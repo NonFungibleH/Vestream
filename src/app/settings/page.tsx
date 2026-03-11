@@ -1,0 +1,589 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { isAddress } from "viem";
+import Link from "next/link";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Wallet {
+  id: string;
+  address: string;
+  label: string | null;
+}
+
+interface Prefs {
+  emailEnabled: boolean;
+  email: string | null;
+  hoursBeforeUnlock: number;
+  notifyCliff: boolean;
+  notifyStreamEnd: boolean;
+}
+
+const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function IconGrid() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  );
+}
+
+function IconSettings() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  );
+}
+
+function IconPlus() {
+  return (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  );
+}
+
+// ─── StyledInput ──────────────────────────────────────────────────────────────
+
+function StyledInput({ placeholder, value, onChange, type = "text", fontMono = false }: {
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  fontMono?: boolean;
+}) {
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all${fontMono ? " font-mono" : ""}`}
+      style={{
+        background: "var(--preview-muted-2)",
+        border: "1px solid var(--preview-border)",
+        color: "var(--preview-text)",
+      }}
+      onFocus={(e) => (e.currentTarget.style.borderColor = "#3b82f6")}
+      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--preview-border)")}
+    />
+  );
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+
+function Section({ title, description, children }: {
+  title: string; description?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border p-6"
+      style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="mb-5" style={{ borderBottom: "1px solid var(--preview-border-2)", paddingBottom: "1.25rem" }}>
+        <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{title}</h2>
+        {description && <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>{description}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+export default function Settings() {
+  const router = useRouter();
+  const [dark, setDark]                   = useState(false);
+  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+
+  // Keep dark mode in sync with the shared localStorage key
+  useEffect(() => {
+    try { if (localStorage.getItem("vestr-dark") === "1") setDark(true); } catch { /* ignore */ }
+  }, []);
+
+  function toggleDark() {
+    setDark((v) => {
+      const next = !v;
+      try { localStorage.setItem("vestr-dark", next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
+  const [wallets, setWallets]             = useState<Wallet[]>([]);
+  const [removingId, setRemovingId]       = useState<string | null>(null);
+
+  // Add wallet form
+  const [newAddress, setNewAddress] = useState("");
+  const [newLabel, setNewLabel]     = useState("");
+  const [addError, setAddError]     = useState<string | null>(null);
+  const [adding, setAdding]         = useState(false);
+
+  // Notification prefs
+  const [prefs, setPrefs]       = useState<Prefs>({ emailEnabled: false, email: null, hoursBeforeUnlock: 24, notifyCliff: true, notifyStreamEnd: true });
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting]           = useState(false);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editingLabelValue, setEditingLabelValue] = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [saveOk, setSaveOk]     = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const loadWallets = useCallback(async () => {
+    const res = await fetch("/api/wallets");
+    if (res.status === 401) { router.push("/login"); return; }
+    if (res.ok) {
+      const json = await res.json();
+      setWallets(json.wallets ?? []);
+      setSessionAddress(json.sessionAddress ?? null);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    loadWallets();
+    fetch("/api/notifications/preferences")
+      .then((r) => r.json())
+      .then(({ preferences }) => {
+        if (preferences) setPrefs((p) => ({
+          ...p,
+          emailEnabled:      preferences.emailEnabled      ?? false,
+          email:             preferences.email             ?? null,
+          hoursBeforeUnlock: preferences.hoursBeforeUnlock ?? 24,
+          notifyCliff:       preferences.notifyCliff       ?? true,
+          notifyStreamEnd:   preferences.notifyStreamEnd   ?? true,
+        }));
+      });
+  }, [loadWallets]);
+
+  async function handleAddWallet(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError(null);
+    if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
+    setAdding(true);
+    try {
+      const res = await fetch("/api/wallets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: newAddress, label: newLabel || undefined }),
+      });
+      if (res.status === 409) { setAddError("Wallet already tracked"); return; }
+      if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
+      setNewAddress(""); setNewLabel("");
+      await loadWallets();
+    } catch { setAddError("Network error"); }
+    finally { setAdding(false); }
+  }
+
+  async function handleRemoveWallet(wallet: Wallet) {
+    setRemovingId(wallet.id);
+    try {
+      await fetch(`/api/wallets/${wallet.address}`, { method: "DELETE" });
+      await loadWallets();
+    } finally { setRemovingId(null); }
+  }
+
+  function startEditLabel(w: Wallet) {
+    setEditingLabelId(w.id);
+    setEditingLabelValue(w.label ?? "");
+  }
+
+  async function saveLabel(w: Wallet) {
+    await fetch(`/api/wallets/${w.address}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: editingLabelValue || null }),
+    });
+    setEditingLabelId(null);
+    await loadWallets();
+  }
+
+  async function handleSavePrefs(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setSaveOk(false); setSaveError(null);
+    try {
+      const res = await fetch("/api/notifications/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailEnabled:      prefs.emailEnabled,
+          email:             prefs.email,
+          hoursBeforeUnlock: prefs.hoursBeforeUnlock,
+          notifyCliff:       prefs.notifyCliff,
+          notifyStreamEnd:   prefs.notifyStreamEnd,
+        }),
+      });
+      if (!res.ok) { const j = await res.json(); setSaveError(j.error ?? "Failed to save"); return; }
+      setSaveOk(true);
+      setTimeout(() => setSaveOk(false), 3000);
+    } catch { setSaveError("Network error"); }
+    finally { setSaving(false); }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/auth/account", { method: "DELETE" });
+      if (!res.ok) { alert("Failed to delete account. Please try again."); return; }
+      router.push("/");
+      router.refresh();
+    } catch { alert("Network error. Please try again."); }
+    finally { setDeleting(false); }
+  }
+
+  const shortAddr = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  const initials  = sessionAddress ? sessionAddress.slice(2, 4).toUpperCase() : "??";
+
+  return (
+    <div className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
+      style={{ background: "var(--preview-bg)" }}>
+
+      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+      <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
+        style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
+
+        {/* Logo */}
+        <div className="px-5 h-14 flex items-center gap-3 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--preview-border)" }}>
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm leading-none">V</span>
+          </div>
+          <div>
+            <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
+            <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
+          {[
+            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard", active: false },
+            { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: true  },
+          ].map((item) => (
+            <Link key={item.label} href={item.href}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+              style={item.active
+                ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)", display: "flex" }
+                : { color: "var(--preview-text-2)", border: "1px solid transparent", display: "flex" }}
+              onMouseEnter={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
+              onMouseLeave={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <span className="opacity-80 flex-shrink-0">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Footer */}
+        <div className="px-4 py-3 flex-shrink-0" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+          <p className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>Read-only · No funds access</p>
+        </div>
+      </aside>
+
+      {/* ── Main ─────────────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Header */}
+        <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
+          style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
+          <div>
+            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Settings</h1>
+            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Wallets & notification preferences</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Dark toggle */}
+            <button onClick={toggleDark} title={dark ? "Light mode" : "Dark mode"}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200"
+              style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--preview-hover)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--preview-card)")}>
+              {dark ? (
+                <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--preview-text-2)" }}>
+                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                </svg>
+              ) : (
+                <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--preview-text-2)" }}>
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              )}
+            </button>
+
+            {/* Wallet chip */}
+            {sessionAddress && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border"
+                style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+                <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[8px] font-bold text-white">{initials}</div>
+                <span className="font-mono text-xs font-medium" style={{ color: "var(--preview-text-2)" }}>{shortAddr(sessionAddress)}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-2xl">
+
+          {/* ── Tracked Wallets ──────────────────────────────────────────── */}
+          <Section title="Tracked Wallets" description="Add any Ethereum address to track its vesting schedules.">
+            {/* Wallet list */}
+            {wallets.length === 0 ? (
+              <p className="text-sm mb-5" style={{ color: "var(--preview-text-3)" }}>No wallets tracked yet.</p>
+            ) : (
+              <ul className="space-y-2 mb-5">
+                {wallets.map((w) => (
+                  <li key={w.id} className="flex items-start justify-between gap-3 px-3.5 py-2.5 rounded-xl"
+                    style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+                    <div className="min-w-0 flex-1">
+                      {editingLabelId === w.id ? (
+                        <div className="flex items-center gap-2 mb-1">
+                          <input
+                            autoFocus
+                            value={editingLabelValue}
+                            onChange={(e) => setEditingLabelValue(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") saveLabel(w); if (e.key === "Escape") setEditingLabelId(null); }}
+                            placeholder="Label (e.g. Portfolio Co A – Series A)"
+                            className="flex-1 text-xs rounded-lg px-2.5 py-1.5 outline-none"
+                            style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
+                          />
+                          <button onClick={() => saveLabel(w)} className="text-[11px] font-semibold px-2 py-1 rounded-lg text-white"
+                            style={{ background: "#2563eb" }}>Save</button>
+                          <button onClick={() => setEditingLabelId(null)} className="text-[11px] font-medium px-2 py-1 rounded-lg"
+                            style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>✕</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          {w.label ? (
+                            <p className="text-xs font-semibold truncate" style={{ color: "var(--preview-text)" }}>{w.label}</p>
+                          ) : (
+                            <p className="text-xs italic" style={{ color: "var(--preview-text-3)" }}>No label</p>
+                          )}
+                          <button onClick={() => startEditLabel(w)}
+                            title="Edit label"
+                            className="flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-colors"
+                            style={{ color: "var(--preview-text-3)" }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text)")}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text-3)")}>
+                            <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-[11px] font-mono truncate" style={{ color: "var(--preview-text-3)" }}>{w.address}</p>
+                    </div>
+                    <button onClick={() => handleRemoveWallet(w)} disabled={removingId === w.id}
+                      className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 mt-0.5"
+                      style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+                      {removingId === w.id ? "…" : "Remove"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add wallet form */}
+            <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1.25rem" }}>
+              <p className="text-xs font-semibold mb-3" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
+              <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
+                <StyledInput
+                  placeholder="Wallet address (0x…)"
+                  value={newAddress}
+                  onChange={setNewAddress}
+                  fontMono
+                />
+                <StyledInput
+                  placeholder="Label (optional — e.g. Team vesting)"
+                  value={newLabel}
+                  onChange={setNewLabel}
+                />
+                {addError && <p className="text-xs text-red-400">{addError}</p>}
+                <button type="submit" disabled={adding || !newAddress}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
+                  <IconPlus /> {adding ? "Adding…" : "Track wallet"}
+                </button>
+              </form>
+            </div>
+          </Section>
+
+          {/* ── Email Notifications ──────────────────────────────────────── */}
+          <Section title="Email Notifications" description="Get alerted before your tokens unlock so you never miss a claim.">
+            <form onSubmit={handleSavePrefs} className="space-y-4">
+
+              {/* Enable toggle */}
+              <div className="flex items-center justify-between gap-4">
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }))}>
+                  <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Enable unlock alerts</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>Receive an email before each token unlock event.</p>
+                </div>
+                {/* Toggle switch — standalone button so clicks don't double-fire */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={prefs.emailEnabled}
+                  onClick={() => setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }))}
+                  className="relative w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0"
+                  style={{ background: prefs.emailEnabled ? "#2563eb" : "var(--preview-border)", border: "none", outline: "none" }}>
+                  <span className="w-5 h-5 rounded-full bg-white shadow transition-all duration-200 block"
+                    style={{ transform: prefs.emailEnabled ? "translateX(16px)" : "translateX(0)" }} />
+                </button>
+              </div>
+
+              {prefs.emailEnabled && (
+                <>
+                  <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1rem" }}>
+                    <p className="text-xs font-semibold mb-2" style={{ color: "var(--preview-text-2)" }}>Email address</p>
+                    <StyledInput
+                      type="email"
+                      placeholder="you@example.com"
+                      value={prefs.email ?? ""}
+                      onChange={(v) => setPrefs((p) => ({ ...p, email: v }))}
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-2" style={{ color: "var(--preview-text-2)" }}>Notify me this far before each unlock</p>
+                    <div className="flex flex-wrap gap-2">
+                      {HOURS_OPTIONS.map((h) => {
+                        const isActive = prefs.hoursBeforeUnlock === h;
+                        return (
+                          <button key={h} type="button"
+                            onClick={() => setPrefs((p) => ({ ...p, hoursBeforeUnlock: h }))}
+                            className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-150"
+                            style={{
+                              background: isActive ? "#2563eb18" : "var(--preview-muted-2)",
+                              borderColor: isActive ? "#2563eb55" : "var(--preview-border-2)",
+                              color: isActive ? "#3b82f6" : "var(--preview-text-3)",
+                            }}>
+                            {h < 24 ? `${h}h` : `${h / 24}d`} before
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Notification type selection */}
+                  <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1rem" }}>
+                    <p className="text-xs font-semibold mb-3" style={{ color: "var(--preview-text-2)" }}>Alert types</p>
+                    <div className="space-y-2.5">
+                      {([
+                        { key: "notifyCliff"     as const, label: "Cliff approaching", desc: "Alert when a cliff unlock date is near." },
+                        { key: "notifyStreamEnd" as const, label: "Stream ending soon", desc: "Alert when a vesting stream is about to fully vest." },
+                      ] as { key: keyof Pick<Prefs, "notifyCliff" | "notifyStreamEnd">; label: string; desc: string }[]).map(({ key, label, desc }) => (
+                        <div key={key} className="flex items-start justify-between gap-4">
+                          <div
+                            className="flex-1 cursor-pointer"
+                            onClick={() => setPrefs((p) => ({ ...p, [key]: !p[key] }))}>
+                            <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>{label}</p>
+                            <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>{desc}</p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={prefs[key]}
+                            onClick={() => setPrefs((p) => ({ ...p, [key]: !p[key] }))}
+                            className="w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0 mt-0.5"
+                            style={{ background: prefs[key] ? "#2563eb" : "var(--preview-border)", border: "none", outline: "none" }}>
+                            <span className="w-5 h-5 rounded-full bg-white shadow transition-all duration-200 block"
+                              style={{ transform: prefs[key] ? "translateX(16px)" : "translateX(0)" }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {saveError && <p className="text-xs text-red-400">{saveError}</p>}
+              {saveOk && <p className="text-xs text-emerald-500">Settings saved.</p>}
+
+              <div className="flex items-center gap-3 pt-1">
+                <button type="submit" disabled={saving}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.25)" }}>
+                  {saving ? "Saving…" : "Save preferences"}
+                </button>
+              </div>
+            </form>
+          </Section>
+
+          {/* ── Account ──────────────────────────────────────────────────── */}
+          <Section title="Account">
+            {/* Sign out */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Sign out</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                  You&apos;ll need to reconnect your wallet to access the dashboard.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  await fetch("/api/auth/logout", { method: "POST" });
+                  router.push("/login");
+                  router.refresh();
+                }}
+                className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
+                style={{ color: "#f87171", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+                Sign out
+              </button>
+            </div>
+
+            {/* Delete account */}
+            <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "#f87171" }}>Delete account</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                    Permanently removes your account, all tracked wallets, and notification settings. This cannot be undone.
+                  </p>
+                </div>
+                {!deleteConfirm ? (
+                  <button
+                    onClick={() => setDeleteConfirm(true)}
+                    className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
+                    style={{ color: "#f87171", background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.18)" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.12)")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.06)")}>
+                    Delete account
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs font-medium" style={{ color: "var(--preview-text-3)" }}>Are you sure?</span>
+                    <button
+                      onClick={() => setDeleteConfirm(false)}
+                      className="text-xs px-2.5 py-1.5 rounded-lg"
+                      style={{ color: "var(--preview-text-3)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-60"
+                      style={{ background: "#dc2626" }}>
+                      {deleting ? "Deleting…" : "Yes, delete"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Section>
+
+        </main>
+      </div>
+    </div>
+  );
+}
