@@ -136,10 +136,11 @@ export default function Home() {
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
-              { name: "Sablier", tagline: "Token streaming",  color: "#7c3aed", bg: "rgba(124,58,237,0.06)", border: "rgba(124,58,237,0.14)" },
-              { name: "Hedgey",  tagline: "Token vesting",    color: "#2563eb", bg: "rgba(37,99,235,0.06)",  border: "rgba(37,99,235,0.14)"  },
-              { name: "UNCX",    tagline: "Token vesting",    color: "#b45309", bg: "rgba(180,83,9,0.06)",   border: "rgba(180,83,9,0.14)"   },
-              { name: "Unvest",  tagline: "Vesting platform", color: "#0891b2", bg: "rgba(8,145,178,0.06)",  border: "rgba(8,145,178,0.14)"  },
+              { name: "Sablier",      tagline: "Token streaming",  color: "#7c3aed", bg: "rgba(124,58,237,0.06)", border: "rgba(124,58,237,0.14)" },
+              { name: "Hedgey",       tagline: "Token vesting",    color: "#2563eb", bg: "rgba(37,99,235,0.06)",  border: "rgba(37,99,235,0.14)"  },
+              { name: "UNCX",         tagline: "Token vesting",    color: "#b45309", bg: "rgba(180,83,9,0.06)",   border: "rgba(180,83,9,0.14)"   },
+              { name: "Team Finance", tagline: "Vesting & locks",  color: "#059669", bg: "rgba(5,150,105,0.06)",  border: "rgba(5,150,105,0.14)"  },
+              { name: "Unvest",       tagline: "Vesting platform", color: "#0891b2", bg: "rgba(8,145,178,0.06)",  border: "rgba(8,145,178,0.14)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -284,9 +285,9 @@ export default function Home() {
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}>4 streams</span>
                   </div>
                   {[
-                    { token: "USDC", protocol: "Sablier",  claimable: "$4,050", locked: "$133,450", color: "#2563eb", proto: "#a78bfa", prog: 15 },
-                    { token: "OP",   protocol: "Hedgey",   claimable: "$1,600", locked: "$43,400",  color: "#f97316", proto: "#60a5fa", prog: 35 },
-                    { token: "WETH", protocol: "UNCX",     claimable: "—",      locked: "$24,000",  color: "#7c3aed", proto: "#fb923c", prog: 5  },
+                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#2563eb", proto: "#a78bfa", prog: 15 },
+                    { token: "OP",   protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
+                    { token: "WETH", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#7c3aed", proto: "#fb923c", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid #1e2330" : undefined }}>

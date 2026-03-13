@@ -3371,9 +3371,10 @@ function LoadingSkeleton() {
           <p className="text-[11px] leading-relaxed" style={{ color: "var(--preview-text-3)" }}>
             Scanning <span style={{ color: "var(--preview-text-2)" }}>Sablier</span>,{" "}
             <span style={{ color: "var(--preview-text-2)" }}>Hedgey</span>,{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>UNCX</span> and{" "}
+            <span style={{ color: "var(--preview-text-2)" }}>UNCX</span>,{" "}
+            <span style={{ color: "var(--preview-text-2)" }}>Team Finance</span> and{" "}
             <span style={{ color: "var(--preview-text-2)" }}>Unvest</span> across{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>Ethereum, Base and BSC</span>.
+            <span style={{ color: "var(--preview-text-2)" }}>Ethereum, Base, BSC and Sepolia</span>.
             This usually takes 5–15 seconds.
           </p>
         </div>
@@ -3879,7 +3880,7 @@ export default function Dashboard() {
             <>
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
               <NextClaimCountdown streams={filteredStreams} />
-              <MonthlyCashFlow streams={filteredStreams} prices={prices} />
+              <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />
               <SnapshotPanel
                 streams={filteredStreams}
                 allStreams={streams}
