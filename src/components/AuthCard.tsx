@@ -106,8 +106,14 @@ export function AuthCard() {
         body:    JSON.stringify({ message: prepared, signature }),
       });
       if (!verifyRes.ok) {
-        const j = await verifyRes.json();
-        setWalletError(j.error ?? "Verification failed. Please try again.");
+        let errMsg = "Verification failed. Please try again.";
+        try {
+          const j = await verifyRes.json();
+          errMsg = j.error ?? errMsg;
+        } catch {
+          // Response wasn't JSON (e.g. HTML 500 from server) — use default message
+        }
+        setWalletError(errMsg);
         return;
       }
 

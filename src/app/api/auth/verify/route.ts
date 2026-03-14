@@ -33,16 +33,17 @@ export async function POST(req: NextRequest) {
 
   const address = result.data.address.toLowerCase();
 
-  // Upsert user
-  const user = await upsertUser(address);
-
-  // Auto-add the signing wallet if not already in the list
-  const existingWallets = await getWalletsForUser(user.id);
-  const alreadyAdded = existingWallets.some(
-    (w) => w.address === address
-  );
-  if (!alreadyAdded) {
-    await addWallet(user.id, address, "My Wallet");
+  // Upsert user + auto-add wallet — wrapped so a DB outage doesn't block login
+  try {
+    const user = await upsertUser(address);
+    const existingWallets = await getWalletsForUser(user.id);
+    const alreadyAdded = existingWallets.some((w) => w.address === address);
+    if (!alreadyAdded) {
+      await addWallet(user.id, address, "My Wallet");
+    }
+  } catch (err) {
+    console.error("DB error in /api/auth/verify (non-fatal):", err);
+    // Continue — session is still set so the user can access the app
   }
 
   // Set session
