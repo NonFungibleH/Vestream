@@ -10,7 +10,12 @@ function generateOtp(): string {
 // POST /api/auth/email   { action: "send", email }   → sends OTP
 // POST /api/auth/email   { action: "verify", email, code }  → verifies OTP, creates session
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: { action?: string; email?: string; code?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { action } = body;
 
   if (action === "send") {
@@ -20,7 +25,13 @@ export async function POST(req: NextRequest) {
     }
 
     const otp = generateOtp();
-    const session = await getSession();
+    let session;
+    try {
+      session = await getSession();
+    } catch (err) {
+      console.error("getSession failed in email send:", err);
+      return NextResponse.json({ error: "Auth service unavailable. Check SESSION_SECRET env var." }, { status: 500 });
+    }
     session.otp = otp;
     session.otpEmail = email;
     session.otpExpiry = Math.floor(Date.now() / 1000) + 600; // 10 min

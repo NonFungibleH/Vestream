@@ -6,7 +6,13 @@ import { upsertUser, addWallet, getWalletsForUser } from "@/lib/db/queries";
 export async function POST(req: NextRequest) {
   const { message, signature } = await req.json();
 
-  const session = await getSession();
+  let session;
+  try {
+    session = await getSession();
+  } catch (err) {
+    console.error("getSession failed in verify:", err);
+    return NextResponse.json({ error: "Auth service unavailable. Check SESSION_SECRET env var." }, { status: 500 });
+  }
 
   if (!session.nonce) {
     return NextResponse.json({ error: "No nonce in session" }, { status: 422 });
