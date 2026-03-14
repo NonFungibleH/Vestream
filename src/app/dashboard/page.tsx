@@ -1240,11 +1240,18 @@ function CopyButton({ text }: { text: string }) {
 const COL = "grid-cols-[160px_88px_98px_80px_80px_108px_98px_118px_80px_90px_130px]";
 
 function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: Record<string, number> }) {
-  const active = streams.filter((s) =>
-    !s.isFullyVested ||
-    BigInt(s.claimableNow ?? "0") > 0n ||
-    BigInt(s.lockedAmount  ?? "0") > 0n
-  );
+  // Show any stream where not all tokens have been withdrawn yet.
+  // Using totalAmount vs withdrawnAmount is more robust than relying on
+  // isFullyVested / claimableNow which can mis-compute on edge-case data.
+  const active = streams.filter((s) => {
+    try {
+      const total     = BigInt(s.totalAmount     || "0");
+      const withdrawn = BigInt(s.withdrawnAmount || "0");
+      return total > 0n && total > withdrawn;
+    } catch {
+      return true; // if we can't parse, show rather than hide
+    }
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const COLS = ["Asset", "Protocol", "Locked", "Start", "End", "Progress", "Claimable", "Schedule", "Cancellable", "Contract", ""];
 

@@ -208,6 +208,30 @@ const UNCX_TOKEN_QUERY = `
   }
 `;
 
+// Fallback: no orderBy (in case startEmission is not indexed for token queries)
+const UNCX_TOKEN_QUERY_NO_SORT = `
+  query GetLocksByTokenNoSort($token: String!, $skip: Int!) {
+    locks(
+      where: { token_: { id: $token } }
+      first: 200
+      skip: $skip
+    ) {
+      id
+      lockID
+      releaseSchedule
+      token { id symbol decimals }
+      sharesDeposited
+      sharesWithdrawn
+      shares
+      startEmission
+      endEmission
+      lockDate
+      condition
+      owner { id }
+    }
+  }
+`;
+
 interface RawUNCXLock {
   id: string;
   lockID: string;
@@ -223,6 +247,24 @@ interface RawUNCXLock {
   owner: { id: string };
 }
 
+async function uncxRunQuery(
+  url: string,
+  query: string,
+  token: string,
+  skip: number,
+): Promise<{ data?: { locks?: RawUNCXLock[] }; errors?: unknown } | null> {
+  try {
+    const res = await fetch(url, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ query, variables: { token, skip } }),
+      next:    { revalidate: 120 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
 export async function explorerFetchUNCX(
   tokenAddress: string,
   chainId: SupportedChainId
@@ -233,21 +275,34 @@ export async function explorerFetchUNCX(
   const token = tokenAddress.toLowerCase();
   const all: RawUNCXLock[] = [];
   let skip = 0;
+  // Determine which query to use — try sorted first, fall back to unsorted
+  let activeQuery = UNCX_TOKEN_QUERY;
 
   while (true) {
-    let json: { data?: { locks?: RawUNCXLock[] }; errors?: unknown };
-    try {
-      const res = await fetch(url, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ query: UNCX_TOKEN_QUERY, variables: { token, skip } }),
-        next:    { revalidate: 120 },
-      });
-      if (!res.ok) break;
-      json = await res.json();
-    } catch { break; }
+    const json = await uncxRunQuery(url, activeQuery, token, skip);
+    if (!json) break;
 
-    if (json.errors) break;
+    if (json.errors) {
+      if (activeQuery === UNCX_TOKEN_QUERY) {
+        // Primary query (with orderBy) failed — retry this page without ordering
+        console.warn(`[UNCX explorer] sorted query failed on chain ${chainId}, retrying without orderBy:`, json.errors);
+        activeQuery = UNCX_TOKEN_QUERY_NO_SORT;
+        const json2 = await uncxRunQuery(url, activeQuery, token, skip);
+        if (!json2 || json2.errors) {
+          console.error(`[UNCX explorer] fallback query also failed on chain ${chainId}:`, json2?.errors);
+          break;
+        }
+        const page2 = json2.data?.locks ?? [];
+        all.push(...(page2 as RawUNCXLock[]));
+        if (page2.length < 200) break;
+        skip += 200;
+        continue;
+      }
+      // Fallback also failed
+      console.error(`[UNCX explorer] query failed on chain ${chainId}:`, json.errors);
+      break;
+    }
+
     const page = json.data?.locks ?? [];
     all.push(...(page as RawUNCXLock[]));
     if (page.length < 200) break;
