@@ -183,6 +183,7 @@ export default function Pricing() {
               <FeatureItem text="3 wallet addresses" checkColor="#2563eb" />
               <FeatureItem text="All integrated blockchains" checkColor="#2563eb" />
               <FeatureItem text="Email unlock alerts" checkColor="#2563eb" />
+              <FeatureItem text="Token Vesting Explorer" checkColor="#2563eb" />
               <FeatureItem text="Basic portfolio analytics" checkColor="#2563eb" />
               <FeatureItem text="30-day unlock calendar" checkColor="#2563eb" />
               <FeatureItem text="Calendar integration" included={false} />
@@ -227,6 +228,7 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Token Vesting Explorer" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Calendar integration (iCal export)" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Team workspace" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#10b981" />
@@ -269,6 +271,7 @@ export default function Pricing() {
               ["Real-time dashboard",        true,       true,              true],
               ["Claimable balance tracking", true,       true,              true],
               ["Email alerts",               false,      true,              true],
+              ["Token Vesting Explorer",     false,      true,              true],
               ["Unlock calendar",            false,      "30-day view",     "Full + iCal export"],
               ["Calendar integration",       false,      false,             true],
               ["Basic portfolio analytics",  false,      true,              true],

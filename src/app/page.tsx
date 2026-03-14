@@ -509,6 +509,12 @@ export default function Home() {
               title: "CSV &amp; PDF export",
               body: "Download a full CSV of vesting positions and sell transactions — or print a PDF report — directly from the dashboard.",
             },
+            {
+              icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+              color: "#0891b2", bg: "rgba(8,145,178,0.07)", border: "rgba(8,145,178,0.13)",
+              title: "Token Vesting Explorer",
+              body: "See every wallet vesting a token globally — not just yours. Understand the full unlock schedule and selling pressure before it hits.",
+            },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
               style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>

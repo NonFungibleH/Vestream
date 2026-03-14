@@ -1469,6 +1469,18 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                         <line x1="10" y1="14" x2="21" y2="3"/>
                       </svg>
                     </a>
+                    <a href={`/explore/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
+                      title="View all vesting holders for this token"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center justify-center w-5 h-5 rounded transition-all duration-150"
+                      style={{ color: "var(--preview-text-3)" }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--preview-muted)")}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                      <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                    </a>
                   </div>
 
                   {/* 12. Claim / View CTA + expand chevron */}
