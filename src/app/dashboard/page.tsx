@@ -3501,14 +3501,19 @@ export default function Dashboard() {
   }
 
   const loadWallets = useCallback(async () => {
-    const res = await fetch("/api/wallets");
-    if (res.status === 401) { router.push("/login"); return; }
-    if (res.ok) {
-      const json = await res.json();
-      setWallets(json.wallets);
-      setSessionAddress(json.sessionAddress ?? null);
-      setTier(json.tier ?? "free");
-      setWalletLimit(json.walletLimit !== undefined ? json.walletLimit : 3);
+    try {
+      const res = await fetch("/api/wallets");
+      if (res.status === 401) { router.push("/login"); return; }
+      if (res.ok) {
+        const json = await res.json();
+        setWallets(json.wallets);
+        setSessionAddress(json.sessionAddress ?? null);
+        setTier(json.tier ?? "free");
+        setWalletLimit(json.walletLimit !== undefined ? json.walletLimit : 3);
+      }
+    } catch {
+      // Network error — fall through, walletsLoaded still gets set so UI doesn't hang
+    } finally {
       setWalletsLoaded(true);
     }
   }, [router]);

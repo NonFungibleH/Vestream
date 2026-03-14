@@ -16,28 +16,33 @@ function walletLimitForTier(tier: string): number | null {
 }
 
 export async function GET() {
-  const session = await getSession();
-  if (!session.address) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const session = await getSession();
+    if (!session.address) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const user = await getUserByAddress(session.address);
-  if (!user) {
+    const user = await getUserByAddress(session.address);
+    if (!user) {
+      return NextResponse.json({
+        wallets: [],
+        sessionAddress: session.address,
+        tier: "free",
+        walletLimit: 1,
+      });
+    }
+
+    const wallets = await getWalletsForUser(user.id);
     return NextResponse.json({
-      wallets: [],
+      wallets,
       sessionAddress: session.address,
-      tier: "free",
-      walletLimit: 1,
+      tier: user.tier,
+      walletLimit: walletLimitForTier(user.tier),
     });
+  } catch (err) {
+    console.error("GET /api/wallets error:", err);
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
-
-  const wallets = await getWalletsForUser(user.id);
-  return NextResponse.json({
-    wallets,
-    sessionAddress: session.address,
-    tier: user.tier,
-    walletLimit: walletLimitForTier(user.tier),
-  });
 }
 
 export async function POST(req: NextRequest) {

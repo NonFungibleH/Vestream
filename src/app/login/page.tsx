@@ -4,7 +4,13 @@ import { AuthCard } from "@/components/AuthCard";
 import Link from "next/link";
 
 export default async function Login() {
-  const session = await getSession();
+  let session: { address?: string } = {};
+  try {
+    session = await getSession();
+  } catch {
+    // If the session library throws (e.g. missing SESSION_SECRET env var in production),
+    // fall through and render the login form rather than white-screening.
+  }
   if (session.address) redirect("/dashboard");
 
   return (
