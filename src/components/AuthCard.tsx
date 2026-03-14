@@ -93,9 +93,21 @@ export function AuthCard() {
     setWalletError(null);
     setWalletLoading(true);
     try {
+      // 1. Fetch nonce — check for errors before destructuring
       const nonceRes = await fetch("/api/auth/nonce");
+      if (!nonceRes.ok) {
+        let errMsg = "Failed to start sign-in. Please try again.";
+        try { const j = await nonceRes.json(); errMsg = j.error ?? errMsg; } catch {}
+        setWalletError(errMsg);
+        return;
+      }
       const { nonce } = await nonceRes.json();
+      if (!nonce) {
+        setWalletError("Failed to get sign-in nonce. Please try again.");
+        return;
+      }
 
+      // 2. Build and sign SIWE message
       const message = new SiweMessage({
         domain:    window.location.host,
         address,
@@ -108,6 +120,7 @@ export function AuthCard() {
       const prepared  = message.prepareMessage();
       const signature = await signMessageAsync({ message: prepared });
 
+      // 3. Verify on server
       const verifyRes = await fetch("/api/auth/verify", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,9 +141,14 @@ export function AuthCard() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      const e = err as { code?: number; message?: string };
-      if (e?.code === 4001 || e?.message?.includes("rejected")) {
+      // Wagmi v2 wraps the provider error inside err.cause — check both levels
+      const e    = err as { code?: number; message?: string; cause?: { code?: number; message?: string } };
+      const code = e?.code ?? e?.cause?.code;
+      const msg  = (e?.message ?? e?.cause?.message ?? "").toLowerCase();
+      if (code === 4001 || msg.includes("rejected") || msg.includes("denied") || msg.includes("user rejected")) {
         setWalletError("Signature rejected. Please approve in your wallet.");
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        setWalletError("Network error. Please check your connection and try again.");
       } else {
         setWalletError("Sign-in failed. Please try again.");
       }

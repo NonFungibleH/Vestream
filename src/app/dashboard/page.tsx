@@ -917,11 +917,14 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {(() => {
                   const parts: string[] = [];
-                  if (totalClaimable >= 0.5) parts.push(fmtUSDFull(totalClaimable));
-                  claimableNoPrice.forEach((t) =>
-                    parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
-                  );
-                  if (!hasPrice) {
+                  if (hasPrice) {
+                    // Some tokens have USD prices — show USD total + any no-price tokens separately
+                    if (totalClaimable >= 0.5) parts.push(fmtUSDFull(totalClaimable));
+                    claimableNoPrice.forEach((t) =>
+                      parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
+                    );
+                  } else {
+                    // No prices at all — show raw token amounts only
                     tokens.filter((t) => t.claimable > 0).forEach((t) =>
                       parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
                     );
