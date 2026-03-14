@@ -3533,26 +3533,6 @@ export default function Dashboard() {
 
   const streams = data?.streams ?? [];
 
-  // Also fetch DexScreener prices for all vested tokens (SWR deduplicates — same URL as TokenMarketPanel)
-  const marketQuery = (() => {
-    const seen = new Set<string>();
-    return streams
-      .filter(s => s.tokenAddress && s.chainId && !seen.has(s.tokenSymbol) && !!seen.add(s.tokenSymbol))
-      .map(s => `${s.tokenSymbol}:${s.tokenAddress}:${s.chainId}`)
-      .join(",");
-  })();
-  const { data: marketData } = useSWR<{ market: TokenMarket[] }>(
-    marketQuery ? `/api/market?tokens=${encodeURIComponent(marketQuery)}` : null,
-    fetcher,
-    { refreshInterval: 300_000 }
-  );
-  // Merge: FALLBACK < CoinGecko livePrices < DexScreener marketPrices (most accurate for custom tokens)
-  const marketPrices = (marketData?.market ?? []).reduce(
-    (acc, m) => m.price ? { ...acc, [m.symbol]: m.price } : acc,
-    {} as Record<string, number>
-  );
-  const prices = { ...FALLBACK_PRICES, ...livePrices, ...marketPrices };
-
   useEffect(() => {
     if (streams.length === 0) return;
     const symbols = new Set(streams.map((s) => s.tokenSymbol));
@@ -3569,6 +3549,27 @@ export default function Dashboard() {
   }
 
   const filteredStreams = streams.filter((s) => activeTokens.has(s.tokenSymbol));
+
+  // Build market query from filteredStreams — identical to what TokenMarketPanel uses,
+  // guaranteeing SWR deduplicates both into a single request and prices stay in sync.
+  const marketQuery = (() => {
+    const seen = new Set<string>();
+    return filteredStreams
+      .filter(s => s.tokenAddress && s.chainId && !seen.has(s.tokenSymbol) && !!seen.add(s.tokenSymbol))
+      .map(s => `${s.tokenSymbol}:${s.tokenAddress}:${s.chainId}`)
+      .join(",");
+  })();
+  const { data: marketData } = useSWR<{ market: TokenMarket[] }>(
+    marketQuery ? `/api/market?tokens=${encodeURIComponent(marketQuery)}` : null,
+    fetcher,
+    { refreshInterval: 300_000 }
+  );
+  // Merge: FALLBACK < CoinGecko livePrices < DexScreener marketPrices (most accurate for custom tokens)
+  const marketPrices = (marketData?.market ?? []).reduce(
+    (acc, m) => m.price ? { ...acc, [m.symbol]: m.price } : acc,
+    {} as Record<string, number>
+  );
+  const prices = { ...FALLBACK_PRICES, ...livePrices, ...marketPrices };
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });

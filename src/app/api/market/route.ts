@@ -192,12 +192,26 @@ export async function GET(req: NextRequest) {
       // 1. Try address lookup first (most accurate)
       let pairs: DexPair[] = token.address ? await fetchByAddress(token.address) : [];
 
-      // 2. Fall back to symbol search if address returned nothing.
-      //    This handles tokens whose stored address isn't indexed by DexScreener
-      //    (e.g. old contract, LP pair address, or pre-migration contract) — the
-      //    symbol search finds the best matching pair by ticker and 24h volume.
+      // 2. Symbol-search fallback when address lookup returns nothing.
+      //    Rules:
+      //    • Token on a supported mainnet (dsChain is set): search by symbol but only
+      //      keep results on the same chain — prevents a Sepolia "TEST" token from
+      //      matching a random mainnet token called TEST.
+      //    • Token with no chainId at all: accept any exact-symbol match (legacy).
+      //    • Token with a chainId that has no DexScreener mapping (testnet): skip —
+      //      any symbol result would be a completely different mainnet token.
       if (pairs.length === 0) {
-        pairs = await fetchBySymbol(token.symbol);
+        if (dsChain) {
+          // Mainnet token: symbol search filtered strictly to the same chain
+          const symbolPairs = await fetchBySymbol(token.symbol);
+          const sameChain   = symbolPairs.filter((p) => p.chainId === dsChain);
+          // Use same-chain results; fall back to all results only if nothing on-chain
+          pairs = sameChain.length > 0 ? sameChain : symbolPairs;
+        } else if (!token.chainId) {
+          // No chain info — accept any symbol match (symbol-only query path)
+          pairs = await fetchBySymbol(token.symbol);
+        }
+        // else: known chainId with no DexScreener mapping (e.g. Sepolia) → no fallback
       }
 
       const best = pickBestPair(pairs, dsChain);
