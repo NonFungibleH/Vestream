@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { isAddress } from "viem";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
+import { UpsellModal } from "@/components/UpsellModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -3415,6 +3416,7 @@ export default function Dashboard() {
   const [dark, setDark]                   = useState(false);
   const [activeTokens, setActiveTokens]   = useState<Set<string>>(new Set());
   const [exportOpen, setExportOpen]       = useState(false);
+  const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
   const [costBasis, setCostBasis]         = useState<Record<string, number>>({});
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
   const [buys,  setBuys]                  = useState<Record<string, BuyTx[]>>({});
@@ -3626,6 +3628,11 @@ export default function Dashboard() {
                   {/* CSV download */}
                   <button
                     onClick={() => {
+                      if (tier !== "fund") {
+                        setExportOpen(false);
+                        setUpsell({ featureName: "CSV Export", requiredTier: "fund" });
+                        return;
+                      }
                       setExportOpen(false);
                       const fld = (s: VestingStream) => s.tokenDecimals ?? 18;
                       // Helper: weighted avg entry from buys or manual cost basis
@@ -3707,6 +3714,11 @@ export default function Dashboard() {
                   {/* Save as PDF */}
                   <button
                     onClick={() => {
+                      if (tier !== "fund") {
+                        setExportOpen(false);
+                        setUpsell({ featureName: "PDF Report", requiredTier: "fund" });
+                        return;
+                      }
                       setExportOpen(false);
                       const fld = (s: VestingStream) => s.tokenDecimals ?? 18;
                       const reportDate = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -3931,6 +3943,15 @@ export default function Dashboard() {
           )}
         </main>
       </div>
+
+      {/* Upsell modal — rendered outside scroll container so it covers everything */}
+      {upsell && (
+        <UpsellModal
+          featureName={upsell.featureName}
+          requiredTier={upsell.requiredTier}
+          onClose={() => setUpsell(null)}
+        />
+      )}
     </div>
   );
 }

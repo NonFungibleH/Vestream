@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAddress } from "viem";
 import Link from "next/link";
+import { UpsellModal } from "@/components/UpsellModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -101,6 +102,8 @@ export default function Settings() {
   const router = useRouter();
   const [dark, setDark]                   = useState(false);
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
+  const [tier, setTier]                   = useState<string>("free");
+  const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
 
   // Keep dark mode in sync with the shared localStorage key
   useEffect(() => {
@@ -140,6 +143,7 @@ export default function Settings() {
       const json = await res.json();
       setWallets(json.wallets ?? []);
       setSessionAddress(json.sessionAddress ?? null);
+      setTier(json.tier ?? "free");
     }
   }, [router]);
 
@@ -416,14 +420,39 @@ export default function Settings() {
           </Section>
 
           {/* ── Email Notifications ──────────────────────────────────────── */}
-          <Section title="Email Notifications" description="Get alerted before your tokens unlock so you never miss a claim.">
+          <Section
+            title="Email Notifications"
+            description="Get alerted before your tokens unlock so you never miss a claim."
+          >
+            {/* Pro-tier lock banner */}
+            {tier === "free" && (
+              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-4"
+                style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)" }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🔒</span>
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "#2563eb" }}>Pro feature</p>
+                    <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Email alerts require a Pro or Fund plan.</p>
+                  </div>
+                </div>
+                <a href="/pricing"
+                  className="flex-shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg text-white transition-all hover:brightness-110"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                  Upgrade →
+                </a>
+              </div>
+            )}
+
             <form onSubmit={handleSavePrefs} className="space-y-4">
 
               {/* Enable toggle */}
               <div className="flex items-center justify-between gap-4">
                 <div
                   className="flex-1 cursor-pointer"
-                  onClick={() => setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }))}>
+                  onClick={() => {
+                    if (tier === "free") { setUpsell({ featureName: "Email Alerts", requiredTier: "pro" }); return; }
+                    setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }));
+                  }}>
                   <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Enable unlock alerts</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>Receive an email before each token unlock event.</p>
                 </div>
@@ -432,7 +461,10 @@ export default function Settings() {
                   type="button"
                   role="switch"
                   aria-checked={prefs.emailEnabled}
-                  onClick={() => setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }))}
+                  onClick={() => {
+                    if (tier === "free") { setUpsell({ featureName: "Email Alerts", requiredTier: "pro" }); return; }
+                    setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }));
+                  }}
                   className="relative w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0"
                   style={{ background: prefs.emailEnabled ? "#2563eb" : "var(--preview-border)", border: "none", outline: "none" }}>
                   <span className="w-5 h-5 rounded-full bg-white shadow transition-all duration-200 block"
@@ -584,6 +616,14 @@ export default function Settings() {
 
         </main>
       </div>
+
+      {upsell && (
+        <UpsellModal
+          featureName={upsell.featureName}
+          requiredTier={upsell.requiredTier}
+          onClose={() => setUpsell(null)}
+        />
+      )}
     </div>
   );
 }
