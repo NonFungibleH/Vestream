@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   if (cached && cached.expiresAt > Date.now()) {
     return NextResponse.json(
       { streams: cached.streams, fetchedAt: cached.fetchedAt, cached: true },
-      { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=30" } }
+      { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
     );
   }
 
@@ -75,6 +75,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(
     { streams, fetchedAt },
-    { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=30" } }
+    { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
   );
 }

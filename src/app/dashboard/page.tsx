@@ -917,7 +917,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {(() => {
                   const parts: string[] = [];
-                  if (totalClaimable > 0) parts.push(fmtUSDFull(totalClaimable));
+                  if (totalClaimable >= 0.5) parts.push(fmtUSDFull(totalClaimable));
                   claimableNoPrice.forEach((t) =>
                     parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
                   );
@@ -2106,7 +2106,7 @@ function MonthlyCashFlow({
           </h2>
           <p className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
             Next 18 months · aggregated across all active streams
-            {anyLive ? " · live USD value" : anyEst ? " · estimated USD (entry prices)" : " · token amounts (no price data)"}
+            {anyLive ? " · live USD value" : anyEst ? " · estimated USD (entry prices)" : ""}
           </p>
         </div>
         <div className="text-right flex-shrink-0">

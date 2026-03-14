@@ -3,6 +3,11 @@ import { mainnet, bsc, base, sepolia } from "viem/chains";
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
 
+// Module-level token metadata cache — survives within the same serverless instance
+// Key: `${chainId}:${tokenAddress}`, Value: { symbol, decimals }
+const TOKEN_META_CACHE = new Map<string, { symbol: string; decimals: number }>();
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 // Hedgey TokenVestingPlans contract addresses per chain
 // Verified on-chain: 0x2CDE... = same bytecode on ETH, Base, and BSC
 //                    0x68b6... = 30402 bytes on Sepolia (same bytecode, from Locked_VestingTokenPlans repo)
@@ -97,22 +102,45 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         })),
       });
 
+      // Batch-fetch token metadata for all unique tokens not already cached
+      const successPlans = detailResults
+        .map((r, i) => (r.status === "success" ? { plan: r.result as HedgeyPlan, idx: i } : null))
+        .filter(Boolean) as { plan: HedgeyPlan; idx: number }[];
+
+      const uniqueTokens = [...new Set(successPlans.map((p) => p.plan.token.toLowerCase()))];
+      const uncached = uniqueTokens.filter((addr) => !TOKEN_META_CACHE.has(`${chainId}:${addr}`));
+
+      if (uncached.length > 0) {
+        // Two multicalls: one for symbol, one for decimals — avoids mixed return type issues
+        const [symResults, decResults] = await Promise.all([
+          client.multicall({
+            contracts: uncached.map((addr) => ({
+              address: addr as `0x${string}`, abi: erc20Abi, functionName: "symbol" as const,
+            })),
+          }),
+          client.multicall({
+            contracts: uncached.map((addr) => ({
+              address: addr as `0x${string}`, abi: erc20Abi, functionName: "decimals" as const,
+            })),
+          }),
+        ]);
+
+        for (let j = 0; j < uncached.length; j++) {
+          const sym = symResults[j].status === "success" ? (symResults[j].result as string) : "UNKNOWN";
+          const dec = decResults[j].status === "success" ? (decResults[j].result as number) : 18;
+          TOKEN_META_CACHE.set(`${chainId}:${uncached[j]}`, { symbol: sym, decimals: dec });
+        }
+      }
+
       for (let i = 0; i < detailResults.length; i++) {
         const r = detailResults[i];
         if (r.status !== "success") continue;
         const plan = r.result as HedgeyPlan;
 
-        // Fetch token metadata
-        let tokenSymbol = "UNKNOWN";
-        let tokenDecimals = 18;
-        try {
-          const [sym, dec] = await Promise.all([
-            client.readContract({ address: plan.token, abi: erc20Abi, functionName: "symbol" }),
-            client.readContract({ address: plan.token, abi: erc20Abi, functionName: "decimals" }),
-          ]);
-          tokenSymbol   = sym;
-          tokenDecimals = dec;
-        } catch { /* use defaults */ }
+        // Resolve token metadata from cache (always populated above)
+        const meta = TOKEN_META_CACHE.get(`${chainId}:${plan.token.toLowerCase()}`);
+        const tokenSymbol   = meta?.symbol   ?? "UNKNOWN";
+        const tokenDecimals = meta?.decimals ?? 18;
 
         const startTime = Number(plan.start);
         const cliffTime = Number(plan.cliff) > startTime ? Number(plan.cliff) : null;
@@ -152,6 +180,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
           cliffTime,
           isFullyVested,
           nextUnlockTime:  nxtUnlock,
+          cancelable:      plan.vestingAdmin.toLowerCase() !== ZERO_ADDRESS,
         });
       }
     } catch (err) {
