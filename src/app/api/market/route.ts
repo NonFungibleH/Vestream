@@ -192,26 +192,12 @@ export async function GET(req: NextRequest) {
       // 1. Try address lookup first (most accurate)
       let pairs: DexPair[] = token.address ? await fetchByAddress(token.address) : [];
 
-      // 2. Symbol-search fallback — runs when address lookup returned nothing.
-      //    Two sub-cases:
-      //    a) No address provided → accept any exact-symbol match (original behaviour)
-      //    b) Address provided but /tokens/{addr} returned nothing (e.g. the address stored
-      //       in the stream is the LP pair address, not the token contract) → run symbol
-      //       search but only keep pairs where our address matches either the base token
-      //       address OR the pair address.  This lets AXGT-style streams work while
-      //       still rejecting a completely different token that shares the ticker.
+      // 2. Fall back to symbol search if address returned nothing.
+      //    This handles tokens whose stored address isn't indexed by DexScreener
+      //    (e.g. old contract, LP pair address, or pre-migration contract) — the
+      //    symbol search finds the best matching pair by ticker and 24h volume.
       if (pairs.length === 0) {
-        const symbolPairs = await fetchBySymbol(token.symbol);
-        if (!token.address) {
-          pairs = symbolPairs;
-        } else {
-          const addr = token.address.toLowerCase();
-          pairs = symbolPairs.filter(
-            (p) =>
-              p.baseToken.address.toLowerCase() === addr ||
-              p.pairAddress.toLowerCase() === addr
-          );
-        }
+        pairs = await fetchBySymbol(token.symbol);
       }
 
       const best = pickBestPair(pairs, dsChain);
