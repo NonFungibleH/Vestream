@@ -192,8 +192,10 @@ export async function GET(req: NextRequest) {
       // 1. Try address lookup first (most accurate)
       let pairs: DexPair[] = token.address ? await fetchByAddress(token.address) : [];
 
-      // 2. Fall back to symbol search if address returned nothing
-      if (pairs.length === 0) {
+      // 2. Fall back to symbol search ONLY when we have no address to rely on.
+      //    If we have an address and DexScreener returned nothing, the token genuinely
+      //    has no liquidity pool — don't substitute a different token that shares the symbol.
+      if (pairs.length === 0 && !token.address) {
         pairs = await fetchBySymbol(token.symbol);
       }
 
