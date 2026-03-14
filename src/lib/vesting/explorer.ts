@@ -2,7 +2,7 @@
  * Token Vesting Explorer — queries protocol subgraphs by TOKEN ADDRESS
  * (not wallet address) to surface all vesting schedules for a given token globally.
  *
- * Protocols: Sablier V2.1, UNCX TokenVesting V3
+ * Protocols: Sablier V2.1, UNCX TokenVesting V3, Team Finance V3
  */
 
 import {
@@ -300,19 +300,151 @@ export async function explorerFetchUNCX(
   });
 }
 
+// ─── Team Finance subgraph (Squid) ────────────────────────────────────────────
+
+const TF_SQUID_URL = "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
+
+// The Squid entity name may vary; we attempt both common names defensively.
+const TF_EXPLORER_QUERY = `
+  query TFExplorerVestings($token: String!, $chainId: Int!, $skip: Int!) {
+    vestings(
+      where: { token_eq: $token, chainId_eq: $chainId }
+      limit: 200
+      offset: $skip
+      orderBy: [id_ASC]
+    ) {
+      id
+      address
+      beneficiary
+      token
+      tokenSymbol
+      tokenDecimals
+      userTotal
+      start
+      end
+      percentageOnStart
+      revocable
+      chainId
+    }
+  }
+`;
+
+interface RawTFVesting {
+  id:                string;
+  address:           string;
+  beneficiary:       string;  // recipient wallet
+  token:             string;
+  tokenSymbol:       string;
+  tokenDecimals:     number;
+  userTotal:         string;  // hex bigint e.g. "0x083d6c7aab63600000"
+  start:             number;
+  end:               number;
+  percentageOnStart: number;
+  revocable:         boolean;
+  chainId:           number;
+}
+
+export async function explorerFetchTeamFinance(
+  tokenAddress: string,
+  chainId: SupportedChainId
+): Promise<VestingStream[]> {
+  const token  = tokenAddress.toLowerCase();
+  const all: RawTFVesting[] = [];
+  let skip = 0;
+
+  while (true) {
+    let json: { data?: { vestings?: RawTFVesting[] }; errors?: unknown };
+    try {
+      const res = await fetch(TF_SQUID_URL, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ query: TF_EXPLORER_QUERY, variables: { token, chainId, skip } }),
+        next:    { revalidate: 120 },
+      });
+      if (!res.ok) break;
+      json = await res.json();
+    } catch { break; }
+
+    // If the schema doesn't have this entity the Squid returns a GraphQL error — bail out gracefully
+    if (json.errors) break;
+    const page = json.data?.vestings ?? [];
+    all.push(...(page as RawTFVesting[]));
+    if (page.length < 200) break;
+    skip += 200;
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+
+  return all
+    .map((v): VestingStream | null => {
+      const startTime = Number(v.start)  || 0;
+      const endTime   = Number(v.end)    || 0;
+      if (!v.userTotal || !endTime || !v.beneficiary) return null;
+
+      let total: bigint;
+      try {
+        total = BigInt(v.userTotal);
+      } catch { return null; }
+
+      const pct          = typeof v.percentageOnStart === "number" && isFinite(v.percentageOnStart)
+        ? v.percentageOnStart : 0;
+      const bps          = BigInt(Math.round(pct * 100));
+      const initialUnlock = (total * bps) / 10000n;
+      const linearPortion = total - initialUnlock;
+
+      let vested: bigint;
+      if (nowSec < startTime || endTime <= startTime) {
+        vested = 0n;
+      } else if (nowSec >= endTime) {
+        vested = total;
+      } else {
+        const elapsed  = BigInt(nowSec - startTime);
+        const duration = BigInt(endTime - startTime);
+        vested = initialUnlock + (linearPortion * elapsed) / duration;
+      }
+
+      const claimableNow  = vested > 0n ? vested : 0n; // explorer: no withdrawn data from Squid
+      const lockedAmount  = total > vested ? total - vested : 0n;
+      const isFullyVested = vested >= total;
+
+      return {
+        id:              `team-finance-${chainId}-${v.address}-${v.beneficiary.toLowerCase()}`,
+        protocol:        "team-finance",
+        chainId,
+        recipient:       v.beneficiary,
+        tokenAddress:    v.token,
+        tokenSymbol:     v.tokenSymbol     ?? "???",
+        tokenDecimals:   v.tokenDecimals   ?? 18,
+        totalAmount:     total.toString(),
+        withdrawnAmount: "0",
+        claimableNow:    claimableNow.toString(),
+        lockedAmount:    lockedAmount.toString(),
+        startTime,
+        endTime,
+        cliffTime:       null,
+        isFullyVested,
+        nextUnlockTime:  nextUnlockTime(isFullyVested, nowSec, null, endTime),
+        cancelable:      v.revocable,
+        shape:           "linear",
+      };
+    })
+    .filter(Boolean) as VestingStream[];
+}
+
 // ─── Combined fetch (all protocols in parallel) ────────────────────────────────
 
 export async function explorerFetch(
   tokenAddress: string,
   chainId: SupportedChainId
 ): Promise<VestingStream[]> {
-  const [sablier, uncx] = await Promise.all([
+  const [sablier, uncx, teamFinance] = await Promise.all([
     explorerFetchSablier(tokenAddress, chainId),
     explorerFetchUNCX(tokenAddress, chainId),
+    explorerFetchTeamFinance(tokenAddress, chainId),
   ]);
   // Deduplicate by stream id (shouldn't overlap, but belt + braces)
   const seen = new Set<string>();
-  return [...sablier, ...uncx].filter((s) => {
+  return [...sablier, ...uncx, ...teamFinance].filter((s) => {
     if (seen.has(s.id)) return false;
     seen.add(s.id);
     return true;

@@ -1469,22 +1469,17 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                         <line x1="10" y1="14" x2="21" y2="3"/>
                       </svg>
                     </a>
-                    <a href={`/explore/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
-                      title="View all vesting holders for this token"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center w-5 h-5 rounded transition-all duration-150"
-                      style={{ color: "var(--preview-text-3)" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--preview-muted)")}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
-                      <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                      </svg>
-                    </a>
                   </div>
 
-                  {/* 12. Claim / View CTA + expand chevron */}
+                  {/* 12. Claim / View CTA + All holders explorer link + expand chevron */}
                   <div className="flex items-center justify-end gap-1.5">
+                    <a href={`/explore/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title="See all vesting holders for this token"
+                      className="text-[9px] font-semibold px-2 py-0.5 rounded-md transition-all duration-150 hover:brightness-125 flex-shrink-0"
+                      style={{ color: "#818cf8", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                      All holders ↗
+                    </a>
                     {claimableAmt > 0 ? (
                       <a href={claimUrl} target="_blank" rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -3553,7 +3548,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (streams.length === 0) return;
     const symbols = new Set(streams.map((s) => s.tokenSymbol));
-    setActiveTokens((prev) => prev.size === 0 ? symbols : prev);
+    setActiveTokens((prev) => {
+      // Always merge new symbols (e.g. from a newly added wallet) into the
+      // active set while preserving tokens the user has manually filtered out.
+      const hasNew = [...symbols].some((s) => !prev.has(s));
+      if (!hasNew) return prev; // avoid re-render when nothing changed
+      return new Set([...prev, ...symbols]);
+    });
   }, [streams]);
 
   function toggleToken(symbol: string) {

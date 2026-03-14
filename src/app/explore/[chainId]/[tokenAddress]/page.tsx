@@ -282,7 +282,7 @@ export default function ExplorePage() {
                 </span>
                 <span className="text-xs px-3 py-1.5 rounded-full font-semibold"
                   style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
-                  Sablier + UNCX
+                  Sablier · UNCX · Team Finance
                 </span>
               </div>
             </div>
@@ -480,8 +480,8 @@ export default function ExplorePage() {
             <p className="text-4xl mb-4">🔍</p>
             <p className="text-lg font-semibold text-white mb-2">No vesting schedules found</p>
             <p className="text-sm" style={{ color: "#64748b" }}>
-              No active Sablier or UNCX vestings found for this token on {chainName}.
-              <br />The token may use a different protocol not yet indexed by the explorer.
+              No active Sablier, UNCX, or Team Finance vestings found for this token on {chainName}.
+              <br />The token may use Hedgey or Unvest, which are not yet indexed by the explorer.
             </p>
           </div>
         )}
@@ -489,7 +489,7 @@ export default function ExplorePage() {
         {/* ── Footer ── */}
         <footer className="text-center py-4">
           <p className="text-[11px]" style={{ color: "#334155" }}>
-            Data sourced from Sablier and UNCX subgraphs · updates every 2 minutes ·{" "}
+            Data sourced from Sablier, UNCX, and Team Finance subgraphs · updates every 2 minutes ·{" "}
             <a href="/dashboard" className="hover:underline">← Back to dashboard</a>
           </p>
         </footer>
