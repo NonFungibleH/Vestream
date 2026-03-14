@@ -62,7 +62,13 @@ export async function POST(req: NextRequest) {
     const email = (body.email ?? "").toLowerCase().trim();
     const code  = (body.code  ?? "").trim();
 
-    const session = await getSession();
+    let session;
+    try {
+      session = await getSession();
+    } catch (err) {
+      console.error("getSession failed in email verify:", err);
+      return NextResponse.json({ error: "Auth service unavailable." }, { status: 500 });
+    }
 
     if (!session.otp || !session.otpEmail || !session.otpExpiry) {
       return NextResponse.json({ error: "No sign-in code requested. Please start over." }, { status: 422 });
@@ -79,8 +85,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Incorrect code. Please try again." }, { status: 422 });
     }
 
-    // Valid — create/fetch user and set session
-    await upsertUser(email);
+    // Valid — create/fetch user (non-fatal if DB unavailable)
+    try {
+      await upsertUser(email);
+    } catch (err) {
+      console.error("DB error in email verify (non-fatal):", err);
+    }
 
     session.otp       = undefined;
     session.otpEmail  = undefined;

@@ -43,13 +43,17 @@ export function AuthCard() {
     setEmailError(null);
     setEmailLoading(true);
     try {
-      const res  = await fetch("/api/auth/email", {
+      const res = await fetch("/api/auth/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "send", email }),
       });
-      const json = await res.json();
-      if (!res.ok) { setEmailError(json.error ?? "Failed to send code"); return; }
+      if (!res.ok) {
+        let errMsg = "Failed to send code";
+        try { const j = await res.json(); errMsg = j.error ?? errMsg; } catch {}
+        setEmailError(errMsg);
+        return;
+      }
       setEmailStep("code");
     } catch {
       setEmailError("Network error. Please try again.");
@@ -63,13 +67,17 @@ export function AuthCard() {
     setEmailError(null);
     setEmailLoading(true);
     try {
-      const res  = await fetch("/api/auth/email", {
+      const res = await fetch("/api/auth/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify", email, code }),
       });
-      const json = await res.json();
-      if (!res.ok) { setEmailError(json.error ?? "Invalid code"); return; }
+      if (!res.ok) {
+        let errMsg = "Invalid code";
+        try { const j = await res.json(); errMsg = j.error ?? errMsg; } catch {}
+        setEmailError(errMsg);
+        return;
+      }
       router.push("/dashboard");
       router.refresh();
     } catch {
