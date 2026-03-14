@@ -187,8 +187,8 @@ const UNCX_TOKEN_QUERY = `
   query GetLocksByToken($token: String!, $skip: Int!) {
     locks(
       where: { token_: { id: $token } }
-      orderBy: sharesDeposited
-      orderDirection: desc
+      orderBy: startEmission
+      orderDirection: asc
       first: 200
       skip: $skip
     ) {

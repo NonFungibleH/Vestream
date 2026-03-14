@@ -1240,7 +1240,11 @@ function CopyButton({ text }: { text: string }) {
 const COL = "grid-cols-[160px_88px_98px_80px_80px_108px_98px_118px_80px_90px_130px]";
 
 function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: Record<string, number> }) {
-  const active = streams.filter((s) => !s.isFullyVested || BigInt(s.claimableNow) > 0n);
+  const active = streams.filter((s) =>
+    !s.isFullyVested ||
+    BigInt(s.claimableNow ?? "0") > 0n ||
+    BigInt(s.lockedAmount  ?? "0") > 0n
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const COLS = ["Asset", "Protocol", "Locked", "Start", "End", "Progress", "Claimable", "Schedule", "Cancellable", "Contract", ""];
 
@@ -2291,6 +2295,11 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
   );
   const market = data?.market ?? [];
 
+  // Toggle: by default only show tokens that have price data
+  const [showNoPriceTokens, setShowNoPriceTokens] = useState(false);
+  const noPriceCount = market.filter((m) => m.price === null).length;
+  const visibleMarket = showNoPriceTokens ? market : market.filter((m) => m.price !== null);
+
   const cardStyle = {
     background:   "var(--preview-card)",
     borderColor:  "var(--preview-border)",
@@ -2309,9 +2318,23 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
             Live prices &amp; liquidity via DexScreener · Is the token liquid enough to sell?
           </p>
         </div>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}>
-          DexScreener
-        </span>
+        <div className="flex items-center gap-2">
+          {noPriceCount > 0 && (
+            <button
+              onClick={() => setShowNoPriceTokens((v) => !v)}
+              className="text-[10px] font-medium px-2 py-0.5 rounded-md transition-all"
+              style={{
+                background:   showNoPriceTokens ? "rgba(99,102,241,0.12)" : "var(--preview-muted-2)",
+                color:        showNoPriceTokens ? "#818cf8" : "var(--preview-text-3)",
+                border:       showNoPriceTokens ? "1px solid rgba(99,102,241,0.3)" : "1px solid var(--preview-border-2)",
+              }}>
+              {showNoPriceTokens ? `Hide ${noPriceCount} unlisted` : `+${noPriceCount} unlisted`}
+            </button>
+          )}
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}>
+            DexScreener
+          </span>
+        </div>
       </div>
 
       {isLoading ? (
@@ -2320,9 +2343,17 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
             <div key={t.symbol} className="flex-1 h-28 rounded-xl" style={{ background: "var(--preview-muted)" }} />
           ))}
         </div>
+      ) : visibleMarket.length === 0 ? (
+        <div className="px-6 py-6 text-center text-[12px]" style={{ color: "var(--preview-text-3)" }}>
+          No price data available.{noPriceCount > 0 && (
+            <button onClick={() => setShowNoPriceTokens(true)} className="ml-1 underline" style={{ color: "#818cf8" }}>
+              Show {noPriceCount} unlisted token{noPriceCount > 1 ? "s" : ""}.
+            </button>
+          )}
+        </div>
       ) : (
-        <div className="px-6 py-5 grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(market.length, 4)}, 1fr)` }}>
-          {market.map((m) => {
+        <div className="px-6 py-5 grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(visibleMarket.length, 4)}, 1fr)` }}>
+          {visibleMarket.map((m) => {
             const color          = getTokenColor(m.symbol);
             const liq            = LIQUIDITY_LABEL[m.liquidity];
             const changePositive = (m.change24h ?? 0) >= 0;
