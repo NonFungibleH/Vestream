@@ -12,6 +12,8 @@ interface Wallet {
   id: string;
   address: string;
   label: string | null;
+  chains:    string[] | null;
+  protocols: string[] | null;
 }
 
 interface Prefs {
@@ -23,6 +25,30 @@ interface Prefs {
 }
 
 const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
+
+// ─── Chain / Protocol options (shared by wallet card + add form) ──────────────
+
+const CHAIN_OPTIONS = [
+  { id: "1",    label: "Ethereum", short: "ETH"  },
+  { id: "56",   label: "BNB Chain", short: "BNB" },
+  { id: "8453", label: "Base",      short: "Base" },
+];
+
+const PROTOCOL_OPTIONS = [
+  { id: "sablier",      label: "Sablier"      },
+  { id: "uncx",         label: "UNCX"         },
+  { id: "uncx-vm",      label: "UNCX V2"      },
+  { id: "team-finance", label: "Team Finance" },
+  { id: "hedgey",       label: "Hedgey"       },
+  { id: "unvest",       label: "Unvest"       },
+];
+
+interface ScanResult {
+  totalStreams:        number;
+  results:            Array<{ protocolId: string; protocolName: string; chainId: number; chainName: string; streamCount: number }>;
+  suggestedChains:    number[];
+  suggestedProtocols: string[];
+}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +122,354 @@ function Section({ title, description, children }: {
   );
 }
 
+// ─── TogglePill ───────────────────────────────────────────────────────────────
+
+function TogglePill({ label, active, onClick, saving }: {
+  label: string; active: boolean; onClick: () => void; saving?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={saving}
+      className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-100 flex-shrink-0 disabled:opacity-60"
+      style={{
+        background: active ? "rgba(37,99,235,0.12)" : "var(--preview-muted-2)",
+        color:      active ? "#3b82f6"               : "var(--preview-text-3)",
+        border:     active ? "1px solid rgba(59,130,246,0.3)" : "1px solid var(--preview-border-2)",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ─── WalletCard (settings) ────────────────────────────────────────────────────
+
+function WalletCard({
+  wallet, tier, isOnly, onRemove, onUpdated,
+}: {
+  wallet:    Wallet;
+  tier:      string;
+  isOnly:    boolean;
+  onRemove:  () => void;
+  onUpdated: (updated: Wallet) => void;
+}) {
+  // Label editing
+  const [editingLabel,      setEditingLabel]      = useState(false);
+  const [labelValue,        setLabelValue]        = useState(wallet.label ?? "");
+  const [savingLabel,       setSavingLabel]       = useState(false);
+
+  // Chain / protocol config — mirror wallet values, all = null stored as "all selected"
+  const allChainIds    = CHAIN_OPTIONS.map(c => c.id);
+  const allProtocolIds = PROTOCOL_OPTIONS.map(p => p.id);
+  const [selChains,    setSelChains]    = useState<Set<string>>(
+    () => new Set(wallet.chains ?? allChainIds)
+  );
+  const [selProtocols, setSelProtocols] = useState<Set<string>>(
+    () => new Set(wallet.protocols ?? allProtocolIds)
+  );
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configSaved,  setConfigSaved]  = useState(false);
+
+  // Find Vestings scan
+  const [scanLoading,  setScanLoading]  = useState(false);
+  const [scanResult,   setScanResult]   = useState<ScanResult | null>(null);
+  const [scanError,    setScanError]    = useState<string | null>(null);
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applied,      setApplied]      = useState(false);
+
+  const isPro = tier !== "free";
+
+  async function saveLabel() {
+    setSavingLabel(true);
+    try {
+      const res = await fetch(`/api/wallets/${wallet.address}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: labelValue || null }),
+      });
+      if (res.ok) {
+        const { wallet: updated } = await res.json();
+        onUpdated(updated);
+        setEditingLabel(false);
+      }
+    } finally { setSavingLabel(false); }
+  }
+
+  async function saveConfig(newChains: Set<string>, newProtocols: Set<string>) {
+    setSavingConfig(true);
+    setConfigSaved(false);
+    try {
+      const allChainsSelected    = newChains.size    === allChainIds.length;
+      const allProtocolsSelected = newProtocols.size === allProtocolIds.length;
+      const chains    = allChainsSelected    ? null : [...newChains].map(Number);
+      const protocols = allProtocolsSelected ? null : [...newProtocols];
+
+      const res = await fetch(`/api/wallets/${wallet.address}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chains, protocols }),
+      });
+      if (res.ok) {
+        const { wallet: updated } = await res.json();
+        onUpdated(updated);
+        setConfigSaved(true);
+        setTimeout(() => setConfigSaved(false), 2000);
+      }
+    } finally { setSavingConfig(false); }
+  }
+
+  function toggleChain(id: string) {
+    setSelChains(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
+      else next.add(id);
+      saveConfig(next, selProtocols);
+      return next;
+    });
+  }
+
+  function toggleProtocol(id: string) {
+    setSelProtocols(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
+      else next.add(id);
+      saveConfig(selChains, next);
+      return next;
+    });
+  }
+
+  async function handleScan() {
+    setScanResult(null); setScanError(null); setApplied(false);
+    setScanLoading(true);
+    try {
+      const res = await fetch(`/api/wallets/scan?address=${wallet.address}`);
+      if (res.status === 402) { setScanError("Upgrade to Pro to use Find Vestings."); return; }
+      if (!res.ok)            { setScanError("Scan failed — please try again."); return; }
+      setScanResult(await res.json() as ScanResult);
+    } catch { setScanError("Network error during scan."); }
+    finally { setScanLoading(false); }
+  }
+
+  async function handleApply() {
+    if (!scanResult) return;
+    setApplyLoading(true);
+    try {
+      const res = await fetch(`/api/wallets/${wallet.address}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chains:    scanResult.suggestedChains,
+          protocols: scanResult.suggestedProtocols,
+        }),
+      });
+      if (res.ok) {
+        const { wallet: updated } = await res.json();
+        // Sync local toggle state to the applied config
+        setSelChains(new Set(updated.chains ?? allChainIds));
+        setSelProtocols(new Set(updated.protocols ?? allProtocolIds));
+        onUpdated(updated);
+        setApplied(true);
+      } else { setScanError("Failed to apply settings."); }
+    } catch { setScanError("Network error."); }
+    finally { setApplyLoading(false); }
+  }
+
+  return (
+    <li className="rounded-xl overflow-hidden"
+      style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+
+      {/* ── Header: label + address + remove ── */}
+      <div className="flex items-start justify-between gap-3 px-4 py-3">
+        <div className="min-w-0 flex-1">
+          {editingLabel ? (
+            <div className="flex items-center gap-2 mb-1">
+              <input
+                autoFocus
+                value={labelValue}
+                onChange={(e) => setLabelValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveLabel(); if (e.key === "Escape") setEditingLabel(false); }}
+                placeholder="Label (e.g. Portfolio Co A)"
+                className="flex-1 text-xs rounded-lg px-2.5 py-1.5 outline-none"
+                style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
+              />
+              <button onClick={saveLabel} disabled={savingLabel}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white disabled:opacity-60"
+                style={{ background: "#2563eb" }}>
+                {savingLabel ? "…" : "Save"}
+              </button>
+              <button onClick={() => { setEditingLabel(false); setLabelValue(wallet.label ?? ""); }}
+                className="text-[11px] px-2 py-1 rounded-lg"
+                style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>✕</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mb-0.5">
+              {wallet.label
+                ? <p className="text-xs font-semibold truncate" style={{ color: "var(--preview-text)" }}>{wallet.label}</p>
+                : <p className="text-xs italic" style={{ color: "var(--preview-text-3)" }}>No label</p>
+              }
+              <button onClick={() => { setEditingLabel(true); setLabelValue(wallet.label ?? ""); }}
+                title="Edit label"
+                className="flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-colors"
+                style={{ color: "var(--preview-text-3)" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text-3)")}>
+                <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            </div>
+          )}
+          <p className="text-[11px] font-mono truncate" style={{ color: "var(--preview-text-3)" }}>{wallet.address}</p>
+        </div>
+        {!isOnly && (
+          <button onClick={onRemove}
+            className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors mt-0.5"
+            style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+            Remove
+          </button>
+        )}
+      </div>
+
+      {/* ── Config: chains + platforms ── */}
+      <div className="px-4 pb-3 space-y-2.5" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
+        <div>
+          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Chains to scan
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CHAIN_OPTIONS.map((c) => (
+              <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} saving={savingConfig} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Platforms to scan
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {PROTOCOL_OPTIONS.map((p) => (
+              <TogglePill key={p.id} label={p.label} active={selProtocols.has(p.id)} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
+            ))}
+          </div>
+        </div>
+
+        {/* Status + summary */}
+        <div className="flex items-center gap-2">
+          {savingConfig ? (
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
+          ) : configSaved ? (
+            <span className="text-[10px] text-emerald-500">✓ Saved</span>
+          ) : (
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+              {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === PROTOCOL_OPTIONS.length
+                ? "Scanning all chains & platforms"
+                : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${selProtocols.size} platform${selProtocols.size !== 1 ? "s" : ""}`
+              }
+            </span>
+          )}
+        </div>
+
+        {/* ── Find Vestings button ── */}
+        <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
+          {isPro ? (
+            <button
+              onClick={handleScan}
+              disabled={scanLoading}
+              className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all disabled:opacity-60"
+              style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", color: "#3b82f6" }}
+              onMouseEnter={(e) => { if (!scanLoading) (e.currentTarget as HTMLElement).style.background = "rgba(37,99,235,0.14)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(37,99,235,0.08)"; }}
+            >
+              {scanLoading ? (
+                <>
+                  <svg className="animate-spin" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                  Scanning all platforms…
+                </>
+              ) : (
+                <>
+                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  Find vestings automatically
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
+              style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
+              <span className="text-sm">🔒</span>
+              <div>
+                <p className="text-[11px] font-semibold" style={{ color: "#3b82f6" }}>Find Vestings — Pro feature</p>
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                  Scan all 6 platforms & 3 chains to auto-discover every vesting.{" "}
+                  <a href="/pricing" className="font-semibold underline" style={{ color: "#3b82f6" }}>Upgrade →</a>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Scan results ── */}
+        {scanError && (
+          <p className="text-[11px] text-red-400 mt-1">{scanError}</p>
+        )}
+        {scanResult && !scanError && (
+          <div className="rounded-xl p-3 mt-1"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+            {scanResult.totalStreams === 0 ? (
+              <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
+                No vestings found on any platform for this address.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs font-semibold mb-2" style={{ color: "#10b981" }}>
+                  Found {scanResult.totalStreams} vesting{scanResult.totalStreams !== 1 ? "s" : ""} across:
+                </p>
+                <div className="space-y-1 mb-3">
+                  {scanResult.results.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
+                        style={{ background: "rgba(37,99,235,0.10)", color: "#60a5fa" }}>
+                        {r.chainName}
+                      </span>
+                      <span className="text-[11px] flex-1" style={{ color: "var(--preview-text-2)" }}>{r.protocolName}</span>
+                      <span className="text-[11px] font-bold" style={{ color: "var(--preview-text)" }}>×{r.streamCount}</span>
+                    </div>
+                  ))}
+                </div>
+                {applied ? (
+                  <p className="text-[11px] font-semibold text-emerald-500">
+                    ✓ Settings updated — dashboard will now load only relevant data
+                  </p>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleApply} disabled={applyLoading}
+                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg text-white transition-all disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                      {applyLoading ? "Applying…" : "Apply these settings"}
+                    </button>
+                    <button onClick={() => setScanResult(null)}
+                      className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 export default function Settings() {
@@ -125,13 +499,15 @@ export default function Settings() {
   const [newLabel, setNewLabel]     = useState("");
   const [addError, setAddError]     = useState<string | null>(null);
   const [adding, setAdding]         = useState(false);
+  const [newSelChains,    setNewSelChains]    = useState<Set<string>>(() => new Set(CHAIN_OPTIONS.map(c => c.id)));
+  const [newSelProtocols, setNewSelProtocols] = useState<Set<string>>(() => new Set(PROTOCOL_OPTIONS.map(p => p.id)));
+  const allNewChainsSelected    = newSelChains.size    === CHAIN_OPTIONS.length;
+  const allNewProtocolsSelected = newSelProtocols.size === PROTOCOL_OPTIONS.length;
 
   // Notification prefs
   const [prefs, setPrefs]       = useState<Prefs>({ emailEnabled: false, email: null, hoursBeforeUnlock: 24, notifyCliff: true, notifyStreamEnd: true });
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting]           = useState(false);
-  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
-  const [editingLabelValue, setEditingLabelValue] = useState("");
   const [saving, setSaving]     = useState(false);
   const [saveOk, setSaveOk]     = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -169,14 +545,18 @@ export default function Settings() {
     if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
     setAdding(true);
     try {
+      const chains    = allNewChainsSelected    ? null : [...newSelChains].map(Number);
+      const protocols = allNewProtocolsSelected ? null : [...newSelProtocols];
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: newAddress, label: newLabel || undefined }),
+        body: JSON.stringify({ address: newAddress, label: newLabel || undefined, chains, protocols }),
       });
       if (res.status === 409) { setAddError("Wallet already tracked"); return; }
       if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
       setNewAddress(""); setNewLabel("");
+      setNewSelChains(new Set(CHAIN_OPTIONS.map(c => c.id)));
+      setNewSelProtocols(new Set(PROTOCOL_OPTIONS.map(p => p.id)));
       await loadWallets();
     } catch { setAddError("Network error"); }
     finally { setAdding(false); }
@@ -188,21 +568,6 @@ export default function Settings() {
       await fetch(`/api/wallets/${wallet.address}`, { method: "DELETE" });
       await loadWallets();
     } finally { setRemovingId(null); }
-  }
-
-  function startEditLabel(w: Wallet) {
-    setEditingLabelId(w.id);
-    setEditingLabelValue(w.label ?? "");
-  }
-
-  async function saveLabel(w: Wallet) {
-    await fetch(`/api/wallets/${w.address}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ label: editingLabelValue || null }),
-    });
-    setEditingLabelId(null);
-    await loadWallets();
   }
 
   async function handleSavePrefs(e: React.FormEvent) {
@@ -334,62 +699,26 @@ export default function Settings() {
         <main className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-2xl">
 
           {/* ── Tracked Wallets ──────────────────────────────────────────── */}
-          <Section title="Tracked Wallets" description="Add any Ethereum address to track its vesting schedules.">
+          <Section
+            title="Tracked Wallets"
+            description="Choose which chains and platforms to scan for each wallet — Vestream only loads what you need, keeping the dashboard fast."
+          >
             {/* Wallet list */}
             {wallets.length === 0 ? (
               <p className="text-sm mb-5" style={{ color: "var(--preview-text-3)" }}>No wallets tracked yet.</p>
             ) : (
-              <ul className="space-y-2 mb-5">
+              <ul className="space-y-3 mb-5">
                 {wallets.map((w) => (
-                  <li key={w.id} className="flex items-start justify-between gap-3 px-3.5 py-2.5 rounded-xl"
-                    style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
-                    <div className="min-w-0 flex-1">
-                      {editingLabelId === w.id ? (
-                        <div className="flex items-center gap-2 mb-1">
-                          <input
-                            autoFocus
-                            value={editingLabelValue}
-                            onChange={(e) => setEditingLabelValue(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") saveLabel(w); if (e.key === "Escape") setEditingLabelId(null); }}
-                            placeholder="Label (e.g. Portfolio Co A – Series A)"
-                            className="flex-1 text-xs rounded-lg px-2.5 py-1.5 outline-none"
-                            style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
-                          />
-                          <button onClick={() => saveLabel(w)} className="text-[11px] font-semibold px-2 py-1 rounded-lg text-white"
-                            style={{ background: "#2563eb" }}>Save</button>
-                          <button onClick={() => setEditingLabelId(null)} className="text-[11px] font-medium px-2 py-1 rounded-lg"
-                            style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>✕</button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          {w.label ? (
-                            <p className="text-xs font-semibold truncate" style={{ color: "var(--preview-text)" }}>{w.label}</p>
-                          ) : (
-                            <p className="text-xs italic" style={{ color: "var(--preview-text-3)" }}>No label</p>
-                          )}
-                          <button onClick={() => startEditLabel(w)}
-                            title="Edit label"
-                            className="flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-colors"
-                            style={{ color: "var(--preview-text-3)" }}
-                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text)")}
-                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--preview-text-3)")}>
-                            <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                      <p className="text-[11px] font-mono truncate" style={{ color: "var(--preview-text-3)" }}>{w.address}</p>
-                    </div>
-                    <button onClick={() => handleRemoveWallet(w)} disabled={removingId === w.id}
-                      className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 mt-0.5"
-                      style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
-                      {removingId === w.id ? "…" : "Remove"}
-                    </button>
-                  </li>
+                  <WalletCard
+                    key={w.id}
+                    wallet={w}
+                    tier={tier}
+                    isOnly={wallets.length === 1}
+                    onRemove={() => handleRemoveWallet(w)}
+                    onUpdated={(updated) =>
+                      setWallets((prev) => prev.map((x) => x.id === updated.id ? { ...x, ...updated } : x))
+                    }
+                  />
                 ))}
               </ul>
             )}
@@ -398,17 +727,45 @@ export default function Settings() {
             <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1.25rem" }}>
               <p className="text-xs font-semibold mb-3" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
               <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
-                <StyledInput
-                  placeholder="Wallet address (0x…)"
-                  value={newAddress}
-                  onChange={setNewAddress}
-                  fontMono
-                />
-                <StyledInput
-                  placeholder="Label (optional — e.g. Team vesting)"
-                  value={newLabel}
-                  onChange={setNewLabel}
-                />
+                <StyledInput placeholder="Wallet address (0x…)" value={newAddress} onChange={setNewAddress} fontMono />
+                <StyledInput placeholder="Label (optional — e.g. Team vesting)" value={newLabel} onChange={setNewLabel} />
+
+                {/* Chain toggles */}
+                <div>
+                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                    Chains to scan
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CHAIN_OPTIONS.map((c) => (
+                      <TogglePill key={c.id} label={c.short} active={newSelChains.has(c.id)} onClick={() =>
+                        setNewSelChains(prev => {
+                          const next = new Set(prev);
+                          if (next.has(c.id)) { if (next.size === 1) return prev; next.delete(c.id); } else next.add(c.id);
+                          return next;
+                        })
+                      } />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Protocol toggles */}
+                <div>
+                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                    Platforms to scan
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PROTOCOL_OPTIONS.map((p) => (
+                      <TogglePill key={p.id} label={p.label} active={newSelProtocols.has(p.id)} onClick={() =>
+                        setNewSelProtocols(prev => {
+                          const next = new Set(prev);
+                          if (next.has(p.id)) { if (next.size === 1) return prev; next.delete(p.id); } else next.add(p.id);
+                          return next;
+                        })
+                      } />
+                    ))}
+                  </div>
+                </div>
+
                 {addError && <p className="text-xs text-red-400">{addError}</p>}
                 <button type="submit" disabled={adding || !newAddress}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"

@@ -3349,121 +3349,40 @@ const NAV_ITEMS = [
   { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: false },
 ];
 
-// ─── WalletRow (sidebar wallet entry with Find Vestings scan) ────────────────
-
-interface ScanResult {
-  totalStreams: number;
-  results: Array<{ protocolId: string; protocolName: string; chainId: number; chainName: string; streamCount: number }>;
-  suggestedChains:    number[];
-  suggestedProtocols: string[];
-}
+// ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
 
 function WalletRow({
-  wallet, tier, isSingle, onRemove, onConfigUpdated,
+  wallet, isSingle, onRemove,
 }: {
-  wallet: Wallet;
-  tier: string;
+  wallet:   Wallet;
   isSingle: boolean;
   onRemove: () => void;
-  onConfigUpdated: () => void;
 }) {
-  const [scanLoading, setScanLoading] = useState(false);
-  const [scanResult,  setScanResult]  = useState<ScanResult | null>(null);
-  const [scanError,   setScanError]   = useState<string | null>(null);
-  const [applyLoading, setApplyLoading] = useState(false);
-  const [applied, setApplied] = useState(false);
-  const isPro = tier !== "free";
-
-  async function handleScan() {
-    setScanResult(null); setScanError(null); setApplied(false);
-    setScanLoading(true);
-    try {
-      const res = await fetch(`/api/wallets/scan?address=${wallet.address}`);
-      if (res.status === 402) { setScanError("Pro plan required to use Find Vestings."); return; }
-      if (!res.ok)            { setScanError("Scan failed — please try again."); return; }
-      const json = await res.json() as ScanResult;
-      setScanResult(json);
-    } catch {
-      setScanError("Network error during scan.");
-    } finally {
-      setScanLoading(false);
-    }
-  }
-
-  async function handleApply() {
-    if (!scanResult) return;
-    setApplyLoading(true);
-    try {
-      const res = await fetch("/api/wallets", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address:   wallet.address,
-          chains:    scanResult.suggestedChains,
-          protocols: scanResult.suggestedProtocols,
-        }),
-      });
-      if (res.ok) { setApplied(true); onConfigUpdated(); }
-      else        { setScanError("Failed to update wallet config."); }
-    } catch {
-      setScanError("Network error updating config.");
-    } finally {
-      setApplyLoading(false);
-    }
-  }
-
-  // Describe wallet config if restricted
   const cfgChains    = wallet.chains    && wallet.chains.length    > 0 ? wallet.chains    : null;
   const cfgProtocols = wallet.protocols && wallet.protocols.length > 0 ? wallet.protocols : null;
 
   return (
-    <div className="rounded-xl mb-0.5 overflow-hidden">
-      {/* Main wallet row */}
-      <div className="group flex items-center gap-2 px-3 py-2 text-xs transition-all duration-150 cursor-default"
+    <div className="rounded-xl mb-0.5">
+      <div className="group flex items-center gap-2 px-3 py-2 text-xs transition-all duration-150 cursor-default rounded-xl"
         style={{ color: "var(--preview-text-2)" }}
         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-muted)")}
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
         <span className="flex-1 truncate font-medium">{wallet.label ?? shortAddr(wallet.address)}</span>
-
-        {/* Find Vestings scan button */}
-        <button
-          onClick={isPro ? handleScan : undefined}
-          title={isPro ? "Find vestings across all platforms" : "Upgrade to Pro to scan for vestings"}
-          disabled={scanLoading}
-          className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded"
-          style={{
-            color: isPro ? "#60a5fa" : "var(--preview-text-3)",
-            cursor: isPro ? "pointer" : "default",
-          }}
-        >
-          {scanLoading ? (
-            <svg className="animate-spin" width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-            </svg>
-          ) : (
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          )}
-        </button>
-
         {!isSingle && (
           <button
             onClick={onRemove}
             className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
             style={{ color: "var(--preview-text-3)" }} title="Remove"
-          >
-            ×
-          </button>
+          >×</button>
         )}
       </div>
 
-      {/* Config badges */}
+      {/* Active config badges */}
       {(cfgChains || cfgProtocols) && (
         <div className="px-3 pb-1.5 flex flex-wrap gap-1">
-          {cfgChains && cfgChains.map((c) => {
+          {cfgChains?.map((c) => {
             const ch = CHAIN_OPTIONS.find(x => x.id === c);
             return (
               <span key={c} className="text-[9px] px-1.5 py-0.5 rounded"
@@ -3472,7 +3391,7 @@ function WalletRow({
               </span>
             );
           })}
-          {cfgProtocols && cfgProtocols.map((p) => {
+          {cfgProtocols?.map((p) => {
             const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
             return (
               <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"
@@ -3483,64 +3402,18 @@ function WalletRow({
           })}
         </div>
       )}
-
-      {/* Scan results panel */}
-      {(scanResult || scanError) && (
-        <div className="mx-2 mb-2 rounded-lg p-2.5" style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-          {scanError ? (
-            <p className="text-[10px] text-red-400">{scanError}</p>
-          ) : scanResult && scanResult.totalStreams === 0 ? (
-            <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>No vestings found on any platform.</p>
-          ) : scanResult ? (
-            <>
-              <p className="text-[10px] font-semibold mb-1.5" style={{ color: "#34d399" }}>
-                Found {scanResult.totalStreams} vesting{scanResult.totalStreams !== 1 ? "s" : ""}
-              </p>
-              <div className="space-y-0.5 mb-2">
-                {scanResult.results.map((r, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0"
-                      style={{ background: "rgba(59,130,246,0.12)", color: "#93c5fd" }}>
-                      {r.chainName}
-                    </span>
-                    <span className="text-[9px] flex-1 truncate" style={{ color: "var(--preview-text-2)" }}>
-                      {r.protocolName}
-                    </span>
-                    <span className="text-[9px] font-semibold" style={{ color: "var(--preview-text)" }}>
-                      ×{r.streamCount}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {applied ? (
-                <p className="text-[10px] font-medium" style={{ color: "#34d399" }}>✓ Settings updated</p>
-              ) : (
-                <button
-                  onClick={handleApply}
-                  disabled={applyLoading}
-                  className="w-full text-[10px] font-semibold py-1 rounded-lg text-white transition-all disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-                >
-                  {applyLoading ? "Applying…" : "Apply these settings"}
-                </button>
-              )}
-            </>
-          ) : null}
-        </div>
-      )}
     </div>
   );
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet, onWalletConfigUpdated }: {
+function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
   wallets: Wallet[];
   tier: string;
   walletLimit: number | null;
   onAddWallet: () => void;
   onRemoveWallet: (address: string) => void;
-  onWalletConfigUpdated: () => void;
 }) {
   const router = useRouter();
   return (
@@ -3578,22 +3451,15 @@ function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet, onWa
 
       {/* Wallets section */}
       <div className="flex-1 px-3 overflow-y-auto" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.875rem" }}>
-        <div className="flex items-center px-3 mb-2">
-          <p className="text-[9px] font-bold tracking-widest uppercase flex-1" style={{ color: "var(--preview-text-3)" }}>Tracked Wallets</p>
-          {tier !== "free" && (
-            <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(59,130,246,0.10)", color: "#60a5fa" }}>
-              hover to scan
-            </span>
-          )}
-        </div>
+        <p className="text-[9px] font-bold tracking-widest uppercase px-3 mb-2" style={{ color: "var(--preview-text-3)" }}>
+          Tracked Wallets
+        </p>
         {wallets.map((w) => (
           <WalletRow
             key={w.id}
             wallet={w}
-            tier={tier}
             isSingle={wallets.length === 1}
             onRemove={() => onRemoveWallet(w.address)}
-            onConfigUpdated={onWalletConfigUpdated}
           />
         ))}
         {/* Add wallet button — or upgrade nudge if at limit */}
@@ -3965,7 +3831,7 @@ export default function Dashboard() {
       style={{ background: "var(--preview-bg)" }}
       onClick={() => { if (walletChipOpen) setWalletChipOpen(false); if (exportOpen) setExportOpen(false); }}
     >
-      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} onWalletConfigUpdated={loadWallets} />
+      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}

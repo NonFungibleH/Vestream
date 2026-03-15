@@ -515,6 +515,12 @@ export default function Home() {
               title: "Token Vesting Explorer",
               body: "See every wallet vesting a token globally — not just yours. Understand the full unlock schedule and selling pressure before it hits.",
             },
+            {
+              icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="m21 21-4.35-4.35"/><circle cx="11" cy="11" r="6"/><path d="M11 8v6M8 11h6"/></svg>,
+              color: "#0d9488", bg: "rgba(13,148,136,0.07)", border: "rgba(13,148,136,0.13)",
+              title: "Find hidden vestings",
+              body: "Forgotten which protocol holds your allocation? One-click scan across all 6 platforms and 3 chains automatically surfaces every active vesting and configures Vestream to watch only what matters.",
+            },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
               style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>

@@ -85,6 +85,24 @@ export async function updateWalletLabel(userId: string, address: string, label: 
   return result[0] ?? null;
 }
 
+/** Update any combination of label / chains / protocols for a wallet. */
+export async function updateWallet(
+  userId: string,
+  address: string,
+  updates: {
+    label?:     string | null;
+    chains?:    string[] | null;
+    protocols?: string[] | null;
+  },
+) {
+  const result = await db
+    .update(wallets)
+    .set(updates)
+    .where(and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase())))
+    .returning();
+  return result[0] ?? null;
+}
+
 export async function getNotificationPreferences(userId: string) {
   const result = await db
     .select()
