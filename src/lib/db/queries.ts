@@ -35,13 +35,35 @@ export async function getWalletsForUser(userId: string) {
 export async function addWallet(
   userId: string,
   address: string,
-  label?: string
+  label?: string,
+  chains?: string[] | null,
+  protocols?: string[] | null,
 ) {
   const result = await db
     .insert(wallets)
-    .values({ userId, address: address.toLowerCase(), label })
+    .values({
+      userId,
+      address: address.toLowerCase(),
+      label,
+      chains:    chains    ?? null,
+      protocols: protocols ?? null,
+    })
     .returning();
   return result[0];
+}
+
+export async function updateWalletConfig(
+  userId: string,
+  address: string,
+  chains:    string[] | null,
+  protocols: string[] | null,
+) {
+  const result = await db
+    .update(wallets)
+    .set({ chains, protocols })
+    .where(and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase())))
+    .returning();
+  return result[0] ?? null;
 }
 
 export async function deleteWallet(userId: string, address: string) {

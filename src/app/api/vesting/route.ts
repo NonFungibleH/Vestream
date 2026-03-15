@@ -10,8 +10,9 @@ import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/ty
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const cache = new Map<string, { streams: VestingStream[]; expiresAt: number; fetchedAt: string }>();
 
-function cacheKey(wallets: string[], chainIds: SupportedChainId[]): string {
-  return `${[...wallets].sort().join(",")}_${[...chainIds].sort().join(",")}`;
+function cacheKey(wallets: string[], chainIds: SupportedChainId[], protocolIds?: string[]): string {
+  const p = protocolIds ? `_${[...protocolIds].sort().join(",")}` : "";
+  return `${[...wallets].sort().join(",")}_${[...chainIds].sort().join(",")}${p}`;
 }
 
 // Evict stale entries (run periodically to avoid unbounded growth)
@@ -29,9 +30,10 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const walletsParam = searchParams.get("wallets");
-  const chainsParam  = searchParams.get("chains"); // optional e.g. "1,56,8453"
-  const refresh      = searchParams.get("refresh") === "1"; // force-bypass cache
+  const walletsParam    = searchParams.get("wallets");
+  const chainsParam     = searchParams.get("chains");    // optional e.g. "1,56,8453"
+  const protocolsParam  = searchParams.get("protocols"); // optional e.g. "sablier,uncx"
+  const refresh         = searchParams.get("refresh") === "1"; // force-bypass cache
 
   if (!walletsParam) {
     return NextResponse.json({ error: "No wallets provided" }, { status: 400 });
@@ -56,8 +58,15 @@ export async function GET(req: NextRequest) {
     if (valid.length > 0) chainIds = valid;
   }
 
+  // Parse protocol filter (default: all adapters)
+  let protocolIds: string[] | undefined;
+  if (protocolsParam) {
+    const ids = protocolsParam.split(",").map((p) => p.trim()).filter(Boolean);
+    if (ids.length > 0) protocolIds = ids;
+  }
+
   // Check cache (skip if ?refresh=1 is passed)
-  const key    = cacheKey(wallets, chainIds);
+  const key    = cacheKey(wallets, chainIds, protocolIds);
   const cached = !refresh ? cache.get(key) : undefined;
   if (cached && cached.expiresAt > Date.now()) {
     return NextResponse.json(
@@ -67,7 +76,7 @@ export async function GET(req: NextRequest) {
   }
 
   const fetchedAt = new Date().toISOString();
-  const streams   = await aggregateVestingStreams(wallets, chainIds);
+  const streams   = await aggregateVestingStreams(wallets, chainIds, protocolIds);
 
   // Store in cache and evict stale entries
   cache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });

@@ -6,17 +6,22 @@ import { VestingStream, SupportedChainId, ALL_CHAIN_IDS } from "./types";
  * Each adapter+chain combination runs concurrently. Failed adapters return []
  * so a single bad data source never blocks the rest.
  *
- * @param wallets  - checksummed or lowercased wallet addresses
- * @param chainIds - subset of supported chains to query (defaults to all)
+ * @param wallets     - checksummed or lowercased wallet addresses
+ * @param chainIds    - subset of supported chains to query (defaults to all)
+ * @param protocolIds - subset of adapter IDs to query (defaults to all)
  */
 export async function aggregateVestingStreams(
   wallets: string[],
-  chainIds: SupportedChainId[] = ALL_CHAIN_IDS
+  chainIds: SupportedChainId[] = ALL_CHAIN_IDS,
+  protocolIds?: string[],
 ): Promise<VestingStream[]> {
   // Build the list of (adapter, chainId) pairs to run
   const tasks: Array<{ adapterId: string; chainId: SupportedChainId; promise: Promise<VestingStream[]> }> = [];
 
   for (const adapter of ADAPTER_REGISTRY) {
+    // Skip adapters not in the optional protocol filter
+    if (protocolIds && protocolIds.length > 0 && !protocolIds.includes(adapter.id)) continue;
+
     for (const chainId of chainIds) {
       if (!adapter.supportedChainIds.includes(chainId)) continue;
       tasks.push({

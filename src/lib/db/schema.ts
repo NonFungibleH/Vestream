@@ -21,6 +21,9 @@ export const wallets = pgTable("wallets", {
     .references(() => users.id, { onDelete: "cascade" }),
   address: text("address").notNull(),
   label: text("label"),
+  // null = scan all chains/protocols; non-null = restrict to listed IDs
+  chains:    text("chains").array(),
+  protocols: text("protocols").array(),
   addedAt: timestamp("added_at").defaultNow().notNull(),
 });
 

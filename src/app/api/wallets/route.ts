@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
-import { getUserByAddress, getWalletsForUser, addWallet } from "@/lib/db/queries";
+import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig } from "@/lib/db/queries";
+import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
+import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
 // Wallet limits per tier: free=1, pro=3, fund=unlimited (null)
 const WALLET_LIMITS: Record<string, number | null> = {
@@ -52,10 +54,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { address, label } = await req.json();
+    const body = await req.json();
+    const { address, label } = body;
+    // chains: array of chain IDs as numbers or strings, null/undefined = all chains
+    // protocols: array of adapter IDs, null/undefined = all protocols
+    const rawChains:    unknown = body.chains;
+    const rawProtocols: unknown = body.protocols;
 
     if (!address || !isAddress(address)) {
       return NextResponse.json({ error: "Invalid address" }, { status: 400 });
+    }
+
+    // Validate chains — must be subset of ALL_CHAIN_IDS
+    let chains: string[] | null = null;
+    if (Array.isArray(rawChains) && rawChains.length > 0) {
+      const valid = (rawChains as unknown[])
+        .map((c) => Number(c))
+        .filter((id): id is SupportedChainId => ALL_CHAIN_IDS.includes(id as SupportedChainId));
+      chains = valid.length > 0 ? valid.map(String) : null;
+    }
+
+    // Validate protocols — must be a known adapter id
+    const validAdapterIds = new Set(ADAPTER_REGISTRY.map((a) => a.id));
+    let protocols: string[] | null = null;
+    if (Array.isArray(rawProtocols) && rawProtocols.length > 0) {
+      const valid = (rawProtocols as unknown[]).filter(
+        (p): p is string => typeof p === "string" && validAdapterIds.has(p)
+      );
+      protocols = valid.length > 0 ? valid : null;
     }
 
     const user = await getUserByAddress(session.address);
@@ -87,10 +113,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Wallet already added" }, { status: 409 });
     }
 
-    const wallet = await addWallet(user.id, address, label);
+    const wallet = await addWallet(user.id, address, label, chains, protocols);
     return NextResponse.json({ wallet }, { status: 201 });
   } catch (err) {
     console.error("POST /api/wallets error:", err);
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
+}
+
+/** PATCH /api/wallets — update chains/protocols config for an existing wallet */
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session.address) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { address } = body;
+    if (!address || !isAddress(address)) {
+      return NextResponse.json({ error: "Invalid address" }, { status: 400 });
+    }
+
+    const rawChains:    unknown = body.chains;
+    const rawProtocols: unknown = body.protocols;
+
+    const validChains: string[] | null = Array.isArray(rawChains) && rawChains.length > 0
+      ? (rawChains as unknown[]).map(Number)
+          .filter((id): id is SupportedChainId => ALL_CHAIN_IDS.includes(id as SupportedChainId))
+          .map(String)
+      : null;
+
+    const validAdapterIds = new Set(ADAPTER_REGISTRY.map((a) => a.id));
+    const validProtocols: string[] | null = Array.isArray(rawProtocols) && rawProtocols.length > 0
+      ? (rawProtocols as unknown[]).filter((p): p is string => typeof p === "string" && validAdapterIds.has(p))
+      : null;
+
+    const user = await getUserByAddress(session.address);
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    const wallet = await updateWalletConfig(user.id, address, validChains, validProtocols);
+    if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+
+    return NextResponse.json({ wallet });
+  } catch (err) {
+    console.error("PATCH /api/wallets error:", err);
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 }

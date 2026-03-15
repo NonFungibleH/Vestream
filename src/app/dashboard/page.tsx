@@ -16,6 +16,8 @@ interface Wallet {
   id: string;
   address: string;
   label: string | null;
+  chains:    string[] | null;  // null = scan all chains
+  protocols: string[] | null;  // null = scan all protocols
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -3146,11 +3148,70 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
 
 // ─── AddWalletBar ─────────────────────────────────────────────────────────────
 
+const CHAIN_OPTIONS = [
+  { id: "1",    label: "Ethereum", short: "ETH"  },
+  { id: "56",   label: "BNB Chain", short: "BNB" },
+  { id: "8453", label: "Base",      short: "Base" },
+];
+
+const PROTOCOL_OPTIONS = [
+  { id: "sablier",      label: "Sablier"       },
+  { id: "uncx",         label: "UNCX"          },
+  { id: "uncx-vm",      label: "UNCX V2"       },
+  { id: "team-finance", label: "Team Finance"  },
+  { id: "hedgey",       label: "Hedgey"        },
+  { id: "unvest",       label: "Unvest"        },
+];
+
+function TogglePill({
+  label, active, onClick,
+}: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-100 flex-shrink-0"
+      style={{
+        background: active ? "rgba(59,130,246,0.15)" : "var(--preview-muted-2)",
+        color:      active ? "#60a5fa"               : "var(--preview-text-3)",
+        border:     active ? "1px solid rgba(59,130,246,0.35)" : "1px solid var(--preview-border-2)",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const [address, setAddress] = useState("");
   const [label, setLabel]     = useState("");
   const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // chain/protocol selection — all selected by default = null (scan everything)
+  const [selChains,    setSelChains]    = useState<Set<string>>(new Set(CHAIN_OPTIONS.map(c => c.id)));
+  const [selProtocols, setSelProtocols] = useState<Set<string>>(new Set(PROTOCOL_OPTIONS.map(p => p.id)));
+
+  const allChainsSelected    = selChains.size    === CHAIN_OPTIONS.length;
+  const allProtocolsSelected = selProtocols.size === PROTOCOL_OPTIONS.length;
+
+  function toggleChain(id: string) {
+    setSelChains(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleProtocol(id: string) {
+    setSelProtocols(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
+      else next.add(id);
+      return next;
+    });
+  }
+
   const { address: wagmiAddress } = useAccount();
   const { connect } = useConnect();
 
@@ -3164,10 +3225,14 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
     if (!isAddress(address)) { setError("Invalid address"); return; }
     setLoading(true);
     try {
+      // null = scan all (when user selected everything, keep null so future adapters are included)
+      const chains    = allChainsSelected    ? null : [...selChains].map(Number);
+      const protocols = allProtocolsSelected ? null : [...selProtocols];
+
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, label: label || undefined }),
+        body: JSON.stringify({ address, label: label || undefined, chains, protocols }),
       });
       if (res.status === 409) { setError("Already added"); return; }
       if (res.status === 402) {
@@ -3183,36 +3248,96 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
   }
 
   return (
-    <div className="px-6 py-3 flex items-center gap-3 flex-shrink-0"
+    <div className="px-6 py-4 flex-shrink-0 space-y-3"
       style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
-      <input placeholder="Wallet address (0x…)" value={address} onChange={(e) => setAddress(e.target.value)}
-        className="flex-1 max-w-xs rounded-xl px-3 py-2 text-sm font-mono outline-none"
-        style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }} />
-      <button
-        type="button"
-        onClick={() => connect({ connector: injected() })}
-        title="Connect a wallet to auto-fill address"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex-shrink-0"
-        style={{
-          color: wagmiAddress ? "#34d399" : "var(--preview-text-3)",
-          background: "var(--preview-muted-2)",
-          border: "1px solid var(--preview-border-2)",
-        }}
-      >
-        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-        </svg>
-        {wagmiAddress ? "Detected" : "Detect"}
-      </button>
-      <input placeholder="Label (optional)" value={label} onChange={(e) => setLabel(e.target.value)}
-        className="w-32 rounded-xl px-3 py-2 text-sm outline-none"
-        style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }} />
-      {error && <span className="text-xs text-red-400">{error}</span>}
-      <button onClick={handleAdd} disabled={loading || !address}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-colors">
-        <IconPlus /> {loading ? "Adding…" : "Track wallet"}
-      </button>
-      <button onClick={onCancel} className="text-xs font-medium transition-colors" style={{ color: "var(--preview-text-3)" }}>Cancel</button>
+
+      {/* Row 1: address + label + buttons */}
+      <div className="flex items-center gap-3">
+        <input
+          placeholder="Wallet address (0x…)"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+          className="flex-1 max-w-xs rounded-xl px-3 py-2 text-sm font-mono outline-none"
+          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+        />
+        <button
+          type="button"
+          onClick={() => connect({ connector: injected() })}
+          title="Connect a wallet to auto-fill address"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex-shrink-0"
+          style={{
+            color: wagmiAddress ? "#34d399" : "var(--preview-text-3)",
+            background: "var(--preview-muted-2)",
+            border: "1px solid var(--preview-border-2)",
+          }}
+        >
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+          </svg>
+          {wagmiAddress ? "Detected" : "Detect"}
+        </button>
+        <input
+          placeholder="Label (optional)"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          className="w-32 rounded-xl px-3 py-2 text-sm outline-none"
+          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+        />
+        <div className="flex-1" />
+        {error && <span className="text-xs text-red-400 max-w-[200px] truncate">{error}</span>}
+        <button
+          onClick={handleAdd}
+          disabled={loading || !address}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-colors flex-shrink-0"
+        >
+          <IconPlus /> {loading ? "Adding…" : "Track wallet"}
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-xs font-medium transition-colors flex-shrink-0"
+          style={{ color: "var(--preview-text-3)" }}
+        >
+          Cancel
+        </button>
+      </div>
+
+      {/* Row 2: chain + protocol toggles */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
+          Chains
+        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {CHAIN_OPTIONS.map((c) => (
+            <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} />
+          ))}
+        </div>
+        <div className="w-px h-4 flex-shrink-0" style={{ background: "var(--preview-border-2)" }} />
+        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
+          Platforms
+        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {PROTOCOL_OPTIONS.map((p) => (
+            <TogglePill key={p.id} label={p.label} active={selProtocols.has(p.id)} onClick={() => toggleProtocol(p.id)} />
+          ))}
+        </div>
+        {(!allChainsSelected || !allProtocolsSelected) && (
+          <button
+            type="button"
+            onClick={() => { setSelChains(new Set(CHAIN_OPTIONS.map(c => c.id))); setSelProtocols(new Set(PROTOCOL_OPTIONS.map(p => p.id))); }}
+            className="text-[11px] transition-colors flex-shrink-0"
+            style={{ color: "var(--preview-text-3)" }}
+          >
+            Reset
+          </button>
+        )}
+        <span className="text-[10px] ml-auto flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
+          {allChainsSelected && allProtocolsSelected
+            ? "Scanning all chains & platforms"
+            : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} × ${selProtocols.size} platform${selProtocols.size !== 1 ? "s" : ""}`
+          }
+        </span>
+      </div>
     </div>
   );
 }
@@ -3224,12 +3349,198 @@ const NAV_ITEMS = [
   { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: false },
 ];
 
-function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
+// ─── WalletRow (sidebar wallet entry with Find Vestings scan) ────────────────
+
+interface ScanResult {
+  totalStreams: number;
+  results: Array<{ protocolId: string; protocolName: string; chainId: number; chainName: string; streamCount: number }>;
+  suggestedChains:    number[];
+  suggestedProtocols: string[];
+}
+
+function WalletRow({
+  wallet, tier, isSingle, onRemove, onConfigUpdated,
+}: {
+  wallet: Wallet;
+  tier: string;
+  isSingle: boolean;
+  onRemove: () => void;
+  onConfigUpdated: () => void;
+}) {
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanResult,  setScanResult]  = useState<ScanResult | null>(null);
+  const [scanError,   setScanError]   = useState<string | null>(null);
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const isPro = tier !== "free";
+
+  async function handleScan() {
+    setScanResult(null); setScanError(null); setApplied(false);
+    setScanLoading(true);
+    try {
+      const res = await fetch(`/api/wallets/scan?address=${wallet.address}`);
+      if (res.status === 402) { setScanError("Pro plan required to use Find Vestings."); return; }
+      if (!res.ok)            { setScanError("Scan failed — please try again."); return; }
+      const json = await res.json() as ScanResult;
+      setScanResult(json);
+    } catch {
+      setScanError("Network error during scan.");
+    } finally {
+      setScanLoading(false);
+    }
+  }
+
+  async function handleApply() {
+    if (!scanResult) return;
+    setApplyLoading(true);
+    try {
+      const res = await fetch("/api/wallets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address:   wallet.address,
+          chains:    scanResult.suggestedChains,
+          protocols: scanResult.suggestedProtocols,
+        }),
+      });
+      if (res.ok) { setApplied(true); onConfigUpdated(); }
+      else        { setScanError("Failed to update wallet config."); }
+    } catch {
+      setScanError("Network error updating config.");
+    } finally {
+      setApplyLoading(false);
+    }
+  }
+
+  // Describe wallet config if restricted
+  const cfgChains    = wallet.chains    && wallet.chains.length    > 0 ? wallet.chains    : null;
+  const cfgProtocols = wallet.protocols && wallet.protocols.length > 0 ? wallet.protocols : null;
+
+  return (
+    <div className="rounded-xl mb-0.5 overflow-hidden">
+      {/* Main wallet row */}
+      <div className="group flex items-center gap-2 px-3 py-2 text-xs transition-all duration-150 cursor-default"
+        style={{ color: "var(--preview-text-2)" }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-muted)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+        <span className="flex-1 truncate font-medium">{wallet.label ?? shortAddr(wallet.address)}</span>
+
+        {/* Find Vestings scan button */}
+        <button
+          onClick={isPro ? handleScan : undefined}
+          title={isPro ? "Find vestings across all platforms" : "Upgrade to Pro to scan for vestings"}
+          disabled={scanLoading}
+          className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded"
+          style={{
+            color: isPro ? "#60a5fa" : "var(--preview-text-3)",
+            cursor: isPro ? "pointer" : "default",
+          }}
+        >
+          {scanLoading ? (
+            <svg className="animate-spin" width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          ) : (
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          )}
+        </button>
+
+        {!isSingle && (
+          <button
+            onClick={onRemove}
+            className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
+            style={{ color: "var(--preview-text-3)" }} title="Remove"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
+      {/* Config badges */}
+      {(cfgChains || cfgProtocols) && (
+        <div className="px-3 pb-1.5 flex flex-wrap gap-1">
+          {cfgChains && cfgChains.map((c) => {
+            const ch = CHAIN_OPTIONS.find(x => x.id === c);
+            return (
+              <span key={c} className="text-[9px] px-1.5 py-0.5 rounded"
+                style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+                {ch?.short ?? c}
+              </span>
+            );
+          })}
+          {cfgProtocols && cfgProtocols.map((p) => {
+            const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
+            return (
+              <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"
+                style={{ background: "rgba(124,58,237,0.10)", color: "#c4b5fd" }}>
+                {pr?.label ?? p}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Scan results panel */}
+      {(scanResult || scanError) && (
+        <div className="mx-2 mb-2 rounded-lg p-2.5" style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
+          {scanError ? (
+            <p className="text-[10px] text-red-400">{scanError}</p>
+          ) : scanResult && scanResult.totalStreams === 0 ? (
+            <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>No vestings found on any platform.</p>
+          ) : scanResult ? (
+            <>
+              <p className="text-[10px] font-semibold mb-1.5" style={{ color: "#34d399" }}>
+                Found {scanResult.totalStreams} vesting{scanResult.totalStreams !== 1 ? "s" : ""}
+              </p>
+              <div className="space-y-0.5 mb-2">
+                {scanResult.results.map((r, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0"
+                      style={{ background: "rgba(59,130,246,0.12)", color: "#93c5fd" }}>
+                      {r.chainName}
+                    </span>
+                    <span className="text-[9px] flex-1 truncate" style={{ color: "var(--preview-text-2)" }}>
+                      {r.protocolName}
+                    </span>
+                    <span className="text-[9px] font-semibold" style={{ color: "var(--preview-text)" }}>
+                      ×{r.streamCount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {applied ? (
+                <p className="text-[10px] font-medium" style={{ color: "#34d399" }}>✓ Settings updated</p>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  disabled={applyLoading}
+                  className="w-full text-[10px] font-semibold py-1 rounded-lg text-white transition-all disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+                >
+                  {applyLoading ? "Applying…" : "Apply these settings"}
+                </button>
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet, onWalletConfigUpdated }: {
   wallets: Wallet[];
   tier: string;
   walletLimit: number | null;
   onAddWallet: () => void;
   onRemoveWallet: (address: string) => void;
+  onWalletConfigUpdated: () => void;
 }) {
   const router = useRouter();
   return (
@@ -3267,23 +3578,23 @@ function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
 
       {/* Wallets section */}
       <div className="flex-1 px-3 overflow-y-auto" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.875rem" }}>
-        <p className="text-[9px] font-bold tracking-widest uppercase px-3 mb-2" style={{ color: "var(--preview-text-3)" }}>Tracked Wallets</p>
+        <div className="flex items-center px-3 mb-2">
+          <p className="text-[9px] font-bold tracking-widest uppercase flex-1" style={{ color: "var(--preview-text-3)" }}>Tracked Wallets</p>
+          {tier !== "free" && (
+            <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(59,130,246,0.10)", color: "#60a5fa" }}>
+              hover to scan
+            </span>
+          )}
+        </div>
         {wallets.map((w) => (
-          <div key={w.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-all duration-150 cursor-default"
-            style={{ color: "var(--preview-text-2)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-muted)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-            <span className="flex-1 truncate font-medium">{w.label ?? shortAddr(w.address)}</span>
-            {wallets.length > 1 && (
-              <button onClick={() => onRemoveWallet(w.address)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
-                style={{ color: "var(--preview-text-3)" }} title="Remove">
-                ×
-              </button>
-            )}
-          </div>
+          <WalletRow
+            key={w.id}
+            wallet={w}
+            tier={tier}
+            isSingle={wallets.length === 1}
+            onRemove={() => onRemoveWallet(w.address)}
+            onConfigUpdated={onWalletConfigUpdated}
+          />
         ))}
         {/* Add wallet button — or upgrade nudge if at limit */}
         {walletLimit !== null && wallets.length >= walletLimit ? (
@@ -3571,7 +3882,18 @@ export default function Dashboard() {
   useEffect(() => { loadWallets(); }, [loadWallets]);
 
   const walletAddresses = wallets.map((w) => w.address).join(",");
-  const vestingUrl = walletAddresses.length > 0 ? `/api/vesting?wallets=${walletAddresses}` : null;
+
+  // Compute the union of chains/protocols across all tracked wallets.
+  // If any wallet has null (= all chains/protocols), we skip the filter param.
+  const anyAllChains    = wallets.some((w) => !w.chains    || w.chains.length    === 0);
+  const anyAllProtocols = wallets.some((w) => !w.protocols || w.protocols.length === 0);
+  const chainUnion    = anyAllChains    ? null : [...new Set(wallets.flatMap((w) => w.chains!))];
+  const protocolUnion = anyAllProtocols ? null : [...new Set(wallets.flatMap((w) => w.protocols!))];
+  const chainsQs    = chainUnion    ? `&chains=${chainUnion.join(",")}`       : "";
+  const protocolsQs = protocolUnion ? `&protocols=${protocolUnion.join(",")}`  : "";
+  const vestingUrl = walletAddresses.length > 0
+    ? `/api/vesting?wallets=${walletAddresses}${chainsQs}${protocolsQs}`
+    : null;
 
   const { data, isLoading } = useSWR<{ streams: VestingStream[] }>(
     vestingUrl, fetcher, { refreshInterval: 60_000, revalidateOnFocus: true }
@@ -3643,7 +3965,7 @@ export default function Dashboard() {
       style={{ background: "var(--preview-bg)" }}
       onClick={() => { if (walletChipOpen) setWalletChipOpen(false); if (exportOpen) setExportOpen(false); }}
     >
-      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} />
+      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} onWalletConfigUpdated={loadWallets} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
