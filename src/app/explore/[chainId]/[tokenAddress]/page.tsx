@@ -202,9 +202,10 @@ export default function ExplorePage() {
   // ── Derived stats ──────────────────────────────────────────────────────────
   const { tokenSymbol, tokenDecimals, totalLocked, totalClaimable, nextUnlock } = useMemo(() => {
     if (!streams.length) return { tokenSymbol: "…", tokenDecimals: 18, totalLocked: 0n, totalClaimable: 0n, nextUnlock: null as number | null };
-    const s0 = streams[0];
+    // Prefer a stream that has a real symbol (TF factory streams may have empty symbol)
+    const s0 = streams.find((s) => s.tokenSymbol && s.tokenSymbol !== "???") ?? streams[0];
     const dec = s0.tokenDecimals ?? 18;
-    const sym = s0.tokenSymbol ?? "TOKEN";
+    const sym = (s0.tokenSymbol && s0.tokenSymbol !== "???") ? s0.tokenSymbol : "TOKEN";
     let locked = 0n, claimable = 0n;
     let nxt: number | null = null;
     for (const s of streams) {
@@ -486,15 +487,15 @@ export default function ExplorePage() {
             <div className="px-6 py-4 flex items-center justify-between"
               style={{ background: t.tableBg, borderBottom: `1px solid ${t.tableBorder}` }}>
               <div>
-                <h2 className="text-sm font-semibold" style={{ color: t.text }}>All Recipients</h2>
-                <p className="text-xs mt-0.5" style={{ color: t.muted }}>{recipients} vesting schedules found</p>
+                <h2 className="text-sm font-semibold" style={{ color: t.text }}>All Vesting Entries</h2>
+                <p className="text-xs mt-0.5" style={{ color: t.muted }}>{recipients} vesting schedule{recipients !== 1 ? "s" : ""} found</p>
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ background: t.tableBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                    <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest" style={{ color: t.muted }}>Recipient</th>
+                    <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-widest" style={{ color: t.muted }}>Recipient / Contract</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest cursor-pointer select-none"
                       style={{ color: t.muted }} onClick={() => toggleSort("protocol")}>
                       Protocol <SortIcon k="protocol" />
@@ -525,14 +526,22 @@ export default function ExplorePage() {
                           background: i % 2 === 0 ? "transparent" : t.tableRowAlt,
                         }}>
                         <td className="px-5 py-3">
-                          <a
-                            href={`${explorerBase}${s.recipient}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-xs hover:underline"
-                            style={{ color: "#60a5fa" }}>
-                            {shortAddr(s.recipient)}
-                          </a>
+                          <div className="flex items-center gap-1.5">
+                            {s.protocol === "team-finance" && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded font-bold flex-shrink-0"
+                                style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8" }}>
+                                CONTRACT
+                              </span>
+                            )}
+                            <a
+                              href={`${explorerBase}${s.recipient}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-xs hover:underline"
+                              style={{ color: "#60a5fa" }}>
+                              {shortAddr(s.recipient)}
+                            </a>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-xs px-2 py-0.5 rounded-md font-medium"

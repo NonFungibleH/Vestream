@@ -356,47 +356,44 @@ export async function explorerFetchUNCX(
 }
 
 // ─── Team Finance subgraph (Squid) ────────────────────────────────────────────
+//
+// The TF Squid stores FACTORY-LEVEL vestings (one row per vesting contract,
+// not per individual recipient) in `vestingFactoryVestings`.
+// Fields: id, address (contract), token, chainId, tokenTotal, claimed, creator.
+//
+// Individual recipient data isn't available via the Squid; the REST API
+// (/api/app/vesting/{wallet}) is per-wallet only.
+// For the explorer we surface each factory contract as one aggregate entry.
 
 const TF_SQUID_URL = "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
 
-// The Squid entity name may vary; we attempt both common names defensively.
 const TF_EXPLORER_QUERY = `
-  query TFExplorerVestings($token: String!, $chainId: Int!, $skip: Int!) {
-    vestings(
+  query TFExplorerFactoryVestings($token: String!, $chainId: Int!, $skip: Int!) {
+    vestingFactoryVestings(
       where: { token_eq: $token, chainId_eq: $chainId }
       limit: 200
       offset: $skip
-      orderBy: [id_ASC]
+      orderBy: [tokenTotal_DESC]
     ) {
       id
       address
-      beneficiary
       token
-      tokenSymbol
-      tokenDecimals
-      userTotal
-      start
-      end
-      percentageOnStart
-      revocable
       chainId
+      tokenTotal
+      claimed
+      creator
     }
   }
 `;
 
-interface RawTFVesting {
-  id:                string;
-  address:           string;
-  beneficiary:       string;  // recipient wallet
-  token:             string;
-  tokenSymbol:       string;
-  tokenDecimals:     number;
-  userTotal:         string;  // hex bigint e.g. "0x083d6c7aab63600000"
-  start:             number;
-  end:               number;
-  percentageOnStart: number;
-  revocable:         boolean;
-  chainId:           number;
+interface RawTFFactoryVesting {
+  id:         string;
+  address:    string;  // vesting contract address
+  token:      string;  // token contract address
+  chainId:    number;
+  tokenTotal: string;  // decimal BigInt string
+  claimed:    string;  // decimal BigInt string
+  creator:    string;  // wallet that deployed the contract
 }
 
 export async function explorerFetchTeamFinance(
@@ -404,11 +401,11 @@ export async function explorerFetchTeamFinance(
   chainId: SupportedChainId
 ): Promise<VestingStream[]> {
   const token  = tokenAddress.toLowerCase();
-  const all: RawTFVesting[] = [];
+  const all: RawTFFactoryVesting[] = [];
   let skip = 0;
 
   while (true) {
-    let json: { data?: { vestings?: RawTFVesting[] }; errors?: unknown };
+    let json: { data?: { vestingFactoryVestings?: RawTFFactoryVesting[] }; errors?: unknown };
     try {
       const res = await fetch(TF_SQUID_URL, {
         method:  "POST",
@@ -420,67 +417,51 @@ export async function explorerFetchTeamFinance(
       json = await res.json();
     } catch { break; }
 
-    // If the schema doesn't have this entity the Squid returns a GraphQL error — bail out gracefully
-    if (json.errors) break;
-    const page = json.data?.vestings ?? [];
-    all.push(...(page as RawTFVesting[]));
+    if (json.errors) {
+      console.error("[TF explorer] query failed:", json.errors);
+      break;
+    }
+    const page = json.data?.vestingFactoryVestings ?? [];
+    all.push(...(page as RawTFFactoryVesting[]));
     if (page.length < 200) break;
     skip += 200;
   }
 
-  const nowSec = Math.floor(Date.now() / 1000);
-
   return all
     .map((v): VestingStream | null => {
-      const startTime = Number(v.start)  || 0;
-      const endTime   = Number(v.end)    || 0;
-      if (!v.userTotal || !endTime || !v.beneficiary) return null;
-
-      let total: bigint;
+      let total: bigint, claimed: bigint;
       try {
-        total = BigInt(v.userTotal);
+        total   = BigInt(v.tokenTotal ?? "0");
+        claimed = BigInt(v.claimed    ?? "0");
       } catch { return null; }
 
-      const pct          = typeof v.percentageOnStart === "number" && isFinite(v.percentageOnStart)
-        ? v.percentageOnStart : 0;
-      const bps          = BigInt(Math.round(pct * 100));
-      const initialUnlock = (total * bps) / 10000n;
-      const linearPortion = total - initialUnlock;
+      if (total === 0n) return null;
 
-      let vested: bigint;
-      if (nowSec < startTime || endTime <= startTime) {
-        vested = 0n;
-      } else if (nowSec >= endTime) {
-        vested = total;
-      } else {
-        const elapsed  = BigInt(nowSec - startTime);
-        const duration = BigInt(endTime - startTime);
-        vested = initialUnlock + (linearPortion * elapsed) / duration;
-      }
+      const locked        = total > claimed ? total - claimed : 0n;
+      const isFullyVested = locked === 0n;
 
-      const claimableNow  = vested > 0n ? vested : 0n; // explorer: no withdrawn data from Squid
-      const lockedAmount  = total > vested ? total - vested : 0n;
-      const isFullyVested = vested >= total;
-
+      // The Squid doesn't expose individual recipients or vesting schedule.
+      // We surface each factory contract as one aggregate entry so the explorer
+      // can still report total locked / claimed amounts for the token.
       return {
-        id:              `team-finance-${chainId}-${v.address}-${v.beneficiary.toLowerCase()}`,
+        id:              `team-finance-explorer-${chainId}-${v.id}`,
         protocol:        "team-finance",
         chainId,
-        recipient:       v.beneficiary,
+        // recipient = the vesting CONTRACT address (not an individual wallet)
+        recipient:       v.address,
         tokenAddress:    v.token,
-        tokenSymbol:     v.tokenSymbol     ?? "???",
-        tokenDecimals:   v.tokenDecimals   ?? 18,
+        tokenSymbol:     "",   // not available from factory Squid; page falls back to "TOKEN"
+        tokenDecimals:   18,   // not available; amounts shown may be off if token uses other decimals
         totalAmount:     total.toString(),
-        withdrawnAmount: "0",
-        claimableNow:    claimableNow.toString(),
-        lockedAmount:    lockedAmount.toString(),
-        startTime,
-        endTime,
+        withdrawnAmount: claimed.toString(),
+        claimableNow:    "0",  // per-recipient amounts not available at factory level
+        lockedAmount:    locked.toString(),
+        startTime:       0,
+        endTime:         0,
         cliffTime:       null,
         isFullyVested,
-        nextUnlockTime:  nextUnlockTime(isFullyVested, nowSec, null, endTime),
-        cancelable:      v.revocable,
-        shape:           "linear",
+        nextUnlockTime:  null,
+        shape:           "linear" as const,
       };
     })
     .filter(Boolean) as VestingStream[];
