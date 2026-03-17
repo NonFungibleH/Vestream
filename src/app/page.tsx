@@ -47,8 +47,8 @@ export default function Home() {
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {([
                 { symbol: "USDC", pct: 67, color: "#2563eb" },
-                { symbol: "OP",   pct: 22, color: "#f97316" },
-                { symbol: "WETH", pct: 11, color: "#7c3aed" },
+                { symbol: "NOVA", pct: 22, color: "#f97316" },
+                { symbol: "FLUX", pct: 11, color: "#7c3aed" },
               ] as const).map((t) => (
                 <div key={t.symbol}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -83,7 +83,7 @@ export default function Home() {
             </div>
             {/* Countdown */}
             <div style={{ padding: "8px 10px", borderRadius: "10px", background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}>
-              <p style={{ color: "#60a5fa", fontSize: "10px", fontWeight: "700", marginBottom: "6px" }}>WETH · Next unlock</p>
+              <p style={{ color: "#60a5fa", fontSize: "10px", fontWeight: "700", marginBottom: "6px" }}>NOVA · Next unlock</p>
               <div style={{ display: "flex", gap: "5px" }}>
                 {([["14", "days"], ["6", "hrs"], ["22", "min"]] as const).map(([v, l]) => (
                   <div key={l} style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: "7px", padding: "6px 4px", textAlign: "center" }}>
@@ -550,25 +550,25 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-6">
           {[
             {
-              icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+              icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
               color: "#2563eb", bg: "rgba(37,99,235,0.07)", border: "rgba(37,99,235,0.12)",
-              audience: "Founders & Core Teams",
-              description: "Your team has grants spread across Sablier, Hedgey, UNCX, and Unvest — across multiple chains. Checking four dashboards every month isn't a workflow.",
-              bullets: ["Unified view of all employee & advisor grants", "Alerts before every cliff and unlock date", "Add multiple team wallets in seconds"],
-            },
-            {
-              icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-              color: "#7c3aed", bg: "rgba(124,58,237,0.07)", border: "rgba(124,58,237,0.12)",
-              audience: "Investors & Funds",
-              description: "You have token allocations across dozens of portfolio companies and protocols. Keeping track manually means missed liquidity events.",
-              bullets: ["Track portfolio vesting across any wallet", "See total claimable value at a glance", "P&L tracker for compliance and reporting"],
+              audience: "Investors & Community Members",
+              description: "You hold token allocations from projects you backed or contributed to. Whether you're a retail investor, community participant, or early supporter, you shouldn't need to read smart contracts to know when you can claim.",
+              bullets: ["Check claimable balance across every major protocol in seconds", "See exact unlock dates — cliff events, streaming rates, tranches", "Get notified before every unlock event by email"],
             },
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.07)", border: "rgba(5,150,105,0.12)",
               audience: "Advisors & Contributors",
-              description: "You've advised multiple projects and hold allocations from different protocols. You shouldn't need to remember which app to check for which token.",
-              bullets: ["All your personal vesting in one place", "Sign in once with your wallet — nothing else", "Export CSV for accounting and tax records"],
+              description: "You've worked with multiple projects and hold token grants across different wallets and protocols. Manually checking each protocol dashboard every month isn't a system.",
+              bullets: ["All your vesting grants in one unified view — across any wallet", "Label each wallet and add notes to stay organised", "Export to CSV for your accountant or tax records"],
+            },
+            {
+              icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+              color: "#7c3aed", bg: "rgba(124,58,237,0.07)", border: "rgba(124,58,237,0.12)",
+              audience: "VCs & Funds",
+              description: "Your portfolio spans dozens of projects, chains, and wallets. Missing a liquidity event or miscalculating claimable balances isn't an option — you need a system that scales.",
+              bullets: ["Track every portfolio wallet and token allocation in one place", "Real-time claimable value with entry price and P&L tracking", "Bulk CSV export for compliance, LP reporting, and audit trails"],
             },
           ].map((card) => (
             <div key={card.audience} className="rounded-2xl p-6"

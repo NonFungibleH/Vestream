@@ -23,10 +23,11 @@ const CHAIN_EXPLORERS: Record<number, string> = {
 };
 
 const PROTOCOL_LABELS: Record<string, string> = {
-  sablier: "Sablier",
-  uncx:    "UNCX",
-  hedgey:  "Hedgey",
-  unvest:  "Unvest",
+  sablier:      "Sablier",
+  uncx:         "UNCX",
+  "uncx-vm":    "UNCX",
+  hedgey:       "Hedgey",
+  unvest:       "Unvest",
   "team-finance": "Team Finance",
 };
 
@@ -164,16 +165,14 @@ export default function ExplorePage() {
   const [sortAsc, setSortAsc] = useState(false);
 
   // ── Dark mode — mirrors dashboard's vestr-dark localStorage key ────────────
-  const [dark, setDark] = useState(true); // default dark during SSR/first paint
+  const [dark, setDark] = useState(false); // default light; updated from localStorage
   useEffect(() => {
     try {
       const stored = localStorage.getItem("vestr-dark");
-      // If not set, fall back to system preference
       if (stored !== null) {
         setDark(stored === "1");
-      } else {
-        setDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
       }
+      // If not stored, stay light — matching the rest of the app
     } catch { /* ignore */ }
   }, []);
 

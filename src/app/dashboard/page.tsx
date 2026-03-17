@@ -173,9 +173,11 @@ function buildMonthlyCashFlow(
   streams: VestingStream[],
   prices: Record<string, number>,
   effectivePrices: Record<string, number> = {}
-): { month: string; usd: number; raw: number; hasLivePrice: boolean }[] {
+): { month: string; usd: number; raw: number; hasLivePrice: boolean; byToken: { symbol: string; color: string; usd: number; raw: number }[] }[] {
   const now    = new Date();
   const MONTHS = 18;
+  // Per-bucket, per-token accumulator
+  const tokenBuckets: Map<string, { usd: number; raw: number }>[] = Array.from({ length: MONTHS }, () => new Map());
   const buckets = Array.from({ length: MONTHS }, (_, i) => {
     const d     = new Date(now.getFullYear(), now.getMonth() + i, 1);
     const nextD = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
@@ -196,10 +198,12 @@ function buildMonthlyCashFlow(
     const fallback  = effectivePrices[s.tokenSymbol] ?? 0;
     const price     = livePrice > 0 ? livePrice : fallback;
     const isLive    = livePrice > 0;
+    const sym       = s.tokenSymbol;
 
     // ── Step/tranched streams: sum tranche amounts falling in each month bucket ──
     if (s.shape === "steps" && s.unlockSteps && s.unlockSteps.length > 0) {
-      for (const b of buckets) {
+      for (let bi = 0; bi < buckets.length; bi++) {
+        const b = buckets[bi];
         const monthTotal = s.unlockSteps
           .filter((step) => step.timestamp >= b.start && step.timestamp < b.end)
           .reduce((sum, step) => sum + toFloat(step.amount, s.tokenDecimals), 0);
@@ -207,6 +211,8 @@ function buildMonthlyCashFlow(
           b.usd += monthTotal * price;
           b.raw += monthTotal;
           if (price > 0 && isLive) b.hasLivePrice = true;
+          const prev = tokenBuckets[bi].get(sym) ?? { usd: 0, raw: 0 };
+          tokenBuckets[bi].set(sym, { usd: prev.usd + monthTotal * price, raw: prev.raw + monthTotal });
         }
       }
       continue;
@@ -217,7 +223,8 @@ function buildMonthlyCashFlow(
     if (duration <= 0) continue;
     const totalAmt = toFloat(s.totalAmount, s.tokenDecimals);
 
-    for (const b of buckets) {
+    for (let bi = 0; bi < buckets.length; bi++) {
+      const b = buckets[bi];
       if (s.cliffTime && b.end <= s.cliffTime) continue;
 
       let frac: number;
@@ -231,13 +238,27 @@ function buildMonthlyCashFlow(
         frac = (overlapEnd - overlapStart) / duration;
       }
 
-      b.usd += totalAmt * frac * price;
-      b.raw += totalAmt * frac;
+      const monthAmt = totalAmt * frac;
+      b.usd += monthAmt * price;
+      b.raw += monthAmt;
       if (price > 0 && isLive) b.hasLivePrice = true;
+      const prev = tokenBuckets[bi].get(sym) ?? { usd: 0, raw: 0 };
+      tokenBuckets[bi].set(sym, { usd: prev.usd + monthAmt * price, raw: prev.raw + monthAmt });
     }
   }
 
-  return buckets.map(({ label, usd, raw, hasLivePrice }) => ({ month: label, usd, raw, hasLivePrice }));
+  return buckets.map(({ label, usd, raw, hasLivePrice }, i) => ({
+    month: label,
+    usd,
+    raw,
+    hasLivePrice,
+    byToken: [...tokenBuckets[i].entries()].map(([symbol, vals]) => ({
+      symbol,
+      color: getTokenColor(symbol),
+      usd:   vals.usd,
+      raw:   vals.raw,
+    })),
+  }));
 }
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
@@ -2209,6 +2230,12 @@ function MonthlyCashFlow({
               const val    = hasPrice ? d.usd : d.raw;
               const barH   = maxVal > 0 ? Math.max((val / maxVal) * 96, val > 0 ? 3 : 0) : 0;
               const isCur  = i === 0;
+              // Build stacked segments sorted by descending value (largest at bottom)
+              const segments = d.byToken
+                .map(t => ({ ...t, val: hasPrice ? t.usd : t.raw }))
+                .filter(t => t.val > 0)
+                .sort((a, b) => b.val - a.val);
+              const segTotal = segments.reduce((s, t) => s + t.val, 0);
               return (
                 <div key={d.month} className="flex-1 group relative flex flex-col justify-end" style={{ height: "100%" }}>
                   {/* Hover tooltip — always shows both metrics when available */}
@@ -2220,24 +2247,47 @@ function MonthlyCashFlow({
                           {fmtUSD(d.usd)}
                         </p>
                       )}
-                      {d.raw > 0 && (
-                        <p className={`text-[9px] text-center ${d.usd > 0 ? "" : "font-bold"}`}
-                          style={{ color: d.usd > 0 ? "var(--preview-text-3)" : "var(--preview-text)" }}>
+                      {/* Per-token breakdown */}
+                      {segments.map(t => (
+                        <p key={t.symbol} className="text-[9px] flex items-center gap-1 justify-center" style={{ color: "var(--preview-text-3)" }}>
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 inline-block" style={{ background: t.color }} />
+                          {t.symbol}: {hasPrice && t.usd > 0 ? fmtUSD(t.usd) : fmtRaw(t.raw)}
+                        </p>
+                      ))}
+                      {!hasPrice && d.raw > 0 && segments.length === 0 && (
+                        <p className="text-[9px] text-center font-bold" style={{ color: "var(--preview-text)" }}>
                           {fmtRaw(d.raw)} tokens
                         </p>
                       )}
                       <p className="text-[9px] text-center mt-0.5" style={{ color: "var(--preview-text-3)" }}>{d.month}</p>
                     </div>
                   )}
-                  {/* Bar */}
-                  <div className="w-full rounded-t-sm"
-                    style={{
-                      height: barH,
-                      background: isCur
-                        ? "linear-gradient(180deg, #93c5fd 0%, #2563eb 100%)"
-                        : "linear-gradient(180deg, rgba(147,197,253,0.55) 0%, rgba(37,99,235,0.42) 100%)",
-                      transition: "height 0.3s ease",
-                    }} />
+                  {/* Stacked bar: one segment per token, bottom-up */}
+                  <div className="w-full flex flex-col justify-end overflow-hidden rounded-t-sm"
+                    style={{ height: barH, transition: "height 0.3s ease" }}>
+                    {segments.length > 0 ? (
+                      segments.map((t, si) => {
+                        const segH = segTotal > 0 ? (t.val / segTotal) * 100 : 0;
+                        const opacity = isCur ? 1 : 0.65;
+                        return (
+                          <div key={t.symbol}
+                            style={{
+                              height:     `${segH}%`,
+                              background: t.color,
+                              opacity,
+                              borderTop: si > 0 ? "1px solid rgba(0,0,0,0.12)" : "none",
+                              minHeight: 2,
+                            }} />
+                        );
+                      })
+                    ) : (
+                      <div className="w-full h-full" style={{
+                        background: isCur
+                          ? "linear-gradient(180deg, #93c5fd 0%, #2563eb 100%)"
+                          : "linear-gradient(180deg, rgba(147,197,253,0.55) 0%, rgba(37,99,235,0.42) 100%)",
+                      }} />
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -2263,6 +2313,24 @@ function MonthlyCashFlow({
             );
           })}
         </div>
+
+        {/* Token legend */}
+        {(() => {
+          const legendTokens = [...new Map(
+            data.flatMap(d => d.byToken).filter(t => t.raw > 0).map(t => [t.symbol, t])
+          ).values()];
+          if (legendTokens.length <= 1) return null;
+          return (
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              {legendTokens.map(t => (
+                <div key={t.symbol} className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: t.color }} />
+                  <span className="text-[10px] font-medium" style={{ color: "var(--preview-text-3)" }}>{t.symbol}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
@@ -3758,7 +3826,8 @@ export default function Dashboard() {
   const anyAllChains    = wallets.some((w) => !w.chains    || w.chains.length    === 0);
   const anyAllProtocols = wallets.some((w) => !w.protocols || w.protocols.length === 0);
   const chainUnion    = anyAllChains    ? null : [...new Set(wallets.flatMap((w) => w.chains!))];
-  const protocolUnion = anyAllProtocols ? null : [...new Set(wallets.flatMap((w) => w.protocols!))];
+  // Normalise "uncx-vm" → "uncx" so the loading message always shows "UNCX" (never "uncx-vm")
+  const protocolUnion = anyAllProtocols ? null : [...new Set(wallets.flatMap((w) => w.protocols!).map(p => p === "uncx-vm" ? "uncx" : p))];
   const chainsQs    = chainUnion    ? `&chains=${chainUnion.join(",")}`       : "";
   const protocolsQs = protocolUnion ? `&protocols=${protocolUnion.join(",")}`  : "";
   // Build per-wallet token filters: "walletAddr:tokenAddr,..." for wallets that have a tokenAddress set
