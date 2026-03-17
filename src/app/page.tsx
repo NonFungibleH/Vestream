@@ -15,6 +15,9 @@ export default function Home() {
           <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
         </div>
         <div className="flex items-center gap-5">
+          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
+            Resources
+          </Link>
           <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
             Pricing
           </Link>
