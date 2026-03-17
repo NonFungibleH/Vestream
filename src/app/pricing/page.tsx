@@ -233,7 +233,7 @@ export default function Pricing() {
               <FeatureItem text="Team workspace" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Telegram & WhatsApp alerts" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="All holders feature" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Priority support" color="#e5e7eb" checkColor="#10b981" />
             </ul>
           </div>
@@ -270,15 +270,15 @@ export default function Pricing() {
               ["Blockchains",                   "1 chain", "5 chains",        "All chains"],
               ["Real-time dashboard",           true,      true,              true],
               ["Claimable balance tracking",    true,      true,              true],
+              ["Unlock calendar",               true,      true,              true],
               ["Email alerts",                  false,     true,              true],
               ["Token Vesting Explorer",        false,     true,              true],
-              ["Unlock calendar",               true,      true,              true],
-              ["Calendar integration",          false,     false,             true],
               ["CSV export",                    false,     true,              true],
+              ["Calendar integration",          false,     false,             true],
+              ["Search all receivers",          false,     false,             true],
               ["Team workspace",                false,     false,             true],
               ["Slack webhook",                 false,     false,             true],
               ["Telegram & WhatsApp alerts",    false,     false,             true],
-              ["All holders feature",           false,     false,             true],
               ["Support",                       false,     "Ticketing",       "Priority"],
             ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
               <div key={feature}

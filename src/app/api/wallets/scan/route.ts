@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
-import { getUserByAddress } from "@/lib/db/queries";
+import { getUserByAddress, checkAndIncrementScanCount } from "@/lib/db/queries";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
@@ -50,6 +50,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { error: "Pro plan required", code: "UPGRADE_REQUIRED" },
         { status: 402 }
+      );
+    }
+
+    // Rate limit: 3 scans per 24-hour rolling window
+    const { allowed, remaining, resetAt } = await checkAndIncrementScanCount(user.id);
+    if (!allowed) {
+      const msLeft    = resetAt.getTime() - Date.now();
+      const hoursLeft = Math.ceil(msLeft / (60 * 60 * 1000));
+      return NextResponse.json(
+        {
+          error:   `Scan limit reached (3 per 24 h). Try again in ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""}.`,
+          code:    "RATE_LIMITED",
+          resetAt: resetAt.toISOString(),
+        },
+        { status: 429 }
       );
     }
 
@@ -122,12 +137,14 @@ export async function GET(req: NextRequest) {
     const suggestedProtocols = [...new Set(results.map((r) => r.protocolId))];
 
     return NextResponse.json({
-      address:      address.toLowerCase(),
-      totalStreams: streams.length,
+      address:          address.toLowerCase(),
+      totalStreams:     streams.length,
       results,
       suggestedChains,
       suggestedProtocols,
-      scannedAt:   new Date().toISOString(),
+      scannedAt:        new Date().toISOString(),
+      scansRemaining:   remaining,
+      scanResetAt:      resetAt.toISOString(),
     });
   } catch (err) {
     console.error("GET /api/wallets/scan error:", err);

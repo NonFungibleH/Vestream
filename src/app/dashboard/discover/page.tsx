@@ -32,6 +32,8 @@ interface ScanData {
   suggestedChains:    number[];
   suggestedProtocols: string[];
   scannedAt:          string;
+  scansRemaining:     number;
+  scanResetAt:        string;
 }
 
 interface TrackedWallet {
@@ -389,14 +391,17 @@ function ResultCard({
 
 export default function DiscoverPage() {
   const router = useRouter();
-  const [dark,        setDark]        = useState(false);
-  const [tier,        setTier]        = useState<string>("free");
-  const [wallets,     setWallets]     = useState<TrackedWallet[]>([]);
-  const [address,     setAddress]     = useState<string>("");
-  const [scanning,    setScanning]    = useState(false);
-  const [scanData,    setScanData]    = useState<ScanData | null>(null);
-  const [scanError,   setScanError]   = useState<string | null>(null);
-  const [watchStatus, setWatchStatus] = useState<Record<string, "adding" | "watching" | "error">>({});
+  const [dark,           setDark]           = useState(false);
+  const [tier,           setTier]           = useState<string>("free");
+  const [wallets,        setWallets]        = useState<TrackedWallet[]>([]);
+  const [address,        setAddress]        = useState<string>("");
+  const [scanning,       setScanning]       = useState(false);
+  const [scanData,       setScanData]       = useState<ScanData | null>(null);
+  const [scanError,      setScanError]      = useState<string | null>(null);
+  const [watchStatus,    setWatchStatus]    = useState<Record<string, "adding" | "watching" | "error">>({});
+  // Scan quota (updated after each successful scan)
+  const [scansRemaining, setScansRemaining] = useState<number | null>(null);
+  const [scanResetAt,    setScanResetAt]    = useState<string | null>(null);
 
   useEffect(() => {
     try { if (localStorage.getItem("vestr-dark") === "1") setDark(true); } catch { /* ignore */ }
@@ -431,6 +436,13 @@ export default function DiscoverPage() {
         setScanError("Pro plan required to use Discover. Upgrade to unlock full scanning.");
         return;
       }
+      if (res.status === 429) {
+        const j = await res.json();
+        setScanError(j.error ?? "Scan limit reached. Please try again later.");
+        if (j.resetAt) setScanResetAt(j.resetAt);
+        setScansRemaining(0);
+        return;
+      }
       if (!res.ok) {
         const j = await res.json();
         setScanError(j.error ?? "Scan failed");
@@ -440,6 +452,9 @@ export default function DiscoverPage() {
       // Merge uncx-vm results into uncx so user sees one unified UNCX entry
       if (data?.results) data.results = mergeUncxResults(data.results);
       setScanData(data);
+      // Update quota display
+      if (typeof data.scansRemaining === "number") setScansRemaining(data.scansRemaining);
+      if (data.scanResetAt) setScanResetAt(data.scanResetAt);
     } catch { setScanError("Network error — please try again."); }
     finally { setScanning(false); }
   }
@@ -673,6 +688,34 @@ export default function DiscoverPage() {
                 )}
               </button>
             </div>
+
+            {/* Quota indicator — appears after first scan attempt */}
+            {scansRemaining !== null && (
+              <div className="mt-3 flex items-center gap-2.5">
+                {/* 3 usage dots */}
+                <div className="flex items-center gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-2 h-2 rounded-full transition-all"
+                      style={{
+                        background: i < (3 - scansRemaining)
+                          ? "var(--preview-border)"
+                          : "linear-gradient(135deg, #2563eb, #7c3aed)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#f59e0b" }}>
+                  {scansRemaining > 0
+                    ? `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
+                    : scanResetAt
+                      ? `No scans left — resets in ${Math.max(1, Math.ceil((new Date(scanResetAt).getTime() - Date.now()) / 3_600_000))}h`
+                      : "No scans remaining today"
+                  }
+                </span>
+              </div>
+            )}
 
             {/* Error banner */}
             {scanError && (

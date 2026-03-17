@@ -12,6 +12,9 @@ export const users = pgTable("users", {
   address: text("address").notNull().unique(),
   tier: text("tier").default("free").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Discover scan rate limiting: 3 scans per 24-hour rolling window
+  scanCount:       integer("scan_count").default(0).notNull(),
+  scanWindowStart: timestamp("scan_window_start"),
 });
 
 export const wallets = pgTable("wallets", {
