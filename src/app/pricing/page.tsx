@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ContactTrigger from "@/components/ContactTrigger";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -244,10 +245,7 @@ export default function Pricing() {
         {/* Enterprise nudge */}
         <p className="text-center text-sm mt-8" style={{ color: "#94a3b8" }}>
           Managing a larger portfolio or need custom integrations?{" "}
-          <a href="mailto:hello@vestream.io" className="font-semibold transition-colors hover:opacity-80"
-            style={{ color: "#2563eb" }}>
-            Talk to us →
-          </a>
+          <ContactTrigger />
         </p>
       </section>
 
