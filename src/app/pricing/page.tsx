@@ -69,7 +69,6 @@ export default function Pricing() {
           <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
         </Link>
         <div className="flex items-center gap-5">
-          <Link href="/preview" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Preview</Link>
           <Link href="/pricing" className="text-sm font-medium" style={{ color: "#0f172a", fontWeight: 600 }}>Pricing</Link>
           <Link href="/login"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
@@ -180,12 +179,13 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="3 wallet addresses" checkColor="#2563eb" />
-              <FeatureItem text="All integrated blockchains" checkColor="#2563eb" />
+              <FeatureItem text="5 wallet addresses" checkColor="#2563eb" />
+              <FeatureItem text="5 blockchains" checkColor="#2563eb" />
               <FeatureItem text="Email unlock alerts" checkColor="#2563eb" />
               <FeatureItem text="Token Vesting Explorer" checkColor="#2563eb" />
-              <FeatureItem text="Basic portfolio analytics" checkColor="#2563eb" />
-              <FeatureItem text="30-day unlock calendar" checkColor="#2563eb" />
+              <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
+              <FeatureItem text="CSV export" checkColor="#2563eb" />
+              <FeatureItem text="Ticketing support" checkColor="#2563eb" />
               <FeatureItem text="Calendar integration" included={false} />
               <FeatureItem text="Team workspace" included={false} />
             </ul>
@@ -228,12 +228,12 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Token Vesting Explorer" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="All chains" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Calendar integration (iCal export)" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Team workspace" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="CSV export" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Comprehensive portfolio analytics" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Telegram & WhatsApp alerts" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="All holders feature" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Priority support" color="#e5e7eb" checkColor="#10b981" />
             </ul>
           </div>
@@ -266,20 +266,20 @@ export default function Pricing() {
             </div>
 
             {([
-              ["Wallet addresses",           "1",        "3",               "Unlimited"],
-              ["Blockchains",                "1 chain",  "All chains",      "All chains"],
-              ["Real-time dashboard",        true,       true,              true],
-              ["Claimable balance tracking", true,       true,              true],
-              ["Email alerts",               false,      true,              true],
-              ["Token Vesting Explorer",     false,      true,              true],
-              ["Unlock calendar",            false,      "30-day view",     "Full + iCal export"],
-              ["Calendar integration",       false,      false,             true],
-              ["Basic portfolio analytics",  false,      true,              true],
-              ["Comprehensive analytics",    false,      false,             true],
-              ["CSV export",                 false,      false,             true],
-              ["Team workspace",             false,      false,             true],
-              ["Slack webhook",              false,      false,             true],
-              ["Priority support",           false,      false,             true],
+              ["Wallet addresses",              "1",       "5 wallets",       "Unlimited"],
+              ["Blockchains",                   "1 chain", "5 chains",        "All chains"],
+              ["Real-time dashboard",           true,      true,              true],
+              ["Claimable balance tracking",    true,      true,              true],
+              ["Email alerts",                  false,     true,              true],
+              ["Token Vesting Explorer",        false,     true,              true],
+              ["Unlock calendar",               true,      true,              true],
+              ["Calendar integration",          false,     false,             true],
+              ["CSV export",                    false,     true,              true],
+              ["Team workspace",                false,     false,             true],
+              ["Slack webhook",                 false,     false,             true],
+              ["Telegram & WhatsApp alerts",    false,     false,             true],
+              ["All holders feature",           false,     false,             true],
+              ["Support",                       false,     "Ticketing",       "Priority"],
             ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
               <div key={feature}
                 className="grid grid-cols-4 px-6 py-3.5 items-center"

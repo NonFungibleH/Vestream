@@ -1647,6 +1647,9 @@ function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
           const amt = toFloat(step.amount, s.tokenDecimals);
           if (amt > 0) amount = `${amt.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${s.tokenSymbol}`;
         }
+      } else if (s.shape !== "linear") {
+        const locked = toFloat(s.lockedAmount, s.tokenDecimals);
+        if (locked > 0) amount = `${locked.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${s.tokenSymbol}`;
       }
       futureMap.set(s.tokenSymbol, { stream: s, nextTs: ts, amount });
     }
@@ -1782,7 +1785,10 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
   }, []);
 
   // Filter out streams with invalid/zero timestamps (e.g. unset defaults)
-  const active = streams.filter((s) => !s.isFullyVested && s.startTime > 100_000 && s.endTime > 100_000);
+  // Allow startTime=0 (e.g. Team Finance missing start); normalize to min(now, endTime) so they still show
+  const active = streams
+    .filter((s) => !s.isFullyVested && s.endTime > 100_000)
+    .map((s) => s.startTime > 100_000 ? s : { ...s, startTime: Math.min(nowSec, s.endTime) });
   if (active.length === 0) return null;
 
   const TWO_YRS  = 2 * 365 * 86400;
@@ -3158,16 +3164,15 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
 // ─── AddWalletBar ─────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"  },
-  { id: "56",       label: "BNB Chain", short: "BNB" },
-  { id: "8453",     label: "Base",      short: "Base" },
-  { id: "11155111", label: "Sepolia",   short: "Sep"  },
+  { id: "1",        label: "Ethereum", short: "ETH"     },
+  { id: "56",       label: "BNB Chain", short: "BSC"    },
+  { id: "8453",     label: "Base",      short: "Base"   },
+  { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 
 const PROTOCOL_OPTIONS = [
   { id: "sablier",      label: "Sablier"       },
   { id: "uncx",         label: "UNCX"          },
-  { id: "uncx-vm",      label: "UNCX V2"       },
   { id: "team-finance", label: "Team Finance"  },
   { id: "hedgey",       label: "Hedgey"        },
   { id: "unvest",       label: "Unvest"        },
@@ -3199,7 +3204,8 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
     setLoading(true);
     try {
       const chains    = [parseInt(selChain)];
-      const protocols = [selProtocol];
+      // UNCX UI option covers both UNCX v1 and UNCX VestingManager (uncx-vm)
+      const protocols = selProtocol === "uncx" ? ["uncx", "uncx-vm"] : [selProtocol];
       const tokenAddress = selTokenAddr.trim() && isAddress(selTokenAddr.trim()) ? selTokenAddr.trim() : undefined;
 
       const res = await fetch("/api/wallets", {
@@ -3371,7 +3377,7 @@ function WalletRow({
               </span>
             );
           })}
-          {cfgProtocols?.map((p) => {
+          {cfgProtocols?.filter(p => p !== "uncx-vm").map((p) => {
             const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
             return (
               <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"

@@ -133,34 +133,31 @@ export default function Home() {
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
-              { name: "Sablier",      tagline: "Token streaming",  color: "#7c3aed", bg: "rgba(124,58,237,0.06)", border: "rgba(124,58,237,0.14)" },
-              { name: "Hedgey",       tagline: "Token vesting",    color: "#2563eb", bg: "rgba(37,99,235,0.06)",  border: "rgba(37,99,235,0.14)"  },
-              { name: "UNCX",         tagline: "Token vesting",    color: "#b45309", bg: "rgba(180,83,9,0.06)",   border: "rgba(180,83,9,0.14)"   },
-              { name: "Team Finance", tagline: "Vesting & locks",  color: "#059669", bg: "rgba(5,150,105,0.06)",  border: "rgba(5,150,105,0.14)"  },
-              { name: "Unvest",       tagline: "Vesting platform", color: "#0891b2", bg: "rgba(8,145,178,0.06)",  border: "rgba(8,145,178,0.14)"  },
+              { name: "Sablier",      color: "#7c3aed", bg: "rgba(124,58,237,0.06)", border: "rgba(124,58,237,0.14)" },
+              { name: "Hedgey",       color: "#2563eb", bg: "rgba(37,99,235,0.06)",  border: "rgba(37,99,235,0.14)"  },
+              { name: "UNCX",         color: "#b45309", bg: "rgba(180,83,9,0.06)",   border: "rgba(180,83,9,0.14)"   },
+              { name: "Team Finance", color: "#059669", bg: "rgba(5,150,105,0.06)",  border: "rgba(5,150,105,0.14)"  },
+              { name: "Unvest",       color: "#0891b2", bg: "rgba(8,145,178,0.06)",  border: "rgba(8,145,178,0.14)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
                   <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
-                  <p className="text-[10px] leading-tight" style={{ color: "#94a3b8" }}>{p.tagline}</p>
-                </div>
+                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
               </div>
             ))}
           </div>
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#cbd5e1" }}>on</p>
             {[
-              { name: "Ethereum", color: "#627eea", bg: "rgba(98,126,234,0.07)",  border: "rgba(98,126,234,0.18)",  icon: "Ξ" },
-              { name: "BNB Chain", color: "#f0a500", bg: "rgba(240,165,0,0.07)", border: "rgba(240,165,0,0.18)",   icon: "B" },
-              { name: "Base",      color: "#0052ff", bg: "rgba(0,82,255,0.07)",   border: "rgba(0,82,255,0.18)",   icon: "⬡" },
+              { name: "Ethereum", color: "#627eea", bg: "rgba(98,126,234,0.07)",  border: "rgba(98,126,234,0.18)"  },
+              { name: "BNB Chain", color: "#f0a500", bg: "rgba(240,165,0,0.07)", border: "rgba(240,165,0,0.18)"   },
+              { name: "Base",      color: "#0052ff", bg: "rgba(0,82,255,0.07)",   border: "rgba(0,82,255,0.18)"   },
+              { name: "Sepolia",   color: "#a78bfa", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.18)" },
             ].map((c) => (
-              <div key={c.name} className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+              <div key={c.name} className="flex items-center px-3 py-1 rounded-full"
                 style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                <span className="text-[11px] font-bold" style={{ color: c.color }}>{c.icon}</span>
                 <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
               </div>
             ))}
@@ -602,7 +599,7 @@ export default function Home() {
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
             Up and running in 60 seconds
           </h2>
-          <p className="text-base" style={{ color: "#64748b" }}>No sign-up forms. No email verification. No KYC. Just your wallet.</p>
+          <p className="text-base" style={{ color: "#64748b" }}>No sign-up forms. No email verification. No KYC.</p>
         </div>
 
         <div className="relative">

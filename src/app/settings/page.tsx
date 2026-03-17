@@ -30,20 +30,23 @@ const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
 // ─── Chain / Protocol options (shared by wallet card + add form) ──────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"  },
-  { id: "56",       label: "BNB Chain", short: "BNB" },
-  { id: "8453",     label: "Base",      short: "Base" },
-  { id: "11155111", label: "Sepolia",   short: "Sep"  },
+  { id: "1",        label: "Ethereum", short: "ETH"     },
+  { id: "56",       label: "BNB Chain", short: "BSC"    },
+  { id: "8453",     label: "Base",      short: "Base"   },
+  { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 
+// UI-visible protocols (UNCX covers both uncx + uncx-vm on the backend)
 const PROTOCOL_OPTIONS = [
   { id: "sablier",      label: "Sablier"      },
   { id: "uncx",         label: "UNCX"         },
-  { id: "uncx-vm",      label: "UNCX V2"      },
   { id: "team-finance", label: "Team Finance" },
   { id: "hedgey",       label: "Hedgey"       },
   { id: "unvest",       label: "Unvest"       },
 ];
+
+// All backend protocol IDs (includes uncx-vm which is hidden in UI but treated as part of UNCX)
+const ALL_BACKEND_PROTOCOL_IDS = ["sablier", "uncx", "uncx-vm", "team-finance", "hedgey", "unvest"];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -77,6 +80,31 @@ function IconPlus() {
   return (
     <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  );
+}
+
+function IconWallet() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      <circle cx="12" cy="14" r="1" fill="currentColor"/>
+    </svg>
+  );
+}
+
+function IconBell() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  );
+}
+
+function IconUser() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
     </svg>
   );
 }
@@ -164,7 +192,7 @@ function WalletCard({
 
   // Chain / protocol config — mirror wallet values, all = null stored as "all selected"
   const allChainIds    = CHAIN_OPTIONS.map(c => c.id);
-  const allProtocolIds = PROTOCOL_OPTIONS.map(p => p.id);
+  const allProtocolIds = ALL_BACKEND_PROTOCOL_IDS;
   const [selChains,    setSelChains]    = useState<Set<string>>(
     () => new Set(wallet.chains ?? allChainIds)
   );
@@ -255,8 +283,17 @@ function WalletCard({
   function toggleProtocol(id: string) {
     setSelProtocols(prev => {
       const next = new Set(prev);
-      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
-      else next.add(id);
+      // UNCX UI pill controls both uncx and uncx-vm together
+      const ids = id === "uncx" ? ["uncx", "uncx-vm"] : [id];
+      const allPresent = ids.every(i => next.has(i));
+      if (allPresent) {
+        // Don't allow deselecting if it would leave nothing enabled
+        const afterRemove = ids.reduce((s, i) => { s.delete(i); return s; }, new Set(next));
+        if (afterRemove.size === 0) return prev;
+        ids.forEach(i => next.delete(i));
+      } else {
+        ids.forEach(i => next.add(i));
+      }
       saveConfig(selChains, next);
       return next;
     });
@@ -336,9 +373,15 @@ function WalletCard({
             Platforms to scan
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {PROTOCOL_OPTIONS.map((p) => (
-              <TogglePill key={p.id} label={p.label} active={selProtocols.has(p.id)} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
-            ))}
+            {PROTOCOL_OPTIONS.map((p) => {
+              // UNCX pill is active if either uncx or uncx-vm is selected
+              const isActive = p.id === "uncx"
+                ? (selProtocols.has("uncx") || selProtocols.has("uncx-vm"))
+                : selProtocols.has(p.id);
+              return (
+                <TogglePill key={p.id} label={p.label} active={isActive} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
+              );
+            })}
           </div>
         </div>
 
@@ -350,9 +393,9 @@ function WalletCard({
             <span className="text-[10px] text-emerald-500">✓ Saved</span>
           ) : (
             <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-              {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === PROTOCOL_OPTIONS.length
+              {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === ALL_BACKEND_PROTOCOL_IDS.length
                 ? "Scanning all chains & platforms"
-                : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${selProtocols.size} platform${selProtocols.size !== 1 ? "s" : ""}`
+                : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${[...selProtocols].filter(p => p !== "uncx-vm").length} platform${[...selProtocols].filter(p => p !== "uncx-vm").length !== 1 ? "s" : ""}`
               }
             </span>
           )}
@@ -447,6 +490,7 @@ export default function Settings() {
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
   const [tier, setTier]                   = useState<string>("free");
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
+  const [activeSection, setActiveSection] = useState<"wallets" | "notifications" | "account">("wallets");
 
   // Keep dark mode in sync with the shared localStorage key
   useEffect(() => {
@@ -516,7 +560,8 @@ export default function Settings() {
     setAdding(true);
     try {
       const chains    = [parseInt(newSelChain)];
-      const protocols = [newSelProtocol];
+      // UNCX UI option covers both UNCX v1 and UNCX VestingManager (uncx-vm)
+      const protocols = newSelProtocol === "uncx" ? ["uncx", "uncx-vm"] : [newSelProtocol];
       const tokenAddress = newTokenAddr.trim() && isAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
       const res = await fetch("/api/wallets", {
         method: "POST",
@@ -616,6 +661,29 @@ export default function Settings() {
           ))}
         </nav>
 
+        {/* Settings section nav */}
+        <div className="px-3 pb-2 flex-shrink-0" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
+          <p className="text-[9px] font-bold tracking-widest uppercase px-3 mb-1.5" style={{ color: "var(--preview-text-3)" }}>Settings</p>
+          {([
+            { id: "wallets"       as const, label: "Tracked Wallets",     icon: <IconWallet /> },
+            { id: "notifications" as const, label: "Notifications",       icon: <IconBell />   },
+            { id: "account"       as const, label: "Account",             icon: <IconUser />   },
+          ]).map((sec) => (
+            <button key={sec.id} type="button"
+              onClick={() => setActiveSection(sec.id)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-left"
+              style={activeSection === sec.id
+                ? { background: "rgba(37,99,235,0.08)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.12)" }
+                : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
+              onMouseEnter={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
+              onMouseLeave={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <span className="opacity-70 flex-shrink-0">{sec.icon}</span>
+              {sec.label}
+            </button>
+          ))}
+        </div>
+
         {/* Spacer */}
         <div className="flex-1" />
 
@@ -632,8 +700,12 @@ export default function Settings() {
         <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
           style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
           <div>
-            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Settings</h1>
-            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Wallets & notification preferences</p>
+            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
+              {activeSection === "wallets" ? "Tracked Wallets" : activeSection === "notifications" ? "Notifications" : "Account"}
+            </h1>
+            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+              {activeSection === "wallets" ? "Manage wallets, chains and platforms to scan" : activeSection === "notifications" ? "Email alert preferences" : "Account settings and data"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {/* Dark toggle */}
@@ -669,7 +741,7 @@ export default function Settings() {
         <main className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-2xl">
 
           {/* ── Tracked Wallets ──────────────────────────────────────────── */}
-          <Section
+          {activeSection === "wallets" && <Section
             title="Tracked Wallets"
             description="Choose which chains and platforms to scan for each wallet — Vestream only loads what you need, keeping the dashboard fast."
           >
@@ -727,6 +799,7 @@ export default function Settings() {
                     >
                       <option value="">Select platform…</option>
                       {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                      {/* uncx-vm is mapped to "uncx" in UI; both are sent to backend */}
                     </select>
                   </div>
                 </div>
@@ -762,10 +835,10 @@ export default function Settings() {
                 </button>
               </form>
             </div>
-          </Section>
+          </Section>}
 
           {/* ── Email Notifications ──────────────────────────────────────── */}
-          <Section
+          {activeSection === "notifications" && <Section
             title="Email Notifications"
             description="Get alerted before your tokens unlock so you never miss a claim."
           >
@@ -893,10 +966,10 @@ export default function Settings() {
                 </button>
               </div>
             </form>
-          </Section>
+          </Section>}
 
           {/* ── Account ──────────────────────────────────────────────────── */}
-          <Section title="Account">
+          {activeSection === "account" && <Section title="Account">
             {/* Sign out */}
             <div className="flex items-center justify-between">
               <div>
@@ -957,7 +1030,7 @@ export default function Settings() {
                 )}
               </div>
             </div>
-          </Section>
+          </Section>}
 
         </main>
       </div>

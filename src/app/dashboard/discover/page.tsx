@@ -46,16 +46,15 @@ interface TrackedWallet {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"  },
-  { id: "56",       label: "BNB Chain", short: "BNB" },
-  { id: "8453",     label: "Base",      short: "Base" },
-  { id: "11155111", label: "Sepolia",   short: "Sep"  },
+  { id: "1",        label: "Ethereum", short: "ETH"     },
+  { id: "56",       label: "BNB Chain", short: "BSC"    },
+  { id: "8453",     label: "Base",      short: "Base"   },
+  { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 
 const PROTOCOL_OPTIONS = [
   { id: "sablier",      label: "Sablier"       },
   { id: "uncx",         label: "UNCX"          },
-  { id: "uncx-vm",      label: "UNCX V2"       },
   { id: "team-finance", label: "Team Finance"  },
   { id: "hedgey",       label: "Hedgey"        },
   { id: "unvest",       label: "Unvest"        },
@@ -71,6 +70,40 @@ const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
+
+// Merge uncx-vm results into the uncx result so the user only sees one "UNCX" entry
+function mergeUncxResults(results: ScanResult[]): ScanResult[] {
+  const merged: ScanResult[] = [];
+  for (const r of results) {
+    if (r.protocolId === "uncx-vm") {
+      const uncxResult = merged.find(x => x.protocolId === "uncx" && x.chainId === r.chainId);
+      if (uncxResult) {
+        uncxResult.streamCount += r.streamCount;
+        for (const tok of r.tokens) {
+          const existingTok = uncxResult.tokens.find(t =>
+            (tok.address && t.address)
+              ? tok.address.toLowerCase() === t.address.toLowerCase()
+              : tok.symbol === t.symbol
+          );
+          if (existingTok) {
+            existingTok.streamCount     += tok.streamCount;
+            existingTok.totalAmountRaw   = (BigInt(existingTok.totalAmountRaw)   + BigInt(tok.totalAmountRaw)).toString();
+            existingTok.claimableNowRaw  = (BigInt(existingTok.claimableNowRaw)  + BigInt(tok.claimableNowRaw)).toString();
+            existingTok.lockedAmountRaw  = (BigInt(existingTok.lockedAmountRaw)  + BigInt(tok.lockedAmountRaw)).toString();
+          } else {
+            uncxResult.tokens.push(tok);
+          }
+        }
+      } else {
+        // No matching uncx entry yet — push as "uncx"
+        merged.push({ ...r, protocolId: "uncx", protocolName: "UNCX" });
+      }
+    } else {
+      merged.push(r);
+    }
+  }
+  return merged;
+}
 
 function fmtTokenAmount(rawStr: string, decimals: number): string {
   try {
@@ -404,6 +437,8 @@ export default function DiscoverPage() {
         return;
       }
       const data = await res.json();
+      // Merge uncx-vm results into uncx so user sees one unified UNCX entry
+      if (data?.results) data.results = mergeUncxResults(data.results);
       setScanData(data);
     } catch { setScanError("Network error — please try again."); }
     finally { setScanning(false); }
@@ -416,8 +451,10 @@ export default function DiscoverPage() {
     if (watchStatus[key] === "watching") return true;
     const tracked = wallets.find(w => w.address === scanData.address.toLowerCase());
     if (!tracked) return false;
-    const hasChain    = !tracked.chains    || tracked.chains.includes(String(chainId));
-    const hasProtocol = !tracked.protocols || tracked.protocols.includes(protocolId);
+    const hasChain = !tracked.chains || tracked.chains.includes(String(chainId));
+    // UNCX UI covers both uncx and uncx-vm
+    const protocolIds = protocolId === "uncx" ? ["uncx", "uncx-vm"] : [protocolId];
+    const hasProtocol = !tracked.protocols || protocolIds.some(pid => tracked.protocols!.includes(pid));
     // Only "group watching" if no token filter is set (covers all tokens)
     return hasChain && hasProtocol && !tracked.tokenAddress;
   }
@@ -429,8 +466,9 @@ export default function DiscoverPage() {
     if (watchStatus[key] === "watching") return true;
     const tracked = wallets.find(w => w.address === scanData.address.toLowerCase());
     if (!tracked) return false;
-    const hasChain    = !tracked.chains    || tracked.chains.includes(String(chainId));
-    const hasProtocol = !tracked.protocols || tracked.protocols.includes(protocolId);
+    const hasChain = !tracked.chains || tracked.chains.includes(String(chainId));
+    const protocolIds = protocolId === "uncx" ? ["uncx", "uncx-vm"] : [protocolId];
+    const hasProtocol = !tracked.protocols || protocolIds.some(pid => tracked.protocols!.includes(pid));
     if (!hasChain || !hasProtocol) return false;
     // Token is watched if: no filter (group watch covers all) OR token filter exactly matches
     return !tracked.tokenAddress || tracked.tokenAddress.toLowerCase() === tokenAddress.toLowerCase();
@@ -444,6 +482,9 @@ export default function DiscoverPage() {
       : `${chainId}:${protocolId}`;
     setWatchStatus(prev => ({ ...prev, [key]: "adding" }));
 
+    // UNCX UI option covers both uncx and uncx-vm on the backend
+    const backendProtocols = protocolId === "uncx" ? ["uncx", "uncx-vm"] : [protocolId];
+
     const alreadyTracked = wallets.find(w => w.address === scanData.address.toLowerCase());
 
     try {
@@ -451,8 +492,8 @@ export default function DiscoverPage() {
         // PATCH to add this chain+protocol, optionally setting tokenAddress
         const existingChains    = alreadyTracked.chains    ?? [];
         const existingProtocols = alreadyTracked.protocols ?? [];
-        const newChains    = [...new Set([...existingChains,    String(chainId)])];
-        const newProtocols = [...new Set([...existingProtocols, protocolId])];
+        const newChains    = [...new Set([...existingChains, String(chainId)])];
+        const newProtocols = [...new Set([...existingProtocols, ...backendProtocols])];
 
         const patchBody: Record<string, unknown> = {
           chains:    newChains.map(Number),
@@ -471,7 +512,7 @@ export default function DiscoverPage() {
         const postBody: Record<string, unknown> = {
           address:   scanData.address,
           chains:    [chainId],
-          protocols: [protocolId],
+          protocols: backendProtocols,
         };
         if (tokenAddress !== undefined) postBody.tokenAddress = tokenAddress;
 
@@ -495,7 +536,7 @@ export default function DiscoverPage() {
           const existing = fresh.find(w => w.address === scanData.address.toLowerCase());
           if (existing) {
             const newChains    = [...new Set([...(existing.chains ?? []),    String(chainId)])];
-            const newProtocols = [...new Set([...(existing.protocols ?? []), protocolId])];
+            const newProtocols = [...new Set([...(existing.protocols ?? []), ...backendProtocols])];
             const racePatch: Record<string, unknown> = { chains: newChains.map(Number), protocols: newProtocols };
             if (tokenAddress !== undefined) racePatch.tokenAddress = tokenAddress;
             await fetch(`/api/wallets/${scanData.address}`, {
