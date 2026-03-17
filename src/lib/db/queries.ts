@@ -38,15 +38,17 @@ export async function addWallet(
   label?: string,
   chains?: string[] | null,
   protocols?: string[] | null,
+  tokenAddress?: string | null,
 ) {
   const result = await db
     .insert(wallets)
     .values({
       userId,
-      address: address.toLowerCase(),
+      address:      address.toLowerCase(),
       label,
-      chains:    chains    ?? null,
-      protocols: protocols ?? null,
+      chains:       chains       ?? null,
+      protocols:    protocols    ?? null,
+      tokenAddress: tokenAddress ?? null,
     })
     .returning();
   return result[0];
@@ -85,14 +87,15 @@ export async function updateWalletLabel(userId: string, address: string, label: 
   return result[0] ?? null;
 }
 
-/** Update any combination of label / chains / protocols for a wallet. */
+/** Update any combination of label / chains / protocols / tokenAddress for a wallet. */
 export async function updateWallet(
   userId: string,
   address: string,
   updates: {
-    label?:     string | null;
-    chains?:    string[] | null;
-    protocols?: string[] | null;
+    label?:        string | null;
+    chains?:       string[] | null;
+    protocols?:    string[] | null;
+    tokenAddress?: string | null;
   },
 ) {
   const result = await db

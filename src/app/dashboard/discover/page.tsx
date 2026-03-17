@@ -6,12 +6,23 @@ import { isAddress } from "viem";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface ScanTokenResult {
+  symbol:          string;
+  address:         string;
+  decimals:        number;
+  streamCount:     number;
+  totalAmountRaw:  string;
+  claimableNowRaw: string;
+  lockedAmountRaw: string;
+}
+
 interface ScanResult {
   protocolId:   string;
   protocolName: string;
   chainId:      number;
   chainName:    string;
   streamCount:  number;
+  tokens:       ScanTokenResult[];
 }
 
 interface ScanData {
@@ -24,19 +35,21 @@ interface ScanData {
 }
 
 interface TrackedWallet {
-  id:        string;
-  address:   string;
-  label:     string | null;
-  chains:    string[] | null;
-  protocols: string[] | null;
+  id:           string;
+  address:      string;
+  label:        string | null;
+  chains:       string[] | null;
+  protocols:    string[] | null;
+  tokenAddress: string | null;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",    label: "Ethereum", short: "ETH"  },
-  { id: "56",   label: "BNB Chain", short: "BNB" },
-  { id: "8453", label: "Base",      short: "Base" },
+  { id: "1",        label: "Ethereum", short: "ETH"  },
+  { id: "56",       label: "BNB Chain", short: "BNB" },
+  { id: "8453",     label: "Base",      short: "Base" },
+  { id: "11155111", label: "Sepolia",   short: "Sep"  },
 ];
 
 const PROTOCOL_OPTIONS = [
@@ -58,6 +71,19 @@ const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
+
+function fmtTokenAmount(rawStr: string, decimals: number): string {
+  try {
+    const raw   = BigInt(rawStr);
+    const scale = 10n ** BigInt(Math.min(decimals, 18));
+    const whole = raw / scale;
+    const frac  = Number(raw % scale) / Number(scale);
+    const total = Number(whole) + frac;
+    if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(2)}M`;
+    if (total >= 1_000)     return `${(total / 1_000).toFixed(1)}K`;
+    return total.toFixed(2);
+  } catch { return "?" }
+}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -181,73 +207,147 @@ function DiscoverSidebar({ tier }: { tier: string }) {
 
 // ─── ResultCard ───────────────────────────────────────────────────────────────
 
+function WatchBtn({ isWatching, isAdding, onClick, size = "sm" }: {
+  isWatching: boolean; isAdding: boolean; onClick: () => void; size?: "sm" | "xs";
+}) {
+  const px = size === "xs" ? "px-2.5 py-1" : "px-3 py-1.5";
+  const fs = size === "xs" ? "text-[11px]" : "text-xs";
+  return (
+    <button
+      onClick={onClick}
+      disabled={isWatching || isAdding}
+      className={`flex items-center gap-1.5 ${px} rounded-lg ${fs} font-semibold transition-all flex-shrink-0 disabled:cursor-default`}
+      style={isWatching
+        ? { background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }
+        : { background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer" }
+      }
+    >
+      {isAdding ? (
+        <>
+          <svg className="animate-spin" width={10} height={10} viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.3)" strokeWidth="3" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          Adding…
+        </>
+      ) : isWatching ? (
+        <>
+          <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Watching
+        </>
+      ) : (
+        <>
+          <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Watch
+        </>
+      )}
+    </button>
+  );
+}
+
 function ResultCard({
-  result, isWatching, isAdding, onWatch,
+  result,
+  watchStatus,
+  onWatchGroup,
+  onWatchToken,
+  isGroupWatching,
+  isTokenWatching,
 }: {
-  result:     ScanResult;
-  isWatching: boolean;
-  isAdding:   boolean;
-  onWatch:    () => void;
+  result:          ScanResult;
+  watchStatus:     Record<string, "adding" | "watching" | "error">;
+  onWatchGroup:    () => void;
+  onWatchToken:    (tokenAddress: string) => void;
+  isGroupWatching: boolean;
+  isTokenWatching: (tokenAddress: string) => boolean;
 }) {
   const pc       = PROTOCOL_COLORS[result.protocolId] ?? { text: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
   const chainOpt = CHAIN_OPTIONS.find(c => c.id === String(result.chainId));
+  const groupKey = `${result.chainId}:${result.protocolId}`;
 
   return (
-    <div className="rounded-xl p-4 flex items-center gap-4"
+    <div className="rounded-xl overflow-hidden"
       style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
 
-      {/* Protocol avatar */}
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold"
-        style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}>
-        {result.protocolName.slice(0, 2).toUpperCase()}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{result.protocolName}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
-            style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
-            {chainOpt?.short ?? result.chainName}
-          </span>
+      {/* ── Group header row ── */}
+      <div className="p-4 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold"
+          style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}>
+          {result.protocolName.slice(0, 2).toUpperCase()}
         </div>
-        <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-          {result.streamCount} vesting stream{result.streamCount !== 1 ? "s" : ""} found
-        </p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{result.protocolName}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+              style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+              {chainOpt?.short ?? result.chainName}
+            </span>
+          </div>
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+            {result.streamCount} stream{result.streamCount !== 1 ? "s" : ""} · {result.tokens.length} token{result.tokens.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        {/* Watch all tokens in this protocol+chain */}
+        <WatchBtn
+          isWatching={isGroupWatching}
+          isAdding={watchStatus[groupKey] === "adding"}
+          onClick={onWatchGroup}
+        />
       </div>
 
-      <button
-        onClick={onWatch}
-        disabled={isWatching || isAdding}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 disabled:cursor-default"
-        style={isWatching
-          ? { background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }
-          : { background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer" }
-        }
-      >
-        {isAdding ? (
-          <>
-            <svg className="animate-spin" width={11} height={11} viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.3)" strokeWidth="3" />
-              <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-            Adding…
-          </>
-        ) : isWatching ? (
-          <>
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Watching
-          </>
-        ) : (
-          <>
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Watch this
-          </>
-        )}
-      </button>
+      {/* ── Individual token rows ── */}
+      {result.tokens.length > 0 && (
+        <div style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+          {result.tokens.map((tok) => {
+            const tokenKey     = `${result.chainId}:${result.protocolId}:${tok.address || tok.symbol}`;
+            const tokenAdding  = watchStatus[tokenKey] === "adding";
+            const tokenWatching = tok.address
+              ? (isTokenWatching(tok.address) || watchStatus[tokenKey] === "watching")
+              : false;
+
+            return (
+              <div key={tokenKey} className="px-4 py-2.5 flex items-center gap-3"
+                style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
+
+                {/* Token avatar */}
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[9px] font-bold"
+                  style={{ background: pc.bg, color: pc.text }}>
+                  {tok.symbol.slice(0, 3).toUpperCase()}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>{tok.symbol}</span>
+                    <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
+                      · {tok.streamCount} stream{tok.streamCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                    <span style={{ color: "#34d399" }}>{fmtTokenAmount(tok.claimableNowRaw, tok.decimals)} claimable</span>
+                    {" · "}
+                    {fmtTokenAmount(tok.totalAmountRaw, tok.decimals)} total
+                  </p>
+                </div>
+
+                {/* Watch this token (only if we have a contract address) */}
+                {tok.address ? (
+                  <WatchBtn
+                    isWatching={tokenWatching}
+                    isAdding={tokenAdding}
+                    onClick={() => onWatchToken(tok.address)}
+                    size="xs"
+                  />
+                ) : (
+                  <span className="text-[10px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>no address</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -309,8 +409,8 @@ export default function DiscoverPage() {
     finally { setScanning(false); }
   }
 
-  // Check if a specific chain+protocol combo is already being watched for the scanned address
-  function isComboWatching(chainId: number, protocolId: string): boolean {
+  // Group watching: protocol+chain is watched with NO token filter (covers all tokens)
+  function isGroupWatching(chainId: number, protocolId: string): boolean {
     if (!scanData) return false;
     const key = `${chainId}:${protocolId}`;
     if (watchStatus[key] === "watching") return true;
@@ -318,40 +418,67 @@ export default function DiscoverPage() {
     if (!tracked) return false;
     const hasChain    = !tracked.chains    || tracked.chains.includes(String(chainId));
     const hasProtocol = !tracked.protocols || tracked.protocols.includes(protocolId);
-    return hasChain && hasProtocol;
+    // Only "group watching" if no token filter is set (covers all tokens)
+    return hasChain && hasProtocol && !tracked.tokenAddress;
   }
 
-  async function handleWatch(chainId: number, protocolId: string) {
+  // Token watching: this specific token is being watched (either via group or token-level watch)
+  function isTokenWatchingFn(chainId: number, protocolId: string, tokenAddress: string): boolean {
+    if (!scanData) return false;
+    const key = `${chainId}:${protocolId}:${tokenAddress}`;
+    if (watchStatus[key] === "watching") return true;
+    const tracked = wallets.find(w => w.address === scanData.address.toLowerCase());
+    if (!tracked) return false;
+    const hasChain    = !tracked.chains    || tracked.chains.includes(String(chainId));
+    const hasProtocol = !tracked.protocols || tracked.protocols.includes(protocolId);
+    if (!hasChain || !hasProtocol) return false;
+    // Token is watched if: no filter (group watch covers all) OR token filter exactly matches
+    return !tracked.tokenAddress || tracked.tokenAddress.toLowerCase() === tokenAddress.toLowerCase();
+  }
+
+  // handleWatch: group-level (no tokenAddress) or token-level (with tokenAddress)
+  async function handleWatch(chainId: number, protocolId: string, tokenAddress?: string) {
     if (!scanData) return;
-    const key = `${chainId}:${protocolId}`;
+    const key = tokenAddress
+      ? `${chainId}:${protocolId}:${tokenAddress}`
+      : `${chainId}:${protocolId}`;
     setWatchStatus(prev => ({ ...prev, [key]: "adding" }));
 
     const alreadyTracked = wallets.find(w => w.address === scanData.address.toLowerCase());
 
     try {
       if (alreadyTracked) {
-        // PATCH to add this chain+protocol to the existing wallet's config
+        // PATCH to add this chain+protocol, optionally setting tokenAddress
         const existingChains    = alreadyTracked.chains    ?? [];
         const existingProtocols = alreadyTracked.protocols ?? [];
         const newChains    = [...new Set([...existingChains,    String(chainId)])];
         const newProtocols = [...new Set([...existingProtocols, protocolId])];
 
+        const patchBody: Record<string, unknown> = {
+          chains:    newChains.map(Number),
+          protocols: newProtocols,
+        };
+        if (tokenAddress !== undefined) patchBody.tokenAddress = tokenAddress;
+
         const res = await fetch(`/api/wallets/${scanData.address}`, {
           method:  "PATCH",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ chains: newChains.map(Number), protocols: newProtocols }),
+          body:    JSON.stringify(patchBody),
         });
         if (!res.ok) throw new Error("Update failed");
       } else {
-        // POST to add new wallet with this specific chain+protocol
+        // POST to add new wallet with this specific chain+protocol (and optionally tokenAddress)
+        const postBody: Record<string, unknown> = {
+          address:   scanData.address,
+          chains:    [chainId],
+          protocols: [protocolId],
+        };
+        if (tokenAddress !== undefined) postBody.tokenAddress = tokenAddress;
+
         const res = await fetch("/api/wallets", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({
-            address:   scanData.address,
-            chains:    [chainId],
-            protocols: [protocolId],
-          }),
+          body:    JSON.stringify(postBody),
         });
         if (res.status === 402) {
           const j = await res.json();
@@ -369,10 +496,12 @@ export default function DiscoverPage() {
           if (existing) {
             const newChains    = [...new Set([...(existing.chains ?? []),    String(chainId)])];
             const newProtocols = [...new Set([...(existing.protocols ?? []), protocolId])];
+            const racePatch: Record<string, unknown> = { chains: newChains.map(Number), protocols: newProtocols };
+            if (tokenAddress !== undefined) racePatch.tokenAddress = tokenAddress;
             await fetch(`/api/wallets/${scanData.address}`, {
               method:  "PATCH",
               headers: { "Content-Type": "application/json" },
-              body:    JSON.stringify({ chains: newChains.map(Number), protocols: newProtocols }),
+              body:    JSON.stringify(racePatch),
             });
           }
         } else if (!res.ok) {
@@ -391,7 +520,7 @@ export default function DiscoverPage() {
     if (!scanData) return;
     for (const r of scanData.results) {
       const key = `${r.chainId}:${r.protocolId}`;
-      if (!isComboWatching(r.chainId, r.protocolId) && watchStatus[key] !== "adding") {
+      if (!isGroupWatching(r.chainId, r.protocolId) && watchStatus[key] !== "adding") {
         await handleWatch(r.chainId, r.protocolId);
       }
     }
@@ -412,7 +541,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Discover Vestings</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 6 platforms × 3 chains to find every active vesting for a wallet
+              Scan 6 platforms × 4 chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -458,7 +587,7 @@ export default function DiscoverPage() {
                   Find all vestings for a wallet
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Enter any wallet address and we&apos;ll scan every supported platform across all 3 chains.
+                  Enter any wallet address and we&apos;ll scan every supported platform across all 4 chains.
                   Results appear below — click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   add individual vestings to your dashboard.
                 </p>
@@ -555,7 +684,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 6 platforms × 3 chains. This may take 10–20 seconds.
+                Checking 6 platforms × 4 chains. This may take 10–20 seconds.
               </p>
             </div>
           )}
@@ -608,20 +737,17 @@ export default function DiscoverPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {scanData.results.map(r => {
-                    const key     = `${r.chainId}:${r.protocolId}`;
-                    const status  = watchStatus[key];
-                    const watching = isComboWatching(r.chainId, r.protocolId);
-                    return (
-                      <ResultCard
-                        key={key}
-                        result={r}
-                        isWatching={watching}
-                        isAdding={status === "adding"}
-                        onWatch={() => handleWatch(r.chainId, r.protocolId)}
-                      />
-                    );
-                  })}
+                  {scanData.results.map(r => (
+                    <ResultCard
+                      key={`${r.chainId}:${r.protocolId}`}
+                      result={r}
+                      watchStatus={watchStatus}
+                      onWatchGroup={() => handleWatch(r.chainId, r.protocolId)}
+                      onWatchToken={(tokenAddress) => handleWatch(r.chainId, r.protocolId, tokenAddress)}
+                      isGroupWatching={isGroupWatching(r.chainId, r.protocolId)}
+                      isTokenWatching={(tokenAddress) => isTokenWatchingFn(r.chainId, r.protocolId, tokenAddress)}
+                    />
+                  ))}
                 </div>
               )}
             </div>

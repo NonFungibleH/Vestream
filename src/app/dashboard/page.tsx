@@ -16,8 +16,9 @@ interface Wallet {
   id: string;
   address: string;
   label: string | null;
-  chains:    string[] | null;  // null = scan all chains
-  protocols: string[] | null;  // null = scan all protocols
+  chains:       string[] | null;  // null = scan all chains
+  protocols:    string[] | null;  // null = scan all protocols
+  tokenAddress: string | null;    // null = scan all tokens
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -3157,9 +3158,10 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
 // ─── AddWalletBar ─────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",    label: "Ethereum", short: "ETH"  },
-  { id: "56",   label: "BNB Chain", short: "BNB" },
-  { id: "8453", label: "Base",      short: "Base" },
+  { id: "1",        label: "Ethereum", short: "ETH"  },
+  { id: "56",       label: "BNB Chain", short: "BNB" },
+  { id: "8453",     label: "Base",      short: "Base" },
+  { id: "11155111", label: "Sepolia",   short: "Sep"  },
 ];
 
 const PROTOCOL_OPTIONS = [
@@ -3180,6 +3182,7 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
   // Required single chain + single platform selection
   const [selChain,    setSelChain]    = useState<string>("");
   const [selProtocol, setSelProtocol] = useState<string>("");
+  const [selTokenAddr, setSelTokenAddr] = useState<string>("");
 
   const { address: wagmiAddress } = useAccount();
   const { connect } = useConnect();
@@ -3197,11 +3200,12 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
     try {
       const chains    = [parseInt(selChain)];
       const protocols = [selProtocol];
+      const tokenAddress = selTokenAddr.trim() && isAddress(selTokenAddr.trim()) ? selTokenAddr.trim() : undefined;
 
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, label: label || undefined, chains, protocols }),
+        body: JSON.stringify({ address, label: label || undefined, chains, protocols, tokenAddress }),
       });
       if (res.status === 409) { setError("Already added"); return; }
       if (res.status === 402) {
@@ -3296,6 +3300,19 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
         </div>
       </div>
 
+      {/* Row 3: optional token contract address */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Token</span>
+        <input
+          placeholder="Token contract address (optional)"
+          value={selTokenAddr}
+          onChange={(e) => setSelTokenAddr(e.target.value)}
+          className="flex-1 min-w-[200px] rounded-xl px-3 py-2 text-sm font-mono outline-none"
+          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+        />
+        <span className="text-[9px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>narrows to one token</span>
+      </div>
+
       {/* Discover hint */}
       <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
         Not sure which platform holds your vesting?{" "}
@@ -3318,10 +3335,9 @@ const NAV_ITEMS = [
 // ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
 
 function WalletRow({
-  wallet, isSingle, onRemove,
+  wallet, onRemove,
 }: {
   wallet:   Wallet;
-  isSingle: boolean;
   onRemove: () => void;
 }) {
   const cfgChains    = wallet.chains    && wallet.chains.length    > 0 ? wallet.chains    : null;
@@ -3336,17 +3352,15 @@ function WalletRow({
       >
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
         <span className="flex-1 truncate font-medium">{wallet.label ?? shortAddr(wallet.address)}</span>
-        {!isSingle && (
-          <button
-            onClick={onRemove}
-            className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
-            style={{ color: "var(--preview-text-3)" }} title="Remove"
-          >×</button>
-        )}
+        <button
+          onClick={onRemove}
+          className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
+          style={{ color: "var(--preview-text-3)" }} title="Remove"
+        >×</button>
       </div>
 
       {/* Active config badges */}
-      {(cfgChains || cfgProtocols) && (
+      {(cfgChains || cfgProtocols || wallet.tokenAddress) && (
         <div className="px-3 pb-1.5 flex flex-wrap gap-1">
           {cfgChains?.map((c) => {
             const ch = CHAIN_OPTIONS.find(x => x.id === c);
@@ -3366,6 +3380,12 @@ function WalletRow({
               </span>
             );
           })}
+          {wallet.tokenAddress && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded"
+              style={{ background: "rgba(52,211,153,0.10)", color: "#34d399" }}>
+              🎯 {wallet.tokenAddress.slice(0, 6)}…{wallet.tokenAddress.slice(-4)}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -3424,7 +3444,6 @@ function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
           <WalletRow
             key={w.id}
             wallet={w}
-            isSingle={wallets.length === 1}
             onRemove={() => onRemoveWallet(w.address)}
           />
         ))}
@@ -3542,7 +3561,11 @@ function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ walletCount, chainUnion, protocolUnion }: {
+  walletCount:    number;
+  chainUnion:     string[] | null;
+  protocolUnion:  string[] | null;
+}) {
   return (
     <div>
       {/* Friendly context message */}
@@ -3561,13 +3584,22 @@ function LoadingSkeleton() {
             Fetching your vesting data…
           </p>
           <p className="text-[11px] leading-relaxed" style={{ color: "var(--preview-text-3)" }}>
-            Scanning <span style={{ color: "var(--preview-text-2)" }}>Sablier</span>,{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>Hedgey</span>,{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>UNCX</span>,{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>Team Finance</span> and{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>Unvest</span> across{" "}
-            <span style={{ color: "var(--preview-text-2)" }}>Ethereum, Base, BSC and Sepolia</span>.
-            This usually takes 5–15 seconds.
+            Checking{" "}
+            <span style={{ color: "var(--preview-text-2)" }}>
+              {walletCount} wallet{walletCount !== 1 ? "s" : ""}
+            </span>
+            {chainUnion && chainUnion.length > 0 && (
+              <>{" on "}<span style={{ color: "var(--preview-text-2)" }}>
+                {chainUnion.map(id => CHAIN_OPTIONS.find(c => c.id === id)?.label ?? `Chain ${id}`).join(", ")}
+              </span></>
+            )}
+            {protocolUnion && protocolUnion.length > 0 && (
+              <>{" via "}<span style={{ color: "var(--preview-text-2)" }}>
+                {protocolUnion.map(id => PROTOCOL_OPTIONS.find(p => p.id === id)?.label ?? id).join(", ")}
+              </span></>
+            )}
+            {!chainUnion && !protocolUnion && <>{" across all configured platforms and chains"}</>}
+            {". This usually takes a few seconds."}
           </p>
         </div>
       </div>
@@ -3723,8 +3755,14 @@ export default function Dashboard() {
   const protocolUnion = anyAllProtocols ? null : [...new Set(wallets.flatMap((w) => w.protocols!))];
   const chainsQs    = chainUnion    ? `&chains=${chainUnion.join(",")}`       : "";
   const protocolsQs = protocolUnion ? `&protocols=${protocolUnion.join(",")}`  : "";
+  // Build per-wallet token filters: "walletAddr:tokenAddr,..." for wallets that have a tokenAddress set
+  const tokenFiltersStr = wallets
+    .filter(w => w.tokenAddress)
+    .map(w => `${w.address}:${w.tokenAddress}`)
+    .join(",");
+  const tokenFiltersQs = tokenFiltersStr ? `&tokenFilters=${tokenFiltersStr}` : "";
   const vestingUrl = walletAddresses.length > 0
-    ? `/api/vesting?wallets=${walletAddresses}${chainsQs}${protocolsQs}`
+    ? `/api/vesting?wallets=${walletAddresses}${chainsQs}${protocolsQs}${tokenFiltersQs}`
     : null;
 
   const { data, isLoading } = useSWR<{ streams: VestingStream[] }>(
@@ -4084,7 +4122,7 @@ export default function Dashboard() {
         {/* Content */}
         <main className="flex-1 overflow-y-auto px-6 py-5">
           {!walletsLoaded ? (
-            <LoadingSkeleton />
+            <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : wallets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center mb-2">
@@ -4101,7 +4139,7 @@ export default function Dashboard() {
               </button>
             </div>
           ) : isLoading ? (
-            <LoadingSkeleton />
+            <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : (
             <>
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />

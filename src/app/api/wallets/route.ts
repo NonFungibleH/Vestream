@@ -58,8 +58,10 @@ export async function POST(req: NextRequest) {
     const { address, label } = body;
     // chains: array of chain IDs as numbers or strings, null/undefined = all chains
     // protocols: array of adapter IDs, null/undefined = all protocols
+    // tokenAddress: optional ERC-20 contract address to narrow scan
     const rawChains:    unknown = body.chains;
     const rawProtocols: unknown = body.protocols;
+    const rawTokenAddress: unknown = body.tokenAddress;
 
     if (!address || !isAddress(address)) {
       return NextResponse.json({ error: "Invalid address" }, { status: 400 });
@@ -83,6 +85,12 @@ export async function POST(req: NextRequest) {
       );
       protocols = valid.length > 0 ? valid : null;
     }
+
+    // Validate tokenAddress — must be a valid EVM address if provided
+    const tokenAddress: string | null =
+      typeof rawTokenAddress === "string" && isAddress(rawTokenAddress)
+        ? rawTokenAddress.toLowerCase()
+        : null;
 
     const user = await getUserByAddress(session.address);
     if (!user) {
@@ -113,7 +121,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Wallet already added" }, { status: 409 });
     }
 
-    const wallet = await addWallet(user.id, address, label, chains, protocols);
+    const wallet = await addWallet(user.id, address, label, chains, protocols, tokenAddress);
     return NextResponse.json({ wallet }, { status: 201 });
   } catch (err) {
     console.error("POST /api/wallets error:", err);

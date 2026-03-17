@@ -22,8 +22,10 @@ export const wallets = pgTable("wallets", {
   address: text("address").notNull(),
   label: text("label"),
   // null = scan all chains/protocols; non-null = restrict to listed IDs
-  chains:    text("chains").array(),
-  protocols: text("protocols").array(),
+  chains:       text("chains").array(),
+  protocols:    text("protocols").array(),
+  // optional ERC-20 contract address — when set, only streams for this token are shown
+  tokenAddress: text("token_address"),
   addedAt: timestamp("added_at").defaultNow().notNull(),
 });
 

@@ -2,11 +2,8 @@
  * GET /api/wallets/scan?address=0x...
  *
  * Pro+ feature: Scans ALL chains × ALL protocols for a wallet address.
- * Returns a summary of discovered vestings grouped by protocol and chain,
- * so the user can see which platforms are actually active for that wallet.
- *
- * This enables "Find Vestings" — useful when a user has forgotten which
- * platforms/chains they used.
+ * Returns vestings grouped by protocol+chain, with per-token breakdowns
+ * so the user can pick individual token vestings to watch.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
@@ -16,14 +13,25 @@ import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
-// ─── Per-protocol / chain grouping in the response ────────────────────────────
+// ─── Response types ────────────────────────────────────────────────────────────
 
-interface ScanProtocolResult {
+export interface ScanTokenResult {
+  symbol:          string;
+  address:         string;   // ERC-20 contract address
+  decimals:        number;
+  streamCount:     number;
+  totalAmountRaw:  string;   // sum as BigInt string
+  claimableNowRaw: string;
+  lockedAmountRaw: string;
+}
+
+export interface ScanProtocolResult {
   protocolId:   string;
   protocolName: string;
-  chainId:      SupportedChainId;
+  chainId:      number;
   chainName:    string;
   streamCount:  number;
+  tokens:       ScanTokenResult[];
 }
 
 export async function GET(req: NextRequest) {
@@ -33,7 +41,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Pro+ gate — free tier users cannot use Find Vestings
+    // Pro+ gate
     const user = await getUserByAddress(session.address);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -51,39 +59,75 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid address" }, { status: 400 });
     }
 
-    // Scan all chains × all protocols for this wallet
+    // Scan all chains × all protocols
     const streams = await aggregateVestingStreams([address], ALL_CHAIN_IDS);
 
-    // Group by protocol × chain — only keep combos that returned at least one stream
-    const byKey = new Map<string, ScanProtocolResult>();
+    // Group by protocol × chain, then per-token within each group
+    const byKey = new Map<string, {
+      result:   ScanProtocolResult;
+      tokenMap: Map<string, ScanTokenResult>;
+    }>();
+
     for (const s of streams) {
       const key = `${s.protocol}:${s.chainId}`;
       if (!byKey.has(key)) {
         const adapter = ADAPTER_REGISTRY.find((a) => a.id === s.protocol);
         byKey.set(key, {
-          protocolId:   s.protocol,
-          protocolName: adapter?.name ?? s.protocol,
-          chainId:      s.chainId,
-          chainName:    CHAIN_NAMES[s.chainId] ?? String(s.chainId),
-          streamCount:  0,
+          result: {
+            protocolId:   s.protocol,
+            protocolName: adapter?.name ?? s.protocol,
+            chainId:      s.chainId as number,
+            chainName:    CHAIN_NAMES[s.chainId as SupportedChainId] ?? String(s.chainId),
+            streamCount:  0,
+            tokens:       [],
+          },
+          tokenMap: new Map(),
         });
       }
-      byKey.get(key)!.streamCount++;
+
+      const { result, tokenMap } = byKey.get(key)!;
+      result.streamCount++;
+
+      // Sub-group by token contract address (fallback to symbol)
+      const tokenKey = (s.tokenAddress ?? s.tokenSymbol).toLowerCase();
+      if (!tokenMap.has(tokenKey)) {
+        tokenMap.set(tokenKey, {
+          symbol:          s.tokenSymbol,
+          address:         s.tokenAddress ?? "",
+          decimals:        s.tokenDecimals ?? 18,
+          streamCount:     0,
+          totalAmountRaw:  "0",
+          claimableNowRaw: "0",
+          lockedAmountRaw: "0",
+        });
+      }
+
+      const tok = tokenMap.get(tokenKey)!;
+      tok.streamCount++;
+      tok.totalAmountRaw  = (BigInt(tok.totalAmountRaw)  + BigInt(s.totalAmount  ?? "0")).toString();
+      tok.claimableNowRaw = (BigInt(tok.claimableNowRaw) + BigInt(s.claimableNow ?? "0")).toString();
+      tok.lockedAmountRaw = (BigInt(tok.lockedAmountRaw) + BigInt(s.lockedAmount ?? "0")).toString();
     }
 
-    const results = [...byKey.values()].sort((a, b) => b.streamCount - a.streamCount);
+    // Flatten token maps into result.tokens arrays
+    for (const { result, tokenMap } of byKey.values()) {
+      result.tokens = [...tokenMap.values()].sort((a, b) => b.streamCount - a.streamCount);
+    }
 
-    // Derive suggested chains + protocols for this wallet
+    const results = [...byKey.values()]
+      .map(({ result }) => result)
+      .sort((a, b) => b.streamCount - a.streamCount);
+
     const suggestedChains    = [...new Set(results.map((r) => r.chainId))];
     const suggestedProtocols = [...new Set(results.map((r) => r.protocolId))];
 
     return NextResponse.json({
-      address: address.toLowerCase(),
+      address:      address.toLowerCase(),
       totalStreams: streams.length,
       results,
       suggestedChains,
       suggestedProtocols,
-      scannedAt: new Date().toISOString(),
+      scannedAt:   new Date().toISOString(),
     });
   } catch (err) {
     console.error("GET /api/wallets/scan error:", err);

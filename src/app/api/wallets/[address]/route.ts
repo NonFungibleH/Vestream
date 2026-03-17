@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
 import { getUserByAddress, deleteWallet, updateWallet, getWalletsForUser } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
@@ -47,7 +48,7 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const patchData: { label?: string | null; chains?: string[] | null; protocols?: string[] | null } = {};
+  const patchData: { label?: string | null; chains?: string[] | null; protocols?: string[] | null; tokenAddress?: string | null } = {};
 
   if ("label" in body) {
     patchData.label = body.label ?? null;
@@ -74,6 +75,13 @@ export async function PATCH(
       const valid = (raw as unknown[]).filter((p): p is string => typeof p === "string" && validIds.has(p));
       patchData.protocols = valid.length > 0 ? valid : null;
     }
+  }
+
+  if ("tokenAddress" in body) {
+    const raw = body.tokenAddress;
+    patchData.tokenAddress = (typeof raw === "string" && isAddress(raw))
+      ? raw.toLowerCase()
+      : null;
   }
 
   const updated = await updateWallet(user.id, address, patchData);

@@ -5,17 +5,24 @@ import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 
 // ─── Server-side in-memory cache ──────────────────────────────────────────────
-// Keyed by sorted wallets + chain IDs. TTL: 5 minutes.
-// This makes page refreshes near-instant after the first load.
+// Keyed by sorted wallets + chain IDs + protocol IDs + token filters. TTL: 5 min.
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const cache = new Map<string, { streams: VestingStream[]; expiresAt: number; fetchedAt: string }>();
 
-function cacheKey(wallets: string[], chainIds: SupportedChainId[], protocolIds?: string[]): string {
+function cacheKey(
+  wallets:      string[],
+  chainIds:     SupportedChainId[],
+  protocolIds?: string[],
+  tokenFilters?: Record<string, string>,
+): string {
   const p = protocolIds ? `_${[...protocolIds].sort().join(",")}` : "";
-  return `${[...wallets].sort().join(",")}_${[...chainIds].sort().join(",")}${p}`;
+  const t = tokenFilters && Object.keys(tokenFilters).length > 0
+    ? `_${Object.entries(tokenFilters).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v}`).join(",")}`
+    : "";
+  return `${[...wallets].sort().join(",")}_${[...chainIds].sort().join(",")}${p}${t}`;
 }
 
-// Evict stale entries (run periodically to avoid unbounded growth)
+// Evict stale entries periodically to avoid unbounded growth
 function evictStale() {
   const now = Date.now();
   for (const [k, v] of cache) {
@@ -30,10 +37,12 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const walletsParam    = searchParams.get("wallets");
-  const chainsParam     = searchParams.get("chains");    // optional e.g. "1,56,8453"
-  const protocolsParam  = searchParams.get("protocols"); // optional e.g. "sablier,uncx"
-  const refresh         = searchParams.get("refresh") === "1"; // force-bypass cache
+  const walletsParam   = searchParams.get("wallets");
+  const chainsParam    = searchParams.get("chains");       // optional e.g. "1,56,8453"
+  const protocolsParam = searchParams.get("protocols");    // optional e.g. "sablier,uncx"
+  // tokenFilters: "walletAddr:tokenAddr,walletAddr2:tokenAddr2" — per-wallet token filter
+  const tokenFiltersParam = searchParams.get("tokenFilters");
+  const refresh        = searchParams.get("refresh") === "1";
 
   if (!walletsParam) {
     return NextResponse.json({ error: "No wallets provided" }, { status: 400 });
@@ -65,8 +74,19 @@ export async function GET(req: NextRequest) {
     if (ids.length > 0) protocolIds = ids;
   }
 
-  // Check cache (skip if ?refresh=1 is passed)
-  const key    = cacheKey(wallets, chainIds, protocolIds);
+  // Parse per-wallet token address filters: "walletAddr:tokenAddr,..."
+  const tokenFilters: Record<string, string> = {};
+  if (tokenFiltersParam) {
+    for (const pair of tokenFiltersParam.split(",")) {
+      const [walletAddr, tokenAddr] = pair.split(":").map(s => s.trim());
+      if (walletAddr && tokenAddr && isAddress(walletAddr) && isAddress(tokenAddr)) {
+        tokenFilters[walletAddr.toLowerCase()] = tokenAddr.toLowerCase();
+      }
+    }
+  }
+
+  // Check cache (skip if ?refresh=1)
+  const key    = cacheKey(wallets, chainIds, protocolIds, Object.keys(tokenFilters).length > 0 ? tokenFilters : undefined);
   const cached = !refresh ? cache.get(key) : undefined;
   if (cached && cached.expiresAt > Date.now()) {
     return NextResponse.json(
@@ -76,9 +96,18 @@ export async function GET(req: NextRequest) {
   }
 
   const fetchedAt = new Date().toISOString();
-  const streams   = await aggregateVestingStreams(wallets, chainIds, protocolIds);
+  let streams     = await aggregateVestingStreams(wallets, chainIds, protocolIds);
 
-  // Store in cache and evict stale entries
+  // Post-filter streams by per-wallet token address
+  if (Object.keys(tokenFilters).length > 0) {
+    streams = streams.filter((s) => {
+      const walletFilter = tokenFilters[(s.recipient ?? "").toLowerCase()];
+      if (!walletFilter) return true; // no filter for this wallet
+      return (s.tokenAddress ?? "").toLowerCase() === walletFilter;
+    });
+  }
+
+  // Store in cache
   cache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
   if (cache.size > 200) evictStale();
 

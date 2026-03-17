@@ -12,8 +12,9 @@ interface Wallet {
   id: string;
   address: string;
   label: string | null;
-  chains:    string[] | null;
-  protocols: string[] | null;
+  chains:       string[] | null;
+  protocols:    string[] | null;
+  tokenAddress: string | null;
 }
 
 interface Prefs {
@@ -29,9 +30,10 @@ const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
 // ─── Chain / Protocol options (shared by wallet card + add form) ──────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",    label: "Ethereum", short: "ETH"  },
-  { id: "56",   label: "BNB Chain", short: "BNB" },
-  { id: "8453", label: "Base",      short: "Base" },
+  { id: "1",        label: "Ethereum", short: "ETH"  },
+  { id: "56",       label: "BNB Chain", short: "BNB" },
+  { id: "8453",     label: "Base",      short: "Base" },
+  { id: "11155111", label: "Sepolia",   short: "Sep"  },
 ];
 
 const PROTOCOL_OPTIONS = [
@@ -148,11 +150,10 @@ function TogglePill({ label, active, onClick, saving }: {
 // ─── WalletCard (settings) ────────────────────────────────────────────────────
 
 function WalletCard({
-  wallet, tier, isOnly, onRemove, onUpdated,
+  wallet, tier, onRemove, onUpdated,
 }: {
   wallet:    Wallet;
   tier:      string;
-  isOnly:    boolean;
   onRemove:  () => void;
   onUpdated: (updated: Wallet) => void;
 }) {
@@ -172,6 +173,11 @@ function WalletCard({
   );
   const [savingConfig, setSavingConfig] = useState(false);
   const [configSaved,  setConfigSaved]  = useState(false);
+
+  // Token address filter
+  const [editingTokenAddr, setEditingTokenAddr] = useState(false);
+  const [tokenAddrValue,   setTokenAddrValue]   = useState(wallet.tokenAddress ?? "");
+  const [savingTokenAddr,  setSavingTokenAddr]  = useState(false);
 
   const isPro = tier !== "free";
 
@@ -212,6 +218,28 @@ function WalletCard({
         setTimeout(() => setConfigSaved(false), 2000);
       }
     } finally { setSavingConfig(false); }
+  }
+
+  async function saveTokenAddrRaw(val: string | null) {
+    setSavingTokenAddr(true);
+    try {
+      const res = await fetch(`/api/wallets/${wallet.address}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokenAddress: val }),
+      });
+      if (res.ok) {
+        const { wallet: updated } = await res.json();
+        onUpdated(updated);
+        setEditingTokenAddr(false);
+        if (!val) setTokenAddrValue("");
+      }
+    } finally { setSavingTokenAddr(false); }
+  }
+
+  async function saveTokenAddr() {
+    const trimmed = tokenAddrValue.trim();
+    await saveTokenAddrRaw(trimmed || null);
   }
 
   function toggleChain(id: string) {
@@ -282,15 +310,13 @@ function WalletCard({
           )}
           <p className="text-[11px] font-mono truncate" style={{ color: "var(--preview-text-3)" }}>{wallet.address}</p>
         </div>
-        {!isOnly && (
-          <button onClick={onRemove}
-            className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors mt-0.5"
-            style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
-            Remove
-          </button>
-        )}
+        <button onClick={onRemove}
+          className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors mt-0.5"
+          style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+          Remove
+        </button>
       </div>
 
       {/* ── Config: chains + platforms ── */}
@@ -348,6 +374,66 @@ function WalletCard({
             </a>
           </p>
         </div>
+
+        {/* ── Token address filter ── */}
+        <div className="pt-2.5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "var(--preview-text-3)" }}>
+              Token filter (optional)
+            </p>
+            {wallet.tokenAddress && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                style={{ background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
+                active
+              </span>
+            )}
+          </div>
+          {editingTokenAddr ? (
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={tokenAddrValue}
+                onChange={(e) => setTokenAddrValue(e.target.value)}
+                placeholder="0x… (token contract address)"
+                className="flex-1 text-xs font-mono rounded-lg px-2.5 py-1.5 outline-none"
+                style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveTokenAddr();
+                  if (e.key === "Escape") { setEditingTokenAddr(false); setTokenAddrValue(wallet.tokenAddress ?? ""); }
+                }}
+              />
+              <button onClick={saveTokenAddr} disabled={savingTokenAddr}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white disabled:opacity-60"
+                style={{ background: "#2563eb" }}>
+                {savingTokenAddr ? "…" : "Save"}
+              </button>
+              <button onClick={() => { setEditingTokenAddr(false); setTokenAddrValue(wallet.tokenAddress ?? ""); }}
+                className="text-[11px] px-2 py-1 rounded-lg"
+                style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>✕</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {wallet.tokenAddress ? (
+                <>
+                  <p className="text-[10px] font-mono flex-1 truncate" style={{ color: "var(--preview-text-2)" }}>{wallet.tokenAddress}</p>
+                  <button onClick={() => { setEditingTokenAddr(true); setTokenAddrValue(wallet.tokenAddress ?? ""); }}
+                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>Edit</button>
+                  <button onClick={() => saveTokenAddrRaw(null)} disabled={savingTokenAddr}
+                    className="text-[10px] flex-shrink-0 underline disabled:opacity-60" style={{ color: "#f87171" }}>Clear</button>
+                </>
+              ) : (
+                <>
+                  <p className="text-[10px] italic" style={{ color: "var(--preview-text-3)" }}>None — scanning all tokens</p>
+                  <button onClick={() => setEditingTokenAddr(true)}
+                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>Set filter</button>
+                </>
+              )}
+            </div>
+          )}
+          <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
+            Narrows dashboard to one specific token on this wallet. Use Discover to find token addresses.
+          </p>
+        </div>
       </div>
     </li>
   );
@@ -385,6 +471,7 @@ export default function Settings() {
   // Required single chain + single platform for new wallet
   const [newSelChain,    setNewSelChain]    = useState<string>("");
   const [newSelProtocol, setNewSelProtocol] = useState<string>("");
+  const [newTokenAddr,   setNewTokenAddr]   = useState<string>("");
 
   // Notification prefs
   const [prefs, setPrefs]       = useState<Prefs>({ emailEnabled: false, email: null, hoursBeforeUnlock: 24, notifyCliff: true, notifyStreamEnd: true });
@@ -430,15 +517,16 @@ export default function Settings() {
     try {
       const chains    = [parseInt(newSelChain)];
       const protocols = [newSelProtocol];
+      const tokenAddress = newTokenAddr.trim() && isAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: newAddress, label: newLabel || undefined, chains, protocols }),
+        body: JSON.stringify({ address: newAddress, label: newLabel || undefined, chains, protocols, tokenAddress }),
       });
       if (res.status === 409) { setAddError("Wallet already tracked"); return; }
       if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
       setNewAddress(""); setNewLabel("");
-      setNewSelChain(""); setNewSelProtocol("");
+      setNewSelChain(""); setNewSelProtocol(""); setNewTokenAddr("");
       await loadWallets();
     } catch { setAddError("Network error"); }
     finally { setAdding(false); }
@@ -511,9 +599,8 @@ export default function Settings() {
         {/* Nav */}
         <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
           {[
-            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: false },
-            { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
-            { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: true  },
+            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard", active: false },
+            { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: true  },
           ].map((item) => (
             <Link key={item.label} href={item.href}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
@@ -596,7 +683,6 @@ export default function Settings() {
                     key={w.id}
                     wallet={w}
                     tier={tier}
-                    isOnly={wallets.length === 1}
                     onRemove={() => handleRemoveWallet(w)}
                     onUpdated={(updated) =>
                       setWallets((prev) => prev.map((x) => x.id === updated.id ? { ...x, ...updated } : x))
@@ -643,6 +729,22 @@ export default function Settings() {
                       {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                     </select>
                   </div>
+                </div>
+
+                {/* Optional token address */}
+                <div>
+                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                    Token filter <span className="normal-case font-normal">(optional)</span>
+                  </p>
+                  <StyledInput
+                    placeholder="Token contract address (0x…)"
+                    value={newTokenAddr}
+                    onChange={setNewTokenAddr}
+                    fontMono
+                  />
+                  <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
+                    Narrows dashboard to a specific token. Use Discover to find addresses.
+                  </p>
                 </div>
 
                 <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
