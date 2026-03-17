@@ -43,13 +43,6 @@ const PROTOCOL_OPTIONS = [
   { id: "unvest",       label: "Unvest"       },
 ];
 
-interface ScanResult {
-  totalStreams:        number;
-  results:            Array<{ protocolId: string; protocolName: string; chainId: number; chainName: string; streamCount: number }>;
-  suggestedChains:    number[];
-  suggestedProtocols: string[];
-}
-
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function IconGrid() {
@@ -66,6 +59,14 @@ function IconSettings() {
     <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  );
+}
+
+function IconSearch() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
   );
 }
@@ -172,13 +173,6 @@ function WalletCard({
   const [savingConfig, setSavingConfig] = useState(false);
   const [configSaved,  setConfigSaved]  = useState(false);
 
-  // Find Vestings scan
-  const [scanLoading,  setScanLoading]  = useState(false);
-  const [scanResult,   setScanResult]   = useState<ScanResult | null>(null);
-  const [scanError,    setScanError]    = useState<string | null>(null);
-  const [applyLoading, setApplyLoading] = useState(false);
-  const [applied,      setApplied]      = useState(false);
-
   const isPro = tier !== "free";
 
   async function saveLabel() {
@@ -238,42 +232,6 @@ function WalletCard({
       saveConfig(selChains, next);
       return next;
     });
-  }
-
-  async function handleScan() {
-    setScanResult(null); setScanError(null); setApplied(false);
-    setScanLoading(true);
-    try {
-      const res = await fetch(`/api/wallets/scan?address=${wallet.address}`);
-      if (res.status === 402) { setScanError("Upgrade to Pro to use Find Vestings."); return; }
-      if (!res.ok)            { setScanError("Scan failed — please try again."); return; }
-      setScanResult(await res.json() as ScanResult);
-    } catch { setScanError("Network error during scan."); }
-    finally { setScanLoading(false); }
-  }
-
-  async function handleApply() {
-    if (!scanResult) return;
-    setApplyLoading(true);
-    try {
-      const res = await fetch(`/api/wallets/${wallet.address}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chains:    scanResult.suggestedChains,
-          protocols: scanResult.suggestedProtocols,
-        }),
-      });
-      if (res.ok) {
-        const { wallet: updated } = await res.json();
-        // Sync local toggle state to the applied config
-        setSelChains(new Set(updated.chains ?? allChainIds));
-        setSelProtocols(new Set(updated.protocols ?? allProtocolIds));
-        onUpdated(updated);
-        setApplied(true);
-      } else { setScanError("Failed to apply settings."); }
-    } catch { setScanError("Network error."); }
-    finally { setApplyLoading(false); }
   }
 
   return (
@@ -374,97 +332,22 @@ function WalletCard({
           )}
         </div>
 
-        {/* ── Find Vestings button ── */}
-        <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
-          {isPro ? (
-            <button
-              onClick={handleScan}
-              disabled={scanLoading}
-              className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all disabled:opacity-60"
-              style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", color: "#3b82f6" }}
-              onMouseEnter={(e) => { if (!scanLoading) (e.currentTarget as HTMLElement).style.background = "rgba(37,99,235,0.14)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(37,99,235,0.08)"; }}
+        {/* ── Discover link ── */}
+        <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+            Not sure which platforms this wallet uses?{" "}
+            <a
+              href={`/dashboard/discover`}
+              className="font-semibold underline"
+              style={{ color: "#60a5fa" }}
             >
-              {scanLoading ? (
-                <>
-                  <svg className="animate-spin" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                  Scanning all platforms…
-                </>
-              ) : (
-                <>
-                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                  </svg>
-                  Find vestings automatically
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
-              style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
-              <span className="text-sm">🔒</span>
-              <div>
-                <p className="text-[11px] font-semibold" style={{ color: "#3b82f6" }}>Find Vestings — Pro feature</p>
-                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                  Scan all 6 platforms & 3 chains to auto-discover every vesting.{" "}
-                  <a href="/pricing" className="font-semibold underline" style={{ color: "#3b82f6" }}>Upgrade →</a>
-                </p>
-              </div>
-            </div>
-          )}
+              {isPro ? "Scan all platforms in Discover →" : "Discover (Pro feature) →"}
+            </a>
+          </p>
         </div>
-
-        {/* ── Scan results ── */}
-        {scanError && (
-          <p className="text-[11px] text-red-400 mt-1">{scanError}</p>
-        )}
-        {scanResult && !scanError && (
-          <div className="rounded-xl p-3 mt-1"
-            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-            {scanResult.totalStreams === 0 ? (
-              <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-                No vestings found on any platform for this address.
-              </p>
-            ) : (
-              <>
-                <p className="text-xs font-semibold mb-2" style={{ color: "#10b981" }}>
-                  Found {scanResult.totalStreams} vesting{scanResult.totalStreams !== 1 ? "s" : ""} across:
-                </p>
-                <div className="space-y-1 mb-3">
-                  {scanResult.results.map((r, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-                        style={{ background: "rgba(37,99,235,0.10)", color: "#60a5fa" }}>
-                        {r.chainName}
-                      </span>
-                      <span className="text-[11px] flex-1" style={{ color: "var(--preview-text-2)" }}>{r.protocolName}</span>
-                      <span className="text-[11px] font-bold" style={{ color: "var(--preview-text)" }}>×{r.streamCount}</span>
-                    </div>
-                  ))}
-                </div>
-                {applied ? (
-                  <p className="text-[11px] font-semibold text-emerald-500">
-                    ✓ Settings updated — dashboard will now load only relevant data
-                  </p>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleApply} disabled={applyLoading}
-                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg text-white transition-all disabled:opacity-60"
-                      style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-                      {applyLoading ? "Applying…" : "Apply these settings"}
-                    </button>
-                    <button onClick={() => setScanResult(null)}
-                      className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
       </div>
     </li>
   );
@@ -499,10 +382,9 @@ export default function Settings() {
   const [newLabel, setNewLabel]     = useState("");
   const [addError, setAddError]     = useState<string | null>(null);
   const [adding, setAdding]         = useState(false);
-  const [newSelChains,    setNewSelChains]    = useState<Set<string>>(() => new Set(CHAIN_OPTIONS.map(c => c.id)));
-  const [newSelProtocols, setNewSelProtocols] = useState<Set<string>>(() => new Set(PROTOCOL_OPTIONS.map(p => p.id)));
-  const allNewChainsSelected    = newSelChains.size    === CHAIN_OPTIONS.length;
-  const allNewProtocolsSelected = newSelProtocols.size === PROTOCOL_OPTIONS.length;
+  // Required single chain + single platform for new wallet
+  const [newSelChain,    setNewSelChain]    = useState<string>("");
+  const [newSelProtocol, setNewSelProtocol] = useState<string>("");
 
   // Notification prefs
   const [prefs, setPrefs]       = useState<Prefs>({ emailEnabled: false, email: null, hoursBeforeUnlock: 24, notifyCliff: true, notifyStreamEnd: true });
@@ -543,10 +425,11 @@ export default function Settings() {
     e.preventDefault();
     setAddError(null);
     if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
+    if (!newSelChain || !newSelProtocol) { setAddError("Select a chain and platform"); return; }
     setAdding(true);
     try {
-      const chains    = allNewChainsSelected    ? null : [...newSelChains].map(Number);
-      const protocols = allNewProtocolsSelected ? null : [...newSelProtocols];
+      const chains    = [parseInt(newSelChain)];
+      const protocols = [newSelProtocol];
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -555,8 +438,7 @@ export default function Settings() {
       if (res.status === 409) { setAddError("Wallet already tracked"); return; }
       if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
       setNewAddress(""); setNewLabel("");
-      setNewSelChains(new Set(CHAIN_OPTIONS.map(c => c.id)));
-      setNewSelProtocols(new Set(PROTOCOL_OPTIONS.map(p => p.id)));
+      setNewSelChain(""); setNewSelProtocol("");
       await loadWallets();
     } catch { setAddError("Network error"); }
     finally { setAdding(false); }
@@ -629,8 +511,9 @@ export default function Settings() {
         {/* Nav */}
         <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
           {[
-            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard", active: false },
-            { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: true  },
+            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: false },
+            { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
+            { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: true  },
           ].map((item) => (
             <Link key={item.label} href={item.href}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
@@ -730,44 +613,47 @@ export default function Settings() {
                 <StyledInput placeholder="Wallet address (0x…)" value={newAddress} onChange={setNewAddress} fontMono />
                 <StyledInput placeholder="Label (optional — e.g. Team vesting)" value={newLabel} onChange={setNewLabel} />
 
-                {/* Chain toggles */}
-                <div>
-                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                    Chains to scan
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {CHAIN_OPTIONS.map((c) => (
-                      <TogglePill key={c.id} label={c.short} active={newSelChains.has(c.id)} onClick={() =>
-                        setNewSelChains(prev => {
-                          const next = new Set(prev);
-                          if (next.has(c.id)) { if (next.size === 1) return prev; next.delete(c.id); } else next.add(c.id);
-                          return next;
-                        })
-                      } />
-                    ))}
+                {/* Chain + Platform dropdowns (required) */}
+                <div className="flex gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[130px]">
+                    <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                      Chain <span style={{ color: "#ef4444" }}>*</span>
+                    </p>
+                    <select
+                      value={newSelChain}
+                      onChange={(e) => setNewSelChain(e.target.value)}
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                      style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+                    >
+                      <option value="">Select chain…</option>
+                      {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                      Platform <span style={{ color: "#ef4444" }}>*</span>
+                    </p>
+                    <select
+                      value={newSelProtocol}
+                      onChange={(e) => setNewSelProtocol(e.target.value)}
+                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                      style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+                    >
+                      <option value="">Select platform…</option>
+                      {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                    </select>
                   </div>
                 </div>
 
-                {/* Protocol toggles */}
-                <div>
-                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                    Platforms to scan
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {PROTOCOL_OPTIONS.map((p) => (
-                      <TogglePill key={p.id} label={p.label} active={newSelProtocols.has(p.id)} onClick={() =>
-                        setNewSelProtocols(prev => {
-                          const next = new Set(prev);
-                          if (next.has(p.id)) { if (next.size === 1) return prev; next.delete(p.id); } else next.add(p.id);
-                          return next;
-                        })
-                      } />
-                    ))}
-                  </div>
-                </div>
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                  Not sure?{" "}
+                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
+                    Scan all platforms in Discover →
+                  </a>
+                </p>
 
                 {addError && <p className="text-xs text-red-400">{addError}</p>}
-                <button type="submit" disabled={adding || !newAddress}
+                <button type="submit" disabled={adding || !newAddress || !newSelChain || !newSelProtocol}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
                   <IconPlus /> {adding ? "Adding…" : "Track wallet"}

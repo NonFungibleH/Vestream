@@ -292,6 +292,14 @@ function IconPlus() {
   );
 }
 
+function IconSearch() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  );
+}
+
 // ─── DonutChart ───────────────────────────────────────────────────────────────
 
 function DonutChart({ tokens }: { tokens: TokenSummary[] }) {
@@ -3163,54 +3171,15 @@ const PROTOCOL_OPTIONS = [
   { id: "unvest",       label: "Unvest"        },
 ];
 
-function TogglePill({
-  label, active, onClick,
-}: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-100 flex-shrink-0"
-      style={{
-        background: active ? "rgba(59,130,246,0.15)" : "var(--preview-muted-2)",
-        color:      active ? "#60a5fa"               : "var(--preview-text-3)",
-        border:     active ? "1px solid rgba(59,130,246,0.35)" : "1px solid var(--preview-border-2)",
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
 function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const [address, setAddress] = useState("");
   const [label, setLabel]     = useState("");
   const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // chain/protocol selection — all selected by default = null (scan everything)
-  const [selChains,    setSelChains]    = useState<Set<string>>(new Set(CHAIN_OPTIONS.map(c => c.id)));
-  const [selProtocols, setSelProtocols] = useState<Set<string>>(new Set(PROTOCOL_OPTIONS.map(p => p.id)));
-
-  const allChainsSelected    = selChains.size    === CHAIN_OPTIONS.length;
-  const allProtocolsSelected = selProtocols.size === PROTOCOL_OPTIONS.length;
-
-  function toggleChain(id: string) {
-    setSelChains(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
-      else next.add(id);
-      return next;
-    });
-  }
-  function toggleProtocol(id: string) {
-    setSelProtocols(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { if (next.size === 1) return prev; next.delete(id); }
-      else next.add(id);
-      return next;
-    });
-  }
+  // Required single chain + single platform selection
+  const [selChain,    setSelChain]    = useState<string>("");
+  const [selProtocol, setSelProtocol] = useState<string>("");
 
   const { address: wagmiAddress } = useAccount();
   const { connect } = useConnect();
@@ -3223,11 +3192,11 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
   async function handleAdd() {
     setError(null);
     if (!isAddress(address)) { setError("Invalid address"); return; }
+    if (!selChain || !selProtocol) { setError("Select a chain and platform"); return; }
     setLoading(true);
     try {
-      // null = scan all (when user selected everything, keep null so future adapters are included)
-      const chains    = allChainsSelected    ? null : [...selChains].map(Number);
-      const protocols = allProtocolsSelected ? null : [...selProtocols];
+      const chains    = [parseInt(selChain)];
+      const protocols = [selProtocol];
 
       const res = await fetch("/api/wallets", {
         method: "POST",
@@ -3251,14 +3220,14 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
     <div className="px-6 py-4 flex-shrink-0 space-y-3"
       style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
 
-      {/* Row 1: address + label + buttons */}
-      <div className="flex items-center gap-3">
+      {/* Row 1: address + label */}
+      <div className="flex items-center gap-3 flex-wrap">
         <input
           placeholder="Wallet address (0x…)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
-          className="flex-1 max-w-xs rounded-xl px-3 py-2 text-sm font-mono outline-none"
+          className="flex-1 min-w-[180px] rounded-xl px-3 py-2 text-sm font-mono outline-none"
           style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
         />
         <button
@@ -3281,63 +3250,59 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
           placeholder="Label (optional)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="w-32 rounded-xl px-3 py-2 text-sm outline-none"
+          className="w-32 rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
           style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
         />
-        <div className="flex-1" />
-        {error && <span className="text-xs text-red-400 max-w-[200px] truncate">{error}</span>}
-        <button
-          onClick={handleAdd}
-          disabled={loading || !address}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-colors flex-shrink-0"
-        >
-          <IconPlus /> {loading ? "Adding…" : "Track wallet"}
-        </button>
-        <button
-          onClick={onCancel}
-          className="text-xs font-medium transition-colors flex-shrink-0"
-          style={{ color: "var(--preview-text-3)" }}
-        >
-          Cancel
-        </button>
       </div>
 
-      {/* Row 2: chain + protocol toggles */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
-          Chains
-        </span>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {CHAIN_OPTIONS.map((c) => (
-            <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} />
-          ))}
-        </div>
-        <div className="w-px h-4 flex-shrink-0" style={{ background: "var(--preview-border-2)" }} />
-        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
-          Platforms
-        </span>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {PROTOCOL_OPTIONS.map((p) => (
-            <TogglePill key={p.id} label={p.label} active={selProtocols.has(p.id)} onClick={() => toggleProtocol(p.id)} />
-          ))}
-        </div>
-        {(!allChainsSelected || !allProtocolsSelected) && (
+      {/* Row 2: required chain + platform dropdowns */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Chain</span>
+        <select
+          value={selChain}
+          onChange={(e) => setSelChain(e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
+          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+        >
+          <option value="">Select chain…</option>
+          {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Platform</span>
+        <select
+          value={selProtocol}
+          onChange={(e) => setSelProtocol(e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
+          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+        >
+          <option value="">Select platform…</option>
+          {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+        </select>
+        {error && <span className="text-xs text-red-400 truncate">{error}</span>}
+        <div className="flex items-center gap-2 ml-auto flex-shrink-0">
           <button
-            type="button"
-            onClick={() => { setSelChains(new Set(CHAIN_OPTIONS.map(c => c.id))); setSelProtocols(new Set(PROTOCOL_OPTIONS.map(p => p.id))); }}
-            className="text-[11px] transition-colors flex-shrink-0"
+            onClick={handleAdd}
+            disabled={loading || !address || !selChain || !selProtocol}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-colors"
+          >
+            <IconPlus /> {loading ? "Adding…" : "Track wallet"}
+          </button>
+          <button
+            onClick={onCancel}
+            className="text-xs font-medium transition-colors"
             style={{ color: "var(--preview-text-3)" }}
           >
-            Reset
+            Cancel
           </button>
-        )}
-        <span className="text-[10px] ml-auto flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
-          {allChainsSelected && allProtocolsSelected
-            ? "Scanning all chains & platforms"
-            : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} × ${selProtocols.size} platform${selProtocols.size !== 1 ? "s" : ""}`
-          }
-        </span>
+        </div>
       </div>
+
+      {/* Discover hint */}
+      <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+        Not sure which platform holds your vesting?{" "}
+        <a href="/dashboard/discover" className="underline" style={{ color: "#60a5fa" }}>
+          Search all platforms →
+        </a>
+      </p>
     </div>
   );
 }
@@ -3345,8 +3310,9 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { icon: <IconGrid />,    label: "Dashboard", href: "/dashboard", active: true  },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: false },
+  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: true  },
+  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
+  { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: false },
 ];
 
 // ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────

@@ -1,0 +1,658 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { isAddress } from "viem";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ScanResult {
+  protocolId:   string;
+  protocolName: string;
+  chainId:      number;
+  chainName:    string;
+  streamCount:  number;
+}
+
+interface ScanData {
+  address:            string;
+  totalStreams:        number;
+  results:            ScanResult[];
+  suggestedChains:    number[];
+  suggestedProtocols: string[];
+  scannedAt:          string;
+}
+
+interface TrackedWallet {
+  id:        string;
+  address:   string;
+  label:     string | null;
+  chains:    string[] | null;
+  protocols: string[] | null;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const CHAIN_OPTIONS = [
+  { id: "1",    label: "Ethereum", short: "ETH"  },
+  { id: "56",   label: "BNB Chain", short: "BNB" },
+  { id: "8453", label: "Base",      short: "Base" },
+];
+
+const PROTOCOL_OPTIONS = [
+  { id: "sablier",      label: "Sablier"       },
+  { id: "uncx",         label: "UNCX"          },
+  { id: "uncx-vm",      label: "UNCX V2"       },
+  { id: "team-finance", label: "Team Finance"  },
+  { id: "hedgey",       label: "Hedgey"        },
+  { id: "unvest",       label: "Unvest"        },
+];
+
+const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  sablier:        { text: "#a78bfa", bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.25)" },
+  hedgey:         { text: "#60a5fa", bg: "rgba(96,165,250,0.12)",  border: "rgba(96,165,250,0.25)"  },
+  "team-finance": { text: "#34d399", bg: "rgba(52,211,153,0.12)",  border: "rgba(52,211,153,0.25)"  },
+  uncx:           { text: "#fb923c", bg: "rgba(251,146,60,0.12)",  border: "rgba(251,146,60,0.25)"  },
+  "uncx-vm":      { text: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.25)"  },
+  unvest:         { text: "#38bdf8", bg: "rgba(56,189,248,0.12)",  border: "rgba(56,189,248,0.25)"  },
+};
+
+function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function IconGrid() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  );
+}
+
+function IconSearch() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  );
+}
+
+function IconSettings() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+const NAV_ITEMS = [
+  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: false },
+  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: true  },
+  { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: false },
+];
+
+function DiscoverSidebar({ tier }: { tier: string }) {
+  const router = useRouter();
+  return (
+    <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
+      style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
+
+      {/* Logo */}
+      <a href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
+        style={{ borderBottom: "1px solid var(--preview-border)" }}>
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-bold text-sm leading-none">V</span>
+        </div>
+        <div>
+          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
+          <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
+        </div>
+      </a>
+
+      {/* Nav */}
+      <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
+        {NAV_ITEMS.map((item) => (
+          <button key={item.label} onClick={() => router.push(item.href)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+            style={item.active
+              ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+              : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
+            onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
+            onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
+          >
+            <span className="opacity-80 flex-shrink-0">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Footer — tier badge */}
+      <div className="px-3 pb-3 flex-shrink-0 space-y-2" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
+        {tier === "free" && (
+          <div className="px-3 py-2.5 rounded-xl"
+            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Free Plan</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>FREE</span>
+            </div>
+            <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
+              Upgrade to Pro to use Discover
+            </p>
+            <a href="/pricing"
+              className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              Upgrade to Pro →
+            </a>
+          </div>
+        )}
+        {tier === "pro" && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>PRO</span>
+            <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
+          </div>
+        )}
+        {tier === "fund" && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.10))", border: "1px solid rgba(99,102,241,0.25)" }}>
+            <span className="text-[10px]">✦</span>
+            <div>
+              <p className="text-[10px] font-bold" style={{ color: "#a78bfa" }}>Fund Plan</p>
+              <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited wallets · all features</p>
+            </div>
+          </div>
+        )}
+        <p className="text-[8px] text-center" style={{ color: "var(--preview-text-3)" }}>
+          Read-only · No funds access
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+// ─── ResultCard ───────────────────────────────────────────────────────────────
+
+function ResultCard({
+  result, isWatching, isAdding, onWatch,
+}: {
+  result:     ScanResult;
+  isWatching: boolean;
+  isAdding:   boolean;
+  onWatch:    () => void;
+}) {
+  const pc       = PROTOCOL_COLORS[result.protocolId] ?? { text: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
+  const chainOpt = CHAIN_OPTIONS.find(c => c.id === String(result.chainId));
+
+  return (
+    <div className="rounded-xl p-4 flex items-center gap-4"
+      style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+
+      {/* Protocol avatar */}
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold"
+        style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}>
+        {result.protocolName.slice(0, 2).toUpperCase()}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{result.protocolName}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+            style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+            {chainOpt?.short ?? result.chainName}
+          </span>
+        </div>
+        <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+          {result.streamCount} vesting stream{result.streamCount !== 1 ? "s" : ""} found
+        </p>
+      </div>
+
+      <button
+        onClick={onWatch}
+        disabled={isWatching || isAdding}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 disabled:cursor-default"
+        style={isWatching
+          ? { background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }
+          : { background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer" }
+        }
+      >
+        {isAdding ? (
+          <>
+            <svg className="animate-spin" width={11} height={11} viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.3)" strokeWidth="3" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            Adding…
+          </>
+        ) : isWatching ? (
+          <>
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Watching
+          </>
+        ) : (
+          <>
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Watch this
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ─── Discover Page ────────────────────────────────────────────────────────────
+
+export default function DiscoverPage() {
+  const router = useRouter();
+  const [dark,        setDark]        = useState(false);
+  const [tier,        setTier]        = useState<string>("free");
+  const [wallets,     setWallets]     = useState<TrackedWallet[]>([]);
+  const [address,     setAddress]     = useState<string>("");
+  const [scanning,    setScanning]    = useState(false);
+  const [scanData,    setScanData]    = useState<ScanData | null>(null);
+  const [scanError,   setScanError]   = useState<string | null>(null);
+  const [watchStatus, setWatchStatus] = useState<Record<string, "adding" | "watching" | "error">>({});
+
+  useEffect(() => {
+    try { if (localStorage.getItem("vestr-dark") === "1") setDark(true); } catch { /* ignore */ }
+  }, []);
+
+  const loadWallets = useCallback(async () => {
+    try {
+      const res = await fetch("/api/wallets");
+      if (res.status === 401) { router.push("/login"); return; }
+      if (res.ok) {
+        const json = await res.json();
+        setWallets(json.wallets ?? []);
+        setTier(json.tier ?? "free");
+      }
+    } catch { /* ignore */ }
+  }, [router]);
+
+  useEffect(() => { loadWallets(); }, [loadWallets]);
+
+  async function handleScan() {
+    setScanError(null);
+    setScanData(null);
+    setWatchStatus({});
+    if (!isAddress(address)) {
+      setScanError("Enter a valid Ethereum wallet address (0x…)");
+      return;
+    }
+    setScanning(true);
+    try {
+      const res = await fetch(`/api/wallets/scan?address=${address}`);
+      if (res.status === 402) {
+        setScanError("Pro plan required to use Discover. Upgrade to unlock full scanning.");
+        return;
+      }
+      if (!res.ok) {
+        const j = await res.json();
+        setScanError(j.error ?? "Scan failed");
+        return;
+      }
+      const data = await res.json();
+      setScanData(data);
+    } catch { setScanError("Network error — please try again."); }
+    finally { setScanning(false); }
+  }
+
+  // Check if a specific chain+protocol combo is already being watched for the scanned address
+  function isComboWatching(chainId: number, protocolId: string): boolean {
+    if (!scanData) return false;
+    const key = `${chainId}:${protocolId}`;
+    if (watchStatus[key] === "watching") return true;
+    const tracked = wallets.find(w => w.address === scanData.address.toLowerCase());
+    if (!tracked) return false;
+    const hasChain    = !tracked.chains    || tracked.chains.includes(String(chainId));
+    const hasProtocol = !tracked.protocols || tracked.protocols.includes(protocolId);
+    return hasChain && hasProtocol;
+  }
+
+  async function handleWatch(chainId: number, protocolId: string) {
+    if (!scanData) return;
+    const key = `${chainId}:${protocolId}`;
+    setWatchStatus(prev => ({ ...prev, [key]: "adding" }));
+
+    const alreadyTracked = wallets.find(w => w.address === scanData.address.toLowerCase());
+
+    try {
+      if (alreadyTracked) {
+        // PATCH to add this chain+protocol to the existing wallet's config
+        const existingChains    = alreadyTracked.chains    ?? [];
+        const existingProtocols = alreadyTracked.protocols ?? [];
+        const newChains    = [...new Set([...existingChains,    String(chainId)])];
+        const newProtocols = [...new Set([...existingProtocols, protocolId])];
+
+        const res = await fetch(`/api/wallets/${scanData.address}`, {
+          method:  "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ chains: newChains.map(Number), protocols: newProtocols }),
+        });
+        if (!res.ok) throw new Error("Update failed");
+      } else {
+        // POST to add new wallet with this specific chain+protocol
+        const res = await fetch("/api/wallets", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            address:   scanData.address,
+            chains:    [chainId],
+            protocols: [protocolId],
+          }),
+        });
+        if (res.status === 402) {
+          const j = await res.json();
+          const nextPlan = j.tier === "free" ? "Pro" : "Fund";
+          setScanError(`Wallet limit reached — upgrade to ${nextPlan} to track more.`);
+          setWatchStatus(prev => ({ ...prev, [key]: "error" }));
+          return;
+        }
+        if (res.status === 409) {
+          // Race condition: wallet was already added — fall through to PATCH
+          await loadWallets();
+          const freshWallets = await fetch("/api/wallets").then(r => r.json()).catch(() => null);
+          const fresh = (freshWallets?.wallets ?? []) as TrackedWallet[];
+          const existing = fresh.find(w => w.address === scanData.address.toLowerCase());
+          if (existing) {
+            const newChains    = [...new Set([...(existing.chains ?? []),    String(chainId)])];
+            const newProtocols = [...new Set([...(existing.protocols ?? []), protocolId])];
+            await fetch(`/api/wallets/${scanData.address}`, {
+              method:  "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body:    JSON.stringify({ chains: newChains.map(Number), protocols: newProtocols }),
+            });
+          }
+        } else if (!res.ok) {
+          throw new Error("Add failed");
+        }
+      }
+
+      await loadWallets();
+      setWatchStatus(prev => ({ ...prev, [key]: "watching" }));
+    } catch {
+      setWatchStatus(prev => ({ ...prev, [key]: "error" }));
+    }
+  }
+
+  async function handleWatchAll() {
+    if (!scanData) return;
+    for (const r of scanData.results) {
+      const key = `${r.chainId}:${r.protocolId}`;
+      if (!isComboWatching(r.chainId, r.protocolId) && watchStatus[key] !== "adding") {
+        await handleWatch(r.chainId, r.protocolId);
+      }
+    }
+  }
+
+  return (
+    <div
+      className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
+      style={{ background: "var(--preview-bg)" }}
+    >
+      <DiscoverSidebar tier={tier} />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Header */}
+        <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
+          style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
+          <div>
+            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Discover Vestings</h1>
+            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+              Scan 6 platforms × 3 chains to find every active vesting for a wallet
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="h-8 flex items-center gap-1.5 px-3 rounded-lg border text-xs font-medium transition-all"
+              style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", color: "var(--preview-text-2)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-muted)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--preview-card)")}>
+              ← Dashboard
+            </button>
+            <button
+              onClick={() => {
+                setDark(v => {
+                  try { localStorage.setItem("vestr-dark", !v ? "1" : "0"); } catch { /* ignore */ }
+                  return !v;
+                });
+              }}
+              className="h-8 w-8 flex items-center justify-center rounded-lg border transition-all text-sm"
+              style={{ background: "var(--preview-muted-2)", borderColor: "var(--preview-border)", color: "var(--preview-text-2)" }}
+            >
+              {dark ? "☀" : "🌙"}
+            </button>
+          </div>
+        </header>
+
+        {/* Main */}
+        <main className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+
+          {/* Scan form card */}
+          <div className="rounded-2xl p-6"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08))", border: "1px solid rgba(59,130,246,0.2)" }}>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
+                  Find all vestings for a wallet
+                </h2>
+                <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
+                  Enter any wallet address and we&apos;ll scan every supported platform across all 3 chains.
+                  Results appear below — click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
+                  add individual vestings to your dashboard.
+                </p>
+              </div>
+            </div>
+
+            {/* Input row */}
+            <div className="flex gap-3">
+              <input
+                placeholder="Wallet address (0x…)"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleScan(); }}
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-mono outline-none"
+                style={{
+                  color: "var(--preview-text)",
+                  background: "var(--preview-muted-2)",
+                  border: `1px solid ${scanError ? "#ef4444" : "var(--preview-border)"}`,
+                }}
+              />
+              <button
+                onClick={handleScan}
+                disabled={scanning || !address}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all flex-shrink-0"
+                style={{ background: scanning ? "var(--preview-muted-2)" : "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+              >
+                {scanning ? (
+                  <>
+                    <svg className="animate-spin" width={14} height={14} viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                    Scanning…
+                  </>
+                ) : (
+                  <>
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Scan all platforms
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Error banner */}
+            {scanError && (
+              <div className="mt-3 flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span className="text-xs flex-1" style={{ color: "#f87171" }}>{scanError}</span>
+                {scanError.includes("Pro plan") && (
+                  <a href="/pricing" className="text-[11px] font-semibold underline flex-shrink-0" style={{ color: "#60a5fa" }}>
+                    Upgrade →
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Platform tags */}
+            <div className="mt-4 pt-4 flex flex-wrap items-center gap-2" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "var(--preview-text-3)" }}>Covers</span>
+              {PROTOCOL_OPTIONS.map(p => {
+                const pc = PROTOCOL_COLORS[p.id] ?? { text: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
+                return (
+                  <span key={p.id} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{ background: pc.bg, color: pc.text }}>
+                    {p.label}
+                  </span>
+                );
+              })}
+              <span className="text-[9px] font-bold tracking-widest uppercase ml-1" style={{ color: "var(--preview-text-3)" }}>on</span>
+              {CHAIN_OPTIONS.map(c => (
+                <span key={c.id} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+                  {c.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Scanning in progress */}
+          {scanning && (
+            <div className="rounded-2xl p-8 text-center"
+              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(59,130,246,0.12)" }}>
+                <svg className="animate-spin" width={24} height={24} viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.2)" strokeWidth="3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
+              <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                Checking 6 platforms × 3 chains. This may take 10–20 seconds.
+              </p>
+            </div>
+          )}
+
+          {/* Results */}
+          {scanData && !scanning && (
+            <div>
+              {/* Summary row */}
+              <div className="flex items-center gap-3 mb-4">
+                <h3 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
+                  {scanData.totalStreams > 0
+                    ? `${scanData.totalStreams} vesting stream${scanData.totalStreams !== 1 ? "s" : ""} found`
+                    : "No vestings found"
+                  }
+                </h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono"
+                  style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
+                  {shortAddr(scanData.address)}
+                </span>
+                {scanData.totalStreams > 0 && (
+                  <>
+                    <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                      across {scanData.results.length} platform{scanData.results.length !== 1 ? "s" : ""}
+                    </span>
+                    <button
+                      onClick={handleWatchAll}
+                      className="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08))", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}
+                    >
+                      Watch all {scanData.results.length} →
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* No results empty state */}
+              {scanData.totalStreams === 0 ? (
+                <div className="rounded-2xl p-8 text-center"
+                  style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                    style={{ background: "var(--preview-muted-2)" }}>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="var(--preview-text-3)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold mb-1.5" style={{ color: "var(--preview-text-2)" }}>No active vestings found</p>
+                  <p className="text-[11px] max-w-xs mx-auto leading-relaxed" style={{ color: "var(--preview-text-3)" }}>
+                    This wallet has no active vesting streams on any of the {PROTOCOL_OPTIONS.length} supported platforms.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {scanData.results.map(r => {
+                    const key     = `${r.chainId}:${r.protocolId}`;
+                    const status  = watchStatus[key];
+                    const watching = isComboWatching(r.chainId, r.protocolId);
+                    return (
+                      <ResultCard
+                        key={key}
+                        result={r}
+                        isWatching={watching}
+                        isAdding={status === "adding"}
+                        onWatch={() => handleWatch(r.chainId, r.protocolId)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Initial empty state — before first scan */}
+          {!scanData && !scanning && (
+            <div className="rounded-2xl p-10 text-center"
+              style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border-2)" }}>
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(59,130,246,0.10)" }}>
+                <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <line x1="11" y1="8" x2="11" y2="14"/>
+                  <line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--preview-text)" }}>
+                Enter a wallet address to begin
+              </h3>
+              <p className="text-[12px] max-w-md mx-auto leading-relaxed" style={{ color: "var(--preview-text-3)" }}>
+                Discover scans every supported platform to find all your token vestings in one go.
+                Perfect if you&apos;ve forgotten which platform holds your allocation, or want to
+                make sure you haven&apos;t missed any active streams.
+              </p>
+            </div>
+          )}
+
+        </main>
+      </div>
+    </div>
+  );
+}
