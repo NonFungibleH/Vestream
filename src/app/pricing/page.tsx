@@ -136,9 +136,10 @@ export default function Pricing() {
               <FeatureItem text="1 blockchain of your choice" checkColor="#2563eb" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#2563eb" />
               <FeatureItem text="Claimable balance tracking" checkColor="#2563eb" />
-              <FeatureItem text="Sablier, Hedgey, UNCX & Unvest" checkColor="#2563eb" />
+              <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
+              <FeatureItem text="All 5 vesting platforms" checkColor="#2563eb" />
               <FeatureItem text="Email alerts" included={false} />
-              <FeatureItem text="Calendar integration" included={false} />
+              <FeatureItem text="CSV & PDF export" included={false} />
             </ul>
           </div>
 
@@ -184,9 +185,9 @@ export default function Pricing() {
               <FeatureItem text="Email unlock alerts" checkColor="#2563eb" />
               <FeatureItem text="Token Vesting Explorer" checkColor="#2563eb" />
               <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
-              <FeatureItem text="CSV export" checkColor="#2563eb" />
+              <FeatureItem text="CSV & PDF export" checkColor="#2563eb" />
               <FeatureItem text="Ticketing support" checkColor="#2563eb" />
-              <FeatureItem text="Calendar integration" included={false} />
+              <FeatureItem text="Search all receivers" included={false} />
               <FeatureItem text="Team workspace" included={false} />
             </ul>
           </div>
@@ -229,11 +230,11 @@ export default function Pricing() {
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="All chains" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Calendar integration (iCal export)" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Calendar integration" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Team workspace" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Telegram & WhatsApp alerts" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Priority support" color="#e5e7eb" checkColor="#10b981" />
             </ul>
           </div>
@@ -273,7 +274,7 @@ export default function Pricing() {
               ["Unlock calendar",               true,      true,              true],
               ["Email alerts",                  false,     true,              true],
               ["Token Vesting Explorer",        false,     true,              true],
-              ["CSV export",                    false,     true,              true],
+              ["CSV & PDF export",               false,     true,              true],
               ["Calendar integration",          false,     false,             true],
               ["Search all receivers",          false,     false,             true],
               ["Team workspace",                false,     false,             true],

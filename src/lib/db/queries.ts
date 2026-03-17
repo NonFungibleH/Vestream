@@ -227,6 +227,35 @@ export async function checkAndIncrementScanCount(
   };
 }
 
+/**
+ * Free-plan wallet settings cooldown — 1 change allowed per 24 hours.
+ * Non-free tiers are always allowed. Updates the timestamp when allowed.
+ * Returns { allowed, resetAt } — caller must check `allowed` before proceeding.
+ */
+export async function checkAndUpdateSettingsCooldown(
+  userId: string,
+  tier:   string,
+): Promise<{ allowed: boolean; resetAt: Date }> {
+  if (tier !== "free") return { allowed: true, resetAt: new Date() };
+
+  const WINDOW = 24 * 60 * 60 * 1000; // 24 hours in ms
+  const now    = new Date();
+
+  const row = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!row[0]) return { allowed: true, resetAt: new Date() };
+
+  const { settingsChangedAt } = row[0];
+
+  if (settingsChangedAt && now.getTime() - settingsChangedAt.getTime() < WINDOW) {
+    // Still within cooldown window
+    return { allowed: false, resetAt: new Date(settingsChangedAt.getTime() + WINDOW) };
+  }
+
+  // Window expired or first change — stamp now and allow
+  await db.update(users).set({ settingsChangedAt: now }).where(eq(users.id, userId));
+  return { allowed: true, resetAt: new Date(now.getTime() + WINDOW) };
+}
+
 export async function deleteUser(userId: string) {
   // Wallets, notificationPreferences, and notificationsSent all have
   // onDelete: "cascade" so they are cleaned up automatically.

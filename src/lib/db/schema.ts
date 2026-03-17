@@ -15,6 +15,8 @@ export const users = pgTable("users", {
   // Discover scan rate limiting: 3 scans per 24-hour rolling window
   scanCount:       integer("scan_count").default(0).notNull(),
   scanWindowStart: timestamp("scan_window_start"),
+  // Free-plan settings cooldown: track last wallet mutation to enforce 24h change limit
+  settingsChangedAt: timestamp("settings_changed_at"),
 });
 
 export const wallets = pgTable("wallets", {
