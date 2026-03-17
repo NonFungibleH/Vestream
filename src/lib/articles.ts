@@ -1457,6 +1457,490 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 7 ────────────────────────────────────────────────────────────────
+  {
+    slug:        "estimating-token-unlock-price-impact",
+    title:       "How to Estimate the Price Impact of a Token Unlock Event",
+    excerpt:     "Token unlocks are public knowledge — so why do prices still dump? This framework shows you how to model sell pressure, adjust for holder type, and identify the unlocks that genuinely move markets.",
+    publishedAt: "2025-04-02",
+    updatedAt:   "2025-04-02",
+    readingTime: "14 min read",
+    category:    "Research",
+    tags:        ["token unlock price impact", "vesting sell pressure", "circulating supply", "token unlock model", "DeFi research", "crypto markets"],
+    content: [
+      {
+        type: "p",
+        html: "Every token unlock event is announced months in advance. The vesting schedule is written into a smart contract, visible on-chain to anyone who looks. And yet, time after time, prices drop when cliff dates arrive. The question isn't whether unlocks cause sell pressure — they often do. The question is <strong>how much</strong>, under what conditions, and whether that pressure is already priced in before the date arrives.",
+      },
+      {
+        type: "p",
+        html: "This article builds a practical framework for estimating the price impact of a token unlock event. It is aimed at investors who want to size positions around vesting events, project teams who want to understand their own unlock risk, and analysts building vesting-aware models. We cover supply shock mechanics, a simple quantitative model, holder-type adjustments, and the real-world patterns the on-chain data reveals.",
+      },
+
+      { type: "h2", text: "The Mechanics of Unlock-Driven Sell Pressure" },
+      {
+        type: "p",
+        html: "An unlock event increases the <strong>liquid supply</strong> of a token: tokens that were previously locked — and therefore unable to be sold — become transferable. This creates a potential supply shock. The magnitude of that shock depends on three variables:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>The size of the unlock relative to current circulating supply.</strong> Unlocking 2% of circulating supply is a rounding error. Unlocking 40% is a structural event.",
+          "<strong>The propensity of recipients to sell.</strong> A protocol treasury receiving tokens rarely dumps immediately. A VC fund at the end of a 12-month lockup often does.",
+          "<strong>Market depth at the time of unlock.</strong> A token with $50m daily volume absorbs $5m in sell orders differently than one with $500k.",
+        ],
+      },
+      {
+        type: "p",
+        html: "The core concept is <strong>adjusted float</strong>: the percentage of total supply that becomes newly liquid as a result of the unlock. If a token has 100m tokens in circulation and an upcoming cliff releases 20m tokens, the adjusted float change is 20%. This is the single most predictive variable for post-unlock price behaviour.",
+      },
+      {
+        type: "callout",
+        emoji: "📐",
+        title: "The Float Change Formula",
+        body: "Adjusted Float Change (%) = Unlock Amount ÷ (Current Circulating Supply + Unlock Amount) × 100. A 20m unlock into a 100m circulating supply = 16.7% float change. A 5m unlock into 500m = 1.0%. The difference in expected price impact is enormous.",
+      },
+
+      { type: "h2", text: "Building a Simple Price Impact Model" },
+      {
+        type: "p",
+        html: "A workable first-order model combines the float change with two adjustments: <strong>holder type</strong> (who is receiving the unlocked tokens) and <strong>market depth</strong> (how much daily volume the token trades). The formula below is deliberately simple — the goal is a directional signal, not a precise prediction.",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Compute the float change percentage.</strong> Unlock size ÷ (circulating supply + unlock size).",
+          "<strong>Apply the holder-type multiplier.</strong> VC funds and early investors: 0.8–1.0 (high sell likelihood). Team and advisor tokens: 0.4–0.7 (moderate, depends on lockup culture). Community and ecosystem tokens: 0.1–0.3 (low immediate sell pressure). Protocol treasury: 0.05–0.15 (near-zero short-term sales).",
+          "<strong>Compute the volume-adjusted impact.</strong> Divide (Unlock Amount × Holder Multiplier) by 30-day average daily volume. This gives you a rough estimate of how many trading days' worth of sell pressure the unlock represents.",
+          "<strong>Sanity-check against market cap.</strong> If the adjusted sell pressure exceeds 5% of market cap, the event is high-risk regardless of other factors.",
+        ],
+      },
+      {
+        type: "p",
+        html: "This model is intentionally conservative — it tells you <em>potential</em> sell pressure, not <em>actual</em> sell pressure. Real-world outcomes depend on market sentiment, token utility demand, and whether buyers step in. But the model reliably flags the events worth paying attention to.",
+      },
+
+      { type: "h2", text: "The Holder Type Matrix" },
+      {
+        type: "p",
+        html: "The most important input to the model is holder type. Not all vesting recipients have the same incentive to sell. Here is a breakdown of the five main recipient categories and their historical sell tendencies:",
+      },
+      {
+        type: "table",
+        headers: ["Holder Type", "Typical Lock Duration", "Expected Sell Pressure", "Rationale"],
+        rows: [
+          ["Venture Capital / Seed Fund", "12–18 months", "High (70–90%)", "Return-focused, LPs expect distributions, cost basis often 5–20× below market"],
+          ["Strategic Investor / Launchpad", "6–12 months", "Moderate–High (50–70%)", "Similar to VC but sometimes subject to reputation incentives to hold"],
+          ["Founding Team", "12–24 months", "Moderate (30–60%)", "Depends heavily on runway needs, public commitments, and market conditions"],
+          ["Advisors", "6–12 months", "Moderate–High (50–80%)", "Token-compensated work often treated as income; advisors frequently sell at unlock"],
+          ["Community / Airdrop", "0–6 months", "Variable (10–90%)", "Highly sensitive to recipient size; small amounts sold immediately, large grants often staked"],
+          ["Protocol Treasury", "N/A (internal)", "Very Low (5–15%)", "Treasury tokens deployed into liquidity, grants, or buybacks — rarely dumped on open market"],
+        ],
+      },
+
+      { type: "h2", text: "Historical Patterns from On-Chain Data" },
+      {
+        type: "p",
+        html: "Analysing on-chain vesting data across hundreds of unlock events reveals several consistent patterns. Understanding these patterns helps investors decide <em>when</em> to act, not just <em>whether</em> to act.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Pre-unlock front-running (days −14 to −7).</strong> Sophisticated short-sellers and informed insiders often position ahead of large cliff releases. Tokens with high anticipated sell pressure frequently decline 5–15% in the two weeks before a major cliff date.",
+          "<strong>The cliff-day overshoot.</strong> On the day of a large cliff unlock, price often falls further than the fundamental sell pressure justifies. This is partly because of forced selling, partly because of stop-loss cascades, and partly because thin order books magnify moves.",
+          "<strong>The post-dump recovery window.</strong> Within 7–21 days after a cliff event, prices often partially recover as selling exhausts itself. Buyers who waited for the dust to settle frequently find better entry points than those who bought before the cliff.",
+          "<strong>Linear unlocks are quieter but cumulatively larger.</strong> Monthly linear vesting generates less day-of volatility than cliff events, but the cumulative supply addition over a 24-month schedule is often 3–5× larger than the initial cliff. The market tends to underappreciate this sustained pressure.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "⚠️",
+        title: "\"The Unlock Is Priced In\" — Until It Isn't",
+        body: "Market participants frequently claim that scheduled unlock events are already priced in. This is sometimes true — for small unlocks into liquid markets. It is often false for cliff events where the recipient is a VC fund with a cost basis 10× below market, or where the unlock represents more than 10% of circulating supply. Do the arithmetic before assuming the market has.",
+      },
+
+      { type: "h2", text: "Adjustments for Real-World Complexity" },
+      {
+        type: "p",
+        html: "The simple model above is a starting point. Several real-world factors can significantly raise or lower the expected impact:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cascading vesting schedules.</strong> Many projects have multiple recipient cohorts on slightly different schedules. A month where team, advisor, and investor vesting all overlap can produce 3× the single-cohort pressure.",
+          "<strong>Staking and re-lock programs.</strong> If a project offers 20% APY staking, a significant proportion of newly unlocked tokens may be immediately re-staked rather than sold. This reduces effective sell pressure but is sensitive to rate changes.",
+          "<strong>Protocol revenue and token utility.</strong> Tokens with genuine utility demand (gas fees, governance power, protocol access) have a demand floor that absorbs supply additions. Tokens with no utility are pure supply-demand dynamics and more sensitive to unlocks.",
+          "<strong>Market regime.</strong> During bull markets, even large unlocks are often absorbed. During bear markets or risk-off periods, the same unlock can become a significant price event because buy-side depth evaporates.",
+        ],
+      },
+
+      { type: "h2", text: "Putting It Together: A Worked Example" },
+      {
+        type: "p",
+        html: "Suppose a mid-cap DeFi token (<strong>$VEST</strong>) has the following characteristics: 200m tokens circulating, $180m market cap, 30-day average daily volume of $8m. An upcoming cliff releases 40m tokens to the project's VC investors, whose cost basis is $0.30 versus a current price of $0.90.",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Float change:</strong> 40m ÷ (200m + 40m) = 16.7%",
+          "<strong>Holder type multiplier:</strong> VC investors at current price 3× cost basis → multiplier 0.85 (high sell pressure expected)",
+          "<strong>Adjusted sell amount:</strong> 40m × 0.85 × $0.90 = $30.6m in potential selling",
+          "<strong>Volume-adjusted impact:</strong> $30.6m ÷ $8m daily volume = 3.8 trading days of sell pressure",
+          "<strong>Sanity check:</strong> $30.6m ÷ $180m market cap = 17% of market cap — high-risk threshold clearly breached",
+          "<strong>Conclusion:</strong> This unlock warrants serious attention. Watch for pre-cliff positioning in the −14 day window, and consider the post-dump recovery trade 7–14 days after the cliff if fundamentals are intact.",
+        ],
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "Why do token prices sometimes pump at a cliff unlock?",
+            a: "Occasionally, unlock events are followed by price increases. This usually happens when: (1) sell pressure was already anticipated and over-priced into the token, causing a short-squeeze when actual selling is lighter than expected; (2) the project announces positive news timed to coincide with the unlock to offset negative sentiment; or (3) the unlocked recipients are insiders who immediately deploy tokens into liquidity provision rather than selling, creating buy-side depth.",
+          },
+          {
+            q: "What float change percentage should be considered high risk?",
+            a: "As a rough guide: under 3% is generally low impact, 3–8% warrants monitoring, 8–15% is significant and should factor into position sizing, and above 15% is a high-risk event regardless of holder type. These thresholds scale down in bear markets and up in strong bull markets where buy-side depth is deeper.",
+          },
+          {
+            q: "Does vesting through Sablier vs UNCX vs Team Finance affect price impact?",
+            a: "The protocol itself does not change the fundamental supply dynamics — the price impact comes from recipient incentives and market conditions, not which smart contract holds the tokens. However, streaming protocols like Sablier produce continuous micro-unlocks rather than discrete cliff events, which tend to spread sell pressure more evenly and reduce day-of volatility compared to cliff-based protocols.",
+          },
+          {
+            q: "How do I find upcoming unlock events for a token I hold?",
+            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like Vestream aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 8 ────────────────────────────────────────────────────────────────
+  {
+    slug:        "on-chain-vesting-protocols-compared",
+    title:       "Sablier, UNCX, Team Finance, Hedgey, Unvest: On-Chain Vesting Protocols Compared",
+    excerpt:     "Five protocols. Five different architectures. Which one should projects use, and what do the differences mean for token holders tracking their unlocks? A technical deep-dive for analysts and builders.",
+    publishedAt: "2025-04-10",
+    updatedAt:   "2025-04-10",
+    readingTime: "15 min read",
+    category:    "Guides",
+    tags:        ["Sablier vesting", "UNCX vesting", "Team Finance", "Hedgey vesting", "Unvest", "vesting protocol comparison", "smart contract vesting", "on-chain vesting"],
+    content: [
+      {
+        type: "p",
+        html: "The on-chain vesting landscape has matured significantly since the days of simple multi-sig time-locks. Today, five protocols handle the majority of structured token releases across EVM chains: <strong>Sablier</strong>, <strong>UNCX</strong>, <strong>Team Finance</strong>, <strong>Hedgey</strong>, and <strong>Unvest</strong>. Each takes a meaningfully different architectural approach to the same problem: how to enforce a token release schedule on-chain, in a trust-minimised way.",
+      },
+      {
+        type: "p",
+        html: "For <strong>token holders</strong>, protocol choice matters because it determines how your vesting position is represented, how you claim, whether it can be transferred, and what happens in edge cases like contract upgrades or project abandonment. For <strong>project teams</strong>, it determines deployment cost, recipient experience, revocation rights, and how easily your vesting is discoverable by analytics tools. This article covers all five in technical depth.",
+      },
+
+      { type: "h2", text: "Architecture Overview" },
+      {
+        type: "p",
+        html: "The five protocols differ most fundamentally in how they represent a vesting position. There are three main architectural patterns:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Streaming (Sablier):</strong> Vesting is modelled as a continuous token stream. The contract holds tokens and releases them per-second. Recipients can withdraw at any time and receive exactly the amount that has streamed to the current timestamp.",
+          "<strong>Lock-and-release (UNCX, Team Finance, Unvest):</strong> Tokens are locked in a contract with a defined schedule. At each milestone or time interval, a specified amount becomes withdrawable. Recipients must actively claim.",
+          "<strong>Award / grant-based (Hedgey):</strong> Tokens are held in individual grant contracts or NFT-bound positions. Recipients claim based on a schedule, with positions represented as NFTs that can be transferred.",
+        ],
+      },
+
+      { type: "h2", text: "Sablier — Real-Time Token Streaming" },
+      {
+        type: "p",
+        html: "Sablier is the most architecturally distinctive of the five. Rather than releasing tokens in discrete chunks, it models vesting as a <strong>continuous flow</strong>: the streamed amount increases linearly (or dynamically) with every block. At any moment, the recipient can withdraw exactly the amount that has elapsed since stream start.",
+      },
+      {
+        type: "p",
+        html: "Sablier v2 introduced three stream types: <code>LockupLinear</code> (cliff + linear), <code>LockupDynamic</code> (custom curve defined by segments), and <code>LockupTranched</code> (discrete tranches at defined intervals). Each stream is represented as an <strong>ERC-721 NFT</strong>, making the vesting position a transferable, tradeable asset. A recipient can sell their stream if the secondary market supports it.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cliff mechanics:</strong> In LockupLinear, a cliff timestamp and cliff amount are set separately from the streaming amount. Before the cliff, nothing is withdrawable. After the cliff, the cliff amount plus all accrued streaming is immediately available.",
+          "<strong>Cancellability:</strong> Streams can be made cancellable or non-cancellable at deployment. If cancellable, the sender can claw back unvested tokens at any time. Non-cancellable streams provide strong guarantees to recipients.",
+          "<strong>Renouncing:</strong> Senders can renounce cancellation rights, permanently making a stream non-cancellable after the fact.",
+          "<strong>Gas profile:</strong> Stream creation is moderately gas-intensive (the NFT mint is additional cost), but withdrawals are cheap — a single storage read and ERC-20 transfer.",
+        ],
+      },
+
+      { type: "h2", text: "UNCX — LP Token Locking and Team Vesting" },
+      {
+        type: "p",
+        html: "UNCX Network originated as an LP token locking protocol — a mechanism for DeFi projects to prove that liquidity could not be rug-pulled. It has since expanded into a broader token vesting platform for team and investor allocations. The protocol runs two main products: the original UNCX locker and the newer UNCX-VM (Vault Manager) architecture.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>UNCX locker:</strong> The classic interface. Tokens are locked for a fixed duration or until a linear vesting schedule completes. Unlock rules are defined at deployment and are largely immutable.",
+          "<strong>UNCX-VM:</strong> A more flexible vault-based model with per-recipient allocation tracking, multi-sig support, and improved UI for large-scale team distributions.",
+          "<strong>Cliff support:</strong> Both products support cliff timestamps — tokens are claimable only after the cliff date, with linear release beginning at or after the cliff.",
+          "<strong>LP token specialisation:</strong> UNCX's primary competitive advantage is its established reputation for LP locking. Projects frequently lock LP tokens on UNCX as a trust signal to investors, making it the most used protocol for that specific use case.",
+          "<strong>Chains:</strong> Available on Ethereum, BSC, Polygon, Arbitrum, and several other EVM chains.",
+        ],
+      },
+
+      { type: "h2", text: "Team Finance — Milestone-Based Vesting" },
+      {
+        type: "p",
+        html: "Team Finance is the most widely used protocol for team and advisor vesting, distinguished by its support for <strong>milestone-based unlocks</strong> alongside time-based schedules. Rather than purely calendar-driven releases, projects can define releases that trigger when specific conditions are met — though in practice, most milestones are manually approved by the project multisig.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Batch distributions:</strong> Team Finance allows a single transaction to create vesting positions for multiple recipients, which is critical for projects distributing tokens to dozens of team members or investors.",
+          "<strong>Revocation:</strong> Schedules can be set as revocable (the depositor can cancel and recover unvested tokens) or irrevocable. Most team vesting is revocable to handle employee departures.",
+          "<strong>Token unlock types:</strong> Supports linear, cliff, and mixed schedules. A common pattern is 12-month cliff followed by 24-month linear — the '1+2 standard' in crypto team vesting.",
+          "<strong>No NFT representation:</strong> Unlike Sablier or Hedgey, Team Finance vesting positions are tied to recipient addresses, not transferable NFTs. This simplifies accounting but reduces flexibility.",
+          "<strong>Chains:</strong> Ethereum, BSC, Polygon, Avalanche, Cronos, and others.",
+        ],
+      },
+
+      { type: "h2", text: "Hedgey — NFT-Bound Vesting and Token Plans" },
+      {
+        type: "p",
+        html: "Hedgey takes a unique approach by combining <strong>vesting with option-like token purchase plans</strong>. It is widely used for employee token compensation — specifically token award plans (TAPs) where recipients vest into the right to tokens at a pre-agreed price, similar to stock options in traditional equity compensation.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>NFT-based positions:</strong> Each vesting grant is an NFT, making positions transferable. Recipients can delegate voting rights to other addresses without transferring the NFT itself.",
+          "<strong>Claim model:</strong> Recipients claim their vested tokens on a schedule. Unlike Sablier's continuous stream, Hedgey positions release in discrete increments.",
+          "<strong>Governance delegation:</strong> A key feature for DAOs — token holders can participate in governance before their tokens fully vest, increasing governance participation during vesting periods.",
+          "<strong>Token purchase plans:</strong> Hedgey supports structured token purchase agreements where recipients buy tokens at a fixed price over time, useful for employee token compensation programmes.",
+          "<strong>Chains:</strong> Available on Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, and others.",
+        ],
+      },
+
+      { type: "h2", text: "Unvest — Structured On-Chain Vesting Schedules" },
+      {
+        type: "p",
+        html: "Unvest is the most recently developed of the five protocols and focuses on clean, configurable vesting schedules for project teams. Its interface emphasises simplicity for project creators while offering granular schedule control.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Tranched releases:</strong> Unvest specialises in tranche-based vesting where precise percentages release at defined intervals.",
+          "<strong>Claim model:</strong> Recipients claim tokens at each release event. Unclaimed tokens from previous tranches accumulate and remain claimable.",
+          "<strong>No cliff distinction:</strong> Rather than a separate 'cliff amount', Unvest models the cliff as a zero-release period followed by the first tranche — functionally equivalent but architecturally different.",
+          "<strong>Chains:</strong> Ethereum, BNB Chain, Polygon, Arbitrum, and Base.",
+        ],
+      },
+
+      { type: "h2", text: "Head-to-Head Comparison" },
+      {
+        type: "table",
+        headers: ["Protocol", "Architecture", "NFT Position", "Cliff Support", "Revocable?", "LP Locking", "Governance Delegation"],
+        rows: [
+          ["Sablier v2", "Continuous streaming", "Yes (ERC-721)", "Yes (LockupLinear)", "Optional at creation", "No", "No (but transferable)"],
+          ["UNCX", "Lock-and-release", "No", "Yes", "Limited", "Yes (primary use case)", "No"],
+          ["Team Finance", "Milestone/linear", "No", "Yes", "Yes", "No", "No"],
+          ["Hedgey", "NFT-bound grants", "Yes (ERC-721)", "Yes", "Yes", "No", "Yes (built-in)"],
+          ["Unvest", "Tranched release", "No", "Via zero-tranche", "Configurable", "No", "No"],
+        ],
+      },
+
+      { type: "h2", text: "Which Protocol Should You Use?" },
+      {
+        type: "p",
+        html: "Protocol selection depends heavily on use case. Here is a decision framework by scenario:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Locking LP tokens as a trust signal:</strong> UNCX is the clear standard. Its reputation in this niche is established and LPs recognise the UNCX lock UI.",
+          "<strong>Team and advisor vesting across multiple recipients:</strong> Team Finance's batch creation and revocation support make it the most practical choice for large distributions.",
+          "<strong>Investor vesting with continuous salary-like UX:</strong> Sablier's streaming model is ideal when you want recipients to experience vesting as an ongoing income stream rather than a series of cliff events.",
+          "<strong>DAO contributor compensation with governance rights:</strong> Hedgey's governance delegation feature is purpose-built for this. Contributors can participate in DAO decisions before their tokens fully vest.",
+          "<strong>Simple, transparent public vesting for community:</strong> Any of the five work, but Sablier and Team Finance have the best explorer tooling for public-facing vesting transparency.",
+        ],
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "Can I transfer my vesting position to another wallet?",
+            a: "It depends on the protocol. Sablier and Hedgey represent vesting positions as NFTs, making them transferable to any address. UNCX, Team Finance, and Unvest lock tokens to a recipient address — you cannot transfer the vesting position itself, though in some cases the depositor can modify the recipient address with appropriate permissions.",
+          },
+          {
+            q: "What happens if a vesting protocol is hacked or has a bug?",
+            a: "Vesting tokens held in a protocol contract are at risk if the contract has an exploitable vulnerability. All five protocols have been audited, but no smart contract is risk-free. Sablier and Team Finance have the longest track records with significant TVL held without incident. For very large allocations, some projects use multi-sig time-locks rather than third-party vesting protocols to minimise smart contract risk.",
+          },
+          {
+            q: "Can vesting be paused or cancelled mid-schedule?",
+            a: "This depends on how the vesting was configured at creation. Sablier streams can be made cancellable or non-cancellable. Team Finance vesting can be revocable or irrevocable. Revocable vesting means the depositor (typically the project) can cancel remaining unvested allocations. Non-revocable vesting provides recipients with a strong guarantee that their tokens will vest regardless of the project's decisions after deployment.",
+          },
+          {
+            q: "How do Vestream and other tracking tools discover vesting positions?",
+            a: "Tracking tools like Vestream query protocol smart contracts directly using event logs and indexed storage. Each protocol emits events when streams/locks are created, and these events include the recipient address, token address, and schedule parameters. Tools index these events across all supported chains to build a complete picture of a wallet's vesting positions.",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 9 ────────────────────────────────────────────────────────────────
+  {
+    slug:        "vesting-cliff-explained",
+    title:       "The Vesting Cliff Explained: What It Is, Why It Exists, and Why It Moves Markets",
+    excerpt:     "The cliff is the most misunderstood mechanism in token vesting — and the one most likely to catch investors off guard. This guide covers the mechanics, the market dynamics, and what the data shows about cliff-driven price events.",
+    publishedAt: "2025-04-18",
+    updatedAt:   "2025-04-18",
+    readingTime: "13 min read",
+    category:    "Fundamentals",
+    tags:        ["vesting cliff", "cliff period", "token cliff unlock", "token vesting cliff", "crypto vesting schedule", "cliff mechanics"],
+    content: [
+      {
+        type: "p",
+        html: "Ask most crypto investors what a vesting cliff is, and they will tell you it is 'a waiting period before tokens unlock.' That is technically correct, but it misses what makes the cliff structurally significant. The cliff is not just a delay — it is a <strong>concentrated release event</strong> that can deliver 12 to 24 months' worth of token allocation in a single transaction. Understanding the cliff at a mechanical level changes how you analyse a project's tokenomics and how you position around unlock events.",
+      },
+      {
+        type: "p",
+        html: "This article covers cliff mechanics in depth: what they are, how they are encoded in smart contracts, why they became standard practice, the market dynamics they generate, and how to identify cliff events before they arrive. By the end, you will be able to read any vesting schedule and quickly determine whether the cliff presents a risk, an opportunity, or a non-event.",
+      },
+
+      { type: "h2", text: "What Is a Vesting Cliff?" },
+      {
+        type: "p",
+        html: "A vesting cliff is a period at the start of a vesting schedule during which <strong>zero tokens are released</strong>. Once the cliff date is reached, a pre-defined lump sum — typically corresponding to the proportion of the total allocation that 'accrued' during the cliff period — unlocks immediately. After the cliff, remaining tokens vest according to the ongoing schedule (usually linear).",
+      },
+      {
+        type: "p",
+        html: "The classic structure in crypto is: <strong>12-month cliff, 36-month total vest</strong>. Under this schedule, 1/3 of the total allocation unlocks on the one-year anniversary of the grant date. The remaining 2/3 then vests linearly over the following 24 months, releasing in monthly increments. This is borrowed directly from startup equity compensation, where the same structure has been standard since the 1980s.",
+      },
+      {
+        type: "callout",
+        emoji: "💡",
+        title: "The Cliff vs Linear Distinction",
+        body: "Without a cliff, linear vesting begins from day one — the recipient earns tokens continuously from grant date. With a cliff, nothing is earned (or at least nothing is withdrawable) until the cliff date, at which point all accrued tokens release at once. The cliff is a threshold, not a gradual ramp.",
+      },
+
+      { type: "h2", text: "How Cliff Calculations Work On-Chain" },
+      {
+        type: "p",
+        html: "On-chain, a cliff is implemented by comparing the current block timestamp to a stored cliff timestamp. Before the cliff, withdrawal functions revert with a 'cliff not reached' error. After the cliff, the claimable amount includes the cliff allocation.",
+      },
+      {
+        type: "p",
+        html: "Different protocols model cliffs differently. In <strong>Sablier v2 LockupLinear</strong>, two separate amounts are specified: a cliff amount (released at the cliff timestamp) and a streaming amount (released linearly from cliff to end). This allows precise control — a 25% cliff with 75% linear, for example, or a 0% cliff with 100% linear.",
+      },
+      {
+        type: "p",
+        html: "In <strong>Team Finance and UNCX</strong>, the cliff is modelled as a single timestamp before which nothing vests. After the cliff, the contract calculates how many full periods have elapsed since the start and releases the proportional amount. Some implementations allow multiple cliff stages — a <strong>cascading cliff</strong> where partial amounts release at defined intervals before the full schedule begins.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cliff timestamp precision:</strong> Cliffs are encoded as Unix timestamps (seconds since January 1, 1970). The practical precision is one second, but actual block timestamps vary by chain — Ethereum blocks target 12 seconds, making cliff execution within 1–2 blocks of the target timestamp.",
+          "<strong>Discrete vs continuous models:</strong> Streaming protocols (Sablier) release tokens continuously, so the 'cliff event' is technically the moment streaming begins rather than a discrete batch release. Non-streaming protocols release a fixed amount at the cliff block, making the event more discrete and visible on-chain.",
+          "<strong>Gas and execution:</strong> The cliff release does not happen automatically. Recipients must call a claim or withdraw function. This means the actual on-chain transfer may happen hours or days after the cliff timestamp, depending on recipient attention and gas prices.",
+        ],
+      },
+
+      { type: "h2", text: "Why Cliffs Exist" },
+      {
+        type: "p",
+        html: "The cliff serves three distinct functions, each of which is relevant to how you evaluate a project's tokenomics design:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Commitment signalling.</strong> A cliff creates a minimum tenure requirement: recipients must stay engaged with the project for at least the cliff duration to receive any tokens. For team members, this is a retention mechanism. For investors, it is a signal that they are committing to the project's trajectory rather than looking for a quick exit.",
+          "<strong>Anti-dump protection.</strong> Without a cliff, linear vesting begins on day one. For a token that is newly listed, early investors could immediately begin selling their first month's vesting allocation. The cliff delays this entirely, giving the token time to establish market depth and price discovery before meaningful selling from insiders begins.",
+          "<strong>Alignment with project milestones.</strong> In practice, the 12-month cliff roughly corresponds to the time it takes for a project to launch its mainnet product, build early community, and establish some track record. Releasing tokens before this milestone would be premature for all parties.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "📜",
+        title: "Why 12 Months Became the Standard",
+        body: "The 12-month cliff in crypto traces directly to Silicon Valley startup equity. Typical startup equity grants use a 4-year vest with 1-year cliff — the same '1+3' or '1+2' structures common in crypto. When the first token-compensated crypto projects structured their allocations, they borrowed from equity compensation norms. The structure stuck, even though the liquidity dynamics of tokens are fundamentally different from illiquid startup equity.",
+      },
+
+      { type: "h2", text: "The Cliff Release Problem" },
+      {
+        type: "p",
+        html: "Here is where the cliff becomes a market structure event rather than just a schedule mechanism. When the cliff fires, a <strong>large discrete quantity of tokens</strong> — potentially 20–35% of total allocation — becomes immediately liquid. The size of this event relative to the existing circulating supply determines whether the cliff is a market-moving occurrence or a non-event.",
+      },
+      {
+        type: "table",
+        headers: ["Unlock Type", "Market Impact Profile", "Price Predictability", "Seller Incentive"],
+        rows: [
+          ["Cliff release", "Large discrete shock on cliff date", "Low (single-day event, hard to predict timing)", "High pressure if cost basis well below market"],
+          ["Linear monthly", "Steady incremental supply addition", "High (predictable monthly amounts)", "Moderate — small per-event, but cumulative"],
+          ["Quarterly tranches", "Medium discrete events 4× per year", "Medium", "Moderate — larger than monthly, smaller than cliff"],
+          ["Continuous stream (Sablier)", "Per-second micro-additions", "Very high (fully predictable)", "Low per-moment, but meaningful on long timescales"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Sophisticated market participants — particularly those with access to vesting schedule data — often begin positioning <strong>before the cliff date</strong>. This typically manifests as increased short interest, reduced buy-side depth, or direct selling by recipients who hold pre-cliff positions through derivatives or OTC agreements. The result is that many cliff events show price weakness in the 7–14 days before the cliff fires.",
+      },
+
+      { type: "h2", text: "Cliff Variations in the Wild" },
+      {
+        type: "p",
+        html: "Not all projects use the standard 12-month cliff. Here is a taxonomy of cliff structures and what they signal about a project's incentive design:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>No cliff (fully linear from day one).</strong> Common for community allocations and public sale tokens. Signals that the project wants recipients to feel immediate ownership. Watch for projects claiming 'no cliff' for team and investor allocations — this is a yellow flag for commitment.",
+          "<strong>Short cliff (3–6 months).</strong> Used when liquidity is needed quickly — bootstrapping liquidity provider incentives, early ecosystem grants. Appropriate for operational allocations, but concerning for investor/team tokens.",
+          "<strong>Standard cliff (12 months).</strong> The baseline. Reasonable alignment signal. Evaluate based on total vesting duration: a 12-month cliff with 14-month total vest is almost as risky as no cliff. A 12-month cliff with 36-month total vest is genuinely aligned.",
+          "<strong>Extended cliff (18–24 months).</strong> Strong commitment signal, particularly for founding teams. Rare but increasingly seen in 'long-term narrative' projects that want to communicate multi-year conviction.",
+          "<strong>Back-loaded schedules.</strong> Some projects use a reverse-cliff structure: small early tranches that increase in size over time. This discourages early selling but creates growing supply pressure in later years.",
+        ],
+      },
+
+      { type: "h2", text: "How to Find and Track Cliff Dates" },
+      {
+        type: "p",
+        html: "Identifying cliff dates for tokens you hold or are researching requires reading the vesting contract data directly. The process varies by protocol:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Find the vesting contract address.</strong> The project's documentation, tokenomics page, or initial token deployment transaction should reference the vesting contract. Many projects post this on their website or GitHub.",
+          "<strong>Read the contract storage.</strong> Using a block explorer (Etherscan, BscScan, etc.), navigate to the contract and call the read functions. Look for <code>cliffTime</code>, <code>cliffDate</code>, <code>vestingStart</code>, or equivalent variables.",
+          "<strong>Use a vesting aggregator.</strong> Tools like Vestream index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
+          "<strong>Verify against tokenomics documentation.</strong> On-chain data is ground truth, but project documentation often explains the intent behind the schedule. Discrepancies between documented schedules and on-chain data are a significant red flag.",
+        ],
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "What happens to unvested tokens during the cliff period?",
+            a: "During the cliff period, tokens remain in the vesting contract — they are not accessible to the recipient or the project. The project deposited them at vesting schedule creation; neither party can access them until the cliff date. If the schedule is revocable, the project can cancel the schedule and recover unvested tokens, but cannot access them without cancellation.",
+          },
+          {
+            q: "Can a cliff be modified or removed after vesting has started?",
+            a: "Generally no. Vesting schedules in smart contracts are largely immutable once created. The cliff timestamp is written into the contract at deployment and cannot be changed without deploying an entirely new vesting contract. Some multi-sig controlled contracts allow parameter modification, but this requires transparent governance and is rare in practice.",
+          },
+          {
+            q: "Do all tokens have vesting cliffs?",
+            a: "No. Public sale tokens and community distribution tokens often have no cliff — they vest immediately or on a short linear schedule. Mining and staking rewards typically have no cliff at all. Cliffs are most common for team, investor, and advisor allocations where long-term alignment is the goal. Always check the specific allocation category you are tracking.",
+          },
+          {
+            q: "What is a 'hard cliff' vs 'soft cliff'?",
+            a: "In some documentation, a 'hard cliff' refers to a schedule where zero tokens are accessible before the cliff date regardless of circumstances — the smart contract enforces it unconditionally. A 'soft cliff' sometimes refers to a revocable schedule where, while tokens don't vest before the cliff, the depositor can cancel the schedule and change the terms. In strict technical usage, all on-chain cliffs are 'hard' (the contract enforces them), but the revocability of the overall schedule affects the practical security of the recipient's allocation.",
+          },
+          {
+            q: "Can I sell or transfer my vesting position before the cliff fires?",
+            a: "On protocols that represent vesting as NFTs (Sablier, Hedgey), you can transfer the vesting NFT to another address, effectively selling the future claim to the tokens. The new holder then waits for the cliff and claims. On address-locked protocols (UNCX, Team Finance, Unvest), you cannot transfer the vesting position — it is permanently tied to the recipient address set at creation.",
+          },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export default articles;

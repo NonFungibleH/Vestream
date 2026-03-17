@@ -69,6 +69,7 @@ export default function Pricing() {
           <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
         </Link>
         <div className="flex items-center gap-5">
+          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Resources</Link>
           <Link href="/pricing" className="text-sm font-medium" style={{ color: "#0f172a", fontWeight: 600 }}>Pricing</Link>
           <Link href="/login"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"

@@ -182,6 +182,101 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
   );
 }
 
+// ─── Article sidebar ──────────────────────────────────────────────────────────
+
+const CATEGORY_COLORS: Record<string, { dot: string }> = {
+  Fundamentals:      { dot: "#3b82f6" },
+  Tokenomics:        { dot: "#7c3aed" },
+  Guides:            { dot: "#10b981" },
+  "Market Analysis": { dot: "#f97316" },
+  Research:          { dot: "#ec4899" },
+};
+
+function ArticleSidebar({
+  allArticles,
+  currentSlug,
+}: {
+  allArticles: ReturnType<typeof getAllArticles>;
+  currentSlug: string;
+}) {
+  // Group by category
+  const categoryOrder: string[] = [];
+  const byCategory: Record<string, typeof allArticles> = {};
+  for (const a of allArticles) {
+    if (!byCategory[a.category]) {
+      categoryOrder.push(a.category);
+      byCategory[a.category] = [];
+    }
+    byCategory[a.category].push(a);
+  }
+
+  return (
+    <aside className="hidden xl:block w-56 flex-shrink-0">
+      <div className="sticky top-24 space-y-6">
+        {/* Back link */}
+        <Link
+          href="/resources"
+          className="flex items-center gap-1.5 text-xs font-semibold transition-colors hover:text-blue-600"
+          style={{ color: "#64748b" }}
+        >
+          <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+            <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          All Resources
+        </Link>
+
+        {/* Articles by category */}
+        {categoryOrder.map((cat) => {
+          const dotColor = CATEGORY_COLORS[cat]?.dot ?? "#64748b";
+          return (
+            <div key={cat}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotColor }} />
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+                  {cat}
+                </p>
+              </div>
+              <ul className="space-y-0.5">
+                {byCategory[cat].map((a) => {
+                  const isCurrent = a.slug === currentSlug;
+                  return (
+                    <li key={a.slug}>
+                      <Link
+                        href={`/resources/${a.slug}`}
+                        className="block text-xs leading-snug px-2.5 py-1.5 rounded-lg transition-colors"
+                        style={{
+                          color: isCurrent ? "#2563eb" : "#64748b",
+                          background: isCurrent ? "rgba(37,99,235,0.07)" : "transparent",
+                          fontWeight: isCurrent ? 600 : 400,
+                        }}
+                      >
+                        {a.title}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+
+        {/* Mini CTA */}
+        <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.12)" }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: "#0f172a" }}>Track your unlocks</p>
+          <p className="text-[11px] mb-3" style={{ color: "#64748b" }}>Free. No signup form.</p>
+          <Link
+            href="/login"
+            className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+          >
+            Launch App →
+          </Link>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ArticlePage(
@@ -191,7 +286,8 @@ export default async function ArticlePage(
   const article = getArticle(slug);
   if (!article) notFound();
 
-  const allArticles = getAllArticles().filter((a) => a.slug !== slug);
+  const allArticles = getAllArticles();
+  const relatedArticles = allArticles.filter((a) => a.slug !== slug).slice(0, 4);
 
   // ── FAQ items for JSON-LD ──────────────────────────────────────────────────
   const faqBlock = article.content.find((b): b is Extract<Block, { type: "faq" }> => b.type === "faq");
@@ -266,7 +362,7 @@ export default async function ArticlePage(
             <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
           </Link>
           <div className="flex items-center gap-5">
-            <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
+            <Link href="/resources" className="text-sm font-semibold transition-colors" style={{ color: "#0f172a" }}>
               Resources
             </Link>
             <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
@@ -337,53 +433,60 @@ export default async function ArticlePage(
           </div>
         </header>
 
-        {/* ── Body ────────────────────────────────────────────────────────── */}
-        <main className="max-w-3xl mx-auto px-6 py-12">
+        {/* ── Body: sidebar + article content ─────────────────────────────── */}
+        <div className="max-w-7xl mx-auto px-6 py-12 flex gap-10 items-start">
 
-          {/* Table of contents */}
-          <TableOfContents blocks={article.content} />
+          {/* Left sidebar */}
+          <ArticleSidebar allArticles={allArticles} currentSlug={slug} />
 
-          {/* Content blocks */}
-          <article>
-            {article.content.map((block, i) => (
-              <RenderBlock key={i} block={block} />
-            ))}
-          </article>
+          {/* Article content */}
+          <main className="flex-1 max-w-3xl min-w-0">
 
-          {/* ── In-article CTA ────────────────────────────────────────────── */}
-          <div className="mt-16 rounded-3xl p-8 text-center"
-            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.15)" }}>
-            <h2 className="text-xl font-bold mb-2" style={{ color: "#0f172a" }}>
-              Track every token unlock in one dashboard
-            </h2>
-            <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#64748b" }}>
-              Vestream covers Sablier, UNCX, Team Finance, Hedgey, and Unvest — across all chains — in a single real-time view. No sign-up forms.
-            </p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link
-                href="/login"
-                className="text-sm font-bold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}
-              >
-                Launch Dashboard →
-              </Link>
-              <Link
-                href="/pricing"
-                className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:bg-slate-100"
-                style={{ background: "white", color: "#475569", border: "1px solid #e2e8f0" }}
-              >
-                See Pricing
-              </Link>
+            {/* Table of contents */}
+            <TableOfContents blocks={article.content} />
+
+            {/* Content blocks */}
+            <article>
+              {article.content.map((block, i) => (
+                <RenderBlock key={i} block={block} />
+              ))}
+            </article>
+
+            {/* ── In-article CTA ──────────────────────────────────────────── */}
+            <div className="mt-16 rounded-3xl p-8 text-center"
+              style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.15)" }}>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "#0f172a" }}>
+                Track every token unlock in one dashboard
+              </h2>
+              <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#64748b" }}>
+                Vestream covers Sablier, UNCX, Team Finance, Hedgey, and Unvest — across all chains — in a single real-time view. No sign-up forms.
+              </p>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <Link
+                  href="/login"
+                  className="text-sm font-bold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}
+                >
+                  Launch Dashboard →
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:bg-slate-100"
+                  style={{ background: "white", color: "#475569", border: "1px solid #e2e8f0" }}
+                >
+                  See Pricing
+                </Link>
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
 
-        {/* ── More articles ────────────────────────────────────────────────── */}
-        {allArticles.length > 0 && (
-          <section className="max-w-3xl mx-auto px-6 pb-20">
+        {/* ── More articles ─────────────────────────────────────────────────── */}
+        {relatedArticles.length > 0 && (
+          <section className="max-w-5xl mx-auto px-6 pb-20">
             <h2 className="text-lg font-bold mb-5" style={{ color: "#0f172a" }}>More from Vestream Resources</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {allArticles.map((a) => (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {relatedArticles.map((a) => (
                 <Link
                   key={a.slug}
                   href={`/resources/${a.slug}`}
