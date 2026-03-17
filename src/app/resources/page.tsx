@@ -16,9 +16,11 @@ export const metadata: Metadata = {
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Fundamentals: { bg: "rgba(59,130,246,0.10)",  text: "#60a5fa" },
-  Tokenomics:   { bg: "rgba(167,139,250,0.12)", text: "#a78bfa" },
-  Guides:       { bg: "rgba(52,211,153,0.10)",  text: "#34d399" },
+  Fundamentals:    { bg: "rgba(59,130,246,0.10)",  text: "#60a5fa" },
+  Tokenomics:      { bg: "rgba(167,139,250,0.12)", text: "#a78bfa" },
+  Guides:          { bg: "rgba(52,211,153,0.10)",  text: "#34d399" },
+  "Market Analysis": { bg: "rgba(251,146,60,0.12)",  text: "#fb923c" },
+  Research:        { bg: "rgba(244,114,182,0.12)", text: "#f472b6" },
 };
 
 export default function ResourcesPage() {
