@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WaitlistForm } from "@/components/WaitlistForm";
 
 export default function Home() {
   return (
@@ -21,11 +22,11 @@ export default function Home() {
           <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
             Pricing
           </Link>
-          <Link href="/login"
-            className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-            Launch App →
-          </Link>
+          <span
+            className="text-xs font-semibold px-3 py-1.5 rounded-full"
+            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
+            Coming Soon
+          </span>
         </div>
       </nav>
 
@@ -96,11 +97,18 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Badge */}
-        <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-8 text-xs font-semibold"
-          style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-          The data layer for token vestings
+        {/* Badges */}
+        <div className="relative flex items-center gap-3 mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold"
+            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            The data layer for token vestings
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
+            Coming Soon
+          </div>
         </div>
 
         <h1 className="relative text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
@@ -119,16 +127,8 @@ export default function Home() {
           Track unlocks, analyse P&amp;L, set email alerts, and export clean reports. All in one place.
         </p>
 
-        <div className="relative flex flex-col items-center gap-3">
-          <Link href="/dashboard"
-            className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-150 hover:scale-105"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 24px rgba(37,99,235,0.35)" }}>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            Launch Dashboard
-          </Link>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>Connect wallet or sign in with email · Free to start</p>
+        <div className="relative flex flex-col items-center gap-3 w-full">
+          <WaitlistForm />
         </div>
 
         {/* Protocol strip */}
@@ -707,16 +707,12 @@ export default function Home() {
             style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
           <div className="absolute -left-8 bottom-0 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)" }} />
-          <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Your vesting data, finally unified</h2>
+          <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Be the first in.</h2>
           <p className="relative text-base mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Connect your wallet and see every vesting position — across every protocol — in seconds.
+            Vestr is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
           </p>
-          <div className="relative flex justify-center">
-            <Link href="/dashboard"
-              className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-150 hover:scale-105"
-              style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", boxShadow: "0 4px 16px rgba(0,0,0,0.25)" }}>
-              Launch Dashboard →
-            </Link>
+          <div className="relative flex justify-center w-full">
+            <WaitlistForm dark />
           </div>
         </div>
       </section>
