@@ -4,8 +4,10 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ── Admin gate ────────────────────────────────────────────────────────────────
-  // /admin/login is the login page itself — let it through unconditionally
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  if (pathname.startsWith("/admin")) {
+    // Login page itself must always be reachable — let it through immediately
+    if (pathname === "/admin/login") return NextResponse.next();
+
     const adminCookie = req.cookies.get("vestr_admin");
     if (!adminCookie) {
       const url = req.nextUrl.clone();
