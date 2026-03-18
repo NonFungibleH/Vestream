@@ -11,6 +11,18 @@ import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
+
+// ─── Per-tier sub-limits (burst + daily) ─────────────────────────────────────
+//
+//  These sit on top of the monthly cap and protect against accidental runaway
+//  usage (a looping agent, a misconfigured script, etc.).
+//
+//  free:  30 req/min  ·  150 req/day
+//  pro:  120 req/min  · 5 000 req/day
+//
+const BURST_LIMITS = { free: 30,  pro: 120  } as const;
+const DAILY_LIMITS = { free: 150, pro: 5000 } as const;
 
 // ─── Key generation (admin use only) ─────────────────────────────────────────
 
@@ -90,6 +102,32 @@ export async function authenticateApiKey(
       ok:      false,
       status:  429,
       message: `Monthly limit of ${row.monthlyLimit} requests reached. Upgrade to Pro for higher limits.`,
+    };
+  }
+
+  // ── Burst + daily sub-limits (Upstash, gracefully skipped if Redis not set) ──
+  const tier = row.tier as "free" | "pro";
+  const burstLimit = BURST_LIMITS[tier] ?? BURST_LIMITS.free;
+  const dailyLimit = DAILY_LIMITS[tier] ?? DAILY_LIMITS.free;
+
+  const [burst, daily] = await Promise.all([
+    checkRateLimit("api:burst", row.id, burstLimit, "1 m"),
+    checkRateLimit("api:daily", row.id, dailyLimit, "24 h"),
+  ]);
+
+  if (!burst.allowed) {
+    return {
+      ok:      false,
+      status:  429,
+      message: `Rate limit exceeded: max ${burstLimit} requests per minute. Please slow down.`,
+    };
+  }
+
+  if (!daily.allowed) {
+    return {
+      ok:      false,
+      status:  429,
+      message: `Daily limit of ${dailyLimit} requests reached. Resets in 24 hours.`,
     };
   }
 
