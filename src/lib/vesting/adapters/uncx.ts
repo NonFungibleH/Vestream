@@ -93,7 +93,11 @@ async function fetchForChain(
     try {
       const res = await fetch(url, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
+        },
         body:    JSON.stringify({
           query:     LOCKS_QUERY,
           variables: { owners: lowercased, skip },

@@ -118,7 +118,11 @@ async function fetchClaims(
   try {
     const res = await fetch(SQUID_URL, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
+      },
       body: JSON.stringify({
         query:     CLAIMS_QUERY,
         variables: { accounts, vestings: vestingAddresses, chainId },
@@ -178,7 +182,11 @@ async function fetchClaimEvents(
   try {
     const res = await fetch(SQUID_URL, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
+      },
       body: JSON.stringify({
         query:     CLAIM_EVENTS_QUERY,
         variables: { account: account.toLowerCase(), vestings: vestingAddresses, chainId },
