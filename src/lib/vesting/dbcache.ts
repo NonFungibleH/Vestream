@@ -21,8 +21,8 @@ import { inArray, and, gte, sql } from "drizzle-orm";
 import { VestingStream } from "./types";
 
 /** How old cached data can be before we re-fetch from subgraphs */
-const ACTIVE_TTL_SECONDS   = 5 * 60;       // 5 min for active streams
-const VESTED_TTL_SECONDS   = 60 * 60;      // 1 hr for fully-vested streams (rarely change)
+const ACTIVE_TTL_SECONDS   = 30 * 60;      // 30 min for active streams (tighten when needed)
+const VESTED_TTL_SECONDS   = 24 * 60 * 60; // 24 hrs for fully-vested streams (never change)
 
 // ─── Read ─────────────────────────────────────────────────────────────────────
 
