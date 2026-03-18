@@ -60,11 +60,11 @@ export default function ResourcesPage() {
             Pricing
           </Link>
           <Link
-            href="/login"
+            href="/early-access"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}
           >
-            Launch App →
+            Early Access →
           </Link>
         </div>
       </nav>
@@ -160,11 +160,11 @@ export default function ResourcesPage() {
               <p className="text-xs font-semibold mb-1" style={{ color: "#0f172a" }}>Track your unlocks</p>
               <p className="text-[11px] mb-3" style={{ color: "#64748b" }}>Free dashboard. No signup form.</p>
               <Link
-                href="/login"
+                href="/early-access"
                 className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
               >
-                Launch App →
+                Early Access →
               </Link>
             </div>
 
@@ -191,14 +191,14 @@ export default function ResourcesPage() {
                   </span>
                 </div>
 
-                {/* Article cards */}
-                <div className="grid gap-5 sm:grid-cols-2">
+                {/* Article cards — horizontal scroll */}
+                <div className="flex gap-5 overflow-x-auto pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
                   {byCategory[cat].map((article) => (
                     <Link
                       key={article.slug}
                       href={`/resources/${article.slug}`}
-                      className="group block rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
-                      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+                      className="group flex-shrink-0 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl snap-start"
+                      style={{ width: "300px", background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
                     >
                       {/* Card accent */}
                       <div className="h-1.5" style={{ background: "linear-gradient(90deg, #2563eb, #7c3aed)" }} />
@@ -267,11 +267,11 @@ export default function ResourcesPage() {
             Vestream connects to all major vesting protocols across every supported chain — so you never miss an unlock.
           </p>
           <Link
-            href="/login"
+            href="/early-access"
             className="inline-block text-sm font-bold px-6 py-3 rounded-xl text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 20px rgba(37,99,235,0.3)" }}
           >
-            Launch Dashboard →
+            Early Access →
           </Link>
         </div>
       </section>

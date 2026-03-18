@@ -22,11 +22,13 @@ export default function Home() {
           <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
             Pricing
           </Link>
-          <span
-            className="text-xs font-semibold px-3 py-1.5 rounded-full"
-            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
-            Coming Soon
-          </span>
+          <Link
+            href="/early-access"
+            className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}
+          >
+            Early Access →
+          </Link>
         </div>
       </nav>
 
@@ -709,7 +711,7 @@ export default function Home() {
             style={{ background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Be the first in.</h2>
           <p className="relative text-base mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Vestr is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
+            Vestream is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
           </p>
           <div className="relative flex justify-center w-full">
             <WaitlistForm dark />

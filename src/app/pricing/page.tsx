@@ -72,10 +72,10 @@ export default function Pricing() {
         <div className="flex items-center gap-5">
           <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Resources</Link>
           <Link href="/pricing" className="text-sm font-medium" style={{ color: "#0f172a", fontWeight: 600 }}>Pricing</Link>
-          <Link href="/login"
+          <Link href="/early-access"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-            Launch App →
+            Early Access →
           </Link>
         </div>
       </nav>
