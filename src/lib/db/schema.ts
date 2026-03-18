@@ -5,6 +5,8 @@ import {
   boolean,
   integer,
   timestamp,
+  jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -64,3 +66,34 @@ export const waitlist = pgTable("waitlist", {
   email:     text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── Persistent vesting stream cache ───────────────────────────────────────────
+// Stores normalised VestingStream objects fetched from subgraphs.
+// Immutable fields (token, amounts, schedule) are kept indefinitely.
+// Mutable fields (claimable, withdrawn, isFullyVested) are refreshed every 5 min.
+// This table is the foundation of the external API / data layer.
+export const vestingStreamsCache = pgTable(
+  "vesting_streams_cache",
+  {
+    // Composite natural key e.g. "sablier-1-12345" — matches VestingStream.id
+    streamId:        text("stream_id").primaryKey(),
+    // ── lookup columns (indexed) ──────────────────────────────────────────────
+    recipient:       text("recipient").notNull(),   // wallet address, lowercase
+    chainId:         integer("chain_id").notNull(),
+    protocol:        text("protocol").notNull(),
+    tokenAddress:    text("token_address"),
+    tokenSymbol:     text("token_symbol"),
+    isFullyVested:   boolean("is_fully_vested").notNull().default(false),
+    endTime:         integer("end_time"),            // unix seconds
+    // ── full normalised stream data ───────────────────────────────────────────
+    streamData:      jsonb("stream_data").$type<Record<string, unknown>>().notNull(),
+    // ── cache bookkeeping ─────────────────────────────────────────────────────
+    firstSeenAt:     timestamp("first_seen_at").defaultNow().notNull(),
+    lastRefreshedAt: timestamp("last_refreshed_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("vsc_recipient_idx").on(t.recipient),
+    index("vsc_recipient_chain_idx").on(t.recipient, t.chainId),
+    index("vsc_recipient_protocol_idx").on(t.recipient, t.protocol),
+  ]
+);

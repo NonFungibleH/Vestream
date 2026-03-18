@@ -4,11 +4,13 @@ import { getSession } from "@/lib/auth/session";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { readFromCache, writeToCache } from "@/lib/vesting/dbcache";
 
-// ─── Server-side in-memory cache ──────────────────────────────────────────────
-// Keyed by sorted wallets + chain IDs + protocol IDs + token filters. TTL: 5 min.
+// ─── Hot in-memory cache (L1) ─────────────────────────────────────────────────
+// Avoids DB round-trips for the same request within a single server instance.
+// The DB cache (L2) handles persistence across restarts and different instances.
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const cache = new Map<string, { streams: VestingStream[]; expiresAt: number; fetchedAt: string }>();
+const hotCache = new Map<string, { streams: VestingStream[]; expiresAt: number; fetchedAt: string }>();
 
 function cacheKey(
   wallets:      string[],
@@ -23,11 +25,10 @@ function cacheKey(
   return `${[...wallets].sort().join(",")}_${[...chainIds].sort().join(",")}${p}${t}`;
 }
 
-// Evict stale entries periodically to avoid unbounded growth
 function evictStale() {
   const now = Date.now();
-  for (const [k, v] of cache) {
-    if (v.expiresAt < now) cache.delete(k);
+  for (const [k, v] of hotCache) {
+    if (v.expiresAt < now) hotCache.delete(k);
   }
 }
 
@@ -47,12 +48,11 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const walletsParam   = searchParams.get("wallets");
-  const chainsParam    = searchParams.get("chains");       // optional e.g. "1,56,8453"
-  const protocolsParam = searchParams.get("protocols");    // optional e.g. "sablier,uncx"
-  // tokenFilters: "walletAddr:tokenAddr,walletAddr2:tokenAddr2" — per-wallet token filter
+  const walletsParam      = searchParams.get("wallets");
+  const chainsParam       = searchParams.get("chains");
+  const protocolsParam    = searchParams.get("protocols");
   const tokenFiltersParam = searchParams.get("tokenFilters");
-  const refresh        = searchParams.get("refresh") === "1";
+  const refresh           = searchParams.get("refresh") === "1";
 
   if (!walletsParam) {
     return NextResponse.json({ error: "No wallets provided" }, { status: 400 });
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No valid addresses" }, { status: 400 });
   }
 
-  // Parse chain filter (default: all supported chains)
+  // Parse chain filter
   let chainIds: SupportedChainId[] = ALL_CHAIN_IDS;
   if (chainsParam) {
     const requested = chainsParam.split(",").map((c) => Number(c.trim()));
@@ -77,14 +77,14 @@ export async function GET(req: NextRequest) {
     if (valid.length > 0) chainIds = valid;
   }
 
-  // Parse protocol filter (default: all adapters)
+  // Parse protocol filter
   let protocolIds: string[] | undefined;
   if (protocolsParam) {
     const ids = protocolsParam.split(",").map((p) => p.trim()).filter(Boolean);
     if (ids.length > 0) protocolIds = ids;
   }
 
-  // Parse per-wallet token address filters: "walletAddr:tokenAddr,..."
+  // Parse per-wallet token filters
   const tokenFilters: Record<string, string> = {};
   if (tokenFiltersParam) {
     for (const pair of tokenFiltersParam.split(",")) {
@@ -95,31 +95,77 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Check cache (skip if ?refresh=1)
-  const key    = cacheKey(wallets, chainIds, protocolIds, Object.keys(tokenFilters).length > 0 ? tokenFilters : undefined);
-  const cached = !refresh ? cache.get(key) : undefined;
-  if (cached && cached.expiresAt > Date.now()) {
+  const hasTokenFilters = Object.keys(tokenFilters).length > 0;
+
+  // ── L1: hot in-memory cache ─────────────────────────────────────────────────
+  const key    = cacheKey(wallets, chainIds, protocolIds, hasTokenFilters ? tokenFilters : undefined);
+  const hotHit = !refresh ? hotCache.get(key) : undefined;
+  if (hotHit && hotHit.expiresAt > Date.now()) {
     return NextResponse.json(
-      { streams: cached.streams, fetchedAt: cached.fetchedAt, cached: true },
+      { streams: hotHit.streams, fetchedAt: hotHit.fetchedAt, cached: "memory" },
       { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
     );
   }
 
+  // ── L2: persistent DB cache ──────────────────────────────────────────────────
+  // Only use DB cache when no chain/protocol/token filters are active
+  // (we store per-wallet, then filter in memory — avoids cache fragmentation)
+  const useDbCache = !refresh && !protocolIds && !hasTokenFilters;
+  if (useDbCache) {
+    const dbResult = await readFromCache(wallets);
+    if (dbResult.isFresh) {
+      // All wallets had fresh data — apply chain filter in memory and serve
+      let streams = dbResult.streams;
+      if (chainIds !== ALL_CHAIN_IDS) {
+        streams = streams.filter((s) => chainIds.includes(s.chainId));
+      }
+      const fetchedAt = new Date().toISOString();
+      hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
+      return NextResponse.json(
+        { streams, fetchedAt, cached: "db" },
+        { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
+      );
+    }
+
+    // Partial hit: some wallets were fresh, some need re-fetching
+    if (dbResult.staleWallets.length < wallets.length) {
+      const freshStreams = dbResult.streams;
+      const freshData    = await aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds);
+      // Write only the newly fetched streams back to DB (fire-and-forget)
+      void writeToCache(freshData);
+
+      let streams = [...freshStreams, ...freshData];
+      if (chainIds !== ALL_CHAIN_IDS) {
+        streams = streams.filter((s) => chainIds.includes(s.chainId));
+      }
+      const fetchedAt = new Date().toISOString();
+      hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
+      return NextResponse.json(
+        { streams, fetchedAt, cached: "partial" },
+        { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
+      );
+    }
+  }
+
+  // ── L3: full subgraph fetch ──────────────────────────────────────────────────
   const fetchedAt = new Date().toISOString();
   let streams     = await aggregateVestingStreams(wallets, chainIds, protocolIds);
 
-  // Post-filter streams by per-wallet token address
-  if (Object.keys(tokenFilters).length > 0) {
+  // Apply per-wallet token filter
+  if (hasTokenFilters) {
     streams = streams.filter((s) => {
       const walletFilter = tokenFilters[(s.recipient ?? "").toLowerCase()];
-      if (!walletFilter) return true; // no filter for this wallet
+      if (!walletFilter) return true;
       return (s.tokenAddress ?? "").toLowerCase() === walletFilter;
     });
   }
 
-  // Store in cache
-  cache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
-  if (cache.size > 200) evictStale();
+  // Write to DB cache (fire-and-forget — never blocks response)
+  void writeToCache(streams);
+
+  // Write to hot cache
+  hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
+  if (hotCache.size > 200) evictStale();
 
   return NextResponse.json(
     { streams, fetchedAt },
