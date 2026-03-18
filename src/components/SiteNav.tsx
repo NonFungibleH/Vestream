@@ -24,10 +24,13 @@ export function SiteNav({ theme = "light" }: Props) {
   const linkBase  = isDark ? "rgba(255,255,255,0.45)"      : "#64748b";
   const linkActive= isDark ? "white"                        : "#0f172a";
 
-  // CTA: on /developer page → scroll to request-access form; elsewhere → early access gate
+  // On /developer: hide consumer links; CTA goes to early-access gate
   const isDeveloper = pathname === "/developer";
-  const ctaHref  = isDeveloper ? "#request-access" : "/early-access";
-  const ctaLabel = isDeveloper ? "Request Access →" : "Early Access →";
+  const visibleLinks = isDeveloper
+    ? NAV_LINKS.filter(({ href }) => href === "/developer")
+    : NAV_LINKS;
+  const ctaHref  = "/early-access";
+  const ctaLabel = "Early Access →";
 
   return (
     <nav
@@ -49,7 +52,7 @@ export function SiteNav({ theme = "light" }: Props) {
 
       {/* Links */}
       <div className="flex items-center gap-5">
-        {NAV_LINKS.map(({ label, href }) => {
+        {visibleLinks.map(({ label, href }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
