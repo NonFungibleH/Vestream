@@ -3,9 +3,9 @@
  * Vestream MCP Server
  *
  * Exposes Vestream's vesting data API as native tools for AI agents
- * (Claude, GPT, LangChain, CrewAI, etc.) via Anthropic's Model Context Protocol.
+ * (Claude, Cursor, Windsurf, LangChain, etc.) via the Model Context Protocol.
  *
- * Usage (add to your Claude Desktop config):
+ * Usage — add to your Claude Desktop config:
  * {
  *   "mcpServers": {
  *     "vestream": {
@@ -15,17 +15,11 @@
  *     }
  *   }
  * }
- *
- * Or run directly:
- *   VESTREAM_API_KEY=vstr_live_... npx ts-node mcp/vestream.ts
  */
 
-import { createServer } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer }          from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  ListToolsRequestSchema,
-  CallToolRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { z }                  from "zod";
 
 const BASE_URL = process.env.VESTREAM_API_URL ?? "https://vestream.io/api/v1";
 const API_KEY  = process.env.VESTREAM_API_KEY ?? "";
@@ -55,165 +49,108 @@ async function vstreamFetch(path: string): Promise<unknown> {
 
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 
-const server = createServer(
+const server = new McpServer({
+  name:    "vestream",
+  version: "1.0.0",
+});
+
+// ── Tool: get_wallet_vestings ─────────────────────────────────────────────────
+
+server.tool(
+  "get_wallet_vestings",
+  "Get all token vesting streams for an EVM wallet address across all supported " +
+  "protocols (Sablier, UNCX, Hedgey, Team Finance, Unvest) and chains (Ethereum, " +
+  "BSC, Base). Returns normalised stream data: token, amounts locked/claimable/" +
+  "withdrawn, schedule dates, cliff time, next unlock, and claim history.",
   {
-    name:    "vestream",
-    version: "1.0.0",
+    address: z.string().describe(
+      "EVM wallet address in 0x format, e.g. '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'"
+    ),
+    protocol: z.string().optional().describe(
+      "Comma-separated protocol filter, e.g. 'sablier,uncx'. " +
+      "Valid values: sablier, uncx, hedgey, team-finance, unvest"
+    ),
+    chain: z.string().optional().describe(
+      "Comma-separated chain ID filter, e.g. '1,8453'. " +
+      "Supported: 1 (Ethereum), 56 (BSC), 8453 (Base)"
+    ),
+    active_only: z.boolean().optional().describe(
+      "If true, only return streams that are not yet fully vested (default: false)"
+    ),
   },
-  {
-    capabilities: { tools: {} },
+  async ({ address, protocol, chain, active_only }) => {
+    const qs = new URLSearchParams();
+    if (protocol)    qs.set("protocol",    protocol);
+    if (chain)       qs.set("chain",       chain);
+    if (active_only) qs.set("active_only", "true");
+    const query = qs.toString() ? `?${qs}` : "";
+
+    const data = await vstreamFetch(`/wallet/${address}/vestings${query}`);
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+    };
   }
 );
 
-// ── Tool definitions ──────────────────────────────────────────────────────────
+// ── Tool: get_upcoming_unlocks ────────────────────────────────────────────────
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    {
-      name:        "get_wallet_vestings",
-      description:
-        "Get all vesting streams for a wallet address across all supported protocols " +
-        "(Sablier, UNCX, Hedgey, Unvest, Team Finance) and chains. Returns normalised " +
-        "stream data including amounts, schedules, cliff dates, and claim history.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          address: {
-            type:        "string",
-            description: "EVM wallet address (0x...)",
-          },
-          protocol: {
-            type:        "string",
-            description: "Optional comma-separated protocol filter e.g. 'sablier,uncx'",
-          },
-          chain: {
-            type:        "string",
-            description: "Optional comma-separated chain ID filter e.g. '1,8453'",
-          },
-          active_only: {
-            type:        "boolean",
-            description: "If true, exclude fully-vested streams (default: false)",
-          },
-        },
-        required: ["address"],
-      },
-    },
-    {
-      name:        "get_upcoming_unlocks",
-      description:
-        "Get all upcoming vesting unlock events for a wallet within a time window. " +
-        "Returns cliffs, tranches, and linear stream endings sorted by date. " +
-        "Ideal for forecasting, alert systems, or claim optimisation.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          address: {
-            type:        "string",
-            description: "EVM wallet address (0x...)",
-          },
-          days: {
-            type:        "number",
-            description: "Lookahead window in days (default: 30, max: 365)",
-          },
-          protocol: {
-            type:        "string",
-            description: "Optional comma-separated protocol filter",
-          },
-        },
-        required: ["address"],
-      },
-    },
-    {
-      name:        "get_stream",
-      description:
-        "Get full details for a single vesting stream by its ID. " +
-        "Stream IDs follow the format: {protocol}-{chainId}-{nativeId} " +
-        "e.g. 'sablier-1-12345'. Use get_wallet_vestings first to discover stream IDs.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          stream_id: {
-            type:        "string",
-            description: "Stream composite ID e.g. 'sablier-1-12345'",
-          },
-        },
-        required: ["stream_id"],
-      },
-    },
-  ],
-}));
+server.tool(
+  "get_upcoming_unlocks",
+  "Get all upcoming token unlock events for an EVM wallet within a future time window. " +
+  "Returns cliff completions, tranche unlocks, and linear stream endings sorted by date. " +
+  "Ideal for forecasting when tokens become available, scheduling claims, or building alerts.",
+  {
+    address: z.string().describe(
+      "EVM wallet address in 0x format"
+    ),
+    days: z.number().optional().describe(
+      "Lookahead window in days (default: 30, max: 365)"
+    ),
+    protocol: z.string().optional().describe(
+      "Comma-separated protocol filter, e.g. 'sablier,uncx'"
+    ),
+  },
+  async ({ address, days, protocol }) => {
+    const qs = new URLSearchParams();
+    if (days)     qs.set("days",     String(days));
+    if (protocol) qs.set("protocol", protocol);
+    const query = qs.toString() ? `?${qs}` : "";
 
-// ── Tool execution ────────────────────────────────────────────────────────────
-
-server.setRequestHandler(CallToolRequestSchema, async (req) => {
-  const { name, arguments: args } = req.params;
-
-  try {
-    let data: unknown;
-
-    switch (name) {
-      case "get_wallet_vestings": {
-        const { address, protocol, chain, active_only } = args as {
-          address: string; protocol?: string; chain?: string; active_only?: boolean;
-        };
-        const qs = new URLSearchParams();
-        if (protocol)    qs.set("protocol",    protocol);
-        if (chain)       qs.set("chain",       chain);
-        if (active_only) qs.set("active_only", "true");
-        const query = qs.toString() ? `?${qs}` : "";
-        data = await vstreamFetch(`/wallet/${address}/vestings${query}`);
-        break;
-      }
-
-      case "get_upcoming_unlocks": {
-        const { address, days, protocol } = args as {
-          address: string; days?: number; protocol?: string;
-        };
-        const qs = new URLSearchParams();
-        if (days)     qs.set("days",     String(days));
-        if (protocol) qs.set("protocol", protocol);
-        const query = qs.toString() ? `?${qs}` : "";
-        data = await vstreamFetch(`/wallet/${address}/upcoming-unlocks${query}`);
-        break;
-      }
-
-      case "get_stream": {
-        const { stream_id } = args as { stream_id: string };
-        data = await vstreamFetch(`/stream/${stream_id}`);
-        break;
-      }
-
-      default:
-        throw new Error(`Unknown tool: ${name}`);
-    }
-
+    const data = await vstreamFetch(`/wallet/${address}/upcoming-unlocks${query}`);
     return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(data, null, 2),
-        },
-      ],
-    };
-  } catch (err) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: ${err instanceof Error ? err.message : String(err)}`,
-        },
-      ],
-      isError: true,
+      content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
     };
   }
-});
+);
+
+// ── Tool: get_stream ──────────────────────────────────────────────────────────
+
+server.tool(
+  "get_stream",
+  "Get full details for a single vesting stream by its composite ID. " +
+  "Stream IDs follow the format: {protocol}-{chainId}-{nativeId}, " +
+  "e.g. 'sablier-1-12345' or 'uncx-8453-99'. " +
+  "Use get_wallet_vestings first to discover stream IDs for a wallet.",
+  {
+    stream_id: z.string().describe(
+      "Composite stream ID in format 'protocol-chainId-nativeId', " +
+      "e.g. 'sablier-1-12345', 'hedgey-8453-42', 'uncx-1-7'"
+    ),
+  },
+  async ({ stream_id }) => {
+    const data = await vstreamFetch(`/stream/${stream_id}`);
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("[vestream-mcp] Server running. Waiting for MCP client...");
+  console.error("[vestream-mcp] Server running on stdio. Waiting for MCP client...");
 }
 
 main().catch((err) => {

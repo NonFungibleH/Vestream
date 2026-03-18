@@ -1,0 +1,35 @@
+{
+  "name": "@vestream/mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Vestream — real-time token vesting data for AI agents",
+  "keywords": ["mcp", "model-context-protocol", "token", "vesting", "defi", "crypto", "sablier", "uncx", "web3"],
+  "homepage": "https://vestream.io/developer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NonFungibleH/Vestream.git",
+    "directory": "mcp"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "vestream-mcp": "./dist/vestream.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev":   "tsx vestream.ts",
+    "start": "node dist/vestream.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx":         "^4.19.2",
+    "typescript":  "^5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
