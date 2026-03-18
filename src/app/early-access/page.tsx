@@ -21,8 +21,9 @@ export default function EarlyAccessPage() {
     }
 
     setLoading(true);
-    // Set cookie for 7 days
-    document.cookie = "vestr_early_access=1; path=/; max-age=604800; SameSite=Lax";
+    // Set cookie for 7 days — Secure flag on HTTPS (production), Strict same-site
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `vestr_early_access=1; path=/; max-age=604800; SameSite=Strict${secure}`;
     router.push("/dashboard");
   }
 

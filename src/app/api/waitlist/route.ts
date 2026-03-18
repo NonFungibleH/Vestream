@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { waitlist } from "@/lib/db/schema";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { checkCors, withCorsHeaders } from "@/lib/cors";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,7 +16,18 @@ function getIp(req: NextRequest): string {
   );
 }
 
+// Handle CORS preflight
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const res = new NextResponse(null, { status: 204 });
+  return withCorsHeaders(res, origin);
+}
+
 export async function POST(req: NextRequest) {
+  // ── CORS check ────────────────────────────────────────────────────────────
+  const corsError = checkCors(req);
+  if (corsError) return corsError;
+
   // ── Rate limit: 5 signups per IP per hour ─────────────────────────────────
   const ip = getIp(req);
   const rl = await checkRateLimit("waitlist", ip, 5, "1 h");
@@ -45,7 +57,8 @@ export async function POST(req: NextRequest) {
       .onConflictDoNothing();
 
     // Always return ok — no enumeration of existing emails
-    return NextResponse.json({ ok: true });
+    const origin = req.headers.get("origin");
+    return withCorsHeaders(NextResponse.json({ ok: true }), origin);
   } catch (err) {
     console.error("POST /api/waitlist error:", err);
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
