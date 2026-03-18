@@ -81,6 +81,19 @@ export const apiKeys = pgTable("api_keys", {
   createdAt:        timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── API access requests ───────────────────────────────────────────────────────
+// Submitted via /developer page. Reviewed manually before key issuance.
+export const apiAccessRequests = pgTable("api_access_requests", {
+  id:        uuid("id").primaryKey().defaultRandom(),
+  name:      text("name").notNull(),
+  email:     text("email").notNull(),
+  company:   text("company"),
+  useCase:   text("use_case").notNull(),
+  protocols: text("protocols").array(),
+  reviewed:  boolean("reviewed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const waitlist = pgTable("waitlist", {
   id:        uuid("id").primaryKey().defaultRandom(),
   email:     text("email").notNull().unique(),
