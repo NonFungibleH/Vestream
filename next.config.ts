@@ -46,7 +46,7 @@ const securityHeaders = [
       "img-src 'self' data: https:",
       "font-src 'self' data:",
       // API calls: own origin + The Graph gateway + RPC nodes + WalletConnect
-      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.supabase.co",
+      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.supabase.co https://vestream.io",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",

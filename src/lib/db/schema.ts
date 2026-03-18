@@ -61,6 +61,26 @@ export const notificationsSent = pgTable("notifications_sent", {
   sentAt: timestamp("sent_at").defaultNow().notNull(),
 });
 
+// ── Public API keys ───────────────────────────────────────────────────────────
+// Invite-only at launch. Keys are issued by admin endpoint.
+// Plaintext key is NEVER stored — only SHA-256 hash.
+// Key format: vstr_live_{32 random hex bytes}
+export const apiKeys = pgTable("api_keys", {
+  id:               uuid("id").primaryKey().defaultRandom(),
+  keyHash:          text("key_hash").notNull().unique(),   // SHA-256(plaintext key)
+  keyPrefix:        text("key_prefix").notNull(),           // first 12 chars, for display
+  ownerEmail:       text("owner_email").notNull(),
+  ownerName:        text("owner_name"),
+  tier:             text("tier").default("free").notNull(), // "free" | "pro"
+  monthlyLimit:     integer("monthly_limit").default(1000).notNull(),
+  usageThisMonth:   integer("usage_this_month").default(0).notNull(),
+  usageMonthStart:  timestamp("usage_month_start").defaultNow().notNull(),
+  lastUsedAt:       timestamp("last_used_at"),
+  revokedAt:        timestamp("revoked_at"),
+  notes:            text("notes"),
+  createdAt:        timestamp("created_at").defaultNow().notNull(),
+});
+
 export const waitlist = pgTable("waitlist", {
   id:        uuid("id").primaryKey().defaultRandom(),
   email:     text("email").notNull().unique(),

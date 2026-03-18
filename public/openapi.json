@@ -1,0 +1,259 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vestream Vesting Data API",
+    "version": "1.0.0",
+    "description": "Normalised, chain-indexed vesting data across Sablier, UNCX, Hedgey, Unvest, and Team Finance. Built for AI agents, wallets, and developer integrations.\n\n**Authentication:** All endpoints require an API key passed as a Bearer token.\n```\nAuthorization: Bearer vstr_live_...\n```\n\nTo request access: [vestream.io](https://vestream.io)",
+    "contact": {
+      "name": "Vestream",
+      "url": "https://vestream.io"
+    }
+  },
+  "servers": [
+    { "url": "https://vestream.io/api/v1", "description": "Production" }
+  ],
+  "security": [
+    { "BearerAuth": [] }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "vstr_live_...",
+        "description": "API key issued by Vestream. Format: vstr_live_{64 hex chars}"
+      }
+    },
+    "schemas": {
+      "VestingStream": {
+        "type": "object",
+        "description": "A normalised vesting stream, consistent across all supported protocols.",
+        "required": ["id","protocol","chainId","recipient","tokenAddress","tokenSymbol","tokenDecimals","totalAmount","withdrawnAmount","claimableNow","lockedAmount","startTime","endTime","isFullyVested"],
+        "properties": {
+          "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID: {protocol}-{chainId}-{nativeId}" },
+          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","hedgey","unvest","team-finance"] },
+          "chainId":        { "type": "integer", "example": 1, "description": "EVM chain ID" },
+          "recipient":      { "type": "string",  "example": "0xabc..." },
+          "tokenAddress":   { "type": "string",  "example": "0xdef..." },
+          "tokenSymbol":    { "type": "string",  "example": "UNI" },
+          "tokenDecimals":  { "type": "integer", "example": 18 },
+          "totalAmount":    { "type": "string",  "description": "Total tokens in the stream (raw, 18 decimals)", "example": "1000000000000000000000" },
+          "withdrawnAmount":{ "type": "string",  "description": "Amount already claimed" },
+          "claimableNow":   { "type": "string",  "description": "Amount claimable at the time of last index" },
+          "lockedAmount":   { "type": "string",  "description": "Amount still locked" },
+          "startTime":      { "type": "integer", "description": "Unix timestamp (seconds)" },
+          "endTime":        { "type": "integer", "description": "Unix timestamp (seconds)" },
+          "cliffTime":      { "type": "integer", "nullable": true, "description": "Unix timestamp of cliff, if applicable" },
+          "isFullyVested":  { "type": "boolean" },
+          "nextUnlockTime": { "type": "integer", "nullable": true },
+          "cancelable":     { "type": "boolean", "nullable": true },
+          "shape":          { "type": "string",  "enum": ["linear","steps"], "nullable": true },
+          "unlockSteps":    {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "integer" },
+                "amount":    { "type": "string" }
+              }
+            }
+          },
+          "claimEvents": {
+            "type": "array",
+            "nullable": true,
+            "description": "Historical claim/withdrawal events (newest first)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "integer" },
+                "amount":    { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "docs":  { "type": "string", "example": "https://vestream.io/api-docs" }
+        }
+      }
+    },
+    "headers": {
+      "X-RateLimit-Limit":     { "schema": { "type": "integer" }, "description": "Monthly request limit for your key" },
+      "X-RateLimit-Remaining": { "schema": { "type": "integer" }, "description": "Remaining requests this month" },
+      "X-RateLimit-Reset":     { "schema": { "type": "integer" }, "description": "Unix timestamp when the counter resets" }
+    }
+  },
+  "paths": {
+    "/wallet/{address}/vestings": {
+      "get": {
+        "operationId": "getWalletVestings",
+        "summary": "Get all vesting streams for a wallet",
+        "description": "Returns all indexed vesting streams for a given wallet address across all supported protocols and chains. Data is served from Vestream's persistent cache — no live on-chain queries.",
+        "tags": ["Wallet"],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "EVM wallet address (0x...)",
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated protocol filter",
+            "example": "sablier,uncx"
+          },
+          {
+            "name": "chain",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated chain ID filter",
+            "example": "1,8453"
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "schema": { "type": "boolean" },
+            "description": "If true, excludes fully-vested streams"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of vesting streams",
+            "headers": {
+              "X-RateLimit-Limit":     { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset":     { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "wallet":       { "type": "string" },
+                    "count":        { "type": "integer" },
+                    "last_indexed": { "type": "string", "format": "date-time", "nullable": true },
+                    "streams":      { "type": "array", "items": { "$ref": "#/components/schemas/VestingStream" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Monthly limit exceeded",     "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/wallet/{address}/upcoming-unlocks": {
+      "get": {
+        "operationId": "getUpcomingUnlocks",
+        "summary": "Get upcoming unlock events for a wallet",
+        "description": "Returns all vesting unlock events (cliffs, tranches, linear endings) due within a time window. Ideal for AI agents building forecasts, alerts, or claim strategies.",
+        "tags": ["Wallet"],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": { "type": "integer", "default": 30, "maximum": 365 },
+            "description": "Lookahead window in days (default: 30, max: 365)"
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated protocol filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming unlock events sorted by date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "wallet":       { "type": "string" },
+                    "window_days":  { "type": "integer" },
+                    "count":        { "type": "integer" },
+                    "unlocks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "stream_id":        { "type": "string" },
+                          "protocol":         { "type": "string" },
+                          "chain_id":         { "type": "integer" },
+                          "token_symbol":     { "type": "string" },
+                          "token_address":    { "type": "string" },
+                          "unlock_time":      { "type": "integer", "description": "Unix timestamp" },
+                          "unlock_type":      { "type": "string", "enum": ["cliff","end","tranche"] },
+                          "amount_unlocking": { "type": "string", "description": "Raw token amount" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/stream/{streamId}": {
+      "get": {
+        "operationId": "getStream",
+        "summary": "Get a single vesting stream by ID",
+        "description": "Returns full details for a specific vesting stream. Stream IDs follow the format: {protocol}-{chainId}-{nativeId}",
+        "tags": ["Streams"],
+        "parameters": [
+          {
+            "name": "streamId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Stream composite ID",
+            "example": "sablier-1-12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vesting stream details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stream":       { "$ref": "#/components/schemas/VestingStream" },
+                    "last_indexed": { "type": "string", "format": "date-time" },
+                    "first_seen":   { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key" },
+          "404": { "description": "Stream not found in index" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Wallet",  "description": "Wallet-level vesting queries" },
+    { "name": "Streams", "description": "Individual stream queries" }
+  ]
+}
