@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ApiAccessForm } from "@/components/ApiAccessForm";
+import { SiteNav } from "@/components/SiteNav";
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
@@ -19,26 +20,7 @@ export default function DeveloperPage() {
     <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* ── Nav ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
-        style={{ background: "rgba(13,15,20,0.92)", borderBottom: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}>
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <span className="font-bold text-base tracking-tight" style={{ color: "white" }}>Vestream</span>
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }}>Resources</Link>
-          <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }}>Pricing</Link>
-          <Link href="/developer" className="text-sm font-semibold" style={{ color: "white" }}>Developer API</Link>
-          <a href="#request-access"
-            className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-            Request Access →
-          </a>
-        </div>
-      </nav>
+      <SiteNav theme="dark" />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden pt-40 pb-28 px-8 text-center">

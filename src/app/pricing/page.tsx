@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ContactTrigger from "@/components/ContactTrigger";
+import { SiteNav } from "@/components/SiteNav";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -60,26 +61,7 @@ export default function Pricing() {
     <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
 
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
-        style={{ background: "rgba(248,250,252,0.88)", borderBottom: "1px solid rgba(0,0,0,0.07)", backdropFilter: "blur(12px)" }}>
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Resources</Link>
-          <Link href="/pricing" className="text-sm font-medium" style={{ color: "#0f172a", fontWeight: 600 }}>Pricing</Link>
-          <Link href="/developer" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Developer API</Link>
-          <Link href="/early-access"
-            className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
-            Early Access →
-          </Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <section className="relative flex flex-col items-center text-center px-6 pt-36 pb-16 overflow-hidden">
