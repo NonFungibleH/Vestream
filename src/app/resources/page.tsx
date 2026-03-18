@@ -59,6 +59,9 @@ export default function ResourcesPage() {
           <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
             Pricing
           </Link>
+          <Link href="/developer" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
+            Developer API
+          </Link>
           <Link
             href="/early-access"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"

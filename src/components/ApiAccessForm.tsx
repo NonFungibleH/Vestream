@@ -41,9 +41,9 @@ export function ApiAccessForm() {
             <path d="M5 12l4 4 10-10" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h3 className="font-bold text-xl mb-2" style={{ color: "#0f172a" }}>Request received</h3>
-        <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "#64748b" }}>
-          We'll review your application and send your API key to <strong style={{ color: "#0f172a" }}>{form.email}</strong> within 1–2 business days.
+        <h3 className="font-bold text-xl mb-2" style={{ color: "white" }}>Request received</h3>
+        <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
+          We&apos;ll review your application and send your API key to <strong style={{ color: "white" }}>{form.email}</strong> within 1–2 business days.
         </p>
       </div>
     );
@@ -53,47 +53,47 @@ export function ApiAccessForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748b" }}>Name *</label>
+          <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Name *</label>
           <input
             type="text" required placeholder="Your name"
             value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             className="text-sm px-4 py-3 rounded-xl outline-none transition-all"
-            style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a" }}
+            style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748b" }}>Email *</label>
+          <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Email *</label>
           <input
             type="email" required placeholder="you@company.com"
             value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
             className="text-sm px-4 py-3 rounded-xl outline-none transition-all"
-            style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a" }}
+            style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748b" }}>Company / Project</label>
+        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Company / Project</label>
         <input
           type="text" placeholder="Acme Labs (optional)"
           value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
           className="text-sm px-4 py-3 rounded-xl outline-none transition-all"
-          style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a" }}
+          style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748b" }}>What are you building? *</label>
+        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>What are you building? *</label>
         <textarea
           required rows={4} placeholder="Describe your use case — e.g. an AI agent that monitors vesting schedules for a fund, a wallet app showing unlock timelines..."
           value={form.useCase} onChange={e => setForm(f => ({ ...f, useCase: e.target.value }))}
           className="text-sm px-4 py-3 rounded-xl outline-none transition-all resize-none"
-          style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a", lineHeight: 1.6 }}
+          style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white", lineHeight: 1.6 }}
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748b" }}>Protocols you need (optional)</label>
+        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Protocols you need (optional)</label>
         <div className="flex flex-wrap gap-2">
           {PROTOCOLS.map(p => {
             const active = protocols.includes(p);
@@ -101,9 +101,9 @@ export function ApiAccessForm() {
               <button key={p} type="button" onClick={() => toggleProtocol(p)}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
                 style={{
-                  background: active ? "rgba(37,99,235,0.1)" : "rgba(0,0,0,0.04)",
-                  border: active ? "1px solid rgba(37,99,235,0.3)" : "1px solid rgba(0,0,0,0.08)",
-                  color: active ? "#2563eb" : "#64748b",
+                  background: active ? "rgba(37,99,235,0.15)" : "rgba(255,255,255,0.05)",
+                  border: active ? "1px solid rgba(37,99,235,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                  color: active ? "#60a5fa" : "rgba(255,255,255,0.45)",
                 }}>
                 {p}
               </button>
@@ -113,19 +113,19 @@ export function ApiAccessForm() {
       </div>
 
       {status === "error" && (
-        <p className="text-sm px-4 py-2.5 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}>
+        <p className="text-sm px-4 py-2.5 rounded-xl" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
           {errorMsg}
         </p>
       )}
 
       <button type="submit" disabled={status === "loading"}
         className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60 mt-1"
-        style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 20px rgba(37,99,235,0.3)" }}>
+        style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 20px rgba(37,99,235,0.35)" }}>
         {status === "loading" ? "Submitting..." : "Request API Access →"}
       </button>
 
-      <p className="text-xs text-center" style={{ color: "#94a3b8" }}>
-        We review every application. You'll hear back within 1–2 business days.
+      <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.3)" }}>
+        We review every application. You&apos;ll hear back within 1–2 business days.
       </p>
     </form>
   );

@@ -261,8 +261,8 @@ export default function Home() {
                   <div className="space-y-2">
                     {[
                       { s: "USDC", clPct: 12, lkPct: 88, color: "#2563eb", total: "$137,500" },
-                      { s: "OP",   clPct:  8, lkPct: 92, color: "#f97316", total: "$45,000"  },
-                      { s: "WETH", clPct:  5, lkPct: 95, color: "#7c3aed", total: "$24,000"  },
+                      { s: "NOVA", clPct:  8, lkPct: 92, color: "#f97316", total: "$45,000"  },
+                      { s: "FLUX", clPct:  5, lkPct: 95, color: "#7c3aed", total: "$24,000"  },
                     ].map((t) => (
                       <div key={t.s}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -288,8 +288,8 @@ export default function Home() {
                   </div>
                   {[
                     { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#2563eb", proto: "#a78bfa", prog: 15 },
-                    { token: "OP",   protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
-                    { token: "WETH", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#7c3aed", proto: "#fb923c", prog: 5  },
+                    { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
+                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#7c3aed", proto: "#fb923c", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid #1e2330" : undefined }}>
@@ -382,10 +382,10 @@ export default function Home() {
               <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "10px", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                   <div style={{ width: "22px", height: "22px", borderRadius: "7px", background: "rgba(37,99,235,0.2)", border: "1px solid rgba(37,99,235,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "#60a5fa", fontSize: "8px", fontWeight: 800 }}>AXG</span>
+                    <span style={{ color: "#60a5fa", fontSize: "8px", fontWeight: 800 }}>PRI</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: "white", fontSize: "10px", fontWeight: 700 }}>AXGT</p>
+                    <p style={{ color: "white", fontSize: "10px", fontWeight: 700 }}>PRISM</p>
                     <p style={{ color: "#4b5563", fontSize: "9px" }}>Entry $0.50 · Now $0.95</p>
                   </div>
                 </div>
@@ -429,8 +429,8 @@ export default function Home() {
             <div className="px-4 pb-4 space-y-2">
               {[
                 { sym: "USDC", price: "$1.00",    mc: "$45.2B", liq: "$892M", color: "#2563eb" },
-                { sym: "OP",   price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#f97316" },
-                { sym: "WETH", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#7c3aed" },
+                { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#f97316" },
+                { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#7c3aed" },
               ].map((t) => (
                 <div key={t.sym} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "9px", padding: "8px 10px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>

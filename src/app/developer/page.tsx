@@ -16,23 +16,22 @@ function Check() {
 
 export default function DeveloperPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* ── Nav ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
-        style={{ background: "rgba(248,250,252,0.88)", borderBottom: "1px solid rgba(0,0,0,0.07)", backdropFilter: "blur(12px)" }}>
+        style={{ background: "rgba(13,15,20,0.92)", borderBottom: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}>
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
             <span className="text-white font-bold text-sm">V</span>
           </div>
-          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
+          <span className="font-bold text-base tracking-tight" style={{ color: "white" }}>Vestream</span>
         </Link>
         <div className="flex items-center gap-5">
-          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Resources</Link>
-          <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Pricing</Link>
-          <Link href="/developer" className="text-sm font-medium" style={{ color: "#0f172a", fontWeight: 600 }}>Developer API</Link>
-          <Link href="/api-docs" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>Docs</Link>
+          <Link href="/resources" className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }}>Resources</Link>
+          <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "rgba(255,255,255,0.55)" }}>Pricing</Link>
+          <Link href="/developer" className="text-sm font-semibold" style={{ color: "white" }}>Developer API</Link>
           <a href="#request-access"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}>
@@ -45,9 +44,9 @@ export default function DeveloperPage() {
       <section className="relative overflow-hidden pt-40 pb-28 px-8 text-center">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.07) 0%, transparent 70%)"
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 70%)"
         }} />
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.2), transparent)" }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.4), transparent)" }} />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Badge */}
@@ -58,7 +57,7 @@ export default function DeveloperPage() {
           </div>
 
           <h1 className="font-bold tracking-tight mb-6"
-            style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#0f172a" }}>
+            style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "white" }}>
             The vesting data layer<br />
             <span style={{
               background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 60%, #6366f1 100%)",
@@ -68,7 +67,7 @@ export default function DeveloperPage() {
             </span>
           </h1>
 
-          <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "#64748b" }}>
+          <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
             Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, and Team Finance —
             served via clean REST API with OpenAPI spec and native MCP support.
             One integration, every protocol.
@@ -85,7 +84,7 @@ export default function DeveloperPage() {
             </a>
             <Link href="/api-docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)", color: "#2563eb" }}>
+              style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)", color: "#60a5fa" }}>
               View API Docs →
             </Link>
           </div>
@@ -100,8 +99,8 @@ export default function DeveloperPage() {
               { value: "MCP",   label: "Agent-native" },
             ].map(s => (
               <div key={s.label} className="text-center">
-                <div className="font-bold text-2xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>{s.value}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>{s.label}</div>
+                <div className="font-bold text-2xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>{s.value}</div>
+                <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -113,7 +112,7 @@ export default function DeveloperPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Indexed protocols</p>
-            <h2 className="font-bold text-2xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-2xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               One API. Every major vesting protocol.
             </h2>
           </div>
@@ -126,14 +125,14 @@ export default function DeveloperPage() {
               { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · BSC",            note: "Team vesting" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+                style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
                   style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                   <span className="font-bold text-base" style={{ color: p.color }}>{p.name[0]}</span>
                 </div>
-                <div className="font-semibold text-sm mb-1" style={{ color: "#0f172a" }}>{p.name}</div>
-                <div className="text-xs mb-1" style={{ color: "#94a3b8" }}>{p.note}</div>
-                <div className="text-xs font-mono" style={{ color: "#cbd5e1" }}>{p.chains}</div>
+                <div className="font-semibold text-sm mb-1" style={{ color: "white" }}>{p.name}</div>
+                <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>{p.note}</div>
+                <div className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>{p.chains}</div>
               </div>
             ))}
           </div>
@@ -141,11 +140,11 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Three pillars ── */}
-      <section className="px-8 py-20" style={{ background: "white", borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why Vestream API</p>
-            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Built for the next generation of<br />financial infrastructure
             </h2>
           </div>
@@ -181,7 +180,7 @@ export default function DeveloperPage() {
               },
             ].map(p => (
               <div key={p.title} className="rounded-2xl p-7"
-                style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.07)" }}>
+                style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
                   style={{ background: p.bg, border: `1px solid ${p.border}`, color: p.color, fontSize: 20 }}>
                   <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
@@ -189,13 +188,13 @@ export default function DeveloperPage() {
                       stroke={p.color} strokeWidth="1.6" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-lg mb-2 tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>{p.title}</h3>
-                <p className="text-sm leading-relaxed mb-5" style={{ color: "#64748b" }}>{p.description}</p>
+                <h3 className="font-bold text-lg mb-2 tracking-tight" style={{ color: "white", letterSpacing: "-0.01em" }}>{p.title}</h3>
+                <p className="text-sm leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.5)" }}>{p.description}</p>
                 <ul className="flex flex-col gap-2">
                   {p.points.map(pt => (
                     <li key={pt} className="flex items-start gap-2.5">
                       <Check />
-                      <span className="text-sm" style={{ color: "#374151" }}>{pt}</span>
+                      <span className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{pt}</span>
                     </li>
                   ))}
                 </ul>
@@ -210,7 +209,7 @@ export default function DeveloperPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>API reference</p>
-            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Three endpoints. Everything you need.
             </h2>
           </div>
@@ -282,19 +281,19 @@ export default function DeveloperPage() {
               },
             ].map(ep => (
               <div key={ep.path} className="rounded-2xl overflow-hidden"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-                <div className="flex items-start gap-4 p-6 border-b" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+                style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div className="flex items-start gap-4 p-6 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                   <span className="text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 mt-0.5"
                     style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb", fontFamily: "monospace" }}>
                     GET
                   </span>
                   <div className="flex-1 min-w-0">
-                    <code className="text-sm font-mono font-semibold" style={{ color: "#0f172a" }}>{ep.path}</code>
-                    <p className="text-sm mt-1.5" style={{ color: "#64748b" }}>{ep.description}</p>
+                    <code className="text-sm font-mono font-semibold" style={{ color: "white" }}>{ep.path}</code>
+                    <p className="text-sm mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>{ep.description}</p>
                     <div className="flex gap-2 mt-3 flex-wrap">
                       {ep.params.map(p => (
                         <span key={p} className="text-xs font-mono px-2 py-1 rounded-md"
-                          style={{ background: "rgba(0,0,0,0.04)", color: "#64748b", border: "1px solid rgba(0,0,0,0.06)" }}>
+                          style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)" }}>
                           {p}
                         </span>
                       ))}
@@ -313,7 +312,7 @@ export default function DeveloperPage() {
           <div className="text-center mt-8">
             <Link href="/api-docs"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-all"
-              style={{ color: "#2563eb" }}>
+              style={{ color: "#60a5fa" }}>
               View full interactive documentation →
             </Link>
           </div>
@@ -321,11 +320,11 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Use cases ── */}
-      <section className="px-8 py-20" style={{ background: "white", borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Use cases</p>
-            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Who builds with Vestream API
             </h2>
           </div>
@@ -370,14 +369,14 @@ export default function DeveloperPage() {
               },
             ].map(u => (
               <div key={u.title} className="rounded-2xl p-6"
-                style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.07)" }}>
+                style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="text-2xl mb-4">{u.icon}</div>
-                <h3 className="font-bold text-base mb-2" style={{ color: "#0f172a" }}>{u.title}</h3>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: "#64748b" }}>{u.description}</p>
+                <h3 className="font-bold text-base mb-2" style={{ color: "white" }}>{u.title}</h3>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>{u.description}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {u.tags.map(t => (
                     <span key={t} className="text-xs px-2 py-1 rounded-md font-medium"
-                      style={{ background: "rgba(37,99,235,0.07)", color: "#2563eb", border: "1px solid rgba(37,99,235,0.12)" }}>
+                      style={{ background: "rgba(37,99,235,0.12)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>
                       {t}
                     </span>
                   ))}
@@ -445,11 +444,11 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section className="px-8 py-20" style={{ background: "white", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Pricing</p>
-            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Simple, transparent access
             </h2>
           </div>
@@ -457,47 +456,47 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-2 gap-6">
             {/* Free */}
             <div className="rounded-2xl p-8"
-              style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)" }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#94a3b8" }}>Free</div>
+              style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Free</div>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.03em" }}>$0</span>
-                <span className="text-sm" style={{ color: "#94a3b8" }}>/month</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>$0</span>
+                <span className="text-sm" style={{ color: "#4b5563" }}>/month</span>
               </div>
-              <p className="text-sm mb-7" style={{ color: "#64748b" }}>For builders and prototyping</p>
+              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For builders and prototyping</p>
               <ul className="flex flex-col gap-3 mb-8">
                 {["1,000 API requests / month", "All 3 endpoints", "5 protocols indexed", "Standard JSON responses", "Community support"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
-                    <span className="text-sm" style={{ color: "#374151" }}>{f}</span>
+                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
                   </li>
                 ))}
               </ul>
               <a href="#request-access"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
-                style={{ background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.18)", color: "#2563eb" }}>
+                style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)", color: "#60a5fa" }}>
                 Request Access
               </a>
             </div>
 
             {/* Pro */}
             <div className="rounded-2xl p-8 relative"
-              style={{ background: "white", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.12)" }}>
+              style={{ background: "#0d0f14", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="text-xs font-bold px-3 py-1 rounded-full"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
                   Most popular
                 </span>
               </div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#2563eb" }}>Pro</div>
+              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#60a5fa" }}>Pro</div>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.03em" }}>Custom</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
               </div>
-              <p className="text-sm mb-7" style={{ color: "#64748b" }}>For production applications</p>
+              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For production applications</p>
               <ul className="flex flex-col gap-3 mb-8">
                 {["100,000+ API requests / month", "All 3 endpoints", "5 protocols · 5 chains", "Priority response SLA", "Dedicated support", "Custom rate limits on request", "Early access to new endpoints"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
-                    <span className="text-sm" style={{ color: "#374151" }}>{f}</span>
+                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
                   </li>
                 ))}
               </ul>
@@ -512,27 +511,27 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Request access form ── */}
-      <section id="request-access" className="px-8 py-24" style={{ background: "#f8fafc", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      <section id="request-access" className="px-8 py-24" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Get started</p>
-            <h2 className="font-bold text-3xl tracking-tight mb-3" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="font-bold text-3xl tracking-tight mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Request API access
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
               Tell us what you're building and we'll send your API key within 1–2 business days.
               Every application is reviewed — we're keeping early access intentional.
             </p>
           </div>
 
           <div className="rounded-2xl p-8"
-            style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+            style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.08)" }}>
             <ApiAccessForm />
           </div>
 
-          <p className="text-center text-xs mt-6" style={{ color: "#94a3b8" }}>
+          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.3)" }}>
             Already have an API key?{" "}
-            <Link href="/api-docs" className="font-semibold" style={{ color: "#2563eb" }}>
+            <Link href="/api-docs" className="font-semibold" style={{ color: "#60a5fa" }}>
               View the docs →
             </Link>
           </p>
@@ -540,21 +539,22 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="px-8 py-8" style={{ background: "#f8fafc", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+      <footer className="px-8 py-8" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
             <div className="w-6 h-6 rounded-md flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
               <span className="text-white font-bold text-xs">V</span>
             </div>
-            <span className="font-semibold text-sm" style={{ color: "#0f172a" }}>Vestream</span>
+            <span className="font-semibold text-sm" style={{ color: "white" }}>Vestream</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/api-docs" className="text-xs transition-colors" style={{ color: "#94a3b8" }}>API Docs</Link>
-            <Link href="/resources" className="text-xs transition-colors" style={{ color: "#94a3b8" }}>Resources</Link>
-            <Link href="/pricing" className="text-xs transition-colors" style={{ color: "#94a3b8" }}>Pricing</Link>
+            <Link href="/resources" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Resources</Link>
+            <Link href="/pricing" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Pricing</Link>
+            <Link href="/privacy" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Privacy Policy</Link>
+            <Link href="/terms" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Terms of Service</Link>
           </div>
-          <p className="text-xs" style={{ color: "#cbd5e1" }}>© 2026 Vestream</p>
+          <p className="text-xs" style={{ color: "#4b5563" }}>© 2026 Vestream</p>
         </div>
       </footer>
 
