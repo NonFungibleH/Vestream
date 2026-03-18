@@ -1,9 +1,8 @@
 /**
  * POST /api/developer/unlock
  *
- * Validates a B2B API key and sets vestr_api_access cookie.
- * This lets approved developers access /api-docs without the
- * consumer early-access code.
+ * Validates a B2B API key, sets vestr_api_access cookie containing the
+ * key's UUID so /developer/account can look up usage stats.
  *
  * Body: { key: string }
  */
@@ -12,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { hashApiKey } from "@/lib/api-key-auth";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   let body: { key?: string };
@@ -30,7 +29,10 @@ export async function POST(req: NextRequest) {
   const hash = hashApiKey(key.trim());
 
   const [row] = await db
-    .select({ id: apiKeys.id })
+    .select({
+      id:        apiKeys.id,
+      revokedAt: apiKeys.revokedAt,
+    })
     .from(apiKeys)
     .where(eq(apiKeys.keyHash, hash))
     .limit(1);
@@ -38,21 +40,14 @@ export async function POST(req: NextRequest) {
   if (!row) {
     return NextResponse.json({ error: "API key not recognised." }, { status: 401 });
   }
-
-  // Check not revoked
-  const [full] = await db
-    .select({ revokedAt: apiKeys.revokedAt })
-    .from(apiKeys)
-    .where(eq(apiKeys.id, row.id))
-    .limit(1);
-
-  if (full?.revokedAt) {
+  if (row.revokedAt) {
     return NextResponse.json({ error: "This API key has been revoked." }, { status: 403 });
   }
 
-  // Set api access cookie — 30 day session
+  // Store the key's UUID as the cookie value so /developer/account can
+  // look up this specific user's usage without re-entering the key.
   const res = NextResponse.json({ ok: true });
-  res.cookies.set("vestr_api_access", "1", {
+  res.cookies.set("vestr_api_access", row.id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

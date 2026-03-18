@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ── Admin gate — separate cookie, separate login page ────────────────────────
-  if (pathname.startsWith("/admin")) {
+  // ── Admin gate ────────────────────────────────────────────────────────────────
+  // /admin/login is the login page itself — let it through unconditionally
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const adminCookie = req.cookies.get("vestr_admin");
     if (!adminCookie) {
       const url = req.nextUrl.clone();
@@ -26,6 +27,17 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // ── /developer/account — requires developer API key cookie ───────────────────
+  if (pathname === "/developer/account") {
+    const apiAccess = req.cookies.get("vestr_api_access");
+    if (!apiAccess) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/developer/portal";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
   // ── /dashboard — early access gate only ──────────────────────────────────────
   const cookie = req.cookies.get("vestr_early_access");
   if (!cookie) {
@@ -37,5 +49,12 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/api-docs", "/admin", "/admin/:path*"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/api-docs",
+    "/admin",
+    "/admin/:path*",
+    "/developer/account",
+  ],
 };

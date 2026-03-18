@@ -21,7 +21,7 @@ export default function DeveloperPortal() {
     });
 
     if (res.ok) {
-      router.push("/api-docs");
+      router.push("/developer/account");
     } else {
       const data = await res.json();
       setError(data.error ?? "Invalid API key.");
@@ -59,9 +59,9 @@ export default function DeveloperPortal() {
         <div className="rounded-2xl p-8"
           style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
 
-          <h1 className="font-bold text-xl mb-1 text-white">Access API documentation</h1>
+          <h1 className="font-bold text-xl mb-1 text-white">Developer sign in</h1>
           <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Enter your Vestream API key to unlock the interactive docs.
+            Enter your Vestream API key to access your account and documentation.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -103,7 +103,7 @@ export default function DeveloperPortal() {
                 boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
               }}
             >
-              {loading ? "Verifying…" : "Access API Docs →"}
+              {loading ? "Verifying…" : "Sign in →"}
             </button>
           </form>
         </div>
