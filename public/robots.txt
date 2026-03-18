@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api-docs
+Disallow: /early-access
+Disallow: /dashboard
+
+Sitemap: https://vestream.io/sitemap.xml
