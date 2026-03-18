@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 // Fallback prices in case CoinGecko is unavailable
 const FALLBACK: Record<string, number> = {
@@ -30,7 +31,17 @@ const SYMBOL_MAP: Record<string, string> = {
   "binancecoin":  "BNB",
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Rate limit: 60 price lookups per IP per minute (protects CoinGecko free tier)
+  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const rl = await checkRateLimit("prices", ip, 60, "1 m");
+  if (!rl.allowed) {
+    return NextResponse.json(FALLBACK, {
+      status: 429,
+      headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) },
+    });
+  }
+
   try {
     const res = await fetch(COINGECKO_URL, {
       // Cache for 5 minutes at the CDN/edge layer
