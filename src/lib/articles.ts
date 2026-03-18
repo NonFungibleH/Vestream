@@ -1994,9 +1994,229 @@ const articles: Article[] = [
     ],
   },
 
-];
+  // ── Article 10 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "token-allocation-vesting-red-flags",
+    title:       "Token Allocation: What Each Stakeholder's Vesting Terms Tell You Before You Invest",
+    excerpt:     "A token's allocation chart is one of the most information-dense documents in crypto. This guide teaches you how to read vesting terms for every stakeholder category — and which red flags should make you reconsider an investment.",
+    publishedAt: "2026-03-18",
+    updatedAt:   "2026-03-18",
+    readingTime: "14 min read",
+    category:    "Tokenomics",
+    tags:        ["token allocation", "token", "tokenomics", "vesting schedule", "crypto due diligence", "token unlock"],
+    content: [
+      {
+        type: "p",
+        html: "Before a single token trades on a public market, its fate is largely determined by a document that most retail investors never read carefully: the token allocation table. This table — sometimes buried in a whitepaper, sometimes published as a pie chart on a project website — tells you who owns what, and crucially, <strong>when they can sell it</strong>. Decoding that information is one of the highest-value skills in crypto investing.",
+      },
+      {
+        type: "p",
+        html: "Every token project distributes its supply across different stakeholder groups. Each group has different incentives, different lock-up periods, and different behaviours when their tokens unlock. Understanding how to interpret these terms — not just accept them at face value — separates informed token holders from those who are perpetually surprised by price action.",
+      },
+      {
+        type: "callout",
+        emoji: "🎯",
+        title: "What you will learn",
+        body: "How to interpret vesting terms for each stakeholder category (team, investors, advisors, community, foundation), what the standard terms look like, and the specific patterns that signal a poorly designed or potentially exploitative token allocation.",
+      },
 
-export default articles;
+      { type: "h2", text: "The Six Stakeholder Categories" },
+      {
+        type: "p",
+        html: "Most token allocations divide supply across some combination of six stakeholder groups. Each group has a distinct relationship with the project — and that relationship should be reflected in their vesting terms. When it isn't, that misalignment is worth investigating.",
+      },
+      {
+        type: "table",
+        headers: ["Stakeholder", "Typical Allocation", "Expected Vesting", "Incentive Alignment"],
+        rows: [
+          ["Core Team", "15–25%", "12-month cliff, 3–4 year linear", "Long-term project success"],
+          ["Early Investors (Seed/Private)", "10–20%", "6–12 month cliff, 12–24 month linear", "Return on capital"],
+          ["Public Sale / IDO", "5–15%", "Partial TGE unlock, 3–12 month linear", "Community participation"],
+          ["Ecosystem / Community", "20–35%", "Long-term emission, 3–5 years", "Protocol usage and growth"],
+          ["Foundation / Treasury", "10–20%", "Locked, released by governance", "Protocol sustainability"],
+          ["Advisors", "1–5%", "6-month cliff, 12–24 month linear", "Strategic guidance"],
+        ],
+      },
+      {
+        type: "p",
+        html: "These ranges are not arbitrary — they represent what market participants have come to expect after years of observing which token structures succeed and which fail. Significant deviations from these norms are not always red flags, but they always deserve an explanation.",
+      },
+
+      { type: "h2", text: "Reading Team Token Allocations" },
+      {
+        type: "p",
+        html: "The team allocation is the single most important vesting tranche to scrutinise. It tells you how much financial risk the founders are genuinely taking, and for how long their economic interests are tied to the token's performance.",
+      },
+      {
+        type: "h3", text: "What good team vesting looks like",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cliff of at least 12 months:</strong> A one-year cliff means the team receives nothing before the project has had at least a year to prove itself.",
+          "<strong>Total vesting period of 3–4 years:</strong> Aligns with the average time it takes for a Web3 project to reach meaningful adoption.",
+          "<strong>Linear monthly or quarterly release:</strong> Gradual release avoids concentrated selling pressure on specific dates.",
+          "<strong>No TGE unlock for the team:</strong> Any immediate team allocation at Token Generation Event is a warning sign — it means founders can sell on day one.",
+        ],
+      },
+      {
+        type: "h3", text: "Team vesting red flags",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Short cliff (under 6 months):</strong> A 3- or 6-month cliff gives the team very little time before they can exit. This is especially concerning when combined with a public sale.",
+          "<strong>TGE unlock percentage above 0%:</strong> Some projects grant team members 5–10% of their allocation at TGE. This is always worth questioning.",
+          "<strong>Overly high allocation (above 30%):</strong> When the team holds more than 30% of supply, even gradual vesting creates persistent selling pressure over years.",
+          "<strong>Unlisted or vague vesting terms:</strong> A project that does not publish its team vesting schedule is a project that does not want you to know its team vesting schedule.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "⚠️",
+        title: "The three-month cliff trick",
+        body: "Some projects advertise a 'cliff and vesting' structure to appear credible, but on inspection the cliff is only 90 days. This provides almost no protection against immediate insider selling. A real cliff — one that meaningfully aligns incentives — is 12 months minimum.",
+      },
+
+      { type: "h2", text: "Investor Token Allocations: Seed, Private, and Strategic Rounds" },
+      {
+        type: "p",
+        html: "Private sale investors — seed funds, venture capital firms, and angel investors — typically receive the largest discount to public sale price, sometimes 80–95% below the eventual listing price. The vesting terms attached to these tranches determine how much sell pressure the token absorbs from sophisticated, profit-motivated capital.",
+      },
+      {
+        type: "p",
+        html: "The key metric here is <strong>multiple on invested capital at TGE</strong>. If seed investors bought tokens at $0.01 and the token lists at $0.20, they are sitting on a 20x return from day one. Even if those tokens are locked for 12 months, the moment their cliff ends, the incentive to sell is overwhelming. This is mathematically unavoidable — which is why investor vesting terms need to be evaluated in the context of their entry price.",
+      },
+      {
+        type: "h3", text: "What to look for in investor vesting",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cliff length relative to entry price:</strong> A 10x+ seed discount with a 6-month cliff is a structural problem regardless of the project's quality.",
+          "<strong>Staggered unlock schedules:</strong> The best structures stagger investor unlocks over 18–36 months, reducing the concentrated selling event at cliff expiry.",
+          "<strong>Small TGE percentage:</strong> A 5–10% TGE unlock for investors is common and acceptable. Anything above 20% creates immediate listing-day sell pressure.",
+          "<strong>Strategic vs. financial investors:</strong> Vesting terms are sometimes more generous for strategic investors (exchanges, ecosystem funds) because they provide ongoing value. This is acceptable if disclosed.",
+        ],
+      },
+
+      { type: "h2", text: "Community and Ecosystem Allocations" },
+      {
+        type: "p",
+        html: "Community allocations — often labelled 'ecosystem fund', 'community incentives', 'liquidity mining', or 'airdrops' — are the most complex to evaluate because they are not governed by fixed vesting schedules. Instead, they are typically released over time according to emission schedules or governance decisions.",
+      },
+      {
+        type: "p",
+        html: "This category can represent 20–40% of total supply in DeFi protocols, and how it is distributed has an enormous impact on token price dynamics. Aggressive liquidity mining that emits tokens quickly stimulates usage but creates sustained selling pressure as yield farmers harvest and sell rewards.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Ask: what is the emission rate?</strong> Annual emission as a percentage of circulating supply tells you how much dilution current holders face each year.",
+          "<strong>Ask: who qualifies?</strong> Community allocations distributed to active users (proof-of-work style) create healthier dynamics than those distributed to wallet snapshots.",
+          "<strong>Ask: is there a lockup on distributed tokens?</strong> Some protocols require staking or locking received tokens before they can be sold — this meaningfully changes the supply dynamics.",
+        ],
+      },
+
+      { type: "h2", text: "Foundation and Treasury Tokens" },
+      {
+        type: "p",
+        html: "The foundation or treasury allocation is typically the most locked-up tranche in any token allocation. These tokens are meant to fund long-term protocol development, grants, partnerships, and operational costs for years after the TGE.",
+      },
+      {
+        type: "p",
+        html: "The key question is not when these tokens vest — it is <strong>who controls the release</strong>. Treasury tokens governed by a multisig held by the founding team give the team enormous discretionary power over the token supply. Treasury tokens governed by on-chain DAO voting are meaningfully more decentralised.",
+      },
+      {
+        type: "callout",
+        emoji: "🔍",
+        title: "Check the multisig",
+        body: "Before investing, verify who controls the treasury. A Gnosis Safe with 5 signers who are all unnamed team members is not decentralised governance — it is a pseudonymous centralised treasury. Look for independently verifiable signers, public identities, or time-lock contracts on treasury movements.",
+      },
+
+      { type: "h2", text: "Advisor Allocations: Small but Telling" },
+      {
+        type: "p",
+        html: "Advisor allocations are typically small (1–5% of supply) but they reveal something important about how a project values accountability. Advisors are typically influential individuals — exchange executives, protocol founders, investment managers — who lend their name and network to a project.",
+      },
+      {
+        type: "p",
+        html: "The problem is that many advisor arrangements are <em>entirely informal</em>. The advisor receives a token allocation in exchange for a short call, a tweet, or an introduction — and the vesting terms are often the most lenient in the entire structure. Watch for:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Advisor cliffs under 6 months:</strong> An advisor who can sell in three months has almost no accountability.",
+          "<strong>Unnamed advisors:</strong> If the whitepaper lists 'strategic advisors' without naming them, those allocations may be reserved for undisclosed insiders.",
+          "<strong>Advisor allocation above 5%:</strong> Anything above this suggests the 'advisor' label may be covering what is effectively an additional private sale round.",
+        ],
+      },
+
+      { type: "h2", text: "The Full Picture: Calculating Unlock Overhang" },
+      {
+        type: "p",
+        html: "The most useful analytical exercise when reviewing a token allocation is to calculate the <strong>unlock overhang</strong> — the ratio of locked supply to circulating supply at any given point in time. A token trading with a circulating supply of 100 million and a locked supply of 900 million has a 9x unlock overhang. Even a small percentage of locked holders choosing to sell at their first unlock can represent a significant multiple of current daily volume.",
+      },
+      {
+        type: "ol",
+        items: [
+          "Find the current circulating supply (CoinGecko, CoinMarketCap, or the project's own dashboard).",
+          "Find the total supply and the fully diluted valuation (FDV).",
+          "Divide FDV by market cap: this ratio tells you how much supply is still locked. A ratio of 10x means 90% of supply is not yet circulating.",
+          "Identify the next major unlock date and the size of that tranche as a percentage of current circulating supply.",
+          "Compare that unlock size to average daily trading volume. Unlock size &gt; 5 days of volume is a meaningful overhang event.",
+        ],
+      },
+      {
+        type: "p",
+        html: "This calculation will not tell you what price will do — markets are forward-looking and a well-anticipated unlock can be fully priced in. But it tells you the <em>structural risk</em> you are accepting as a token holder, and whether the current valuation is sustainable once locked supply enters circulation.",
+      },
+
+      { type: "h2", text: "How On-Chain Vesting Changes the Picture" },
+      {
+        type: "p",
+        html: "Not all token vesting is created equal. There is a critical difference between <strong>contractual vesting</strong> (a promise that tokens will be locked) and <strong>on-chain vesting</strong> (tokens that are mathematically impossible to access before their scheduled unlock).",
+      },
+      {
+        type: "p",
+        html: "On-chain vesting — enforced by protocols like Sablier, UNCX, Team Finance, Hedgey, or Unvest — is verifiable by anyone. You can look at the vesting contract address on a block explorer and confirm exactly how many tokens are locked, when they unlock, and who the beneficiary is. <strong>If a project's team vesting is not on-chain, the only thing preventing early access to those tokens is the team's word.</strong>",
+      },
+      {
+        type: "callout",
+        emoji: "✅",
+        title: "Verify on-chain vesting yourself",
+        body: "Ask the project team for the vesting contract address. Paste it into Etherscan, Arbiscan, or the relevant explorer. If they cannot provide one — or if the address shows tokens that are already withdrawn — treat that as material information.",
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "What is a healthy team token allocation percentage?",
+            a: "Most well-structured projects allocate 15–25% of total supply to the core team. Below 10% may fail to adequately incentivise founders and key hires over a multi-year build. Above 30% creates long-term selling pressure that can weigh on price even with extended vesting.",
+          },
+          {
+            q: "What does TGE unlock percentage mean?",
+            a: "TGE (Token Generation Event) unlock percentage refers to the portion of a vesting tranche that becomes immediately available when the token launches. A '10% TGE unlock' for investors means 10% of their allocation is transferable from day one, with the remaining 90% subject to the vesting schedule.",
+          },
+          {
+            q: "How do I find a project's token allocation?",
+            a: "Check the project's whitepaper, tokenomics page, or official documentation. On-chain vesting contracts can be verified directly via block explorers. Token unlock tracking tools like Vestream aggregate this data across multiple vesting protocols in one view.",
+          },
+          {
+            q: "Is a high FDV/market cap ratio always bad?",
+            a: "Not always, but it warrants scrutiny. A high FDV/MC ratio means most supply is still locked. If that supply belongs to well-aligned long-term holders (a DAO treasury, a foundation with a 5-year lock), it is less concerning than if it belongs to early investors with short vesting periods sitting on large unrealised gains.",
+          },
+          {
+            q: "Can vesting terms be changed after launch?",
+            a: "For on-chain vesting, the smart contract terms are immutable — they cannot be changed without beneficiary consent. For contractual vesting (off-chain legal agreements), terms can theoretically be renegotiated. This is another reason why on-chain enforcement is preferable to contractual promises.",
+          },
+        ],
+      },
+    ],
+  },
+
+];
 
 export function getArticle(slug: string): Article | undefined {
   return articles.find((a) => a.slug === slug);
