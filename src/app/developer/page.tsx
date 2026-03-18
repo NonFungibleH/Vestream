@@ -513,8 +513,8 @@ export default function DeveloperPage() {
 
           <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.3)" }}>
             Already have an API key?{" "}
-            <Link href="/api-docs" className="font-semibold" style={{ color: "#60a5fa" }}>
-              View the docs →
+            <Link href="/developer/portal" className="font-semibold transition-colors hover:opacity-80" style={{ color: "#60a5fa" }}>
+              Access the docs →
             </Link>
           </p>
         </div>

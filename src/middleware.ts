@@ -14,7 +14,19 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── Early access gate — dashboard + api-docs ─────────────────────────────────
+  // ── /api-docs — accept early access OR developer API key cookie ──────────────
+  if (pathname === "/api-docs") {
+    const earlyAccess = req.cookies.get("vestr_early_access");
+    const apiAccess   = req.cookies.get("vestr_api_access");
+    if (!earlyAccess && !apiAccess) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/developer/portal";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
+  // ── /dashboard — early access gate only ──────────────────────────────────────
   const cookie = req.cookies.get("vestr_early_access");
   if (!cookie) {
     const url = req.nextUrl.clone();
