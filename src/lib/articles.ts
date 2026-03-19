@@ -2216,6 +2216,146 @@ const articles: Article[] = [
     ],
   },
 
+  // ─── Token Vesting as a Health Signal ────────────────────────────────────────
+  {
+    slug:        "token-vesting-health-signal",
+    title:       "How a Project's Token Vesting Schedule Reveals Its True Health",
+    excerpt:     "Before you invest, look at the vesting schedule. The way a project structures token releases tells you more about its long-term intentions than any whitepaper ever will.",
+    publishedAt: "2026-03-18",
+    updatedAt:   "2026-03-18",
+    readingTime: "9 min read",
+    category:    "Analysis",
+    tags:        ["token", "token vesting", "crypto investing", "project health", "tokenomics", "due diligence"],
+    content: [
+      {
+        type: "p",
+        html: "Most crypto investors spend hours reading whitepapers, studying tokenomics PDFs, and watching founder interviews. Very few spend ten minutes looking at the vesting schedule — which is a mistake, because the vesting schedule is the one document a project cannot fake.",
+      },
+      {
+        type: "p",
+        html: "A whitepaper is a marketing document. A pitch deck is a best-case scenario. But a token vesting contract, deployed on-chain, is a legally and cryptographically binding commitment. It tells you exactly when every insider — every founder, every VC, every advisor — can sell. And that, more than anything else, reveals what they actually believe about the project's future.",
+      },
+      {
+        type: "callout",
+        emoji: "🔍",
+        title: "The core insight",
+        body:  "Insiders design their own vesting schedules. When those schedules are short, front-loaded, or full of loopholes, it tells you something important: they are not confident enough in the project to lock up their tokens for long.",
+      },
+
+      { type: "h2", text: "What a Token Vesting Schedule Actually Contains" },
+      {
+        type: "p",
+        html: "A token vesting schedule defines three things for each recipient group (team, investors, advisors, ecosystem fund, etc.): the <strong>cliff</strong> (the minimum time before any tokens unlock), the <strong>vesting period</strong> (the total duration over which tokens release), and the <strong>TGE unlock</strong> (the percentage available immediately at token launch).",
+      },
+      {
+        type: "p",
+        html: "A typical healthy schedule for a project team looks like: 0% TGE, 12-month cliff, 36-month linear vesting. This means founders receive nothing for the first year, then gradually receive their allocation over the following three years. Seed investors might receive: 5% TGE, 6-month cliff, 24-month vesting.",
+      },
+      {
+        type: "p",
+        html: "The numbers matter less than the <em>ratio</em> between what insiders can sell quickly versus what they have to hold long-term. That ratio is your signal.",
+      },
+
+      { type: "h2", text: "Five Vesting Patterns That Should Concern You" },
+      {
+        type: "p",
+        html: "After analysing hundreds of token vesting schedules, these are the patterns that most reliably predict poor long-term performance:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>High TGE unlocks for insiders (above 15%).</strong> If founders or seed investors can sell 20%+ of their allocation the day the token lists, the incentive structure is broken. Watch for projects where the team's TGE unlock is higher than the community's.",
+          "<strong>Vesting periods shorter than 18 months for the team.</strong> Building a meaningful protocol takes years. A team whose tokens fully vest in 12 months has no structural reason to stay past month 12. Many don't.",
+          "<strong>No cliff for seed or private round investors.</strong> Early-stage investors who can sell from day one are not long-term believers — they are short-term speculators. If VCs have no cliff, expect selling pressure the moment the token lists.",
+          "<strong>Ecosystem and treasury funds with short vesting.</strong> A '40% community fund' sounds generous. A 40% community fund that fully unlocks in 6 months is a dumping mechanism disguised as altruism.",
+          "<strong>Vesting changes after launch.</strong> On-chain vesting contracts are immutable — a project that announces it is 'adjusting' its vesting schedule post-launch is using off-chain (contractual) rather than on-chain enforcement. That is a red flag for the entire token's integrity.",
+        ],
+      },
+
+      { type: "h2", text: "What Good Token Vesting Looks Like" },
+      {
+        type: "p",
+        html: "The best vesting schedules are almost boring. Long cliffs, linear releases, conservative TGE unlocks, and no special carve-outs for any individual. Here is what to look for as a positive signal:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Team vesting longer than investor vesting.</strong> Founders should be tied to the project longer than the VCs backing them. If the team's vesting is shorter, ask why.",
+          "<strong>On-chain enforcement.</strong> Vesting contracts deployed to Ethereum, Base, or another L2 via protocols like Sablier or UNCX are verifiable and immutable. Contractual vesting ('trust us, it's in the legal agreements') is not.",
+          "<strong>No cliff exceptions.</strong> Some projects grant early liquidity to certain advisors or strategic partners. Each exception is a sell event you did not see coming.",
+          "<strong>Community allocation vesting longer than private round.</strong> This signals the team wants retail holders to have earlier access than institutions — a genuine alignment with the community.",
+          "<strong>Published, verified on-chain addresses.</strong> The project should publish the smart contract addresses for every vesting tranche. If you cannot independently verify when tokens will unlock, assume the worst.",
+        ],
+      },
+
+      { type: "h2", text: "How to Read a Vesting Schedule in Practice" },
+      {
+        type: "p",
+        html: "Start with the tokenomics table — usually in the whitepaper or on the project website. Note the allocation percentages (team, investors, advisors, ecosystem, etc.) and their respective vesting terms. Then ask three questions:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>When can the largest single group of insiders first sell?</strong> Identify the earliest unlock event that involves a significant percentage of total supply (more than 5%). This is the first moment of meaningful sell pressure.",
+          "<strong>What percentage of total supply unlocks in the first six months?</strong> Add up TGE unlocks plus any cliff-free linear vesting in the first six months. If this number exceeds 15–20% of total supply, the token faces structural selling pressure during its most vulnerable price discovery phase.",
+          "<strong>Is the vesting on-chain or contractual?</strong> Check block explorers or use a tool like Vestream to verify whether vesting contracts are actually deployed. If you cannot find on-chain contracts, the schedule is an unenforceable promise.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "💡",
+        title: "A practical benchmark",
+        body:  "For a project you are seriously considering investing in: total insider unlocks in the first 12 months should be below 10% of total supply. If it is above 20%, the token price will struggle to hold gains regardless of fundamentals.",
+      },
+
+      { type: "h2", text: "Why This Matters More Than Fundamentals (Short Term)" },
+      {
+        type: "p",
+        html: "In traditional equity markets, a company's stock can rise on strong fundamentals even while insiders are selling — because the selling pressure is spread across millions of public shares and many liquidity providers. Crypto tokens are different. Supply floats are small, liquidity is thin, and a single unlock event involving 5% of total supply can move the price by 20–30%.",
+      },
+      {
+        type: "p",
+        html: "This means that even a fundamentally strong project with a poor vesting schedule will struggle to hold its price in the year after launch. Conversely, a mediocre project with a well-designed vesting schedule may <em>appear</em> to perform well simply because there is limited sell pressure. Vesting schedules do not tell you about a project's long-term quality — but they tell you a great deal about its short-to-medium term price dynamics.",
+      },
+      {
+        type: "p",
+        html: "For traders, this means vesting unlock calendars are a first-order input to any position sizing decision. For long-term investors, a strong vesting structure is a prerequisite — not a nice-to-have — before doing deeper research.",
+      },
+
+      { type: "h2", text: "Tracking Vesting Unlocks Across Your Portfolio" },
+      {
+        type: "p",
+        html: "The practical problem is that tracking vesting across multiple projects is genuinely hard. Different protocols (Sablier, UNCX, Hedgey, Team Finance, Unvest) use different contract structures. Different chains (Ethereum, Base, BSC) require different tooling. And most projects do not send you a notification when a major unlock is approaching.",
+      },
+      {
+        type: "p",
+        html: "This is the problem Vestream was built to solve. Connect your wallet and Vestream surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "Does a long vesting period guarantee a project is legitimate?",
+            a: "No. Vesting periods can be gamed — for example, by setting long public vesting periods while quietly granting shorter vesting to individual insiders via separate contracts. Always verify on-chain. Long vesting is necessary but not sufficient for legitimacy.",
+          },
+          {
+            q: "What is the difference between a cliff and a lock-up?",
+            a: "A cliff is the minimum period before vesting begins — after the cliff, tokens release gradually. A lock-up typically means 100% of tokens are locked until a specific date, then release all at once. Lock-ups without subsequent vesting create a single large sell event; cliffs followed by linear vesting create gradual, smaller releases.",
+          },
+          {
+            q: "Can I see another wallet's vesting schedule?",
+            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like Vestream make this easier by normalising data across multiple protocols into a readable format.",
+          },
+          {
+            q: "What happens to unvested tokens if a project fails?",
+            a: "It depends on the vesting contract design. Some contracts allow the project to revoke unvested tokens (common for employee grants, less common for investor tranches). Others are irrevocable — even if the project shuts down, tokens continue to vest on the original schedule. Always check whether the contract has a revocation function.",
+          },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {
