@@ -3468,16 +3468,19 @@ function WalletRow({
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ wallets, tier, walletLimit, onAddWallet, onRemoveWallet }: {
+function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onRemoveWallet }: {
   wallets: Wallet[];
   tier: string;
   walletLimit: number | null;
+  isOpen: boolean;
+  onClose: () => void;
   onAddWallet: () => void;
   onRemoveWallet: (address: string) => void;
 }) {
   const router = useRouter();
   return (
-    <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
+    <aside
+      className={`fixed md:relative z-50 md:z-auto w-56 flex-shrink-0 h-full md:h-screen flex flex-col transition-transform duration-200 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
       {/* Logo */}
@@ -3711,6 +3714,7 @@ export default function Dashboard() {
   const [activeTokens, setActiveTokens]   = useState<Set<string>>(new Set());
   const [exportOpen, setExportOpen]       = useState(false);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
   const [costBasis, setCostBasis]         = useState<Record<string, number>>({});
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
   const [buys,  setBuys]                  = useState<Record<string, BuyTx[]>>({});
@@ -3910,17 +3914,33 @@ export default function Dashboard() {
       style={{ background: "var(--preview-bg)" }}
       onClick={() => { if (walletChipOpen) setWalletChipOpen(false); if (exportOpen) setExportOpen(false); }}
     >
-      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} />
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}
+          style={{ background: "rgba(0,0,0,0.5)" }} />
+      )}
+      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
+        <header className="h-14 px-4 md:px-6 flex items-center justify-between flex-shrink-0"
           style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
-          <div>
-            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Overview</h1>
-            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              {isLoading ? "Syncing…" : streams.length > 0 ? `${streams.length} stream${streams.length !== 1 ? "s" : ""} · live` : "No streams found"}
-            </p>
+          <div className="flex items-center gap-3">
+            {/* Mobile hamburger */}
+            <button className="flex md:hidden w-8 h-8 items-center justify-center rounded-lg"
+              style={{ color: "var(--preview-text-2)" }}
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label="Toggle sidebar">
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Overview</h1>
+              <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                {isLoading ? "Syncing…" : streams.length > 0 ? `${streams.length} stream${streams.length !== 1 ? "s" : ""} · live` : "No streams found"}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             {/* Export dropdown */}

@@ -10,7 +10,7 @@ export default function Home() {
       <SiteNav />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-40 pb-32 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-5 pt-24 pb-16 md:pt-40 md:pb-32 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px)`, backgroundSize: "28px 28px" }} />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at top, rgba(37,99,235,0.07) 0%, transparent 65%)" }} />
@@ -90,7 +90,7 @@ export default function Home() {
           </div>
         </div>
 
-        <h1 className="relative text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
+        <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
           style={{ letterSpacing: "-0.03em", color: "#0f172a" }}>
           Never miss a<br />
           <span style={{ background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 60%, #6366f1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -148,7 +148,7 @@ export default function Home() {
       </section>
 
       {/* ── Dashboard preview (updated to match real UI) ─────────────────── */}
-      <section className="px-8 pb-24 flex justify-center">
+      <section className="px-3 md:px-8 pb-16 md:pb-24 flex justify-center">
         <div className="relative w-full max-w-5xl rounded-2xl overflow-hidden"
           style={{ border: "1px solid rgba(0,0,0,0.09)", boxShadow: "0 32px 80px rgba(15,23,42,0.14), 0 4px 16px rgba(15,23,42,0.06)" }}>
           {/* Browser chrome */}
@@ -173,9 +173,9 @@ export default function Home() {
           </div>
 
           {/* Mock dashboard — dark theme */}
-          <div className="flex" style={{ background: "#0d0f14", minHeight: 380 }}>
-            {/* Sidebar */}
-            <div className="w-44 flex-shrink-0 flex flex-col" style={{ background: "#141720", borderRight: "1px solid #1e2330" }}>
+          <div className="flex" style={{ background: "#0d0f14", minHeight: 280 }}>
+            {/* Sidebar — hidden on mobile */}
+            <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#141720", borderRight: "1px solid #1e2330" }}>
               <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid #1e2330" }}>
                 <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
                   <span className="text-white text-[9px] font-bold">V</span>
@@ -228,9 +228,9 @@ export default function Home() {
               </div>
 
               {/* Two-col: snapshot + table */}
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 {/* Token snapshot */}
-                <div className="col-span-2 rounded-xl p-3" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+                <div className="md:col-span-2 rounded-xl p-3" style={{ background: "#141720", border: "1px solid #1e2330" }}>
                   <p className="text-[9px] font-semibold text-white mb-2.5">Token Snapshot</p>
                   <div className="space-y-2">
                     {[
@@ -255,7 +255,7 @@ export default function Home() {
                 </div>
 
                 {/* Vesting table */}
-                <div className="col-span-3 rounded-xl overflow-hidden" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+                <div className="md:col-span-3 rounded-xl overflow-hidden" style={{ background: "#141720", border: "1px solid #1e2330" }}>
                   <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid #1e2330" }}>
                     <p className="text-[9px] font-semibold text-white">Vesting Schedules</p>
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}>4 streams</span>
@@ -296,7 +296,7 @@ export default function Home() {
       </section>
 
       {/* ── Feature showcase panels ──────────────────────────────────────── */}
-      <section className="px-8 pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Deeper than a simple tracker</p>
           <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
@@ -307,7 +307,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Panel 1: Monthly Forecast */}
           <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
@@ -440,7 +440,7 @@ export default function Home() {
       </section>
 
       {/* ── Features grid ────────────────────────────────────────────────── */}
-      <section className="px-8 pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
             Everything in one place
@@ -450,7 +450,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
@@ -515,7 +515,7 @@ export default function Home() {
       </section>
 
       {/* ── Who it's for ────────────────────────────────────────────────── */}
-      <section className="px-8 pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Built for</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
@@ -526,7 +526,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
@@ -575,7 +575,7 @@ export default function Home() {
       </section>
 
       {/* ── How it works ────────────────────────────────────────────────── */}
-      <section className="px-8 pb-28 max-w-4xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Simple by design</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
@@ -587,7 +587,7 @@ export default function Home() {
         <div className="relative">
           <div className="absolute top-8 left-[calc(16.67%+16px)] right-[calc(16.67%+16px)] h-px hidden md:block"
             style={{ background: "linear-gradient(90deg, rgba(37,99,235,0.2), rgba(124,58,237,0.2))" }} />
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 step: "01", color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.18)",
@@ -628,7 +628,7 @@ export default function Home() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
-      <section className="px-8 pb-28 max-w-3xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Got questions</p>
           <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>Frequently asked</h2>
@@ -679,8 +679,8 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
-      <section className="px-8 pb-32 flex flex-col items-center text-center">
-        <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-10 py-16"
+      <section className="px-4 md:px-8 pb-20 md:pb-32 flex flex-col items-center text-center">
+        <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-6 md:px-10 py-12 md:py-16"
           style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
@@ -697,7 +697,7 @@ export default function Home() {
       </section>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="px-8 py-6 flex items-center justify-between" style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+      <footer className="px-4 md:px-8 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
         <p className="text-xs" style={{ color: "#94a3b8" }}>© 2026 Vestream. All rights reserved.</p>
         <div className="flex items-center gap-5">
           <Link href="/privacy" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
