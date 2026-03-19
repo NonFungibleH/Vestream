@@ -97,22 +97,27 @@ export function SiteNav({ theme = "light" }: Props) {
           </a>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg"
-            style={{ color: linkBase }}
+            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
             aria-label="Toggle menu"
           >
-            <span
-              className="block w-5 h-0.5 rounded-full transition-all duration-200 origin-center"
-              style={{ background: linkActive, transform: open ? "rotate(45deg) translateY(7px)" : "none" }}
-            />
-            <span
-              className="block w-5 h-0.5 rounded-full transition-all duration-200"
-              style={{ background: linkActive, opacity: open ? 0 : 1 }}
-            />
-            <span
-              className="block w-5 h-0.5 rounded-full transition-all duration-200 origin-center"
-              style={{ background: linkActive, transform: open ? "rotate(-45deg) translateY(-7px)" : "none" }}
-            />
+            {([
+              { offset: -6, deg: 45,  hide: false },
+              { offset:  0, deg:  0,  hide: true  },
+              { offset:  6, deg: -45, hide: false },
+            ] as const).map(({ offset, deg, hide }, i) => (
+              <span
+                key={i}
+                className="absolute block w-5 h-0.5 rounded-full transition-all duration-200"
+                style={{
+                  background: linkActive,
+                  top: "50%",
+                  transform: open
+                    ? `translateY(-50%) rotate(${deg}deg)`
+                    : `translateY(calc(-50% + ${offset}px))`,
+                  opacity: hide && open ? 0 : 1,
+                }}
+              />
+            ))}
           </button>
         </div>
       </nav>

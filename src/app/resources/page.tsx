@@ -252,7 +252,7 @@ export default function ResourcesPage() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t py-8 px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
+      <footer className="border-t py-8 px-4 md:px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
         <div className="flex items-center justify-center gap-1.5 mb-3">
           <div className="w-5 h-5 rounded-md flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>

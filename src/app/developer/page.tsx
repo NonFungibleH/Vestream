@@ -17,13 +17,13 @@ function Check() {
 
 export default function DeveloperPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* ── Nav ── */}
       <SiteNav theme="dark" />
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-40 pb-28 px-8 text-center">
+      <section className="relative overflow-hidden pt-24 pb-16 md:pt-40 md:pb-28 px-4 md:px-8 text-center">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 70%)"
@@ -90,7 +90,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── What we index ── */}
-      <section className="px-8 pb-20">
+      <section className="px-4 md:px-8 pb-16 md:pb-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Indexed protocols</p>
@@ -98,7 +98,7 @@ export default function DeveloperPage() {
               One API. Every major vesting protocol.
             </h2>
           </div>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC",    note: "Linear + tranched" },
               { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · BSC",            note: "Token locks" },
@@ -122,16 +122,16 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Three pillars ── */}
-      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why Vestream API</p>
-            <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
-              Built for the next generation of<br />financial infrastructure
+            <h2 className="font-bold text-2xl md:text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
+              Built for the next generation of financial infrastructure
             </h2>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: "⬡",
@@ -187,7 +187,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── API endpoints showcase ── */}
-      <section className="px-8 py-20">
+      <section className="px-4 md:px-8 py-16 md:py-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>API reference</p>
@@ -378,7 +378,7 @@ export default function DeveloperPage() {
               backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
               backgroundSize: "28px 28px"
             }} />
-            <div className="relative flex items-center justify-between gap-10">
+            <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-8">
               <div className="flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-5"
                   style={{ background: "rgba(99,102,241,0.15)", borderColor: "rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
@@ -426,7 +426,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Pricing</p>
@@ -435,7 +435,7 @@ export default function DeveloperPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Free */}
             <div className="rounded-2xl p-8"
               style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -493,7 +493,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Request access form ── */}
-      <section id="request-access" className="px-8 py-24" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <section id="request-access" className="px-4 md:px-8 py-16 md:py-24" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Get started</p>
@@ -521,8 +521,8 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="px-8 py-8" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <footer className="px-4 md:px-8 py-8" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
             <div className="w-6 h-6 rounded-md flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
@@ -530,9 +530,7 @@ export default function DeveloperPage() {
             </div>
             <span className="font-semibold text-sm" style={{ color: "white" }}>Vestream</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/resources" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Resources</Link>
-            <Link href="/pricing" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Pricing</Link>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link href="/privacy" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Privacy Policy</Link>
             <Link href="/terms" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Terms of Service</Link>
           </div>

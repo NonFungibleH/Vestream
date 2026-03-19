@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNav />
@@ -402,7 +402,7 @@ export default function Home() {
             </div>
             <div className="px-4 pb-4 space-y-2">
               {[
-                { sym: "USDC", price: "$1.00",    mc: "$45.2B", liq: "$892M", color: "#2563eb" },
+                { sym: "VOLT", price: "$1.04",    mc: "$38.7B", liq: "$741M", color: "#2563eb" },
                 { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#f97316" },
                 { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#7c3aed" },
               ].map((t) => (
