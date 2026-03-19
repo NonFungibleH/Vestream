@@ -101,10 +101,10 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC",    note: "Linear + tranched" },
-              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · BSC",            note: "Token locks" },
+              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · Base · BSC",    note: "Token locks" },
               { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  chains: "ETH · Base · BSC",    note: "NFT-based vesting" },
               { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   chains: "ETH · Base · BSC",    note: "Multi-chain" },
-              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · BSC",            note: "Team vesting" },
+              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC",    note: "Team vesting" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
