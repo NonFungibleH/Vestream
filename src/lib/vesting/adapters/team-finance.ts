@@ -332,6 +332,6 @@ async function fetchForChain(
 export const teamFinanceAdapter: VestingAdapter = {
   id:                "team-finance",
   name:              "Team Finance",
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.BASE, CHAIN_IDS.SEPOLIA],
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.SEPOLIA],
   fetch:             fetchForChain,
 };

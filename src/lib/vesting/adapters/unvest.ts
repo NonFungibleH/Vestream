@@ -13,6 +13,10 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_BSC,
                               "5RiFDxL1mDFdSojrC7tRkVXqiiQgysf77iC7c1KK5CAp"
                             ),
+  [CHAIN_IDS.POLYGON]:      resolveSubgraphUrl(
+                              process.env.UNVEST_SUBGRAPH_URL_POLYGON,
+                              "7EwmQS7MyeY9BZC5xeAr25WgjcgbRNpAY95dZNBvqgja"
+                            ),
   [CHAIN_IDS.BASE]:         resolveSubgraphUrl(
                               process.env.UNVEST_SUBGRAPH_URL_BASE,
                               "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M"
@@ -263,6 +267,7 @@ export const unvestAdapter: VestingAdapter = {
   supportedChainIds: [
     CHAIN_IDS.ETHEREUM,
     CHAIN_IDS.BSC,
+    CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
     CHAIN_IDS.BASE_SEPOLIA,
   ],

@@ -456,7 +456,7 @@ export default function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled directly from Sablier, Hedgey, UNCX, and Unvest — across Ethereum, Base, and BSC.",
+              body: "Real-time positions pulled directly from Sablier, Hedgey, UNCX, and Unvest — across Ethereum, Base, BSC, and Polygon.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -468,7 +468,7 @@ export default function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.14)",
               title: "Multi-chain dashboard",
-              body: "Ethereum, Base, and BSC in one view. Filter by token, protocol, or wallet with a single click.",
+              body: "Ethereum, Base, BSC, and Polygon in one view. Filter by token, protocol, or wallet with a single click.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
@@ -646,7 +646,7 @@ export default function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports Sablier (streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), and Unvest — on Ethereum mainnet, Base, and BSC. Ethereum Sepolia and Base Sepolia are supported for testing. More protocols are on the roadmap.",
+              a: "Vestream supports Sablier (streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), and Unvest — on Ethereum, Base, BSC, and Polygon. Ethereum Sepolia and Base Sepolia are supported for testing. More chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

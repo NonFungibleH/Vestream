@@ -15,6 +15,10 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.SABLIER_SUBGRAPH_URL_BSC,
                               "A8Vc9hi7j45u7P8Uw5dg4uqYJgPo4x1rB4oZtTVaiccK"
                             ),
+  [CHAIN_IDS.POLYGON]:      resolveSubgraphUrl(
+                              process.env.SABLIER_SUBGRAPH_URL_POLYGON,
+                              "8fgeQMEQ8sskVeWE5nvtsVL2VpezDrAkx2d1VeiHiheu"
+                            ),
   [CHAIN_IDS.BASE]:         resolveSubgraphUrl(
                               process.env.SABLIER_SUBGRAPH_URL_BASE ?? process.env.SABLIER_SUBGRAPH_URL,
                               "778GfecD9tsyB4xNnz4wfuAyfHU6rqGr79VCPZKu3t2F"
@@ -37,6 +41,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
 const V2_1_CHAINS = new Set<SupportedChainId>([
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
+  CHAIN_IDS.POLYGON,
   CHAIN_IDS.BASE,
   CHAIN_IDS.SEPOLIA,
 ]);
@@ -273,6 +278,7 @@ export const sablierAdapter: VestingAdapter = {
   supportedChainIds: [
     CHAIN_IDS.ETHEREUM,
     CHAIN_IDS.BSC,
+    CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
     CHAIN_IDS.SEPOLIA,
   ],

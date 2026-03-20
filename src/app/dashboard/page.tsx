@@ -60,6 +60,7 @@ function getTokenColor(symbol: string): string {
 const BLOCK_EXPLORERS: Record<number, string> = {
   1:        "https://etherscan.io",
   56:       "https://bscscan.com",
+  137:      "https://polygonscan.com",
   8453:     "https://basescan.org",
   11155111: "https://sepolia.etherscan.io",
   84532:    "https://sepolia.basescan.org",
@@ -3232,9 +3233,10 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
 // ─── AddWalletBar ─────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"     },
-  { id: "56",       label: "BNB Chain", short: "BSC"    },
-  { id: "8453",     label: "Base",      short: "Base"   },
+  { id: "1",        label: "Ethereum", short: "ETH"      },
+  { id: "56",       label: "BNB Chain", short: "BSC"     },
+  { id: "137",      label: "Polygon",   short: "Polygon" },
+  { id: "8453",     label: "Base",      short: "Base"    },
   { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 

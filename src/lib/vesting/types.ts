@@ -2,6 +2,7 @@
 export const CHAIN_IDS = {
   ETHEREUM:     1,
   BSC:          56,
+  POLYGON:      137,
   BASE:         8453,
   SEPOLIA:      11155111,  // Ethereum Sepolia testnet
   BASE_SEPOLIA: 84532,     // Base Sepolia testnet
@@ -12,6 +13,7 @@ export type SupportedChainId = (typeof CHAIN_IDS)[keyof typeof CHAIN_IDS];
 export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.ETHEREUM]:     "Ethereum",
   [CHAIN_IDS.BSC]:          "BSC",
+  [CHAIN_IDS.POLYGON]:      "Polygon",
   [CHAIN_IDS.BASE]:         "Base",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",
   [CHAIN_IDS.BASE_SEPOLIA]: "Base Sepolia",
@@ -26,6 +28,7 @@ export const TESTNET_CHAIN_IDS: SupportedChainId[] = [
 export const ALL_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
+  CHAIN_IDS.POLYGON,
   CHAIN_IDS.BASE,
   CHAIN_IDS.SEPOLIA,
   CHAIN_IDS.BASE_SEPOLIA,

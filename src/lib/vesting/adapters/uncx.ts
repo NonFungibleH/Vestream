@@ -20,6 +20,10 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNCX_SUBGRAPH_URL_BSC,
                               "Bq3CVVspv1gunmEhYkAwfRZcMZK5QyaydyCRarCwgE8P"
                             ),
+  [CHAIN_IDS.POLYGON]:      resolveSubgraphUrl(
+                              process.env.UNCX_SUBGRAPH_URL_POLYGON,
+                              "Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD"
+                            ),
   [CHAIN_IDS.BASE]:         resolveSubgraphUrl(
                               process.env.UNCX_SUBGRAPH_URL_BASE,
                               "CUQ2qwQcVfivLPF9TsoLaLnJGmPRb3sDYFVRXbtUy78z"
@@ -183,6 +187,7 @@ export const uncxAdapter: VestingAdapter = {
   supportedChainIds: [
     CHAIN_IDS.ETHEREUM,
     CHAIN_IDS.BSC,
+    CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
     CHAIN_IDS.SEPOLIA,
   ],

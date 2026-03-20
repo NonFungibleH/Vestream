@@ -100,11 +100,11 @@ export default function DeveloperPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
-              { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC",    note: "Linear + tranched" },
-              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · Base · BSC",    note: "Token locks" },
-              { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  chains: "ETH · Base · BSC",    note: "NFT-based vesting" },
-              { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   chains: "ETH · Base · BSC",    note: "Multi-chain" },
-              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC",    note: "Team vesting" },
+              { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Linear + tranched" },
+              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Token locks" },
+              { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "NFT-based vesting" },
+              { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Multi-chain" },
+              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Team vesting" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -475,7 +475,7 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For production applications</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["100,000+ API requests / month", "All 3 endpoints", "5 protocols · 5 chains", "Priority response SLA", "Dedicated support", "Custom rate limits on request", "Early access to new endpoints"].map(f => (
+                {["100,000+ API requests / month", "All 3 endpoints", "5 protocols · 6 chains", "Priority response SLA", "Dedicated support", "Custom rate limits on request", "Early access to new endpoints"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
