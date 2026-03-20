@@ -100,6 +100,16 @@ export const waitlist = pgTable("waitlist", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Beta feedback ─────────────────────────────────────────────────────────────
+export const betaFeedback = pgTable("beta_feedback", {
+  id:          uuid("id").primaryKey().defaultRandom(),
+  userAddress: text("user_address"),          // null = submitted before wallet connect
+  rating:      integer("rating"),             // 1–5 star rating, optional
+  message:     text("message").notNull(),
+  page:        text("page"),                  // which page they were on when submitted
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Persistent vesting stream cache ───────────────────────────────────────────
 // Stores normalised VestingStream objects fetched from subgraphs.
 // Immutable fields (token, amounts, schedule) are kept indefinitely.

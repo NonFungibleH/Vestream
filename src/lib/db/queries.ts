@@ -1,10 +1,11 @@
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { db } from "./index";
 import {
   users,
   wallets,
   notificationPreferences,
   notificationsSent,
+  betaFeedback,
 } from "./schema";
 
 export async function getUserByAddress(address: string) {
@@ -21,9 +22,13 @@ export async function upsertUser(address: string) {
   const existing = await getUserByAddress(normalized);
   if (existing) return existing;
 
+  // During the beta period, new users get Pro access automatically.
+  // Set BETA_DEFAULT_TIER=free in env to revert to the normal free default.
+  const defaultTier = process.env.BETA_DEFAULT_TIER ?? "pro";
+
   const result = await db
     .insert(users)
-    .values({ address: normalized })
+    .values({ address: normalized, tier: defaultTier })
     .returning();
   return result[0];
 }
@@ -275,4 +280,29 @@ export async function getAllUsersWithEmailEnabled() {
         eq(notificationPreferences.emailEnabled, true)
       )
     );
+}
+
+// ── Beta helpers ───────────────────────────────────────────────────────────────
+
+/** Returns the total number of registered users. */
+export async function countUsers(): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(users);
+  return result[0]?.count ?? 0;
+}
+
+/** Saves a piece of beta feedback. */
+export async function saveFeedback(opts: {
+  userAddress?: string;
+  rating?:      number;
+  message:      string;
+  page?:        string;
+}) {
+  await db.insert(betaFeedback).values({
+    userAddress: opts.userAddress ?? null,
+    rating:      opts.rating     ?? null,
+    message:     opts.message,
+    page:        opts.page       ?? null,
+  });
 }

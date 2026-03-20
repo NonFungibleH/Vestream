@@ -2356,6 +2356,165 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 12 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "token-unlock-calendar",
+    title:       "Token Unlock Calendar: How to Track When Your Tokens Become Available",
+    excerpt:     "Every vested token has an unlock schedule. Understanding when your tokens release — and how to track those dates — is essential for managing your crypto portfolio.",
+    publishedAt: "2026-03-20",
+    updatedAt:   "2026-03-20",
+    readingTime: "8 min read",
+    category:    "Fundamentals",
+    tags:        ["token", "token unlock", "token vesting", "crypto portfolio", "vesting schedule", "unlock calendar"],
+    content: [
+      {
+        type: "p",
+        html: "If you have received tokens through a vesting agreement — as an investor, a project team member, or through a community program — you almost certainly cannot access all of them right now. Your tokens are unlocking on a schedule, and that schedule has a direct impact on your portfolio value, your tax planning, and your decisions about when and whether to sell.",
+      },
+      {
+        type: "p",
+        html: "A <strong>token unlock calendar</strong> is a structured view of exactly when your vested tokens become available. It shows you each future release date, the quantity unlocking at each point, and the cumulative percentage of your allocation you have received so far. For anyone holding meaningful token positions, it is one of the most practical financial tools you can maintain.",
+      },
+      {
+        type: "callout",
+        emoji: "📅",
+        title: "Why this matters",
+        body:  "Most token holders have only a vague sense of when their next unlock is. This leads to two mistakes: selling too early (before a large unlock you forgot about) or holding too long (not realising significant supply is about to hit the market from other vesting recipients).",
+      },
+
+      { type: "h2", text: "What Is a Token Unlock?" },
+      {
+        type: "p",
+        html: "A token unlock is the moment a portion of previously locked tokens becomes transferable. Tokens are locked by smart contracts — code deployed on a blockchain that holds your tokens in escrow and releases them according to a predefined schedule. Until the contract releases them, you can see your allocation but cannot move, sell, or use those tokens.",
+      },
+      {
+        type: "p",
+        html: "Unlocks can be structured in several ways. A <strong>linear unlock</strong> releases a fixed fraction of your allocation every second, every day, or every month. A <strong>cliff unlock</strong> releases nothing until a specific date, then either releases everything at once or switches to linear vesting. A <strong>tranche unlock</strong> releases fixed percentages at predetermined milestones — for example, 25% every six months.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Linear vesting:</strong> Smooth, continuous release — e.g., 1/1440th of your allocation unlocks every minute for 1,000 days.",
+          "<strong>Cliff + linear:</strong> Nothing unlocks for 12 months (the cliff), then linear release begins over 24 months.",
+          "<strong>Milestone-based:</strong> Tranches release when protocol metrics are hit (TVL targets, user counts), though this requires off-chain oracle input and is less common.",
+          "<strong>TGE unlock:</strong> A percentage (often 5–20%) unlocks immediately at Token Generation Event; the remainder vests over time.",
+        ],
+      },
+
+      { type: "h2", text: "The Anatomy of a Token Unlock Event" },
+      {
+        type: "p",
+        html: "Every unlock event has four components worth tracking: the <strong>date</strong> (or block height) when tokens release, the <strong>quantity</strong> unlocking at that moment, the <strong>recipient group</strong> (team, seed investors, public sale participants, ecosystem fund), and the <strong>percentage of total supply</strong> that event represents.",
+      },
+      {
+        type: "p",
+        html: "The last point — percentage of total supply — is the one most investors ignore. An unlock of 1,000,000 tokens sounds large. But if total supply is 10 billion, it represents 0.01% of supply and is unlikely to move the price. Conversely, an unlock of 500,000 tokens from a 2,000,000-token circulating supply is a 25% supply increase in a single event — a genuinely significant market event.",
+      },
+      {
+        type: "callout",
+        emoji: "📊",
+        title: "The right metric",
+        body:  "Always express unlock quantities as a percentage of current circulating supply — not total supply, and not your personal allocation. That percentage tells you how much new sell pressure the market must absorb.",
+      },
+
+      { type: "h2", text: "Why Token Unlocks Move Prices" },
+      {
+        type: "p",
+        html: "Token unlocks have a measurable effect on price — particularly in the days immediately before and after a large unlock event. The mechanism is straightforward: recipients who have been waiting for liquidity will, in aggregate, sell some portion of what they receive. The market anticipates this, and professional traders often build short positions ahead of large known unlock events.",
+      },
+      {
+        type: "p",
+        html: "Research across DeFi tokens consistently shows that tokens underperform in the 30 days following a major unlock (typically defined as an unlock representing more than 1% of total supply). The underperformance is most pronounced when the unlocking recipients are early-stage investors (seed or private round VCs) who purchased at a significant discount to the current market price.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Seed investor unlocks:</strong> Highest sell probability. Early investors often bought at 5–20% of the current price and may have fund mandates to realise returns.",
+          "<strong>Team unlocks:</strong> Mixed. Founders often hold long-term, but early employees who have moved on will sell.",
+          "<strong>Community/ecosystem unlocks:</strong> Lower sell pressure. These tokens are typically distributed to active users who are already engaged with the protocol.",
+          "<strong>Treasury/DAO unlocks:</strong> Lowest sell pressure. These tokens are controlled by governance and rarely sold directly.",
+        ],
+      },
+
+      { type: "h2", text: "How to Find Your Token's Unlock Schedule" },
+      {
+        type: "p",
+        html: "There are three places to find authoritative unlock information, in increasing order of reliability:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>The project's official tokenomics documentation.</strong> Most projects publish a vesting schedule in their whitepaper or tokenomics page. This tells you the intended schedule — but does not confirm it is actually enforced on-chain.",
+          "<strong>Block explorers.</strong> For any token with on-chain vesting, the vesting contract is publicly visible. Search the token's contract address on Etherscan, BscScan, or Polygonscan to find associated vesting contracts. This requires understanding how to read smart contract state, which is not beginner-friendly.",
+          "<strong>Vesting aggregator tools.</strong> Platforms like Vestream read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
+        ],
+      },
+      {
+        type: "p",
+        html: "The third option — a dedicated vesting aggregator — is the only one that gives you a consolidated view if you hold multiple token positions across different protocols. Most investors have vesting positions spread across Sablier, UNCX, Hedgey, and Team Finance simultaneously, and checking each protocol manually is impractical.",
+      },
+
+      { type: "h2", text: "Building Your Personal Token Unlock Calendar" },
+      {
+        type: "p",
+        html: "A useful personal unlock calendar should show, at minimum: the next 12 months of unlock dates for every position you hold, the quantity and estimated value unlocking at each event, and the protocol managing the vesting contract. For tax purposes, you will also want a record of the token price at each unlock date, since in most jurisdictions a token unlock is a taxable event at the fair market value at time of receipt.",
+      },
+      {
+        type: "p",
+        html: "Beyond your own positions, serious token holders also track <em>market-wide</em> unlock calendars — the aggregate unlocks happening across the entire market, not just their own wallet. A large unlock in a competing protocol can affect sentiment across an entire sector. A massive team unlock in a high-profile token can pull liquidity from the whole market as investors sell to reallocate.",
+      },
+      {
+        type: "callout",
+        emoji: "🗓️",
+        title: "What to track",
+        body:  "For each position: unlock date · quantity · estimated USD value · protocol · recipient category. For market-wide awareness: total supply unlocking in the next 30 and 90 days across the tokens in your sector.",
+      },
+
+      { type: "h2", text: "Protocols That Manage Token Vesting On-Chain" },
+      {
+        type: "p",
+        html: "Not all vesting is created equal. On-chain vesting — enforced by immutable smart contracts — is verifiable and tamper-proof. Off-chain vesting — managed by legal agreements and manual token transfers — is not. The following protocols handle on-chain vesting and are widely used by major token projects:",
+      },
+      {
+        type: "table",
+        headers: ["Protocol", "Model", "Chains"],
+        rows: [
+          ["Sablier", "Per-second linear streaming", "Ethereum, Base, Polygon, BNB Chain"],
+          ["UNCX", "Configurable lock & vest", "Ethereum, Base, Polygon, BNB Chain"],
+          ["Hedgey", "Batch grants, DAO payroll", "Ethereum, Base, Polygon, BNB Chain"],
+          ["Team Finance", "Team & investor vesting", "Ethereum, Base, Polygon, BNB Chain"],
+          ["Unvest", "Milestone + linear vesting", "Ethereum, Base, Polygon, BNB Chain"],
+        ],
+      },
+      {
+        type: "p",
+        html: "If your token's vesting is managed by any of these protocols, the schedule is verifiable on-chain and trackable via aggregators like Vestream. If your project uses a custom vesting contract, you will need to find and read that specific contract on the relevant block explorer.",
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "Do I owe taxes when my tokens unlock?",
+            a: "In most jurisdictions, yes — a token unlock is treated as receipt of income at the fair market value at the time of unlocking, regardless of whether you sell. Consult a tax professional familiar with crypto in your country, as treatment varies significantly by jurisdiction.",
+          },
+          {
+            q: "Can a project change my vesting schedule after the fact?",
+            a: "Not if the vesting is enforced by an immutable smart contract. Contracts deployed on-chain cannot be altered unless they were specifically designed with upgradeability. If a project claims it is 'adjusting' its vesting schedule, ask whether the on-chain contracts have actually been changed — or whether only off-chain legal agreements have been modified.",
+          },
+          {
+            q: "What happens if I miss a claim on my vesting contract?",
+            a: "Most vesting contracts continue accruing tokens regardless of whether you actively claim them. You do not forfeit unclaimed tokens by failing to claim on a specific date — they accumulate and can be claimed whenever you choose. Check your specific contract, as behaviour varies by protocol.",
+          },
+          {
+            q: "How do I track token unlocks for projects I am invested in but not directly holding vesting positions?",
+            a: "For market-wide unlock tracking, use a token unlock aggregator that monitors all vesting contracts for a given token — not just your personal wallet. This gives you visibility into upcoming sell pressure from all recipient groups, even if you purchased tokens on the open market rather than through a vesting agreement.",
+          },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {

@@ -3470,7 +3470,102 @@ function WalletRow({
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onRemoveWallet }: {
+// ─── FeedbackModal ────────────────────────────────────────────────────────────
+
+function FeedbackModal({ onClose }: { onClose: () => void }) {
+  const [message, setMessage]   = useState("");
+  const [rating, setRating]     = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone]         = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setSubmitting(true);
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, rating, page: "/dashboard" }),
+      });
+      setDone(true);
+    } catch {
+      // Silent fail — feedback isn't critical
+      setDone(true);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.5)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-md rounded-2xl p-6"
+        style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+        {done ? (
+          <div className="flex flex-col items-center text-center py-4 gap-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+              style={{ background: "rgba(16,185,129,0.1)" }}>✓</div>
+            <p className="font-semibold text-sm" style={{ color: "#0f172a" }}>Thanks for the feedback!</p>
+            <p className="text-xs" style={{ color: "#64748b" }}>We read every response and use it to make Vestream better.</p>
+            <button onClick={onClose}
+              className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="font-bold text-sm" style={{ color: "#0f172a" }}>Share feedback</p>
+                <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>Help us build a better product</p>
+              </div>
+              <button onClick={onClose} className="text-lg leading-none" style={{ color: "#94a3b8" }}>×</button>
+            </div>
+
+            {/* Star rating */}
+            <div className="flex gap-1 mb-4">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} onClick={() => setRating(n)}
+                  className="text-2xl transition-transform hover:scale-110"
+                  style={{ color: rating !== null && n <= rating ? "#f59e0b" : "#e2e8f0" }}>
+                  ★
+                </button>
+              ))}
+              {rating && (
+                <span className="text-xs self-center ml-1" style={{ color: "#64748b" }}>
+                  {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
+                </span>
+              )}
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="What's working well? What could be better? Any features you're missing?"
+                rows={4}
+                maxLength={2000}
+                className="w-full text-sm px-4 py-3 rounded-xl resize-none outline-none"
+                style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a", lineHeight: 1.5 }}
+              />
+              <button type="submit"
+                disabled={!message.trim() || submitting}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                {submitting ? "Sending…" : "Send feedback"}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onRemoveWallet, onFeedback }: {
   wallets: Wallet[];
   tier: string;
   walletLimit: number | null;
@@ -3478,6 +3573,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
   onClose: () => void;
   onAddWallet: () => void;
   onRemoveWallet: (address: string) => void;
+  onFeedback: () => void;
 }) {
   const router = useRouter();
   return (
@@ -3574,31 +3670,24 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           </div>
         )}
 
-        {/* Pro plan badge */}
+        {/* Pro plan badge (beta version — shows Beta Access branding) */}
         {tier === "pro" && (
           <div className="px-3 py-2.5 rounded-xl"
-            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
+            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(124,58,237,0.2)" }}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Beta Access</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>PRO</span>
+                style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>BETA</span>
             </div>
-            {/* Wallet usage bar */}
-            <div className="w-full h-1 rounded-full mb-1.5" style={{ background: "var(--preview-border)" }}>
-              <div className="h-1 rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, (wallets.length / 3) * 100)}%`,
-                  background: wallets.length >= 3 ? "#ef4444" : "linear-gradient(90deg, #2563eb, #7c3aed)",
-                }} />
-            </div>
-            <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              {wallets.length}/3 wallets · email alerts · all chains
+            <p className="text-[9px] mb-2.5" style={{ color: "var(--preview-text-3)" }}>
+              Pro features · 3 wallets · all chains
             </p>
-            <a href="/pricing"
+            <button
+              onClick={onFeedback}
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
-              Upgrade to Fund →
-            </a>
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              Share feedback →
+            </button>
           </div>
         )}
 
@@ -3717,6 +3806,7 @@ export default function Dashboard() {
   const [exportOpen, setExportOpen]       = useState(false);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
   const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [showFeedback, setShowFeedback]   = useState(false);
   const [costBasis, setCostBasis]         = useState<Record<string, number>>({});
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
   const [buys,  setBuys]                  = useState<Record<string, BuyTx[]>>({});
@@ -3921,7 +4011,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}
           style={{ background: "rgba(0,0,0,0.5)" }} />
       )}
-      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} />
+      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} onFeedback={() => setShowFeedback(true)} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
@@ -4292,6 +4382,9 @@ export default function Dashboard() {
           onClose={() => setUpsell(null)}
         />
       )}
+
+      {/* Beta feedback modal */}
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
     </div>
   );
 }
