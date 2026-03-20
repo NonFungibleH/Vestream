@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 const ACCESS_CODE = "Ilovevesting";
 
 export default function EarlyAccessPage() {
-  const router = useRouter();
   const [code, setCode]     = useState("");
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +22,10 @@ export default function EarlyAccessPage() {
     // Set cookie for 7 days — Secure flag on HTTPS (production), Strict same-site
     const secure = window.location.protocol === "https:" ? "; Secure" : "";
     document.cookie = `vestr_early_access=1; path=/; max-age=604800; SameSite=Strict${secure}`;
-    router.push("/dashboard");
+    // Full page navigation (not client-side router.push) ensures the cookie is
+    // committed to the browser before the middleware checks it — prevents the
+    // split-second flash back to this page that router.push caused.
+    window.location.href = "/dashboard";
   }
 
   return (

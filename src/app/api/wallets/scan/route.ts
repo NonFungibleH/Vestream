@@ -74,8 +74,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid address" }, { status: 400 });
     }
 
-    // Scan all chains × all protocols
-    const streams = await aggregateVestingStreams([address], ALL_CHAIN_IDS);
+    // Optional chain/protocol filters — narrows the scan for speed
+    const chainsParam    = searchParams.get("chains");
+    const protocolsParam = searchParams.get("protocols");
+    const chainIds: SupportedChainId[] = chainsParam
+      ? chainsParam.split(",").map(Number).filter((n) => ALL_CHAIN_IDS.includes(n as SupportedChainId)) as SupportedChainId[]
+      : ALL_CHAIN_IDS;
+    const protocolFilter = protocolsParam ? new Set(protocolsParam.split(",")) : null;
+
+    // Scan chains × protocols (filtered or all)
+    const allStreams = await aggregateVestingStreams([address], chainIds);
+    const streams    = protocolFilter
+      ? allStreams.filter((s) => protocolFilter.has(s.protocol) || (s.protocol === "uncx-vm" && protocolFilter.has("uncx")))
+      : allStreams;
 
     // Group by protocol × chain, then per-token within each group
     const byKey = new Map<string, {

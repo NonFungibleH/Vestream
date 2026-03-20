@@ -67,12 +67,12 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 };
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#a78bfa", bg: "rgba(167,139,250,0.1)",  border: "rgba(167,139,250,0.2)" },
-  hedgey:         { text: "#60a5fa", bg: "rgba(96,165,250,0.1)",   border: "rgba(96,165,250,0.2)"  },
-  "team-finance": { text: "#34d399", bg: "rgba(52,211,153,0.1)",   border: "rgba(52,211,153,0.2)"  },
-  uncx:           { text: "#fb923c", bg: "rgba(251,146,60,0.1)",   border: "rgba(251,146,60,0.2)"  },
-  "uncx-vm":      { text: "#f97316", bg: "rgba(249,115,22,0.1)",   border: "rgba(249,115,22,0.2)"  },
-  unvest:         { text: "#38bdf8", bg: "rgba(56,189,248,0.1)",   border: "rgba(56,189,248,0.2)"  },
+  sablier:        { text: "#f97316", bg: "rgba(249,115,22,0.1)",   border: "rgba(249,115,22,0.2)"  },
+  hedgey:         { text: "#2563eb", bg: "rgba(37,99,235,0.1)",    border: "rgba(37,99,235,0.2)"   },
+  "team-finance": { text: "#10b981", bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.2)"  },
+  uncx:           { text: "#f59e0b", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  "uncx-vm":      { text: "#f59e0b", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.1)",    border: "rgba(8,145,178,0.2)"   },
 };
 
 const CLAIM_LINKS: Record<string, string> = {

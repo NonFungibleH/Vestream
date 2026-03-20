@@ -50,6 +50,7 @@ interface TrackedWallet {
 const CHAIN_OPTIONS = [
   { id: "1",        label: "Ethereum", short: "ETH"     },
   { id: "56",       label: "BNB Chain", short: "BSC"    },
+  { id: "137",      label: "Polygon",   short: "Polygon" },
   { id: "8453",     label: "Base",      short: "Base"   },
   { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
@@ -63,12 +64,12 @@ const PROTOCOL_OPTIONS = [
 ];
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#a78bfa", bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.25)" },
-  hedgey:         { text: "#60a5fa", bg: "rgba(96,165,250,0.12)",  border: "rgba(96,165,250,0.25)"  },
-  "team-finance": { text: "#34d399", bg: "rgba(52,211,153,0.12)",  border: "rgba(52,211,153,0.25)"  },
-  uncx:           { text: "#fb923c", bg: "rgba(251,146,60,0.12)",  border: "rgba(251,146,60,0.25)"  },
-  "uncx-vm":      { text: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.25)"  },
-  unvest:         { text: "#38bdf8", bg: "rgba(56,189,248,0.12)",  border: "rgba(56,189,248,0.25)"  },
+  sablier:        { text: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.25)"  },
+  hedgey:         { text: "#2563eb", bg: "rgba(37,99,235,0.12)",   border: "rgba(37,99,235,0.25)"   },
+  "team-finance": { text: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
+  uncx:           { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  "uncx-vm":      { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.12)",   border: "rgba(8,145,178,0.25)"   },
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
@@ -395,6 +396,8 @@ export default function DiscoverPage() {
   const [tier,           setTier]           = useState<string>("free");
   const [wallets,        setWallets]        = useState<TrackedWallet[]>([]);
   const [address,        setAddress]        = useState<string>("");
+  const [filterChain,    setFilterChain]    = useState<string>("");   // "" = all chains
+  const [filterProtocol, setFilterProtocol] = useState<string>("");   // "" = all platforms
   const [scanning,       setScanning]       = useState(false);
   const [scanData,       setScanData]       = useState<ScanData | null>(null);
   const [scanError,      setScanError]      = useState<string | null>(null);
@@ -431,7 +434,11 @@ export default function DiscoverPage() {
     }
     setScanning(true);
     try {
-      const res = await fetch(`/api/wallets/scan?address=${address}`);
+      const filterQs = [
+        filterChain    ? `chains=${filterChain}`       : "",
+        filterProtocol ? `protocols=${filterProtocol}` : "",
+      ].filter(Boolean).join("&");
+      const res = await fetch(`/api/wallets/scan?address=${address}${filterQs ? "&" + filterQs : ""}`);
       if (res.status === 402) {
         setScanError("Pro plan required to use Discover. Upgrade to unlock full scanning.");
         return;
@@ -643,7 +650,7 @@ export default function DiscoverPage() {
                   Find all vestings for a wallet
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Enter any wallet address and we&apos;ll scan every supported platform across all 4 chains.
+                  Enter any wallet address and we&apos;ll scan every supported platform across all 5 chains.
                   Results appear below — click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   add individual vestings to your dashboard.
                 </p>
@@ -651,19 +658,41 @@ export default function DiscoverPage() {
             </div>
 
             {/* Input row */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <input
                 placeholder="Wallet address (0x…)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleScan(); }}
-                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-mono outline-none"
+                className="flex-1 min-w-[220px] rounded-xl px-4 py-2.5 text-sm font-mono outline-none"
                 style={{
                   color: "var(--preview-text)",
                   background: "var(--preview-muted-2)",
                   border: `1px solid ${scanError ? "#ef4444" : "var(--preview-border)"}`,
                 }}
               />
+              <select
+                value={filterChain}
+                onChange={(e) => setFilterChain(e.target.value)}
+                className="rounded-xl px-3 py-2.5 text-sm outline-none flex-shrink-0"
+                style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+              >
+                <option value="">All chains</option>
+                {CHAIN_OPTIONS.filter(c => c.id !== "11155111").map(c => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+              <select
+                value={filterProtocol}
+                onChange={(e) => setFilterProtocol(e.target.value)}
+                className="rounded-xl px-3 py-2.5 text-sm outline-none flex-shrink-0"
+                style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+              >
+                <option value="">All platforms</option>
+                {PROTOCOL_OPTIONS.map(p => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
               <button
                 onClick={handleScan}
                 disabled={scanning || !address}

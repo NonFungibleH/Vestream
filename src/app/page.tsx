@@ -115,7 +115,7 @@ export default function Home() {
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
-              { name: "Sablier",      color: "#7c3aed", bg: "rgba(124,58,237,0.06)", border: "rgba(124,58,237,0.14)" },
+              { name: "Sablier",      color: "#f97316", bg: "rgba(249,115,22,0.06)", border: "rgba(249,115,22,0.14)" },
               { name: "Hedgey",       color: "#2563eb", bg: "rgba(37,99,235,0.06)",  border: "rgba(37,99,235,0.14)"  },
               { name: "UNCX",         color: "#b45309", bg: "rgba(180,83,9,0.06)",   border: "rgba(180,83,9,0.14)"   },
               { name: "Team Finance", color: "#059669", bg: "rgba(5,150,105,0.06)",  border: "rgba(5,150,105,0.14)"  },
@@ -133,9 +133,10 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#cbd5e1" }}>on</p>
             {[
-              { name: "Ethereum", color: "#627eea", bg: "rgba(98,126,234,0.07)",  border: "rgba(98,126,234,0.18)"  },
-              { name: "BNB Chain", color: "#f0a500", bg: "rgba(240,165,0,0.07)", border: "rgba(240,165,0,0.18)"   },
-              { name: "Base",      color: "#0052ff", bg: "rgba(0,82,255,0.07)",   border: "rgba(0,82,255,0.18)"   },
+              { name: "Ethereum", color: "#627eea", bg: "rgba(98,126,234,0.07)",   border: "rgba(98,126,234,0.18)"   },
+              { name: "BNB Chain", color: "#f3ba2f", bg: "rgba(243,186,47,0.07)",  border: "rgba(243,186,47,0.18)"   },
+              { name: "Base",      color: "#0052ff", bg: "rgba(0,82,255,0.07)",    border: "rgba(0,82,255,0.18)"    },
+              { name: "Polygon",   color: "#8247e5", bg: "rgba(130,71,229,0.07)",  border: "rgba(130,71,229,0.18)"  },
               { name: "Sepolia",   color: "#a78bfa", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.18)" },
             ].map((c) => (
               <div key={c.name} className="flex items-center px-3 py-1 rounded-full"

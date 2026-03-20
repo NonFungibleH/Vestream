@@ -1,7 +1,7 @@
 {
   "name": "@vestream/mcp",
   "version": "1.0.1",
-  "mcpName": "io.github.NonFungibleH/vestream",
+  "mcpName": "io.vestream/mcp",
   "description": "MCP server for Vestream — real-time token vesting data for AI agents",
   "keywords": ["mcp", "model-context-protocol", "token", "vesting", "defi", "crypto", "sablier", "uncx", "web3"],
   "homepage": "https://vestream.io/developer",

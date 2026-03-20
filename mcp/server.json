@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.NonFungibleH/vestream",
+  "name": "io.vestream/mcp",
   "description": "Real-time token vesting data for AI agents. Query wallet vestings, upcoming token unlocks, and individual stream details across Sablier, UNCX, Hedgey, Unvest, and Team Finance on Ethereum, Base, and BSC.",
   "repository": {
     "url": "https://github.com/NonFungibleH/Vestream",
