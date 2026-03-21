@@ -658,6 +658,12 @@ export default function Home() {
           {/* iPhone illustration */}
           <div className="relative flex-shrink-0">
             <svg width={150} height={310} viewBox="0 0 150 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop stopColor="#2563eb"/>
+                  <stop offset="1" stopColor="#7c3aed"/>
+                </linearGradient>
+              </defs>
               {/* Phone body */}
               <rect x="4" y="4" width="142" height="302" rx="26" fill="#1a1625" stroke="rgba(167,139,250,0.45)" strokeWidth="1.5"/>
               {/* Side button (right) */}
@@ -667,24 +673,37 @@ export default function Home() {
               <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(167,139,250,0.3)"/>
               {/* Screen */}
               <rect x="10" y="10" width="130" height="290" rx="20" fill="#0d0f14"/>
-              {/* Dynamic Island — small centered pill */}
+              {/* Dynamic Island */}
               <rect x="51" y="17" width="48" height="12" rx="6" fill="#1a1625"/>
               {/* App bar */}
-              <rect x="10" y="40" width="130" height="36" fill="#141720"/>
-              {/* Stream bar logo mark */}
-              <rect x="20" y="55.5" width="9" height="3.5" rx="1.75" fill="white"/>
-              <circle cx="29" cy="57.25" r="2.2" fill="white"/>
-              <circle cx="35" cy="57.25" r="1.6" fill="white" fillOpacity="0.72"/>
-              <circle cx="40" cy="57.25" r="1.2" fill="white" fillOpacity="0.46"/>
-              <circle cx="44" cy="57.25" r="0.85" fill="white" fillOpacity="0.26"/>
-              <text x="50" y="61" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
+              <rect x="10" y="40" width="130" height="34" fill="#141720"/>
+              {/* App icon — V-path mark */}
+              <rect x="18" y="47" width="20" height="20" rx="5" fill="url(#iconGrad)"/>
+              {/* Left arm (solid) */}
+              <line x1="22" y1="52" x2="28" y2="62" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+              {/* Ghost right arm */}
+              <line x1="28" y1="62" x2="34" y2="52" stroke="white" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.2"/>
+              {/* Valley glow */}
+              <circle cx="28" cy="62" r="3.5" fill="white" fillOpacity="0.12"/>
+              {/* Valley dot */}
+              <circle cx="28" cy="62" r="1.7" fill="white"/>
+              {/* Future dots */}
+              <circle cx="30" cy="59.5" r="1.3" fill="white" fillOpacity="0.75"/>
+              <circle cx="32" cy="57" r="1" fill="white" fillOpacity="0.45"/>
+              <circle cx="34" cy="54.5" r="0.7" fill="white" fillOpacity="0.22"/>
+              {/* App title */}
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
-              <rect x="14" y="84" width="122" height="50" rx="11" fill="#201c40" stroke="rgba(167,139,250,0.3)" strokeWidth="1"/>
-              <rect x="21" y="91" width="20" height="20" rx="6" fill="rgba(124,58,237,0.5)"/>
-              <text x="31" y="105" fontSize="11" textAnchor="middle" fill="white">🔔</text>
-              <text x="48" y="100" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
-              <text x="48" y="111" fontSize="7" fill="rgba(255,255,255,0.55)" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
-              <text x="126" y="100" fontSize="7" fill="#a78bfa" textAnchor="end" fontFamily="system-ui">now</text>
+              <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
+              {/* Bell icon background */}
+              <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(124,58,237,0.45)"/>
+              {/* Bell SVG path */}
+              <path d="M32 92.5c-2.2 0-4 1.8-4 4v.8c-.8.4-1 1-1 1.7h10c0-.7-.2-1.3-1-1.7v-.8c0-2.2-1.8-4-4-4z" fill="white" fillOpacity="0.9"/>
+              <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="white" fillOpacity="0.9"/>
+              {/* Notification text */}
+              <text x="49" y="98" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
+              <text x="49" y="109" fontSize="7" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
+              <text x="128" y="98" fontSize="6.5" fill="#c4b5fd" textAnchor="end" fontFamily="system-ui">now</text>
               {/* Divider */}
               <line x1="14" y1="142" x2="136" y2="142" stroke="#1e2330" strokeWidth="1"/>
               {/* Section label */}
