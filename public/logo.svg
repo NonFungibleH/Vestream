@@ -1,0 +1,48 @@
+<svg viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Icon background gradient -->
+    <linearGradient id="iconBg" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+
+    <!-- V letterform gradient -->
+    <linearGradient id="vGrad" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Icon mark (80×80) ────────────────────────────────── -->
+  <rect width="80" height="80" rx="18" fill="url(#iconBg)"/>
+
+  <!-- Ghost right-arm trajectory -->
+  <line x1="40" y1="53.5" x2="65.5" y2="20.5"
+    stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.18"/>
+
+  <!-- Left arm (solid) -->
+  <line x1="14.5" y1="20.5" x2="40" y2="53.5"
+    stroke="white" stroke-width="7.2" stroke-linecap="round"/>
+
+  <!-- Valley glow -->
+  <circle cx="40" cy="53.5" r="9" fill="white" fill-opacity="0.12"/>
+  <!-- Valley dot -->
+  <circle cx="40" cy="53.5" r="4.4" fill="white"/>
+
+  <!-- Future dots -->
+  <circle cx="46.4" cy="45.2"  r="3.6" fill="white" fill-opacity="0.78"/>
+  <circle cx="52.8" cy="37"    r="2.8" fill="white" fill-opacity="0.52"/>
+  <circle cx="59.2" cy="28.7"  r="2.0" fill="white" fill-opacity="0.30"/>
+  <circle cx="65.5" cy="20.5"  r="1.4" fill="white" fill-opacity="0.15"/>
+
+  <!-- ── Wordmark ─────────────────────────────────────────── -->
+  <text
+    x="97" y="52"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+    font-size="40"
+    font-weight="800"
+    letter-spacing="-0.03em"
+  >
+    <tspan fill="url(#vGrad)">V</tspan><tspan fill="#0f172a" font-weight="700">estream</tspan>
+  </text>
+</svg>

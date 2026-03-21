@@ -1,0 +1,19 @@
+<svg viewBox="0 0 248 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for the V -->
+    <linearGradient id="vGrad" x1="0" y1="0" x2="36" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <text
+    x="0" y="46"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+    font-size="50"
+    font-weight="800"
+    letter-spacing="-0.03em"
+  >
+    <tspan fill="url(#vGrad)">V</tspan><tspan fill="#0f172a" font-weight="700">estream</tspan>
+  </text>
+</svg>

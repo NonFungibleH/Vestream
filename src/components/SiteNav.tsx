@@ -22,7 +22,6 @@ export function SiteNav({ theme = "light" }: Props) {
   // Colours
   const navBg     = isDark ? "rgba(13,15,20,0.92)"         : "rgba(248,250,252,0.85)";
   const navBorder = isDark ? "rgba(255,255,255,0.06)"      : "rgba(0,0,0,0.07)";
-  const logoText  = isDark ? "white"                        : "#0f172a";
   const linkBase  = isDark ? "rgba(255,255,255,0.45)"      : "#64748b";
   const linkActive= isDark ? "white"                        : "#0f172a";
   const mobileMenuBg = isDark ? "#0d0f14" : "#f8fafc";
@@ -42,16 +41,14 @@ export function SiteNav({ theme = "light" }: Props) {
         style={{ background: navBg, borderBottom: `1px solid ${navBorder}`, backdropFilter: "blur(12px)" }}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-          >
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <span className="font-bold text-base tracking-tight" style={{ color: logoText }}>
-            Vestream
-          </span>
+        <Link href="/" className="flex items-center hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
+          <img
+            src={isDark ? "/logo-dark.svg" : "/logo.svg"}
+            alt="Vestream"
+            width={140}
+            height={35}
+            style={{ height: 35, width: "auto" }}
+          />
         </Link>
 
         {/* Desktop links */}

@@ -1,0 +1,31 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+
+  <!-- Right-arm trajectory guide (ghost line) -->
+  <line x1="50" y1="67" x2="82" y2="26"
+    stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.18"/>
+
+  <!-- Left arm — solid (vested / the past) -->
+  <line x1="18" y1="26" x2="50" y2="67"
+    stroke="white" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Glow halo around valley dot -->
+  <circle cx="50" cy="67" r="11" fill="white" fill-opacity="0.12"/>
+
+  <!-- Valley dot — the "now" moment -->
+  <circle cx="50" cy="67" r="5.5" fill="white"/>
+
+  <!-- Future dots — fading stream of upcoming unlocks -->
+  <circle cx="58"  cy="57"   r="4.5" fill="white" fill-opacity="0.78"/>
+  <circle cx="66"  cy="46.5" r="3.5" fill="white" fill-opacity="0.52"/>
+  <circle cx="74"  cy="36"   r="2.5" fill="white" fill-opacity="0.30"/>
+  <circle cx="82"  cy="26"   r="1.8" fill="white" fill-opacity="0.15"/>
+</svg>
