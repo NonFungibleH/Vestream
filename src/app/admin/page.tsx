@@ -1,10 +1,37 @@
 import { db } from "@/lib/db";
-import { waitlist, apiAccessRequests, apiKeys } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { waitlist, apiAccessRequests, apiKeys, users, wallets, vestingStreamsCache, notificationPreferences, betaFeedback } from "@/lib/db/schema";
+import { desc, sql, count } from "drizzle-orm";
 import { ApproveButton } from "./ApproveButton";
 import { RevokeButton } from "./RevokeButton";
 
 export const dynamic = "force-dynamic";
+
+const BETA_MAX = 100;
+
+const CHAIN_NAMES: Record<number, string> = {
+  1:        "Ethereum",
+  56:       "BNB Chain",
+  137:      "Polygon",
+  8453:     "Base",
+  11155111: "Sepolia",
+};
+
+const CHAIN_COLORS: Record<number, string> = {
+  1:        "#627eea",
+  56:       "#f3ba2f",
+  137:      "#8247e5",
+  8453:     "#2563eb",
+  11155111: "#94a3b8",
+};
+
+const PROTOCOL_COLORS: Record<string, string> = {
+  sablier:        "#f97316",
+  hedgey:         "#2563eb",
+  "team-finance": "#10b981",
+  uncx:           "#f59e0b",
+  "uncx-vm":      "#f59e0b",
+  unvest:         "#0891b2",
+};
 
 function formatDate(d: Date | null | string) {
   if (!d) return "—";
@@ -13,25 +40,127 @@ function formatDate(d: Date | null | string) {
   });
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+function StatCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: string }) {
   return (
-    <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+    <div className="rounded-2xl p-5" style={{ background: "#141720", border: `1px solid ${accent ? accent + "33" : "#1e2330"}` }}>
       <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#4b5563" }}>{label}</p>
-      <p className="text-3xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>{value}</p>
+      <p className="text-3xl font-bold tracking-tight" style={{ color: accent ?? "white", letterSpacing: "-0.02em" }}>{value}</p>
       {sub && <p className="text-xs mt-1" style={{ color: "#4b5563" }}>{sub}</p>}
     </div>
   );
 }
 
+function HBar({ label, value, max, color, sub }: { label: string; value: number; max: number; color: string; sub?: string }) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-24 text-xs text-right shrink-0" style={{ color: "#9ca3af" }}>{label}</div>
+      <div className="flex-1 h-2 rounded-full" style={{ background: "#1e2330" }}>
+        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <div className="w-16 text-xs shrink-0" style={{ color: "#9ca3af" }}>
+        {value.toLocaleString()} {sub && <span style={{ color: "#4b5563" }}>{sub}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default async function AdminPage() {
-  const [waitlistRows, requestRows, keyRows] = await Promise.all([
+  const [
+    waitlistRows, requestRows, keyRows,
+    userRows, walletRows,
+    streamsByProtocol, streamsByChain, streamsByToken,
+    streamTotals, emailAlertsCount,
+    feedbackRows, signupTrend,
+  ] = await Promise.all([
     db.select().from(waitlist).orderBy(desc(waitlist.createdAt)),
     db.select().from(apiAccessRequests).orderBy(desc(apiAccessRequests.createdAt)),
     db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt)),
+
+    db.select().from(users).orderBy(desc(users.createdAt)),
+    db.select().from(wallets),
+
+    // Streams grouped by protocol
+    db.select({ protocol: vestingStreamsCache.protocol, cnt: count() })
+      .from(vestingStreamsCache)
+      .groupBy(vestingStreamsCache.protocol)
+      .orderBy(sql`count(*) desc`),
+
+    // Streams grouped by chain
+    db.select({ chainId: vestingStreamsCache.chainId, cnt: count() })
+      .from(vestingStreamsCache)
+      .groupBy(vestingStreamsCache.chainId)
+      .orderBy(sql`count(*) desc`),
+
+    // Top tokens by stream count
+    db.select({ symbol: vestingStreamsCache.tokenSymbol, cnt: count() })
+      .from(vestingStreamsCache)
+      .groupBy(vestingStreamsCache.tokenSymbol)
+      .orderBy(sql`count(*) desc`)
+      .limit(8),
+
+    // Active vs fully vested
+    db.select({ isFullyVested: vestingStreamsCache.isFullyVested, cnt: count() })
+      .from(vestingStreamsCache)
+      .groupBy(vestingStreamsCache.isFullyVested),
+
+    // Email alerts
+    db.select({ cnt: count() }).from(notificationPreferences)
+      .where(sql`email_enabled = true`),
+
+    // Feedback (most recent 10)
+    db.select().from(betaFeedback).orderBy(desc(betaFeedback.createdAt)).limit(10),
+
+    // Sign-up trend — last 30 days
+    db.select({
+      day: sql<string>`date_trunc('day', created_at)::date::text`,
+      cnt: count(),
+    })
+      .from(users)
+      .where(sql`created_at >= now() - interval '30 days'`)
+      .groupBy(sql`date_trunc('day', created_at)::date`)
+      .orderBy(sql`date_trunc('day', created_at)::date`),
   ]);
 
   const pendingRequests = requestRows.filter(r => !r.reviewed);
   const activeKeys      = keyRows.filter(k => !k.revokedAt);
+
+  // ── Derived analytics ───────────────────────────────────────────────────────
+  const totalUsers    = userRows.length;
+  const totalWallets  = walletRows.length;
+  const totalStreams   = streamsByProtocol.reduce((s, r) => s + Number(r.cnt), 0);
+  const activeStreams  = streamTotals.find(r => !r.isFullyVested)?.cnt ?? 0;
+  const emailAlerts   = Number(emailAlertsCount[0]?.cnt ?? 0);
+  const avgRating     = feedbackRows.filter(f => f.rating).length > 0
+    ? (feedbackRows.filter(f => f.rating).reduce((s, f) => s + (f.rating ?? 0), 0) / feedbackRows.filter(f => f.rating).length).toFixed(1)
+    : "—";
+
+  const maxProtocolStreams = Math.max(...streamsByProtocol.map(r => Number(r.cnt)), 1);
+  const maxChainStreams    = Math.max(...streamsByChain.map(r => Number(r.cnt)), 1);
+  const maxTokenStreams    = Math.max(...streamsByToken.map(r => Number(r.cnt)), 1);
+
+  // tier breakdown
+  const tierCounts = userRows.reduce<Record<string, number>>((acc, u) => {
+    acc[u.tier] = (acc[u.tier] ?? 0) + 1; return acc;
+  }, {});
+
+  // wallet chain preference (null = all chains)
+  const chainFilterCounts = walletRows.reduce<Record<string, number>>((acc, w) => {
+    const key = w.chains?.length ? w.chains.join(",") : "all";
+    acc[key] = (acc[key] ?? 0) + 1; return acc;
+  }, {});
+  const walletsAllChains = chainFilterCounts["all"] ?? 0;
+
+  // sign-up trend: fill in zeros for missing days (last 14 days)
+  const today = new Date();
+  const trendDays = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (13 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const trendMap = Object.fromEntries(signupTrend.map(r => [r.day, Number(r.cnt)]));
+  const trendData = trendDays.map(d => ({ day: d, cnt: trendMap[d] ?? 0 }));
+  const maxTrend = Math.max(...trendData.map(d => d.cnt), 1);
 
   return (
     <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
@@ -54,6 +183,230 @@ export default async function AdminPage() {
       </header>
 
       <div className="px-8 py-8 max-w-6xl mx-auto">
+
+        {/* ── Beta Analytics ─────────────────────────────────────────────────── */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="font-bold text-xl">Beta Analytics</h2>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(124,58,237,0.2)", color: "#a78bfa" }}>
+              {totalUsers} / {BETA_MAX} spots
+            </span>
+          </div>
+
+          {/* Row 1: key metrics */}
+          <div className="grid grid-cols-6 gap-3 mb-6">
+            <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#7c3aed" />
+            <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#2563eb" />
+            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#10b981" />
+            <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#f97316" />
+            <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
+            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#f59e0b" />
+          </div>
+
+          {/* Row 2: beta cap bar + sign-up trend */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+
+            {/* Beta capacity */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Beta capacity</p>
+              <div className="flex items-end gap-2 mb-3">
+                <span className="text-4xl font-bold" style={{ color: "white", letterSpacing: "-0.03em" }}>{totalUsers}</span>
+                <span className="text-lg mb-1" style={{ color: "#4b5563" }}>/ {BETA_MAX}</span>
+              </div>
+              <div className="w-full h-3 rounded-full mb-3" style={{ background: "#1e2330" }}>
+                <div className="h-3 rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(100, (totalUsers / BETA_MAX) * 100)}%`,
+                    background: totalUsers >= BETA_MAX ? "#ef4444" : "linear-gradient(90deg, #2563eb, #7c3aed)",
+                  }} />
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                {Object.entries(tierCounts).map(([tier, n]) => (
+                  <span key={tier} className="text-xs px-2 py-0.5 rounded-md font-semibold"
+                    style={{
+                      background: tier === "fund" ? "rgba(99,102,241,0.15)" : tier === "pro" ? "rgba(124,58,237,0.15)" : "rgba(75,85,99,0.2)",
+                      color: tier === "fund" ? "#818cf8" : tier === "pro" ? "#a78bfa" : "#9ca3af",
+                    }}>
+                    {n} {tier}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Sign-up trend sparkline */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Sign-ups · last 14 days</p>
+              <div className="flex items-end gap-1 h-16">
+                {trendData.map(({ day, cnt }) => (
+                  <div key={day} className="flex-1 flex flex-col items-center justify-end gap-1 group relative">
+                    <div className="w-full rounded-sm transition-all"
+                      style={{
+                        height: `${Math.max(4, (cnt / maxTrend) * 100)}%`,
+                        background: cnt > 0 ? "linear-gradient(180deg, #7c3aed, #2563eb)" : "#1e2330",
+                        minHeight: "4px",
+                      }} />
+                    {/* tooltip on hover */}
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10
+                      text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap"
+                      style={{ background: "#0d0f14", border: "1px solid #1e2330", color: "#9ca3af" }}>
+                      {day.slice(5)} · {cnt}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px]" style={{ color: "#4b5563" }}>{trendDays[0].slice(5)}</span>
+                <span className="text-[10px]" style={{ color: "#4b5563" }}>{trendDays[13].slice(5)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: protocol breakdown + chain breakdown + top tokens */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+
+            {/* Protocol breakdown */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Streams by protocol</p>
+              {streamsByProtocol.length === 0 ? (
+                <p className="text-xs" style={{ color: "#4b5563" }}>No streams cached yet</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {streamsByProtocol.map(r => {
+                    const label = r.protocol === "team-finance" ? "Team Finance"
+                      : r.protocol === "uncx-vm" ? "UNCX VM"
+                      : r.protocol.charAt(0).toUpperCase() + r.protocol.slice(1);
+                    const color = PROTOCOL_COLORS[r.protocol] ?? "#4b5563";
+                    return (
+                      <HBar key={r.protocol} label={label} value={Number(r.cnt)} max={maxProtocolStreams} color={color} />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Chain breakdown */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Streams by chain</p>
+              {streamsByChain.length === 0 ? (
+                <p className="text-xs" style={{ color: "#4b5563" }}>No streams cached yet</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {streamsByChain.map(r => {
+                    const label = CHAIN_NAMES[r.chainId] ?? `Chain ${r.chainId}`;
+                    const color = CHAIN_COLORS[r.chainId] ?? "#4b5563";
+                    return (
+                      <HBar key={r.chainId} label={label} value={Number(r.cnt)} max={maxChainStreams} color={color} />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Top tokens */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Top tokens tracked</p>
+              {streamsByToken.length === 0 ? (
+                <p className="text-xs" style={{ color: "#4b5563" }}>No streams cached yet</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {streamsByToken.map(r => (
+                    <HBar key={r.symbol ?? "?"} label={r.symbol ?? "Unknown"} value={Number(r.cnt)} max={maxTokenStreams} color="#60a5fa" />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Row 4: wallet config + feedback */}
+          <div className="grid grid-cols-2 gap-4">
+
+            {/* Wallet config */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Wallet configuration</p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-2xl font-bold" style={{ color: "white" }}>{walletsAllChains}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#4b5563" }}>watching all chains</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold" style={{ color: "white" }}>{totalWallets - walletsAllChains}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#4b5563" }}>chain-specific filter</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold" style={{ color: "white" }}>{emailAlerts}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#4b5563" }}>email alerts enabled</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold" style={{ color: "white" }}>{walletRows.filter(w => w.tokenAddress).length}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#4b5563" }}>token-specific filter</p>
+                </div>
+              </div>
+              {/* Users breakdown */}
+              <div className="pt-4" style={{ borderTop: "1px solid #1e2330" }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs" style={{ color: "#4b5563" }}>Avg wallets per user</span>
+                  <span className="text-xs font-semibold" style={{ color: "white" }}>
+                    {(totalWallets / Math.max(totalUsers, 1)).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs" style={{ color: "#4b5563" }}>Users with 0 wallets</span>
+                  <span className="text-xs font-semibold" style={{ color: "#f87171" }}>
+                    {userRows.filter(u => !walletRows.some(w => w.userId === u.id)).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs" style={{ color: "#4b5563" }}>Users at wallet limit (3)</span>
+                  <span className="text-xs font-semibold" style={{ color: "#fbbf24" }}>
+                    {userRows.filter(u => walletRows.filter(w => w.userId === u.id).length >= 3).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feedback */}
+            <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#4b5563" }}>Beta feedback</p>
+                <div className="flex items-center gap-1">
+                  {[1,2,3,4,5].map(n => (
+                    <span key={n} className="text-sm"
+                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#f59e0b" : "#1e2330" }}>★</span>
+                  ))}
+                  <span className="text-xs ml-1" style={{ color: "#9ca3af" }}>{avgRating}</span>
+                </div>
+              </div>
+              {feedbackRows.length === 0 ? (
+                <p className="text-xs" style={{ color: "#4b5563" }}>No feedback yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-1">
+                  {feedbackRows.map(f => (
+                    <div key={f.id} className="rounded-xl px-4 py-3" style={{ background: "#0d0f14", border: "1px solid #1e2330" }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        {f.rating && (
+                          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>{"★".repeat(f.rating)}</span>
+                        )}
+                        <span className="text-[10px]" style={{ color: "#4b5563" }}>{formatDate(f.createdAt)}</span>
+                        {f.userAddress && (
+                          <code className="text-[10px]" style={{ color: "#4b5563" }}>
+                            {f.userAddress.slice(0, 6)}…{f.userAddress.slice(-4)}
+                          </code>
+                        )}
+                      </div>
+                      <p className="text-xs leading-relaxed" style={{ color: "#9ca3af" }}>{f.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Operations ─────────────────────────────────────────────────────── */}
+        <div className="mb-6" style={{ borderTop: "1px solid #1e2330", paddingTop: "2rem" }}>
+          <h2 className="font-bold text-xl mb-6">Operations</h2>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-10">
