@@ -270,7 +270,7 @@ export default function DeveloperPage() {
                     GET
                   </span>
                   <div className="flex-1 min-w-0">
-                    <code className="text-sm font-mono font-semibold" style={{ color: "white" }}>{ep.path}</code>
+                    <code className="text-sm font-mono font-semibold break-all" style={{ color: "white" }}>{ep.path}</code>
                     <p className="text-sm mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>{ep.description}</p>
                     <div className="flex gap-2 mt-3 flex-wrap">
                       {ep.params.map(p => (
@@ -302,7 +302,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Use cases ── */}
-      <section className="px-8 py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Use cases</p>
@@ -311,7 +311,7 @@ export default function DeveloperPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
                 icon: "🤖",
@@ -370,7 +370,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── MCP callout ── */}
-      <section className="px-8 py-20">
+      <section className="px-4 md:px-8 py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
           <div className="rounded-3xl p-10 relative overflow-hidden"
             style={{ background: "linear-gradient(135deg, #0d1b3e 0%, #1a0e40 100%)", boxShadow: "0 24px 64px rgba(15,23,42,0.18)" }}>
