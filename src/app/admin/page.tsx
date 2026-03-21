@@ -66,61 +66,58 @@ function HBar({ label, value, max, color, sub }: { label: string; value: number;
 }
 
 export default async function AdminPage() {
-  const [
-    waitlistRows, requestRows, keyRows,
-    userRows, walletRows,
-    streamsByProtocol, streamsByChain, streamsByToken,
-    streamTotals, emailAlertsCount,
-    feedbackRows, signupTrend,
-  ] = await Promise.all([
-    db.select().from(waitlist).orderBy(desc(waitlist.createdAt)),
-    db.select().from(apiAccessRequests).orderBy(desc(apiAccessRequests.createdAt)),
-    db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt)),
+  // Use allSettled + 10 s timeout so a slow query never blocks the whole page
+  function withTimeout<T>(p: Promise<T>, ms = 10_000): Promise<T> {
+    return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+  }
 
-    db.select().from(users).orderBy(desc(users.createdAt)),
-    db.select().from(wallets),
+  const results = await Promise.allSettled([
+    withTimeout(db.select().from(waitlist).orderBy(desc(waitlist.createdAt))),
+    withTimeout(db.select().from(apiAccessRequests).orderBy(desc(apiAccessRequests.createdAt))),
+    withTimeout(db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt))),
 
-    // Streams grouped by protocol
-    db.select({ protocol: vestingStreamsCache.protocol, cnt: count() })
-      .from(vestingStreamsCache)
-      .groupBy(vestingStreamsCache.protocol)
-      .orderBy(sql`count(*) desc`),
+    withTimeout(db.select().from(users).orderBy(desc(users.createdAt))),
+    withTimeout(db.select().from(wallets)),
 
-    // Streams grouped by chain
-    db.select({ chainId: vestingStreamsCache.chainId, cnt: count() })
-      .from(vestingStreamsCache)
-      .groupBy(vestingStreamsCache.chainId)
-      .orderBy(sql`count(*) desc`),
+    withTimeout(db.select({ protocol: vestingStreamsCache.protocol, cnt: count() })
+      .from(vestingStreamsCache).groupBy(vestingStreamsCache.protocol).orderBy(sql`count(*) desc`)),
 
-    // Top tokens by stream count
-    db.select({ symbol: vestingStreamsCache.tokenSymbol, cnt: count() })
-      .from(vestingStreamsCache)
-      .groupBy(vestingStreamsCache.tokenSymbol)
-      .orderBy(sql`count(*) desc`)
-      .limit(8),
+    withTimeout(db.select({ chainId: vestingStreamsCache.chainId, cnt: count() })
+      .from(vestingStreamsCache).groupBy(vestingStreamsCache.chainId).orderBy(sql`count(*) desc`)),
 
-    // Active vs fully vested
-    db.select({ isFullyVested: vestingStreamsCache.isFullyVested, cnt: count() })
-      .from(vestingStreamsCache)
-      .groupBy(vestingStreamsCache.isFullyVested),
+    withTimeout(db.select({ symbol: vestingStreamsCache.tokenSymbol, cnt: count() })
+      .from(vestingStreamsCache).groupBy(vestingStreamsCache.tokenSymbol).orderBy(sql`count(*) desc`).limit(8)),
 
-    // Email alerts
-    db.select({ cnt: count() }).from(notificationPreferences)
-      .where(sql`email_enabled = true`),
+    withTimeout(db.select({ isFullyVested: vestingStreamsCache.isFullyVested, cnt: count() })
+      .from(vestingStreamsCache).groupBy(vestingStreamsCache.isFullyVested)),
 
-    // Feedback (most recent 10)
-    db.select().from(betaFeedback).orderBy(desc(betaFeedback.createdAt)).limit(10),
+    withTimeout(db.select({ cnt: count() }).from(notificationPreferences).where(sql`email_enabled = true`)),
 
-    // Sign-up trend — last 30 days
-    db.select({
+    withTimeout(db.select().from(betaFeedback).orderBy(desc(betaFeedback.createdAt)).limit(10)),
+
+    withTimeout(db.select({
       day: sql<string>`date_trunc('day', created_at)::date::text`,
       cnt: count(),
-    })
-      .from(users)
-      .where(sql`created_at >= now() - interval '30 days'`)
-      .groupBy(sql`date_trunc('day', created_at)::date`)
-      .orderBy(sql`date_trunc('day', created_at)::date`),
+    }).from(users).where(sql`created_at >= now() - interval '30 days'`)
+      .groupBy(sql`date_trunc('day', created_at)::date`).orderBy(sql`date_trunc('day', created_at)::date`)),
   ]);
+
+  // Unwrap allSettled results — fall back to empty arrays so timed-out queries degrade gracefully
+  function ok<T>(r: PromiseSettledResult<T>, fallback: T): T {
+    return r.status === "fulfilled" ? r.value : (console.error("admin query failed:", (r as PromiseRejectedResult).reason), fallback);
+  }
+  const waitlistRows       = ok(results[0],  []);
+  const requestRows        = ok(results[1],  []);
+  const keyRows            = ok(results[2],  []);
+  const userRows           = ok(results[3],  []);
+  const walletRows         = ok(results[4],  []);
+  const streamsByProtocol  = ok(results[5],  []);
+  const streamsByChain     = ok(results[6],  []);
+  const streamsByToken     = ok(results[7],  []);
+  const streamTotals       = ok(results[8],  []);
+  const emailAlertsCount   = ok(results[9],  [{ cnt: 0 }]);
+  const feedbackRows       = ok(results[10], []);
+  const signupTrend        = ok(results[11], []);
 
   const pendingRequests = requestRows.filter(r => !r.reviewed);
   const activeKeys      = keyRows.filter(k => !k.revokedAt);
