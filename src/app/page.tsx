@@ -78,15 +78,10 @@ export default function Home() {
 
         {/* Badges */}
         <div className="relative flex items-center gap-3 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold"
-            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            The data layer for token vestings
-          </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
             style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
-            Coming Soon
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f59e0b" }} />
+            Beta Testing
           </div>
         </div>
 
