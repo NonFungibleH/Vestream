@@ -9,20 +9,18 @@
   <!-- ── Icon mark ────────────────────────────────────────── -->
   <rect width="80" height="80" rx="18" fill="url(#iconBgD)"/>
 
-  <!-- Left solid bar segment -->
-  <rect x="11" y="37.6" width="32" height="4.8" rx="2.4" fill="white"/>
+  <line x1="40" y1="53.5" x2="65.5" y2="20.5"
+    stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.18"/>
+  <line x1="14.5" y1="20.5" x2="40" y2="53.5"
+    stroke="white" stroke-width="7.2" stroke-linecap="round"/>
 
-  <!-- Glow halo -->
-  <circle cx="43" cy="40" r="8.8" fill="white" fill-opacity="0.13"/>
+  <circle cx="40" cy="53.5" r="9"   fill="white" fill-opacity="0.12"/>
+  <circle cx="40" cy="53.5" r="4.4" fill="white"/>
 
-  <!-- Now dot -->
-  <circle cx="43" cy="40" r="4.4" fill="white"/>
-
-  <!-- Future dots -->
-  <circle cx="52" cy="40" r="3.0" fill="white" fill-opacity="0.72"/>
-  <circle cx="59" cy="40" r="2.2" fill="white" fill-opacity="0.46"/>
-  <circle cx="65" cy="40" r="1.6" fill="white" fill-opacity="0.26"/>
-  <circle cx="69" cy="40" r="1.1" fill="white" fill-opacity="0.13"/>
+  <circle cx="46.4" cy="45.2" r="3.6" fill="white" fill-opacity="0.78"/>
+  <circle cx="52.8" cy="37"   r="2.8" fill="white" fill-opacity="0.52"/>
+  <circle cx="59.2" cy="28.7" r="2.0" fill="white" fill-opacity="0.30"/>
+  <circle cx="65.5" cy="20.5" r="1.4" fill="white" fill-opacity="0.15"/>
 
   <!-- ── Wordmark (white for dark backgrounds) ───────────── -->
   <text
