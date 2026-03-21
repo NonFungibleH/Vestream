@@ -94,8 +94,7 @@ export default function Home() {
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#64748b" }}>
-          Vestream is the <strong style={{ color: "#334155" }}>data layer for your vesting positions</strong> — aggregating
-          real-time streams from every major protocol into one unified dashboard.
+          See every token you&apos;re owed, across every protocol and chain — in one clean dashboard. Know exactly when your next unlock is, and get alerted the moment it&apos;s ready to claim.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
           Track unlocks, analyse P&amp;L, set email alerts, and export clean reports. All in one place.
@@ -132,7 +131,6 @@ export default function Home() {
               { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",   border: "rgba(234,179,8,0.16)"    },
               { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.16)"   },
               { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",  border: "rgba(139,92,246,0.16)"   },
-              { name: "Sepolia",   color: "#94a3b8", bg: "rgba(148,163,184,0.07)", border: "rgba(148,163,184,0.16)"  },
             ].map((c) => (
               <div key={c.name} className="flex items-center px-3 py-1 rounded-full"
                 style={{ background: c.bg, border: `1px solid ${c.border}` }}>
@@ -551,10 +549,10 @@ export default function Home() {
             </div>
             {/* Result rows */}
             {[
-              { protocol: "Sablier", chain: "Base", token: "ARB", amount: "12,500", color: "#f97316" },
-              { protocol: "Hedgey", chain: "Ethereum", token: "OP", amount: "4,200", color: "#3b82f6" },
-              { protocol: "UNCX", chain: "BNB Chain", token: "TKN", amount: "8,750", color: "#f59e0b" },
-              { protocol: "Unvest", chain: "Polygon", token: "USDC", amount: "3,100", color: "#06b6d4" },
+              { protocol: "Sablier", chain: "Base", token: "NOVA", amount: "12,500", color: "#f97316" },
+              { protocol: "Hedgey", chain: "Ethereum", token: "FLUX", amount: "4,200", color: "#3b82f6" },
+              { protocol: "UNCX", chain: "BNB Chain", token: "VEST", amount: "8,750", color: "#f59e0b" },
+              { protocol: "Unvest", chain: "Polygon", token: "KLAR", amount: "3,100", color: "#06b6d4" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#141720", border: "1px solid #1e2330" }}>
@@ -586,34 +584,28 @@ export default function Home() {
             <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
               See who else is vesting your token
             </h2>
-            <p className="text-base leading-relaxed mb-6" style={{ color: "#64748b" }}>
-              Search any token and see the complete global picture — every wallet, every protocol, every upcoming unlock. Know before the market does when a wave of tokens is about to become liquid.
+            <p className="text-base leading-relaxed" style={{ color: "#64748b" }}>
+              Search any token and see the complete global picture — every wallet, every protocol, every upcoming unlock. Large unlock events create selling pressure. Spotting a cluster 30 days out lets you hedge, hold, or exit with conviction — not guesswork.
             </p>
-            <div className="rounded-2xl p-5" style={{ background: "rgba(8,145,178,0.05)", border: "1px solid rgba(8,145,178,0.12)" }}>
-              <p className="text-sm font-semibold mb-2" style={{ color: "#0f172a" }}>Why this matters</p>
-              <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
-                Large unlock events create selling pressure. Spotting a cluster of unlocks 30 days out lets you hedge, hold, or exit with conviction — not guesswork.
-              </p>
-            </div>
           </div>
           {/* Mockup */}
           <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p style={{ color: "white", fontSize: 13, fontWeight: 700 }}>ARB — All Vestings</p>
+                <p style={{ color: "white", fontSize: 13, fontWeight: 700 }}>NOVA — All Vestings</p>
                 <p style={{ color: "#6b7280", fontSize: 11 }}>Global unlock schedule</p>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
-                47.2M unlocking in 14d
+                47.2M NOVA in 14d
               </span>
             </div>
             {/* Wallet rows */}
             {[
-              { wallet: "0x1a4c...f2d8", protocol: "Sablier", unlock: "14 days", amount: "12.5M ARB", pct: 82 },
-              { wallet: "0x9b2e...c401", protocol: "Hedgey", unlock: "21 days", amount: "8.1M ARB", pct: 54 },
-              { wallet: "0x5f7a...3c9e", protocol: "UNCX", unlock: "30 days", amount: "6.4M ARB", pct: 42 },
-              { wallet: "0x2d8b...a71f", protocol: "Sablier", unlock: "45 days", amount: "20.2M ARB", pct: 100 },
+              { wallet: "0x1a4c...f2d8", protocol: "Sablier", unlock: "14 days", amount: "12.5M NOVA", pct: 82 },
+              { wallet: "0x9b2e...c401", protocol: "Hedgey", unlock: "21 days", amount: "8.1M NOVA", pct: 54 },
+              { wallet: "0x5f7a...3c9e", protocol: "UNCX", unlock: "30 days", amount: "6.4M NOVA", pct: 42 },
+              { wallet: "0x2d8b...a71f", protocol: "Sablier", unlock: "45 days", amount: "20.2M NOVA", pct: 100 },
             ].map((w) => (
               <div key={w.wallet} className="mb-2.5">
                 <div className="flex items-center justify-between mb-1">
@@ -638,24 +630,24 @@ export default function Home() {
       {/* ── Mobile app coming soon ───────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
-          style={{ background: "linear-gradient(135deg, #0f1525 0%, #1a1040 100%)", border: "1px solid rgba(124,58,237,0.2)" }}>
+          style={{ background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #1e3a8a 100%)", border: "1px solid rgba(167,139,250,0.25)" }}>
 
           {/* Gradient glow */}
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: "radial-gradient(ellipse 60% 50% at 80% 50%, rgba(124,58,237,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 55% 60% at 85% 50%, rgba(167,139,250,0.2) 0%, transparent 70%)",
           }} />
 
           {/* Text */}
           <div className="relative flex-1 md:pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
-              style={{ background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa" }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#a78bfa" }} />
+              style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#c4b5fd" }} />
               Coming soon · iOS &amp; Android
             </div>
             <h2 className="text-3xl font-bold mb-4" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Your vestings, in your pocket
             </h2>
-            <p className="text-base leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
+            <p className="text-base leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.8)" }}>
               The Vestream mobile app brings your full dashboard to iOS and Android — with native push notifications that alert you the moment a token unlock is due, so you never miss a claim again.
             </p>
             <ul className="flex flex-col gap-3.5">
@@ -664,9 +656,9 @@ export default function Home() {
                 "Full portfolio view across all wallets",
                 "Claim reminders with one-tap deep links",
               ].map(item => (
-                <li key={item} className="flex items-center gap-3 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>
                   <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
-                    style={{ background: "rgba(124,58,237,0.25)", color: "#a78bfa" }}>
+                    style={{ background: "rgba(255,255,255,0.15)", color: "white" }}>
                     <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </span>
                   {item}
@@ -675,48 +667,54 @@ export default function Home() {
             </ul>
           </div>
 
-          {/* Phone illustration */}
+          {/* iPhone illustration */}
           <div className="relative flex-shrink-0">
-            <svg width={160} height={280} viewBox="0 0 160 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Phone body */}
-              <rect x="8" y="8" width="144" height="264" rx="24" fill="#141720" stroke="rgba(124,58,237,0.4)" strokeWidth="1.5"/>
+            <svg width={150} height={310} viewBox="0 0 150 310" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Phone body — iPhone proportions, larger corner radius */}
+              <rect x="5" y="5" width="140" height="300" rx="38" fill="#1a1625" stroke="rgba(167,139,250,0.5)" strokeWidth="1.5"/>
+              {/* Side button (right) */}
+              <rect x="145" y="90" width="3" height="40" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              {/* Volume buttons (left) */}
+              <rect x="2" y="80" width="3" height="24" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="2" y="112" width="3" height="24" rx="1.5" fill="rgba(167,139,250,0.3)"/>
               {/* Screen */}
-              <rect x="18" y="28" width="124" height="224" rx="16" fill="#0d0f14"/>
-              {/* Notch */}
-              <rect x="55" y="18" width="50" height="10" rx="5" fill="#1e2330"/>
-              {/* Status bar dots */}
-              <circle cx="42" cy="56" r="18" fill="rgba(37,99,235,0.15)"/>
-              <circle cx="42" cy="56" r="9" fill="rgba(37,99,235,0.8)"/>
-              {/* Mini stream bar in circle */}
-              <rect x="30" y="54.5" width="7" height="3" rx="1.5" fill="white"/>
-              <circle cx="37" cy="56" r="1.8" fill="white"/>
-              <circle cx="41" cy="56" r="1.3" fill="white" fillOpacity="0.7"/>
-              <circle cx="45" cy="56" r="0.9" fill="white" fillOpacity="0.4"/>
-              {/* App title */}
-              <text x="66" y="61" fontSize="11" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
+              <rect x="12" y="12" width="126" height="286" rx="30" fill="#0d0f14"/>
+              {/* Dynamic Island */}
+              <rect x="47" y="20" width="56" height="14" rx="7" fill="#1a1625"/>
+              {/* App header */}
+              <circle cx="34" cy="56" r="14" fill="rgba(37,99,235,0.2)"/>
+              {/* Stream bar logo mark inside circle */}
+              <rect x="24" y="54.5" width="8" height="3" rx="1.5" fill="white"/>
+              <circle cx="32" cy="56" r="2" fill="white"/>
+              <circle cx="37" cy="56" r="1.5" fill="white" fillOpacity="0.72"/>
+              <circle cx="41" cy="56" r="1.1" fill="white" fillOpacity="0.46"/>
+              <circle cx="44" cy="56" r="0.8" fill="white" fillOpacity="0.26"/>
+              <text x="52" y="61" fontSize="11" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
               {/* Push notification card */}
-              <rect x="22" y="84" width="116" height="54" rx="12" fill="#1e2330" stroke="rgba(124,58,237,0.3)" strokeWidth="1"/>
-              <circle cx="38" cy="105" r="8" fill="rgba(124,58,237,0.3)"/>
-              <text x="36" y="109" fontSize="9" fill="#a78bfa" textAnchor="middle">🔔</text>
-              <text x="52" y="100" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
-              <text x="52" y="112" fontSize="7.5" fill="#6b7280" fontFamily="system-ui">ARB · 12,500 tokens ready</text>
-              <text x="52" y="123" fontSize="7" fill="#4b5563" fontFamily="system-ui">Tap to claim →</text>
+              <rect x="16" y="78" width="118" height="56" rx="13" fill="#1e1b3a" stroke="rgba(167,139,250,0.35)" strokeWidth="1"/>
+              <rect x="24" y="88" width="24" height="24" rx="8" fill="rgba(124,58,237,0.4)"/>
+              <text x="36" y="104" fontSize="12" fill="white" textAnchor="middle">🔔</text>
+              <text x="56" y="97" fontSize="8.5" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock · Now</text>
+              <text x="56" y="109" fontSize="7.5" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">NOVA · 12,500 tokens ready</text>
+              <text x="56" y="122" fontSize="7" fill="#a78bfa" fontFamily="system-ui">Tap to claim →</text>
+              {/* Section label */}
+              <text x="16" y="152" fontSize="8" fontWeight="600" fill="rgba(255,255,255,0.35)" fontFamily="system-ui" letterSpacing="0.08em">PORTFOLIO</text>
               {/* Portfolio rows */}
               {[
-                { y: 154, label: "ARB", val: "$4,218", color: "#f97316" },
-                { y: 180, label: "OP", val: "$1,840", color: "#3b82f6" },
-                { y: 206, label: "TKN", val: "$920", color: "#f59e0b" },
+                { y: 173, label: "NOVA", val: "$4,218", color: "#f97316" },
+                { y: 200, label: "FLUX", val: "$1,840", color: "#3b82f6" },
+                { y: 227, label: "VEST", val: "$920",   color: "#10b981" },
               ].map(r => (
                 <g key={r.label}>
-                  <rect x="22" y={r.y - 14} width="116" height="22" rx="8" fill="#141720"/>
-                  <circle cx="36" cy={r.y - 3} r="6" fill={r.color + "33"}/>
-                  <text x="36" y={r.y} fontSize="7" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
-                  <text x="48" y={r.y} fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
-                  <text x="128" y={r.y} fontSize="8" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
+                  <rect x="16" y={r.y - 15} width="118" height="24" rx="9" fill="#1a1625"/>
+                  <circle cx="31" cy={r.y - 3} r="7" fill={r.color + "30"}/>
+                  <text x="31" y={r.y} fontSize="7.5" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
+                  <text x="44" y={r.y} fontSize="8.5" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
+                  <text x="126" y={r.y} fontSize="8.5" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
                 </g>
               ))}
               {/* Home indicator */}
-              <rect x="60" y="258" width="40" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+              <rect x="55" y="294" width="40" height="4" rx="2" fill="rgba(255,255,255,0.18)"/>
             </svg>
           </div>
         </div>
