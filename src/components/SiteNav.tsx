@@ -9,10 +9,9 @@ interface Props {
 }
 
 const NAV_LINKS = [
-  { label: "Resources",    href: "/resources" },
-  { label: "Pricing",      href: "/pricing"   },
-  { label: "Developer API", href: "/developer" },
-  { label: "AI Agents",    href: "/ai"        },
+  { label: "Portfolio",   href: "/"          },
+  { label: "Developers",  href: "/developer" },
+  { label: "AI Agents",   href: "/ai"        },
 ] as const;
 
 export function SiteNav({ theme = "light" }: Props) {
@@ -27,11 +26,6 @@ export function SiteNav({ theme = "light" }: Props) {
   const linkActive= isDark ? "white"                        : "#0f172a";
   const mobileMenuBg = isDark ? "#0d0f14" : "#f8fafc";
 
-  // On /developer: hide consumer links
-  const isDeveloper  = pathname === "/developer";
-  const visibleLinks = isDeveloper
-    ? NAV_LINKS.filter(({ href }) => href === "/developer")
-    : NAV_LINKS;
   const ctaHref  = "/early-access";
   const ctaLabel = "Early Access →";
 
@@ -54,8 +48,8 @@ export function SiteNav({ theme = "light" }: Props) {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-5">
-          {visibleLinks.map(({ label, href }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
+          {NAV_LINKS.map(({ label, href }) => {
+            const isActive = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
@@ -126,8 +120,8 @@ export function SiteNav({ theme = "light" }: Props) {
           className="fixed top-14 left-0 right-0 z-40 md:hidden px-4 pt-4 pb-6 space-y-1"
           style={{ background: mobileMenuBg, borderBottom: `1px solid ${navBorder}`, backdropFilter: "blur(12px)" }}
         >
-          {visibleLinks.map(({ label, href }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
+          {NAV_LINKS.map(({ label, href }) => {
+            const isActive = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}

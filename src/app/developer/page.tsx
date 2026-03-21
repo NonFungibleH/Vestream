@@ -17,7 +17,7 @@ function Check() {
 
 export default function DeveloperPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d0f14", color: "white" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d1b35", color: "white" }}>
 
       {/* ── Nav ── */}
       <SiteNav theme="dark" />
@@ -107,7 +107,7 @@ export default function DeveloperPage() {
               { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Team vesting" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
-                style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
+                style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
                   style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                   <span className="font-bold text-base" style={{ color: p.color }}>{p.name[0]}</span>
@@ -122,7 +122,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Three pillars ── */}
-      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why Vestream API</p>
@@ -162,7 +162,7 @@ export default function DeveloperPage() {
               },
             ].map(p => (
               <div key={p.title} className="rounded-2xl p-7"
-                style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)" }}>
+                style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
                   style={{ background: p.bg, border: `1px solid ${p.border}`, color: p.color, fontSize: 20 }}>
                   <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
@@ -263,7 +263,7 @@ export default function DeveloperPage() {
               },
             ].map(ep => (
               <div key={ep.path} className="rounded-2xl overflow-hidden"
-                style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
+                style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex items-start gap-4 p-6 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                   <span className="text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 mt-0.5"
                     style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb", fontFamily: "monospace" }}>
@@ -282,7 +282,7 @@ export default function DeveloperPage() {
                     </div>
                   </div>
                 </div>
-                <div className="p-5" style={{ background: "#0d0f14" }}>
+                <div className="p-5" style={{ background: "#0a1628" }}>
                   <pre className="text-xs leading-relaxed overflow-x-auto" style={{ color: "#94a3b8", fontFamily: "monospace" }}>
                     <code>{ep.example}</code>
                   </pre>
@@ -302,7 +302,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Use cases ── */}
-      <section className="px-8 py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-8 py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Use cases</p>
@@ -351,7 +351,7 @@ export default function DeveloperPage() {
               },
             ].map(u => (
               <div key={u.title} className="rounded-2xl p-6"
-                style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)" }}>
+                style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="text-2xl mb-4">{u.icon}</div>
                 <h3 className="font-bold text-base mb-2" style={{ color: "white" }}>{u.title}</h3>
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>{u.description}</p>
@@ -426,7 +426,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#141720", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Pricing</p>
@@ -438,7 +438,7 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Free */}
             <div className="rounded-2xl p-8"
-              style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)" }}>
+              style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#4b5563" }}>Free</div>
               <div className="flex items-baseline gap-1.5 mb-1">
                 <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>$0</span>
@@ -462,7 +462,7 @@ export default function DeveloperPage() {
 
             {/* Pro */}
             <div className="rounded-2xl p-8 relative"
-              style={{ background: "#0d0f14", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
+              style={{ background: "#0a1628", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="text-xs font-bold px-3 py-1 rounded-full"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
@@ -493,7 +493,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Request access form ── */}
-      <section id="request-access" className="px-4 md:px-8 py-16 md:py-24" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <section id="request-access" className="px-4 md:px-8 py-16 md:py-24" style={{ background: "#0a1628", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Get started</p>
@@ -507,7 +507,7 @@ export default function DeveloperPage() {
           </div>
 
           <div className="rounded-2xl p-8"
-            style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.08)" }}>
+            style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.08)" }}>
             <ApiAccessForm />
           </div>
 
@@ -521,7 +521,7 @@ export default function DeveloperPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="px-4 md:px-8 py-8" style={{ background: "#0d0f14", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <footer className="px-4 md:px-8 py-8" style={{ background: "#0a1628", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
             <div className="w-6 h-6 rounded-md flex items-center justify-center"
@@ -531,6 +531,7 @@ export default function DeveloperPage() {
             <span className="font-semibold text-sm" style={{ color: "white" }}>Vestream</span>
           </Link>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link href="/resources" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Resources</Link>
             <Link href="/privacy" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Privacy Policy</Link>
             <Link href="/terms" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Terms of Service</Link>
           </div>

@@ -893,6 +893,136 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Pricing ─────────────────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6"
+            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
+            Simple, transparent pricing
+          </div>
+          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+            Start free. Scale when you&apos;re ready.
+          </h2>
+          <p className="text-base" style={{ color: "#64748b" }}>
+            From solo investors to investment funds — a plan for every stage.
+          </p>
+        </div>
+
+        {/* Tier cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
+          {/* Free */}
+          <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#94a3b8" }}>Free</p>
+            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>Coming soon</span>
+            <p className="text-sm mb-6" style={{ color: "#64748b" }}>Free forever. No credit card needed.</p>
+            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
+              style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
+              Get early access →
+            </a>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
+              {["1 wallet address", "1 blockchain of your choice", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "All 5 vesting platforms"].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pro (featured) */}
+          <div className="relative rounded-2xl p-7" style={{ background: "white", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}>
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
+                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 12px rgba(37,99,235,0.4)" }}>
+                Most popular
+              </span>
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2563eb" }}>Pro</p>
+            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>Coming soon</span>
+            <p className="text-sm mb-6" style={{ color: "#64748b" }}>For individuals tracking multiple wallets and tokens.</p>
+            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
+              Get early access →
+            </a>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
+              {["5 wallet addresses", "5 blockchains", "Email unlock alerts", "Token Vesting Explorer", "CSV & PDF export", "Ticketing support"].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Fund */}
+          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 4px 40px rgba(37,99,235,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
+                style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
+                Best for funds &amp; teams
+              </span>
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Fund</p>
+            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>Coming soon</span>
+            <p className="text-sm mb-6" style={{ color: "#6b7280" }}>For VCs and teams managing large token portfolios.</p>
+            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
+              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)" }}>
+              Get early access →
+            </a>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
+              {["Unlimited wallet addresses", "All chains", "Search all receivers", "Calendar integration", "Team workspace", "Slack, Telegram & WhatsApp alerts", "Priority support"].map(f => (
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#e5e7eb" }}>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#10b981" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#10b981" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Comparison table */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+          <div className="grid grid-cols-4 px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#94a3b8" }}>Feature</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#94a3b8" }}>Free</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2563eb" }}>Pro</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Fund</span>
+          </div>
+          {([
+            ["Wallet addresses",           "1",       "5 wallets",  "Unlimited"],
+            ["Blockchains",                "1 chain", "5 chains",   "All chains"],
+            ["Real-time dashboard",        true,      true,         true],
+            ["Claimable balance tracking", true,      true,         true],
+            ["Unlock calendar",            true,      true,         true],
+            ["Email alerts",               false,     true,         true],
+            ["Token Vesting Explorer",     false,     true,         true],
+            ["CSV & PDF export",           false,     true,         true],
+            ["Calendar integration",       false,     false,        true],
+            ["Team workspace",             false,     false,        true],
+            ["Slack & messaging alerts",   false,     false,        true],
+            ["Support",                    false,     "Ticketing",  "Priority"],
+          ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
+            <div key={feature} className="grid grid-cols-4 px-6 py-3.5 items-center"
+              style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
+              <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
+              {([free, pro, fund] as (string | boolean)[]).map((val, j) => (
+                <div key={j} className="flex justify-center">
+                  {typeof val === "boolean" ? (
+                    val
+                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill={j === 2 ? "#10b981" : "#2563eb"} fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke={j === 2 ? "#10b981" : "#2563eb"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#94a3b8" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  ) : (
+                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#2563eb" : "#6366f1" }}>{val}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-20 md:pb-32 flex flex-col items-center text-center">
         <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-6 md:px-10 py-12 md:py-16"
@@ -915,6 +1045,7 @@ export default function Home() {
       <footer className="px-4 md:px-8 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
         <p className="text-xs" style={{ color: "#94a3b8" }}>© 2026 Vestream. All rights reserved.</p>
         <div className="flex items-center gap-5">
+          <Link href="/resources" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Resources</Link>
           <Link href="/privacy" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
           <Link href="/terms"   className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Terms of Service</Link>
           <Link href="/admin"   className="text-xs transition-colors hover:opacity-60" style={{ color: "rgba(148,163,184,0.3)" }} title="Admin">·</Link>

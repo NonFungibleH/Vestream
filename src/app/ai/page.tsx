@@ -522,6 +522,7 @@ export default function AiPage() {
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>© {new Date().getFullYear()} Vestream. All rights reserved.</p>
         <div className="flex items-center gap-6">
           <Link href="/" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.35)" }}>Home</Link>
+          <Link href="/resources" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.35)" }}>Resources</Link>
           <Link href="/developer" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.35)" }}>Developer API</Link>
           <Link href="/api-docs" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.35)" }}>API Docs</Link>
           <Link href="/privacy" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.35)" }}>Privacy</Link>
