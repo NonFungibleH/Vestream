@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: "Resources",    href: "/resources" },
   { label: "Pricing",      href: "/pricing"   },
   { label: "Developer API", href: "/developer" },
+  { label: "AI Agents",    href: "/ai"        },
 ] as const;
 
 export function SiteNav({ theme = "light" }: Props) {
