@@ -510,6 +510,218 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Search feature ──────────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+          {/* Text */}
+          <div className="flex-1 md:max-w-[420px]">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
+              style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.14)", color: "#2563eb" }}>
+              <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+              Find every vesting in one search
+            </h2>
+            <p className="text-base leading-relaxed mb-7" style={{ color: "#64748b" }}>
+              Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
+            </p>
+            <ul className="flex flex-col gap-3.5">
+              {[
+                "5 protocols scanned simultaneously",
+                "Ethereum, Base, BNB Chain & Polygon",
+                "Results surface in under 3 seconds",
+              ].map(item => (
+                <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#0f172a" }}>
+                  <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
+                    style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}>
+                    <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Mockup */}
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+            {/* Search bar */}
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: "#141720", border: "1px solid #2a3040" }}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span style={{ color: "#6b7280", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(37,99,235,0.18)", color: "#60a5fa" }}>Scan all</span>
+            </div>
+            {/* Result rows */}
+            {[
+              { protocol: "Sablier", chain: "Base", token: "ARB", amount: "12,500", color: "#f97316" },
+              { protocol: "Hedgey", chain: "Ethereum", token: "OP", amount: "4,200", color: "#3b82f6" },
+              { protocol: "UNCX", chain: "BNB Chain", token: "TKN", amount: "8,750", color: "#f59e0b" },
+              { protocol: "Unvest", chain: "Polygon", token: "USDC", amount: "3,100", color: "#06b6d4" },
+            ].map((r) => (
+              <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
+                style={{ background: "#141720", border: "1px solid #1e2330" }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold"
+                  style={{ background: r.color, fontSize: 10 }}>{r.protocol[0]}</div>
+                <div className="flex-1 min-w-0">
+                  <p style={{ color: "white", fontSize: 12, fontWeight: 600 }}>{r.protocol}</p>
+                  <p style={{ color: "#6b7280", fontSize: 11 }}>{r.chain}</p>
+                </div>
+                <div className="text-right">
+                  <p style={{ color: "#34d399", fontSize: 12, fontWeight: 600 }}>{r.amount} {r.token}</p>
+                </div>
+              </div>
+            ))}
+            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>4 vestings found across 4 chains</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Token Vesting Explorer ───────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row-reverse items-center gap-10 md:gap-16">
+          {/* Text */}
+          <div className="flex-1 md:max-w-[420px]">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
+              style={{ background: "rgba(8,145,178,0.08)", border: "1px solid rgba(8,145,178,0.14)", color: "#0891b2" }}>
+              <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+              See who else is vesting your token
+            </h2>
+            <p className="text-base leading-relaxed mb-6" style={{ color: "#64748b" }}>
+              Search any token and see the complete global picture — every wallet, every protocol, every upcoming unlock. Know before the market does when a wave of tokens is about to become liquid.
+            </p>
+            <div className="rounded-2xl p-5" style={{ background: "rgba(8,145,178,0.05)", border: "1px solid rgba(8,145,178,0.12)" }}>
+              <p className="text-sm font-semibold mb-2" style={{ color: "#0f172a" }}>Why this matters</p>
+              <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
+                Large unlock events create selling pressure. Spotting a cluster of unlocks 30 days out lets you hedge, hold, or exit with conviction — not guesswork.
+              </p>
+            </div>
+          </div>
+          {/* Mockup */}
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p style={{ color: "white", fontSize: 13, fontWeight: 700 }}>ARB — All Vestings</p>
+                <p style={{ color: "#6b7280", fontSize: 11 }}>Global unlock schedule</p>
+              </div>
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+                47.2M unlocking in 14d
+              </span>
+            </div>
+            {/* Wallet rows */}
+            {[
+              { wallet: "0x1a4c...f2d8", protocol: "Sablier", unlock: "14 days", amount: "12.5M ARB", pct: 82 },
+              { wallet: "0x9b2e...c401", protocol: "Hedgey", unlock: "21 days", amount: "8.1M ARB", pct: 54 },
+              { wallet: "0x5f7a...3c9e", protocol: "UNCX", unlock: "30 days", amount: "6.4M ARB", pct: 42 },
+              { wallet: "0x2d8b...a71f", protocol: "Sablier", unlock: "45 days", amount: "20.2M ARB", pct: 100 },
+            ].map((w) => (
+              <div key={w.wallet} className="mb-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span style={{ color: "#9ca3af", fontSize: 11, fontFamily: "monospace" }}>{w.wallet}</span>
+                    <span style={{ color: "#4b5563", fontSize: 10, background: "#1e2330", padding: "1px 6px", borderRadius: 4 }}>{w.protocol}</span>
+                  </div>
+                  <div className="text-right">
+                    <span style={{ color: "#e2e8f0", fontSize: 11, fontWeight: 600 }}>{w.amount}</span>
+                    <span style={{ color: "#6b7280", fontSize: 10, marginLeft: 6 }}>{w.unlock}</span>
+                  </div>
+                </div>
+                <div className="h-1 rounded-full" style={{ background: "#1e2330" }}>
+                  <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #0891b2, #2563eb)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Mobile app coming soon ───────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
+          style={{ background: "linear-gradient(135deg, #0f1525 0%, #1a1040 100%)", border: "1px solid rgba(124,58,237,0.2)" }}>
+
+          {/* Gradient glow */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: "radial-gradient(ellipse 60% 50% at 80% 50%, rgba(124,58,237,0.12) 0%, transparent 70%)",
+          }} />
+
+          {/* Text */}
+          <div className="relative flex-1 md:pr-8">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
+              style={{ background: "rgba(124,58,237,0.18)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#a78bfa" }} />
+              Coming soon · iOS &amp; Android
+            </div>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "white", letterSpacing: "-0.02em" }}>
+              Your vestings, in your pocket
+            </h2>
+            <p className="text-base leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
+              The Vestream mobile app brings your full dashboard to iOS and Android — with native push notifications that alert you the moment a token unlock is due, so you never miss a claim again.
+            </p>
+            <ul className="flex flex-col gap-3.5">
+              {[
+                "Push notifications for every unlock event",
+                "Full portfolio view across all wallets",
+                "Claim reminders with one-tap deep links",
+              ].map(item => (
+                <li key={item} className="flex items-center gap-3 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                  <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
+                    style={{ background: "rgba(124,58,237,0.25)", color: "#a78bfa" }}>
+                    <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Phone illustration */}
+          <div className="relative flex-shrink-0">
+            <svg width={160} height={280} viewBox="0 0 160 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Phone body */}
+              <rect x="8" y="8" width="144" height="264" rx="24" fill="#141720" stroke="rgba(124,58,237,0.4)" strokeWidth="1.5"/>
+              {/* Screen */}
+              <rect x="18" y="28" width="124" height="224" rx="16" fill="#0d0f14"/>
+              {/* Notch */}
+              <rect x="55" y="18" width="50" height="10" rx="5" fill="#1e2330"/>
+              {/* Status bar dots */}
+              <circle cx="42" cy="56" r="18" fill="rgba(37,99,235,0.15)"/>
+              <circle cx="42" cy="56" r="9" fill="rgba(37,99,235,0.8)"/>
+              {/* Mini stream bar in circle */}
+              <rect x="30" y="54.5" width="7" height="3" rx="1.5" fill="white"/>
+              <circle cx="37" cy="56" r="1.8" fill="white"/>
+              <circle cx="41" cy="56" r="1.3" fill="white" fillOpacity="0.7"/>
+              <circle cx="45" cy="56" r="0.9" fill="white" fillOpacity="0.4"/>
+              {/* App title */}
+              <text x="66" y="61" fontSize="11" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
+              {/* Push notification card */}
+              <rect x="22" y="84" width="116" height="54" rx="12" fill="#1e2330" stroke="rgba(124,58,237,0.3)" strokeWidth="1"/>
+              <circle cx="38" cy="105" r="8" fill="rgba(124,58,237,0.3)"/>
+              <text x="36" y="109" fontSize="9" fill="#a78bfa" textAnchor="middle">🔔</text>
+              <text x="52" y="100" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
+              <text x="52" y="112" fontSize="7.5" fill="#6b7280" fontFamily="system-ui">ARB · 12,500 tokens ready</text>
+              <text x="52" y="123" fontSize="7" fill="#4b5563" fontFamily="system-ui">Tap to claim →</text>
+              {/* Portfolio rows */}
+              {[
+                { y: 154, label: "ARB", val: "$4,218", color: "#f97316" },
+                { y: 180, label: "OP", val: "$1,840", color: "#3b82f6" },
+                { y: 206, label: "TKN", val: "$920", color: "#f59e0b" },
+              ].map(r => (
+                <g key={r.label}>
+                  <rect x="22" y={r.y - 14} width="116" height="22" rx="8" fill="#141720"/>
+                  <circle cx="36" cy={r.y - 3} r="6" fill={r.color + "33"}/>
+                  <text x="36" y={r.y} fontSize="7" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
+                  <text x="48" y={r.y} fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
+                  <text x="128" y={r.y} fontSize="8" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
+                </g>
+              ))}
+              {/* Home indicator */}
+              <rect x="60" y="258" width="40" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
       {/* ── Who it's for ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-14">
