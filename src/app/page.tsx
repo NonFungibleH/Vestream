@@ -482,18 +482,6 @@ export default function Home() {
               title: "CSV &amp; PDF export",
               body: "Download a full CSV of vesting positions and sell transactions — or print a PDF report — directly from the dashboard.",
             },
-            {
-              icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-              color: "#0891b2", bg: "rgba(8,145,178,0.07)", border: "rgba(8,145,178,0.13)",
-              title: "Token Vesting Explorer",
-              body: "See every wallet vesting a token globally — not just yours. Understand the full unlock schedule and selling pressure before it hits.",
-            },
-            {
-              icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="m21 21-4.35-4.35"/><circle cx="11" cy="11" r="6"/><path d="M11 8v6M8 11h6"/></svg>,
-              color: "#0d9488", bg: "rgba(13,148,136,0.07)", border: "rgba(13,148,136,0.13)",
-              title: "Find hidden vestings",
-              body: "Forgotten which protocol holds your allocation? One-click scan across all 6 platforms and 3 chains automatically surfaces every active vesting and configures Vestream to watch only what matters.",
-            },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
               style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
@@ -670,51 +658,53 @@ export default function Home() {
           {/* iPhone illustration */}
           <div className="relative flex-shrink-0">
             <svg width={150} height={310} viewBox="0 0 150 310" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Phone body — iPhone proportions, larger corner radius */}
-              <rect x="5" y="5" width="140" height="300" rx="38" fill="#1a1625" stroke="rgba(167,139,250,0.5)" strokeWidth="1.5"/>
+              {/* Phone body */}
+              <rect x="4" y="4" width="142" height="302" rx="26" fill="#1a1625" stroke="rgba(167,139,250,0.45)" strokeWidth="1.5"/>
               {/* Side button (right) */}
-              <rect x="145" y="90" width="3" height="40" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(167,139,250,0.3)"/>
               {/* Volume buttons (left) */}
-              <rect x="2" y="80" width="3" height="24" rx="1.5" fill="rgba(167,139,250,0.3)"/>
-              <rect x="2" y="112" width="3" height="24" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="1" y="84" width="3" height="22" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(167,139,250,0.3)"/>
               {/* Screen */}
-              <rect x="12" y="12" width="126" height="286" rx="30" fill="#0d0f14"/>
-              {/* Dynamic Island */}
-              <rect x="47" y="20" width="56" height="14" rx="7" fill="#1a1625"/>
-              {/* App header */}
-              <circle cx="34" cy="56" r="14" fill="rgba(37,99,235,0.2)"/>
-              {/* Stream bar logo mark inside circle */}
-              <rect x="24" y="54.5" width="8" height="3" rx="1.5" fill="white"/>
-              <circle cx="32" cy="56" r="2" fill="white"/>
-              <circle cx="37" cy="56" r="1.5" fill="white" fillOpacity="0.72"/>
-              <circle cx="41" cy="56" r="1.1" fill="white" fillOpacity="0.46"/>
-              <circle cx="44" cy="56" r="0.8" fill="white" fillOpacity="0.26"/>
-              <text x="52" y="61" fontSize="11" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
-              {/* Push notification card */}
-              <rect x="16" y="78" width="118" height="56" rx="13" fill="#1e1b3a" stroke="rgba(167,139,250,0.35)" strokeWidth="1"/>
-              <rect x="24" y="88" width="24" height="24" rx="8" fill="rgba(124,58,237,0.4)"/>
-              <text x="36" y="104" fontSize="12" fill="white" textAnchor="middle">🔔</text>
-              <text x="56" y="97" fontSize="8.5" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock · Now</text>
-              <text x="56" y="109" fontSize="7.5" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">NOVA · 12,500 tokens ready</text>
-              <text x="56" y="122" fontSize="7" fill="#a78bfa" fontFamily="system-ui">Tap to claim →</text>
+              <rect x="10" y="10" width="130" height="290" rx="20" fill="#0d0f14"/>
+              {/* Dynamic Island — small centered pill */}
+              <rect x="51" y="17" width="48" height="12" rx="6" fill="#1a1625"/>
+              {/* App bar */}
+              <rect x="10" y="40" width="130" height="36" fill="#141720"/>
+              {/* Stream bar logo mark */}
+              <rect x="20" y="55.5" width="9" height="3.5" rx="1.75" fill="white"/>
+              <circle cx="29" cy="57.25" r="2.2" fill="white"/>
+              <circle cx="35" cy="57.25" r="1.6" fill="white" fillOpacity="0.72"/>
+              <circle cx="40" cy="57.25" r="1.2" fill="white" fillOpacity="0.46"/>
+              <circle cx="44" cy="57.25" r="0.85" fill="white" fillOpacity="0.26"/>
+              <text x="50" y="61" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
+              {/* Notification banner */}
+              <rect x="14" y="84" width="122" height="50" rx="11" fill="#201c40" stroke="rgba(167,139,250,0.3)" strokeWidth="1"/>
+              <rect x="21" y="91" width="20" height="20" rx="6" fill="rgba(124,58,237,0.5)"/>
+              <text x="31" y="105" fontSize="11" textAnchor="middle" fill="white">🔔</text>
+              <text x="48" y="100" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
+              <text x="48" y="111" fontSize="7" fill="rgba(255,255,255,0.55)" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
+              <text x="126" y="100" fontSize="7" fill="#a78bfa" textAnchor="end" fontFamily="system-ui">now</text>
+              {/* Divider */}
+              <line x1="14" y1="142" x2="136" y2="142" stroke="#1e2330" strokeWidth="1"/>
               {/* Section label */}
-              <text x="16" y="152" fontSize="8" fontWeight="600" fill="rgba(255,255,255,0.35)" fontFamily="system-ui" letterSpacing="0.08em">PORTFOLIO</text>
+              <text x="14" y="157" fontSize="7.5" fontWeight="600" fill="rgba(255,255,255,0.3)" fontFamily="system-ui" letterSpacing="1">PORTFOLIO</text>
               {/* Portfolio rows */}
               {[
-                { y: 173, label: "NOVA", val: "$4,218", color: "#f97316" },
-                { y: 200, label: "FLUX", val: "$1,840", color: "#3b82f6" },
-                { y: 227, label: "VEST", val: "$920",   color: "#10b981" },
+                { y: 178, label: "NOVA", val: "$4,218", color: "#f97316" },
+                { y: 206, label: "FLUX", val: "$1,840", color: "#3b82f6" },
+                { y: 234, label: "VEST", val: "$920",   color: "#10b981" },
               ].map(r => (
                 <g key={r.label}>
-                  <rect x="16" y={r.y - 15} width="118" height="24" rx="9" fill="#1a1625"/>
-                  <circle cx="31" cy={r.y - 3} r="7" fill={r.color + "30"}/>
-                  <text x="31" y={r.y} fontSize="7.5" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
-                  <text x="44" y={r.y} fontSize="8.5" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
-                  <text x="126" y={r.y} fontSize="8.5" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
+                  <rect x="14" y={r.y - 14} width="122" height="22" rx="8" fill="#141720"/>
+                  <circle cx="28" cy={r.y - 3} r="6.5" fill={r.color + "28"}/>
+                  <text x="28" y={r.y} fontSize="7" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
+                  <text x="41" y={r.y} fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
+                  <text x="128" y={r.y} fontSize="8" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
                 </g>
               ))}
               {/* Home indicator */}
-              <rect x="55" y="294" width="40" height="4" rx="2" fill="rgba(255,255,255,0.18)"/>
+              <rect x="55" y="295" width="40" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
             </svg>
           </div>
         </div>
