@@ -20,7 +20,7 @@ export default function DeveloperPage() {
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d1b35", color: "white" }}>
 
       {/* ── Nav ── */}
-      <SiteNav theme="dark" />
+      <SiteNav theme="navy" />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden pt-24 pb-16 md:pt-40 md:pb-28 px-4 md:px-8 text-center">

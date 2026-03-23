@@ -90,7 +90,7 @@ Three distinct audience pages with deliberate visual hierarchy:
 
 ### Rules
 - **Never mix themes** — each page uses its own background throughout all sections
-- **SiteNav theme** must match: `<SiteNav theme="light" />` on `/`, `<SiteNav theme="dark" />` on `/developer` and `/ai`
+- **SiteNav theme** must match: `<SiteNav theme="light" />` on `/`, `<SiteNav theme="navy" />` on `/developer`, `<SiteNav theme="dark" />` on `/ai`
 - The developer page uses navy card backgrounds (`#122040`, `#0a1628`) — NOT the near-black values from `/ai`
 - The AI page uses near-black card backgrounds (`#141720`, `#0d0f14`)
 
@@ -101,13 +101,9 @@ Three distinct audience pages with deliberate visual hierarchy:
 ```tsx
 import { SiteNav } from "@/components/SiteNav";
 
-// Light pages (homepage, pricing, resources, etc.)
-<SiteNav />
-// or
-<SiteNav theme="light" />
-
-// Dark pages (developer, ai)
-<SiteNav theme="dark" />
+<SiteNav theme="light" />   // homepage, pricing, resources — white nav
+<SiteNav theme="navy" />    // /developer — navy nav matches page bg
+<SiteNav theme="dark" />    // /ai — near-black nav matches page bg
 ```
 
 ### Nav links (current)

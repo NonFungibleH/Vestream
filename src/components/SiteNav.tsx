@@ -4,8 +4,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 interface Props {
-  /** "light" = white/grey pages (default). "dark" = dark pages like /developer */
-  theme?: "light" | "dark";
+  /**
+   * "light"  = white/grey consumer pages (default) — homepage, pricing, resources
+   * "navy"   = dark navy developer page — /developer
+   * "dark"   = near-black AI/technical pages — /ai
+   */
+  theme?: "light" | "navy" | "dark";
 }
 
 const NAV_LINKS = [
@@ -14,17 +18,44 @@ const NAV_LINKS = [
   { label: "AI Agents",   href: "/ai"        },
 ] as const;
 
+const THEME = {
+  light: {
+    navBg:          "rgba(248,250,252,0.85)",
+    navBorder:      "rgba(0,0,0,0.07)",
+    linkBase:       "#64748b",
+    linkActive:     "#0f172a",
+    mobileMenuBg:   "#f8fafc",
+    activeDot:      "#2563eb",
+    mobileActiveBg: "rgba(37,99,235,0.05)",
+    logo:           "/logo.svg",
+  },
+  navy: {
+    navBg:          "rgba(13,27,53,0.92)",
+    navBorder:      "rgba(255,255,255,0.06)",
+    linkBase:       "rgba(255,255,255,0.45)",
+    linkActive:     "white",
+    mobileMenuBg:   "#0d1b35",
+    activeDot:      "white",
+    mobileActiveBg: "rgba(255,255,255,0.05)",
+    logo:           "/logo-dark.svg",
+  },
+  dark: {
+    navBg:          "rgba(13,15,20,0.92)",
+    navBorder:      "rgba(255,255,255,0.06)",
+    linkBase:       "rgba(255,255,255,0.45)",
+    linkActive:     "white",
+    mobileMenuBg:   "#0d0f14",
+    activeDot:      "white",
+    mobileActiveBg: "rgba(255,255,255,0.05)",
+    logo:           "/logo-dark.svg",
+  },
+} as const;
+
 export function SiteNav({ theme = "light" }: Props) {
-  const pathname   = usePathname();
-  const isDark     = theme === "dark";
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Colours
-  const navBg     = isDark ? "rgba(13,15,20,0.92)"         : "rgba(248,250,252,0.85)";
-  const navBorder = isDark ? "rgba(255,255,255,0.06)"      : "rgba(0,0,0,0.07)";
-  const linkBase  = isDark ? "rgba(255,255,255,0.45)"      : "#64748b";
-  const linkActive= isDark ? "white"                        : "#0f172a";
-  const mobileMenuBg = isDark ? "#0d0f14" : "#f8fafc";
+  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, activeDot, mobileActiveBg, logo } = THEME[theme];
 
   const ctaHref  = "/early-access";
   const ctaLabel = "Early Access →";
@@ -38,7 +69,7 @@ export function SiteNav({ theme = "light" }: Props) {
         {/* Logo */}
         <Link href="/" className="flex items-center hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
           <img
-            src={isDark ? "/logo-dark.svg" : "/logo.svg"}
+            src={logo}
             alt="Vestream"
             width={140}
             height={35}
@@ -61,7 +92,7 @@ export function SiteNav({ theme = "light" }: Props) {
                 {isActive && (
                   <span
                     className="block mx-auto mt-0.5 rounded-full"
-                    style={{ width: 4, height: 4, background: isDark ? "white" : "#2563eb" }}
+                    style={{ width: 4, height: 4, background: activeDot }}
                   />
                 )}
               </Link>
@@ -130,7 +161,7 @@ export function SiteNav({ theme = "light" }: Props) {
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
                 style={{
                   color: isActive ? linkActive : linkBase,
-                  background: isActive ? (isDark ? "rgba(255,255,255,0.05)" : "rgba(37,99,235,0.05)") : "transparent",
+                  background: isActive ? mobileActiveBg : "transparent",
                   fontWeight: isActive ? 600 : 400,
                 }}
               >
