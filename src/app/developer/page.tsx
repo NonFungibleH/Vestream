@@ -98,15 +98,15 @@ export default function DeveloperPage() {
               One API. Every major vesting protocol.
             </h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
-              { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Linear + tranched" },
-              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Token locks" },
-              { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "NFT-based vesting" },
-              { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Multi-chain" },
-              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Team vesting" },
-              { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Streaming vesting" },
-              { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "PinkLock V2" },
+              { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  note: "Linear + tranched" },
+              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   note: "Token locks" },
+              { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  note: "NFT-based vesting" },
+              { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   note: "Multi-chain" },
+              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  note: "Team vesting" },
+              { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   note: "Streaming vesting" },
+              { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  note: "PinkLock V2" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -115,9 +115,18 @@ export default function DeveloperPage() {
                   <span className="font-bold text-base" style={{ color: p.color }}>{p.name[0]}</span>
                 </div>
                 <div className="font-semibold text-sm mb-1" style={{ color: "white" }}>{p.name}</div>
-                <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>{p.note}</div>
-                <div className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>{p.chains}</div>
+                <div className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{p.note}</div>
               </div>
+            ))}
+          </div>
+          {/* Shared chain coverage — applies to all protocols above */}
+          <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Available on</span>
+            {["Ethereum", "BNB Chain", "Base", "Polygon"].map((chain) => (
+              <span key={chain} className="text-xs px-2.5 py-1 rounded-full font-medium"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
+                {chain}
+              </span>
             ))}
           </div>
         </div>

@@ -107,12 +107,26 @@ export default function Home() {
         {/* Protocol strip */}
         <div className="relative mt-14">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
+          {/* Row 1 */}
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
               { name: "Sablier",      color: "#f97316", bg: "rgba(249,115,22,0.07)",  border: "rgba(249,115,22,0.15)"  },
               { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
               { name: "UNCX",         color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
               { name: "Team Finance", color: "#10b981", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
+            ].map((p) => (
+              <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+                style={{ background: p.bg, border: `1px solid ${p.border}` }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
+                  <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
+                </div>
+                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
+              </div>
+            ))}
+          </div>
+          {/* Row 2 */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            {[
               { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
               { name: "Superfluid",   color: "#1db954", bg: "rgba(29,185,84,0.07)",   border: "rgba(29,185,84,0.15)"   },
               { name: "PinkSale",     color: "#ec4899", bg: "rgba(236,72,153,0.07)",  border: "rgba(236,72,153,0.15)"  },
