@@ -61,6 +61,8 @@ const PROTOCOL_OPTIONS = [
   { id: "team-finance", label: "Team Finance"  },
   { id: "hedgey",       label: "Hedgey"        },
   { id: "unvest",       label: "Unvest"        },
+  { id: "superfluid",   label: "Superfluid"    },
+  { id: "pinksale",     label: "PinkSale"      },
 ];
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
@@ -70,6 +72,8 @@ const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string
   uncx:           { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   "uncx-vm":      { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.12)",   border: "rgba(8,145,178,0.25)"   },
+  superfluid:     { text: "#1db954", bg: "rgba(29,185,84,0.12)",   border: "rgba(29,185,84,0.25)"   },
+  pinksale:       { text: "#ec4899", bg: "rgba(236,72,153,0.12)",  border: "rgba(236,72,153,0.25)"  },
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }

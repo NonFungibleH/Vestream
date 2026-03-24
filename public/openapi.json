@@ -31,7 +31,7 @@
         "required": ["id","protocol","chainId","recipient","tokenAddress","tokenSymbol","tokenDecimals","totalAmount","withdrawnAmount","claimableNow","lockedAmount","startTime","endTime","isFullyVested"],
         "properties": {
           "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID: {protocol}-{chainId}-{nativeId}" },
-          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","hedgey","unvest","team-finance"] },
+          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale"] },
           "chainId":        { "type": "integer", "example": 1, "description": "EVM chain ID" },
           "recipient":      { "type": "string",  "example": "0xabc..." },
           "tokenAddress":   { "type": "string",  "example": "0xdef..." },

@@ -114,6 +114,8 @@ export default function Home() {
               { name: "UNCX",         color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
               { name: "Team Finance", color: "#10b981", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
               { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
+              { name: "Superfluid",   color: "#1db954", bg: "rgba(29,185,84,0.07)",   border: "rgba(29,185,84,0.15)"   },
+              { name: "PinkSale",     color: "#ec4899", bg: "rgba(236,72,153,0.07)",  border: "rgba(236,72,153,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -450,7 +452,7 @@ export default function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled directly from Sablier, Hedgey, UNCX, and Unvest — across Ethereum, Base, BSC, and Polygon.",
+              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale — across Ethereum, Base, BSC, and Polygon.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -513,7 +515,7 @@ export default function Home() {
             </p>
             <ul className="flex flex-col gap-3.5">
               {[
-                "5 protocols scanned simultaneously",
+                "7 protocols scanned simultaneously",
                 "Ethereum, Base, BNB Chain & Polygon",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -537,10 +539,11 @@ export default function Home() {
             </div>
             {/* Result rows */}
             {[
-              { protocol: "Sablier", chain: "Base", token: "NOVA", amount: "12,500", color: "#f97316" },
-              { protocol: "Hedgey", chain: "Ethereum", token: "FLUX", amount: "4,200", color: "#3b82f6" },
-              { protocol: "UNCX", chain: "BNB Chain", token: "VEST", amount: "8,750", color: "#f59e0b" },
-              { protocol: "Unvest", chain: "Polygon", token: "KLAR", amount: "3,100", color: "#06b6d4" },
+              { protocol: "Sablier",    chain: "Base",       token: "NOVA", amount: "12,500", color: "#f97316" },
+              { protocol: "Hedgey",     chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
+              { protocol: "UNCX",       chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#f59e0b" },
+              { protocol: "Superfluid", chain: "Polygon",    token: "KLAR", amount: "3,100",  color: "#1db954" },
+              { protocol: "PinkSale",   chain: "BNB Chain",  token: "NOVA", amount: "5,000",  color: "#ec4899" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#141720", border: "1px solid #1e2330" }}>
@@ -555,7 +558,7 @@ export default function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>4 vestings found across 4 chains</p>
+            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>5 vestings found across 7 protocols</p>
           </div>
         </div>
       </section>
@@ -861,7 +864,7 @@ export default function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports Sablier (streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), and Unvest — on Ethereum, Base, BSC, and Polygon. Ethereum Sepolia and Base Sepolia are supported for testing. More chains on the roadmap.",
+              a: "Vestream supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), and PinkSale (PinkLock V2) — on Ethereum, Base, BSC, and Polygon. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

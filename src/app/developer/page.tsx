@@ -50,7 +50,7 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, and Team Finance —
+            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Team Finance, Superfluid, and PinkSale —
             served via clean REST API with OpenAPI spec and native MCP support.
             One integration, every protocol.
           </p>
@@ -74,7 +74,7 @@ export default function DeveloperPage() {
           {/* Stats bar */}
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
-              { value: "5",     label: "Protocols indexed" },
+              { value: "7",     label: "Protocols indexed" },
               { value: "5",     label: "EVM chains" },
               { value: "3",     label: "API endpoints" },
               { value: "JSON",  label: "Normalised output" },
@@ -98,13 +98,15 @@ export default function DeveloperPage() {
               One API. Every major vesting protocol.
             </h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             {[
               { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Linear + tranched" },
               { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Token locks" },
               { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "NFT-based vesting" },
               { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Multi-chain" },
               { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "Team vesting" },
+              { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   chains: "ETH · Base · BSC · Polygon",    note: "Streaming vesting" },
+              { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  chains: "ETH · Base · BSC · Polygon",    note: "PinkLock V2" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>

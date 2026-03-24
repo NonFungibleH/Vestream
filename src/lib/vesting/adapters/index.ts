@@ -25,6 +25,8 @@ import { teamFinanceAdapter } from "./team-finance";
 import { uncxAdapter }        from "./uncx";
 import { uncxVmAdapter }      from "./uncx-vm";
 import { unvestAdapter }      from "./unvest";
+import { superfluidAdapter }  from "./superfluid";
+import { pinksaleAdapter }    from "./pinksale";
 
 export const ADAPTER_REGISTRY: VestingAdapter[] = [
   sablierAdapter,
@@ -33,4 +35,6 @@ export const ADAPTER_REGISTRY: VestingAdapter[] = [
   uncxAdapter,
   uncxVmAdapter,
   unvestAdapter,
+  superfluidAdapter,
+  pinksaleAdapter,
 ];

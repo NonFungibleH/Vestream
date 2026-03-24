@@ -56,7 +56,7 @@ src/
     vesting/
       types.ts            VestingStream interface + math helpers (source of truth)
       adapters/           One file per protocol — sablier, hedgey, uncx, uncx-vm,
-                          unvest, team-finance. Each exports fetchStreams(address, chainId)
+                          unvest, team-finance, superfluid, pinksale. Each exports fetchStreams(address, chainId)
       aggregate.ts        Calls all adapters in parallel, dedupes, sorts
       normalize.ts        Cross-protocol field normalisation
       dbcache.ts          Read/write to vestingStreamsCache table
@@ -335,7 +335,7 @@ This is the canonical data shape everything normalises to:
 ```ts
 interface VestingStream {
   id: string;               // "{protocol}-{chainId}-{nativeId}"
-  protocol: string;         // "sablier" | "hedgey" | "uncx" | "unvest" | "team-finance"
+  protocol: string;         // "sablier" | "hedgey" | "uncx" | "uncx-vm" | "unvest" | "team-finance" | "superfluid" | "pinksale"
   chainId: SupportedChainId;
   recipient: string;
   tokenAddress: string;
@@ -367,8 +367,24 @@ interface VestingStream {
 | Sepolia (testnet) | 11155111 |
 | Base Sepolia (testnet) | 84532 |
 
+### Supported protocols
+| Protocol | ID | Chains | Data source | Notes |
+|---|---|---|---|---|
+| Sablier | `sablier` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Linear + tranched (LockupTranched) |
+| Hedgey | `hedgey` | ETH, BSC, Polygon, Base | The Graph subgraph | NFT-based vesting plans |
+| UNCX (TokenVesting) | `uncx` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Token locker v3 |
+| UNCX (VestingManager) | `uncx-vm` | ETH, BSC, Polygon, Base | The Graph subgraph | Hidden in UI; merged with `uncx` |
+| Unvest | `unvest` | ETH, BSC, Polygon, Base | The Graph subgraph | Step/milestone vesting |
+| Team Finance | `team-finance` | ETH, BSC, Polygon, Base | The Graph subgraph | Team token vesting |
+| Superfluid | `superfluid` | ETH, BSC, Polygon, Base | Superfluid hosted subgraph (no GRAPH_API_KEY) | Cliff + linear streaming; endpoint: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler` |
+| PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem | TGE + cycle-based schedule; no subgraph |
+
 ### Adding a new adapter
-Create `src/lib/vesting/adapters/{protocol}.ts` — must export `fetchStreams(address: string, chainId: SupportedChainId): Promise<VestingStream[]>`. Register it in `adapters/index.ts`.
+Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapter` object with `id`, `name`, `supportedChainIds`, and `fetch(wallets, chainId)`. Register it in `adapters/index.ts`.
+
+**Subgraph-based adapters** (most protocols): use `resolveSubgraphUrl()` from `graph.ts` with the GRAPH_API_KEY.
+**Superfluid exception**: uses its own hosted endpoints — no GRAPH_API_KEY, endpoint format: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler`
+**Contract-read adapters** (PinkSale): use viem `createPublicClient` + `http()` transport with RPC env vars. No subgraph.
 
 ---
 

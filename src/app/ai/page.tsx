@@ -138,7 +138,7 @@ export default function AiPage() {
           {/* Stats strip */}
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
-              { value: "5",      label: "Protocols indexed" },
+              { value: "7",      label: "Protocols indexed" },
               { value: "4",      label: "EVM chains"        },
               { value: "3",      label: "MCP tools"         },
               { value: "MCP",    label: "Native support"    },
@@ -191,7 +191,7 @@ export default function AiPage() {
             description="Get all token vesting streams for an EVM wallet across all supported protocols and chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
               { name: "address", type: "string", required: true,  desc: "EVM wallet in 0x format" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, uncx, hedgey, team-finance, unvest" },
+              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, uncx, hedgey, team-finance, unvest, superfluid, pinksale" },
               { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 8453 (Base)" },
               { name: "active_only", type: "boolean", required: false, desc: "Only return streams not yet fully vested" },
             ]}
