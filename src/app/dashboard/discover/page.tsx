@@ -421,7 +421,10 @@ export default function DiscoverPage() {
       if (res.ok) {
         const json = await res.json();
         setWallets(json.wallets ?? []);
-        setTier(json.tier ?? "free");
+        const fetchedTier = json.tier ?? "free";
+        setTier(fetchedTier);
+        // Gate: free users cannot access Discover
+        if (fetchedTier === "free") { router.replace("/pricing"); return; }
       }
     } catch { /* ignore */ }
   }, [router]);

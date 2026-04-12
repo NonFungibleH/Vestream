@@ -10,10 +10,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { isAdminAuthorized } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
-  const adminCookie = req.cookies.get("vestr_admin");
-  if (!adminCookie) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

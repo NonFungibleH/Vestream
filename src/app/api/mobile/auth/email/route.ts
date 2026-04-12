@@ -8,6 +8,7 @@ import { mobileOtps } from "@/lib/db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -83,6 +84,13 @@ export async function POST(req: NextRequest) {
 
   // ── SEND ────────────────────────────────────────────────────────────────────
   if (action === "send") {
+    // Rate limit: 5 OTP requests per email per hour
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = await checkRateLimit("mobile:otp:send", `${ip}:${email}`, 5, "1 h");
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many attempts. Try again in an hour." }, { status: 429 });
+    }
+
     const otp       = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
@@ -90,7 +98,9 @@ export async function POST(req: NextRequest) {
     await db.delete(mobileOtps).where(eq(mobileOtps.email, email));
     await db.insert(mobileOtps).values({ email, otpHash: hashValue(otp), expiresAt });
 
-    console.log(`[Mobile OTP] ${email} → ${otp}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[Mobile OTP] code sent to ${email} (check email or use DEV_OTP)`);
+    }
 
     if (!process.env.RESEND_API_KEY) {
       console.warn("[Mobile OTP] RESEND_API_KEY not set — email not sent");
@@ -139,8 +149,8 @@ export async function POST(req: NextRequest) {
       ))
       .limit(1);
 
-    // DEV_OTP bypass
-    const devOtp = process.env.DEV_OTP;
+    // DEV_OTP bypass — development builds only, never active in production
+    const devOtp = process.env.NODE_ENV !== "production" ? process.env.DEV_OTP : undefined;
     if (!row && !(devOtp && code === devOtp)) {
       return NextResponse.json({ error: "Invalid or expired code" }, { status: 422 });
     }

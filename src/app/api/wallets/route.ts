@@ -108,6 +108,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Free plan: require a specific token address, at least one chain, and at least one protocol.
+    // Auto-discovery (scanning without a token address) is a Pro+ feature.
+    if (user.tier === "free") {
+      if (!tokenAddress) {
+        return NextResponse.json(
+          { error: "Free plan requires a token contract address. Upgrade to Pro to auto-scan your wallet.", code: "TOKEN_ADDRESS_REQUIRED" },
+          { status: 402 }
+        );
+      }
+      if (!chains || chains.length === 0) {
+        return NextResponse.json(
+          { error: "Free plan: select a chain.", code: "CHAIN_REQUIRED" },
+          { status: 400 }
+        );
+      }
+      if (!protocols || protocols.length === 0) {
+        return NextResponse.json(
+          { error: "Free plan: select a vesting platform.", code: "PROTOCOL_REQUIRED" },
+          { status: 400 }
+        );
+      }
+    }
+
     const existingWallets = await getWalletsForUser(user.id);
 
     // Enforce per-tier wallet limit

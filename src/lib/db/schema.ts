@@ -11,7 +11,7 @@ import {
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  address: text("address").notNull().unique(),
+  address: text("address").notNull().unique(), // unique() creates an index automatically
   tier: text("tier").default("free").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Discover scan rate limiting: 3 scans per 24-hour rolling window
@@ -44,7 +44,10 @@ export const wallets = pgTable("wallets", {
   // optional ERC-20 contract address — when set, only streams for this token are shown
   tokenAddress: text("token_address"),
   addedAt: timestamp("added_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("wallets_user_idx").on(t.userId),
+  index("wallets_user_address_idx").on(t.userId, t.address),
+]);
 
 export const notificationPreferences = pgTable("notification_preferences", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -77,7 +80,7 @@ export const notificationsSent = pgTable("notifications_sent", {
 // Key format: vstr_live_{32 random hex bytes}
 export const apiKeys = pgTable("api_keys", {
   id:               uuid("id").primaryKey().defaultRandom(),
-  keyHash:          text("key_hash").notNull().unique(),   // SHA-256(plaintext key)
+  keyHash:          text("key_hash").notNull().unique(),   // SHA-256(plaintext key) — unique() creates index
   keyPrefix:        text("key_prefix").notNull(),           // first 12 chars, for display
   ownerEmail:       text("owner_email").notNull(),
   ownerName:        text("owner_name"),

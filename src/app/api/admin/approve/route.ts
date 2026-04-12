@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { apiKeys, apiAccessRequests } from "@/lib/db/schema";
 import { generateApiKey, hashApiKey } from "@/lib/api-key-auth";
 import { eq } from "drizzle-orm";
+import { isAdminAuthorized } from "@/lib/admin-auth";
 
 const DEFAULT_LIMITS: Record<string, number> = {
   free: 1_000,
@@ -20,9 +21,7 @@ const DEFAULT_LIMITS: Record<string, number> = {
 };
 
 export async function POST(req: NextRequest) {
-  // Auth: must have the admin session cookie set by /api/admin/login
-  const adminCookie = req.cookies.get("vestr_admin");
-  if (!adminCookie) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -3257,7 +3257,7 @@ const PROTOCOL_OPTIONS = [
   { id: "pinksale",     label: "PinkSale"      },
 ];
 
-function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
+function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; onCancel: () => void; tier?: string }) {
   const [address, setAddress] = useState("");
   const [label, setLabel]     = useState("");
   const [error, setError]     = useState<string | null>(null);
@@ -3398,13 +3398,15 @@ function AddWalletBar({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => 
         <span className="text-[9px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>narrows to one token</span>
       </div>
 
-      {/* Discover hint */}
-      <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-        Not sure which platform holds your vesting?{" "}
-        <a href="/dashboard/discover" className="underline" style={{ color: "#60a5fa" }}>
-          Search all platforms →
-        </a>
-      </p>
+      {/* Discover hint — Pro only */}
+      {tier !== "free" && (
+        <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+          Not sure which platform holds your vesting?{" "}
+          <a href="/dashboard/discover" className="underline" style={{ color: "#60a5fa" }}>
+            Search all platforms →
+          </a>
+        </p>
+      )}
     </div>
   );
 }
@@ -3604,19 +3606,30 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
 
       {/* Nav */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
-        {NAV_ITEMS.map((item) => (
-          <button key={item.label} onClick={() => router.push(item.href)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-            style={item.active
-              ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
-              : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
-            onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
-            onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
-          >
-            <span className="opacity-80 flex-shrink-0">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const isDiscoverLocked = item.href === "/dashboard/discover" && tier === "free";
+          return (
+            <button key={item.label}
+              onClick={() => isDiscoverLocked ? router.push("/pricing") : router.push(item.href)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+              style={item.active
+                ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+                : { color: isDiscoverLocked ? "var(--preview-text-3)" : "var(--preview-text-2)", border: "1px solid transparent" }}
+              onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
+              onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
+              title={isDiscoverLocked ? "Upgrade to Pro to unlock Discover" : undefined}
+            >
+              <span className="opacity-80 flex-shrink-0">{item.icon}</span>
+              {item.label}
+              {isDiscoverLocked && (
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: "rgba(37,99,235,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)" }}>
+                  Pro
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Wallets section */}
@@ -4312,7 +4325,7 @@ export default function Dashboard() {
         </header>
 
         {showAddWallet && (
-          <AddWalletBar onAdd={() => { loadWallets(); setShowAddWallet(false); }} onCancel={() => setShowAddWallet(false)} />
+          <AddWalletBar tier={tier} onAdd={() => { loadWallets(); setShowAddWallet(false); }} onCancel={() => setShowAddWallet(false)} />
         )}
 
         {/* Content */}

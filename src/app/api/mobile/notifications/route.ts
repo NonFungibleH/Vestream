@@ -34,12 +34,27 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const {
     emailEnabled      = false,
-    email,
+    email: rawEmail,
     hoursBeforeUnlock = 24,
     notifyCliff       = true,
     notifyStreamEnd   = true,
     notifyMonthly     = false,
   } = body;
+
+  // Validate email if provided
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const email = typeof rawEmail === "string" && rawEmail.trim().length > 0
+    ? rawEmail.trim().toLowerCase()
+    : null;
+  if (email !== null && (!emailRegex.test(email) || email.length > 320)) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+  }
+
+  // Validate hoursBeforeUnlock is a sensible number
+  const hours = Number(hoursBeforeUnlock);
+  if (!Number.isInteger(hours) || hours < 1 || hours > 168) {
+    return NextResponse.json({ error: "hoursBeforeUnlock must be between 1 and 168" }, { status: 400 });
+  }
 
   const [existing] = await db.select({ id: notificationPreferences.id })
     .from(notificationPreferences)
@@ -48,11 +63,11 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     await db.update(notificationPreferences)
-      .set({ emailEnabled, email, hoursBeforeUnlock, notifyCliff, notifyStreamEnd, notifyMonthly, updatedAt: new Date() })
+      .set({ emailEnabled, email, hoursBeforeUnlock: hours, notifyCliff, notifyStreamEnd, notifyMonthly, updatedAt: new Date() })
       .where(eq(notificationPreferences.userId, userId));
   } else {
     await db.insert(notificationPreferences)
-      .values({ userId, emailEnabled, email, hoursBeforeUnlock, notifyCliff, notifyStreamEnd, notifyMonthly });
+      .values({ userId, emailEnabled, email, hoursBeforeUnlock: hours, notifyCliff, notifyStreamEnd, notifyMonthly });
   }
 
   return NextResponse.json({ ok: true });

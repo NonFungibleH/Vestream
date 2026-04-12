@@ -22,13 +22,10 @@ export async function upsertUser(address: string) {
   const existing = await getUserByAddress(normalized);
   if (existing) return existing;
 
-  // New users start on a 14-day pro trial. On conflict (race condition), do NOT
-  // overwrite tier or trialEndsAt of an existing user.
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-
+  // New users start on the Free plan — no trial period.
   const result = await db
     .insert(users)
-    .values({ address: normalized, tier: "pro", trialEndsAt })
+    .values({ address: normalized, tier: "free" })
     .onConflictDoNothing()
     .returning();
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { upsertUser } from "@/lib/db/queries";
 import { Resend } from "resend";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -78,6 +79,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
+    // Rate limit: 5 OTP send attempts per email per hour
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = await checkRateLimit("auth:otp:send", `${ip}:${email}`, 5, "1 h");
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many attempts. Try again in an hour." }, { status: 429 });
+    }
+
     const otp = generateOtp();
     let session;
     try {
@@ -91,8 +99,10 @@ export async function POST(req: NextRequest) {
     session.otpExpiry = Math.floor(Date.now() / 1000) + 600; // 10 min
     await session.save();
 
-    // Log OTP to server console in all environments (useful in dev/staging)
-    console.log(`[Vestream OTP] ${email} → ${otp}`);
+    // In development, log a hint — never log the actual OTP value in any environment
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[Vestream OTP] code sent to ${email} (check email or use DEV_OTP)`);
+    }
 
     if (process.env.RESEND_API_KEY) {
       const fromAddress = process.env.RESEND_FROM_EMAIL;
@@ -139,7 +149,7 @@ export async function POST(req: NextRequest) {
     if (Math.floor(Date.now() / 1000) > session.otpExpiry) {
       return NextResponse.json({ error: "Code expired. Please request a new one." }, { status: 422 });
     }
-    const devOtp = process.env.DEV_OTP;
+    const devOtp = process.env.NODE_ENV !== "production" ? process.env.DEV_OTP : undefined;
     const codeMatches = session.otp === code || (devOtp && code === devOtp);
     if (!codeMatches) {
       return NextResponse.json({ error: "Incorrect code. Please try again." }, { status: 422 });

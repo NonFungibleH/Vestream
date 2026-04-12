@@ -38,8 +38,7 @@ export async function POST(req: Request) {
     // e.g. HubSpot: POST https://api.hubapi.com/crm/v3/objects/contacts
     // e.g. Pipedrive: POST https://api.pipedrive.com/v1/persons
     // e.g. Attio: POST https://api.attio.com/v2/records/people
-    // For now, log the enquiry so it is at least visible in server logs.
-    console.log("[contact] New enquiry:", enquiry);
+    // Do NOT log enquiry here — it would expose PII (name, email, company) to server logs.
     // ─────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({ success: true });

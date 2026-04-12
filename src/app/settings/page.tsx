@@ -365,67 +365,93 @@ function WalletCard({
         </button>
       </div>
 
-      {/* ── Config: chains + platforms ── */}
+      {/* ── Config: chains + platforms + token filter ── */}
       <div className="px-4 pb-3 space-y-2.5" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
-        <div>
-          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-            Chains to scan
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {CHAIN_OPTIONS.map((c) => (
-              <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} saving={savingConfig} />
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-            Platforms to scan
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {PROTOCOL_OPTIONS.map((p) => {
-              // UNCX pill is active if either uncx or uncx-vm is selected
-              const isActive = p.id === "uncx"
-                ? (selProtocols.has("uncx") || selProtocols.has("uncx-vm"))
-                : selProtocols.has(p.id);
-              return (
-                <TogglePill key={p.id} label={p.label} active={isActive} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Status + summary */}
-        <div className="flex items-center gap-2">
-          {savingConfig ? (
-            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
-          ) : configSaved ? (
-            <span className="text-[10px] text-emerald-500">✓ Saved</span>
-          ) : (
-            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-              {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === ALL_BACKEND_PROTOCOL_IDS.length
-                ? "Scanning all chains & platforms"
-                : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${[...selProtocols].filter(p => p !== "uncx-vm").length} platform${[...selProtocols].filter(p => p !== "uncx-vm").length !== 1 ? "s" : ""}`
-              }
-            </span>
-          )}
-        </div>
+        {/* Chains / protocols — Pro multi-select; Free shows read-only badges + upsell */}
+        {isPro ? (
+          <>
+            <div>
+              <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                Chains to scan
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {CHAIN_OPTIONS.map((c) => (
+                  <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} saving={savingConfig} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                Platforms to scan
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {PROTOCOL_OPTIONS.map((p) => {
+                  // UNCX pill is active if either uncx or uncx-vm is selected
+                  const isActive = p.id === "uncx"
+                    ? (selProtocols.has("uncx") || selProtocols.has("uncx-vm"))
+                    : selProtocols.has(p.id);
+                  return (
+                    <TogglePill key={p.id} label={p.label} active={isActive} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* ── Discover link ── */}
-        <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-            Not sure which platforms this wallet uses?{" "}
-            <a
-              href={`/dashboard/discover`}
-              className="font-semibold underline"
-              style={{ color: "#60a5fa" }}
-            >
-              {isPro ? "Scan all platforms in Discover →" : "Discover (Pro feature) →"}
-            </a>
-          </p>
-        </div>
+            {/* Status + summary */}
+            <div className="flex items-center gap-2">
+              {savingConfig ? (
+                <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
+              ) : configSaved ? (
+                <span className="text-[10px] text-emerald-500">✓ Saved</span>
+              ) : (
+                <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                  {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === ALL_BACKEND_PROTOCOL_IDS.length
+                    ? "Scanning all chains & platforms"
+                    : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${[...selProtocols].filter(p => p !== "uncx-vm").length} platform${[...selProtocols].filter(p => p !== "uncx-vm").length !== 1 ? "s" : ""}`
+                  }
+                </span>
+              )}
+            </div>
+
+            {/* ── Discover link ── */}
+            <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                Not sure which platforms this wallet uses?{" "}
+                <a href="/dashboard/discover" className="font-semibold underline" style={{ color: "#60a5fa" }}>
+                  Scan all platforms in Discover →
+                </a>
+              </p>
+            </div>
+          </>
+        ) : (
+          /* Free plan: read-only badges + upgrade prompt */
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-1.5">
+              {wallet.chains?.map((c) => (
+                <span key={c} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
+                  {CHAIN_OPTIONS.find(x => x.id === String(c))?.short ?? c}
+                </span>
+              ))}
+              {wallet.protocols?.map((p) => (
+                <span key={p} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
+                  {PROTOCOL_OPTIONS.find(x => x.id === p)?.label ?? p}
+                </span>
+              ))}
+            </div>
+            <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+              <a href="/pricing" className="font-semibold underline" style={{ color: "#3b82f6" }}>
+                Upgrade to Pro
+              </a>
+              {" "}to scan all chains and platforms automatically.
+            </p>
+          </div>
+        )}
 
         {/* ── Token address filter ── */}
         <div className="pt-2.5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
@@ -569,6 +595,10 @@ export default function Settings() {
     setAddError(null);
     if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
     if (!newSelChain || !newSelProtocol) { setAddError("Select a chain and platform"); return; }
+    if (tier === "free" && (!newTokenAddr.trim() || !isAddress(newTokenAddr.trim()))) {
+      setAddError("Free plan: enter the token contract address (upgrade to Pro for auto-scan)");
+      return;
+    }
     setAdding(true);
     try {
       const chains    = [parseInt(newSelChain)];
@@ -848,31 +878,47 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Optional token address */}
+                {/* Token address — required for free, optional for pro/fund */}
                 <div>
                   <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                    Token filter <span className="normal-case font-normal">(optional)</span>
+                    Token contract address{" "}
+                    {tier === "free"
+                      ? <span style={{ color: "#ef4444" }}>*</span>
+                      : <span className="normal-case font-normal">(optional)</span>
+                    }
                   </p>
                   <StyledInput
-                    placeholder="Token contract address (0x…)"
+                    placeholder="0x…"
                     value={newTokenAddr}
                     onChange={setNewTokenAddr}
                     fontMono
                   />
                   <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
-                    Narrows dashboard to a specific token. Use Discover to find addresses.
+                    {tier === "free"
+                      ? "Enter the ERC-20 contract address for your vested token."
+                      : "Optional — narrows tracking to one token. Leave blank to auto-scan all."}
                   </p>
                 </div>
 
-                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                  Not sure?{" "}
-                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
-                    Scan all platforms in Discover →
-                  </a>
-                </p>
+                {tier === "free" ? (
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                    Want to skip the contract address?{" "}
+                    <a href="/pricing" className="underline font-medium" style={{ color: "#a78bfa" }}>
+                      Upgrade to Pro for auto-scan →
+                    </a>
+                  </p>
+                ) : (
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                    Not sure?{" "}
+                    <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
+                      Scan all platforms in Discover →
+                    </a>
+                  </p>
+                )}
 
                 {addError && <p className="text-xs text-red-400">{addError}</p>}
-                <button type="submit" disabled={adding || !newAddress || !newSelChain || !newSelProtocol}
+                <button type="submit"
+                  disabled={adding || !newAddress || !newSelChain || !newSelProtocol || (tier === "free" && (!newTokenAddr.trim() || !isAddress(newTokenAddr.trim())))}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
                   <IconPlus /> {adding ? "Adding…" : "Track wallet"}

@@ -121,11 +121,13 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="1 wallet address" checkColor="#2563eb" />
-              <FeatureItem text="1 blockchain of your choice" checkColor="#2563eb" />
+              <FeatureItem text="1 vesting platform" checkColor="#2563eb" />
+              <FeatureItem text="1 blockchain" checkColor="#2563eb" />
+              <FeatureItem text="1 token (enter contract address)" checkColor="#2563eb" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#2563eb" />
               <FeatureItem text="Claimable balance tracking" checkColor="#2563eb" />
               <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
-              <FeatureItem text="All 5 vesting platforms" checkColor="#2563eb" />
+              <FeatureItem text="Auto-discovery" included={false} />
               <FeatureItem text="Email alerts" included={false} />
               <FeatureItem text="CSV & PDF export" included={false} />
             </ul>
@@ -150,13 +152,13 @@ export default function Pricing() {
             <div className="mb-5">
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2563eb" }}>Pro</p>
               <div className="flex items-end gap-1 mb-0.5">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.03em" }}>$19.99</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "#0f172a", letterSpacing: "-0.03em" }}>$7.99</span>
                 <span className="text-sm mb-1.5" style={{ color: "#94a3b8" }}>/month</span>
               </div>
               <p className="text-sm" style={{ color: "#64748b" }}>
                 Or{" "}
-                <span className="font-semibold" style={{ color: "#2563eb" }}>$191.90/year</span>
-                {" "}— save 20%
+                <span className="font-semibold" style={{ color: "#2563eb" }}>$63.99/year</span>
+                {" "}— save 33%
               </p>
             </div>
 
@@ -170,11 +172,12 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
+              <FeatureItem text="Auto-discovery — no contract address needed" checkColor="#2563eb" />
               <FeatureItem text="5 wallet addresses" checkColor="#2563eb" />
               <FeatureItem text="5 blockchains" checkColor="#2563eb" />
+              <FeatureItem text="All 7 vesting platforms" checkColor="#2563eb" />
               <FeatureItem text="Email unlock alerts" checkColor="#2563eb" />
               <FeatureItem text="Token Vesting Explorer" checkColor="#2563eb" />
-              <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
               <FeatureItem text="CSV & PDF export" checkColor="#2563eb" />
               <FeatureItem text="Ticketing support" checkColor="#2563eb" />
               <FeatureItem text="Search all receivers" included={false} />
@@ -255,20 +258,22 @@ export default function Pricing() {
             </div>
 
             {([
-              ["Wallet addresses",              "1",       "5 wallets",       "Unlimited"],
-              ["Blockchains",                   "1 chain", "5 chains",        "All chains"],
-              ["Real-time dashboard",           true,      true,              true],
-              ["Claimable balance tracking",    true,      true,              true],
-              ["Unlock calendar",               true,      true,              true],
-              ["Email alerts",                  false,     true,              true],
-              ["Token Vesting Explorer",        false,     true,              true],
-              ["CSV & PDF export",               false,     true,              true],
-              ["Calendar integration",          false,     false,             true],
-              ["Search all receivers",          false,     false,             true],
-              ["Team workspace",                false,     false,             true],
-              ["Slack webhook",                 false,     false,             true],
-              ["Telegram & WhatsApp alerts",    false,     false,             true],
-              ["Support",                       false,     "Ticketing",       "Priority"],
+              ["Wallet addresses",              "1",               "5 wallets",  "Unlimited"],
+              ["Blockchains",                   "1 chain",         "5 chains",   "All chains"],
+              ["Vesting platforms",             "1 platform",      "All 7",      "All 7"],
+              ["Token tracking",                "Manual (address)", "Auto-scan", "Auto-scan"],
+              ["Real-time dashboard",           true,              true,         true],
+              ["Claimable balance tracking",    true,              true,         true],
+              ["Unlock calendar",               true,              true,         true],
+              ["Email alerts",                  false,             true,         true],
+              ["Token Vesting Explorer",        false,             true,         true],
+              ["CSV & PDF export",              false,             true,         true],
+              ["Calendar integration",          false,             false,        true],
+              ["Search all receivers",          false,             false,        true],
+              ["Team workspace",                false,             false,        true],
+              ["Slack webhook",                 false,             false,        true],
+              ["Telegram & WhatsApp alerts",    false,             false,        true],
+              ["Support",                       false,             "Ticketing",  "Priority"],
             ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
               <div key={feature}
                 className="grid grid-cols-4 px-6 py-3.5 items-center"
@@ -320,11 +325,15 @@ export default function Pricing() {
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <FAQItem
               q="Do I need a credit card to start?"
-              a="No. The Free plan requires no payment details at all. Pro and Fund plans include a 14-day free trial — also card-free. You only need to add a card when you decide to continue."
+              a="No. The Free plan requires no payment details at all — just sign up with your email and start tracking. You only need to add a card when you choose to upgrade."
             />
             <FAQItem
-              q="What happens after the trial ends?"
-              a="If you don't add a payment method your account automatically downgrades to the Free plan. You keep your data and can upgrade again at any time."
+              q="What does the Free plan actually let me do?"
+              a="The Free plan lets you track one token from one wallet on one blockchain and one vesting platform. You enter the token contract address manually. It's a great way to try Vestream before upgrading."
+            />
+            <FAQItem
+              q="Why do I need to enter the token address on the Free plan?"
+              a="Auto-discovery — where Vestream scans your wallet and automatically finds all your vesting streams — is a Pro feature. On the Free plan you enter the token contract address yourself. Upgrade to Pro and we handle the discovery for you."
             />
             <FAQItem
               q="Can I cancel anytime?"
@@ -332,7 +341,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="How does annual billing work?"
-              a="Annual billing is charged upfront for 12 months at a 20% discount — Pro is $191.90/year (~$16/mo) and Fund is $2,870/year (~$239/mo). You can switch between monthly and annual at renewal."
+              a="Annual billing is charged upfront for 12 months at a 33% discount — Pro is $63.99/year (~$5.33/mo) and Fund is $2,870/year (~$239/mo). You can switch between monthly and annual at renewal."
             />
             <FAQItem
               q="What's the difference between Pro and Fund?"
@@ -361,16 +370,18 @@ export default function Pricing() {
             Join investors and funds that use Vestream to stay on top of every vesting schedule.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/login"
+            <Link href="/early-access"
               className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-105"
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}>
               Start for free →
             </Link>
-            <Link href="/login"
+            <PricingCta
+              priceId={proPriceId}
+              href="/early-access"
+              label="Upgrade to Pro →"
               className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 20px rgba(37,99,235,0.4)" }}>
-              Try Pro free for 14 days →
-            </Link>
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 20px rgba(37,99,235,0.4)" }}
+            />
           </div>
         </div>
       </section>
