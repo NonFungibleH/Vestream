@@ -9,6 +9,7 @@ import { isAddress } from "viem";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
+import { MobileAppBanner } from "@/components/MobileAppBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4337,6 +4338,7 @@ export default function Dashboard() {
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : (
             <>
+              <MobileAppBanner />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
               <NextClaimCountdown streams={filteredStreams} />
               <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />

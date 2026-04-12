@@ -77,11 +77,16 @@ export default function Home() {
         </div>
 
         {/* Badges */}
-        <div className="relative flex items-center gap-3 mb-8">
+        <div className="relative flex items-center gap-3 mb-8 flex-wrap justify-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
             style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f59e0b" }} />
             Beta Testing
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+            style={{ background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.39.07 2.35.82 3.15.85.82-.08 2.43-.99 4.1-.84 1.01.08 3.86.41 5.7 3.14-4.84 2.69-4.07 8.64.05 10.71zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            iOS &amp; Android
           </div>
         </div>
 
@@ -94,10 +99,10 @@ export default function Home() {
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#64748b" }}>
-          See every token you&apos;re owed, across every protocol and chain — in one clean dashboard. Know exactly when your next unlock is, and get alerted the moment it&apos;s ready to claim.
+          The Vestream mobile app tracks every vesting you&apos;re owed — across all protocols and chains — and sends push notifications the moment a token is ready to claim.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
-          Track unlocks, analyse P&amp;L, set email alerts, and export clean reports. All in one place.
+          Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
         </p>
 
         <div className="relative flex flex-col items-center gap-3 w-full">
@@ -471,14 +476,14 @@ export default function Home() {
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
               color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.14)",
-              title: "Unlock alerts",
-              body: "Get emailed before every token unlock so you never leave claimable tokens sitting on the table.",
+              title: "Push + email alerts",
+              body: "Native push notifications on iOS & Android, plus email — so you always know when a token is ready to claim, before you open the app.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.14)",
-              title: "Multi-chain dashboard",
-              body: "Ethereum, Base, BSC, and Polygon in one view. Filter by token, protocol, or wallet with a single click.",
+              title: "Mobile app + web dashboard",
+              body: "Track unlocks on the go with the iOS & Android app, then go deeper on the web dashboard — advanced filters, exports, and P&L analysis.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
@@ -632,7 +637,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Mobile app coming soon ───────────────────────────────────────── */}
+      {/* ── Mobile app ──────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
           style={{ background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #1e3a8a 100%)", border: "1px solid rgba(167,139,250,0.25)" }}>
@@ -646,20 +651,23 @@ export default function Home() {
           <div className="relative flex-1 md:pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
               style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#c4b5fd" }} />
-              Coming soon · iOS &amp; Android
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
+              Available on iOS &amp; Android
             </div>
             <h2 className="text-3xl font-bold mb-4" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Your vestings, in your pocket
             </h2>
-            <p className="text-base leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.8)" }}>
-              The Vestream mobile app brings your full dashboard to iOS and Android — with native push notifications that alert you the moment a token unlock is due, so you never miss a claim again.
+            <p className="text-base leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
+              The Vestream mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
+            </p>
+            <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Sign up for early access to the web dashboard — the mobile app is included with your account.
             </p>
             <ul className="flex flex-col gap-3.5">
               {[
-                "Push notifications for every unlock event",
-                "Full portfolio view across all wallets",
-                "Claim reminders with one-tap deep links",
+                "Native push notifications for every unlock",
+                "Full portfolio view, calendar & alerts on mobile",
+                "Web dashboard for deep analysis, exports & P&L",
               ].map(item => (
                 <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>
                   <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"

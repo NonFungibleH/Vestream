@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ContactTrigger from "@/components/ContactTrigger";
 import { SiteNav } from "@/components/SiteNav";
+import PricingCta from "@/components/PricingCta";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Pricing() {
+  const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
   return (
     <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
 
@@ -109,11 +111,12 @@ export default function Pricing() {
               <p className="text-sm" style={{ color: "#64748b" }}>Free forever. No credit card needed.</p>
             </div>
 
-            <Link href="/login"
+            <PricingCta
+              href="/early-access"
+              label="Get early access →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 mb-6"
-              style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
-              Get started free →
-            </Link>
+              style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb", textDecoration: "none" }}
+            />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
@@ -157,11 +160,13 @@ export default function Pricing() {
               </p>
             </div>
 
-            <Link href="/login"
+            <PricingCta
+              priceId={proPriceId}
+              href="/early-access"
+              label="Get started →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
-              Start free trial →
-            </Link>
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}
+            />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
@@ -205,11 +210,12 @@ export default function Pricing() {
               </p>
             </div>
 
-            <Link href="/login"
+            <PricingCta
+              href="/early-access"
+              label="Contact us →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)" }}>
-              Start 14-day free trial →
-            </Link>
+              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", textDecoration: "none" }}
+            />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
