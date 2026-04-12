@@ -19,6 +19,16 @@ export const users = pgTable("users", {
   scanWindowStart: timestamp("scan_window_start"),
   // Free-plan settings cooldown: track last wallet mutation to enforce 24h change limit
   settingsChangedAt: timestamp("settings_changed_at"),
+  // Mobile app profiling columns
+  userType:              text("user_type"),           // "team_member"|"investor"|"fund_manager"|"airdrop_recipient"
+  vestingCount:          text("vesting_count"),        // "1-3"|"4-10"|"10+"|"unsure"
+  currentTracking:       text("current_tracking"),     // "spreadsheet"|"protocol_websites"|"nothing"|"another_tool"
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  expoPushToken:         text("expo_push_token"),
+  // Billing / trial columns (Task 17)
+  trialEndsAt:           timestamp("trial_ends_at"),
+  stripeCustomerId:      text("stripe_customer_id"),
+  stripeSubscriptionId:  text("stripe_subscription_id"),
 });
 
 export const wallets = pgTable("wallets", {
@@ -140,3 +150,27 @@ export const vestingStreamsCache = pgTable(
     index("vsc_recipient_protocol_idx").on(t.recipient, t.protocol),
   ]
 );
+
+// ── Mobile bearer tokens ──────────────────────────────────────────────────────
+// Long-lived tokens issued to the mobile app. SHA-256 hash stored — never plaintext.
+// Token format: vstr_mob_{32 random hex bytes}
+export const mobileTokens = pgTable("mobile_tokens", {
+  id:          uuid("id").primaryKey().defaultRandom(),
+  userId:      uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tokenHash:   text("token_hash").notNull().unique(),  // SHA-256 of bearer token
+  tokenPrefix: text("token_prefix").notNull(),          // first 12 chars for logging
+  expiresAt:   timestamp("expires_at").notNull(),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  lastUsedAt:  timestamp("last_used_at"),
+}, (t) => [index("mobile_tokens_user_idx").on(t.userId)]);
+
+// ── Mobile OTPs ───────────────────────────────────────────────────────────────
+// Short-lived one-time passwords for email sign-in on mobile. OTP stored as SHA-256 hash.
+export const mobileOtps = pgTable("mobile_otps", {
+  id:        uuid("id").primaryKey().defaultRandom(),
+  email:     text("email").notNull(),
+  otpHash:   text("otp_hash").notNull(),    // SHA-256 of OTP — don't store plaintext
+  expiresAt: timestamp("expires_at").notNull(),
+  used:      boolean("used").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
