@@ -22,14 +22,21 @@ export async function upsertUser(address: string) {
   const existing = await getUserByAddress(normalized);
   if (existing) return existing;
 
-  // During the beta period, new users get Pro access automatically.
-  // Set BETA_DEFAULT_TIER=free in env to revert to the normal free default.
-  const defaultTier = process.env.BETA_DEFAULT_TIER ?? "pro";
+  // New users start on a 14-day pro trial. On conflict (race condition), do NOT
+  // overwrite tier or trialEndsAt of an existing user.
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
   const result = await db
     .insert(users)
-    .values({ address: normalized, tier: defaultTier })
+    .values({ address: normalized, tier: "pro", trialEndsAt })
+    .onConflictDoNothing()
     .returning();
+
+  // If onConflictDoNothing fired, the returning() array is empty — fetch existing row
+  if (result.length === 0) {
+    return (await getUserByAddress(normalized))!;
+  }
+
   return result[0];
 }
 
