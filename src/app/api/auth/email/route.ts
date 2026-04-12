@@ -41,13 +41,18 @@ export async function POST(req: NextRequest) {
     console.log(`[Vestream OTP] ${email} → ${otp}`);
 
     if (process.env.RESEND_API_KEY) {
+      const fromAddress = process.env.RESEND_FROM_EMAIL;
+      if (!fromAddress) {
+        console.error("[Auth OTP] RESEND_FROM_EMAIL not set — cannot send email");
+        return NextResponse.json({ error: "Email sending not configured. Contact support." }, { status: 503 });
+      }
       const resend = new Resend(process.env.RESEND_API_KEY);
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL ?? "noreply@vestr.xyz",
-          to: email,
-          subject: `Your Vestream sign-in code: ${otp}`,
-          text: `Your Vestream sign-in code is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+          from:    fromAddress,
+          to:      email,
+          subject: `${otp} is your Vestream code`,
+          text:    `Your Vestream sign-in code is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
         });
       } catch (err) {
         console.error("Failed to send OTP email:", err);

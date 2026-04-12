@@ -73,8 +73,9 @@ export default function EarlyAccessPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Incorrect code. Try again."); return; }
       // Set early-access cookie then do a full navigation so middleware + session are both committed
+      // 2592000 = 30 days — matches the iron-session TTL so users stay logged in for the same period
       const secure = window.location.protocol === "https:" ? "; Secure" : "";
-      document.cookie = `vestr_early_access=1; path=/; max-age=604800; SameSite=Strict${secure}`;
+      document.cookie = `vestr_early_access=1; path=/; max-age=2592000; SameSite=Strict${secure}`;
       window.location.href = "/dashboard";
     } catch {
       setError("Network error. Please try again.");
