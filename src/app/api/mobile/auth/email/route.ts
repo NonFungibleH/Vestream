@@ -2,7 +2,6 @@
 // POST { action: "send", email }  → sends OTP via Resend
 // POST { action: "verify", email, code }  → returns { token, user }
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
 import { mobileOtps } from "@/lib/db/schema";
@@ -93,6 +92,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
-
-// Suppress unused import warning — crypto is used via hashValue which calls it internally
-void crypto;
