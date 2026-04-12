@@ -7,6 +7,60 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function otpEmailHtml(otp: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:white;border-radius:20px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+        <tr>
+          <td style="padding:28px 32px 20px;border-bottom:1px solid #f1f5f9;">
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="width:30px;height:30px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:8px;text-align:center;vertical-align:middle;">
+                  <span style="font-size:14px;font-weight:900;color:white;line-height:30px;">V</span>
+                </td>
+                <td style="padding-left:10px;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;">Vestream</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.4px;">Your sign-in code</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.5;">
+              Use this code to sign in to Vestream. It expires in 10 minutes.
+            </p>
+
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:24px;text-align:center;margin-bottom:28px;">
+              <span style="font-size:40px;font-weight:800;color:#1d4ed8;letter-spacing:10px;font-family:'Courier New',monospace;">${otp}</span>
+            </div>
+
+            <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+              If you didn't request this code, you can safely ignore this email.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 32px 20px;border-top:1px solid #f1f5f9;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;">
+              Vestream · Track every unlock · <a href="https://www.vestream.io" style="color:#94a3b8;text-decoration:none;">vestream.io</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // POST /api/auth/email   { action: "send", email }   → sends OTP
 // POST /api/auth/email   { action: "verify", email, code }  → verifies OTP, creates session
 export async function POST(req: NextRequest) {
@@ -52,6 +106,7 @@ export async function POST(req: NextRequest) {
           from:    fromAddress,
           to:      email,
           subject: `${otp} is your Vestream code`,
+          html:    otpEmailHtml(otp),
           text:    `Your Vestream sign-in code is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
         });
       } catch (err) {
