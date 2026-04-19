@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
-import { getUserByAddress, deleteWallet, updateWallet, getWalletsForUser, checkAndUpdateSettingsCooldown } from "@/lib/db/queries";
+import { getUserByAddress, deleteWallet, updateWallet, getWalletsForUser } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
@@ -25,16 +25,6 @@ export async function DELETE(
   const found = existing.find((w) => w.address === address.toLowerCase());
   if (!found) {
     return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
-  }
-
-  // Free-plan: enforce 24-hour settings cooldown on deletion
-  const cooldown = await checkAndUpdateSettingsCooldown(user.id, user.tier);
-  if (!cooldown.allowed) {
-    const hoursLeft = Math.max(1, Math.ceil((cooldown.resetAt.getTime() - Date.now()) / 3_600_000));
-    return NextResponse.json(
-      { error: `Free plan: you can change your wallet settings again in ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""}.`, code: "SETTINGS_COOLDOWN", resetAt: cooldown.resetAt.toISOString() },
-      { status: 429 }
-    );
   }
 
   await deleteWallet(user.id, address);
@@ -92,19 +82,6 @@ export async function PATCH(
     patchData.tokenAddress = (typeof raw === "string" && isAddress(raw))
       ? raw.toLowerCase()
       : null;
-  }
-
-  // Free-plan: enforce 24h cooldown only when chains/protocols/tokenAddress change (not label-only)
-  const isStructuralChange = "chains" in patchData || "protocols" in patchData || "tokenAddress" in patchData;
-  if (isStructuralChange) {
-    const cooldown = await checkAndUpdateSettingsCooldown(user.id, user.tier);
-    if (!cooldown.allowed) {
-      const hoursLeft = Math.max(1, Math.ceil((cooldown.resetAt.getTime() - Date.now()) / 3_600_000));
-      return NextResponse.json(
-        { error: `Free plan: you can change your wallet settings again in ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""}.`, code: "SETTINGS_COOLDOWN", resetAt: cooldown.resetAt.toISOString() },
-        { status: 429 }
-      );
-    }
   }
 
   const updated = await updateWallet(user.id, address, patchData);

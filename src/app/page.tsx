@@ -99,7 +99,7 @@ export default function Home() {
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#64748b" }}>
-          The Vestream mobile app tracks every vesting you&apos;re owed — across all protocols and chains — and sends push notifications the moment a token is ready to claim.
+          Track every vesting you&rsquo;re owed across all protocols and chains &mdash; all in one place. Get instant unlock alerts on mobile, and dive into detailed analysis, reports, and exports on desktop. Vestream is your all-in-one vesting manager.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
           Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.

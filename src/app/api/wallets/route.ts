@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
-import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig, checkAndUpdateSettingsCooldown } from "@/lib/db/queries";
+import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
@@ -36,21 +36,11 @@ export async function GET() {
 
     const wallets = await getWalletsForUser(user.id);
 
-    // Compute cooldown expiry for free users so the UI can show it proactively
-    let settingsCooldownUntil: string | null = null;
-    if (user.tier === "free" && user.settingsChangedAt) {
-      const resetAt = new Date(user.settingsChangedAt.getTime() + 24 * 60 * 60 * 1000);
-      if (resetAt.getTime() > Date.now()) {
-        settingsCooldownUntil = resetAt.toISOString();
-      }
-    }
-
     return NextResponse.json({
       wallets,
       sessionAddress: session.address,
       tier: user.tier,
       walletLimit: walletLimitForTier(user.tier),
-      settingsCooldownUntil,
     });
   } catch (err) {
     console.error("GET /api/wallets error:", err);
@@ -155,16 +145,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Wallet already added" }, { status: 409 });
     }
 
-    // Free-plan: enforce 24-hour settings cooldown
-    const cooldown = await checkAndUpdateSettingsCooldown(user.id, user.tier);
-    if (!cooldown.allowed) {
-      const hoursLeft = Math.max(1, Math.ceil((cooldown.resetAt.getTime() - Date.now()) / 3_600_000));
-      return NextResponse.json(
-        { error: `Free plan: you can change your wallet settings again in ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""}.`, code: "SETTINGS_COOLDOWN", resetAt: cooldown.resetAt.toISOString() },
-        { status: 429 }
-      );
-    }
-
     const wallet = await addWallet(user.id, address, label, chains, protocols, tokenAddress);
     return NextResponse.json({ wallet }, { status: 201 });
   } catch (err) {
@@ -203,16 +183,6 @@ export async function PATCH(req: NextRequest) {
 
     const user = await getUserByAddress(session.address);
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-    // Free-plan: enforce 24-hour settings cooldown
-    const cooldown = await checkAndUpdateSettingsCooldown(user.id, user.tier);
-    if (!cooldown.allowed) {
-      const hoursLeft = Math.max(1, Math.ceil((cooldown.resetAt.getTime() - Date.now()) / 3_600_000));
-      return NextResponse.json(
-        { error: `Free plan: you can change your wallet settings again in ${hoursLeft} hour${hoursLeft !== 1 ? "s" : ""}.`, code: "SETTINGS_COOLDOWN", resetAt: cooldown.resetAt.toISOString() },
-        { status: 429 }
-      );
-    }
 
     const wallet = await updateWalletConfig(user.id, address, validChains, validProtocols);
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });

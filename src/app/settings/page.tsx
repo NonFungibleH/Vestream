@@ -180,13 +180,12 @@ function TogglePill({ label, active, onClick, saving }: {
 // ─── WalletCard (settings) ────────────────────────────────────────────────────
 
 function WalletCard({
-  wallet, tier, onRemove, onUpdated, onCooldown,
+  wallet, tier, onRemove, onUpdated,
 }: {
   wallet:      Wallet;
   tier:        string;
   onRemove:    () => void;
   onUpdated:   (updated: Wallet) => void;
-  onCooldown?: (resetAt: string) => void;
 }) {
   // Label editing
   const [editingLabel,      setEditingLabel]      = useState(false);
@@ -242,10 +241,7 @@ function WalletCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chains, protocols }),
       });
-      if (res.status === 429) {
-        const j = await res.json().catch(() => ({}));
-        if (j.resetAt && onCooldown) onCooldown(j.resetAt);
-      } else if (res.ok) {
+      if (res.ok) {
         const { wallet: updated } = await res.json();
         onUpdated(updated);
         setConfigSaved(true);
@@ -262,10 +258,7 @@ function WalletCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tokenAddress: val }),
       });
-      if (res.status === 429) {
-        const j = await res.json().catch(() => ({}));
-        if (j.resetAt && onCooldown) onCooldown(j.resetAt);
-      } else if (res.ok) {
+      if (res.ok) {
         const { wallet: updated } = await res.json();
         onUpdated(updated);
         setEditingTokenAddr(false);
@@ -541,8 +534,6 @@ export default function Settings() {
   }
   const [wallets, setWallets]             = useState<Wallet[]>([]);
   const [removingId, setRemovingId]       = useState<string | null>(null);
-  // Free-plan settings cooldown — ISO timestamp until which wallet changes are blocked
-  const [settingsCooldownUntil, setSettingsCooldownUntil] = useState<string | null>(null);
 
   // Add wallet form
   const [newAddress, setNewAddress] = useState("");
@@ -570,7 +561,6 @@ export default function Settings() {
       setWallets(json.wallets ?? []);
       setSessionAddress(json.sessionAddress ?? null);
       setTier(json.tier ?? "free");
-      setSettingsCooldownUntil(json.settingsCooldownUntil ?? null);
     }
   }, [router]);
 
@@ -611,12 +601,6 @@ export default function Settings() {
         body: JSON.stringify({ address: newAddress, label: newLabel || undefined, chains, protocols, tokenAddress }),
       });
       if (res.status === 409) { setAddError("Wallet already tracked"); return; }
-      if (res.status === 429) {
-        const j = await res.json();
-        setAddError(j.error ?? "Settings change limit reached");
-        if (j.resetAt) setSettingsCooldownUntil(j.resetAt);
-        return;
-      }
       if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
       setNewAddress(""); setNewLabel("");
       setNewSelChain(""); setNewSelProtocol(""); setNewTokenAddr("");
@@ -628,12 +612,7 @@ export default function Settings() {
   async function handleRemoveWallet(wallet: Wallet) {
     setRemovingId(wallet.id);
     try {
-      const res = await fetch(`/api/wallets/${wallet.address}`, { method: "DELETE" });
-      if (res.status === 429) {
-        const j = await res.json().catch(() => ({}));
-        if (j.resetAt) setSettingsCooldownUntil(j.resetAt);
-        return;
-      }
+      await fetch(`/api/wallets/${wallet.address}`, { method: "DELETE" });
       await loadWallets();
     } finally { setRemovingId(null); }
   }
@@ -798,26 +777,6 @@ export default function Settings() {
             title="Tracked Wallets"
             description="Choose which chains and platforms to scan for each wallet — Vestream only loads what you need, keeping the dashboard fast."
           >
-            {/* Free-plan settings cooldown notice */}
-            {settingsCooldownUntil && new Date(settingsCooldownUntil).getTime() > Date.now() && (
-              <div className="mb-4 flex items-start gap-2.5 px-4 py-3 rounded-xl"
-                style={{ background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.2)" }}>
-                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <div>
-                  <p className="text-xs font-semibold mb-0.5" style={{ color: "#fb923c" }}>Free plan: settings cooldown active</p>
-                  <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                    You can change your wallet, chain, or platform settings again in{" "}
-                    <strong style={{ color: "var(--preview-text-2)" }}>
-                      {Math.max(1, Math.ceil((new Date(settingsCooldownUntil).getTime() - Date.now()) / 3_600_000))}h
-                    </strong>.{" "}
-                    <a href="/pricing" className="underline font-medium" style={{ color: "#fb923c" }}>Upgrade to Pro</a> to remove this limit.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Wallet list */}
             {wallets.length === 0 ? (
               <p className="text-sm mb-5" style={{ color: "var(--preview-text-3)" }}>No wallets tracked yet.</p>
@@ -832,7 +791,6 @@ export default function Settings() {
                     onUpdated={(updated) =>
                       setWallets((prev) => prev.map((x) => x.id === updated.id ? { ...x, ...updated } : x))
                     }
-                    onCooldown={(resetAt) => setSettingsCooldownUntil(resetAt)}
                   />
                 ))}
               </ul>

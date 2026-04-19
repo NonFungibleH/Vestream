@@ -4,12 +4,14 @@
 - **Framework**: Next.js 16 App Router (TypeScript, React 19, Server Components)
 - **Styling**: Tailwind CSS v4 + inline `style={{}}` for one-off values (no separate CSS files)
 - **Database**: Postgres via Drizzle ORM + Supabase hosting
-- **Auth**: SIWE (Sign-In with Ethereum) via `siwe` + `iron-session` cookies
-- **Wallet**: wagmi v3 + viem v2
+- **Auth (web)**: Email OTP via `iron-session` cookies — user enters email, receives OTP, session cookie set
+- **Auth (mobile)**: Bearer token via `Authorization: Bearer <token>` header — issued at login
+- **Wallet**: wagmi v3 + viem v2 (still used for on-chain reads; SIWE login no longer primary)
 - **Email**: Resend
 - **Rate limiting**: Upstash Redis
 - **Data fetching**: SWR (client), native fetch (server)
 - **MCP**: `@vestream/mcp` npm package (lives in `mcp/`)
+- **Mobile subscriptions**: RevenueCat (`react-native-purchases`) for iOS/Android IAP
 
 ---
 
@@ -32,7 +34,7 @@ src/
     api-docs/             Swagger UI (gated)
     developer/account/    API key management (gated)
     developer/portal/     API key login page
-    settings/             User notification preferences
+    settings/             Tracked wallet management + notification preferences
     api/                  All API route handlers (see API Routes section)
 
   components/
@@ -259,8 +261,12 @@ Use real protocol names (Sablier, Hedgey, UNCX, Unvest, Team Finance) and chain 
 // In browser console on localhost:3000
 document.cookie = "vestr_early_access=1; path=/";
 document.cookie = "vestr_api_access=1; path=/";
-document.cookie = "vestr_admin=1; path=/";
+// vestr_admin is now a derived token — set it via the login form at /admin/login
 ```
+
+### OTP in development
+Set `DEV_OTP=123456` in `.env.local` to bypass real email sending — any email will accept that code.
+The OTP value is **never** logged in production.
 
 ---
 
@@ -282,24 +288,37 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | Route | Purpose |
 |---|---|
 | `/api/vesting` | Dashboard: fetch streams for tracked wallets |
-| `/api/wallets` | CRUD for tracked wallets |
-| `/api/wallets/scan` | Trigger multi-protocol scan |
+| `/api/wallets` | CRUD for tracked wallets (web) |
+| `/api/wallets/[address]` | PATCH label/chains/protocols/tokenAddress; DELETE wallet |
+| `/api/wallets/scan` | Trigger multi-protocol scan (Pro only) |
 | `/api/market` | DexScreener price data |
 | `/api/prices` | Token price cache |
 | `/api/explore` | Token explorer queries |
-| `/api/auth/nonce` | SIWE nonce generation |
-| `/api/auth/verify` | SIWE signature verification |
+| `/api/auth/nonce` | SIWE nonce generation (legacy, still present) |
+| `/api/auth/verify` | SIWE signature verification (legacy, still present) |
 | `/api/auth/logout` | Clear session |
-| `/api/auth/email` | Save/update user email |
+| `/api/auth/email` | Email OTP: send code (step 1) |
+| `/api/auth/verify-otp` | Email OTP: verify code + set session (step 2) |
 | `/api/waitlist` | Waitlist email signup |
 | `/api/api-access` | Submit developer API access request |
 | `/api/contact` | Contact form submission |
 | `/api/feedback` | Beta feedback submission |
 | `/api/notifications/preferences` | Save notification settings |
 | `/api/cron/notify` | Cron: send unlock notification emails |
+| `/api/admin/login` | Admin login — rate-limited, timing-safe, sets derived cookie |
 | `/api/admin/approve` | Admin: approve API access request |
 | `/api/admin/revoke` | Admin: revoke an API key |
 | `/api/developer/unlock` | Set vestr_api_access cookie |
+
+### Mobile API (`/api/mobile/`)
+| Route | Purpose |
+|---|---|
+| `/api/mobile/auth/email` | Mobile OTP: send code |
+| `/api/mobile/auth/verify-otp` | Mobile OTP: verify + return bearer token |
+| `/api/mobile/me` | Current user profile + tier |
+| `/api/mobile/wallets` | CRUD for tracked wallets (mobile) — enforces same free-plan limits as web |
+| `/api/mobile/notifications` | Save mobile notification preferences |
+| `/api/mobile/revenuecat-webhook` | RevenueCat subscription events → update user tier in DB |
 
 ---
 
@@ -323,8 +342,19 @@ Tables in `src/lib/db/schema.ts`:
 `vstr_live_{32 random hex bytes}` — plaintext shown once on creation, never stored. Only SHA-256 hash + 12-char prefix kept in DB.
 
 ### User tiers
-`"free"` | `"pro"` | `"fund"` — stored on `users.tier`.
-Free plan limits: 1 wallet, 1 chain, 3 discover scans per 24h.
+`"free"` | `"pro"` | `"fund"` — stored on `users.tier`. No trial period — users start on free.
+
+| Tier | Wallets | Token discovery | Discover page |
+|---|---|---|---|
+| Free | 1 | Manual — must enter token contract address + select 1 chain + 1 platform | Blocked (redirect to `/pricing`) |
+| Pro | 3 | Auto-scan — no address needed; multi-chain, multi-platform toggles | Full access |
+| Fund | Unlimited | Auto-scan | Full access |
+
+**Free plan enforcement** is applied at the API layer (both `/api/wallets` and `/api/mobile/wallets`):
+- Requires `tokenAddress`, `chains` (exactly 1), and `protocols` (exactly 1) in the add-wallet request
+- Returns `{ code: "TOKEN_ADDRESS_REQUIRED" }` with 402 if missing
+
+**Wallet indexes**: `wallets_user_idx` (userId) and `wallets_user_address_idx` (userId + address) are defined in schema.
 
 ---
 
@@ -422,15 +452,18 @@ npm publish --access public
 
 ## Pricing Tiers
 
-Three tiers (currently "coming soon" on all public pages):
+Prices are **live and shown publicly** on `/pricing`.
 
-| Tier | Target | Key limits |
-|---|---|---|
-| Free | Builders / individuals | 1 wallet, 1 chain, 1,000 API req/month |
-| Pro | Power users / small teams | 5 wallets, 5 chains, email alerts, exports |
-| Fund | VCs / funds | Unlimited wallets, all chains, Slack/Telegram, team workspace |
+| Tier | Web price | In-app (iOS/Android) | Key feature |
+|---|---|---|---|
+| Free | $0 | $0 | 1 wallet, manual token address entry |
+| Pro | $7.99/mo · $63.99/yr | $9.99/mo · $79.99/yr | Auto-discovery, 3 wallets, Discover page |
+| Fund | Contact | — | Unlimited wallets, team workspace |
 
-Prices are **not shown publicly** until launch — replace with "Coming soon" amber badge. CTAs link to `/early-access`.
+In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($9.99) and `io.vestream.pro_annual` ($79.99).
+Web users who subscribe directly save ~20% vs in-app pricing.
+
+Tier is updated in the DB by the RevenueCat webhook (`/api/mobile/revenuecat-webhook`) on purchase/renewal/expiry events.
 
 ---
 
@@ -448,10 +481,15 @@ BSC_RPC_URL                   BNB Chain RPC endpoint
 UPSTASH_REDIS_REST_URL        Upstash Redis (rate limiting)
 UPSTASH_REDIS_REST_TOKEN      Upstash Redis token
 RESEND_API_KEY                Resend email API key
+RESEND_FROM_EMAIL             Sender address for OTP/notification emails
 IRON_SESSION_SECRET           iron-session cookie encryption secret (32+ chars)
 NEXT_PUBLIC_WALLETCONNECT_ID  WalletConnect project ID
-ADMIN_PASSWORD_HASH           bcrypt hash of admin password
+ADMIN_PASSWORD                Admin panel password (plaintext, compared with timing-safe equal)
+DEV_OTP                       (dev only) Fixed OTP code bypassing real email send (e.g. "123456")
+REVENUECAT_WEBHOOK_SECRET     Secret to validate RevenueCat webhook Authorization header
 ```
+
+> **Admin cookie note**: The `vestr_admin` cookie value is no longer `"1"` — it's a token derived from `ADMIN_PASSWORD`. Always log in via `/admin/login` to get a valid cookie.
 
 ---
 
@@ -512,7 +550,7 @@ preview_resize("vestr-dev", preset="desktop")   # or width=1440, height=900
 - **Never hardcode grid columns without mobile fallback** — `grid-cols-3` must be `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
 - **Never use `px-8` without `md:` prefix on section padding** — always `px-4 md:px-8`
 - **Never use real token names in mockups** — use NOVA, FLUX, VEST, KLAR
-- **Never show real prices** on public pages — amber "Coming soon" badge instead
+- **Prices are now live** — do not replace them with "Coming soon" badges
 - **Never alter the logo SVG files** without explicit instruction
 - **Never add nav links to SiteNav** — Resources, Pricing etc. belong in page footers
 - **Never use inline SVG for the Vestream logo in the nav** — use `<img src="/logo.svg">` or `<img src="/logo-dark.svg">`

@@ -73,6 +73,38 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ wallet });
 }
 
+export async function PATCH(req: NextRequest) {
+  const token  = extractBearerToken(req);
+  const userId = token ? await validateMobileToken(token) : null;
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const { address, label, chains, protocols, tokenAddress: rawToken } = body;
+  if (!address) return NextResponse.json({ error: "Address required" }, { status: 400 });
+
+  const user = await getMobileUser(userId);
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const chainFilter    = Array.isArray(chains)    && chains.length    > 0 ? chains.map(String)    : null;
+  const protocolFilter = Array.isArray(protocols) && protocols.length > 0 ? protocols as string[] : null;
+  const tokenAddress   = typeof rawToken === "string" && isAddress(rawToken) ? rawToken.toLowerCase() : null;
+
+  // Free plan: same invariants as POST — chain, protocol, and token are required.
+  if (user.tier === "free") {
+    if (!tokenAddress)    return NextResponse.json({ error: "Free plan requires a token contract address.", code: "TOKEN_ADDRESS_REQUIRED" }, { status: 402 });
+    if (!chainFilter)     return NextResponse.json({ error: "Free plan: select a chain.", code: "CHAIN_REQUIRED" }, { status: 400 });
+    if (!protocolFilter)  return NextResponse.json({ error: "Free plan: select a vesting platform.", code: "PROTOCOL_REQUIRED" }, { status: 400 });
+  }
+
+  const [wallet] = await db.update(wallets)
+    .set({ label: label ?? null, chains: chainFilter, protocols: protocolFilter, tokenAddress })
+    .where(and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase())))
+    .returning();
+
+  if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+  return NextResponse.json({ wallet });
+}
+
 export async function DELETE(req: NextRequest) {
   const token  = extractBearerToken(req);
   const userId = token ? await validateMobileToken(token) : null;
