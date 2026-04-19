@@ -3192,7 +3192,7 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
     ? address.slice(0, 2).toUpperCase()
     : address.slice(2, 4).toUpperCase();
   const displayLabel = isEmail
-    ? (address.length > 22 ? address.slice(0, 18) + "…" : address)
+    ? (address.length > 16 ? address.slice(0, 14) + "…" : address)
     : shortAddr(address);
 
   return (
@@ -3593,7 +3593,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
       {/* Logo */}
-      <a href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
+      <a href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
           <span className="text-white font-bold text-sm leading-none">V</span>
@@ -3610,14 +3610,13 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           const isDiscoverLocked = item.href === "/dashboard/discover" && tier === "free";
           return (
             <button key={item.label}
-              onClick={() => isDiscoverLocked ? router.push("/pricing") : router.push(item.href)}
+              onClick={() => router.push(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
                 ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
                 : { color: isDiscoverLocked ? "var(--preview-text-3)" : "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
               onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
-              title={isDiscoverLocked ? "Upgrade to Pro to unlock Discover" : undefined}
             >
               <span className="opacity-80 flex-shrink-0">{item.icon}</span>
               {item.label}
@@ -3646,19 +3645,11 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         ))}
         {/* Add wallet button — or upgrade nudge if at limit */}
         {walletLimit !== null && wallets.length >= walletLimit ? (
-          <div className="mt-2 mx-1 rounded-xl p-3"
-            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(59,130,246,0.15)" }}>
-            <p className="text-[10px] font-semibold mb-1" style={{ color: "#60a5fa" }}>
-              🔒 {walletLimit}/{walletLimit} wallets used
+          <div className="mt-2 mx-1 px-3 py-2 rounded-xl"
+            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
+            <p className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
+              {walletLimit}/{walletLimit} wallets — {tier === "free" ? "upgrade to add more" : "upgrade to Fund for unlimited"}
             </p>
-            <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              {tier === "free" ? "Upgrade to Pro for up to 3 wallets." : "Upgrade to Fund for unlimited wallets."}
-            </p>
-            <a href="/pricing"
-              className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: tier === "fund" ? "linear-gradient(135deg, #6366f1, #a855f7)" : "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              {tier === "free" ? "Upgrade to Pro →" : "Upgrade to Fund →"}
-            </a>
           </div>
         ) : (
           <button onClick={onAddWallet}
@@ -3702,7 +3693,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
                 style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>BETA</span>
             </div>
             <p className="text-[9px] mb-2.5" style={{ color: "var(--preview-text-3)" }}>
-              Pro features · 3 wallets · all chains
+              Pro features · 5 wallets · all chains
             </p>
             <button
               onClick={onFeedback}

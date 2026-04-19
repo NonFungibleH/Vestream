@@ -660,8 +660,13 @@ export default function Settings() {
     finally { setDeleting(false); }
   }
 
-  const shortAddr = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-  const initials  = sessionAddress ? sessionAddress.slice(2, 4).toUpperCase() : "??";
+  const shortAddr = (addr: string) => {
+    if (addr.includes("@")) return addr.length > 16 ? addr.slice(0, 14) + "…" : addr;
+    return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  };
+  const initials = sessionAddress
+    ? (sessionAddress.includes("@") ? sessionAddress.slice(0, 2).toUpperCase() : sessionAddress.slice(2, 4).toUpperCase())
+    : "??";
 
   return (
     <div className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
@@ -672,7 +677,7 @@ export default function Settings() {
         style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
         {/* Logo */}
-        <div className="px-5 h-14 flex items-center gap-3 flex-shrink-0"
+        <Link href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
           style={{ borderBottom: "1px solid var(--preview-border)" }}>
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm leading-none">V</span>
@@ -681,13 +686,14 @@ export default function Settings() {
             <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
             <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
           </div>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
           {[
-            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard", active: false },
-            { icon: <IconSettings />, label: "Settings",  href: "/settings",  active: true  },
+            { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",         active: false },
+            { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
+            { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: true  },
           ].map((item) => (
             <Link key={item.label} href={item.href}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
@@ -772,7 +778,7 @@ export default function Settings() {
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border"
                 style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
                 <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[8px] font-bold text-white">{initials}</div>
-                <span className="font-mono text-xs font-medium" style={{ color: "var(--preview-text-2)" }}>{shortAddr(sessionAddress)}</span>
+                <span className="text-xs font-medium" style={{ color: "var(--preview-text-2)", fontFamily: sessionAddress?.includes("@") ? "inherit" : "monospace" }}>{shortAddr(sessionAddress)}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
               </div>
             )}
@@ -920,25 +926,6 @@ export default function Settings() {
             title="Email Notifications"
             description="Get alerted before your tokens unlock so you never miss a claim."
           >
-            {/* Pro-tier lock banner */}
-            {tier === "free" && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-4"
-                style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.18)" }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base">🔒</span>
-                  <div>
-                    <p className="text-xs font-semibold" style={{ color: "#2563eb" }}>Pro feature</p>
-                    <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Email alerts require a Pro or Fund plan.</p>
-                  </div>
-                </div>
-                <a href="/pricing"
-                  className="flex-shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-                  Upgrade →
-                </a>
-              </div>
-            )}
-
             <form onSubmit={handleSavePrefs} className="space-y-4">
 
               {/* Enable toggle */}
@@ -946,7 +933,6 @@ export default function Settings() {
                 <div
                   className="flex-1 cursor-pointer"
                   onClick={() => {
-                    if (tier === "free") { setUpsell({ featureName: "Email Alerts", requiredTier: "pro" }); return; }
                     setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }));
                   }}>
                   <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Enable unlock alerts</p>
@@ -958,7 +944,6 @@ export default function Settings() {
                   role="switch"
                   aria-checked={prefs.emailEnabled}
                   onClick={() => {
-                    if (tier === "free") { setUpsell({ featureName: "Email Alerts", requiredTier: "pro" }); return; }
                     setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }));
                   }}
                   className="relative w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0"
@@ -1044,6 +1029,32 @@ export default function Settings() {
                 </button>
               </div>
             </form>
+
+            {/* ── Mobile push notifications ── */}
+            <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl"
+                style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.14)" }}>
+                <span className="text-xl mt-0.5">📱</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Mobile push notifications</p>
+                  <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
+                    Get instant push notifications the moment a token unlocks — straight to your phone. Available in the Vestream app.
+                  </p>
+                  <div className="flex gap-2">
+                    <a href="https://apps.apple.com/app/vestream" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
+                      style={{ background: "#000", color: "#fff" }}>
+                      🍎 App Store
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=io.vestream" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
+                      style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }}>
+                      🤖 Google Play
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </Section>}
 
           {/* ── Account ──────────────────────────────────────────────────── */}

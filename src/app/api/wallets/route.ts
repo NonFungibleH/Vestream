@@ -8,7 +8,7 @@ import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 // Wallet limits per tier: free=1, pro=3, fund=unlimited (null)
 const WALLET_LIMITS: Record<string, number | null> = {
   free: 1,
-  pro:  3,
+  pro:  5,
   fund: null,
 };
 

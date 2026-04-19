@@ -423,8 +423,6 @@ export default function DiscoverPage() {
         setWallets(json.wallets ?? []);
         const fetchedTier = json.tier ?? "free";
         setTier(fetchedTier);
-        // Gate: free users cannot access Discover
-        if (fetchedTier === "free") { router.replace("/pricing"); return; }
       }
     } catch { /* ignore */ }
   }, [router]);
@@ -641,6 +639,29 @@ export default function DiscoverPage() {
         {/* Main */}
         <main className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
 
+          {/* Free-tier paywall banner */}
+          {tier === "free" && (
+            <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl mb-6"
+              style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(124,58,237,0.2)" }}>
+              <div className="flex items-start gap-3">
+                <span className="text-xl mt-0.5">🔍</span>
+                <div>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
+                    Auto-scan unlocks with Pro
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
+                    Enter any wallet address and Vestream automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
+                  </p>
+                </div>
+              </div>
+              <a href="/pricing"
+                className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl text-white transition-all hover:brightness-110"
+                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                Upgrade →
+              </a>
+            </div>
+          )}
+
           {/* Scan form card */}
           <div className="rounded-2xl p-6"
             style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
@@ -702,7 +723,7 @@ export default function DiscoverPage() {
               </select>
               <button
                 onClick={handleScan}
-                disabled={scanning || !address}
+                disabled={scanning || !address || tier === "free"}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all flex-shrink-0"
                 style={{ background: scanning ? "var(--preview-muted-2)" : "linear-gradient(135deg, #2563eb, #7c3aed)" }}
               >
@@ -724,6 +745,9 @@ export default function DiscoverPage() {
                 )}
               </button>
             </div>
+            {tier === "free" && (
+              <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>Upgrade to Pro to run a scan.</p>
+            )}
 
             {/* Quota indicator — appears after first scan attempt */}
             {scansRemaining !== null && (
