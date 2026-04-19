@@ -4052,7 +4052,12 @@ export default function Dashboard() {
             <div>
               <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Overview</h1>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                {isLoading ? "Syncing…" : streams.length > 0 ? `${streams.length} stream${streams.length !== 1 ? "s" : ""} · live` : "No streams found"}
+                {isLoading ? "Syncing…" : (() => {
+                  if (streams.length === 0) return "No streams found";
+                  const active = streams.filter(s => !s.isFullyVested).length;
+                  if (active === 0) return `${streams.length} stream${streams.length !== 1 ? "s" : ""} · all fully vested`;
+                  return `${active} active stream${active !== 1 ? "s" : ""} · live`;
+                })()}
               </p>
             </div>
           </div>

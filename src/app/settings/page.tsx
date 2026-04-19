@@ -450,7 +450,11 @@ function WalletCard({
         <div className="pt-2.5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
           <div className="flex items-center gap-2 mb-1.5">
             <p className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "var(--preview-text-3)" }}>
-              Token filter (optional)
+              {isPro ? "Token filter" : "Token contract address"}
+              {isPro
+                ? <span className="normal-case font-normal tracking-normal"> (optional)</span>
+                : <span style={{ color: "#ef4444" }}> *</span>
+              }
             </p>
             {wallet.tokenAddress && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full"
@@ -494,9 +498,13 @@ function WalletCard({
                 </>
               ) : (
                 <>
-                  <p className="text-[10px] italic" style={{ color: "var(--preview-text-3)" }}>None — scanning all tokens</p>
+                  <p className="text-[10px] italic" style={{ color: isPro ? "var(--preview-text-3)" : "#f87171" }}>
+                    {isPro ? "None — scanning all tokens" : "Required — enter token contract address"}
+                  </p>
                   <button onClick={() => setEditingTokenAddr(true)}
-                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>Set filter</button>
+                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>
+                    {isPro ? "Set filter" : "Set"}
+                  </button>
                 </>
               )}
             </div>
@@ -517,6 +525,7 @@ export default function Settings() {
   const [dark, setDark]                   = useState(false);
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
   const [tier, setTier]                   = useState<string>("free");
+  const [walletLimit, setWalletLimit]     = useState<number | null>(1);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
   const [activeSection, setActiveSection] = useState<"wallets" | "notifications" | "account">("wallets");
 
@@ -561,6 +570,7 @@ export default function Settings() {
       setWallets(json.wallets ?? []);
       setSessionAddress(json.sessionAddress ?? null);
       setTier(json.tier ?? "free");
+      setWalletLimit(json.walletLimit ?? 1);
     }
   }, [router]);
 
@@ -796,7 +806,26 @@ export default function Settings() {
               </ul>
             )}
 
-            {/* Add wallet form */}
+            {/* Add wallet form — gated for free plan at limit */}
+            {walletLimit !== null && wallets.length >= walletLimit && tier === "free" ? (
+              <div className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl"
+                style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.18)", borderTop: "1px solid var(--preview-border-2)", marginTop: "0.25rem" }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🔒</span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Add another wallet</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                      Free plan includes 1 wallet. Upgrade to Pro for up to 3.
+                    </p>
+                  </div>
+                </div>
+                <a href="/pricing"
+                  className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-white"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                  Upgrade →
+                </a>
+              </div>
+            ) : (
             <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1.25rem" }}>
               <p className="text-xs font-semibold mb-3" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
               <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
@@ -883,6 +912,7 @@ export default function Settings() {
                 </button>
               </form>
             </div>
+            )}
           </Section>}
 
           {/* ── Email Notifications ──────────────────────────────────────── */}
