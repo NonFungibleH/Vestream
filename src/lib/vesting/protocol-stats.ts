@@ -172,6 +172,71 @@ export async function getNextUpcomingUnlock(
   return rows[0] ? rowToUnlock(rows[0]) : null;
 }
 
+/**
+ * Top N upcoming unlocks across ALL indexed protocols, ordered by how soon they
+ * trigger. Used by the "upcoming unlocks" ticker on /unlocks so the homepage
+ * feels alive with forward-looking activity, not just a static count.
+ *
+ * Filters: fully-vested = false AND endTime > now. Returns up to `limit` rows.
+ */
+export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummary[]> {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const rows = await db
+    .select({
+      streamId:    vestingStreamsCache.streamId,
+      protocol:    vestingStreamsCache.protocol,
+      chainId:     vestingStreamsCache.chainId,
+      tokenSymbol: vestingStreamsCache.tokenSymbol,
+      endTime:     vestingStreamsCache.endTime,
+      recipient:   vestingStreamsCache.recipient,
+      streamData:  vestingStreamsCache.streamData,
+    })
+    .from(vestingStreamsCache)
+    .where(
+      and(
+        eq(vestingStreamsCache.isFullyVested, false),
+        gt(vestingStreamsCache.endTime, nowSec),
+      ),
+    )
+    .orderBy(asc(vestingStreamsCache.endTime))
+    .limit(limit);
+
+  return rows.map(rowToUnlock);
+}
+
+/**
+ * Top N upcoming unlocks for a SINGLE protocol group. Powers the per-protocol
+ * upcoming strip on /unlocks/[protocol].
+ */
+export async function getUpcomingUnlocksForProtocol(
+  adapterIds: readonly string[],
+  limit = 6,
+): Promise<UnlockSummary[]> {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const rows = await db
+    .select({
+      streamId:    vestingStreamsCache.streamId,
+      protocol:    vestingStreamsCache.protocol,
+      chainId:     vestingStreamsCache.chainId,
+      tokenSymbol: vestingStreamsCache.tokenSymbol,
+      endTime:     vestingStreamsCache.endTime,
+      recipient:   vestingStreamsCache.recipient,
+      streamData:  vestingStreamsCache.streamData,
+    })
+    .from(vestingStreamsCache)
+    .where(
+      and(
+        adapterFilter(adapterIds),
+        eq(vestingStreamsCache.isFullyVested, false),
+        gt(vestingStreamsCache.endTime, nowSec),
+      ),
+    )
+    .orderBy(asc(vestingStreamsCache.endTime))
+    .limit(limit);
+
+  return rows.map(rowToUnlock);
+}
+
 // ─── formatting helpers (pure — safe to import from Server Components) ───────
 
 /** Truncate a wallet / contract address for public display: `0x3f5C…8b2e`. */

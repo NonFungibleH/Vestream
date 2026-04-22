@@ -17,12 +17,14 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LiveActivityTicker } from "@/components/LiveActivityTicker";
+import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
   relativeTimeSince,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
+import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 
 export const revalidate = 60;
 
@@ -46,21 +48,62 @@ export default async function UnlocksIndexPage() {
 
   // Fetch stats for all protocols in parallel. Each fetch is independent and
   // wrapped so one failure doesn't sink the whole page.
-  const statsByslug = await Promise.all(
-    protocols.map(async (p) => {
-      try {
-        return [p.slug, await getProtocolStats(p.adapterIds)] as const;
-      } catch (err) {
-        console.error(`[unlocks] stats failed for ${p.slug}:`, err);
-        return [p.slug, null as ProtocolStats | null] as const;
-      }
-    }),
-  );
-  const statsMap = new Map(statsByslug);
+  //
+  // Two data sources per protocol:
+  //   - local cache stats: what WE'VE indexed (low initially, grows with
+  //                        traffic + seeder runs)
+  //   - global stats:      direct subgraph counts across all chains
+  //                        (reflects on-chain reality — used for the
+  //                        "streams tracked" headline number)
+  // We display whichever is larger so the page never looks smaller than the
+  // on-chain truth, even before the seeder has run.
+  const [statsEntries, globalEntries] = await Promise.all([
+    Promise.all(
+      protocols.map(async (p) => {
+        try {
+          return [p.slug, await getProtocolStats(p.adapterIds)] as const;
+        } catch (err) {
+          console.error(`[unlocks] stats failed for ${p.slug}:`, err);
+          return [p.slug, null as ProtocolStats | null] as const;
+        }
+      }),
+    ),
+    Promise.all(
+      protocols.map(async (p) => {
+        // Use the first adapter ID that has a direct subgraph path — falls
+        // through zero-fill for hedgey/pinksale/team-finance.
+        let best: GlobalProtocolStats | null = null;
+        for (const aid of p.adapterIds) {
+          try {
+            const g = await getGlobalStats(aid);
+            if (g.totalStreams > (best?.totalStreams ?? 0)) best = g;
+          } catch (err) {
+            console.error(`[unlocks] global stats failed for ${aid}:`, err);
+          }
+        }
+        return [p.slug, best] as const;
+      }),
+    ),
+  ]);
+  const statsMap  = new Map(statsEntries);
+  const globalMap = new Map(globalEntries);
 
-  const grandTotal = Array.from(statsMap.values())
-    .filter((s): s is ProtocolStats => !!s)
-    .reduce((sum, s) => sum + s.totalStreams, 0);
+  // Effective counts: max(local cache, subgraph-reported global). The subgraph
+  // ceiling of 1000 per chain can slightly undercount on very large protocols
+  // (e.g. Sablier mainnet), so we take the max with local cache which can
+  // exceed it once seeded + supplemented by user activity.
+  function effectiveTotal(slug: string): number {
+    const local  = statsMap.get(slug)?.totalStreams ?? 0;
+    const global = globalMap.get(slug)?.totalStreams ?? 0;
+    return Math.max(local, global);
+  }
+  function effectiveActive(slug: string): number {
+    const local  = statsMap.get(slug)?.activeStreams ?? 0;
+    const global = globalMap.get(slug)?.activeStreams ?? 0;
+    return Math.max(local, global);
+  }
+
+  const grandTotal = protocols.reduce((sum, p) => sum + effectiveTotal(p.slug), 0);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -143,9 +186,10 @@ export default async function UnlocksIndexPage() {
         </div>
       </section>
 
-      {/* ── Live platform ticker ─────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto">
+      {/* ── Live platform tickers (recent + upcoming side-by-side) ───────── */}
+      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         <LiveActivityTicker />
+        <UpcomingUnlockTicker />
       </section>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
@@ -164,10 +208,15 @@ export default async function UnlocksIndexPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {protocols.map((p) => {
-            const s = statsMap.get(p.slug);
-            return <ProtocolCard key={p.slug} protocol={p} stats={s ?? null} />;
-          })}
+          {protocols.map((p) => (
+            <ProtocolCard
+              key={p.slug}
+              protocol={p}
+              stats={statsMap.get(p.slug) ?? null}
+              effectiveTotal={effectiveTotal(p.slug)}
+              effectiveActive={effectiveActive(p.slug)}
+            />
+          ))}
         </div>
       </section>
 
@@ -223,7 +272,17 @@ export default async function UnlocksIndexPage() {
 
 // ─── Card ────────────────────────────────────────────────────────────────────
 
-function ProtocolCard({ protocol, stats }: { protocol: ProtocolMeta; stats: ProtocolStats | null }) {
+function ProtocolCard({
+  protocol,
+  stats,
+  effectiveTotal,
+  effectiveActive,
+}: {
+  protocol:        ProtocolMeta;
+  stats:           ProtocolStats | null;
+  effectiveTotal:  number;
+  effectiveActive: number;
+}) {
   const liveLabel = stats?.lastIndexedAt
     ? `Indexed ${relativeTimeSince(stats.lastIndexedAt)}`
     : `${protocol.chainIds.length} chains`;
@@ -281,13 +340,13 @@ function ProtocolCard({ protocol, stats }: { protocol: ProtocolMeta; stats: Prot
         >
           <div>
             <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
-              {stats ? stats.totalStreams.toLocaleString() : "—"}
+              {effectiveTotal > 0 ? effectiveTotal.toLocaleString() : "—"}
             </div>
             <div style={{ color: "#94a3b8" }}>streams</div>
           </div>
           <div>
             <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
-              {stats ? stats.activeStreams.toLocaleString() : "—"}
+              {effectiveActive > 0 ? effectiveActive.toLocaleString() : "—"}
             </div>
             <div style={{ color: "#94a3b8" }}>active</div>
           </div>

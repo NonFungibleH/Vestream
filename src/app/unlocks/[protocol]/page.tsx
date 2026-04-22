@@ -30,12 +30,14 @@ import {
   getLatestUnlock,
   getNextUpcomingUnlock,
   getProtocolStats,
+  getUpcomingUnlocksForProtocol,
   relativeTimeSince,
   relativeTimeUntil,
   truncateAddress,
   type ProtocolStats,
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
+import { getGlobalStats } from "@/lib/vesting/global-stats";
 
 export const revalidate = 60;
 export const dynamicParams = false;
@@ -92,17 +94,37 @@ export default async function ProtocolLandingPage(
   let stats: ProtocolStats | null = null;
   let latest: UnlockSummary | null = null;
   let upcoming: UnlockSummary | null = null;
+  let upcomingList: UnlockSummary[] = [];
+  let globalTotal  = 0;
+  let globalActive = 0;
   try {
-    [stats, latest, upcoming] = await Promise.all([
+    [stats, latest, upcoming, upcomingList] = await Promise.all([
       getProtocolStats(meta.adapterIds),
       getLatestUnlock(meta.adapterIds),
       getNextUpcomingUnlock(meta.adapterIds),
+      getUpcomingUnlocksForProtocol(meta.adapterIds, 6),
     ]);
+
+    // Direct subgraph counts — beats local cache on day one. Use the highest
+    // total across the protocol's adapter IDs (uncx has two).
+    for (const aid of meta.adapterIds) {
+      try {
+        const g = await getGlobalStats(aid);
+        if (g.totalStreams  > globalTotal)  globalTotal  = g.totalStreams;
+        if (g.activeStreams > globalActive) globalActive = g.activeStreams;
+      } catch (err) {
+        console.error(`[unlocks/${meta.slug}] global stats ${aid} failed:`, err);
+      }
+    }
   } catch (err) {
     console.error(`[unlocks/${meta.slug}] stats fetch failed:`, err);
   }
 
-  const hasData = !!stats && stats.totalStreams > 0;
+  // Show the larger of local (cache) vs global (subgraph) — accounts for the
+  // cache being empty before the first seeder run.
+  const effectiveTotal  = Math.max(stats?.totalStreams  ?? 0, globalTotal);
+  const effectiveActive = Math.max(stats?.activeStreams ?? 0, globalActive);
+  const hasData = effectiveTotal > 0;
   const related = meta.relatedSlugs
     .map((s) => getProtocol(s))
     .filter((p): p is ProtocolMeta => !!p);
@@ -227,12 +249,12 @@ export default async function ProtocolLandingPage(
         >
           <Stat
             label="Streams indexed"
-            value={hasData ? stats!.totalStreams.toLocaleString() : "—"}
+            value={hasData ? effectiveTotal.toLocaleString() : "—"}
             color={meta.color}
           />
           <Stat
             label="Active now"
-            value={hasData ? stats!.activeStreams.toLocaleString() : "—"}
+            value={hasData ? effectiveActive.toLocaleString() : "—"}
             color={meta.color}
           />
           <Stat
@@ -285,6 +307,30 @@ export default async function ProtocolLandingPage(
             protocolName={meta.name}
           />
         </div>
+
+        {/* ── Upcoming queue (top 6) ─────────────────────────────────────── */}
+        {upcomingList.length > 1 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: meta.color }}>
+                Upcoming queue
+              </p>
+              <p className="text-xs" style={{ color: "#94a3b8" }}>
+                next {upcomingList.length} scheduled releases
+              </p>
+            </div>
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{ background: "white", border: `1px solid ${meta.border}` }}
+            >
+              <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                {upcomingList.map((u) => (
+                  <UpcomingRow key={u.streamId} u={u} accent={meta.color} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── Use cases ────────────────────────────────────────────────────── */}
@@ -478,6 +524,35 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
       </div>
       <div className="text-[11px] md:text-xs mt-0.5" style={{ color: "#94a3b8" }}>
         {label}
+      </div>
+    </div>
+  );
+}
+
+function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
+  const amount = formatAmountCompact(u.amount, u.tokenSymbol);
+  const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
+  return (
+    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+            {amount}
+          </span>
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider"
+            style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+          >
+            {chainLabel(u.chainId)}
+          </span>
+        </div>
+        <div className="text-[10.5px] font-mono truncate" style={{ color: "#94a3b8" }}>
+          for {truncateAddress(u.recipient)}
+        </div>
+      </div>
+      <div className="flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
+        style={{ background: `${accent}15`, color: accent }}>
+        {ttl}
       </div>
     </div>
   );
