@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/demo-push",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/cron/seed-cache",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
