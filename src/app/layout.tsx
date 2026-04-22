@@ -21,6 +21,20 @@ export const metadata: Metadata = {
   description:
     "One dashboard for all your vesting positions — across Sablier, Hedgey, UNCX, and Unvest on Ethereum, Base, and BSC. Real-time data, email alerts, and a beautiful interface.",
   metadataBase: new URL(APP_URL),
+  manifest: "/manifest.json",
+  applicationName: "Vestream",
+  appleWebApp: {
+    capable:     true,
+    title:       "Vestream",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
   openGraph: {
     title: "Vestream – Token Vesting Tracker",
     description:
@@ -36,6 +50,10 @@ export const metadata: Metadata = {
     description:
       "One dashboard for all your vesting positions. Real-time data, email alerts, and a beautiful interface.",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({

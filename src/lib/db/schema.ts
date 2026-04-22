@@ -180,3 +180,35 @@ export const mobileOtps = pgTable("mobile_otps", {
   used:      boolean("used").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── Demo web-push subscriptions ───────────────────────────────────────────────
+// Anonymous push subscriptions for the 15-minute vesting demo on /demo.
+// One row per (sessionId, endpoint) pair — when a visitor subscribes we mirror
+// the minimal demo session state here so the `/api/cron/demo-push` job can fire
+// milestone notifications without needing the visitor's cookie.
+//
+// Rows are ephemeral: the cron cleans up anything older than 30 minutes.
+export const demoPushSubscriptions = pgTable(
+  "demo_push_subscriptions",
+  {
+    id:              uuid("id").primaryKey().defaultRandom(),
+    sessionId:       text("session_id").notNull(),          // UUID from demo iron-session
+    endpoint:        text("endpoint").notNull(),            // PushSubscription.endpoint — used as natural dedupe key
+    subscription:    jsonb("subscription").$type<{
+                       endpoint: string;
+                       keys: { p256dh: string; auth: string };
+                     }>().notNull(),
+    // Mirrored demo-session snapshot at subscribe-time
+    startMs:         text("start_ms").notNull(),            // stringified unix ms (Postgres bigint avoidance)
+    durationSec:     integer("duration_sec").notNull(),     // 15 * 60 = 900
+    total:           text("total").notNull(),               // stringified bigint, 18 decimals
+    tokenSymbol:     text("token_symbol").notNull(),        // "DEMO"
+    // Which milestone percentages have already been pushed. Starts as [].
+    milestonesFired: jsonb("milestones_fired").$type<number[]>().default([]).notNull(),
+    createdAt:       timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("demo_push_session_idx").on(t.sessionId),
+    index("demo_push_endpoint_idx").on(t.endpoint),
+  ]
+);

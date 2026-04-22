@@ -28,6 +28,10 @@ export interface DemoSession {
   vestingAddress?: string;
   /** Optional tx hash of the latest claim (sepolia mode only). */
   lastClaimTx?: string;
+  /** Visitor-chosen token symbol (1-10 uppercase chars). Falls back to DEMO_CONFIG.tokenSymbol. */
+  tokenSymbol?: string;
+  /** Visitor-chosen vesting duration in seconds (60–3600). Falls back to DEMO_CONFIG.durationSec. */
+  durationSec?: number;
 }
 
 /** Public response shape returned by /api/demo/* routes. */

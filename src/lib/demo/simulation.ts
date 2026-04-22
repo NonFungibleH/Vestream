@@ -39,8 +39,13 @@ export function computeSimulationState(session: DemoSession | null | undefined, 
 
   if (!session?.sessionId || !session.startMs) return empty;
 
+  // Custom config (visitor chose a token / amount / duration at start) overrides
+  // the default DEMO_CONFIG. Both codepaths produce the same DemoVestingState.
+  const tokenSymbol = session.tokenSymbol ?? DEMO_CONFIG.tokenSymbol;
+  const durationSec = session.durationSec ?? DEMO_CONFIG.durationSec;
+
   const startMs     = session.startMs;
-  const durationMs  = DEMO_CONFIG.durationSec * 1000;
+  const durationMs  = durationSec * 1000;
   const endMs       = startMs + durationMs;
   const elapsed     = Math.max(0, Math.min(nowMs - startMs, durationMs));
   const progress    = durationMs > 0 ? elapsed / durationMs : 0;
@@ -62,7 +67,7 @@ export function computeSimulationState(session: DemoSession | null | undefined, 
     endMs,
     remainingSec,
     progress,
-    tokenSymbol:    DEMO_CONFIG.tokenSymbol,
+    tokenSymbol,
     tokenDecimals:  DEMO_CONFIG.tokenDecimals,
     total:          total.toString(),
     vested:         vested.toString(),
