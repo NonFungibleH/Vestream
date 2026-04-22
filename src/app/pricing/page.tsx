@@ -386,7 +386,10 @@ export default function Pricing() {
       <footer className="border-t px-4 md:px-8 py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
         style={{ borderColor: "rgba(0,0,0,0.07)", background: "#f8fafc" }}>
         <p className="text-xs" style={{ color: "#94a3b8" }}>© 2026 Vestream. All rights reserved.</p>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4 md:gap-5 flex-wrap">
+          <Link href="/developer" className="text-xs transition-colors hover:opacity-80" style={{ color: "#94a3b8" }}>Developer API</Link>
+          <Link href="/ai" className="text-xs transition-colors hover:opacity-80" style={{ color: "#94a3b8" }}>AI Agents</Link>
+          <Link href="/resources" className="text-xs transition-colors hover:opacity-80" style={{ color: "#94a3b8" }}>Resources</Link>
           <Link href="/privacy" className="text-xs transition-colors hover:opacity-80" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
           <Link href="/terms" className="text-xs transition-colors hover:opacity-80" style={{ color: "#94a3b8" }}>Terms of Service</Link>
         </div>

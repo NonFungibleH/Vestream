@@ -13,10 +13,10 @@ interface Props {
 }
 
 const NAV_LINKS = [
-  { label: "Portfolio",   href: "/"          },
-  { label: "Protocols",   href: "/unlocks"   },
-  { label: "Developers",  href: "/developer" },
-  { label: "AI Agents",   href: "/ai"        },
+  { label: "Portfolio",     href: "/"              },
+  { label: "Protocols",     href: "/unlocks"       },
+  { label: "Demo",          href: "/demo"          },
+  { label: "Find Vestings", href: "/find-vestings" },
 ] as const;
 
 const THEME = {

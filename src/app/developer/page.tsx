@@ -542,6 +542,7 @@ export default function DeveloperPage() {
             <span className="font-semibold text-sm" style={{ color: "white" }}>Vestream</span>
           </Link>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link href="/ai" className="text-xs transition-colors hover:opacity-80" style={{ color: "#4b5563" }}>AI Agents</Link>
             <Link href="/resources" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Resources</Link>
             <Link href="/privacy" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Privacy Policy</Link>
             <Link href="/terms" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Terms of Service</Link>
