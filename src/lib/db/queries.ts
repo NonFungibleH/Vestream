@@ -236,6 +236,45 @@ export async function checkAndIncrementScanCount(
   };
 }
 
+/**
+ * Free users get 3 lifetime push-alert credits. Pro/Fund are unmetered.
+ *
+ * Call this immediately BEFORE sending a push to check+consume a credit atomically.
+ * Returns { allowed: true } if the push should be sent, false if the free user
+ * has already burned through their 3 credits.
+ */
+export const FREE_PUSH_ALERT_LIMIT = 3;
+
+export async function checkAndConsumePushCredit(
+  userId: string
+): Promise<{ allowed: boolean; remaining: number | null }> {
+  const row = await db
+    .select({ tier: users.tier, pushAlertsSent: users.pushAlertsSent })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!row[0]) return { allowed: false, remaining: 0 };
+
+  const { tier, pushAlertsSent } = row[0];
+  // Paid tiers: unlimited. Don't increment counter for them.
+  if (tier && tier !== "free") {
+    return { allowed: true, remaining: null };
+  }
+
+  if (pushAlertsSent >= FREE_PUSH_ALERT_LIMIT) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  await db.update(users)
+    .set({ pushAlertsSent: pushAlertsSent + 1 })
+    .where(eq(users.id, userId));
+
+  return {
+    allowed:   true,
+    remaining: FREE_PUSH_ALERT_LIMIT - 1 - pushAlertsSent,
+  };
+}
+
 export async function deleteUser(userId: string) {
   // Wallets, notificationPreferences, and notificationsSent all have
   // onDelete: "cascade" so they are cleaned up automatically.

@@ -1,10 +1,15 @@
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { sendEmailNotification } from "./email";
+import { sendExpoPush } from "./push";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import {
   getAllUsersWithEmailEnabled,
   getWalletsForUser,
   hasNotificationBeenSent,
   recordNotificationSent,
+  checkAndConsumePushCredit,
 } from "@/lib/db/queries";
 
 export async function runNotificationJob(): Promise<number> {
@@ -29,6 +34,14 @@ export async function runNotificationJob(): Promise<number> {
       continue;
     }
 
+    // Look up the user's Expo push token once per user — used for push fan-out below.
+    const userRow = await db
+      .select({ expoPushToken: users.expoPushToken })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const expoPushToken = userRow[0]?.expoPushToken ?? null;
+
     const windowSec = hoursBeforeUnlock * 60 * 60;
 
     for (const stream of streams) {
@@ -42,7 +55,25 @@ export async function runNotificationJob(): Promise<number> {
       if (alreadySent) continue;
 
       try {
+        // 1. Email (no credit gate — email is on every tier that has it enabled).
         await sendEmailNotification(email, stream, unlockDate);
+
+        // 2. Push (free tier: 3 lifetime credits; paid: unmetered).
+        if (expoPushToken) {
+          const credit = await checkAndConsumePushCredit(userId);
+          if (credit.allowed) {
+            const hrs = Math.round((stream.nextUnlockTime - nowSec) / 3600);
+            await sendExpoPush({
+              to:    expoPushToken,
+              title: `${stream.tokenSymbol} unlocks in ${hrs}h`,
+              body:  `${stream.tokenSymbol} on chain ${stream.chainId} — tap to view.`,
+              data:  { streamId: stream.id, url: `/stream/${stream.id}` },
+            }).catch((err) => {
+              console.error(`Push send failed for user ${userId}:`, err);
+            });
+          }
+        }
+
         await recordNotificationSent(userId, stream.id, unlockDate);
         notifiedCount++;
       } catch (err) {

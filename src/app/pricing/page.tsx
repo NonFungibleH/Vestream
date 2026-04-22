@@ -120,16 +120,15 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="1 wallet address" checkColor="#2563eb" />
-              <FeatureItem text="1 vesting platform" checkColor="#2563eb" />
-              <FeatureItem text="1 blockchain" checkColor="#2563eb" />
-              <FeatureItem text="1 token (enter contract address)" checkColor="#2563eb" />
+              <FeatureItem text="1 wallet — auto-scanned across all chains" checkColor="#2563eb" />
+              <FeatureItem text="All 7 vesting platforms" checkColor="#2563eb" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#2563eb" />
               <FeatureItem text="Claimable balance tracking" checkColor="#2563eb" />
               <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
-              <FeatureItem text="Auto-discovery" included={false} />
+              <FeatureItem text="3 free push alerts (lifetime)" checkColor="#2563eb" />
+              <FeatureItem text="Unlimited push alerts" included={false} />
               <FeatureItem text="Email alerts" included={false} />
-              <FeatureItem text="CSV & PDF export" included={false} />
+              <FeatureItem text="Multiple wallets" included={false} />
             </ul>
           </div>
 
@@ -172,12 +171,11 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="Auto-discovery — no contract address needed" checkColor="#2563eb" />
-              <FeatureItem text="5 wallet addresses" checkColor="#2563eb" />
-              <FeatureItem text="5 blockchains" checkColor="#2563eb" />
-              <FeatureItem text="All 7 vesting platforms" checkColor="#2563eb" />
+              <FeatureItem text="3 wallet addresses" checkColor="#2563eb" />
+              <FeatureItem text="Unlimited push alerts before every unlock" checkColor="#2563eb" />
               <FeatureItem text="Email unlock alerts" checkColor="#2563eb" />
-              <FeatureItem text="Token Vesting Explorer" checkColor="#2563eb" />
+              <FeatureItem text="Token Vesting Explorer — Discover any stream on-chain" checkColor="#2563eb" />
+              <FeatureItem text="Priority data refresh (60s)" checkColor="#2563eb" />
               <FeatureItem text="CSV & PDF export" checkColor="#2563eb" />
               <FeatureItem text="Ticketing support" checkColor="#2563eb" />
               <FeatureItem text="Search all receivers" included={false} />
@@ -185,7 +183,7 @@ export default function Pricing() {
             </ul>
           </div>
 
-          {/* ── Fund ── */}
+          {/* ── Enterprise ── */}
           <div className="relative rounded-2xl p-7"
             style={{
               background: "#0d0f14",
@@ -196,25 +194,21 @@ export default function Pricing() {
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
-                Best for funds &amp; teams
+                Funds &amp; teams
               </span>
             </div>
 
             <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Fund</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Enterprise</p>
               <div className="flex items-end gap-1 mb-0.5">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>$299</span>
-                <span className="text-sm mb-1.5" style={{ color: "#6b7280" }}>/month</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
               </div>
               <p className="text-sm" style={{ color: "#6b7280" }}>
-                Or{" "}
-                <span className="font-semibold" style={{ color: "#a78bfa" }}>$2,870/year</span>
-                {" "}— save 20%
+                Built around your team — pricing on request.
               </p>
             </div>
 
-            <PricingCta
-              href="/early-access"
+            <ContactTrigger
               label="Contact us →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
               style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", textDecoration: "none" }}
@@ -223,21 +217,23 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="All chains" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Full REST API + MCP server access" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Calendar integration" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Team workspace" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Team workspace &amp; shared portfolios" color="#e5e7eb" checkColor="#10b981" />
               <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Telegram & WhatsApp alerts" color="#e5e7eb" checkColor="#10b981" />
-              <FeatureItem text="Priority support" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Telegram &amp; WhatsApp alerts" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="SSO &amp; custom SLA" color="#e5e7eb" checkColor="#10b981" />
+              <FeatureItem text="Dedicated support channel" color="#e5e7eb" checkColor="#10b981" />
             </ul>
           </div>
         </div>
 
-        {/* Enterprise nudge */}
+        {/* API nudge */}
         <p className="text-center text-sm mt-8" style={{ color: "#94a3b8" }}>
-          Managing a larger portfolio or need custom integrations?{" "}
-          <ContactTrigger />
+          Building on Vestream data?{" "}
+          <Link href="/developer" className="font-semibold underline" style={{ color: "#2563eb" }}>
+            See the Developer API →
+          </Link>
         </p>
       </section>
 
@@ -254,26 +250,26 @@ export default function Pricing() {
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#94a3b8" }}>Feature</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#94a3b8" }}>Free</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2563eb" }}>Pro</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Fund</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Enterprise</span>
             </div>
 
             {([
-              ["Wallet addresses",              "1",               "5 wallets",  "Unlimited"],
-              ["Blockchains",                   "1 chain",         "5 chains",   "All chains"],
-              ["Vesting platforms",             "1 platform",      "All 7",      "All 7"],
-              ["Token tracking",                "Manual (address)", "Auto-scan", "Auto-scan"],
-              ["Real-time dashboard",           true,              true,         true],
-              ["Claimable balance tracking",    true,              true,         true],
-              ["Unlock calendar",               true,              true,         true],
-              ["Email alerts",                  false,             true,         true],
-              ["Token Vesting Explorer",        false,             true,         true],
-              ["CSV & PDF export",              false,             true,         true],
-              ["Calendar integration",          false,             false,        true],
-              ["Search all receivers",          false,             false,        true],
-              ["Team workspace",                false,             false,        true],
-              ["Slack webhook",                 false,             false,        true],
-              ["Telegram & WhatsApp alerts",    false,             false,        true],
-              ["Support",                       false,             "Ticketing",  "Priority"],
+              ["Wallet addresses",              "1",               "3 wallets",     "Unlimited"],
+              ["Auto-scan (all chains + platforms)", true,         true,            true],
+              ["Real-time dashboard",           true,              true,            true],
+              ["Claimable balance tracking",    true,              true,            true],
+              ["Unlock calendar",               true,              true,            true],
+              ["Push notifications",            "3 (lifetime)",    "Unlimited",     "Unlimited"],
+              ["Email alerts",                  false,             true,            true],
+              ["Token Vesting Explorer",        false,             true,            true],
+              ["CSV & PDF export",              false,             true,            true],
+              ["REST API + MCP server",         false,             false,           true],
+              ["Search all receivers",          false,             false,           true],
+              ["Team workspace",                false,             false,           true],
+              ["Slack webhook",                 false,             false,           true],
+              ["Telegram & WhatsApp alerts",    false,             false,           true],
+              ["SSO & custom SLA",              false,             false,           true],
+              ["Support",                       false,             "Ticketing",     "Dedicated"],
             ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
               <div key={feature}
                 className="grid grid-cols-4 px-6 py-3.5 items-center"
@@ -329,11 +325,11 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan lets you track one token from one wallet on one blockchain and one vesting platform. You enter the token contract address manually. It's a great way to try Vestream before upgrading."
+              a="The Free plan auto-scans one wallet across every supported chain and all 7 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 3 free push notifications (lifetime) to try alerts. Pro unlocks unlimited push alerts, email alerts, more wallets, and Discover."
             />
             <FAQItem
-              q="Why do I need to enter the token address on the Free plan?"
-              a="Auto-discovery — where Vestream scans your wallet and automatically finds all your vesting streams — is a Pro feature. On the Free plan you enter the token contract address yourself. Upgrade to Pro and we handle the discovery for you."
+              q="How do the 3 free push alerts work?"
+              a="Every Free account gets 3 lifetime push notification credits, consumed one per unlock alert sent to your phone. They're there so you can experience how alerting actually feels on a real unlock before committing to Pro. Upgrade anytime for unlimited alerts."
             />
             <FAQItem
               q="Can I cancel anytime?"
@@ -341,15 +337,15 @@ export default function Pricing() {
             />
             <FAQItem
               q="How does annual billing work?"
-              a="Annual billing is charged upfront for 12 months at a 33% discount — Pro is $63.99/year (~$5.33/mo) and Fund is $2,870/year (~$239/mo). You can switch between monthly and annual at renewal."
+              a="Pro annual is charged upfront for 12 months at a 33% discount — $63.99/year (~$5.33/mo). You can switch between monthly and annual at renewal."
             />
             <FAQItem
-              q="What's the difference between Pro and Fund?"
-              a="Pro is built for individuals managing a few wallets who want email alerts and multi-chain coverage. Fund adds everything a team needs: calendar sync, Slack webhooks, CSV exports, team workspace, and comprehensive portfolio analytics."
+              q="Do you have an API?"
+              a="Yes — the Vestream REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
             />
             <FAQItem
-              q="Can the Fund plan support more than one user?"
-              a="Yes — the Fund plan includes a shared team workspace. Need custom seats or enterprise features? Get in touch and we'll work something out."
+              q="I run a fund / team / build an app — what do I do?"
+              a="Get in touch via the Enterprise contact form. We scope unlimited wallets, team workspace, SSO, API access, Slack/Telegram integrations, and an SLA to your use case — then quote you accordingly."
             />
           </div>
         </div>

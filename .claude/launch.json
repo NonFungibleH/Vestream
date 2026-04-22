@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "vestr-dev",
-      "runtimeExecutable": "/Users/howardpearce/vestr-dev.sh",
-      "runtimeArgs": [],
-      "port": 3000
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

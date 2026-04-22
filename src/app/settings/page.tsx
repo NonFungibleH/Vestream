@@ -209,7 +209,10 @@ function WalletCard({
   const [tokenAddrValue,   setTokenAddrValue]   = useState(wallet.tokenAddress ?? "");
   const [savingTokenAddr,  setSavingTokenAddr]  = useState(false);
 
-  const isPro = tier !== "free";
+  // All tiers now support auto-discovery + per-wallet scan config.
+  // Tier differentiation lives on wallet count, Discover, alerts, and API — not the wallet-add flow.
+  const isPro = true;
+  void tier;
 
   async function saveLabel() {
     setSavingLabel(true);
@@ -594,16 +597,15 @@ export default function Settings() {
     e.preventDefault();
     setAddError(null);
     if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
-    if (!newSelChain || !newSelProtocol) { setAddError("Select a chain and platform"); return; }
-    if (tier === "free" && (!newTokenAddr.trim() || !isAddress(newTokenAddr.trim()))) {
-      setAddError("Free plan: enter the token contract address (upgrade to Pro for auto-scan)");
-      return;
-    }
     setAdding(true);
     try {
-      const chains    = [parseInt(newSelChain)];
-      // UNCX UI option covers both UNCX v1 and UNCX VestingManager (uncx-vm)
-      const protocols = newSelProtocol === "uncx" ? ["uncx", "uncx-vm"] : [newSelProtocol];
+      // All optional — wallet-add defaults to auto-scan all chains + platforms.
+      // Users can narrow chains/platforms/token afterwards from the wallet card.
+      const chains =
+        newSelChain ? [parseInt(newSelChain)] : undefined;
+      const protocols = newSelProtocol
+        ? (newSelProtocol === "uncx" ? ["uncx", "uncx-vm"] : [newSelProtocol])
+        : undefined;
       const tokenAddress = newTokenAddr.trim() && isAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
       const res = await fetch("/api/wallets", {
         method: "POST",
@@ -833,85 +835,69 @@ export default function Settings() {
               </div>
             ) : (
             <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1.25rem" }}>
-              <p className="text-xs font-semibold mb-3" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
+              <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
+              <p className="text-[11px] mb-3" style={{ color: "var(--preview-text-3)" }}>
+                We&apos;ll scan every supported chain &amp; platform for you. Narrow scope later if you want to.
+              </p>
               <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
                 <StyledInput placeholder="Wallet address (0x…)" value={newAddress} onChange={setNewAddress} fontMono />
                 <StyledInput placeholder="Label (optional — e.g. Team vesting)" value={newLabel} onChange={setNewLabel} />
 
-                {/* Chain + Platform dropdowns (required) */}
-                <div className="flex gap-3 flex-wrap">
-                  <div className="flex-1 min-w-[130px]">
-                    <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                      Chain <span style={{ color: "#ef4444" }}>*</span>
-                    </p>
-                    <select
-                      value={newSelChain}
-                      onChange={(e) => setNewSelChain(e.target.value)}
-                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                      style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
-                    >
-                      <option value="">Select chain…</option>
-                      {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex-1 min-w-[150px]">
-                    <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                      Platform <span style={{ color: "#ef4444" }}>*</span>
-                    </p>
-                    <select
-                      value={newSelProtocol}
-                      onChange={(e) => setNewSelProtocol(e.target.value)}
-                      className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                      style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
-                    >
-                      <option value="">Select platform…</option>
-                      {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                      {/* uncx-vm is mapped to "uncx" in UI; both are sent to backend */}
-                    </select>
-                  </div>
-                </div>
+                {/* Optional advanced filters */}
+                <details className="mt-1">
+                  <summary className="text-[11px] cursor-pointer select-none" style={{ color: "var(--preview-text-3)" }}>
+                    Advanced — narrow chains / platforms / token (optional)
+                  </summary>
+                  <div className="mt-3 flex flex-col gap-2.5">
+                    <div className="flex gap-3 flex-wrap">
+                      <div className="flex-1 min-w-[130px]">
+                        <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>Chain</p>
+                        <select
+                          value={newSelChain}
+                          onChange={(e) => setNewSelChain(e.target.value)}
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                          style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+                        >
+                          <option value="">All chains</option>
+                          {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex-1 min-w-[150px]">
+                        <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>Platform</p>
+                        <select
+                          value={newSelProtocol}
+                          onChange={(e) => setNewSelProtocol(e.target.value)}
+                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                          style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+                        >
+                          <option value="">All platforms</option>
+                          {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
 
-                {/* Token address — required for free, optional for pro/fund */}
-                <div>
-                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                    Token contract address{" "}
-                    {tier === "free"
-                      ? <span style={{ color: "#ef4444" }}>*</span>
-                      : <span className="normal-case font-normal">(optional)</span>
-                    }
-                  </p>
-                  <StyledInput
-                    placeholder="0x…"
-                    value={newTokenAddr}
-                    onChange={setNewTokenAddr}
-                    fontMono
-                  />
-                  <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
-                    {tier === "free"
-                      ? "Enter the ERC-20 contract address for your vested token."
-                      : "Optional — narrows tracking to one token. Leave blank to auto-scan all."}
-                  </p>
-                </div>
+                    <div>
+                      <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+                        Token contract address <span className="normal-case font-normal">(optional)</span>
+                      </p>
+                      <StyledInput placeholder="0x…" value={newTokenAddr} onChange={setNewTokenAddr} fontMono />
+                      <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
+                        Narrows tracking to a single token. Leave blank to auto-scan all.
+                      </p>
+                    </div>
+                  </div>
+                </details>
 
-                {tier === "free" ? (
-                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                    Want to skip the contract address?{" "}
-                    <a href="/pricing" className="underline font-medium" style={{ color: "#a78bfa" }}>
-                      Upgrade to Pro for auto-scan →
-                    </a>
-                  </p>
-                ) : (
-                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                    Not sure?{" "}
-                    <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
-                      Scan all platforms in Discover →
-                    </a>
-                  </p>
-                )}
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+                  Not sure?{" "}
+                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
+                    Scan all platforms in Discover →
+                  </a>
+                </p>
 
                 {addError && <p className="text-xs text-red-400">{addError}</p>}
                 <button type="submit"
-                  disabled={adding || !newAddress || !newSelChain || !newSelProtocol || (tier === "free" && (!newTokenAddr.trim() || !isAddress(newTokenAddr.trim())))}
+                  disabled={adding || !newAddress}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
                   <IconPlus /> {adding ? "Adding…" : "Track wallet"}

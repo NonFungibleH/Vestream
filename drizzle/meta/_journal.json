@@ -8,6 +8,13 @@
       "when": 1776007826700,
       "tag": "0000_kind_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776662573907,
+      "tag": "0001_legal_wallop",
+      "breakpoints": true
     }
   ]
 }

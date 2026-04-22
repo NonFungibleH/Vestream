@@ -14,6 +14,7 @@ interface Props {
 
 const NAV_LINKS = [
   { label: "Portfolio",   href: "/"          },
+  { label: "Protocols",   href: "/unlocks"   },
   { label: "Developers",  href: "/developer" },
   { label: "AI Agents",   href: "/ai"        },
 ] as const;

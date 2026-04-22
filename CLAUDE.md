@@ -343,16 +343,22 @@ Tables in `src/lib/db/schema.ts`:
 
 ### User tiers
 `"free"` | `"pro"` | `"fund"` — stored on `users.tier`. No trial period — users start on free.
+The `"fund"` tier stays in the DB/webhook plumbing for existing subscribers but is
+no longer self-serve. Enterprise customers go through the contact form.
 
-| Tier | Wallets | Token discovery | Discover page |
-|---|---|---|---|
-| Free | 1 | Manual — must enter token contract address + select 1 chain + 1 platform | Blocked (redirect to `/pricing`) |
-| Pro | 3 | Auto-scan — no address needed; multi-chain, multi-platform toggles | Full access |
-| Fund | Unlimited | Auto-scan | Full access |
+| Tier | Wallets | Token discovery | Push alerts | Discover page |
+|---|---|---|---|---|
+| Free | 1 | Auto-scan across all chains + all 7 platforms | 3 lifetime credits | Blocked (redirect to `/pricing`) |
+| Pro | 3 | Auto-scan | Unlimited | Full access |
+| Fund / Enterprise | Unlimited | Auto-scan | Unlimited | Full access |
 
-**Free plan enforcement** is applied at the API layer (both `/api/wallets` and `/api/mobile/wallets`):
-- Requires `tokenAddress`, `chains` (exactly 1), and `protocols` (exactly 1) in the add-wallet request
-- Returns `{ code: "TOKEN_ADDRESS_REQUIRED" }` with 402 if missing
+**Free plan enforcement** (both `/api/wallets` and `/api/mobile/wallets`):
+- Enforced at the API layer purely by **wallet count** — all tiers can omit `chains`/`protocols`/`tokenAddress` for auto-scan.
+- Free: hard limit of 1 wallet. Pro: 3. Fund: unlimited.
+- Push alerts are metered by `users.pushAlertsSent` (lifetime counter).
+  `checkAndConsumePushCredit(userId)` in `src/lib/db/queries.ts` is the single gate
+  — it's called by the notification scheduler before `sendExpoPush`. Paid tiers
+  are unmetered; free tier is capped at `FREE_PUSH_ALERT_LIMIT = 3`.
 
 **Wallet indexes**: `wallets_user_idx` (userId) and `wallets_user_address_idx` (userId + address) are defined in schema.
 
@@ -456,9 +462,9 @@ Prices are **live and shown publicly** on `/pricing`.
 
 | Tier | Web price | In-app (iOS/Android) | Key feature |
 |---|---|---|---|
-| Free | $0 | $0 | 1 wallet, manual token address entry |
-| Pro | $7.99/mo · $63.99/yr | $9.99/mo · $79.99/yr | Auto-discovery, 3 wallets, Discover page |
-| Fund | Contact | — | Unlimited wallets, team workspace |
+| Free | $0 | $0 | 1 wallet (auto-scan), 3 lifetime push alerts |
+| Pro | $7.99/mo · $63.99/yr | $9.99/mo · $79.99/yr | 3 wallets, unlimited push + email alerts, Discover page |
+| Enterprise | Contact | — | Unlimited wallets, REST API + MCP, SSO, dedicated support |
 
 In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($9.99) and `io.vestream.pro_annual` ($79.99).
 Web users who subscribe directly save ~20% vs in-app pricing.

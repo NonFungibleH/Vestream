@@ -1,8 +1,52 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { SiteNav } from "@/components/SiteNav";
+import ContactTrigger from "@/components/ContactTrigger";
+import { listProtocols } from "@/lib/protocol-constants";
+import {
+  getProtocolStats,
+  relativeTimeSince,
+  type ProtocolStats,
+} from "@/lib/vesting/protocol-stats";
 
-export default function Home() {
+// ISR — re-render at most once a minute so the live freshness strip stays
+// current without hammering the DB on every hit.
+export const revalidate = 60;
+
+async function getHomepageLiveStats() {
+  // Aggregate across all 7 protocols. Any single-protocol failure must not
+  // sink the homepage render — silently fall back to nulls.
+  try {
+    const protocols = listProtocols();
+    const results = await Promise.all(
+      protocols.map(async (p) => {
+        try {
+          return await getProtocolStats(p.adapterIds);
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const valid = results.filter((s): s is ProtocolStats => !!s);
+    const totalStreams = valid.reduce((sum, s) => sum + s.totalStreams, 0);
+    const lastIndexedAt = valid.reduce<Date | null>((latest, s) => {
+      if (!s.lastIndexedAt) return latest;
+      if (!latest || s.lastIndexedAt > latest) return s.lastIndexedAt;
+      return latest;
+    }, null);
+    return {
+      totalStreams,
+      lastIndexedAt,
+      protocolCount: protocols.length,
+    };
+  } catch {
+    return { totalStreams: 0, lastIndexedAt: null, protocolCount: 7 };
+  }
+}
+
+export default async function Home() {
+  const liveStats = await getHomepageLiveStats();
+
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
 
@@ -109,8 +153,34 @@ export default function Home() {
           <WaitlistForm />
         </div>
 
+        {/* Live freshness strip — aggregate stream count + last-indexed timestamp
+            across all 7 protocols, refreshed every 60s via ISR. Signals to search
+            engines and visitors alike that this index is active, not stale. */}
+        <div className="relative mt-10 flex justify-center">
+          <Link
+            href="/unlocks"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:opacity-90"
+            style={{
+              background: "rgba(37,99,235,0.05)",
+              borderColor: "rgba(37,99,235,0.18)",
+              color: "#2563eb",
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ background: "#2563eb" }}
+            />
+            Live · {liveStats.totalStreams.toLocaleString()} {liveStats.totalStreams === 1 ? "stream" : "streams"} indexed across {liveStats.protocolCount} protocols
+            {liveStats.lastIndexedAt && (
+              <span style={{ color: "#64748b", fontWeight: 500 }}>
+                · refreshed {relativeTimeSince(liveStats.lastIndexedAt)}
+              </span>
+            )}
+          </Link>
+        </div>
+
         {/* Protocol strip */}
-        <div className="relative mt-14">
+        <div className="relative mt-8">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
@@ -814,6 +884,74 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── B2B / Developer callout ─────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="relative rounded-3xl overflow-hidden px-6 md:px-12 py-12 md:py-16"
+          style={{ background: "linear-gradient(135deg, #0d1b35 0%, #0d0f14 100%)", border: "1px solid rgba(99,102,241,0.25)" }}>
+          {/* Atmospheric bloom */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 70%)" }} />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)" }} />
+
+          <div className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-5"
+                style={{ background: "rgba(99,102,241,0.12)", borderColor: "rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
+                For developers &amp; AI agents
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white" style={{ letterSpacing: "-0.02em" }}>
+                The vesting data layer for&nbsp;builders
+              </h2>
+              <p className="text-base mb-6 leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+                Every stream across 7 protocols and 4 chains, normalised behind one REST API and an MCP server.
+                Power claim bots, portfolio agents, compliance dashboards, or embed unlock data in your own product.
+              </p>
+              <div className="flex flex-wrap gap-3 mb-8">
+                <Link href="/developer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
+                  Developer API →
+                </Link>
+                <Link href="/ai" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", color: "#c7d2fe" }}>
+                  MCP for AI agents →
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
+                  REST + MCP
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#60a5fa" }} />
+                  7 protocols · 4 chains
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#a855f7" }} />
+                  Cross-protocol normalisation
+                </span>
+              </div>
+            </div>
+
+            {/* Code snippet */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0d13", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#ef4444" }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#f59e0b" }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#10b981" }} />
+                <span className="text-xs ml-2" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>vestings.sh</span>
+              </div>
+              <pre className="px-5 py-4 text-xs overflow-x-auto" style={{ color: "#e2e8f0", fontFamily: "monospace", lineHeight: 1.7 }}>
+<span style={{ color: "#64748b" }}># All streams for a wallet — cross-chain, cross-protocol</span>{"\n"}
+<span style={{ color: "#c084fc" }}>curl</span> https://api.vestream.io/v1/wallet/\{"\n"}
+  <span style={{ color: "#60a5fa" }}>0x3f5CE...8b2e</span>/vestings \{"\n"}
+  -H <span style={{ color: "#fbbf24" }}>&quot;Authorization: Bearer vstr_live_...&quot;</span>
+              </pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
@@ -910,7 +1048,11 @@ export default function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "The core dashboard is free. Pro and Fund tiers (coming soon) will unlock additional tracked wallets, priority support, and advanced reporting. If you're a fund or protocol managing large vesting programmes, get in touch.",
+              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, plus 3 free push alerts so you can try the unlock notifications. Upgrade to Pro ($7.99/mo) for 3 wallets and unlimited push + email alerts, or contact us for Enterprise if you're a fund, team, or building on our data.",
+            },
+            {
+              q: "Do you have an API for developers and AI agents?",
+              a: "Yes. The Vestream REST API and our @vestream/mcp MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
             },
           ].map((item, i) => (
             <FAQItem key={i} q={item.q} a={item.a} />
@@ -938,14 +1080,14 @@ export default function Home() {
           {/* Free */}
           <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#94a3b8" }}>Free</p>
-            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>Coming soon</span>
+            <p className="text-3xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>$0</p>
             <p className="text-sm mb-6" style={{ color: "#64748b" }}>Free forever. No credit card needed.</p>
-            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
+            <Link href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
               style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
-              Get early access →
-            </a>
+              Start free →
+            </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["1 wallet address", "1 blockchain of your choice", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "All 5 vesting platforms"].map(f => (
+              {["1 wallet — auto-scanned across all chains", "All 7 vesting platforms", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
@@ -963,15 +1105,17 @@ export default function Home() {
               </span>
             </div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2563eb" }}>Pro</p>
-            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>Coming soon</span>
-            <p className="text-sm mb-6" style={{ color: "#64748b" }}>For individuals tracking multiple wallets and tokens.</p>
-            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
+            <p className="text-3xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+              $7.99<span className="text-base font-semibold" style={{ color: "#64748b" }}>/mo</span>
+            </p>
+            <p className="text-sm mb-6" style={{ color: "#64748b" }}>For active holders who want every unlock on their radar.</p>
+            <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
-              Get early access →
-            </a>
+              Get Pro →
+            </Link>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["5 wallet addresses", "5 blockchains", "Email unlock alerts", "Token Vesting Explorer", "CSV & PDF export", "Ticketing support"].map(f => (
+              {["3 wallet addresses", "Unlimited push alerts", "Email unlock alerts", "Token Vesting Explorer (Discover)", "Priority data refresh (60s)", "CSV & PDF export"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
@@ -980,24 +1124,25 @@ export default function Home() {
             </ul>
           </div>
 
-          {/* Fund */}
+          {/* Enterprise (replaces Fund self-serve) */}
           <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 4px 40px rgba(37,99,235,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
-                Best for funds &amp; teams
+                Funds, teams &amp; builders
               </span>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Fund</p>
-            <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-4" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>Coming soon</span>
-            <p className="text-sm mb-6" style={{ color: "#6b7280" }}>For VCs and teams managing large token portfolios.</p>
-            <a href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
-              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)" }}>
-              Get early access →
-            </a>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Enterprise</p>
+            <p className="text-3xl font-bold mb-1 text-white" style={{ letterSpacing: "-0.02em" }}>Custom</p>
+            <p className="text-sm mb-6" style={{ color: "#9ca3af" }}>Built around your team — pricing on request.</p>
+            <ContactTrigger
+              label="Contact us →"
+              className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
+              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", border: "none", cursor: "pointer" }}
+            />
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["Unlimited wallet addresses", "All chains", "Search all receivers", "Calendar integration", "Team workspace", "Slack, Telegram & WhatsApp alerts", "Priority support"].map(f => (
+              {["Unlimited wallet addresses", "REST API + MCP server access", "Team workspace", "SSO & custom SLA", "Slack, Telegram & WhatsApp alerts", "Dedicated support channel"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#e5e7eb" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#10b981" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#10b981" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
@@ -1007,27 +1152,36 @@ export default function Home() {
           </div>
         </div>
 
+        {/* B2B / developer nudge */}
+        <p className="text-center text-sm mt-4 mb-8" style={{ color: "#64748b" }}>
+          Building on Vestream data?{" "}
+          <Link href="/developer" className="font-semibold" style={{ color: "#2563eb" }}>
+            See the Developer API →
+          </Link>
+        </p>
+
         {/* Comparison table */}
         <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
           <div className="grid grid-cols-4 px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#94a3b8" }}>Feature</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#94a3b8" }}>Free</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2563eb" }}>Pro</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Fund</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Enterprise</span>
           </div>
           {([
-            ["Wallet addresses",           "1",       "5 wallets",  "Unlimited"],
-            ["Blockchains",                "1 chain", "5 chains",   "All chains"],
-            ["Real-time dashboard",        true,      true,         true],
-            ["Claimable balance tracking", true,      true,         true],
-            ["Unlock calendar",            true,      true,         true],
-            ["Email alerts",               false,     true,         true],
-            ["Token Vesting Explorer",     false,     true,         true],
-            ["CSV & PDF export",           false,     true,         true],
-            ["Calendar integration",       false,     false,        true],
-            ["Team workspace",             false,     false,        true],
-            ["Slack & messaging alerts",   false,     false,        true],
-            ["Support",                    false,     "Ticketing",  "Priority"],
+            ["Wallet addresses",           "1",              "3 wallets",    "Unlimited"],
+            ["Auto-scan all chains",       true,             true,           true],
+            ["Real-time dashboard",        true,             true,           true],
+            ["Claimable balance tracking", true,             true,           true],
+            ["Unlock calendar",            true,             true,           true],
+            ["Push notifications",         "3 lifetime",     "Unlimited",    "Unlimited"],
+            ["Email alerts",               false,            true,           true],
+            ["Token Vesting Explorer",     false,            true,           true],
+            ["CSV & PDF export",           false,            true,           true],
+            ["REST API + MCP server",      false,            false,          true],
+            ["Team workspace",             false,            false,          true],
+            ["SSO & custom SLA",           false,            false,          true],
+            ["Support",                    false,            "Ticketing",    "Dedicated"],
           ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
             <div key={feature} className="grid grid-cols-4 px-6 py-3.5 items-center"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>

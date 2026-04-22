@@ -49,22 +49,8 @@ export async function POST(req: NextRequest) {
   const protocolFilter = Array.isArray(protocols) && protocols.length > 0 ? protocols as string[] : null;
   const tokenAddress   = typeof rawToken === "string" && isAddress(rawToken) ? rawToken.toLowerCase() : null;
 
-  // Free plan: token address, chain, and protocol are all required.
-  // Auto-discovery is a Pro+ feature.
-  if (user.tier === "free") {
-    if (!tokenAddress) {
-      return NextResponse.json(
-        { error: "Free plan requires a token contract address. Upgrade to Pro to auto-scan.", code: "TOKEN_ADDRESS_REQUIRED" },
-        { status: 402 }
-      );
-    }
-    if (!chainFilter || chainFilter.length === 0) {
-      return NextResponse.json({ error: "Free plan: select a chain.", code: "CHAIN_REQUIRED" }, { status: 400 });
-    }
-    if (!protocolFilter || protocolFilter.length === 0) {
-      return NextResponse.json({ error: "Free plan: select a vesting platform.", code: "PROTOCOL_REQUIRED" }, { status: 400 });
-    }
-  }
+  // All tiers now support auto-discovery (no token address required).
+  // Differentiation is on wallet count + advanced features (alerts, Discover, API), not wallet-add flow.
 
   const [wallet] = await db.insert(wallets)
     .values({ userId, address: address.toLowerCase(), label, chains: chainFilter, protocols: protocolFilter, tokenAddress })
@@ -89,12 +75,7 @@ export async function PATCH(req: NextRequest) {
   const protocolFilter = Array.isArray(protocols) && protocols.length > 0 ? protocols as string[] : null;
   const tokenAddress   = typeof rawToken === "string" && isAddress(rawToken) ? rawToken.toLowerCase() : null;
 
-  // Free plan: same invariants as POST — chain, protocol, and token are required.
-  if (user.tier === "free") {
-    if (!tokenAddress)    return NextResponse.json({ error: "Free plan requires a token contract address.", code: "TOKEN_ADDRESS_REQUIRED" }, { status: 402 });
-    if (!chainFilter)     return NextResponse.json({ error: "Free plan: select a chain.", code: "CHAIN_REQUIRED" }, { status: 400 });
-    if (!protocolFilter)  return NextResponse.json({ error: "Free plan: select a vesting platform.", code: "PROTOCOL_REQUIRED" }, { status: 400 });
-  }
+  // All tiers now support auto-discovery; no per-tier edit gating.
 
   const [wallet] = await db.update(wallets)
     .set({ label: label ?? null, chains: chainFilter, protocols: protocolFilter, tokenAddress })
