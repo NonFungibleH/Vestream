@@ -15,6 +15,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
+import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
@@ -131,43 +133,36 @@ export default async function UnlocksIndexPage() {
           </h1>
 
           <p
-            className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-10"
+            className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#64748b" }}
           >
             Vestream tracks every vesting schedule on Sablier, Hedgey, Superfluid, UNCX, Team Finance,
             Unvest and PinkSale — across Ethereum, Base, BSC and Polygon. Pick a protocol below to see
             live activity.
           </p>
-
-          <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-            <Link
-              href="/early-access"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-              style={{
-                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                color: "white",
-                boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
-              }}
-            >
-              Track your wallet →
-            </Link>
-            <Link
-              href="/developer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:bg-slate-50"
-              style={{
-                background: "white",
-                border: "1px solid rgba(0,0,0,0.1)",
-                color: "#0f172a",
-              }}
-            >
-              View the API →
-            </Link>
-          </div>
         </div>
+      </section>
+
+      {/* ── Live platform ticker ─────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto">
+        <LiveActivityTicker />
       </section>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-20 md:pb-28 max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2
+              className="text-xl md:text-2xl font-bold"
+              style={{ color: "#0f172a", letterSpacing: "-0.02em" }}
+            >
+              Browse by protocol
+            </h2>
+            <p className="text-sm mt-1" style={{ color: "#64748b" }}>
+              {protocols.length} protocols indexed · dive into any one for the full feed.
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {protocols.map((p) => {
             const s = statsMap.get(p.slug);
@@ -221,45 +216,7 @@ export default async function UnlocksIndexPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        className="px-4 md:px-8 py-8 max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4"
-        style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
-      >
-        <p className="text-xs" style={{ color: "#94a3b8" }}>
-          © {new Date().getFullYear()} Vestream. All rights reserved.
-        </p>
-        <div className="flex items-center gap-6 flex-wrap">
-          <Link
-            href="/"
-            className="text-xs hover:opacity-80 transition-opacity"
-            style={{ color: "#64748b" }}
-          >
-            Home
-          </Link>
-          <Link
-            href="/developer"
-            className="text-xs hover:opacity-80 transition-opacity"
-            style={{ color: "#64748b" }}
-          >
-            Developer API
-          </Link>
-          <Link
-            href="/ai"
-            className="text-xs hover:opacity-80 transition-opacity"
-            style={{ color: "#64748b" }}
-          >
-            AI Agents
-          </Link>
-          <Link
-            href="/privacy"
-            className="text-xs hover:opacity-80 transition-opacity"
-            style={{ color: "#64748b" }}
-          >
-            Privacy
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter theme="light" />
     </div>
   );
 }

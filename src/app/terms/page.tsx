@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function Terms() {
   return (
@@ -101,7 +102,7 @@ export default function Terms() {
         </div>
       </div>
 
-      <Footer />
+      <SiteFooter theme="light" />
     </div>
   );
 }
@@ -117,15 +118,3 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Footer() {
-  return (
-    <footer className="max-w-3xl mx-auto px-6 py-8 flex items-center justify-between"
-      style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
-      <p className="text-xs" style={{ color: "#94a3b8" }}>© 2026 Vestream. All rights reserved.</p>
-      <div className="flex items-center gap-5">
-        <Link href="/privacy" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
-        <Link href="/terms" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Terms of Service</Link>
-      </div>
-    </footer>
-  );
-}

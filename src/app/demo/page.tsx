@@ -1,24 +1,36 @@
 // src/app/demo/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Interactive product demo — a ~90 second walkthrough of the real claim flow:
+// Two-demo walkthrough of the product:
 //
-//   1. Find     — scan 7 protocols for vestings on a fake wallet
-//   2. Alerted  — mock mobile app + push notification
-//   3. Claim    — mock Sablier UI + wallet popup + tx success
+//   A. Interactive demo (90 seconds, no signup)
+//      A fully client-side, 3-step guided walkthrough of the claim flow:
+//      Scan → Alerted → Claim. Good for visitors in a hurry.
 //
-// Pure client-side (no API round-trips). User-paced with auto-animations.
+//   B. Live demo (15 minutes, real state)
+//      A real vesting schedule that ticks in real time. In production (Sepolia
+//      mode) it's a real VestingWallet on Sepolia with an actual on-chain
+//      release() tx; locally / without env vars it runs as pure-math
+//      simulation. Either way, the user can tap through, claim, and see
+//      state change — including a push alert arriving on their phone.
+//
+// The two are stacked vertically with guiding copy between them so the user
+// understands what they're looking at.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { InteractiveDemo } from "@/components/InteractiveDemo";
+import { VestingDemo } from "@/components/VestingDemo";
 
 export const metadata: Metadata = {
-  title: "Interactive product demo · Vestream",
-  description: "See Vestream in 90 seconds — scan a wallet, get a push alert when tokens unlock, and claim them on the source protocol. No signup required.",
+  title: "Interactive + live vesting demo · Vestream",
+  description: "Two demos in one page — a 90-second interactive walkthrough of the claim flow, and a real 15-minute vesting schedule on Sepolia you can watch and claim yourself.",
   alternates: { canonical: "https://vestream.io/demo" },
 };
+
+const SEPOLIA_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
 
 export default function DemoPage() {
   return (
@@ -26,8 +38,8 @@ export default function DemoPage() {
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 md:px-8 pt-24 md:pt-32 pb-10 md:pb-14">
-        <div className="text-center mb-8 md:mb-10">
+      <section className="max-w-5xl mx-auto px-4 md:px-8 pt-24 md:pt-32 pb-8 md:pb-10">
+        <div className="text-center mb-6 md:mb-8">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
             style={{
@@ -36,7 +48,7 @@ export default function DemoPage() {
               border: "1px solid rgba(37,99,235,0.2)",
             }}
           >
-            Interactive · 90 seconds · No signup
+            Two demos · No signup · ~90s + 15min
           </div>
 
           <h1
@@ -48,24 +60,109 @@ export default function DemoPage() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            The whole claim flow,<br className="hidden md:block" /> in one demo
+            See the claim flow,<br className="hidden md:block" /> then try it live
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#64748b", lineHeight: 1.6 }}>
-            Walk through the real Vestream experience &mdash; scanning a wallet, getting a push alert when tokens unlock, and claiming on the source protocol. All of it, in under two minutes.
+            Start with the 90-second interactive walkthrough to understand what Vestream does.
+            Then drop down to the live demo &mdash; a real vesting schedule you can watch tick and claim yourself.
           </p>
         </div>
+      </section>
 
-        {/* The demo widget */}
+      {/* ── Demo A — Interactive walkthrough ─────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 md:px-8 pb-10 md:pb-14">
+        <DemoIntro
+          letter="A"
+          eyebrow="Demo A · 90 seconds"
+          title="Interactive walkthrough"
+          copy="A guided, 3-step tour of how Vestream finds vestings, pushes alerts to your phone, and takes you to claim. Everything is mocked so you can click through without signing anything."
+        />
         <InteractiveDemo />
 
-        {/* Secondary CTAs */}
+        {/* Small divider with hand-off copy */}
+        <div className="flex items-center justify-center gap-4 mt-10 md:mt-12 mb-2">
+          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+            Now try the real thing
+          </span>
+          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+        </div>
+      </section>
+
+      {/* ── Demo B — Live 15-min vesting ──────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
+        <DemoIntro
+          letter="B"
+          eyebrow="Demo B · 15 minutes · Live state"
+          title="Spin up a real vesting schedule"
+          copy="This is a real 15-minute vesting schedule &mdash; in production, a VestingWallet deployed on Sepolia that unlocks 1,000 DEMO tokens linearly. Press Start, watch the bar tick, and claim whenever you like. If you have our app installed, you'll get a push notification the moment tokens unlock."
+        />
+
+        <VestingDemo />
+
+        {/* Guidance — what to do after starting */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <GuideCard
+            n="1"
+            title="Press Start"
+            body="Kicks off a 15-minute linear vest of 1,000 DEMO. No wallet connection required — your session lives in a cookie."
+          />
+          <GuideCard
+            n="2"
+            title="Watch it tick"
+            body="The bar updates every 2 seconds. If you install the mobile app and scan this demo wallet, the same unlock triggers a real push alert."
+          />
+          <GuideCard
+            n="3"
+            title="Claim anytime"
+            body="You don't have to wait. Hit Claim at any point to release whatever's currently vested — simulating a mid-stream withdrawal."
+          />
+        </div>
+
+        {/* Sepolia-only helper — faucet + how to get the on-chain version */}
+        <div
+          className="mt-6 rounded-2xl p-5 md:p-6 flex items-start gap-4 flex-wrap"
+          style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}
+        >
+          <div
+            className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: "rgba(245,158,11,0.15)", color: "#d97706" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-[240px]">
+            <div className="text-sm font-bold mb-1" style={{ color: "#0f172a" }}>
+              Want the real on-chain version?
+            </div>
+            <p className="text-xs md:text-sm mb-3" style={{ color: "#64748b", lineHeight: 1.55 }}>
+              When the Sepolia demo contracts are configured, the same widget above broadcasts a real{" "}
+              <code className="font-mono px-1 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.05)" }}>release()</code>{" "}
+              transaction on Sepolia and a tx link appears inline. You can grab free Sepolia ETH for gas from the Google Cloud faucet.
+            </p>
+            <a
+              href={SEPOLIA_FAUCET}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold hover:underline"
+              style={{ color: "#d97706" }}
+            >
+              Get Sepolia ETH from the Google Cloud faucet ↗
+            </a>
+          </div>
+        </div>
+
+        {/* Secondary CTAs under live demo */}
         <div className="mt-8 flex items-center justify-center gap-4 flex-wrap text-sm">
           <Link
             href="/find-vestings"
             className="font-medium hover:underline"
             style={{ color: "#2563eb" }}
           >
-            Try it on your own wallet →
+            Scan your own wallet →
           </Link>
           <span style={{ color: "#cbd5e1" }}>·</span>
           <Link
@@ -73,7 +170,7 @@ export default function DemoPage() {
             className="font-medium hover:underline"
             style={{ color: "#2563eb" }}
           >
-            Get early access to the app →
+            Get the app (early access) →
           </Link>
         </div>
       </section>
@@ -85,7 +182,7 @@ export default function DemoPage() {
             What you just saw, in real life
           </h2>
           <p className="text-sm md:text-base max-w-2xl mx-auto" style={{ color: "#64748b" }}>
-            The demo is compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using Vestream day-to-day.
+            The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using Vestream day-to-day.
           </p>
         </div>
 
@@ -185,21 +282,65 @@ export default function DemoPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <footer className="max-w-5xl mx-auto px-4 md:px-8 pb-12">
-        <div className="pt-8 flex items-center justify-between flex-wrap gap-4" style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            © 2026 Vestream. The demo uses illustrative data; real scans index on-chain contracts and subgraphs.
-          </p>
-          <div className="flex items-center gap-4 md:gap-5 flex-wrap">
-            <Link href="/developer" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Developer API</Link>
-            <Link href="/ai" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>AI Agents</Link>
-            <Link href="/resources" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Resources</Link>
-            <Link href="/privacy" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
-            <Link href="/terms" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter theme="light" note="The interactive demo uses illustrative data; the live demo runs a real schedule (Sepolia when configured)." />
     </main>
+  );
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function DemoIntro({
+  letter, eyebrow, title, copy,
+}: {
+  letter: string; eyebrow: string; title: string; copy: string;
+}) {
+  return (
+    <div className="mb-6 md:mb-8 flex items-start gap-4">
+      <div
+        className="flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg md:text-xl font-extrabold"
+        style={{
+          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          color: "white",
+          boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
+        }}
+      >
+        {letter}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#94a3b8" }}>
+          {eyebrow}
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold mb-1.5" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          {title}
+        </h2>
+        <p className="text-sm md:text-base" style={{ color: "#64748b", lineHeight: 1.55 }}>
+          {copy}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function GuideCard({ n, title, body }: { n: string; title: string; body: string }) {
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <div
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
+          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+        >
+          {n}
+        </div>
+        <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+          {title}
+        </div>
+      </div>
+      <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
+        {body}
+      </p>
+    </div>
   );
 }
 
@@ -232,3 +373,4 @@ function Step({ n, title, body, icon }: { n: string; title: string; body: string
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ApiAccessForm } from "@/components/ApiAccessForm";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
@@ -531,26 +532,7 @@ export default function DeveloperPage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="px-4 md:px-8 py-8" style={{ background: "#0a1628", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-xs">V</span>
-            </div>
-            <span className="font-semibold text-sm" style={{ color: "white" }}>Vestream</span>
-          </Link>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <Link href="/ai" className="text-xs transition-colors hover:opacity-80" style={{ color: "#4b5563" }}>AI Agents</Link>
-            <Link href="/resources" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Resources</Link>
-            <Link href="/privacy" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Privacy Policy</Link>
-            <Link href="/terms" className="text-xs transition-colors" style={{ color: "#4b5563" }}>Terms of Service</Link>
-          </div>
-          <p className="text-xs" style={{ color: "#4b5563" }}>© 2026 Vestream</p>
-        </div>
-      </footer>
-
+      <SiteFooter theme="navy" recessed />
     </div>
   );
 }

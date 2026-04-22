@@ -55,7 +55,7 @@ export function SiteNav({ theme = "light" }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, activeDot, mobileActiveBg, logo } = THEME[theme];
+  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileActiveBg, logo } = THEME[theme];
 
   const ctaHref  = "/early-access";
   const ctaLabel = "Early Access →";
@@ -77,27 +77,27 @@ export function SiteNav({ theme = "light" }: Props) {
           />
         </Link>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-5">
-          {NAV_LINKS.map(({ label, href }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
-            return (
-              <Link
-                key={href}
-                href={href}
-                className="text-sm transition-colors"
-                style={{ color: isActive ? linkActive : linkBase, fontWeight: isActive ? 600 : 400 }}
-              >
-                {label}
-                {isActive && (
-                  <span
-                    className="block mx-auto mt-0.5 rounded-full"
-                    style={{ width: 4, height: 4, background: activeDot }}
-                  />
-                )}
-              </Link>
-            );
-          })}
+        {/* Desktop links + CTA */}
+        <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {NAV_LINKS.map(({ label, href }) => {
+              const isActive = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="relative text-sm transition-colors px-3 py-1.5 rounded-lg"
+                  style={{
+                    color: isActive ? linkActive : linkBase,
+                    fontWeight: isActive ? 600 : 500,
+                    background: isActive ? mobileActiveBg : "transparent",
+                  }}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* CTA */}
           <a

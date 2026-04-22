@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   getProtocol,
   listProtocols,
@@ -427,11 +428,17 @@ export default async function ProtocolLandingPage(
             background: `radial-gradient(ellipse 70% 60% at 50% 0%, ${accentHalo} 0%, transparent 70%)`,
           }} />
           <div className="relative">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-widest mb-4"
+              style={{ background: "white", border: `1px solid ${meta.border}`, color: meta.color }}
+            >
+              📱 Mobile alerts for {meta.name}
+            </div>
             <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
-              Ready to stop missing {meta.name} unlocks?
+              Never miss another {meta.name} unlock
             </h2>
             <p className="text-sm md:text-base mb-8 max-w-xl mx-auto" style={{ color: "#475569" }}>
-              Add your wallet, pick the chain, and we'll alert you before every {meta.name} cliff, tranche and final release.
+              Add your wallet to Vestream and get a push notification the moment any {meta.name} tranche becomes claimable — across every chain you hold on. No checking dashboards. No missed deadlines.
             </p>
             <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
               <Link
@@ -439,34 +446,24 @@ export default async function ProtocolLandingPage(
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
                 style={{ background: meta.color, color: "white", boxShadow: `0 4px 20px ${meta.color}55` }}
               >
-                Get early access →
+                Get the app →
               </Link>
-              <a
-                href={meta.claimUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm"
+              <Link
+                href="/find-vestings"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:bg-slate-50"
                 style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a" }}
               >
-                Claim on {meta.name} ↗
-              </a>
+                Scan a wallet now →
+              </Link>
             </div>
+            <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#94a3b8" }}>
+              Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We're the alert layer above it.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-4 md:px-8 py-8 max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4"
-        style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <p className="text-xs" style={{ color: "#94a3b8" }}>© {new Date().getFullYear()} Vestream. All rights reserved.</p>
-        <div className="flex items-center gap-6 flex-wrap">
-          <Link href="/" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "#64748b" }}>Home</Link>
-          <Link href="/unlocks" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "#64748b" }}>All trackers</Link>
-          <Link href="/developer" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "#64748b" }}>Developer API</Link>
-          <Link href="/ai" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "#64748b" }}>AI Agents</Link>
-          <Link href="/privacy" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "#64748b" }}>Privacy</Link>
-        </div>
-      </footer>
+      <SiteFooter theme="light" />
     </div>
   );
 }

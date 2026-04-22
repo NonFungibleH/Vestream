@@ -3,47 +3,108 @@
 // src/components/InteractiveDemo.tsx
 //
 // Three-step interactive walkthrough that mimics the full Vestream product flow:
-//   1. Find   — animated scan across the 7 supported protocols
+//   1. Find   — animated scan across 7 protocols, finds hits on 3 of them
 //   2. Alert  — mock phone frame with dashboard + push notification
 //   3. Claim  — mock Sablier-style protocol UI, claim button, tx success
 //
-// Purely client-side (no API). The user advances steps themselves, with tight
-// auto-animations inside each step. ~60–90 seconds end-to-end, not 15 minutes.
+// Purely client-side (no API). The user advances steps themselves, with
+// auto-animations inside each step. ~90 seconds end-to-end.
+//
+// Visual affordances:
+//   - Distinct dashed/solid outer frame + "Interactive demo" label so the
+//     widget reads as a product demo, not a page section.
+//   - Pulse animation on every primary advance button to guide attention.
+//   - USD $-equivalents shown alongside token amounts throughout.
+//   - "Tap to open" hint + ring on the phone notification so the interaction
+//     is discoverable.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 // ── Demo data ────────────────────────────────────────────────────────────────
-const DEMO_WALLET = "0x3f5CE3d2Fa4B9d8E7f5a6B2c1d8E7f5a6B2c18b2e";
 const DEMO_WALLET_SHORT = "0x3f5C...8b2e";
 
-// 7 protocols scanned in parallel; only 1 has a match in our fake result set
+// Assumed spot prices — fake but plausible, used to show $-equivalents
+const PRICE_USD = {
+  NOVA: 0.42,
+  FLUX: 1.85,
+  VEST: 0.11,
+} as const;
+
+type TokenSymbol = keyof typeof PRICE_USD;
+
+interface DemoStream {
+  protocolId: "sablier" | "hedgey" | "team-finance";
+  protocolName: string;
+  token:       TokenSymbol;
+  tokenColors: [string, string]; // gradient from → to
+  chain:       string;
+  totalAmount: number;
+  claimable:   number;
+  vested:      number;
+  percent:     number;
+  unlockInHrs: number;
+}
+
+// Three hits across three different protocols — demonstrates breadth of coverage
+const STREAMS: DemoStream[] = [
+  {
+    protocolId: "sablier", protocolName: "Sablier",
+    token: "NOVA", tokenColors: ["#f59e0b", "#ef4444"],
+    chain: "Ethereum",
+    totalAmount: 12_000, claimable: 4_200, vested: 7_800, percent: 65,
+    unlockInHrs: 24,
+  },
+  {
+    protocolId: "hedgey", protocolName: "Hedgey",
+    token: "FLUX", tokenColors: ["#2563eb", "#7c3aed"],
+    chain: "Base",
+    totalAmount: 3_500, claimable: 875, vested: 1_575, percent: 45,
+    unlockInHrs: 72,
+  },
+  {
+    protocolId: "team-finance", protocolName: "Team Finance",
+    token: "VEST", tokenColors: ["#10b981", "#0891b2"],
+    chain: "BNB Chain",
+    totalAmount: 50_000, claimable: 12_500, vested: 30_000, percent: 60,
+    unlockInHrs: 6,
+  },
+];
+
+// Featured stream (the one surfaced on alert + claim steps — the biggest USD value)
+const FEATURED = STREAMS[0];
+
+// 7 protocols scanned in parallel; 3 hit in our fake result set
 const PROTOCOLS = [
   { id: "sablier",      name: "Sablier",       hit: true,  count: 1 },
-  { id: "hedgey",       name: "Hedgey",        hit: false, count: 0 },
+  { id: "hedgey",       name: "Hedgey",        hit: true,  count: 1 },
   { id: "uncx",         name: "UNCX",          hit: false, count: 0 },
   { id: "unvest",       name: "Unvest",        hit: false, count: 0 },
-  { id: "team-finance", name: "Team Finance",  hit: false, count: 0 },
+  { id: "team-finance", name: "Team Finance",  hit: true,  count: 1 },
   { id: "superfluid",   name: "Superfluid",    hit: false, count: 0 },
   { id: "pinksale",     name: "PinkSale",      hit: false, count: 0 },
 ] as const;
 
-// The single fake stream surfaced across all three steps
-const STREAM = {
-  protocol:    "Sablier",
-  token:       "NOVA",
-  chain:       "Ethereum",
-  totalAmount: 12_000,
-  claimable:   4_200,
-  vested:      7_800,
-  percent:     65,
-  unlockInHrs: 24,
-};
+// ── Formatting helpers ───────────────────────────────────────────────────────
+function fmtUSD(n: number): string {
+  if (n >= 1000) return `$${(n / 1000).toFixed(n >= 10_000 ? 1 : 2)}k`;
+  return `$${n.toFixed(0)}`;
+}
+function usdOf(token: TokenSymbol, amount: number): number {
+  return amount * PRICE_USD[token];
+}
+function fmtUsdExact(n: number): string {
+  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
 
 type Step = "scan" | "alert" | "claim";
 type ScanPhase = "idle" | "pinging" | "done";
 type AlertPhase = "list" | "pushed" | "detail";
 type ClaimPhase = "idle" | "wallet" | "pending" | "success";
+
+// Per-protocol scan stagger (ms). Slower than before so the scan feels
+// deliberate and gives the user time to read each hit.
+const SCAN_STAGGER_MS = 650;
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function InteractiveDemo() {
@@ -51,7 +112,7 @@ export function InteractiveDemo() {
 
   // Scan sub-state
   const [scanPhase, setScanPhase]   = useState<ScanPhase>("idle");
-  const [scanCursor, setScanCursor] = useState(-1); // -1 = not started, 7 = finished
+  const [scanCursor, setScanCursor] = useState(-1); // -1 = not started, >= length = finished
   const scanTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Alert sub-state
@@ -73,15 +134,15 @@ export function InteractiveDemo() {
     setScanCursor(-1);
     clearTimers(scanTimers);
 
-    // Stagger each protocol ping ~320ms apart
+    // Stagger each protocol ping, slower so hits are visually satisfying
     PROTOCOLS.forEach((_, i) => {
-      const t = setTimeout(() => setScanCursor(i), 120 + i * 320);
+      const t = setTimeout(() => setScanCursor(i), 200 + i * SCAN_STAGGER_MS);
       scanTimers.current.push(t);
     });
     const doneT = setTimeout(() => {
       setScanCursor(PROTOCOLS.length);
       setScanPhase("done");
-    }, 120 + PROTOCOLS.length * 320 + 100);
+    }, 200 + PROTOCOLS.length * SCAN_STAGGER_MS + 300);
     scanTimers.current.push(doneT);
   }, []);
 
@@ -117,43 +178,75 @@ export function InteractiveDemo() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="rounded-3xl overflow-hidden"
-      style={{
-        background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 10px 40px rgba(37,99,235,0.08)",
-      }}
-    >
-      {/* Step indicator */}
-      <StepIndicator step={step} />
-
-      {/* Step content */}
-      <div className="p-6 md:p-8 min-h-[440px]">
-        {step === "scan" && (
-          <ScanStep
-            phase={scanPhase}
-            cursor={scanCursor}
-            onStart={runScan}
-            onNext={() => setStep("alert")}
-          />
-        )}
-        {step === "alert" && (
-          <AlertStep
-            phase={alertPhase}
-            onTapNotification={() => setAlertPhase("detail")}
-            onNext={() => setStep("claim")}
-          />
-        )}
-        {step === "claim" && (
-          <ClaimStep
-            phase={claimPhase}
-            onStartClaim={() => setClaimPhase("wallet")}
-            onConfirmTx={onConfirmTx}
-            onReset={resetDemo}
-          />
-        )}
+    <div className="relative">
+      {/* Outer "demo widget" frame — strong visual boundary + label */}
+      <div
+        className="absolute -top-3 left-6 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+        style={{
+          background: "white",
+          color: "#2563eb",
+          border: "1px solid rgba(37,99,235,0.3)",
+          boxShadow: "0 2px 8px rgba(37,99,235,0.1)",
+        }}
+      >
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2563eb" }} />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#2563eb" }} />
+        </span>
+        Interactive demo
       </div>
+
+      <div
+        className="rounded-3xl overflow-hidden"
+        style={{
+          background: "white",
+          // Distinct blue outline + halo, so the widget reads as a demo not a page section
+          border: "2px dashed rgba(37,99,235,0.35)",
+          boxShadow: "0 0 0 4px rgba(37,99,235,0.05), 0 20px 50px rgba(37,99,235,0.12)",
+        }}
+      >
+        {/* Step indicator */}
+        <StepIndicator step={step} />
+
+        {/* Step content */}
+        <div className="p-6 md:p-8 min-h-[460px]">
+          {step === "scan" && (
+            <ScanStep
+              phase={scanPhase}
+              cursor={scanCursor}
+              onStart={runScan}
+              onNext={() => setStep("alert")}
+            />
+          )}
+          {step === "alert" && (
+            <AlertStep
+              phase={alertPhase}
+              onTapNotification={() => setAlertPhase("detail")}
+              onNext={() => setStep("claim")}
+            />
+          )}
+          {step === "claim" && (
+            <ClaimStep
+              phase={claimPhase}
+              onStartClaim={() => setClaimPhase("wallet")}
+              onConfirmTx={onConfirmTx}
+              onReset={resetDemo}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Global keyframes for pulse + tap ring */}
+      <style>{`
+        @keyframes demoPulse {
+          0%, 100% { box-shadow: 0 4px 20px rgba(37,99,235,0.35), 0 0 0 0 rgba(37,99,235,0.55); }
+          50%      { box-shadow: 0 4px 20px rgba(37,99,235,0.35), 0 0 0 10px rgba(37,99,235,0); }
+        }
+        @keyframes demoTapRing {
+          0%, 100% { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 0 rgba(37,99,235,0.6), 0 0 0 1px rgba(0,0,0,0.04); }
+          50%      { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 6px rgba(37,99,235,0), 0 0 0 1px rgba(0,0,0,0.04); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -212,6 +305,32 @@ function StepIndicator({ step }: { step: Step }) {
   );
 }
 
+// ─── Pulse advance button ──────────────────────────────────────────────────
+// Reusable pulsing gradient button — draws attention to the next advance step.
+function PulseAdvanceButton({
+  onClick, children, size = "md",
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  size?: "md" | "lg";
+}) {
+  const pad = size === "lg" ? "px-6 py-3" : "px-5 py-2.5";
+  const txt = size === "lg" ? "text-sm" : "text-sm";
+  return (
+    <button
+      onClick={onClick}
+      className={`${txt} font-semibold ${pad} rounded-xl transition-all duration-150 hover:opacity-90 whitespace-nowrap`}
+      style={{
+        background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+        color: "white",
+        animation: "demoPulse 2s ease-in-out infinite",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 // ─── Step 1: Scan ──────────────────────────────────────────────────────────
 function ScanStep({
   phase, cursor, onStart, onNext,
@@ -221,7 +340,19 @@ function ScanStep({
   onStart: () => void;
   onNext:  () => void;
 }) {
-  const foundCount = PROTOCOLS.filter((p) => p.hit && PROTOCOLS.indexOf(p) < cursor).reduce((s, p) => s + p.count, 0);
+  // Count streams found up to the current cursor
+  const foundCount = PROTOCOLS
+    .filter((p, idx) => p.hit && idx < cursor)
+    .reduce((s, p) => s + p.count, 0);
+
+  // Total USD surfaced so far across protocols scanned
+  const streamsByProtocol = new Map(STREAMS.map((s) => [s.protocolId, s]));
+  const foundUsdTotal = PROTOCOLS
+    .filter((p, idx) => p.hit && idx < cursor)
+    .reduce((sum, p) => {
+      const s = streamsByProtocol.get(p.id as DemoStream["protocolId"]);
+      return s ? sum + usdOf(s.token, s.claimable) : sum;
+    }, 0);
 
   return (
     <div>
@@ -245,8 +376,13 @@ function ScanStep({
           </div>
         </div>
         {phase === "done" && (
-          <div className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", color: "#059669" }}>
-            {foundCount} {foundCount === 1 ? "stream" : "streams"} found
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+              Total claimable
+            </div>
+            <div className="text-sm font-bold font-mono" style={{ color: "#059669" }}>
+              {fmtUsdExact(foundUsdTotal)}
+            </div>
           </div>
         )}
       </div>
@@ -268,34 +404,27 @@ function ScanStep({
           <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#64748b", lineHeight: 1.55 }}>
             We&rsquo;ll ping Sablier, Hedgey, UNCX, Unvest, Team&nbsp;Finance, Superfluid and PinkSale in parallel &mdash; across Ethereum, BNB, Polygon and Base.
           </p>
-          <button
-            onClick={onStart}
-            className="text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-150 hover:opacity-90"
-            style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
-            }}
-          >
+          <PulseAdvanceButton onClick={onStart} size="lg">
             Start the scan →
-          </button>
+          </PulseAdvanceButton>
         </div>
       )}
 
       {phase !== "idle" && (
         <div>
-          <ul className="space-y-1.5 mb-6">
+          <ul className="space-y-1.5 mb-5">
             {PROTOCOLS.map((p, i) => {
               const isPinging = i === cursor;
               const isDone    = i < cursor;
               const isQueued  = i > cursor;
+              const stream    = streamsByProtocol.get(p.id as DemoStream["protocolId"]);
               return (
                 <li
                   key={p.id}
                   className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors"
                   style={{
-                    background: isPinging ? "rgba(37,99,235,0.05)" : "transparent",
-                    border: "1px solid " + (isPinging ? "rgba(37,99,235,0.2)" : "transparent"),
+                    background: isPinging ? "rgba(37,99,235,0.05)" : isDone && p.hit ? "rgba(16,185,129,0.04)" : "transparent",
+                    border: "1px solid " + (isPinging ? "rgba(37,99,235,0.2)" : isDone && p.hit ? "rgba(16,185,129,0.15)" : "transparent"),
                   }}
                 >
                   {/* Icon */}
@@ -323,12 +452,19 @@ function ScanStep({
                     {p.name}
                   </span>
 
-                  <span className="text-xs" style={{
+                  <span className="text-xs text-right" style={{
                     color: isPinging ? "#2563eb" : isDone ? (p.hit ? "#059669" : "#94a3b8") : "#cbd5e1",
                     fontWeight: isDone && p.hit ? 600 : 400,
                   }}>
                     {isPinging && "Checking…"}
-                    {isDone && p.hit   && `${p.count} stream${p.count === 1 ? "" : "s"} found`}
+                    {isDone && p.hit && stream && (
+                      <span>
+                        {stream.claimable.toLocaleString()} {stream.token}
+                        <span className="ml-1.5 font-normal" style={{ color: "#94a3b8" }}>
+                          · {fmtUSD(usdOf(stream.token, stream.claimable))}
+                        </span>
+                      </span>
+                    )}
                     {isDone && !p.hit  && "No streams"}
                     {isQueued && "Queued"}
                   </span>
@@ -337,60 +473,67 @@ function ScanStep({
             })}
           </ul>
 
-          {/* Found-stream card + Next */}
+          {/* Found-streams summary + Next */}
           {phase === "done" && (
             <div>
-              <div
-                className="rounded-xl p-4 mb-5 flex items-center gap-4"
-                style={{
-                  background: "linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05))",
-                  border: "1px solid rgba(37,99,235,0.15)",
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-white text-[11px]"
-                  style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}
-                >
-                  NOVA
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs mb-0.5" style={{ color: "#64748b" }}>
-                    Sablier · Ethereum
-                  </div>
-                  <div className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
-                    {STREAM.totalAmount.toLocaleString()} NOVA · {STREAM.percent}% vested
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
-                    Claimable
-                  </div>
-                  <div className="text-sm font-bold font-mono" style={{ color: "#059669" }}>
-                    {STREAM.claimable.toLocaleString()}
-                  </div>
-                </div>
+              {/* All 3 streams as cards */}
+              <div className="space-y-2 mb-5">
+                {STREAMS.map((s) => (
+                  <StreamHitCard key={s.protocolId} stream={s} />
+                ))}
               </div>
 
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-xs" style={{ color: "#64748b" }}>
-                  Scan took <span className="font-semibold">2.3s</span>. In the real product, this triggers a push alert.
+                  Scan took <span className="font-semibold">4.6s</span> · <span className="font-semibold">{foundCount} streams</span> worth <span className="font-semibold" style={{ color: "#059669" }}>{fmtUsdExact(foundUsdTotal)}</span> claimable.
                 </p>
-                <button
-                  onClick={onNext}
-                  className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-150 hover:opacity-90 whitespace-nowrap"
-                  style={{
-                    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                    color: "white",
-                    boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
-                  }}
-                >
+                <PulseAdvanceButton onClick={onNext}>
                   See it in the app →
-                </button>
+                </PulseAdvanceButton>
               </div>
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function StreamHitCard({ stream }: { stream: DemoStream }) {
+  const usd = usdOf(stream.token, stream.claimable);
+  return (
+    <div
+      className="rounded-xl p-3 flex items-center gap-3"
+      style={{
+        background: "linear-gradient(135deg, rgba(37,99,235,0.03), rgba(124,58,237,0.03))",
+        border: "1px solid rgba(37,99,235,0.12)",
+      }}
+    >
+      <div
+        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-white text-[10px]"
+        style={{ background: `linear-gradient(135deg, ${stream.tokenColors[0]}, ${stream.tokenColors[1]})` }}
+      >
+        {stream.token}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[11px] mb-0.5" style={{ color: "#64748b" }}>
+          {stream.protocolName} · {stream.chain}
+        </div>
+        <div className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+          {stream.totalAmount.toLocaleString()} {stream.token} · {stream.percent}% vested
+        </div>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+          Claimable
+        </div>
+        <div className="text-sm font-bold font-mono leading-tight" style={{ color: "#059669" }}>
+          {stream.claimable.toLocaleString()}
+        </div>
+        <div className="text-[10px] font-mono" style={{ color: "#94a3b8" }}>
+          {fmtUsdExact(usd)}
+        </div>
+      </div>
     </div>
   );
 }
@@ -403,6 +546,7 @@ function AlertStep({
   onTapNotification: () => void;
   onNext: () => void;
 }) {
+  const featuredUsd = usdOf(FEATURED.token, FEATURED.claimable);
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 items-center">
       {/* Copy column */}
@@ -431,21 +575,22 @@ function AlertStep({
         </ul>
 
         {phase === "detail" && (
-          <button
-            onClick={onNext}
-            className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-150 hover:opacity-90"
-            style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
-            }}
-          >
+          <PulseAdvanceButton onClick={onNext}>
             Claim your tokens →
-          </button>
+          </PulseAdvanceButton>
         )}
         {phase !== "detail" && (
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            {phase === "list" ? "Waiting for an unlock event…" : "Tap the notification →"}
+          <p className="text-xs flex items-center gap-1.5" style={{ color: phase === "pushed" ? "#2563eb" : "#94a3b8" }}>
+            {phase === "list" ? (
+              "Waiting for an unlock event…"
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 2v4"/><path d="m6.34 6.34-2.83-2.83"/><path d="M2 12h4"/>
+                </svg>
+                <span className="font-semibold">Tap the notification on the phone →</span>
+              </>
+            )}
           </p>
         )}
       </div>
@@ -493,28 +638,28 @@ function AlertStep({
               <div className="flex items-center gap-2 mb-2.5">
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-bold text-white"
-                  style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}
+                  style={{ background: `linear-gradient(135deg, ${FEATURED.tokenColors[0]}, ${FEATURED.tokenColors[1]})` }}
                 >
-                  NOVA
+                  {FEATURED.token}
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs font-semibold" style={{ color: "#0f172a" }}>NOVA</div>
-                  <div className="text-[10px]" style={{ color: "#94a3b8" }}>Sablier · Ethereum</div>
+                  <div className="text-xs font-semibold" style={{ color: "#0f172a" }}>{FEATURED.token}</div>
+                  <div className="text-[10px]" style={{ color: "#94a3b8" }}>{FEATURED.protocolName} · {FEATURED.chain}</div>
                 </div>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>
-                  24h
+                  {FEATURED.unlockInHrs}h
                 </span>
               </div>
               <div className="h-1.5 rounded-full mb-1.5" style={{ background: "rgba(0,0,0,0.06)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${STREAM.percent}%`, background: "linear-gradient(90deg, #2563eb, #7c3aed)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #2563eb, #7c3aed)" }}
                 />
               </div>
               <div className="flex justify-between text-[10px]">
-                <span style={{ color: "#64748b" }}>{STREAM.percent}% vested</span>
+                <span style={{ color: "#64748b" }}>{FEATURED.percent}% vested</span>
                 <span className="font-semibold" style={{ color: "#059669" }}>
-                  {STREAM.claimable.toLocaleString()} claimable
+                  {FEATURED.claimable.toLocaleString()} {FEATURED.token} · {fmtUsdExact(featuredUsd)}
                 </span>
               </div>
             </button>
@@ -526,7 +671,7 @@ function AlertStep({
               >
                 <div className="text-[10px] mb-1" style={{ color: "#64748b" }}>Next unlock</div>
                 <div className="text-xs font-bold" style={{ color: "#0f172a" }}>
-                  4,200 NOVA &middot; in 24 hours
+                  {FEATURED.claimable.toLocaleString()} {FEATURED.token} &middot; {fmtUsdExact(featuredUsd)} &middot; in {FEATURED.unlockInHrs} hours
                 </div>
               </div>
             )}
@@ -534,7 +679,7 @@ function AlertStep({
 
           {/* Push notification overlay */}
           {phase === "pushed" && (
-            <PushNotification onTap={onTapNotification} />
+            <PushNotification onTap={onTapNotification} featuredUsd={featuredUsd} />
           )}
         </PhoneFrame>
       </div>
@@ -582,41 +727,56 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PushNotification({ onTap }: { onTap: () => void }) {
+function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredUsd: number }) {
   return (
-    <button
-      onClick={onTap}
-      className="absolute left-2 right-2 rounded-2xl p-3 text-left transition-transform"
-      style={{
-        top: 40,
-        background: "rgba(255,255,255,0.92)",
-        backdropFilter: "blur(20px)",
-        boxShadow: "0 10px 40px rgba(15,23,42,0.25), 0 0 0 1px rgba(0,0,0,0.04)",
-        animation: "slideInFromTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both",
-      }}
-    >
-      <div className="flex items-center gap-2.5">
-        <div
-          className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-          </svg>
+    <>
+      <button
+        onClick={onTap}
+        className="absolute left-2 right-2 rounded-2xl p-3 text-left transition-transform hover:scale-[1.02]"
+        style={{
+          top: 40,
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          // Pulsing blue ring signals "tap me"
+          animation: "slideInFromTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both, demoTapRing 1.8s ease-in-out 0.5s infinite",
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline justify-between gap-1">
+              <span className="text-[11px] font-semibold" style={{ color: "#0f172a" }}>Vestream</span>
+              <span className="text-[9px]" style={{ color: "#94a3b8" }}>now</span>
+            </div>
+            <div className="text-[10.5px] font-semibold mb-0.5" style={{ color: "#0f172a" }}>
+              Unlock in {FEATURED.unlockInHrs} hours
+            </div>
+            <div className="text-[10px]" style={{ color: "#475569", lineHeight: 1.3 }}>
+              {FEATURED.claimable.toLocaleString()} {FEATURED.token} ({fmtUsdExact(featuredUsd)}) on {FEATURED.protocolName} will be ready to claim.
+            </div>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline justify-between gap-1">
-            <span className="text-[11px] font-semibold" style={{ color: "#0f172a" }}>Vestream</span>
-            <span className="text-[9px]" style={{ color: "#94a3b8" }}>now</span>
-          </div>
-          <div className="text-[10.5px] font-semibold mb-0.5" style={{ color: "#0f172a" }}>
-            Unlock in 24 hours
-          </div>
-          <div className="text-[10px]" style={{ color: "#475569", lineHeight: 1.3 }}>
-            4,200 NOVA on Sablier will be ready to claim tomorrow.
-          </div>
-        </div>
+      </button>
+      {/* Tap hint chip under the notification */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 text-[9px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 pointer-events-none"
+        style={{
+          top: 120,
+          background: "rgba(37,99,235,0.95)",
+          color: "white",
+          animation: "slideInFromTop 0.5s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        }}
+      >
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="white"><path d="M13 2l-2 14h6l-7 6 2-14H6l7-6z"/></svg>
+        Tap to open
       </div>
       <style>{`
         @keyframes slideInFromTop {
@@ -624,7 +784,7 @@ function PushNotification({ onTap }: { onTap: () => void }) {
           to   { transform: translateY(0);     opacity: 1; }
         }
       `}</style>
-    </button>
+    </>
   );
 }
 
@@ -637,6 +797,8 @@ function ClaimStep({
   onConfirmTx: () => void;
   onReset: () => void;
 }) {
+  const featuredUsd = usdOf(FEATURED.token, FEATURED.claimable);
+
   if (phase === "success") {
     return (
       <div className="text-center py-10">
@@ -648,10 +810,13 @@ function ClaimStep({
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
-          {STREAM.claimable.toLocaleString()} NOVA claimed
+        <h3 className="text-xl md:text-2xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          {FEATURED.claimable.toLocaleString()} {FEATURED.token} claimed
         </h3>
-        <p className="text-sm mb-5" style={{ color: "#64748b" }}>
+        <div className="text-sm font-semibold mb-3" style={{ color: "#059669" }}>
+          Worth {fmtUsdExact(featuredUsd)}
+        </div>
+        <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: "#64748b" }}>
           Transaction confirmed on Ethereum. In the real product, Vestream tracks the claim and updates your portfolio instantly.
         </p>
 
@@ -741,9 +906,9 @@ function ClaimStep({
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}
+                style={{ background: `linear-gradient(135deg, ${FEATURED.tokenColors[0]}, ${FEATURED.tokenColors[1]})` }}
               >
-                NOVA
+                {FEATURED.token}
               </div>
               <div>
                 <div className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.95)" }}>
@@ -757,9 +922,22 @@ function ClaimStep({
 
             {/* Numbers */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              <SablierStat label="Total"     value={`${STREAM.totalAmount.toLocaleString()}`} />
-              <SablierStat label="Vested"    value={`${STREAM.vested.toLocaleString()}`} />
-              <SablierStat label="Claimable" value={`${STREAM.claimable.toLocaleString()}`} tint="#f59e0b" />
+              <SablierStat
+                label="Total"
+                value={FEATURED.totalAmount.toLocaleString()}
+                sub={fmtUsdExact(usdOf(FEATURED.token, FEATURED.totalAmount))}
+              />
+              <SablierStat
+                label="Vested"
+                value={FEATURED.vested.toLocaleString()}
+                sub={fmtUsdExact(usdOf(FEATURED.token, FEATURED.vested))}
+              />
+              <SablierStat
+                label="Claimable"
+                value={FEATURED.claimable.toLocaleString()}
+                sub={fmtUsdExact(featuredUsd)}
+                tint="#f59e0b"
+              />
             </div>
 
             {/* Progress */}
@@ -767,11 +945,11 @@ function ClaimStep({
               <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${STREAM.percent}%`, background: "linear-gradient(90deg, #f59e0b, #ef4444)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #f59e0b, #ef4444)" }}
                 />
               </div>
               <div className="flex justify-between text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
-                <span>{STREAM.percent}% vested</span>
+                <span>{FEATURED.percent}% vested</span>
                 <span>100%</span>
               </div>
             </div>
@@ -787,7 +965,7 @@ function ClaimStep({
                   boxShadow: "0 4px 20px rgba(245,158,11,0.25)",
                 }}
               >
-                Claim {STREAM.claimable.toLocaleString()} NOVA
+                Claim {FEATURED.claimable.toLocaleString()} {FEATURED.token} · {fmtUsdExact(featuredUsd)}
               </button>
             )}
             {phase === "pending" && (
@@ -820,7 +998,7 @@ function ClaimStep({
   );
 }
 
-function SablierStat({ label, value, tint }: { label: string; value: string; tint?: string }) {
+function SablierStat({ label, value, sub, tint }: { label: string; value: string; sub?: string; tint?: string }) {
   return (
     <div className="rounded-lg p-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
       <div className="text-[9px] uppercase tracking-wider font-semibold mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>
@@ -829,6 +1007,11 @@ function SablierStat({ label, value, tint }: { label: string; value: string; tin
       <div className="text-xs font-mono font-semibold" style={{ color: tint ?? "rgba(255,255,255,0.95)" }}>
         {value}
       </div>
+      {sub && (
+        <div className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }

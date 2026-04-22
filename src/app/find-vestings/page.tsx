@@ -11,8 +11,8 @@
 
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import FindVestingsClient from "./FindVestingsClient";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Find your token vestings — scan any wallet · Vestream",
@@ -59,21 +59,7 @@ export default function FindVestingsPage() {
         <FindVestingsClient />
       </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <footer className="max-w-5xl mx-auto px-4 md:px-8 pb-12">
-        <div className="pt-8 flex items-center justify-between flex-wrap gap-4" style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            © 2026 Vestream. Scan results may take 10–30 seconds for wallets with many streams.
-          </p>
-          <div className="flex items-center gap-4 md:gap-5 flex-wrap">
-            <Link href="/developer" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Developer API</Link>
-            <Link href="/ai" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>AI Agents</Link>
-            <Link href="/resources" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Resources</Link>
-            <Link href="/privacy" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Privacy Policy</Link>
-            <Link href="/terms" className="text-xs hover:underline" style={{ color: "#94a3b8" }}>Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter theme="light" note="Scan results may take 10–30 seconds for wallets with many streams." />
     </main>
   );
 }
