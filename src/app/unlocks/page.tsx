@@ -18,6 +18,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
+import { TvlComparisonBar } from "@/components/TvlComparisonBar";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
@@ -25,6 +26,7 @@ import {
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
+import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 
 export const revalidate = 60;
 
@@ -57,7 +59,7 @@ export default async function UnlocksIndexPage() {
   //                        "streams tracked" headline number)
   // We display whichever is larger so the page never looks smaller than the
   // on-chain truth, even before the seeder has run.
-  const [statsEntries, globalEntries] = await Promise.all([
+  const [statsEntries, globalEntries, tvlMap] = await Promise.all([
     Promise.all(
       protocols.map(async (p) => {
         try {
@@ -84,9 +86,19 @@ export default async function UnlocksIndexPage() {
         return [p.slug, best] as const;
       }),
     ),
+    (async (): Promise<Record<string, ProtocolTvl>> => {
+      try {
+        const byId = Object.fromEntries(protocols.map((p) => [p.slug, p.adapterIds] as const));
+        return await getAllProtocolsTvl(byId);
+      } catch (err) {
+        console.error("[unlocks] tvl aggregate failed:", err);
+        return {};
+      }
+    })(),
   ]);
   const statsMap  = new Map(statsEntries);
   const globalMap = new Map(globalEntries);
+  const tvlRows   = protocols.map((p) => ({ protocol: p, tvl: tvlMap[p.slug] ?? null }));
 
   // Effective counts: max(local cache, subgraph-reported global). The subgraph
   // ceiling of 1000 per chain can slightly undercount on very large protocols
@@ -187,9 +199,14 @@ export default async function UnlocksIndexPage() {
       </section>
 
       {/* ── Live platform tickers (recent + upcoming side-by-side) ───────── */}
-      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <section className="px-4 md:px-8 pb-6 md:pb-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         <LiveActivityTicker />
         <UpcomingUnlockTicker />
+      </section>
+
+      {/* ── TVL comparison ───────────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto">
+        <TvlComparisonBar rows={tvlRows} />
       </section>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
