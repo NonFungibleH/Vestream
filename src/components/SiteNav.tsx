@@ -13,7 +13,6 @@ interface Props {
 }
 
 const NAV_LINKS = [
-  { label: "Portfolio",     href: "/"              },
   { label: "Protocols",     href: "/unlocks"       },
   { label: "Demo",          href: "/demo"          },
   { label: "Find Vestings", href: "/find-vestings" },
@@ -81,7 +80,7 @@ export function SiteNav({ theme = "light" }: Props) {
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-5">
           {NAV_LINKS.map(({ label, href }) => {
-            const isActive = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+            const isActive = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
@@ -153,7 +152,7 @@ export function SiteNav({ theme = "light" }: Props) {
           style={{ background: mobileMenuBg, borderBottom: `1px solid ${navBorder}`, backdropFilter: "blur(12px)" }}
         >
           {NAV_LINKS.map(({ label, href }) => {
-            const isActive = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+            const isActive = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
