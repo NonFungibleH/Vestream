@@ -13,16 +13,18 @@
 //   - Empty state stays useful: "Indexing… first unlocks will appear here".
 // ─────────────────────────────────────────────────────────────────────────────
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type UpcomingRow = {
-  streamId:    string;
-  protocol:    string;
-  chainId:     number;
-  tokenSymbol: string | null;
-  recipient:   string;
-  amount:      string | null;
-  endTime:     number | null;
+  streamId:     string;
+  protocol:     string;
+  chainId:      number;
+  tokenSymbol:  string | null;
+  tokenAddress: string;
+  recipient:    string;
+  amount:       string | null;
+  endTime:      number | null;
 };
 
 type UpcomingResponse = {
@@ -198,9 +200,10 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const amount = formatAmount(row.amount, row.tokenSymbol);
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h
+  const canLink  = !!row.tokenAddress && /^0x[0-9a-f]{40}$/i.test(row.tokenAddress);
 
-  return (
-    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3">
+  const inner = (
+    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
       <div
         className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold"
         style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color }}
@@ -248,4 +251,10 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
       </div>
     </div>
   );
+
+  return canLink ? (
+    <Link href={`/token/${row.chainId}/${row.tokenAddress}`} className="block">
+      {inner}
+    </Link>
+  ) : inner;
 }

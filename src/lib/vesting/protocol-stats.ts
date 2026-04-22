@@ -35,6 +35,8 @@ export interface UnlockSummary {
   protocol:    string;
   chainId:     number;
   tokenSymbol: string | null;
+  /** Lowercase ERC-20 contract address — used to deep-link to /token/[chainId]/[address]. */
+  tokenAddress: string;
   /** Unix seconds — end of the schedule. */
   endTime:     number | null;
   /** Stringified bigint total amount for the stream. */
@@ -52,23 +54,25 @@ function adapterFilter(adapterIds: readonly string[]) {
 }
 
 function rowToUnlock(row: {
-  streamId:    string;
-  protocol:    string;
-  chainId:     number;
-  tokenSymbol: string | null;
-  endTime:     number | null;
-  recipient:   string;
-  streamData:  Record<string, unknown>;
+  streamId:     string;
+  protocol:     string;
+  chainId:      number;
+  tokenSymbol:  string | null;
+  tokenAddress: string | null;
+  endTime:      number | null;
+  recipient:    string;
+  streamData:   Record<string, unknown>;
 }): UnlockSummary {
   const sd = row.streamData as Partial<VestingStream>;
   return {
-    streamId:    row.streamId,
-    protocol:    row.protocol,
-    chainId:     row.chainId,
-    tokenSymbol: row.tokenSymbol ?? null,
-    endTime:     row.endTime ?? null,
-    amount:      sd.totalAmount ?? null,
-    recipient:   row.recipient,
+    streamId:     row.streamId,
+    protocol:     row.protocol,
+    chainId:      row.chainId,
+    tokenSymbol:  row.tokenSymbol ?? null,
+    tokenAddress: (row.tokenAddress ?? "").toLowerCase(),
+    endTime:      row.endTime ?? null,
+    amount:       sd.totalAmount ?? null,
+    recipient:    row.recipient,
   };
 }
 
@@ -124,13 +128,14 @@ export async function getLatestUnlock(
 ): Promise<UnlockSummary | null> {
   const rows = await db
     .select({
-      streamId:    vestingStreamsCache.streamId,
-      protocol:    vestingStreamsCache.protocol,
-      chainId:     vestingStreamsCache.chainId,
-      tokenSymbol: vestingStreamsCache.tokenSymbol,
-      endTime:     vestingStreamsCache.endTime,
-      recipient:   vestingStreamsCache.recipient,
-      streamData:  vestingStreamsCache.streamData,
+      streamId:     vestingStreamsCache.streamId,
+      protocol:     vestingStreamsCache.protocol,
+      chainId:      vestingStreamsCache.chainId,
+      tokenSymbol:  vestingStreamsCache.tokenSymbol,
+      tokenAddress: vestingStreamsCache.tokenAddress,
+      endTime:      vestingStreamsCache.endTime,
+      recipient:    vestingStreamsCache.recipient,
+      streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
     .where(and(adapterFilter(adapterIds), eq(vestingStreamsCache.isFullyVested, true)))
@@ -150,13 +155,14 @@ export async function getNextUpcomingUnlock(
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = await db
     .select({
-      streamId:    vestingStreamsCache.streamId,
-      protocol:    vestingStreamsCache.protocol,
-      chainId:     vestingStreamsCache.chainId,
-      tokenSymbol: vestingStreamsCache.tokenSymbol,
-      endTime:     vestingStreamsCache.endTime,
-      recipient:   vestingStreamsCache.recipient,
-      streamData:  vestingStreamsCache.streamData,
+      streamId:     vestingStreamsCache.streamId,
+      protocol:     vestingStreamsCache.protocol,
+      chainId:      vestingStreamsCache.chainId,
+      tokenSymbol:  vestingStreamsCache.tokenSymbol,
+      tokenAddress: vestingStreamsCache.tokenAddress,
+      endTime:      vestingStreamsCache.endTime,
+      recipient:    vestingStreamsCache.recipient,
+      streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
     .where(
@@ -183,13 +189,14 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = await db
     .select({
-      streamId:    vestingStreamsCache.streamId,
-      protocol:    vestingStreamsCache.protocol,
-      chainId:     vestingStreamsCache.chainId,
-      tokenSymbol: vestingStreamsCache.tokenSymbol,
-      endTime:     vestingStreamsCache.endTime,
-      recipient:   vestingStreamsCache.recipient,
-      streamData:  vestingStreamsCache.streamData,
+      streamId:     vestingStreamsCache.streamId,
+      protocol:     vestingStreamsCache.protocol,
+      chainId:      vestingStreamsCache.chainId,
+      tokenSymbol:  vestingStreamsCache.tokenSymbol,
+      tokenAddress: vestingStreamsCache.tokenAddress,
+      endTime:      vestingStreamsCache.endTime,
+      recipient:    vestingStreamsCache.recipient,
+      streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
     .where(
@@ -215,13 +222,14 @@ export async function getUpcomingUnlocksForProtocol(
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = await db
     .select({
-      streamId:    vestingStreamsCache.streamId,
-      protocol:    vestingStreamsCache.protocol,
-      chainId:     vestingStreamsCache.chainId,
-      tokenSymbol: vestingStreamsCache.tokenSymbol,
-      endTime:     vestingStreamsCache.endTime,
-      recipient:   vestingStreamsCache.recipient,
-      streamData:  vestingStreamsCache.streamData,
+      streamId:     vestingStreamsCache.streamId,
+      protocol:     vestingStreamsCache.protocol,
+      chainId:      vestingStreamsCache.chainId,
+      tokenSymbol:  vestingStreamsCache.tokenSymbol,
+      tokenAddress: vestingStreamsCache.tokenAddress,
+      endTime:      vestingStreamsCache.endTime,
+      recipient:    vestingStreamsCache.recipient,
+      streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
     .where(

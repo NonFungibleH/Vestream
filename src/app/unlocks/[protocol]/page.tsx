@@ -532,8 +532,10 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
   const amount = formatAmountCompact(u.amount, u.tokenSymbol);
   const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
-  return (
-    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3">
+  // Only link when we know a chain+address — otherwise fall back to a plain row.
+  const canLink = !!u.tokenAddress && /^0x[0-9a-f]{40}$/i.test(u.tokenAddress);
+  const inner = (
+    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
@@ -545,6 +547,11 @@ function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
           >
             {chainLabel(u.chainId)}
           </span>
+          {canLink && (
+            <span className="text-[10px] font-semibold" style={{ color: accent, opacity: 0.7 }}>
+              view token →
+            </span>
+          )}
         </div>
         <div className="text-[10.5px] font-mono truncate" style={{ color: "#94a3b8" }}>
           for {truncateAddress(u.recipient)}
@@ -556,6 +563,11 @@ function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
       </div>
     </div>
   );
+  return canLink ? (
+    <Link href={`/token/${u.chainId}/${u.tokenAddress}`} className="block">
+      {inner}
+    </Link>
+  ) : inner;
 }
 
 function UnlockCard({
