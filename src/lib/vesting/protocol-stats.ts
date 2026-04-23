@@ -37,6 +37,10 @@ export interface UnlockSummary {
   tokenSymbol: string | null;
   /** Lowercase ERC-20 contract address — used to deep-link to /token/[chainId]/[address]. */
   tokenAddress: string;
+  /** ERC-20 decimals for the token. Needed by formatters to scale the raw
+   *  bigint amount down to the human unit. Without it, formatters default
+   *  to 18 and USDC (decimals=6) rendered as "0.0000 USDC". */
+  tokenDecimals: number;
   /** Unix seconds — end of the schedule. */
   endTime:     number | null;
   /** Stringified bigint total amount for the stream. */
@@ -70,6 +74,9 @@ function rowToUnlock(row: {
     chainId:      row.chainId,
     tokenSymbol:  row.tokenSymbol ?? null,
     tokenAddress: (row.tokenAddress ?? "").toLowerCase(),
+    // Default to 18 for legacy rows that somehow lack tokenDecimals in their
+    // streamData blob. Any adapter written since inception sets it.
+    tokenDecimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
     endTime:      row.endTime ?? null,
     amount:       sd.totalAmount ?? null,
     recipient:    row.recipient,
@@ -276,6 +283,34 @@ export function relativeTimeSince(date: Date | null, nowMs = Date.now()): string
   return `${Math.floor(diffSec / 86400)} d ago`;
 }
 
+/**
+ * Freshness formatter tuned for "we re-index on a daily cadence" displays.
+ *
+ * `relativeTimeSince` is honest but ugly here: the cron runs at 03:00 UTC
+ * and by 09:00 UTC the same day it already reads "6 h ago" — which reads
+ * as "stale" even though nothing on-chain has actually changed meaningfully.
+ * This formatter drops hour precision after the first hour and switches to
+ * day buckets so the freshness pill stays confidence-inspiring for the full
+ * ~23-hour window between runs.
+ *
+ * Buckets (descending priority):
+ *   < 1 min   → "just now"
+ *   < 60 min  → "X min ago"                  (minute precision builds trust
+ *                                              for manual reruns / user hits)
+ *   < 24 h    → "today"                      (the key UX change)
+ *   < 48 h    → "yesterday"
+ *   else      → "N days ago"
+ */
+export function relativeFreshness(date: Date | null, nowMs = Date.now()): string {
+  if (!date) return "never";
+  const diffSec = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
+  if (diffSec < 60)    return "just now";
+  if (diffSec < 3600)  return `${Math.floor(diffSec / 60)} min ago`;
+  if (diffSec < 86400) return "today";
+  if (diffSec < 86400 * 2) return "yesterday";
+  return `${Math.floor(diffSec / 86400)} days ago`;
+}
+
 /** Time-until from now → a unix-seconds future timestamp — "in 4 d 2 h". */
 export function relativeTimeUntil(unixSec: number | null, nowMs = Date.now()): string {
   if (!unixSec) return "unknown";
@@ -314,5 +349,9 @@ export function formatAmountCompact(
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
   if (whole >= 1)         return `${whole.toFixed(2)}${sym}`;
-  return `${whole.toFixed(4)}${sym}`;
+  // Sub-1 amounts: toFixed(4) rounds very small values to "0.0000" which
+  // reads as broken data. Show "< 0.0001" instead so the UI stays honest.
+  const fixed = whole.toFixed(4);
+  if (fixed === "0.0000" && whole > 0) return `< 0.0001${sym}`;
+  return `${fixed}${sym}`;
 }

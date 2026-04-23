@@ -26,13 +26,17 @@ import { vestingStreamsCache } from "@/lib/db/schema";
 export const dynamic = "force-dynamic";
 
 export interface LiveActivityRow {
-  streamId:    string;
-  protocol:    string;        // adapter ID: "sablier" | "hedgey" | ...
-  chainId:     number;
-  tokenSymbol: string | null;
-  recipient:   string;        // lowercase 0x address
-  totalAmount: string | null; // stringified bigint
-  endTime:     number | null; // unix seconds
+  streamId:     string;
+  protocol:     string;        // adapter ID: "sablier" | "hedgey" | ...
+  chainId:      number;
+  tokenSymbol:  string | null;
+  /** Pulled from streamData.tokenDecimals; defaults to 18 only if the cached
+   *  blob is missing the field (shouldn't happen for rows written after the
+   *  tokenDecimals rollout, but the cache contains historical data). */
+  tokenDecimals: number;
+  recipient:    string;        // lowercase 0x address
+  totalAmount:  string | null; // stringified bigint
+  endTime:      number | null; // unix seconds
   /** ISO timestamp of the latest refresh — drives "X min ago" in the UI. */
   lastRefreshedAt: string;
   /** ISO timestamp of first discovery — distinguishes brand-new rows. */
@@ -97,12 +101,13 @@ export async function GET() {
       .limit(12);
 
     const recent: LiveActivityRow[] = recentRows.map((r) => {
-      const sd = r.streamData as { totalAmount?: string };
+      const sd = r.streamData as { totalAmount?: string; tokenDecimals?: number };
       return {
         streamId:        r.streamId,
         protocol:        r.protocol,
         chainId:         r.chainId,
         tokenSymbol:     r.tokenSymbol,
+        tokenDecimals:   typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
         recipient:       r.recipient,
         totalAmount:     sd.totalAmount ?? null,
         endTime:         r.endTime,

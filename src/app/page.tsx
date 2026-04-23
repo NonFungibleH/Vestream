@@ -7,7 +7,7 @@ import ContactTrigger from "@/components/ContactTrigger";
 import { listProtocols } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
-  relativeTimeSince,
+  relativeFreshness,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 
@@ -135,7 +135,7 @@ export default async function Home() {
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#64748b" }}>
-          The Vestream mobile app tracks every vesting you&apos;re owed — across all protocols and chains — and sends push notifications the moment a token is ready to claim.
+          The Vestream mobile app finds and tracks every vesting you&apos;re owed — across all protocols and chains — and sends push notifications the moment a token is ready to claim.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
           Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
@@ -185,7 +185,7 @@ export default async function Home() {
             Live · {liveStats.totalStreams.toLocaleString()} {liveStats.totalStreams === 1 ? "stream" : "streams"} indexed across {liveStats.protocolCount} protocols
             {liveStats.lastIndexedAt && (
               <span style={{ color: "#64748b", fontWeight: 500 }}>
-                · refreshed {relativeTimeSince(liveStats.lastIndexedAt)}
+                · refreshed {relativeFreshness(liveStats.lastIndexedAt)}
               </span>
             )}
           </Link>

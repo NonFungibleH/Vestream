@@ -26,7 +26,7 @@ import { TvlComparisonBar } from "@/components/TvlComparisonBar";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
-  relativeTimeSince,
+  relativeFreshness,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
@@ -310,7 +310,7 @@ function ProtocolCard({
   effectiveActive: number;
 }) {
   const liveLabel = stats?.lastIndexedAt
-    ? `Indexed ${relativeTimeSince(stats.lastIndexedAt)}`
+    ? `Indexed ${relativeFreshness(stats.lastIndexedAt)}`
     : `${protocol.chainIds.length} chains`;
 
   // Protocol-colour hover accent — we intensify the tint on hover by upgrading

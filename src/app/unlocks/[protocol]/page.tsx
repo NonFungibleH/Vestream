@@ -31,6 +31,7 @@ import {
   getNextUpcomingUnlock,
   getProtocolStats,
   getUpcomingUnlocksForProtocol,
+  relativeFreshness,
   relativeTimeSince,
   relativeTimeUntil,
   truncateAddress,
@@ -199,7 +200,7 @@ export default async function ProtocolLandingPage(
               style={{ background: meta.color }}
             />
             {stats?.lastIndexedAt
-              ? `Live · indexed ${relativeTimeSince(stats.lastIndexedAt)}`
+              ? `Live · indexed ${relativeFreshness(stats.lastIndexedAt)}`
               : `Live · indexing ${meta.chainIds.length} chains`}
           </div>
 
@@ -283,7 +284,7 @@ export default async function ProtocolLandingPage(
           />
           <Stat
             label="Last indexed"
-            value={stats?.lastIndexedAt ? relativeTimeSince(stats.lastIndexedAt) : "—"}
+            value={stats?.lastIndexedAt ? relativeFreshness(stats.lastIndexedAt) : "—"}
             color={meta.color}
           />
         </div>
@@ -544,7 +545,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 }
 
 function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
-  const amount = formatAmountCompact(u.amount, u.tokenSymbol);
+  const amount = formatAmountCompact(u.amount, u.tokenSymbol, u.tokenDecimals);
   const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
   // Only link when we know a chain+address — otherwise fall back to a plain row.
   const canLink = !!u.tokenAddress && /^0x[0-9a-f]{40}$/i.test(u.tokenAddress);
@@ -628,10 +629,10 @@ function UnlockCard({
     ? (unlock.endTime ? relativeTimeSince(new Date(unlock.endTime * 1000)) : "—")
     : relativeTimeUntil(unlock.endTime);
 
-  // Decimals default to 18 (true for 95% of ERC-20s on the indexed chains).
-  // The cache's JSONB blob has the real tokenDecimals if we ever want to be exact.
-  const amountDecimals = 18;
-  const amountDisplay = formatAmountCompact(unlock.amount, unlock.tokenSymbol, amountDecimals);
+  // UnlockSummary now carries tokenDecimals — pulled from the cached JSONB
+  // blob. Previously this was hardcoded to 18, which rendered USDC/USDT
+  // (6-decimal stablecoins) as "0.0000 USDC" on the Upcoming Unlocks panel.
+  const amountDisplay = formatAmountCompact(unlock.amount, unlock.tokenSymbol, unlock.tokenDecimals);
 
   return (
     <div

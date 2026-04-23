@@ -23,6 +23,7 @@ type Activity = {
   protocol:        string;
   chainId:         number;
   tokenSymbol:     string | null;
+  tokenDecimals:   number;      // required for correct amount display
   recipient:       string;
   totalAmount:     string | null;
   endTime:         number | null;
@@ -87,7 +88,9 @@ function formatAmount(raw: string | null, symbol: string | null, decimals = 18):
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
   if (whole >= 1)         return `${whole.toFixed(2)}${sym}`;
-  return `${whole.toFixed(4)}${sym}`;
+  const fixed = whole.toFixed(4);
+  if (fixed === "0.0000" && whole > 0) return `< 0.0001${sym}`;
+  return `${fixed}${sym}`;
 }
 
 function relTime(iso: string, nowMs: number): string {
@@ -233,7 +236,7 @@ function Stat({ n, label }: { n: number; label: string }) {
 
 function ActivityRow({ row, nowMs }: { row: Activity; nowMs: number }) {
   const meta = PROTOCOL_COLORS[row.protocol] ?? { color: "#64748b", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.2)", name: row.protocol };
-  const amount = formatAmount(row.totalAmount, row.tokenSymbol);
+  const amount = formatAmount(row.totalAmount, row.tokenSymbol, row.tokenDecimals);
   const age    = relTime(row.lastRefreshedAt, nowMs);
   // Pulse extra on rows first seen in the last 30 seconds
   const firstSeenMs = new Date(row.firstSeenAt).getTime();

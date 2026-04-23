@@ -17,14 +17,15 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type UpcomingRow = {
-  streamId:     string;
-  protocol:     string;
-  chainId:      number;
-  tokenSymbol:  string | null;
-  tokenAddress: string;
-  recipient:    string;
-  amount:       string | null;
-  endTime:      number | null;
+  streamId:      string;
+  protocol:      string;
+  chainId:       number;
+  tokenSymbol:   string | null;
+  tokenAddress:  string;
+  tokenDecimals: number;   // needed to scale `amount` — defaults upstream to 18
+  recipient:     string;
+  amount:        string | null;
+  endTime:       number | null;
 };
 
 type UpcomingResponse = {
@@ -72,7 +73,11 @@ function formatAmount(raw: string | null, symbol: string | null, decimals = 18):
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
   if (whole >= 1)         return `${whole.toFixed(2)}${sym}`;
-  return `${whole.toFixed(4)}${sym}`;
+  // Sub-1 amounts: show up to 4 decimals, but if rounding gives exactly 0,
+  // bump to "< 0.0001" so we never render a misleading "0.0000 USDC".
+  const fixed = whole.toFixed(4);
+  if (fixed === "0.0000" && whole > 0) return `< 0.0001${sym}`;
+  return `${fixed}${sym}`;
 }
 
 function countdown(unlockSec: number | null, nowMs: number): string {
@@ -148,10 +153,10 @@ export function UpcomingUnlockTicker() {
         </div>
         {data && (
           <div className="flex items-center gap-1.5 text-xs" style={{ color: "#64748b" }}>
+            <span>showing next</span>
             <span className="font-mono font-semibold tabular-nums" style={{ color: "#0f172a" }}>
               {data.unlocks.length}
             </span>
-            <span>scheduled</span>
           </div>
         )}
       </div>
@@ -197,7 +202,7 @@ export function UpcomingUnlockTicker() {
 
 function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const meta   = PROTOCOL_COLORS[row.protocol] ?? { color: "#64748b", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.2)", name: row.protocol };
-  const amount = formatAmount(row.amount, row.tokenSymbol);
+  const amount = formatAmount(row.amount, row.tokenSymbol, row.tokenDecimals);
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h
   const canLink  = !!row.tokenAddress && /^0x[0-9a-f]{40}$/i.test(row.tokenAddress);
