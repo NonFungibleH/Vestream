@@ -9,9 +9,16 @@
 //   - "navy"  → /developer
 //   - "dark"  → /ai
 //
-// Links are identical across all themes. A tiny "·" admin escape-hatch lives
-// in the light footer only — it's faint enough not to draw attention but
-// available if you ever need to find your way back to /admin.
+// Layout:
+//   - Left: logo + copyright
+//   - Centre (desktop) / below (mobile): three grouped link columns
+//       • Platform:   Protocols · Demo · Pricing · Resources
+//       • Developers: Developer API · AI Agents
+//       • Legal:      Privacy Policy · Terms of Service
+//   - Right: social icons (X, LinkedIn)
+//   - A tiny "·" admin escape-hatch lives in the light footer only — it's
+//     faint enough not to draw attention but available if you ever need
+//     to find your way back to /admin.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
@@ -25,41 +32,105 @@ interface Props {
   recessed?: boolean;
 }
 
-const LINKS = [
-  { label: "Protocols",       href: "/unlocks"       },
-  { label: "Demo",            href: "/demo"          },
-  { label: "Developer API",   href: "/developer"     },
-  { label: "AI Agents",       href: "/ai"            },
-  { label: "Pricing",         href: "/pricing"       },
-  { label: "Resources",       href: "/resources"     },
-  { label: "Privacy Policy",  href: "/privacy"       },
-  { label: "Terms of Service", href: "/terms"        },
+// Grouped link structure. Order matters within each column — matches the
+// order the user approved: Protocols, Demo, Pricing, Resources for Platform;
+// Developer API, AI Agents for Developers; Privacy, Terms for Legal.
+const LINK_GROUPS = [
+  {
+    heading: "Platform",
+    links: [
+      { label: "Protocols", href: "/unlocks"   },
+      { label: "Demo",      href: "/demo"      },
+      { label: "Pricing",   href: "/pricing"   },
+      { label: "Resources", href: "/resources" },
+    ],
+  },
+  {
+    heading: "Developers",
+    links: [
+      { label: "Developer API", href: "/developer" },
+      { label: "AI Agents",     href: "/ai"        },
+    ],
+  },
+  {
+    heading: "Legal",
+    links: [
+      { label: "Privacy Policy",   href: "/privacy" },
+      { label: "Terms of Service", href: "/terms"   },
+    ],
+  },
+] as const;
+
+// Social — placeholder URLs until real accounts exist. Swap in real handles
+// here (they're the only two strings that change).
+const SOCIAL = [
+  {
+    label: "X",
+    href:  "https://x.com/vestream",
+    // X (formerly Twitter) brand mark. currentColor lets the icon inherit
+    // from the parent's colour so theme swaps work without editing the SVG.
+    svg: (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+  {
+    label: "LinkedIn",
+    href:  "https://linkedin.com/company/vestream",
+    svg: (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.852 3.37-1.852 3.601 0 4.267 2.37 4.267 5.455v6.288zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      </svg>
+    ),
+  },
 ] as const;
 
 const THEME = {
   light: {
-    border:   "rgba(0,0,0,0.07)",
-    bg:       "transparent",
-    mutedBg:  "#f8fafc",
-    text:     "#94a3b8",
-    link:     "#64748b",
-    adminDot: "rgba(148,163,184,0.3)",
+    border:     "rgba(0,0,0,0.07)",
+    bg:         "transparent",
+    mutedBg:    "#f8fafc",
+    heading:    "#0f172a",
+    copyright:  "#94a3b8",
+    link:       "#64748b",
+    linkHover:  "#0f172a",
+    socialBg:   "rgba(0,0,0,0.04)",
+    socialFg:   "#64748b",
+    socialHoverBg: "rgba(37,99,235,0.08)",
+    socialHoverFg: "#2563eb",
+    adminDot:   "rgba(148,163,184,0.3)",
+    brandName:  "#0f172a",
   },
   navy: {
-    border:   "rgba(255,255,255,0.06)",
-    bg:       "transparent",
-    mutedBg:  "#0a1628",
-    text:     "#4b5563",
-    link:     "#64748b",
-    adminDot: "rgba(255,255,255,0.14)",
+    border:     "rgba(255,255,255,0.06)",
+    bg:         "transparent",
+    mutedBg:    "#0a1628",
+    heading:    "rgba(255,255,255,0.85)",
+    copyright:  "#4b5563",
+    link:       "rgba(255,255,255,0.55)",
+    linkHover:  "white",
+    socialBg:   "rgba(255,255,255,0.05)",
+    socialFg:   "rgba(255,255,255,0.55)",
+    socialHoverBg: "rgba(96,165,250,0.12)",
+    socialHoverFg: "#60a5fa",
+    adminDot:   "rgba(255,255,255,0.14)",
+    brandName:  "white",
   },
   dark: {
-    border:   "rgba(255,255,255,0.06)",
-    bg:       "transparent",
-    mutedBg:  "#0d0f14",
-    text:     "rgba(255,255,255,0.3)",
-    link:     "rgba(255,255,255,0.45)",
-    adminDot: "rgba(255,255,255,0.14)",
+    border:     "rgba(255,255,255,0.06)",
+    bg:         "transparent",
+    mutedBg:    "#0d0f14",
+    heading:    "rgba(255,255,255,0.85)",
+    copyright:  "rgba(255,255,255,0.3)",
+    link:       "rgba(255,255,255,0.45)",
+    linkHover:  "white",
+    socialBg:   "rgba(255,255,255,0.05)",
+    socialFg:   "rgba(255,255,255,0.55)",
+    socialHoverBg: "rgba(99,102,241,0.15)",
+    socialHoverFg: "#a5b4fc",
+    adminDot:   "rgba(255,255,255,0.14)",
+    brandName:  "white",
   },
 } as const;
 
@@ -69,65 +140,136 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
 
   return (
     <footer
-      className="px-4 md:px-8 py-8"
+      className="px-4 md:px-8 pt-12 pb-8"
       style={{
         borderTop: `1px solid ${palette.border}`,
         background: recessed ? palette.mutedBg : palette.bg,
       }}
     >
-      <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-            >
-              <span className="text-white font-bold text-xs">V</span>
-            </div>
-            <span
-              className="font-semibold text-sm"
-              style={{ color: theme === "light" ? "#0f172a" : "white" }}
-            >
-              Vestream
-            </span>
-          </Link>
-          <p className="text-xs hidden sm:inline" style={{ color: palette.text }}>
-            © {year} Vestream
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 md:gap-x-5">
-          {LINKS.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              className="text-xs transition-colors hover:opacity-80"
-              style={{ color: palette.link }}
-            >
-              {label}
+      <div className="max-w-5xl mx-auto">
+        {/* ── Upper block: brand (left) + link columns (centre) + social (right) ── */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 md:gap-12">
+          {/* Brand block */}
+          <div className="flex flex-col gap-4">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity w-fit">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+              >
+                <span className="text-white font-bold text-sm">V</span>
+              </div>
+              <span className="font-semibold text-base" style={{ color: palette.brandName }}>
+                Vestream
+              </span>
             </Link>
-          ))}
-          <Link
-            href="/admin"
-            className="text-xs transition-colors hover:opacity-60"
-            style={{ color: palette.adminDot }}
-            title="Admin"
-            aria-label="Admin"
-          >
-            ·
-          </Link>
+            <p className="text-xs max-w-[18rem] leading-relaxed" style={{ color: palette.copyright }}>
+              Track every token unlock across every major vesting protocol.
+            </p>
+
+            {/* Social row — hidden on mobile (surfaced at the bottom there) */}
+            <div className="hidden md:flex items-center gap-2 mt-2">
+              {SOCIAL.map((s) => (
+                <SocialButton key={s.label} palette={palette} {...s} />
+              ))}
+            </div>
+          </div>
+
+          {/* Link columns */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-10 gap-y-6">
+            {LINK_GROUPS.map((group) => (
+              <div key={group.heading} className="flex flex-col gap-3 min-w-[6.5rem]">
+                <h3
+                  className="text-[11px] font-semibold uppercase tracking-widest"
+                  style={{ color: palette.heading, letterSpacing: "0.12em" }}
+                >
+                  {group.heading}
+                </h3>
+                <ul className="flex flex-col gap-2.5">
+                  {group.links.map(({ label, href }) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        className="text-sm transition-colors"
+                        style={{ color: palette.link }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = palette.linkHover)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = palette.link)}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* ── Lower strip: copyright + mobile social + admin dot ── */}
+        <div
+          className="mt-10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          style={{ borderTop: `1px solid ${palette.border}` }}
+        >
+          <p className="text-xs" style={{ color: palette.copyright }}>
+            © {year} Vestream. All rights reserved.
+          </p>
+
+          <div className="flex items-center gap-3">
+            {/* Mobile social (desktop version sits in the brand block) */}
+            <div className="flex md:hidden items-center gap-2">
+              {SOCIAL.map((s) => (
+                <SocialButton key={s.label} palette={palette} {...s} />
+              ))}
+            </div>
+            <Link
+              href="/admin"
+              className="text-xs transition-colors hover:opacity-60"
+              style={{ color: palette.adminDot }}
+              title="Admin"
+              aria-label="Admin"
+            >
+              ·
+            </Link>
+          </div>
+        </div>
+
+        {note && (
+          <p className="mt-4 text-[11px]" style={{ color: palette.copyright }}>
+            {note}
+          </p>
+        )}
       </div>
-
-      {note && (
-        <p className="max-w-5xl mx-auto mt-4 text-[11px]" style={{ color: palette.text }}>
-          {note}
-        </p>
-      )}
-
-      <p className="max-w-5xl mx-auto mt-3 text-xs sm:hidden" style={{ color: palette.text }}>
-        © {year} Vestream. All rights reserved.
-      </p>
     </footer>
+  );
+}
+
+// ── Small bits ─────────────────────────────────────────────────────────────
+
+interface SocialButtonProps {
+  label: string;
+  href:  string;
+  svg:   React.ReactNode;
+  palette: (typeof THEME)[keyof typeof THEME];
+}
+
+function SocialButton({ label, href, svg, palette }: SocialButtonProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer noopener"
+      aria-label={label}
+      className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+      style={{ background: palette.socialBg, color: palette.socialFg }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = palette.socialHoverBg;
+        e.currentTarget.style.color = palette.socialHoverFg;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = palette.socialBg;
+        e.currentTarget.style.color = palette.socialFg;
+      }}
+    >
+      {svg}
+    </a>
   );
 }
