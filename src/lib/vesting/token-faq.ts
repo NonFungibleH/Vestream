@@ -193,15 +193,31 @@ function ansNext30Days(input: BuildFAQInput): string {
 }
 
 function ansTopRecipients(input: BuildFAQInput): string {
-  const { symbol, recipients } = input;
+  const { symbol, overview, recipients } = input;
   if (recipients.length === 0) {
     return `Vestream has not indexed any vested ${symbol} recipients yet.`;
   }
+  const totalLocked = overview?.lockedTokensWhole ?? 0;
   const top = recipients.slice(0, 3);
+
+  // % of locked supply — always computable from our own cache, no external
+  // data needed. We floor to 0.1% so the snippet doesn't fill with noise
+  // like "0.0003% of locked supply" for tiny positions.
+  const supplyShare = (tokens: number): string => {
+    if (totalLocked <= 0) return "";
+    const pct = (tokens / totalLocked) * 100;
+    if (pct < 0.1) return "";
+    return ` (${pct.toFixed(1)}% of locked supply)`;
+  };
+
   if (top.length === 1) {
-    return `The wallet with the largest indexed ${symbol} vesting position is ${truncateAddr(top[0].recipient)} with approximately ${fmtTokens(top[0].lockedTokensWhole)} ${symbol} locked.`;
+    const r = top[0];
+    return `The largest indexed ${symbol} vesting position belongs to ${truncateAddr(r.recipient)} with approximately ${fmtTokens(r.lockedTokensWhole)} ${symbol}${supplyShare(r.lockedTokensWhole)}.`;
   }
-  const list = top.map((r, i) => `${i + 1}. ${truncateAddr(r.recipient)} (${fmtTokens(r.lockedTokensWhole)} ${symbol})`).join("; ");
+
+  const list = top
+    .map((r, i) => `${i + 1}. ${truncateAddr(r.recipient)} with ${fmtTokens(r.lockedTokensWhole)} ${symbol}${supplyShare(r.lockedTokensWhole)}`)
+    .join("; ");
   return `The top ${top.length} wallets by indexed ${symbol} vesting positions are: ${list}.`;
 }
 
@@ -235,48 +251,56 @@ function ansCirculatingVsTotal(input: BuildFAQInput): string {
 // ─── Public entry point ─────────────────────────────────────────────────────
 
 /**
- * Produce an ordered list of FAQ entries for a token page. The order is
- * deliberate — most-searched questions first, generic educational at the
- * bottom. Callers render in order and pass the same list to the JSON-LD
- * schema so on-page and search-engine views stay in sync.
+ * Produce an ordered list of FAQ entries for a token page.
+ *
+ * Questions are deliberately phrased in conversational Vestream voice
+ * rather than the stock "What is the X token vesting schedule?" template
+ * that several competitors use — both to read less like a page clone and
+ * because the rephrasings match real long-tail search phrasing better
+ * (e.g. "next X unlock" beats "When is the next X unlock?" for intent
+ * parity with how users actually type).
+ *
+ * Order is deliberate — soonest-urgency questions first, educational at
+ * the bottom. The same list feeds both the accordion and the JSON-LD
+ * schema so on-page and search-result views stay in sync.
  */
 export function buildTokenFAQ(input: BuildFAQInput): FAQItem[] {
   const { symbol } = input;
   return [
     {
-      question: `What is the ${symbol} token vesting schedule?`,
+      question: `What does the ${symbol} unlock schedule look like over the next year?`,
       answer:   ansVestingSchedule(input),
     },
     {
-      question: `When is the next ${symbol} unlock?`,
+      question: `When is the very next ${symbol} unlock event?`,
       answer:   ansNextUnlock(input),
     },
     {
-      question: `How much ${symbol} is currently locked in vesting contracts?`,
+      question: `How much ${symbol} is still locked in vesting right now, and what is it worth?`,
       answer:   ansLockedSupply(input),
     },
     {
-      question: `Which vesting protocols hold ${symbol}?`,
+      question: `Which vesting protocols are holding ${symbol}?`,
       answer:   ansProtocolAllocation(input),
     },
     {
-      question: `How much ${symbol} unlocks in the next 30 days?`,
+      question: `How much ${symbol} will unlock in the next 30 days?`,
       answer:   ansNext30Days(input),
     },
     {
-      question: `Which wallets hold the most vested ${symbol}?`,
+      question: `Who are the largest ${symbol} recipients with active vesting?`,
       answer:   ansTopRecipients(input),
     },
     {
-      question: `What is ${symbol}'s Fully Diluted Valuation (FDV)?`,
+      question: `What is ${symbol} worth fully diluted today?`,
       answer:   ansFdv(input),
     },
     {
-      question: `How can I track upcoming ${symbol} unlocks?`,
+      question: `How do I get notified before a ${symbol} unlock happens?`,
       answer:   ansTrack(input),
     },
     {
-      question: `What is the difference between ${symbol} circulating supply and total supply?`,
+      question: `Why does ${symbol} circulating supply differ from the locked amount Vestream shows?`,
       answer:   ansCirculatingVsTotal(input),
     },
   ];

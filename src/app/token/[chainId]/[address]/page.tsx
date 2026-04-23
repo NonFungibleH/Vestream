@@ -26,8 +26,10 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
+import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
 import { buildTokenFAQ } from "@/lib/vesting/token-faq";
+import { buildTokenPulse } from "@/lib/vesting/token-pulse";
 import {
   getTokenOverview,
   getTokenUnlockCalendar,
@@ -258,6 +260,28 @@ export default async function TokenPage(
             tokenSymbol={overview.tokenSymbol ?? market.tokenName ?? null}
             market={market}
             overview={overview}
+          />
+        </section>
+      )}
+
+      {/* ── Pulse summary — 3-4 bullets with a "See more" narrative.
+          Rendered only when there's something substantive to say (the
+          pulse builder returns empty bullets otherwise and the component
+          renders null). Sits between the meta panel and the hero stats so
+          visitors get the "what's happening with this token right now"
+          read-out before diving into the raw numbers. */}
+      {overview && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <TokenPulse
+            symbol={symbol}
+            pulse={buildTokenPulse({
+              symbol,
+              overview,
+              market,
+              calendar,
+              upcoming,
+              recipients,
+            })}
           />
         </section>
       )}
