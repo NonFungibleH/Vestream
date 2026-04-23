@@ -1,5 +1,6 @@
 import { getIronSession, IronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { env } from "@/lib/env";
 
 export interface SessionData {
   address?: string;
@@ -10,10 +11,10 @@ export interface SessionData {
 }
 
 const sessionOptions = {
-  password: process.env.SESSION_SECRET!,
+  password: env.SESSION_SECRET,
   cookieName: "vestr_session",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
+    secure: env.isProd,
     httpOnly: true,
     sameSite: "lax" as const,
     maxAge: 60 * 60 * 24 * 30, // 30 days

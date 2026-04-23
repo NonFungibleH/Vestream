@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runNotificationJob } from "@/lib/notifications/scheduler";
+import { env } from "@/lib/env";
 
 // Notification job runs the full upcoming-unlocks scan + emails every eligible
 // user. Needs more than the default 10s Vercel function timeout.
@@ -8,7 +9,7 @@ export const dynamic     = "force-dynamic";
 
 async function handle(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = env.CRON_SECRET;
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

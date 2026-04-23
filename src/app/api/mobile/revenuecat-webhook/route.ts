@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { env } from "@/lib/env";
 
 // Events that mean a subscription is now active
 const ACTIVE_EVENTS = new Set(["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE"]);
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
   // Fail CLOSED when the env var is unset — an unset secret used to let every
   // request through, which is a critical privilege-escalation hole (anyone
   // could flip any user to tier="fund" with a crafted POST).
-  const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
+  const secret = env.REVENUECAT_WEBHOOK_SECRET;
   if (!secret) {
     console.error("[RC Webhook] REVENUECAT_WEBHOOK_SECRET not set — rejecting request");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { env } from "@/lib/env";
 
 export async function POST(req: NextRequest) {
   // Brute-force protection: 5 attempts per IP per 15 minutes
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { password } = await req.json().catch(() => ({}));
-  const expected = process.env.ADMIN_PASSWORD;
+  const expected = env.ADMIN_PASSWORD;
 
   if (!password || !expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

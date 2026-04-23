@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { seedAll, summariseRun } from "@/lib/vesting/seeder";
+import { env } from "@/lib/env";
 
 // Seeder jobs can take a while (many subgraph round-trips). Lift the default
 // 10s Vercel function timeout with the app-router config.
@@ -22,7 +23,7 @@ export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
 
 async function handle(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

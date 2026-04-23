@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@vestream/shared": ["./packages/shared/src/index.ts"],
+      "@vestream/shared/*": ["./packages/shared/src/*"]
     }
   },
   "include": [

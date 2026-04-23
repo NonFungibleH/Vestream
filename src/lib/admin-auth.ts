@@ -1,4 +1,5 @@
 import { type NextRequest } from "next/server";
+import { env } from "@/lib/env";
 
 /**
  * Validate the admin session cookie.
@@ -10,7 +11,7 @@ export function isAdminAuthorized(req: NextRequest): boolean {
   const cookie = req.cookies.get("vestr_admin");
   if (!cookie?.value) return false;
 
-  const expected = process.env.ADMIN_PASSWORD;
+  const expected = env.ADMIN_PASSWORD;
   if (!expected) return false;
 
   const expectedToken = `vstr_admin_${Buffer.from(expected).toString("base64url").slice(0, 16)}`;
