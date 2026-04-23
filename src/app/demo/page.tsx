@@ -32,12 +32,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://vestream.io/demo" },
 };
 
-// Thirdweb + faucet URLs for Demo C. The thirdweb contract deploy pages
-// support a `?network=sepolia` query so the user lands on the right chain
-// without having to click through the network picker.
-const SEPOLIA_FAUCET        = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
-const THIRDWEB_TOKEN_DEPLOY = "https://thirdweb.com/thirdweb.eth/TokenERC20?network=sepolia";
-const THIRDWEB_VESTING      = "https://thirdweb.com/explore/vesting";
+// External deep-links used by Demo C. Chosen specifically to produce a real,
+// indexable vesting on Sepolia in about 10 minutes — no contract deployment
+// required from the user.
+//
+//   SEPOLIA_ETH_FAUCET  → free Sepolia ETH for gas
+//   LINK_FAUCET         → Chainlink's Sepolia faucet drops test LINK tokens
+//                         a user can vest without having to deploy their own
+//                         ERC20 (which is where the previous thirdweb flow
+//                         stalled — deploy + mint + transfer to vesting was
+//                         too many steps for a pre-launch demo)
+//   SABLIER_CREATE      → Sablier's Sepolia app. Sablier is one of our
+//                         indexed protocols on Sepolia (subgraph 5yDtFSxy…)
+//                         so the moment the user creates a stream, Vestream
+//                         can index it. Closes the demo loop end-to-end.
+const SEPOLIA_ETH_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
+const LINK_FAUCET        = "https://faucets.chain.link/sepolia";
+const SABLIER_CREATE     = "https://app.sablier.com/streams/create";
 
 export default function DemoPage() {
   return (
@@ -161,16 +172,16 @@ export default function DemoPage() {
         <DemoIntro
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
-          title="Deploy your own vesting on Sepolia"
-          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below deploy a token and a vesting contract on Sepolia testnet via thirdweb. No charge (Sepolia ETH is free), no custodial risk, and once deployed Vestream will auto-index the vesting the moment it's scanned."
+          title="Create a real Sepolia vesting Vestream will index"
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia stream without deploying a single line of code. You'll use a public faucet for gas and test tokens, then create the vesting on Sablier's Sepolia app (which Vestream indexes automatically)."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <DeployStep
             n="1"
             title="Get Sepolia ETH"
-            body="You'll need a small amount of Sepolia ETH (~0.05 ETH) to cover gas for the two contract deployments. The Google Cloud faucet drops test ETH instantly once per day."
-            href={SEPOLIA_FAUCET}
+            body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for creating the vesting in step 3. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
+            href={SEPOLIA_ETH_FAUCET}
             cta="Open the Google Cloud faucet"
             accent="#d97706"
             accentBg="rgba(245,158,11,0.08)"
@@ -179,30 +190,34 @@ export default function DemoPage() {
 
           <DeployStep
             n="2"
-            title="Deploy a test token"
-            body="Thirdweb's TokenERC20 template deploys a standard ERC-20 on Sepolia in a couple of clicks — name it anything, mint yourself a supply, and note the contract address for step 3."
-            href={THIRDWEB_TOKEN_DEPLOY}
-            cta="Deploy ERC-20 on thirdweb"
-            accent="#7c3aed"
-            accentBg="rgba(124,58,237,0.08)"
-            accentBorder="rgba(124,58,237,0.22)"
-          />
-
-          <DeployStep
-            n="3"
-            title="Create a vesting schedule"
-            body="Deploy a VestingWallet (or any of thirdweb's vesting templates), fund it with tokens from step 2, and set a recipient + duration. Vestream indexes VestingWallet contracts on Sepolia automatically."
-            href={THIRDWEB_VESTING}
-            cta="Browse vesting contracts"
+            title="Mint test tokens"
+            body="No contract deployment required — Chainlink's Sepolia faucet mints LINK test tokens directly to your wallet. Connect, pick how many LINK you want (up to 25), and these are what you'll vest in step 3."
+            href={LINK_FAUCET}
+            cta="Mint LINK from Chainlink"
             accent="#2563eb"
             accentBg="rgba(37,99,235,0.08)"
             accentBorder="rgba(37,99,235,0.22)"
           />
+
+          <DeployStep
+            n="3"
+            title="Create a vesting stream"
+            body="Sablier's app handles the vesting contract for you. Connect your wallet, switch to Sepolia, pick LINK as the token, set a recipient + duration, and submit. Within a minute Vestream will auto-index the stream — scan the recipient wallet on /find-vestings to see it live."
+            href={SABLIER_CREATE}
+            cta="Open Sablier to create stream"
+            accent="#7c3aed"
+            accentBg="rgba(124,58,237,0.08)"
+            accentBorder="rgba(124,58,237,0.22)"
+          />
         </div>
 
-        {/* Note on embedding thirdweb — they block iframe embedding for security,
-            so we deep-link rather than embed the deploy flow inline. Text
-            explains this to the user so the external-link behaviour is expected. */}
+        {/* Note on why we use Sablier + Chainlink faucet instead of a self-hosted
+            deploy flow: thirdweb blocks iframe embedding (wallet-signing security)
+            and even their deep-linked deploy is a 4-step shuffle (deploy contract
+            → mint → fund vesting → configure) that stalls pre-launch demo users.
+            Sablier's Sepolia app does the whole vesting leg in one UI, and
+            because we already index Sablier on Sepolia, the stream appears in
+            Vestream automatically. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
           style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b" }}
@@ -213,7 +228,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            The deploy flows live on thirdweb&rsquo;s dashboard (which doesn&rsquo;t allow iframe embedding for wallet-signing security reasons). Each step above opens thirdweb in a new tab &mdash; follow their prompts to deploy, then come back here and scan the wallet you used on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link>.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your stream is live on Sablier, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch Vestream index it.
           </p>
         </div>
       </section>
