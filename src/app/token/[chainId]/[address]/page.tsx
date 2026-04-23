@@ -26,6 +26,8 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
+import { TokenFAQ } from "@/components/TokenFAQ";
+import { buildTokenFAQ } from "@/lib/vesting/token-faq";
 import {
   getTokenOverview,
   getTokenUnlockCalendar,
@@ -346,6 +348,26 @@ export default async function TokenPage(
           )}
         </>
       )}
+
+      {/* ── SEO FAQ ───────────────────────────────────────────────────────
+          Rendered even when hasVesting is false — questions like "what is
+          $TOKEN FDV" still have valid answers, and the FAQPage JSON-LD is
+          the main SEO win regardless of whether a vesting schedule exists.
+          For a not-yet-indexed token the answers gracefully degrade to
+          "Vestream has not indexed vesting for $TOKEN yet". */}
+      <TokenFAQ
+        symbol={symbol}
+        items={buildTokenFAQ({
+          chainId: cid,
+          tokenAddress: addr,
+          symbol,
+          overview,
+          market,
+          calendar,
+          upcoming,
+          recipients,
+        })}
+      />
 
       <SiteFooter theme="light" />
     </div>
