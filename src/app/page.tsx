@@ -933,73 +933,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── B2B / Developer callout ─────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
-        <div className="relative rounded-3xl overflow-hidden px-6 md:px-12 py-12 md:py-16"
-          style={{ background: "linear-gradient(135deg, #0d1b35 0%, #0d0f14 100%)", border: "1px solid rgba(99,102,241,0.25)" }}>
-          {/* Atmospheric bloom */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 70%)" }} />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)" }} />
-
-          <div className="relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-5"
-                style={{ background: "rgba(99,102,241,0.12)", borderColor: "rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
-                For developers &amp; AI agents
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white" style={{ letterSpacing: "-0.02em" }}>
-                The vesting data layer for&nbsp;builders
-              </h2>
-              <p className="text-base mb-6 leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-                Every stream across 7 protocols and 4 chains, normalised behind one REST API and an MCP server.
-                Power claim bots, portfolio agents, compliance dashboards, or embed unlock data in your own product.
-              </p>
-              <div className="flex flex-wrap gap-3 mb-8">
-                <Link href="/developer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
-                  Developer API →
-                </Link>
-                <Link href="/ai" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", color: "#c7d2fe" }}>
-                  MCP for AI agents →
-                </Link>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
-                  REST + MCP
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#60a5fa" }} />
-                  7 protocols · 4 chains
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#a855f7" }} />
-                  Cross-protocol normalisation
-                </span>
-              </div>
-            </div>
-
-            {/* Code snippet */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0d13", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#ef4444" }} />
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#f59e0b" }} />
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#10b981" }} />
-                <span className="text-xs ml-2" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>vestings.sh</span>
-              </div>
-              <pre className="px-5 py-4 text-xs overflow-x-auto" style={{ color: "#e2e8f0", fontFamily: "monospace", lineHeight: 1.7 }}>
-<span style={{ color: "#64748b" }}># All streams for a wallet — cross-chain, cross-protocol</span>{"\n"}
-<span style={{ color: "#c084fc" }}>curl</span> https://api.vestream.io/v1/wallet/\{"\n"}
-  <span style={{ color: "#60a5fa" }}>0x3f5CE...8b2e</span>/vestings \{"\n"}
-  -H <span style={{ color: "#fbbf24" }}>&quot;Authorization: Bearer vstr_live_...&quot;</span>
-              </pre>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* B2B / Developer callout removed — the homepage is now strictly B2C.
+          Developer and AI-agent audiences land directly on /developer and /ai
+          via the top nav + footer, so a dark navy section in the middle of the
+          retail narrative was off-theme. Those pages still exist unchanged. */}
 
       {/* ── How it works ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">

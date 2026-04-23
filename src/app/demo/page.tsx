@@ -1,20 +1,22 @@
 // src/app/demo/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Two-demo walkthrough of the product:
+// Three-demo walkthrough of the product:
 //
 //   A. Interactive demo (90 seconds, no signup)
 //      A fully client-side, 3-step guided walkthrough of the claim flow:
 //      Scan → Alerted → Claim. Good for visitors in a hurry.
 //
-//   B. Live demo (15 minutes, real state)
-//      A real vesting schedule that ticks in real time. In production (Sepolia
-//      mode) it's a real VestingWallet on Sepolia with an actual on-chain
-//      release() tx; locally / without env vars it runs as pure-math
-//      simulation. Either way, the user can tap through, claim, and see
-//      state change — including a push alert arriving on their phone.
+//   B. Design-a-vesting + App Store funnel (no signup)
+//      User designs a sample schedule (token symbol, amount, duration) and is
+//      funnelled to the App Store to see it tick live on the mobile app.
+//      Browser simulation is available as a hidden "Run simulation" expander
+//      for QA + power users, but the hero path is the App Store.
 //
-// The two are stacked vertically with guiding copy between them so the user
-// understands what they're looking at.
+//   C. Deploy-your-own on Sepolia via thirdweb (~10 min, real on-chain)
+//      Three deep-links to the Google Cloud Sepolia faucet, a thirdweb
+//      ERC-20 token deploy, and a thirdweb vesting contract. Vestream
+//      auto-indexes VestingWallet contracts on Sepolia, so once deployed
+//      the user can verify the full indexing loop end-to-end.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
@@ -26,11 +28,16 @@ import { VestingDemo } from "@/components/VestingDemo";
 
 export const metadata: Metadata = {
   title: "Interactive + live vesting demo · Vestream",
-  description: "Two demos in one page — a 90-second interactive walkthrough of the claim flow, and a real 15-minute vesting schedule on Sepolia you can watch and claim yourself.",
+  description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy with thirdweb.",
   alternates: { canonical: "https://vestream.io/demo" },
 };
 
-const SEPOLIA_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
+// Thirdweb + faucet URLs for Demo C. The thirdweb contract deploy pages
+// support a `?network=sepolia` query so the user lands on the right chain
+// without having to click through the network picker.
+const SEPOLIA_FAUCET        = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
+const THIRDWEB_TOKEN_DEPLOY = "https://thirdweb.com/thirdweb.eth/TokenERC20?network=sepolia";
+const THIRDWEB_VESTING      = "https://thirdweb.com/explore/vesting";
 
 export default function DemoPage() {
   return (
@@ -48,7 +55,7 @@ export default function DemoPage() {
               border: "1px solid rgba(37,99,235,0.2)",
             }}
           >
-            Two demos · No signup · ~90s + 15min
+            Three demos · No signup for A + B · ~90s → ~10min
           </div>
 
           <h1
@@ -63,8 +70,9 @@ export default function DemoPage() {
             See the claim flow,<br className="hidden md:block" /> then try it live
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#64748b", lineHeight: 1.6 }}>
-            Start with the 90-second interactive walkthrough to understand what Vestream does.
-            Then drop down to the live demo &mdash; a real vesting schedule you can watch tick and claim yourself.
+            <strong style={{ color: "#0f172a" }}>A.</strong> A 90-second interactive walkthrough.{" "}
+            <strong style={{ color: "#0f172a" }}>B.</strong> Design a vesting and watch it live on the mobile app.{" "}
+            <strong style={{ color: "#0f172a" }}>C.</strong> Deploy a real on-chain vesting on Sepolia via thirdweb.
           </p>
         </div>
       </section>
@@ -89,73 +97,37 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Demo B — Live 15-min vesting ──────────────────────────────────── */}
+      {/* ── Demo B — Design a vesting, see it live on the app ─────────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <DemoIntro
           letter="B"
-          eyebrow="Demo B · 15 minutes · Live state"
-          title="Spin up a real vesting schedule"
-          copy="This is a real 15-minute vesting schedule &mdash; in production, a VestingWallet deployed on Sepolia that unlocks 1,000 DEMO tokens linearly. Press Start, watch the bar tick, and claim whenever you like. If you have our app installed, you'll get a push notification the moment tokens unlock."
+          eyebrow="Demo B · Design your vesting · See it live on the app"
+          title="Spin up a sample vesting schedule"
+          copy="Pick the token name, amount, and duration below. Then download the Vestream app to watch that vesting tick down in real time on your phone &mdash; including native push notifications the moment tokens unlock. No Sepolia ETH, no wallet signature, nothing to sign up for."
         />
 
         <VestingDemo />
 
-        {/* Guidance — what to do after starting */}
+        {/* Guidance — 3 steps that match the new B flow */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
           <GuideCard
             n="1"
-            title="Press Start"
-            body="Kicks off a 15-minute linear vest of 1,000 DEMO. No wallet connection required — your session lives in a cookie."
+            title="Design your vesting"
+            body="Pick a token symbol, amount, and duration. VEST and NOVA are our canonical demo tokens — whatever you set here will be your sandbox on the app."
           />
           <GuideCard
             n="2"
-            title="Watch it tick"
-            body="The bar updates every 2 seconds. If you install the mobile app and scan this demo wallet, the same unlock triggers a real push alert."
+            title="Download the app"
+            body="Install Vestream from the App Store or Google Play. Sign in with your email and your designed vesting is ready to watch from the dashboard."
           />
           <GuideCard
             n="3"
-            title="Claim anytime"
-            body="You don't have to wait. Hit Claim at any point to release whatever's currently vested — simulating a mid-stream withdrawal."
+            title="See it tick + claim"
+            body="Your vesting ticks down in the app with native push alerts on every unlock milestone. Hit Claim at any point to simulate a mid-stream withdrawal."
           />
         </div>
 
-        {/* Sepolia-only helper — faucet + how to get the on-chain version */}
-        <div
-          className="mt-6 rounded-2xl p-5 md:p-6 flex items-start gap-4 flex-wrap"
-          style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}
-        >
-          <div
-            className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(245,158,11,0.15)", color: "#d97706" }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <div className="flex-1 min-w-[240px]">
-            <div className="text-sm font-bold mb-1" style={{ color: "#0f172a" }}>
-              Want the real on-chain version?
-            </div>
-            <p className="text-xs md:text-sm mb-3" style={{ color: "#64748b", lineHeight: 1.55 }}>
-              When the Sepolia demo contracts are configured, the same widget above broadcasts a real{" "}
-              <code className="font-mono px-1 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.05)" }}>release()</code>{" "}
-              transaction on Sepolia and a tx link appears inline. You can grab free Sepolia ETH for gas from the Google Cloud faucet.
-            </p>
-            <a
-              href={SEPOLIA_FAUCET}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold hover:underline"
-              style={{ color: "#d97706" }}
-            >
-              Get Sepolia ETH from the Google Cloud faucet ↗
-            </a>
-          </div>
-        </div>
-
-        {/* Secondary CTAs under live demo */}
+        {/* Secondary CTAs under the design-your-vesting card */}
         <div className="mt-8 flex items-center justify-center gap-4 flex-wrap text-sm">
           <Link
             href="/find-vestings"
@@ -170,8 +142,79 @@ export default function DemoPage() {
             className="font-medium hover:underline"
             style={{ color: "#2563eb" }}
           >
-            Get the app (early access) →
+            Get early access on web →
           </Link>
+        </div>
+
+        {/* Divider into Demo C */}
+        <div className="flex items-center justify-center gap-4 mt-12 md:mt-14 mb-2">
+          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+            Or deploy a real vesting on Sepolia
+          </span>
+          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+        </div>
+      </section>
+
+      {/* ── Demo C — Deploy a live Sepolia vesting via thirdweb ──────────── */}
+      <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
+        <DemoIntro
+          letter="C"
+          eyebrow="Demo C · ~10 minutes · Real on-chain"
+          title="Deploy your own vesting on Sepolia"
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below deploy a token and a vesting contract on Sepolia testnet via thirdweb. No charge (Sepolia ETH is free), no custodial risk, and once deployed Vestream will auto-index the vesting the moment it's scanned."
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <DeployStep
+            n="1"
+            title="Get Sepolia ETH"
+            body="You'll need a small amount of Sepolia ETH (~0.05 ETH) to cover gas for the two contract deployments. The Google Cloud faucet drops test ETH instantly once per day."
+            href={SEPOLIA_FAUCET}
+            cta="Open the Google Cloud faucet"
+            accent="#d97706"
+            accentBg="rgba(245,158,11,0.08)"
+            accentBorder="rgba(245,158,11,0.22)"
+          />
+
+          <DeployStep
+            n="2"
+            title="Deploy a test token"
+            body="Thirdweb's TokenERC20 template deploys a standard ERC-20 on Sepolia in a couple of clicks — name it anything, mint yourself a supply, and note the contract address for step 3."
+            href={THIRDWEB_TOKEN_DEPLOY}
+            cta="Deploy ERC-20 on thirdweb"
+            accent="#7c3aed"
+            accentBg="rgba(124,58,237,0.08)"
+            accentBorder="rgba(124,58,237,0.22)"
+          />
+
+          <DeployStep
+            n="3"
+            title="Create a vesting schedule"
+            body="Deploy a VestingWallet (or any of thirdweb's vesting templates), fund it with tokens from step 2, and set a recipient + duration. Vestream indexes VestingWallet contracts on Sepolia automatically."
+            href={THIRDWEB_VESTING}
+            cta="Browse vesting contracts"
+            accent="#2563eb"
+            accentBg="rgba(37,99,235,0.08)"
+            accentBorder="rgba(37,99,235,0.22)"
+          />
+        </div>
+
+        {/* Note on embedding thirdweb — they block iframe embedding for security,
+            so we deep-link rather than embed the deploy flow inline. Text
+            explains this to the user so the external-link behaviour is expected. */}
+        <div
+          className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
+          style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p style={{ lineHeight: 1.55 }}>
+            The deploy flows live on thirdweb&rsquo;s dashboard (which doesn&rsquo;t allow iframe embedding for wallet-signing security reasons). Each step above opens thirdweb in a new tab &mdash; follow their prompts to deploy, then come back here and scan the wallet you used on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link>.
+          </p>
         </div>
       </section>
 
@@ -195,7 +238,7 @@ export default function DemoPage() {
               </svg>
             }
             title="Scan any wallet, across every protocol"
-            body="One address, seven protocols, four mainnets. Vestream indexes Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid and PinkSale in parallel."
+            body="One address, every integrated protocol, four mainnets. Vestream pings every supported vesting platform in parallel so you never have to check them one by one."
           />
           <Step
             n="2"
@@ -282,7 +325,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <SiteFooter theme="light" note="The interactive demo uses illustrative data; the live demo runs a real schedule (Sepolia when configured)." />
+      <SiteFooter theme="light" note="Demo A + B use illustrative data so you can explore without signing anything. Demo C deploys real contracts on Sepolia testnet via thirdweb — no real money, no mainnet risk." />
     </main>
   );
 }
@@ -340,6 +383,53 @@ function GuideCard({ n, title, body }: { n: string; title: string; body: string 
       <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
         {body}
       </p>
+    </div>
+  );
+}
+
+function DeployStep({
+  n, title, body, href, cta, accent, accentBg, accentBorder,
+}: {
+  n:            string;
+  title:        string;
+  body:         string;
+  href:         string;
+  cta:          string;
+  accent:       string;
+  accentBg:     string;
+  accentBorder: string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-5 flex flex-col"
+      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
+          style={{ background: accentBg, color: accent, border: `1px solid ${accentBorder}` }}
+        >
+          {n}
+        </div>
+        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+          Step {n}
+        </div>
+      </div>
+      <h3 className="text-base font-semibold mb-1.5" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+        {title}
+      </h3>
+      <p className="text-sm flex-1 mb-4" style={{ color: "#64748b", lineHeight: 1.55 }}>
+        {body}
+      </p>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all hover:-translate-y-0.5"
+        style={{ background: accentBg, color: accent, border: `1px solid ${accentBorder}` }}
+      >
+        {cta} ↗
+      </a>
     </div>
   );
 }

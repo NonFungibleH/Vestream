@@ -19,6 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 interface DemoVestingState {
   sessionId:      string | null;
@@ -54,12 +55,15 @@ interface DemoConfig {
 }
 
 const DEFAULT_CONFIG: DemoConfig = {
-  tokenSymbol: "NOVA",
+  tokenSymbol: "VEST",
   totalAmount: "1000",
   durationSec: 15 * 60,
 };
 
-const TOKEN_PRESETS = ["NOVA", "FLUX", "VEST", "KLAR"] as const;
+// VEST leads the list because it's the most on-brand demo symbol for Vestream;
+// the others (NOVA/FLUX/KLAR) are carried over from the homepage mockups so
+// users see a consistent cast of example tokens across the site.
+const TOKEN_PRESETS = ["VEST", "NOVA", "FLUX", "KLAR"] as const;
 const AMOUNT_PRESETS: { label: string; value: string }[] = [
   { label: "1K",   value: "1000"    },
   { label: "10K",  value: "10000"   },
@@ -229,7 +233,7 @@ export function VestingDemo() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2563eb" }} />
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#2563eb" }} />
             </span>
-            Live · {state?.mode === "sepolia" ? "Sepolia on-chain" : "Simulated"}
+            Demo — simulated vesting
           </div>
           <h3 className="text-xl md:text-2xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
             {isActive
@@ -580,21 +584,53 @@ function DemoConfigForm({
           </p>
         </div>
 
-        <button
-          onClick={onStart}
-          disabled={loading || !canStart}
-          className="w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+        {/* Previously this was a "Start my vesting schedule" button that kicked
+            off a client-side simulation. Browser-level alerts and a fake progress
+            bar don't sell the product — the app does. So Start is now a funnel
+            straight to the App Store: users design the schedule they want to
+            see, then download the app to watch it for real. The onStart handler
+            + server-side demo state remain wired for future use. */}
+        <div
+          className="rounded-2xl p-5"
           style={{
-            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-            color: "white",
-            boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+            background: "linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))",
+            border: "1px solid rgba(37,99,235,0.18)",
           }}
         >
-          {loading ? "Starting…" : `Start my ${symTrimmed || "vesting"} schedule →`}
-        </button>
-        <p className="text-xs text-center" style={{ color: "#94a3b8" }}>
-          No wallet or signup. Your session lives in a cookie.
-        </p>
+          <div className="text-center mb-4">
+            <p className="text-sm font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+              Watch your {symTrimmed || "VEST"} vesting go live on your phone
+            </p>
+            <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
+              Download the Vestream app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
+            </p>
+          </div>
+          <AppStoreBadges comingSoon />
+        </div>
+
+        {/* Quiet "start the web sim anyway" affordance — kept because the sim
+            logic is still fully functional and useful for us during QA. Hidden
+            from the hero flow but one click away for power users. */}
+        <details className="text-center">
+          <summary
+            className="text-xs cursor-pointer inline-block select-none"
+            style={{ color: "#94a3b8" }}
+          >
+            Or run a quick simulation in the browser
+          </summary>
+          <button
+            onClick={onStart}
+            disabled={loading || !canStart}
+            className="mt-3 text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              background: "rgba(0,0,0,0.04)",
+              color: "#475569",
+              border: "1px solid rgba(0,0,0,0.08)",
+            }}
+          >
+            {loading ? "Starting…" : "Run simulation"}
+          </button>
+        </details>
       </div>
     </div>
   );

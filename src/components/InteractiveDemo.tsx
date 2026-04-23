@@ -402,7 +402,7 @@ function ScanStep({
             Scan a wallet across every vesting protocol
           </h3>
           <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#64748b", lineHeight: 1.55 }}>
-            We&rsquo;ll ping Sablier, Hedgey, UNCX, Unvest, Team&nbsp;Finance, Superfluid and PinkSale in parallel &mdash; across Ethereum, BNB, Polygon and Base.
+            We&rsquo;ll ping every integrated vesting protocol in parallel &mdash; across Ethereum, BNB, Polygon and Base.
           </p>
           <PulseAdvanceButton onClick={onStart} size="lg">
             Start the scan →
