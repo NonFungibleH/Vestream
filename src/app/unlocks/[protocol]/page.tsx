@@ -39,7 +39,16 @@ import {
 } from "@/lib/vesting/protocol-stats";
 import { getGlobalStats } from "@/lib/vesting/global-stats";
 
-export const revalidate = 60;
+// Render on-demand instead of at build time. The previous ISR setup pre-
+// rendered all 7 protocol pages during `next build`, which required DB access
+// at build time — and that was the root cause of the failed Vercel deploy
+// (DATABASE_URL wasn't scoped to the build environment, so postgres-js
+// fell back to localhost:5432 and timed out).
+//
+// force-dynamic means every request is server-rendered. We still get caching
+// via the Cache-Control headers the existing routes set, and the DB + subgraph
+// queries run on request-time workers that have full env access.
+export const dynamic = "force-dynamic";
 export const dynamicParams = false;
 
 export async function generateStaticParams() {

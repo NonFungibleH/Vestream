@@ -16,7 +16,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { LiveActivityTicker } from "@/components/LiveActivityTicker";
+// LiveActivityTicker intentionally removed from this page — it polls
+// /api/unlocks/live-activity and renders recent-activity rows. Pre-launch we
+// don't have enough platform traffic to make the feed feel alive, and an empty
+// "Reconnecting to the live feed…" placeholder undermines the rest of the
+// page. Re-add when we have steady real traffic (track via analytics).
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
@@ -28,7 +32,11 @@ import {
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 
-export const revalidate = 60;
+// force-dynamic instead of ISR — the index page hits the same DB + subgraph
+// queries per protocol that the individual protocol pages do, and pre-
+// rendering them at build time fails when DATABASE_URL isn't in the build
+// environment. Render on request; Cache-Control handles freshness.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Token unlock trackers — Vestream",
@@ -198,15 +206,14 @@ export default async function UnlocksIndexPage() {
         </div>
       </section>
 
-      {/* ── Live platform tickers (recent + upcoming side-by-side) ───────── */}
-      <section className="px-4 md:px-8 pb-6 md:pb-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <LiveActivityTicker />
-        <UpcomingUnlockTicker />
-      </section>
-
-      {/* ── TVL comparison ───────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto">
+      {/* ── TVL (left) + Upcoming unlocks (right) ────────────────────────── */}
+      {/* Previously LIVE ACTIVITY sat in the left cell, but pre-launch there
+          isn't enough real traffic to fill it, and an empty "Reconnecting…"
+          state undermines the rest of the page. Swapped in the TVL bar so
+          the left column always has content and the two panels feel balanced. */}
+      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TvlComparisonBar rows={tvlRows} />
+        <UpcomingUnlockTicker />
       </section>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
