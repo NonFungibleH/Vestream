@@ -179,12 +179,99 @@ export default async function TokenPage(
     : null;
   const symbol  = overview?.tokenSymbol ?? market.tokenName ?? truncate(addr);
 
+  // Pick the dominant protocol for this token (the one with the largest locked
+  // share). Used as the third breadcrumb so visitors landing on a token page
+  // can navigate up to the protocol whose schedule dominates that token's
+  // vesting — usually what they were browsing before finding the token.
+  const dominantProtocol = (() => {
+    const mix = overview?.protocolMix ?? [];
+    if (mix.length === 0) return null;
+    const sorted = [...mix].sort((a, b) => b.lockedTokensWhole - a.lockedTokensWhole);
+    const slug = protocolSlug(sorted[0].protocol);
+    const name = protocolName(sorted[0].protocol);
+    return slug ? { slug, name } : null;
+  })();
+
+  // BreadcrumbList JSON-LD. Google uses this to render the breadcrumb
+  // trail directly in search results (rich-snippet format) — the structured
+  // signal also reinforces the site hierarchy for ranking. Positions are
+  // 1-indexed and run Home → Protocols → [Protocol] → [Token].
+  const breadcrumbs = [
+    { name: "Home",      url: "https://vestream.io/" },
+    { name: "Protocols", url: "https://vestream.io/protocols" },
+    ...(dominantProtocol
+      ? [{ name: dominantProtocol.name, url: `https://vestream.io/protocols/${dominantProtocol.slug}` }]
+      : []),
+    { name: `${symbol} on ${CHAIN_NAMES[cid]}`, url: `https://vestream.io/token/${cid}/${addr}` },
+  ];
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type":    "BreadcrumbList",
+    itemListElement: breadcrumbs.map((b, i) => ({
+      "@type":    "ListItem",
+      position:   i + 1,
+      name:       b.name,
+      item:       b.url,
+    })),
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
       <SiteNav theme="light" />
 
+      {/* BreadcrumbList JSON-LD — rendered first so crawlers see the
+          hierarchy before parsing anything else on the page. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
+      {/* ── Breadcrumbs ─────────────────────────────────────────────────────
+          Visible trail directly under the nav. Two jobs:
+            1. UX — visitors who landed on a deep token page have a way back
+               up the hierarchy instead of hunting for the nav "Protocols"
+               link. Also gives them context about where they are.
+            2. SEO — the structured-data version above helps Google render
+               a breadcrumb trail in search results. The visible version
+               provides the matching HTML links Google cross-references.
+         ───────────────────────────────────────────────────────────────── */}
+      <nav
+        className="pt-24 md:pt-28 pb-2 px-4 md:px-8 max-w-5xl mx-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="flex items-center gap-1.5 flex-wrap text-xs" style={{ color: "#94a3b8" }}>
+          {breadcrumbs.map((b, i) => {
+            const isLast = i === breadcrumbs.length - 1;
+            return (
+              <li key={b.url} className="flex items-center gap-1.5">
+                {i > 0 && (
+                  <span aria-hidden style={{ color: "#cbd5e1" }}>/</span>
+                )}
+                {isLast ? (
+                  <span
+                    className="font-semibold truncate max-w-[240px]"
+                    style={{ color: "#0f172a" }}
+                    aria-current="page"
+                  >
+                    {b.name}
+                  </span>
+                ) : (
+                  <Link
+                    href={b.url.replace("https://vestream.io", "")}
+                    className="transition-colors hover:underline"
+                    style={{ color: "#64748b" }}
+                  >
+                    {b.name}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <section className="pt-24 pb-6 md:pt-32 md:pb-10 px-4 md:px-8 max-w-5xl mx-auto">
+      <section className="pt-4 pb-6 md:pt-6 md:pb-10 px-4 md:px-8 max-w-5xl mx-auto">
         <div className="flex items-start gap-4 md:gap-5 flex-wrap">
           {market.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
