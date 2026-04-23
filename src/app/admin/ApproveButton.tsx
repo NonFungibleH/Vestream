@@ -54,7 +54,7 @@ export function ApproveButton({ requestId, email, name }: Props) {
       <div className="flex flex-col gap-3 min-w-0 max-w-xs">
         <div className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
           <p className="text-xs font-semibold mb-1.5" style={{ color: "#34d399" }}>
-            ✓ Key issued — copy now, it won't be shown again
+            ✓ Key issued — copy now, it won&apos;t be shown again
           </p>
           <code className="text-xs break-all block leading-relaxed" style={{ color: "#a7f3d0", wordBreak: "break-all" }}>
             {apiKey}

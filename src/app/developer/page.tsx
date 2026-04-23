@@ -407,16 +407,20 @@ export default function DeveloperPage() {
                 </p>
                 <div className="rounded-xl p-4 font-mono text-xs leading-relaxed"
                   style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}>
-                  <span style={{ color: "#475569" }}>// Claude Desktop config</span>{"\n"}
-                  <span style={{ color: "#6366f1" }}>"mcpServers"</span>
-                  {": { "}<span style={{ color: "#6366f1" }}>"vestream"</span>{": {"}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>"command"</span>
-                  {": "}<span style={{ color: "#10b981" }}>"npx"</span>{","}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>"args"</span>
-                  {": ["}<span style={{ color: "#10b981" }}>"-y"</span>{", "}<span style={{ color: "#10b981" }}>"@vestream/mcp"</span>{"],"}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>"env"</span>
-                  {": { "}<span style={{ color: "#6366f1" }}>"VESTREAM_API_KEY"</span>
-                  {": "}<span style={{ color: "#10b981" }}>"vstr_live_..."</span>{" }"}{"\n"}
+                  {/* Inline JSON snippet — wrapping the raw ASCII comment in a JSX expression
+                      prevents eslint's react/jsx-no-comment-textnodes rule from mistaking it
+                      for a misplaced JS comment, and escaping the quotes satisfies
+                      react/no-unescaped-entities. */}
+                  <span style={{ color: "#475569" }}>{"// Claude Desktop config"}</span>{"\n"}
+                  <span style={{ color: "#6366f1" }}>{'"mcpServers"'}</span>
+                  {": { "}<span style={{ color: "#6366f1" }}>{'"vestream"'}</span>{": {"}{"\n"}
+                  {"  "}<span style={{ color: "#6366f1" }}>{'"command"'}</span>
+                  {": "}<span style={{ color: "#10b981" }}>{'"npx"'}</span>{","}{"\n"}
+                  {"  "}<span style={{ color: "#6366f1" }}>{'"args"'}</span>
+                  {": ["}<span style={{ color: "#10b981" }}>{'"-y"'}</span>{", "}<span style={{ color: "#10b981" }}>{'"@vestream/mcp"'}</span>{"],"}{"\n"}
+                  {"  "}<span style={{ color: "#6366f1" }}>{'"env"'}</span>
+                  {": { "}<span style={{ color: "#6366f1" }}>{'"VESTREAM_API_KEY"'}</span>
+                  {": "}<span style={{ color: "#10b981" }}>{'"vstr_live_..."'}</span>{" }"}{"\n"}
                   {" } }"}
                 </div>
               </div>

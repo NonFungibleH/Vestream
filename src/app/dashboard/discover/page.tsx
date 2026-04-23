@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { isAddress } from "viem";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -168,7 +169,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
       {/* Logo */}
-      <a href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
+      <Link href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
           <span className="text-white font-bold text-sm leading-none">V</span>
@@ -177,7 +178,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
         </div>
-      </a>
+      </Link>
 
       {/* Nav */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">

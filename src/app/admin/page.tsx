@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { waitlist, apiAccessRequests, apiKeys, users, wallets, vestingStreamsCache, notificationPreferences, betaFeedback } from "@/lib/db/schema";
 import { desc, sql, count } from "drizzle-orm";
@@ -176,7 +177,7 @@ export default async function AdminPage() {
               style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>Admin</span>
           </div>
         </div>
-        <a href="/" className="text-xs" style={{ color: "#4b5563" }}>← Back to site</a>
+        <Link href="/" className="text-xs" style={{ color: "#4b5563" }}>← Back to site</Link>
       </header>
 
       <div className="px-8 py-8 max-w-6xl mx-auto">

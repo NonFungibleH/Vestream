@@ -182,7 +182,7 @@ export default function AiPage() {
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>MCP Tools</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Three tools. Everything you need.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Install the MCP server and your agent immediately has access to all of Vestream's vesting data.
+            Install the MCP server and your agent immediately has access to all of Vestream&apos;s vesting data.
           </p>
         </div>
 

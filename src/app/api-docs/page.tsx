@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import "swagger-ui-react/swagger-ui.css";
 
 // Dynamically import to avoid SSR issues with swagger-ui-react
@@ -16,12 +17,12 @@ export default function ApiDocsPage() {
           <span className="text-gray-400 text-sm">API Reference</span>
           <span className="bg-blue-500/20 text-blue-400 text-xs font-mono px-2 py-0.5 rounded">v1.0</span>
         </div>
-        <a
+        <Link
           href="/"
           className="text-gray-400 hover:text-white text-sm transition-colors"
         >
           ← Back to vestream.io
-        </a>
+        </Link>
       </div>
 
       {/* Swagger UI */}
