@@ -138,6 +138,18 @@ export async function POST(req: NextRequest) {
   if (action === "verify") {
     if (!code) return NextResponse.json({ error: "Code required" }, { status: 400 });
 
+    // Rate-limit verify attempts: 10 per IP+email per 15 min.
+    // Without this, a 6-digit OTP has ~1M combinations — a single IP could
+    // brute-force the code space in seconds.
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 10, "15 m");
+    if (!rlVerify.allowed) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Try again in 15 minutes." },
+        { status: 429 }
+      );
+    }
+
     const [row] = await db
       .select()
       .from(mobileOtps)

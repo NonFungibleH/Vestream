@@ -1,0 +1,45 @@
+# CI — runs on every PR + push to main.
+# Catches TypeScript errors, lint regressions, and build failures before Vercel
+# tries to deploy. Matches Vercel's Node 22 runtime so "it builds locally" and
+# "it builds in CI" mean the same thing.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # `next build` runs the full TypeScript compile — no separate `tsc` step
+      # needed. The build will fail fast on any TS error.
+      - name: Build
+        run: npm run build
+        env:
+          # Dummy values so Next.js' static analysis can import modules that
+          # reference env at build time. Real values only matter at runtime on
+          # Vercel — CI just needs the imports to resolve.
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
+          IRON_SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
+          NEXT_PUBLIC_WALLETCONNECT_ID: ci_placeholder

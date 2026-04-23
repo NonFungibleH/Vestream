@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminAuthorized } from "@/lib/admin-auth";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -8,8 +9,11 @@ export function middleware(req: NextRequest) {
     // Login page itself must always be reachable — let it through immediately
     if (pathname === "/admin/login") return NextResponse.next();
 
-    const adminCookie = req.cookies.get("vestr_admin");
-    if (!adminCookie) {
+    // Validate the cookie VALUE against the derived token, not just its presence.
+    // Previously, any cookie named `vestr_admin` with any value would bypass this
+    // gate (the API routes still did the real check, but a malformed cookie
+    // would render the admin UI shell, which is a UX/info-leak hazard).
+    if (!isAdminAuthorized(req)) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);

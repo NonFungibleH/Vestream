@@ -132,6 +132,18 @@ export async function POST(req: NextRequest) {
     const email = (body.email ?? "").toLowerCase().trim();
     const code  = (body.code  ?? "").trim();
 
+    // Rate-limit verify attempts: 10 per IP+email per 15 min.
+    // Without this, a 6-digit OTP has ~1M combinations — brute-forcing from a
+    // single IP is trivial without any rate limit on the verify path.
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = await checkRateLimit("auth:otp:verify", `${ip}:${email}`, 10, "15 m");
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Try again in 15 minutes." },
+        { status: 429 }
+      );
+    }
+
     let session;
     try {
       session = await getSession();

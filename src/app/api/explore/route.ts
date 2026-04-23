@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
+import { getUserByAddress } from "@/lib/db/queries";
 import { explorerFetch } from "@/lib/vesting/explorer";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 
@@ -8,13 +9,27 @@ import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
  * GET /api/explore?token=0x...&chainId=1
  *
  * Returns all vesting streams for the given token across Sablier and UNCX.
- * Requires auth. Pro+ gate is enforced client-side on the explorer page.
+ * Requires auth AND Pro+ tier — the explorer is a paid feature. The client
+ * page also gates access, but defence-in-depth: a logged-in Free user hitting
+ * this API directly used to get the full explorer payload for free.
  */
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session.address) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Server-side tier check — the explorer is Pro-and-above only.
+    // `session.address` holds either an email (OTP auth) or 0x wallet (SIWE).
+    // getUserByAddress lower-cases and matches on `users.address`, which works
+    // for both because upsertUser writes the lowered form on sign-in.
+    const user = await getUserByAddress(session.address);
+    if (!user || (user.tier !== "pro" && user.tier !== "fund")) {
+      return NextResponse.json(
+        { error: "Pro plan required", upgradeUrl: "/pricing" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(req.url);
