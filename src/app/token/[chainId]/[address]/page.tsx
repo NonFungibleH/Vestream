@@ -250,43 +250,24 @@ export default async function TokenPage(
         </div>
       </section>
 
-      {/* ── Stats + external links panel (DexScreener market + our own LP-lock
-          readout + every external link the token-sleuth actually wants) ──── */}
-      {overview && (
-        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
-          <TokenMetaPanel
-            chainId={cid}
-            tokenAddress={addr}
-            tokenSymbol={overview.tokenSymbol ?? market.tokenName ?? null}
-            market={market}
-            overview={overview}
-          />
-        </section>
-      )}
+      {/* ──────────────────────────────────────────────────────────────────
+          Page ordering rationale — vesting-first, market-data later.
+          Vestream is a vesting platform first; price/liquidity are
+          supporting context. Visitors who came here via a search for an
+          unlock date should get the vesting answer before scrolling.
 
-      {/* ── Pulse summary — 3-4 bullets with a "See more" narrative.
-          Rendered only when there's something substantive to say (the
-          pulse builder returns empty bullets otherwise and the component
-          renders null). Sits between the meta panel and the hero stats so
-          visitors get the "what's happening with this token right now"
-          read-out before diving into the raw numbers. */}
-      {overview && (
-        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
-          <TokenPulse
-            symbol={symbol}
-            pulse={buildTokenPulse({
-              symbol,
-              overview,
-              market,
-              calendar,
-              upcoming,
-              recipients,
-            })}
-          />
-        </section>
-      )}
+            1. Header
+            2. 4 hero stats (Locked / 7d / 30d / Recipients)   ← vesting
+            3. Pulse summary (narrative over those 4 numbers)  ← vesting
+            4. 12-month unlock calendar                         ← vesting
+            5. Protocol mix + top recipients                    ← vesting
+            6. Upcoming events chronological list               ← vesting
+            7. Market stats + external links (price/liquidity/FDV)
+            8. Token FAQ
+            9. Conversion CTA
+         ───────────────────────────────────────────────────────────────── */}
 
-      {/* ── 4 hero stats ───────────────────────────────────────────────────── */}
+      {/* ── 4 hero stats (highest priority — vesting platform first) ─────── */}
       <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <HeroStat
@@ -315,6 +296,24 @@ export default async function TokenPage(
           />
         </div>
       </section>
+
+      {/* ── Pulse summary (3-4 bullets, no See more). Hidden when there's
+          nothing substantive to say — TokenPulse returns null on empty. */}
+      {overview && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <TokenPulse
+            symbol={symbol}
+            pulse={buildTokenPulse({
+              symbol,
+              overview,
+              market,
+              calendar,
+              upcoming,
+              recipients,
+            })}
+          />
+        </section>
+      )}
 
       {/* ── No-vesting state ───────────────────────────────────────────────── */}
       {!hasVesting && (
@@ -366,19 +365,35 @@ export default async function TokenPage(
 
           {/* ── Upcoming events chronological list ─────────────────────── */}
           {upcoming.length > 0 && (
-            <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
+            <section className="px-4 md:px-8 pb-10 max-w-5xl mx-auto">
               <UpcomingEvents events={upcoming} symbol={symbol} priceUsd={priceUsd} />
             </section>
           )}
         </>
       )}
 
+      {/* ── Market stats + external links (price/liquidity/volume/FDV +
+          explorer/website/X/TokenSniffer). Positioned LOWER than the
+          vesting block because Vestream's value prop is vesting-first —
+          price data is supporting context, not the headline. */}
+      {overview && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <TokenMetaPanel
+            chainId={cid}
+            tokenAddress={addr}
+            tokenSymbol={overview.tokenSymbol ?? market.tokenName ?? null}
+            market={market}
+            overview={overview}
+          />
+        </section>
+      )}
+
       {/* ── SEO FAQ ───────────────────────────────────────────────────────
           Rendered even when hasVesting is false — questions like "what is
-          $TOKEN FDV" still have valid answers, and the FAQPage JSON-LD is
-          the main SEO win regardless of whether a vesting schedule exists.
-          For a not-yet-indexed token the answers gracefully degrade to
-          "Vestream has not indexed vesting for $TOKEN yet". */}
+          $TOKEN worth fully diluted today" still have valid answers, and
+          the FAQPage JSON-LD is the main SEO win regardless of whether a
+          vesting schedule exists. For a not-yet-indexed token the answers
+          gracefully degrade to "Vestream has not indexed vesting yet". */}
       <TokenFAQ
         symbol={symbol}
         items={buildTokenFAQ({
@@ -392,6 +407,68 @@ export default async function TokenPage(
           recipients,
         })}
       />
+
+      {/* ── Conversion CTA — the funnel entry point at the bottom of every
+          token page. Visitors who scrolled this far are high-intent: they
+          read the Pulse, the calendar, the FAQ. This is the moment to
+          offer the one action we actually want — put the wallet on their
+          watchlist so they get notified before every future unlock. */}
+      <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
+        <div
+          className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)",
+            border: "1px solid rgba(124,58,237,0.25)",
+          }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%)",
+            }}
+          />
+          <div className="relative">
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-3"
+              style={{ letterSpacing: "-0.02em", color: "white" }}
+            >
+              Don&rsquo;t miss the next {symbol} unlock
+            </h2>
+            <p
+              className="text-sm md:text-base mb-8 max-w-xl mx-auto"
+              style={{ color: "rgba(255,255,255,0.65)" }}
+            >
+              Get a push and email notification the moment {symbol} tokens
+              are ready to claim — plus coverage for every other wallet you
+              track, across all 7 protocols and 4 chains.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                href="/early-access"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
+                style={{
+                  background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+                  color: "white",
+                  boxShadow: "0 4px 24px rgba(124,58,237,0.4)",
+                }}
+              >
+                Get early access →
+              </Link>
+              <Link
+                href="/find-vestings"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border:     "1px solid rgba(255,255,255,0.15)",
+                  color:      "white",
+                }}
+              >
+                Scan a wallet first
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <SiteFooter theme="light" />
     </div>

@@ -19,15 +19,19 @@
 //   - "dark"  → /ai
 //
 // Layout:
-//   - Left: logo + copyright
-//   - Centre (desktop) / below (mobile): three grouped link columns
-//       • Platform:   Protocols · Demo · Pricing · Resources
+//   - Left column: logo + tagline + social icons + copyright (stacked)
+//   - Right columns: three grouped link columns
+//       • Platform:   Protocols · Demo · Pricing · Resources · FAQ · Contact
 //       • Developers: Developer API · AI Agents
 //       • Legal:      Privacy Policy · Terms of Service
-//   - Right: social icons (X, LinkedIn)
-//   - A tiny "·" admin escape-hatch lives in the light footer only — it's
-//     faint enough not to draw attention but available if you ever need
-//     to find your way back to /admin.
+//   - A tiny "·" admin escape-hatch lives adjacent to the copyright — faint
+//     enough not to draw attention but available if you ever need to find
+//     your way back to /admin.
+//
+// The copyright strip used to live in its own bordered row below the main
+// grid, which added a horizontal rule + a lot of whitespace at the bottom
+// of every page. Tucking it under the social icons instead removes the
+// divider and tightens the footer into a single cohesive block.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
@@ -158,9 +162,12 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
       }}
     >
       <div className="max-w-5xl mx-auto">
-        {/* ── Upper block: brand (left) + link columns (centre) + social (right) ── */}
+        {/* Single grid: brand stack (logo / tagline / socials / copyright) on
+            the left, link columns on the right. No separate lower strip and
+            no dividing rule — copyright tucks directly under the socials
+            inside the brand stack to keep the footer as one cohesive block. */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 md:gap-12">
-          {/* Brand block */}
+          {/* Brand stack */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity w-fit">
               <div
@@ -177,11 +184,29 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
               Track every token unlock across every major vesting protocol.
             </p>
 
-            {/* Social row — hidden on mobile (surfaced at the bottom there) */}
-            <div className="hidden md:flex items-center gap-2 mt-2">
+            {/* Social row */}
+            <div className="flex items-center gap-2 mt-2">
               {SOCIAL.map((s) => (
                 <SocialButton key={s.label} palette={palette} {...s} />
               ))}
+            </div>
+
+            {/* Copyright — directly under the socials, no divider. The admin
+                dot sits inline with the copyright so it stays discoverable
+                without needing its own row. */}
+            <div className="flex items-center gap-2 mt-2">
+              <p className="text-xs" style={{ color: palette.copyright }}>
+                © {year} Vestream. All rights reserved.
+              </p>
+              <Link
+                href="/admin"
+                className="text-xs transition-colors hover:opacity-60"
+                style={{ color: palette.adminDot }}
+                title="Admin"
+                aria-label="Admin"
+              >
+                ·
+              </Link>
             </div>
           </div>
 
@@ -215,36 +240,8 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
           </div>
         </div>
 
-        {/* ── Lower strip: copyright + mobile social + admin dot ── */}
-        <div
-          className="mt-10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-          style={{ borderTop: `1px solid ${palette.border}` }}
-        >
-          <p className="text-xs" style={{ color: palette.copyright }}>
-            © {year} Vestream. All rights reserved.
-          </p>
-
-          <div className="flex items-center gap-3">
-            {/* Mobile social (desktop version sits in the brand block) */}
-            <div className="flex md:hidden items-center gap-2">
-              {SOCIAL.map((s) => (
-                <SocialButton key={s.label} palette={palette} {...s} />
-              ))}
-            </div>
-            <Link
-              href="/admin"
-              className="text-xs transition-colors hover:opacity-60"
-              style={{ color: palette.adminDot }}
-              title="Admin"
-              aria-label="Admin"
-            >
-              ·
-            </Link>
-          </div>
-        </div>
-
         {note && (
-          <p className="mt-4 text-[11px]" style={{ color: palette.copyright }}>
+          <p className="mt-6 text-[11px]" style={{ color: palette.copyright }}>
             {note}
           </p>
         )}

@@ -69,7 +69,12 @@ export function TokenPulse({ pulse, symbol }: Props) {
       </div>
 
       {/* Bullet body — scannable, 3-4 rows max. Each bullet is a single
-          complete sentence so even a quick-skim visitor gets a full insight. */}
+          complete sentence so even a quick-skim visitor gets a full insight.
+          The "See more" extended narrative that used to live below is
+          removed for now — the bullets carry the insight and the extended
+          paragraph didn't add enough on top to justify the extra UI. If we
+          later wire Pulse to a real LLM, the extended surface can come
+          back with genuinely richer content. */}
       <ul className="px-5 md:px-6 py-4 space-y-2">
         {pulse.bullets.map((b, i) => (
           <li
@@ -86,35 +91,6 @@ export function TokenPulse({ pulse, symbol }: Props) {
           </li>
         ))}
       </ul>
-
-      {/* Extended narrative — opt-in via <details>. Keeping it inside the
-          same card (rather than a side panel) means visitors who expand
-          it don't lose the card's context. */}
-      {pulse.extended && (
-        <details
-          className="group"
-          style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}
-        >
-          <summary
-            className="px-5 md:px-6 py-3 cursor-pointer select-none flex items-center justify-between gap-4 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-slate-50/60"
-            style={{ color: "#7c3aed" }}
-          >
-            <span>See more</span>
-            <span
-              aria-hidden
-              className="text-[10px] transition-transform group-open:rotate-180"
-            >
-              ▼
-            </span>
-          </summary>
-          <div
-            className="px-5 md:px-6 pb-5 text-sm leading-relaxed"
-            style={{ color: "#475569" }}
-          >
-            {pulse.extended}
-          </div>
-        </details>
-      )}
     </div>
   );
 }
