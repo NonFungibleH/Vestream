@@ -49,8 +49,8 @@
 // Run by `/api/cron/seed-cache` on the Vercel cron schedule (daily at 03:00 UTC).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
+import { createPublicClient, http, type Hex } from "viem";
+import { mainnet, bsc, polygon, base, sepolia } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
 import { ADAPTER_REGISTRY } from "./adapters";
@@ -78,6 +78,8 @@ const UNCX_URLS: Partial<Record<SupportedChainId, string>> = {
   // until UNCX publishes a replacement. See adapters/uncx.ts for full note.
   [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_POLYGON) ?? "",
   [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_BASE,    "CUQ2qwQcVfivLPF9TsoLaLnJGmPRb3sDYFVRXbtUy78z") ?? "",
+  // Sepolia — testnet coverage for QA. Subgraph ID mirrors adapters/uncx.ts.
+  [CHAIN_IDS.SEPOLIA]:  resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_SEPOLIA, "5foyqAtEVWtcSJX62sMC6fVR7FmetsFy8eYRKRT2E7DU") ?? "",
 };
 
 const UNVEST_URLS: Partial<Record<SupportedChainId, string>> = {
@@ -261,7 +263,19 @@ async function discoverTeamFinanceRecipients(chainId: SupportedChainId): Promise
     { chainId, first: SEED_LIMIT },
     `team-finance/${chainId}`,
   );
-  return dedupeAddresses((data?.vestingClaims ?? []).map((v) => v.account));
+  const recipients = dedupeAddresses((data?.vestingClaims ?? []).map((v) => v.account));
+
+  // Team Finance's Squid indexer has no Base data as of writing — verified
+  // directly against the endpoint. ETH/BSC/Polygon have tens of thousands
+  // of claims each; Base has zero. Not our bug — upstream. Log this
+  // distinctly so the next time someone sees "team-finance/8453: 0" they
+  // don't waste an hour debugging the query.
+  if (recipients.length === 0 && chainId === CHAIN_IDS.BASE) {
+    console.log(
+      `[seeder:team-finance/${CHAIN_IDS.BASE}] upstream Squid has no indexed claims or vestings for Base; nothing to seed — this will fix itself when Team Finance starts indexing Base`,
+    );
+  }
+  return recipients;
 }
 
 // ─── Hedgey discovery (on-chain ERC721Enumerable reads) ─────────────────────
@@ -290,6 +304,8 @@ const HEDGEY_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.BSC]:      "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.POLYGON]:  "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.BASE]:     "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
+  // Sepolia deploys a different address (same bytecode) — mirrors adapters/hedgey.ts.
+  [CHAIN_IDS.SEPOLIA]:  "0x68b6986416c7A38F630cBc644a2833A0b78b3631",
 };
 
 const VIEM_CHAIN_MAP = {
@@ -297,6 +313,7 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.BSC]:      bsc,
   [CHAIN_IDS.POLYGON]:  polygon,
   [CHAIN_IDS.BASE]:     base,
+  [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
@@ -305,6 +322,7 @@ function getRpcUrl(chainId: SupportedChainId): string | undefined {
     case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL;
     case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL;
     case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE;
+    case CHAIN_IDS.SEPOLIA:  return process.env.SEPOLIA_RPC_URL;
     default:                 return undefined;
   }
 }
@@ -411,6 +429,103 @@ async function discoverPinksaleRecipients(chainId: SupportedChainId): Promise<st
   return dedupeAddresses(wallets);
 }
 
+// ─── UNCX VestingManager discovery (on-chain event scan, no filter) ─────────
+//
+// The uncx-vm adapter performs per-wallet event scans filtered by
+// topic[2]=beneficiary — which is a chicken-and-egg problem for seeding
+// (you can only see the wallet's plans if you already know the wallet).
+// For discovery we scan the same VestingCreated event WITHOUT the
+// beneficiary filter and then extract topic[2] from every log — that's the
+// indexed beneficiary field, padded to 32 bytes. Strip the padding and we
+// have a fresh recipient set.
+//
+// VestingManager was deployed mid-August 2025. We scan the last ~500k
+// blocks (which on every supported chain is at least ~5 days of activity)
+// in 50k-block chunks, parallelised 10 at a time. If a chain's contract
+// has seen fewer than 500k blocks of existence we scan from its deploy
+// block instead.
+
+const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
+  contract:  `0x${string}`;
+  fromBlock: bigint;
+}>> = {
+  [CHAIN_IDS.ETHEREUM]: { contract: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5", fromBlock: 23_143_944n },
+  [CHAIN_IDS.BASE]:     { contract: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45", fromBlock: 43_187_425n },
+  [CHAIN_IDS.BSC]:      { contract: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa", fromBlock: 85_818_300n },
+};
+const UNCX_VM_VESTING_CREATED_TOPIC =
+  "0xcfcd2ea84a9e988255710b3adc4919275a012aa72f68b63acf1e9f67296e134f" as Hex;
+const UNCX_VM_CHUNK  = 49_999n;  // PublicNode caps eth_getLogs at 50k blocks
+const UNCX_VM_WINDOW = 500_000n; // ~69 days ETH, ~11 days BSC, ~11 days Base
+
+async function discoverUncxVmRecipients(chainId: SupportedChainId): Promise<string[]> {
+  const config = UNCX_VM_CONFIG[chainId];
+  const rpcUrl = getRpcUrl(chainId);
+  const chain  = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
+  if (!config || !rpcUrl || !chain) {
+    console.log(`[seeder:uncx-vm/${chainId}] skipped — chain not supported or RPC not configured`);
+    return [];
+  }
+
+  const tag = `uncx-vm/${chainId}`;
+  try {
+    const client      = createPublicClient({ chain, transport: http(rpcUrl) });
+    const latestBlock = await client.getBlockNumber();
+    const fromBlock   = latestBlock > UNCX_VM_WINDOW + config.fromBlock
+      ? latestBlock - UNCX_VM_WINDOW
+      : config.fromBlock;
+
+    // Build 50k-block chunks.
+    const chunks: Array<{ from: bigint; to: bigint }> = [];
+    for (let from = fromBlock; from <= latestBlock; from += UNCX_VM_CHUNK + 1n) {
+      chunks.push({ from, to: from + UNCX_VM_CHUNK > latestBlock ? latestBlock : from + UNCX_VM_CHUNK });
+    }
+
+    // Parallel batches of 10 — matches the adapter's pattern.
+    const BATCH    = 10;
+    const rawLogs: Array<{ topics: readonly (Hex | null | undefined)[] }> = [];
+    for (let i = 0; i < chunks.length; i += BATCH) {
+      const batch   = chunks.slice(i, i + BATCH);
+      const results = await Promise.allSettled(
+        batch.map(({ from, to }) =>
+          client.getLogs({
+            address:   config.contract,
+            event:     undefined, // topic-only filter; keeps the payload tiny
+            args:      undefined,
+            fromBlock: from,
+            toBlock:   to,
+          }).then((logs) =>
+            // Filter to VestingCreated topic client-side (getLogs's `topics`
+            // array is brittle across viem versions; post-filter is cheap).
+            logs.filter((l) => l.topics[0] === UNCX_VM_VESTING_CREATED_TOPIC),
+          ),
+        ),
+      );
+      for (const r of results) {
+        if (r.status === "fulfilled") rawLogs.push(...r.value);
+        else                          console.error(`[seeder:${tag}] chunk error:`, r.reason);
+      }
+    }
+
+    // topic[2] = beneficiary (indexed address, left-padded to 32 bytes).
+    // Stripe the 12-byte pad → 20-byte address, lowercase via dedupeAddresses.
+    const beneficiaries: string[] = [];
+    for (const log of rawLogs) {
+      const t2 = log.topics[2];
+      if (typeof t2 === "string" && t2.length === 66) {
+        beneficiaries.push(`0x${t2.slice(26)}`);
+      }
+    }
+
+    const recipients = dedupeAddresses(beneficiaries).slice(0, SEED_LIMIT);
+    console.log(`[seeder:${tag}] scanned ${chunks.length} chunks (blocks ${fromBlock}..${latestBlock}), ${rawLogs.length} VestingCreated → ${recipients.length} unique recipients`);
+    return recipients;
+  } catch (err) {
+    console.error(`[seeder:${tag}] discovery failed:`, err);
+    return [];
+  }
+}
+
 function dedupeAddresses(addresses: string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -451,38 +566,54 @@ export interface SeedRunResult {
 }
 
 const SEED_JOBS: SeedJob[] = [
-  // Sablier — ETH, BSC, Polygon, Base (Sepolia omitted: no cache value in
-  // surfacing testnet streams on the public /unlocks page)
+  // Sablier — ETH, BSC, Polygon, Base + Sepolia (testnet). Single Envio
+  // endpoint; Sepolia is filtered in-query via the chainId variable.
   { adapterId: "sablier",      chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.BSC,      discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.BASE,     discover: discoverSablierRecipients },
-  // UNCX — four mainnets
+  { adapterId: "sablier",      chainId: CHAIN_IDS.SEPOLIA,  discover: discoverSablierRecipients },
+  // UNCX (TokenVesting V3) — ETH/BSC/Base + Sepolia. Polygon subgraph is
+  // deprecated; skipping until a replacement publishes.
   { adapterId: "uncx",         chainId: CHAIN_IDS.ETHEREUM, discover: discoverUncxRecipients },
   { adapterId: "uncx",         chainId: CHAIN_IDS.BSC,      discover: discoverUncxRecipients },
   { adapterId: "uncx",         chainId: CHAIN_IDS.POLYGON,  discover: discoverUncxRecipients },
   { adapterId: "uncx",         chainId: CHAIN_IDS.BASE,     discover: discoverUncxRecipients },
-  // Unvest — four mainnets
+  { adapterId: "uncx",         chainId: CHAIN_IDS.SEPOLIA,  discover: discoverUncxRecipients },
+  // UNCX VestingManager — ETH/BSC/Base only (not deployed on Polygon or
+  // Sepolia). On-chain event scan via getLogs; see discoverUncxVmRecipients.
+  { adapterId: "uncx-vm",      chainId: CHAIN_IDS.ETHEREUM, discover: discoverUncxVmRecipients },
+  { adapterId: "uncx-vm",      chainId: CHAIN_IDS.BSC,      discover: discoverUncxVmRecipients },
+  { adapterId: "uncx-vm",      chainId: CHAIN_IDS.BASE,     discover: discoverUncxVmRecipients },
+  // Unvest — four mainnets. Sepolia subgraph URL is undefined in the
+  // adapter; adding a job would just log "0 recipients discovered" on every
+  // run. Omitting keeps the summary cleaner.
   { adapterId: "unvest",       chainId: CHAIN_IDS.ETHEREUM, discover: discoverUnvestRecipients },
   { adapterId: "unvest",       chainId: CHAIN_IDS.BSC,      discover: discoverUnvestRecipients },
   { adapterId: "unvest",       chainId: CHAIN_IDS.POLYGON,  discover: discoverUnvestRecipients },
   { adapterId: "unvest",       chainId: CHAIN_IDS.BASE,     discover: discoverUnvestRecipients },
-  // Superfluid — four mainnets
+  // Superfluid — four mainnets. Its hosted subgraph endpoints don't include
+  // a Sepolia deployment, so no testnet job.
   { adapterId: "superfluid",   chainId: CHAIN_IDS.ETHEREUM, discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BSC,      discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.POLYGON,  discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BASE,     discover: discoverSuperfluidRecipients },
-  // Team Finance — four mainnets (Squid GraphQL, different stack)
+  // Team Finance — four mainnets + Sepolia (Squid GraphQL, different stack).
+  // Note: Base returns 0 because Team Finance's Squid doesn't index Base
+  // yet; that's logged distinctly inside the discover fn.
   { adapterId: "team-finance", chainId: CHAIN_IDS.ETHEREUM, discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.BSC,      discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.POLYGON,  discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.BASE,     discover: discoverTeamFinanceRecipients },
-  // Hedgey — four mainnets (ERC721 Transfer event scan via RPC)
+  { adapterId: "team-finance", chainId: CHAIN_IDS.SEPOLIA,  discover: discoverTeamFinanceRecipients },
+  // Hedgey — four mainnets + Sepolia (ERC721Enumerable reads via Multicall3).
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ETHEREUM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BSC,      discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.POLYGON,  discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BASE,     discover: discoverHedgeyRecipients },
-  // PinkSale — four mainnets (curated wallet list; see seed-wallets.ts)
+  { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
+  // PinkSale — four mainnets (curated wallet list; see seed-wallets.ts).
+  // Adapter doesn't support Sepolia.
   { adapterId: "pinksale",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverPinksaleRecipients },
   { adapterId: "pinksale",     chainId: CHAIN_IDS.BSC,      discover: discoverPinksaleRecipients },
   { adapterId: "pinksale",     chainId: CHAIN_IDS.POLYGON,  discover: discoverPinksaleRecipients },

@@ -655,14 +655,9 @@ function UnlockCard({
         <p className="text-2xl font-bold mb-1" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
           {amountDisplay}
         </p>
-        <p className="text-xs mb-4" style={{ color: "#64748b" }}>
+        <p className="text-xs" style={{ color: "#64748b" }}>
           for <code style={{ fontFamily: "monospace", color: "#334155" }}>{truncateAddress(unlock.recipient)}</code> · {relative}
         </p>
-        <div className="pt-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-          <p className="text-[11px]" style={{ color: "#94a3b8" }}>
-            Stream ID <code style={{ fontFamily: "monospace", color: "#64748b" }}>{unlock.streamId}</code>
-          </p>
-        </div>
       </div>
     </div>
   );

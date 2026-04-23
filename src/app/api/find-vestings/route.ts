@@ -4,7 +4,7 @@
 //
 //   - Unauthenticated — designed to funnel users into the mobile app
 //   - Rate-limited (5 scans per IP per hour, 20 per day)
-//   - Mainnet chains only (no testnets)
+//   - Four production mainnets + Sepolia (for QA / dev wallets)
 //   - Returns a lightweight per-protocol×chain summary, not raw streams
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -15,12 +15,18 @@ import { CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 import { checkRateLimit } from "@/lib/ratelimit";
 
-// Only scan mainnets — testnets would pollute results
-const MAINNET_CHAINS: SupportedChainId[] = [
+// Chains the scanner fans out to. Mainnets are the primary signal; Sepolia is
+// included so the dev team can paste a test wallet with freshly-minted
+// vestings and see them surface end-to-end (Sepolia-specific adapters and
+// subgraphs are wired for every protocol that has a testnet deployment).
+// Individual adapters skip chains they don't support, so adding a chain here
+// is safe — protocols without coverage just return [].
+const SCAN_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
   CHAIN_IDS.POLYGON,
   CHAIN_IDS.BASE,
+  CHAIN_IDS.SEPOLIA,
 ];
 
 export interface FindVestingsTokenSummary {
@@ -77,7 +83,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const streams = await aggregateVestingStreams([address.toLowerCase()], MAINNET_CHAINS);
+    const streams = await aggregateVestingStreams([address.toLowerCase()], SCAN_CHAINS);
 
     // Group by protocol × chain, then per-token
     const byKey = new Map<string, { group: FindVestingsGroup; tokenMap: Map<string, FindVestingsTokenSummary> }>();

@@ -50,7 +50,7 @@ export default function FindVestingsPage() {
           Find every vesting<br className="hidden md:block" /> on your wallet
         </h1>
         <p className="text-base md:text-lg max-w-xl mx-auto" style={{ color: "#64748b", lineHeight: 1.6 }}>
-          Paste any address. We&rsquo;ll scan Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid and PinkSale across Ethereum, BNB, Polygon and Base.
+          Paste any address. We&rsquo;ll scan Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid and PinkSale across Ethereum, BNB, Polygon, Base and Sepolia.
         </p>
       </section>
 

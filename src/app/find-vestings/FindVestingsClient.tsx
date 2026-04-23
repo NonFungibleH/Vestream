@@ -477,7 +477,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#64748b" }}>
-        We scanned 7 vesting protocols across Ethereum, BNB Chain, Polygon and Base. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
+        We scanned 7 vesting protocols across Ethereum, BNB Chain, Polygon, Base and Sepolia. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
       </p>
     </div>
   );
