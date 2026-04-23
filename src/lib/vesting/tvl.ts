@@ -139,8 +139,13 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
 
   try {
     const url = `https://api.dexscreener.com/latest/dex/tokens/${addresses.join(",")}`;
+    // Align the fetch cache lifetime with the page's `revalidate = 60`. Using
+    // `no-store` forces the entire calling route into dynamic rendering,
+    // which defeats SSG for /unlocks (the page is a rainbow grid of protocol
+    // cards that are genuinely ISR-friendly). 60s keeps TVL numbers fresh
+    // without 500'ing the static build.
     const res = await fetch(url, {
-      cache: "no-store",
+      next: { revalidate: 60 },
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return out;

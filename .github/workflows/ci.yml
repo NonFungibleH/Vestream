@@ -1,7 +1,11 @@
 # CI — runs on every PR + push to main.
-# Catches TypeScript errors, lint regressions, and build failures before Vercel
-# tries to deploy. Matches Vercel's Node 22 runtime so "it builds locally" and
-# "it builds in CI" mean the same thing.
+# Three gated jobs:
+#   unit    → fast, pure-TS tests via Vitest (packages/shared math helpers, etc.)
+#   build   → lint + next build (catches TypeScript regressions)
+#   e2e     → Playwright smoke tests against a locally-booted production build
+#
+# Split so a flaky Playwright run doesn't block merging a pure-TS change —
+# unit + build must pass on every PR, e2e gets a 1-retry allowance.
 name: CI
 
 on:
@@ -11,6 +15,26 @@ on:
     branches: [main]
 
 jobs:
+  unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Vitest
+        run: npm test
+
   build:
     name: Build & Lint
     runs-on: ubuntu-latest
@@ -43,3 +67,48 @@ jobs:
           SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
           IRON_SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
           NEXT_PUBLIC_WALLETCONNECT_ID: ci_placeholder
+
+  e2e:
+    name: E2E smoke (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # E2E depends on a clean build artefact — only run if build passed.
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Installs the Chromium binary + OS deps. Cached between runs by the
+      # action — first run is slow, subsequent runs pull from cache.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Playwright's webServer config runs `npm run build && npm run start`.
+      # The dummy env vars below match the build job so the server boots.
+      - name: Run Playwright smoke tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
+          IRON_SESSION_SECRET: ci_only_placeholder_secret_at_least_32_characters_long
+          NEXT_PUBLIC_WALLETCONNECT_ID: ci_placeholder
+          CI: "true"
+
+      # Always upload the Playwright report, even on success — makes it easy
+      # to check traces for flakes before they turn into failures.
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
