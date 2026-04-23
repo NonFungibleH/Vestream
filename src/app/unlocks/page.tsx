@@ -32,11 +32,7 @@ import {
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 
-// force-dynamic instead of ISR — the index page hits the same DB + subgraph
-// queries per protocol that the individual protocol pages do, and pre-
-// rendering them at build time fails when DATABASE_URL isn't in the build
-// environment. Render on request; Cache-Control handles freshness.
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Token unlock trackers — Vestream",
