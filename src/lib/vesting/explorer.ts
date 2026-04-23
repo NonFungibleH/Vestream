@@ -632,7 +632,10 @@ export async function explorerFetchUNCXVM(
       .sort((a, b) => a.timestamp - b.timestamp);
 
     let claimableNow: bigint, lockedAmount: bigint, isFullyVested: boolean;
-    let startTime = 0, endTime = 0, cliffTime: number | null = null;
+    let startTime = 0, endTime = 0;
+    // cliffTime is only assigned once below (never reassigned), so const keeps
+    // eslint's prefer-const happy while staying readable.
+    const cliffTime: number | null = null;
 
     if (unlockSteps.length > 0) {
       startTime = unlockSteps[0].timestamp;

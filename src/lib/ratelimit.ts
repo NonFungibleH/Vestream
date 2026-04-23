@@ -18,8 +18,9 @@ import { Redis } from "@upstash/redis";
 
 type RatelimitResult = { allowed: boolean; remaining: number; reset: number };
 
-// Singleton — reused across warm lambda invocations
-let limiterCache: Map<string, Ratelimit> = new Map();
+// Singleton — reused across warm lambda invocations. Using const: the Map
+// reference never changes, only its contents (which doesn't violate immutability).
+const limiterCache: Map<string, Ratelimit> = new Map();
 
 function getLimiter(requests: number, window: Parameters<typeof Ratelimit.slidingWindow>[1]): Ratelimit | null {
   const key = `${requests}:${window}`;

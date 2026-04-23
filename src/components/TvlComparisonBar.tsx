@@ -79,7 +79,7 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
               Pricing indexed tokens…
             </div>
             <div className="text-xs" style={{ color: "#94a3b8" }}>
-              TVL appears here as soon as we've priced the locked assets.
+              TVL appears here as soon as we&apos;ve priced the locked assets.
             </div>
           </div>
         ) : (
