@@ -171,23 +171,23 @@ const raw = {
   }, problems),
 };
 
-// ── Guard: explode fast on missing secrets instead of at first request ──────
-// During production runtime, a missing required var is a config bug the sooner
-// we surface, the better. During dev/build, we only warn.
+// ── Guard: surface missing vars in logs — but NEVER refuse to boot ──────────
+// Earlier this check used to throw on production boot when any requiredInProd
+// var was missing. That turned out to be worse than the problem it was solving:
+// the rate limiter, OTP route, webhook route, and every adapter already handle
+// their own absent-var paths gracefully (no-op the feature, return 503, or fall
+// back to defaults). Refusing to boot meant that removing ONE env var took down
+// the entire platform, including routes that didn't depend on the missing var
+// at all.
+//
+// We now log loudly so Vercel / Sentry surfaces the config drift, then let the
+// process keep running. Each call site is responsible for its own fallback.
 if (problems.length > 0) {
   const header = IS_PROD
-    ? "\n[env] MISSING REQUIRED ENVIRONMENT VARIABLES — refusing to boot:\n"
-    : "\n[env] Missing environment variables (warnings in dev, errors in prod):\n";
+    ? "[env] Missing environment variables in production — dependent features will be degraded or disabled:"
+    : "[env] Missing environment variables (features that need them will no-op):";
   const body = problems.map((p) => `  - ${p}`).join("\n");
-  const message = header + body + "\n";
-
-  if (IS_PROD && !IS_BUILD) {
-    // Hard fail — better to crash now than to serve 500s to every user.
-    throw new Error(message);
-  } else {
-    // Soft warn — local dev + build time.
-    console.warn(message);
-  }
+  console.warn(`\n${header}\n${body}\n`);
 }
 
 /**
