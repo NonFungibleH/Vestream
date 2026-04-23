@@ -1,4 +1,4 @@
-// src/app/unlocks/page.tsx
+// src/app/protocols/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Index hub for all per-protocol landing pages. Lists the 7 protocols we
 // index with a live "last indexed" stamp per row pulled from cache — so this
@@ -32,7 +32,7 @@ import {
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 
-// See note on /unlocks/[protocol]/page.tsx — same rationale. This index
+// See note on /protocols/[slug]/page.tsx — same rationale. This index
 // page fans out into all 7 protocols' getProtocolStats() + getGlobalStats()
 // calls at render time, every one a DB or subgraph query. Pre-rendering at
 // build fails without the prod env; rendering on request with an edge
@@ -44,12 +44,12 @@ export const metadata: Metadata = {
   title: "Token unlock trackers — Vestream",
   description:
     "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, UNCX, Team Finance, Unvest and PinkSale — across Ethereum, Base, BSC and Polygon.",
-  alternates: { canonical: "https://vestream.io/unlocks" },
+  alternates: { canonical: "https://vestream.io/protocols" },
   openGraph: {
     title: "Token unlock trackers — Vestream",
     description:
       "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
-    url: "https://vestream.io/unlocks",
+    url: "https://vestream.io/protocols",
     siteName: "Vestream",
     type: "website",
   },
@@ -131,11 +131,11 @@ export default async function UnlocksIndexPage() {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Token unlock trackers",
-    url: "https://vestream.io/unlocks",
+    url: "https://vestream.io/protocols",
     hasPart: protocols.map((p) => ({
       "@type": "WebPage",
       name: `${p.name} unlock tracker`,
-      url: `https://vestream.io/unlocks/${p.slug}`,
+      url: `https://vestream.io/protocols/${p.slug}`,
     })),
   };
 
@@ -319,7 +319,7 @@ function ProtocolCard({
 
   return (
     <Link
-      href={`/unlocks/${protocol.slug}`}
+      href={`/protocols/${protocol.slug}`}
       className="rounded-2xl p-5 relative overflow-hidden transition-all hover:-translate-y-0.5"
       style={{
         background: "white",

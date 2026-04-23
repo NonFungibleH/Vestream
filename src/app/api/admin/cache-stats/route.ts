@@ -4,7 +4,7 @@
 //
 // Purpose: make "is the seeder actually producing data everywhere?" a
 // one-HTTP-request question instead of a guessing-game from UI widgets.
-// The /unlocks (soon /protocols) page summarises everything into a single TVL
+// The /protocols page summarises everything into a single TVL
 // bar per protocol, which can hide "chain X has 0 streams" behind chain Y
 // carrying the numbers. This endpoint is the ground-truth readout.
 //

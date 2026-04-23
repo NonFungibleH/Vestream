@@ -278,7 +278,7 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
 
 /**
  * Top N upcoming unlocks for a SINGLE protocol group. Powers the per-protocol
- * upcoming strip on /unlocks/[protocol].
+ * upcoming strip on /protocols/[slug].
  */
 export async function getUpcomingUnlocksForProtocol(
   adapterIds: readonly string[],

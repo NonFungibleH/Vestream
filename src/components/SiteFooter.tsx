@@ -14,7 +14,7 @@
 // handles the boundary automatically.
 //
 // Themes match SiteNav exactly:
-//   - "light" → white B2C pages (homepage, pricing, /unlocks, /demo, etc.)
+//   - "light" → white B2C pages (homepage, pricing, /protocols, /demo, etc.)
 //   - "navy"  → /developer
 //   - "dark"  → /ai
 //
@@ -48,7 +48,7 @@ const LINK_GROUPS = [
   {
     heading: "Platform",
     links: [
-      { label: "Protocols", href: "/unlocks"   },
+      { label: "Protocols", href: "/protocols" },
       { label: "Demo",      href: "/demo"      },
       { label: "Pricing",   href: "/pricing"   },
       { label: "Resources", href: "/resources" },

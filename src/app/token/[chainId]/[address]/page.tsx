@@ -515,7 +515,7 @@ function ProtocolMix({
             </>
           );
           return slug ? (
-            <Link key={p.protocol} href={`/unlocks/${slug}`} className="block hover:opacity-80 transition-opacity">
+            <Link key={p.protocol} href={`/protocols/${slug}`} className="block hover:opacity-80 transition-opacity">
               {content}
             </Link>
           ) : (

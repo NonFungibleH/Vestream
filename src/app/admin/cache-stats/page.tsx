@@ -27,7 +27,7 @@ const CHAIN_ORDER: { id: number; label: string }[] = [
   { id: 11155111,  label: "Sepolia"  },
 ];
 
-// Protocol display order — matches the /unlocks page ordering (biggest by TVL
+// Protocol display order — matches the /protocols page ordering (biggest by TVL
 // first, roughly) for consistency. Unknown protocols appear at the end in
 // whatever order the DB returns them.
 const PROTOCOL_ORDER = [

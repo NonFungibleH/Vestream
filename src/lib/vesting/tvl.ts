@@ -142,7 +142,7 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
     const url = `https://api.dexscreener.com/latest/dex/tokens/${addresses.join(",")}`;
     // Align the fetch cache lifetime with the page's `revalidate = 60`. Using
     // `no-store` forces the entire calling route into dynamic rendering,
-    // which defeats SSG for /unlocks (the page is a rainbow grid of protocol
+    // which defeats SSG for /protocols (the page is a rainbow grid of protocol
     // cards that are genuinely ISR-friendly). 60s keeps TVL numbers fresh
     // without 500'ing the static build.
     //
@@ -287,7 +287,7 @@ export async function getProtocolTvl(
 }
 
 /**
- * Batch helper for the /unlocks index page — computes TVL for many protocols
+ * Batch helper for the /protocols index page — computes TVL for many protocols
  * in parallel. Accepts a record of (protocolSlug → adapterIds).
  */
 export async function getAllProtocolsTvl(

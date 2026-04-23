@@ -64,6 +64,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // 301 redirects for the /unlocks → /protocols URL rename. Any external
+  // backlink / search-engine result for /unlocks or /unlocks/:slug keeps
+  // working forever; search engines consolidate the link equity onto the
+  // new URL. Add NEW redirects here rather than rewiring the old paths.
+  async redirects() {
+    return [
+      { source: "/unlocks",       destination: "/protocols",       permanent: true },
+      { source: "/unlocks/:slug", destination: "/protocols/:slug", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

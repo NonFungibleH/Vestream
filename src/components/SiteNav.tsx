@@ -13,7 +13,7 @@ interface Props {
 }
 
 const NAV_LINKS = [
-  { label: "Protocols",     href: "/unlocks"       },
+  { label: "Protocols",     href: "/protocols"     },
   { label: "Demo",          href: "/demo"          },
   { label: "Find Vestings", href: "/find-vestings" },
 ] as const;

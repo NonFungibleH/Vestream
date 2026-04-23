@@ -4,7 +4,7 @@
 // real vesting streams from every subgraph-based adapter × mainnet chain.
 //
 // Why a cron: before this job, the cache only filled when a visitor searched
-// their own wallet. That meant public /unlocks/* landing pages started life
+// their own wallet. That meant public /protocols/* landing pages started life
 // with "0 streams indexed" and stayed that way until organic traffic rolled
 // in. This endpoint runs on a Vercel cron schedule (every 6 hours) and seeds
 // ~200 recipients × 4 adapters × 4 chains ≈ 3.2K stream rows per run. After

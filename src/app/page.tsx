@@ -170,7 +170,7 @@ export default async function Home() {
             engines and visitors alike that this index is active, not stale. */}
         <div className="relative mt-10 flex justify-center">
           <Link
-            href="/unlocks"
+            href="/protocols"
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:opacity-90"
             style={{
               background: "rgba(37,99,235,0.05)",

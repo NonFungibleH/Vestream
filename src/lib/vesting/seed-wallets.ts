@@ -32,10 +32,10 @@ import { CHAIN_IDS, type SupportedChainId } from "./types";
 /**
  * Wallets known to have PinkSale (PinkLock V2) locks. PinkLock has no
  * subgraph, and its events haven't been mapped yet in the seeder, so this
- * list is how we prime the cache for the PinkSale protocol card on /unlocks.
+ * list is how we prime the cache for the PinkSale protocol card on /protocols.
  *
  * Populate opportunistically as you encounter real wallets — a pre-launch
- * empty list is expected and the /unlocks card will read "no data" until
+ * empty list is expected and the /protocols card will read "no data" until
  * it's filled.
  */
 export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {

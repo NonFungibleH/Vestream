@@ -12,8 +12,8 @@
 //                        the number investors actually care about on the
 //                        landing page.
 //
-// Called from the per-protocol `/unlocks/[protocol]` page and the protocol
-// grid on `/unlocks`. Results are memoised per-process for 10 minutes so we
+// Called from the per-protocol `/protocols/[slug]` page and the protocol
+// grid on `/protocols`. Results are memoised per-process for 10 minutes so we
 // don't re-hit subgraphs on every ISR revalidate.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -254,7 +254,7 @@ export async function getGlobalStats(adapterId: string): Promise<GlobalProtocolS
 }
 
 /**
- * Fetch global stats for multiple adapters. Useful for the /unlocks index
+ * Fetch global stats for multiple adapters. Useful for the /protocols index
  * page which needs all 7 protocols' numbers at once. Non-supported adapter
  * IDs (team-finance, hedgey, pinksale, uncx-vm) get zero-filled stats —
  * the page can fall back to the local cache count for those.

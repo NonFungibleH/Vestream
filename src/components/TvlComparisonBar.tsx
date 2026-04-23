@@ -93,7 +93,7 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
               return (
                 <Link
                   key={protocol.slug}
-                  href={`/unlocks/${protocol.slug}`}
+                  href={`/protocols/${protocol.slug}`}
                   className="block group"
                 >
                   <div className="flex items-center gap-3 mb-1">

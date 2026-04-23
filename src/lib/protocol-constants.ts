@@ -3,8 +3,8 @@
 // Single source of truth for public-facing protocol metadata.
 //
 // Used by:
-//   • /unlocks/[protocol] SEO landing pages
-//   • /unlocks index page
+//   • /protocols/[slug] SEO landing pages
+//   • /protocols index page
 //   • Any cross-protocol UI that needs colour / name / chains / claim URL
 //
 // Adapter IDs here MUST match VestingStream.protocol values emitted by the
@@ -21,7 +21,7 @@ export interface Testimonial {
 }
 
 export interface ProtocolMeta {
-  /** URL segment: `/unlocks/{slug}`. Also matches VestingStream.protocol. */
+  /** URL segment: `/protocols/{slug}`. Also matches VestingStream.protocol. */
   slug: string;
   /** Adapter IDs this page aggregates from (usually [slug], but see uncx). */
   adapterIds: string[];

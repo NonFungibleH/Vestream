@@ -5,7 +5,7 @@
 // Strategy:
 // - Public, SEO-relevant routes only — never gated routes (/dashboard, /admin,
 //   /settings, /api-docs, etc.)
-// - `lastModified` on /unlocks/[protocol] pages uses the cached stream table's
+// - `lastModified` on /protocols/[slug] pages uses the cached stream table's
 //   most recent refresh timestamp — this is the whole point of shipping
 //   per-protocol landing pages: search engines see the content changing and
 //   re-crawl more aggressively.
@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE}/`,              lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${SITE}/unlocks`,       lastModified: now, changeFrequency: "daily",   priority: 0.95 },
+    { url: `${SITE}/protocols`,     lastModified: now, changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/demo`,          lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE}/find-vestings`, lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
     { url: `${SITE}/developer`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -58,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const protocolEntries: MetadataRoute.Sitemap = protocols.map((p, i) => ({
-    url:             `${SITE}/unlocks/${p.slug}`,
+    url:             `${SITE}/protocols/${p.slug}`,
     lastModified:    protocolLastModified[i],
     changeFrequency: "daily",
     priority:        0.9,

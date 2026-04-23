@@ -1,4 +1,4 @@
-// src/app/unlocks/[protocol]/page.tsx
+// src/app/protocols/[protocol]/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-protocol SEO landing page.
 //
@@ -73,7 +73,7 @@ export async function generateMetadata(
   const title = `${meta.name} unlock tracker & alerts — Vestream`;
   const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
   const keywords = meta.searchKeywords;
-  const url = `https://vestream.io/unlocks/${meta.slug}`;
+  const url = `https://vestream.io/protocols/${meta.slug}`;
 
   return {
     title,
@@ -153,10 +153,10 @@ export default async function ProtocolLandingPage(
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": `https://vestream.io/unlocks/${meta.slug}`,
+        "@id": `https://vestream.io/protocols/${meta.slug}`,
         name: `${meta.name} unlock tracker & alerts`,
         description: meta.description,
-        url: `https://vestream.io/unlocks/${meta.slug}`,
+        url: `https://vestream.io/protocols/${meta.slug}`,
         isPartOf: { "@id": "https://vestream.io/#website" },
         dateModified: stats?.lastIndexedAt?.toISOString() ?? new Date().toISOString(),
       },
@@ -164,8 +164,8 @@ export default async function ProtocolLandingPage(
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: "https://vestream.io/" },
-          { "@type": "ListItem", position: 2, name: "Unlocks", item: "https://vestream.io/unlocks" },
-          { "@type": "ListItem", position: 3, name: meta.name, item: `https://vestream.io/unlocks/${meta.slug}` },
+          { "@type": "ListItem", position: 2, name: "Protocols", item: "https://vestream.io/protocols" },
+          { "@type": "ListItem", position: 3, name: meta.name, item: `https://vestream.io/protocols/${meta.slug}` },
         ],
       },
     ],
@@ -246,7 +246,7 @@ export default async function ProtocolLandingPage(
               Track your {meta.name} wallet →
             </Link>
             <Link
-              href="/unlocks"
+              href="/protocols"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
               style={{ background: "white", border: `1px solid ${meta.border}`, color: "#0f172a" }}
             >
@@ -447,7 +447,7 @@ export default async function ProtocolLandingPage(
           {related.map((r) => (
             <Link
               key={r.slug}
-              href={`/unlocks/${r.slug}`}
+              href={`/protocols/${r.slug}`}
               className="rounded-2xl p-5 transition-all hover:opacity-90"
               style={{ background: "white", border: `1px solid ${r.border}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
             >
@@ -470,7 +470,7 @@ export default async function ProtocolLandingPage(
 
         <div className="mt-6 text-center">
           <Link
-            href="/unlocks"
+            href="/protocols"
             className="text-sm font-semibold"
             style={{ color: "#64748b" }}
           >
