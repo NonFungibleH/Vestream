@@ -25,6 +25,7 @@ import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PROTOCOLS } from "@/lib/protocol-constants";
+import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import {
   getTokenOverview,
   getTokenUnlockCalendar,
@@ -239,28 +240,25 @@ export default async function TokenPage(
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {market.dexScreenerUrl && (
-              <a
-                href={market.dexScreenerUrl} target="_blank" rel="noopener noreferrer"
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#475569" }}
-              >
-                DexScreener ↗
-              </a>
-            )}
-            {market.website && (
-              <a
-                href={market.website} target="_blank" rel="noopener noreferrer"
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#475569" }}
-              >
-                Website ↗
-              </a>
-            )}
-          </div>
+          {/* The duplicate DexScreener / Website buttons that used to sit here
+              moved into <TokenMetaPanel/> below so every external link lives
+              in one consistent row (explorer, website, X, TokenSniffer, …). */}
         </div>
       </section>
+
+      {/* ── Stats + external links panel (DexScreener market + our own LP-lock
+          readout + every external link the token-sleuth actually wants) ──── */}
+      {overview && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <TokenMetaPanel
+            chainId={cid}
+            tokenAddress={addr}
+            tokenSymbol={overview.tokenSymbol ?? market.tokenName ?? null}
+            market={market}
+            overview={overview}
+          />
+        </section>
+      )}
 
       {/* ── 4 hero stats ───────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">

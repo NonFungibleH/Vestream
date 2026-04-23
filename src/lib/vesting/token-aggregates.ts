@@ -390,6 +390,10 @@ export interface TokenMarketData {
   tokenName:  string | null;
   imageUrl:   string | null;
   website:    string | null;
+  /** Project's X / Twitter URL, pulled from DexScreener's info.socials[].
+   *  Null when the token submission didn't include socials (common for
+   *  tokens listed only by an automated pair scanner). */
+  twitterUrl: string | null;
   dexScreenerUrl: string | null;
   dexToolsUrl:    string | null;
 }
@@ -421,6 +425,9 @@ interface DexPair {
   info?: {
     imageUrl?: string;
     websites?: Array<{ label: string; url: string }>;
+    // DexScreener exposes socials as {type, url} where type is "twitter",
+    // "telegram", "discord", etc. We only surface twitter right now.
+    socials?: Array<{ type: string; url: string }>;
   };
 }
 
@@ -430,7 +437,8 @@ export async function getTokenMarketData(
 ): Promise<TokenMarketData> {
   const empty: TokenMarketData = {
     priceUsd:   null, fdv: null, marketCap: null, change24h: null,
-    liquidity:  null, volume24h: null, tokenName: null, imageUrl: null, website: null,
+    liquidity:  null, volume24h: null, tokenName: null, imageUrl: null,
+    website: null, twitterUrl: null,
     dexScreenerUrl: DS_CHAIN_SLUG[chainId]
       ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${tokenAddress.toLowerCase()}` : null,
     dexToolsUrl:    DEXTOOLS_CHAIN_SLUG[chainId]
@@ -454,6 +462,12 @@ export async function getTokenMarketData(
     const website = best.info?.websites?.find((w) => w.label?.toLowerCase() === "website")?.url
       ?? best.info?.websites?.[0]?.url
       ?? null;
+    // DexScreener uses "twitter" for the type slug even though the product
+    // is now called X — accept both defensively. Returns the FIRST match
+    // since tokens rarely have more than one project-X account.
+    const twitterUrl = best.info?.socials?.find(
+      (s) => s.type?.toLowerCase() === "twitter" || s.type?.toLowerCase() === "x",
+    )?.url ?? null;
 
     return {
       ...empty,
@@ -466,6 +480,7 @@ export async function getTokenMarketData(
       tokenName:  best.baseToken?.name  ?? null,
       imageUrl:   best.info?.imageUrl   ?? null,
       website,
+      twitterUrl,
       dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
     };
   } catch (err) {
