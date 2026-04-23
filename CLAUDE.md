@@ -464,11 +464,17 @@ Prices are **live and shown publicly** on `/pricing`.
 | Tier | Web price | In-app (iOS/Android) | Key feature |
 |---|---|---|---|
 | Free | $0 | $0 | 1 wallet (auto-scan), 3 lifetime push alerts |
-| Pro | $7.99/mo · $63.99/yr | $9.99/mo · $79.99/yr | 3 wallets, unlimited push + email alerts, Discover page |
-| Enterprise | Contact | — | Unlimited wallets, REST API + MCP, SSO, dedicated support |
+| Pro | $14.99/mo · $119.99/yr · 14-day free trial | $17.99/mo · $144.99/yr | 3 wallets, unlimited push + email alerts, Discover page |
+| Enterprise | Contact | — | Unlimited wallets, REST API + MCP, Slack/Telegram/WhatsApp, SSO, dedicated support |
 
-In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($9.99) and `io.vestream.pro_annual` ($79.99).
+In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($17.99) and `io.vestream.pro_annual` ($144.99).
 Web users who subscribe directly save ~20% vs in-app pricing.
+Pro includes a 14-day free trial on new signups (web only — iOS/Android follow each store's respective trial policy).
+
+**Email alerts stay in Pro** (deliberately — removing them to Enterprise makes
+Pro feel stingy at $14.99 and competitors all include email in mid-tiers).
+Enterprise-only: Slack/Telegram/WhatsApp alerts, REST API + MCP, team workspace,
+SSO, search-all-receivers.
 
 Tier is updated in the DB by the RevenueCat webhook (`/api/mobile/revenuecat-webhook`) on purchase/renewal/expiry events.
 

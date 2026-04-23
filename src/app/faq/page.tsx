@@ -180,11 +180,11 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "How much does Vestream cost?",
-        a: "Free: $0, 1 wallet, unlimited email alerts, 3 lifetime push alerts. Pro: $7.99/month or $63.99/year on web ($9.99/$79.99 via the iOS/Android app — the Apple/Google cut is baked into the in-app price) for 3 wallets, unlimited push and email alerts, and the Discover page. Enterprise: contact us — unlimited wallets, REST API + MCP access, SSO, dedicated support.",
+        a: "Free: $0, 1 wallet, unlimited email alerts on Pro and Enterprise, 3 lifetime push alerts. Pro: $14.99/month or $119.99/year on web ($17.99/$144.99 via the iOS/Android app — the Apple/Google cut is baked into the in-app price) for 3 wallets, unlimited push and email alerts, and the Discover page. Every new Pro signup on web includes a 14-day free trial. Enterprise: contact us — unlimited wallets, REST API + MCP access, Slack/Telegram/WhatsApp, SSO, dedicated support.",
       },
       {
         q: "Is there a free trial for Pro?",
-        a: "No explicit trial. The Free plan is indefinite, so you can validate the core experience (wallet tracking, email alerts, dashboard) before paying. Push alerts are the main Pro feature gated by a quota (3 lifetime on Free) so you can try notification delivery end-to-end before upgrading.",
+        a: "Yes — every new web signup to Pro includes a 14-day free trial. Add a card to start; we don't charge until day 15, and you can cancel anytime before then with one click. The Free plan is indefinite on top of that, so you can also validate the core experience (wallet tracking, email alerts, dashboard) without ever entering payment details. iOS and Android follow each store's respective trial policy.",
       },
       {
         q: "Why does the mobile app price more than the web price?",

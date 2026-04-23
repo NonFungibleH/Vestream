@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import ContactTrigger from "@/components/ContactTrigger";
@@ -121,19 +122,9 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Badges */}
-        <div className="relative flex items-center gap-3 mb-8 flex-wrap justify-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f59e0b" }} />
-            Beta Testing
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-            style={{ background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
-            <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.39.07 2.35.82 3.15.85.82-.08 2.43-.99 4.1-.84 1.01.08 3.86.41 5.7 3.14-4.84 2.69-4.07 8.64.05 10.71zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-            iOS &amp; Android
-          </div>
-        </div>
+        {/* Beta/iOS badges removed per product decision — the App Store + Play Store
+            pill buttons below now carry the platform messaging, and the "Start now"
+            CTA replaces the previous waitlist capture. */}
 
         <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
           style={{ letterSpacing: "-0.03em", color: "#0f172a" }}>
@@ -150,8 +141,28 @@ export default async function Home() {
           Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
         </p>
 
-        <div className="relative flex flex-col items-center gap-3 w-full">
-          <WaitlistForm />
+        {/* Primary CTA — "Start now" routes to early access sign-up. Under it,
+            the App Store + Play Store download badges surface the mobile
+            option for visitors who prefer to start on their phone. */}
+        <div className="relative flex flex-col items-center gap-5 w-full">
+          <Link
+            href="/early-access"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+            style={{
+              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              color: "white",
+              boxShadow: "0 8px 24px rgba(37,99,235,0.35)",
+            }}
+          >
+            Start now — it&apos;s free →
+          </Link>
+
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#94a3b8" }}>
+              Or get it on your phone
+            </p>
+            <AppStoreBadges comingSoon />
+          </div>
         </div>
 
         {/* Live freshness strip — aggregate stream count + last-indexed timestamp
@@ -603,9 +614,43 @@ export default async function Home() {
             <p className="text-base leading-relaxed mb-7" style={{ color: "#64748b" }}>
               Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
+
+            {/* Protocol pill grid — explicit list of every platform we scan, each
+                with its brand accent. Matches the 7 rows in the mockup on the right
+                so a visitor can't accidentally assume we've quietly dropped one. */}
+            <div className="mb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>
+                Protocols scanned on every search
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { name: "Sablier",      color: "#f97316" },
+                  { name: "Hedgey",       color: "#3b82f6" },
+                  { name: "UNCX",         color: "#f59e0b" },
+                  { name: "Unvest",       color: "#06b6d4" },
+                  { name: "Team Finance", color: "#10b981" },
+                  { name: "Superfluid",   color: "#1db954" },
+                  { name: "PinkSale",     color: "#ec4899" },
+                ].map((p) => (
+                  <span
+                    key={p.name}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                    style={{
+                      background: `${p.color}14`,     // ~8% alpha
+                      border: `1px solid ${p.color}33`, // ~20% alpha
+                      color: p.color,
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: p.color }} />
+                    {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <ul className="flex flex-col gap-3.5">
               {[
-                "7 protocols scanned simultaneously",
+                "7 protocols scanned simultaneously — every one listed above",
                 "Ethereum, Base, BNB Chain & Polygon",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -627,13 +672,16 @@ export default async function Home() {
               <span style={{ color: "#6b7280", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(37,99,235,0.18)", color: "#60a5fa" }}>Scan all</span>
             </div>
-            {/* Result rows */}
+            {/* Result rows — one per supported protocol so a visitor sees all 7
+                integrations represented, not just a convenient subset. */}
             {[
-              { protocol: "Sablier",    chain: "Base",       token: "NOVA", amount: "12,500", color: "#f97316" },
-              { protocol: "Hedgey",     chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
-              { protocol: "UNCX",       chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#f59e0b" },
-              { protocol: "Superfluid", chain: "Polygon",    token: "KLAR", amount: "3,100",  color: "#1db954" },
-              { protocol: "PinkSale",   chain: "BNB Chain",  token: "NOVA", amount: "5,000",  color: "#ec4899" },
+              { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "12,500", color: "#f97316" },
+              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
+              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#f59e0b" },
+              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
+              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#10b981" },
+              { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#1db954" },
+              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#ec4899" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#141720", border: "1px solid #1e2330" }}>
@@ -648,7 +696,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>5 vestings found across 7 protocols</p>
+            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>7 vestings found across 7 protocols</p>
           </div>
         </div>
       </section>
@@ -1049,7 +1097,7 @@ export default async function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, plus 3 free push alerts so you can try the unlock notifications. Upgrade to Pro ($7.99/mo) for 3 wallets and unlimited push + email alerts, or contact us for Enterprise if you're a fund, team, or building on our data.",
+              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, plus 3 free push alerts so you can try the unlock notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets and unlimited push + email alerts, or contact us for Enterprise if you're a fund, team, or building on our data.",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1107,8 +1155,12 @@ export default async function Home() {
             </div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2563eb" }}>Pro</p>
             <p className="text-3xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
-              $7.99<span className="text-base font-semibold" style={{ color: "#64748b" }}>/mo</span>
+              $14.99<span className="text-base font-semibold" style={{ color: "#64748b" }}>/mo</span>
             </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
+              style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#059669" }}>
+              14-day free trial
+            </div>
             <p className="text-sm mb-6" style={{ color: "#64748b" }}>For active holders who want every unlock on their radar.</p>
             <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
