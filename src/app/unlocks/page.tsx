@@ -32,7 +32,13 @@ import {
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 
-export const revalidate = 60;
+// See note on /unlocks/[protocol]/page.tsx — same rationale. This index
+// page fans out into all 7 protocols' getProtocolStats() + getGlobalStats()
+// calls at render time, every one a DB or subgraph query. Pre-rendering at
+// build fails without the prod env; rendering on request with an edge
+// Cache-Control header gives us the same perceived freshness at the
+// visitor-level while letting `next build` complete.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Token unlock trackers — Vestream",

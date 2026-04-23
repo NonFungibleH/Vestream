@@ -39,7 +39,21 @@ import {
 } from "@/lib/vesting/protocol-stats";
 import { getGlobalStats } from "@/lib/vesting/global-stats";
 
-export const revalidate = 60;
+// Render on-demand instead of pre-rendering all 7 protocol pages at build
+// time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
+// forced `next build` to query Postgres for every protocol during the
+// static-export phase. That worked on Vercel with a warm cache, but broke
+// on every cold build — Vercel's first build after a cache wipe AND GitHub
+// Actions CI (which has no DB at all). Postgres-js hangs for 60s retrying
+// ECONNREFUSED even with connect_timeout:10 set, and Next's build worker
+// gives up after 3 attempts of 60s each = 3-minute build timeout per page.
+//
+// force-dynamic renders each page on request, where the runtime env DOES
+// have DATABASE_URL + subgraph keys. First-request latency lands ~200ms on
+// a warm lambda. Edge cache (Cache-Control: s-maxage=60) still caches the
+// rendered HTML, so subsequent visitors in the same minute pay zero cost
+// just like ISR did. Net: same user experience, builds that actually succeed.
+export const dynamic = "force-dynamic";
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
