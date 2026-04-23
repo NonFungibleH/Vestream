@@ -5,16 +5,16 @@
 // Pattern that every adapter test file should follow:
 //   1. Freeze the clock at a known time (so claimableNow/lockedAmount math is
 //      deterministic — otherwise tests would silently drift every day).
-//   2. Mock `globalThis.fetch` to return a saved subgraph response.
+//   2. Mock `globalThis.fetch` to return a saved Envio response.
 //   3. Call adapter.fetch() through its public surface.
 //   4. Assert on the normalised VestingStream output — one test per interesting
 //      stream shape in the fixture.
 //
-// Why this matters: Sablier (or any upstream) can change their subgraph schema
-// at any time. The adapter has two mapping paths (V2, V2.1), each with subtle
-// field differences (cliff as timestamp vs boolean, token vs asset, streamId
-// vs subgraphId). A schema change that breaks normalisation silently returns
-// []; this test ensures we catch the drift in CI instead of production.
+// Why this matters: Sablier migrated off The Graph onto Envio HyperIndex in
+// 2025 (root field renamed `streams` → `LockupStream`, `token` → `asset`,
+// `withdrawals` → `actions`). That exact schema flip caused a silent prod
+// outage; this test guards against the same class of drift now that we're
+// on Envio.
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { sablierAdapter } from "./sablier";
@@ -26,7 +26,7 @@ import fixture from "./__fixtures__/sablier.v2.json";
 // assertion below, which is the point — the test is about a fixed scenario.
 const FROZEN_NOW_SEC = 1_700_000_500; // 500 seconds into stream #1's 1000s schedule
 
-describe("sablierAdapter — V2 mainnet normalisation", () => {
+describe("sablierAdapter — Envio HyperIndex normalisation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(FROZEN_NOW_SEC * 1000);
@@ -79,7 +79,7 @@ describe("sablierAdapter — V2 mainnet normalisation", () => {
     expect(s1.lockedAmount).toBe("500000000");
     expect(s1.isFullyVested).toBe(false);
     expect(s1.cliffTime).toBeNull();
-    // V2.1 mainnet path emits shape="linear" for non-tranched streams.
+    // Linear (non-tranched) streams map to shape="linear".
     expect(s1.shape).toBe("linear");
   });
 
@@ -123,7 +123,7 @@ describe("sablierAdapter — V2 mainnet normalisation", () => {
     expect(streams[2].cancelable).toBe(true);
   });
 
-  it("returns empty array on subgraph HTTP failure (never throws)", async () => {
+  it("returns empty array on upstream HTTP failure (never throws)", async () => {
     vi.unstubAllGlobals();
     vi.stubGlobal("fetch", vi.fn(async () => ({
       ok: false,
@@ -142,7 +142,7 @@ describe("sablierAdapter — V2 mainnet normalisation", () => {
     expect(err).toHaveBeenCalled();
   });
 
-  it("returns empty array when subgraph responds with graphql errors", async () => {
+  it("returns empty array when upstream responds with graphql errors", async () => {
     vi.unstubAllGlobals();
     vi.stubGlobal("fetch", vi.fn(async () => ({
       ok: true,
@@ -162,7 +162,7 @@ describe("sablierAdapter — V2 mainnet normalisation", () => {
   });
 
   it("returns empty array for chains Sablier doesn't support", async () => {
-    // Base Sepolia has no Sablier deployment — SUBGRAPH_URLS entry is undefined,
+    // Base Sepolia has no Sablier deployment — chainId isn't in SUPPORTED_CHAINS,
     // so the adapter must short-circuit before even calling fetch.
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const streams = await sablierAdapter.fetch(
