@@ -350,7 +350,12 @@ export default async function TokenPage(
         <>
           {/* ── 12-month unlock calendar ───────────────────────────────── */}
           <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
-            <UnlockCalendar calendar={calendar} priceUsd={priceUsd} symbol={symbol} />
+            <UnlockCalendar
+              calendar={calendar}
+              priceUsd={priceUsd}
+              symbol={symbol}
+              lockedTotal={overview.lockedTokensWhole}
+            />
           </section>
 
           {/* ── Protocol mix + top recipients side-by-side ─────────────── */}
@@ -501,16 +506,82 @@ function HeroStat({
 }
 
 function UnlockCalendar({
-  calendar, priceUsd, symbol,
-}: { calendar: UnlockCalendarBucket[]; priceUsd: number | null; symbol: string }) {
-  const maxBucket = Math.max(1, ...calendar.map((b) => b.totalTokensWhole));
+  calendar, priceUsd, symbol, lockedTotal,
+}: {
+  calendar:    UnlockCalendarBucket[];
+  priceUsd:    number | null;
+  symbol:      string;
+  /** Current locked-supply total — used to compute "share of locked supply
+   *  unlocking in this 12-month window" in the stats footer. */
+  lockedTotal: number;
+}) {
+  // ── Derived series ────────────────────────────────────────────────────
+  const maxBucket  = Math.max(1, ...calendar.map((b) => b.totalTokensWhole));
   const grandTotal = calendar.reduce((s, b) => s + b.totalTokensWhole, 0);
+
+  // Cumulative running total across the 12-month window. Drives the overlay
+  // curve — turns the chart from "12 independent months" into a release
+  // trajectory reading at a glance. Uses reduce rather than a mutable `let`
+  // accumulator to keep the react-hooks/purity rule happy (SSR component,
+  // but the linter doesn't distinguish).
+  const cumulativeRaw: number[] = calendar.reduce<number[]>((acc, b) => {
+    const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
+    acc.push(prev + b.totalTokensWhole);
+    return acc;
+  }, []);
+  const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1;
+
+  // Peak month (biggest single-bucket unlock) — for the stats strip callout.
+  const peak = calendar.reduce<UnlockCalendarBucket | null>((acc, b) => {
+    if (!acc || b.totalTokensWhole > acc.totalTokensWhole) return b;
+    return acc;
+  }, null);
+
+  // Share of currently-locked supply unlocking in this 12-month window. A
+  // reading of "90%+ in 12mo" means the vesting is nearly over; "30%" means
+  // most unlocks are further out.
+  const unlockShareOfLocked = lockedTotal > 0
+    ? Math.min(100, (grandTotal / lockedTotal) * 100)
+    : 0;
+
+  // Last non-empty bucket — used for "fully vested by" strip stat.
+  const lastActiveIdx = (() => {
+    for (let i = calendar.length - 1; i >= 0; i--) {
+      if (calendar[i].totalTokensWhole > 0) return i;
+    }
+    return -1;
+  })();
+
+  // ── Y-axis scale (0, 25%, 50%, 75%, 100% of peak month) ───────────────
+  const yAxisLabels = [1, 0.75, 0.5, 0.25, 0].map((frac) => ({
+    frac,
+    value: maxBucket * frac,
+  }));
+
+  // ── Cumulative overlay coordinates — an SVG polyline drawn over the bars.
+  // viewBox is 0→100 horizontal, 0→100 vertical; preserveAspectRatio=none
+  // stretches to fill the bar grid so the line aligns with bar tops.
+  //
+  // The polyline's X runs from the centre of the first bar to the centre
+  // of the last bar. Y is inverted (SVG 0 is top) and scaled against maxCum.
+  const svgPoints = calendar
+    .map((_, i) => {
+      const x = ((i + 0.5) / calendar.length) * 100;
+      const y = 100 - (cumulativeRaw[i] / maxCum) * 100;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+
+  // Where does the cumulative curve hit the right edge? Used to position
+  // the final "cumulative" label.
+  const finalCumY = 100 - 100; // ends at top (100% of maxCum), i.e. y=0
 
   return (
     <div
       className="rounded-2xl overflow-hidden"
       style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
+      {/* Header */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 flex-wrap gap-2"
         style={{
@@ -522,6 +593,20 @@ function UnlockCalendar({
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
             12-month unlock schedule
           </span>
+          {/* Legend chip for the overlay line */}
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#7c3aed" }}>
+            <span
+              aria-hidden
+              style={{
+                display:       "inline-block",
+                width:         14,
+                height:        2,
+                background:    "#7c3aed",
+                borderRadius:  1,
+              }}
+            />
+            cumulative
+          </span>
         </div>
         <div className="text-xs" style={{ color: "#64748b" }}>
           <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
@@ -531,46 +616,186 @@ function UnlockCalendar({
         </div>
       </div>
 
+      {/* Chart body — Y-axis column on the left, bars + overlay on the right */}
       <div className="px-4 md:px-5 py-4 overflow-x-auto">
-        <div className="flex items-end gap-1 md:gap-2" style={{ minHeight: 160 }}>
-          {calendar.map((b) => {
-            const pct = (b.totalTokensWhole / maxBucket) * 100;
-            const usd = priceUsd ? b.totalTokensWhole * priceUsd : null;
-            return (
-              <div key={b.timestamp} className="flex flex-col items-center flex-1 min-w-[34px] group">
+        <div className="flex items-stretch gap-2" style={{ minHeight: 180 }}>
+          {/* Y-axis labels (peak-month scale). We keep these on the left so
+              the bars can line up against known reference rows — feels a lot
+              more like a chart and less like a decorative graphic. */}
+          <div
+            className="flex flex-col justify-between pr-2 flex-shrink-0"
+            style={{ height: 130, paddingTop: 0, paddingBottom: 24, color: "#cbd5e1", fontSize: 9.5 }}
+            aria-hidden
+          >
+            {yAxisLabels.map(({ frac, value }) => (
+              <div key={frac} className="tabular-nums leading-none text-right">
+                {value > 0 ? fmtTokens(value) : "0"}
+              </div>
+            ))}
+          </div>
+
+          {/* Bars + overlay curve stacked in the same grid */}
+          <div className="flex-1 relative">
+            {/* Horizontal gridlines — pure decoration but makes the chart read
+                as a chart. Drawn as stacked flex rows matching the Y labels. */}
+            <div
+              className="absolute inset-x-0 pointer-events-none"
+              style={{ top: 0, height: 130 }}
+              aria-hidden
+            >
+              {[0.25, 0.5, 0.75, 1].map((frac) => (
                 <div
-                  className="w-full flex flex-col-reverse rounded-t"
-                  style={{ height: 130, position: "relative" }}
-                  title={`${b.label}: ${fmtTokens(b.totalTokensWhole)} ${symbol}${usd ? ` (${fmtUsd(usd)})` : ""}`}
+                  key={frac}
+                  className="absolute left-0 right-0"
+                  style={{
+                    top:        `${(1 - frac) * 100}%`,
+                    height:     1,
+                    background: "rgba(0,0,0,0.04)",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Bars themselves */}
+            <div className="flex items-end gap-1 md:gap-2" style={{ height: 130 }}>
+              {calendar.map((b, idx) => {
+                const pct = (b.totalTokensWhole / maxBucket) * 100;
+                const usd = priceUsd ? b.totalTokensWhole * priceUsd : null;
+                const isThisMonth = idx === 0;
+                return (
+                  <div
+                    key={b.timestamp}
+                    className="flex flex-col items-center flex-1 min-w-[34px] group relative"
+                  >
+                    <div
+                      className="w-full flex flex-col-reverse rounded-t"
+                      style={{ height: "100%", position: "relative" }}
+                      title={`${b.label}: ${fmtTokens(b.totalTokensWhole)} ${symbol}${usd ? ` (${fmtUsd(usd)})` : ""}${
+                        b.byProtocol.length > 0
+                          ? " · " + b.byProtocol.map((s) => `${protocolName(s.protocol)}: ${fmtTokens(s.tokensWhole)}`).join(", ")
+                          : ""
+                      }`}
+                    >
+                      {b.byProtocol.length === 0 ? (
+                        <div className="w-full" style={{ height: 0 }} />
+                      ) : (
+                        b.byProtocol.map((seg, i) => {
+                          const segPct = (seg.tokensWhole / b.totalTokensWhole) * pct;
+                          return (
+                            <div
+                              key={seg.protocol + i}
+                              className="w-full transition-opacity group-hover:opacity-90"
+                              style={{
+                                height:     `${segPct}%`,
+                                background: protocolColour(seg.protocol),
+                                borderTop:  i > 0 ? "1px solid rgba(255,255,255,0.4)" : undefined,
+                              }}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+                    {/* "This month" marker on bucket 0 — a subtle pill above
+                        the bar so users immediately see where "now" is on
+                        the timeline without counting columns. */}
+                    {isThisMonth && (
+                      <div
+                        className="absolute -top-3 text-[8.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                        style={{
+                          background: "#7c3aed",
+                          color:      "white",
+                          letterSpacing: "0.08em",
+                          whiteSpace: "nowrap",
+                        }}
+                        aria-hidden
+                      >
+                        Now
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Cumulative overlay. Same bounding box as the bars so y=0
+                lines up with the x-axis baseline and y=100 with the peak
+                bucket top. preserveAspectRatio=none is critical — we WANT
+                the line to stretch to fill the container on any width. */}
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="absolute inset-0 pointer-events-none"
+              style={{ width: "100%", height: 130 }}
+              aria-hidden
+            >
+              <polyline
+                points={svgPoints}
+                fill="none"
+                stroke="#7c3aed"
+                strokeWidth={1.5}
+                vectorEffect="non-scaling-stroke"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {/* Dot on the final point so the end of the curve has a
+                  visual anchor (matches the "cumulative" legend pill). */}
+              <circle
+                cx={calendar.length ? ((calendar.length - 0.5) / calendar.length) * 100 : 100}
+                cy={finalCumY}
+                r={0.9}
+                fill="#7c3aed"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+
+            {/* Month labels under each bar */}
+            <div className="flex gap-1 md:gap-2 mt-2">
+              {calendar.map((b) => (
+                <div
+                  key={b.timestamp}
+                  className="text-[9.5px] text-center flex-1 min-w-[34px]"
+                  style={{ color: "#94a3b8" }}
                 >
-                  {b.byProtocol.length === 0 ? (
-                    <div className="w-full" style={{ height: 0 }} />
-                  ) : (
-                    b.byProtocol.map((seg, i) => {
-                      const segPct = (seg.tokensWhole / b.totalTokensWhole) * pct;
-                      return (
-                        <div
-                          key={seg.protocol + i}
-                          className="w-full transition-opacity group-hover:opacity-90"
-                          style={{
-                            height: `${segPct}%`,
-                            background: protocolColour(seg.protocol),
-                            borderTop: i > 0 ? "1px solid rgba(255,255,255,0.4)" : undefined,
-                          }}
-                        />
-                      );
-                    })
-                  )}
-                </div>
-                <div className="text-[9.5px] mt-2 text-center" style={{ color: "#94a3b8" }}>
                   {b.label.split(" ")[0]}
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Stats strip — four technical metrics pulled from the same data. */}
+      <div
+        className="px-4 md:px-5 py-3 grid grid-cols-2 md:grid-cols-4 gap-3 border-t"
+        style={{ borderColor: "rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.015)" }}
+      >
+        <CalendarStat
+          label="Peak month"
+          value={peak && peak.totalTokensWhole > 0 ? peak.label : "—"}
+          sub={peak && peak.totalTokensWhole > 0 ? `${fmtTokens(peak.totalTokensWhole)} ${symbol}` : ""}
+        />
+        <CalendarStat
+          label="12-mo total"
+          value={fmtTokens(grandTotal)}
+          sub={priceUsd ? fmtUsd(grandTotal * priceUsd) : `${symbol}`}
+        />
+        <CalendarStat
+          label="of locked supply"
+          value={lockedTotal > 0 ? `${unlockShareOfLocked.toFixed(1)}%` : "—"}
+          sub={lockedTotal > 0
+            ? `${fmtTokens(lockedTotal - grandTotal)} ${symbol} still locked beyond`
+            : ""}
+        />
+        <CalendarStat
+          label="Last unlock ahead"
+          value={lastActiveIdx >= 0 ? calendar[lastActiveIdx].label : "—"}
+          sub={lastActiveIdx >= 0
+            ? `${lastActiveIdx + 1} month${lastActiveIdx === 0 ? "" : "s"} out`
+            : ""}
+        />
+      </div>
+
+      {/* Protocol legend */}
       <div
         className="px-4 md:px-5 py-2.5 text-[10.5px] leading-relaxed flex items-center gap-4 flex-wrap"
         style={{
@@ -587,6 +812,31 @@ function UnlockCalendar({
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Small stat cell for the calendar's footer strip. Co-located because it
+// only makes sense inside this chart card.
+function CalendarStat({
+  label, value, sub,
+}: { label: string; value: string; sub: string }) {
+  return (
+    <div>
+      <div
+        className="text-[10px] font-semibold uppercase tracking-wider"
+        style={{ color: "#94a3b8" }}
+      >
+        {label}
+      </div>
+      <div className="text-sm font-semibold tabular-nums mt-0.5" style={{ color: "#0f172a" }}>
+        {value}
+      </div>
+      {sub && (
+        <div className="text-[10.5px] mt-0.5" style={{ color: "#64748b" }}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
