@@ -412,7 +412,7 @@ interface VestingStream {
 | UNCX (TokenVesting) | `uncx` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Token locker v3 |
 | UNCX (VestingManager) | `uncx-vm` | ETH, BSC, Polygon, Base | The Graph subgraph | Hidden in UI; merged with `uncx` |
 | Unvest | `unvest` | ETH, BSC, Polygon, Base | The Graph subgraph | Step/milestone vesting |
-| Team Finance | `team-finance` | ETH, BSC, Polygon, Base | The Graph subgraph | Team token vesting |
+| Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Team token vesting — used in Demo C on /demo |
 | Superfluid | `superfluid` | ETH, BSC, Polygon, Base | Superfluid hosted subgraph (no GRAPH_API_KEY) | Cliff + linear streaming; endpoint: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler` |
 | PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem | TGE + cycle-based schedule; no subgraph |
 

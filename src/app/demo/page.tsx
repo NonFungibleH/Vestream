@@ -36,19 +36,22 @@ export const metadata: Metadata = {
 // indexable vesting on Sepolia in about 10 minutes — no contract deployment
 // required from the user.
 //
-//   SEPOLIA_ETH_FAUCET  → free Sepolia ETH for gas
-//   LINK_FAUCET         → Chainlink's Sepolia faucet drops test LINK tokens
-//                         a user can vest without having to deploy their own
-//                         ERC20 (which is where the previous thirdweb flow
-//                         stalled — deploy + mint + transfer to vesting was
-//                         too many steps for a pre-launch demo)
-//   SABLIER_CREATE      → Sablier's Sepolia app. Sablier is one of our
-//                         indexed protocols on Sepolia (subgraph 5yDtFSxy…)
-//                         so the moment the user creates a stream, Vestream
-//                         can index it. Closes the demo loop end-to-end.
+//   SEPOLIA_ETH_FAUCET → free Sepolia ETH for gas
+//   LINK_FAUCET        → Chainlink's Sepolia faucet drops test LINK tokens
+//                        a user can vest without having to deploy their own
+//                        ERC20 (which is where the previous thirdweb flow
+//                        stalled — deploy + mint + transfer to vesting was
+//                        too many steps for a pre-launch demo)
+//   TEAM_FINANCE       → Team Finance's vesting app. Team Finance is one of
+//                        our indexed protocols on Sepolia (see
+//                        supportedChainIds in adapters/team-finance.ts), so
+//                        the moment the user creates a vesting, Vestream
+//                        picks it up automatically — closing the loop
+//                        end-to-end without needing a separate block
+//                        explorer step.
 const SEPOLIA_ETH_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
 const LINK_FAUCET        = "https://faucets.chain.link/sepolia";
-const SABLIER_CREATE     = "https://app.sablier.com/streams/create";
+const TEAM_FINANCE       = "https://www.team.finance/vesting";
 
 export default function DemoPage() {
   return (
@@ -173,7 +176,7 @@ export default function DemoPage() {
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
           title="Create a real Sepolia vesting Vestream will index"
-          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia stream without deploying a single line of code. You'll use a public faucet for gas and test tokens, then create the vesting on Sablier's Sepolia app (which Vestream indexes automatically)."
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting without deploying a single line of code. You'll use a public faucet for gas and test tokens, then create the vesting on Team Finance's Sepolia app (which Vestream indexes automatically)."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -201,23 +204,24 @@ export default function DemoPage() {
 
           <DeployStep
             n="3"
-            title="Create a vesting stream"
-            body="Sablier's app handles the vesting contract for you. Connect your wallet, switch to Sepolia, pick LINK as the token, set a recipient + duration, and submit. Within a minute Vestream will auto-index the stream — scan the recipient wallet on /find-vestings to see it live."
-            href={SABLIER_CREATE}
-            cta="Open Sablier to create stream"
-            accent="#7c3aed"
-            accentBg="rgba(124,58,237,0.08)"
-            accentBorder="rgba(124,58,237,0.22)"
+            title="Create a vesting schedule"
+            body="Team Finance's app handles the vesting contract for you. Connect your wallet, switch to Sepolia, pick LINK as the token, set a recipient + duration, and submit. Within a minute Vestream will auto-index the vesting — scan the recipient wallet on /find-vestings to see it live."
+            href={TEAM_FINANCE}
+            cta="Open Team Finance"
+            accent="#10b981"
+            accentBg="rgba(16,185,129,0.08)"
+            accentBorder="rgba(16,185,129,0.22)"
           />
         </div>
 
-        {/* Note on why we use Sablier + Chainlink faucet instead of a self-hosted
-            deploy flow: thirdweb blocks iframe embedding (wallet-signing security)
-            and even their deep-linked deploy is a 4-step shuffle (deploy contract
-            → mint → fund vesting → configure) that stalls pre-launch demo users.
-            Sablier's Sepolia app does the whole vesting leg in one UI, and
-            because we already index Sablier on Sepolia, the stream appears in
-            Vestream automatically. */}
+        {/* Note on why we use Team Finance + Chainlink faucet instead of a
+            self-hosted deploy flow: thirdweb blocks iframe embedding
+            (wallet-signing security) and even their deep-linked deploy is a
+            4-step shuffle (deploy contract → mint → fund vesting → configure)
+            that stalls pre-launch demo users. Team Finance's Sepolia app does
+            the whole vesting leg in one UI, and because we already index
+            Team Finance on Sepolia, the vesting appears in Vestream
+            automatically. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
           style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b" }}
@@ -228,7 +232,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your stream is live on Sablier, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch Vestream index it.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch Vestream index it.
           </p>
         </div>
       </section>
