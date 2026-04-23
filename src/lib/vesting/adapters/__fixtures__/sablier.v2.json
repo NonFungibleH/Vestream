@@ -1,0 +1,73 @@
+{
+  "_comment": "Realistic-shape Sablier V2.1 subgraph response — the schema ALL current mainnet deployments (ETH, BSC, Polygon, Base) plus Sepolia use. Key differences from V2: `asset` replaces `token`, `subgraphId` replaces `streamId`, `cliff` is a bool + separate `cliffTime`, `actions` replaces `withdrawals`. Three stream shapes: active linear mid-vest, fully-vested-and-withdrawn, and pre-cliff.",
+  "data": {
+    "streams": [
+      {
+        "id": "0x01-1",
+        "subgraphId": "12345",
+        "recipient": "0x1111111111111111111111111111111111111111",
+        "asset": {
+          "id":       "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+          "symbol":   "USDC",
+          "decimals": 6
+        },
+        "depositAmount":   "1000000000",
+        "withdrawnAmount": "0",
+        "startTime":       "1700000000",
+        "endTime":         "1700001000",
+        "cliff":           false,
+        "cliffTime":       null,
+        "canceled":        false,
+        "cancelable":      true,
+        "category":        "LockupLinear",
+        "tranches":        [],
+        "actions":         []
+      },
+      {
+        "id": "0x01-2",
+        "subgraphId": "67890",
+        "recipient": "0x1111111111111111111111111111111111111111",
+        "asset": {
+          "id":       "0xdac17f958d2ee523a2206206994597c13d831ec7",
+          "symbol":   "USDT",
+          "decimals": 6
+        },
+        "depositAmount":   "500000000",
+        "withdrawnAmount": "500000000",
+        "startTime":       "1600000000",
+        "endTime":         "1700000000",
+        "cliff":           false,
+        "cliffTime":       null,
+        "canceled":        false,
+        "cancelable":      false,
+        "category":        "LockupLinear",
+        "tranches":        [],
+        "actions": [
+          { "amountA": "250000000", "timestamp": "1699000000" },
+          { "amountA": "250000000", "timestamp": "1700000000" }
+        ]
+      },
+      {
+        "id": "0x01-3",
+        "subgraphId": "11111",
+        "recipient": "0x1111111111111111111111111111111111111111",
+        "asset": {
+          "id":       "0x6b175474e89094c44da98b954eedeac495271d0f",
+          "symbol":   "DAI",
+          "decimals": 18
+        },
+        "depositAmount":   "1000000000000000000000",
+        "withdrawnAmount": "0",
+        "startTime":       "1700000000",
+        "endTime":         "1710000000",
+        "cliff":           true,
+        "cliffTime":       "1705000000",
+        "canceled":        false,
+        "cancelable":      true,
+        "category":        "LockupLinear",
+        "tranches":        [],
+        "actions":         []
+      }
+    ]
+  }
+}

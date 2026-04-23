@@ -23,6 +23,7 @@ import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
+import { fetchWithRetry } from "../fetch-with-retry";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -437,11 +438,12 @@ export async function getTokenMarketData(
   };
 
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress.toLowerCase()}`,
       { next: { revalidate: 300 }, headers: { Accept: "application/json" } },
+      { tag: "dexscreener-token-page", retries: 2 },
     );
-    if (!res.ok) return empty;
+    if (!res || !res.ok) return empty;
     const data = (await res.json()) as { pairs?: DexPair[] };
     const dsChain = DS_CHAIN_SLUG[chainId];
     const onChain = (data.pairs ?? []).filter((p) => !dsChain || p.chainId === dsChain);

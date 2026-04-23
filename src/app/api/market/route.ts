@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fetchWithRetry } from "@/lib/fetch-with-retry";
 
 // DexScreener chain IDs → URL slugs
 const CHAIN_TO_DS: Record<number, string> = {
@@ -63,14 +64,17 @@ interface DexPair {
   };
 }
 
-// Fetch pairs by token address — no Next.js caching so we always get fresh data
+// Fetch pairs by token address — no Next.js caching so we always get fresh data.
+// fetchWithRetry transparently retries 5xx + 429 with exponential backoff, so a
+// transient DexScreener hiccup no longer blanks a user's whole market panel.
 async function fetchByAddress(address: string): Promise<DexPair[]> {
+  const res = await fetchWithRetry(
+    `https://api.dexscreener.com/latest/dex/tokens/${address}`,
+    { cache: "no-store", headers: { Accept: "application/json" } },
+    { tag: "dexscreener-byaddr", retries: 2 },
+  );
+  if (!res || !res.ok) return [];
   try {
-    const res = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${address}`,
-      { cache: "no-store", headers: { Accept: "application/json" } }
-    );
-    if (!res.ok) return [];
     const data = await res.json();
     return (data.pairs ?? []) as DexPair[];
   } catch {
@@ -80,12 +84,13 @@ async function fetchByAddress(address: string): Promise<DexPair[]> {
 
 // Fallback: search by symbol — useful when address isn't in DexScreener
 async function fetchBySymbol(symbol: string): Promise<DexPair[]> {
+  const res = await fetchWithRetry(
+    `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`,
+    { cache: "no-store", headers: { Accept: "application/json" } },
+    { tag: "dexscreener-bysymbol", retries: 2 },
+  );
+  if (!res || !res.ok) return [];
   try {
-    const res = await fetch(
-      `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(symbol)}`,
-      { cache: "no-store", headers: { Accept: "application/json" } }
-    );
-    if (!res.ok) return [];
     const data = await res.json();
     // Filter to exact symbol matches on the base token
     return ((data.pairs ?? []) as DexPair[]).filter(

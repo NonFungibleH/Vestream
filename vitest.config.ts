@@ -13,6 +13,9 @@ export default defineConfig({
     environment: "node",
     // Strict: a single unhandled promise rejection fails the run
     reporters: ["default"],
+    // Setup runs BEFORE any test file is imported — use it to seed env vars
+    // that modules read at top-level const-eval time (e.g. adapter subgraph URLs).
+    setupFiles: ["./vitest.setup.ts"],
     coverage: {
       provider:  "v8",
       reporter:  ["text", "html"],

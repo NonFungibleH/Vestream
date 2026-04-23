@@ -32,6 +32,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
+import { fetchWithRetry } from "../fetch-with-retry";
 
 // ─── DexScreener chain slug mapping ──────────────────────────────────────────
 // Only these chains have DexScreener coverage — tokens on other chains are
@@ -144,11 +145,15 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
     // which defeats SSG for /unlocks (the page is a rainbow grid of protocol
     // cards that are genuinely ISR-friendly). 60s keeps TVL numbers fresh
     // without 500'ing the static build.
-    const res = await fetch(url, {
+    //
+    // fetchWithRetry auto-retries 5xx + 429 (DexScreener has both) with
+    // exponential backoff + jitter, so a brief upstream blip no longer
+    // blanks every user's TVL bar for 60s.
+    const res = await fetchWithRetry(url, {
       next: { revalidate: 60 },
       headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return out;
+    }, { tag: "dexscreener-tvl", retries: 2 });
+    if (!res || !res.ok) return out;
     const data = (await res.json()) as { pairs?: DexPair[] };
 
     // For each (chainSlug:tokenAddress) key, pick the highest-volume pair that
