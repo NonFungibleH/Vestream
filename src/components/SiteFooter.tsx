@@ -1,8 +1,17 @@
+"use client";
+
 // src/components/SiteFooter.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared footer for every public page. Ensures the same set of links and
 // visual style across light / navy / dark themed pages — so the footer never
 // drifts page-to-page as it has historically.
+//
+// "use client" because the social buttons and link columns use onMouseEnter/
+// onMouseLeave for theme-driven hover colours. Inline style= doesn't support
+// :hover, and the hover tints are driven by the palette (different per theme)
+// so Tailwind hover: utilities can't express them statically. Client
+// components render fine when imported by server-component pages — Next.js
+// handles the boundary automatically.
 //
 // Themes match SiteNav exactly:
 //   - "light" → white B2C pages (homepage, pricing, /unlocks, /demo, etc.)
