@@ -517,8 +517,8 @@ export default function DeveloperPage() {
               Request API access
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Tell us what you're building and we'll send your API key within 1–2 business days.
-              Every application is reviewed — we're keeping early access intentional.
+              Tell us what you&apos;re building and we&apos;ll send your API key within 1–2 business days.
+              Every application is reviewed — we&apos;re keeping early access intentional.
             </p>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 const ACCESS_CODE = "Ilovevesting";
 type Step = "code" | "email" | "otp";
@@ -114,10 +115,10 @@ export default function EarlyAccessPage() {
             <p className="text-sm mb-8" style={{ color: "#64748b" }}>
               All 100 beta spots have been claimed. Join the waitlist and we&apos;ll reach out when more spots open.
             </p>
-            <a href="/" className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
+            <Link href="/" className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}>
               Join the waitlist →
-            </a>
+            </Link>
           </>
         ) : (
           <>
@@ -203,7 +204,7 @@ export default function EarlyAccessPage() {
 
             <p className="text-xs mt-6" style={{ color: "#94a3b8" }}>
               Don&apos;t have an access code?{" "}
-              <a href="/" className="underline" style={{ color: "#64748b" }}>Join the waitlist</a>
+              <Link href="/" className="underline" style={{ color: "#64748b" }}>Join the waitlist</Link>
             </p>
           </>
         )}

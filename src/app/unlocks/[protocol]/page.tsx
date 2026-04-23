@@ -282,10 +282,10 @@ export default async function ProtocolLandingPage(
             Live activity
           </p>
           <h2 className="text-3xl font-bold mb-2" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
-            What's happening on {meta.name} right now
+            What&apos;s happening on {meta.name} right now
           </h2>
           <p className="text-sm max-w-xl mx-auto" style={{ color: "#64748b" }}>
-            Pulled from Vestream's index — updated every minute so you see what crawlers see.
+            Pulled from Vestream&apos;s index — updated every minute so you see what crawlers see.
           </p>
         </div>
 
@@ -389,7 +389,7 @@ export default async function ProtocolLandingPage(
                   <path d="M7.17 3C4.31 3 2 5.31 2 8.17v5.68C2 16.71 4.31 19 7.17 19h.34c.55 0 1 .45 1 1 0 .55-.45 1-1 1H5.5c-.55 0-1 .45-1 1s.45 1 1 1h4.17c1.38 0 2.5-1.12 2.5-2.5v-8.33C12.17 6.31 9.86 3 7 3h.17zm10 0c-2.86 0-5.17 2.31-5.17 5.17v5.68c0 2.86 2.31 5.15 5.17 5.15h.34c.55 0 1 .45 1 1 0 .55-.45 1-1 1H15.5c-.55 0-1 .45-1 1s.45 1 1 1h4.17c1.38 0 2.5-1.12 2.5-2.5v-8.33C22.17 6.31 19.86 3 17 3h.17z"/>
                 </svg>
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "#334155" }}>
-                  "{t.quote}"
+                  &ldquo;{t.quote}&rdquo;
                 </p>
                 <p className="text-xs" style={{ color: "#94a3b8" }}>
                   <span className="font-semibold" style={{ color: "#0f172a" }}>{t.author}</span>
@@ -503,7 +503,7 @@ export default async function ProtocolLandingPage(
               </Link>
             </div>
             <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#94a3b8" }}>
-              Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We're the alert layer above it.
+              Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We&apos;re the alert layer above it.
             </p>
           </div>
         </div>
