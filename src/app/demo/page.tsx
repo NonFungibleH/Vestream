@@ -32,26 +32,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://vestream.io/demo" },
 };
 
-// External deep-links used by Demo C. Chosen specifically to produce a real,
-// indexable vesting on Sepolia in about 10 minutes — no contract deployment
-// required from the user.
+// External deep-links used by Demo C. The flow is now unified on Team Finance
+// for steps 2 + 3, so the user minting a token and creating a vesting is the
+// same thing a real team would do in production — not a faucet-and-Sablier
+// workaround. Team Finance is one of our indexed protocols on Sepolia (see
+// supportedChainIds in adapters/team-finance.ts), so the tokens AND the
+// vesting both land in Vestream automatically, closing the loop end-to-end.
 //
-//   SEPOLIA_ETH_FAUCET → free Sepolia ETH for gas
-//   LINK_FAUCET        → Chainlink's Sepolia faucet drops test LINK tokens
-//                        a user can vest without having to deploy their own
-//                        ERC20 (which is where the previous thirdweb flow
-//                        stalled — deploy + mint + transfer to vesting was
-//                        too many steps for a pre-launch demo)
-//   TEAM_FINANCE       → Team Finance's vesting app. Team Finance is one of
-//                        our indexed protocols on Sepolia (see
-//                        supportedChainIds in adapters/team-finance.ts), so
-//                        the moment the user creates a vesting, Vestream
-//                        picks it up automatically — closing the loop
-//                        end-to-end without needing a separate block
-//                        explorer step.
-const SEPOLIA_ETH_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
-const LINK_FAUCET        = "https://faucets.chain.link/sepolia";
-const TEAM_FINANCE       = "https://www.team.finance/vesting";
+//   SEPOLIA_ETH_FAUCET    → free Sepolia ETH for gas (Google Cloud faucet)
+//   TEAM_FINANCE_MINT     → Token Mint — deploy a real ERC-20 on Sepolia
+//                           with a custom name, symbol, and supply, no
+//                           contract code required
+//   TEAM_FINANCE_VESTING  → Create the vesting using the token just minted
+const SEPOLIA_ETH_FAUCET    = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
+const TEAM_FINANCE_MINT     = "https://www.team.finance/mint";
+const TEAM_FINANCE_VESTING  = "https://www.team.finance/vesting";
 
 export default function DemoPage() {
   return (
@@ -176,14 +171,14 @@ export default function DemoPage() {
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
           title="Create a real Sepolia vesting Vestream will index"
-          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting without deploying a single line of code. You'll use a public faucet for gas and test tokens, then create the vesting on Team Finance's Sepolia app (which Vestream indexes automatically)."
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, mint a test token with Team Finance, then create a vesting schedule for it &mdash; all on Team Finance&rsquo;s Sepolia app, which Vestream indexes automatically."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <DeployStep
             n="1"
             title="Get Sepolia ETH"
-            body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for creating the vesting in step 3. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
+            body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for minting the token and creating the vesting. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
             href={SEPOLIA_ETH_FAUCET}
             cta="Open the Google Cloud faucet"
             accent="#d97706"
@@ -193,10 +188,10 @@ export default function DemoPage() {
 
           <DeployStep
             n="2"
-            title="Mint test tokens"
-            body="No contract deployment required — Chainlink's Sepolia faucet mints LINK test tokens directly to your wallet. Connect, pick how many LINK you want (up to 25), and these are what you'll vest in step 3."
-            href={LINK_FAUCET}
-            cta="Mint LINK from Chainlink"
+            title="Mint your test token"
+            body="Team Finance's Token Mint deploys a real ERC-20 on Sepolia with a custom name, symbol, and supply. Connect, switch chain to Sepolia, name your token, and mint — you now have something to vest in step 3."
+            href={TEAM_FINANCE_MINT}
+            cta="Open Team Finance Mint"
             accent="#2563eb"
             accentBg="rgba(37,99,235,0.08)"
             accentBorder="rgba(37,99,235,0.22)"
@@ -205,23 +200,23 @@ export default function DemoPage() {
           <DeployStep
             n="3"
             title="Create a vesting schedule"
-            body="Team Finance's app handles the vesting contract for you. Connect your wallet, switch to Sepolia, pick LINK as the token, set a recipient + duration, and submit. Within a minute Vestream will auto-index the vesting — scan the recipient wallet on /find-vestings to see it live."
-            href={TEAM_FINANCE}
-            cta="Open Team Finance"
+            body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute Vestream auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
+            href={TEAM_FINANCE_VESTING}
+            cta="Open Team Finance Vesting"
             accent="#10b981"
             accentBg="rgba(16,185,129,0.08)"
             accentBorder="rgba(16,185,129,0.22)"
           />
         </div>
 
-        {/* Note on why we use Team Finance + Chainlink faucet instead of a
-            self-hosted deploy flow: thirdweb blocks iframe embedding
-            (wallet-signing security) and even their deep-linked deploy is a
-            4-step shuffle (deploy contract → mint → fund vesting → configure)
-            that stalls pre-launch demo users. Team Finance's Sepolia app does
-            the whole vesting leg in one UI, and because we already index
-            Team Finance on Sepolia, the vesting appears in Vestream
-            automatically. */}
+        {/* Note on why the whole flow sits on Team Finance (mint + vesting):
+            thirdweb blocks iframe embedding (wallet-signing security) and even
+            their deep-linked deploy is a 4-step shuffle (deploy contract →
+            mint → fund vesting → configure) that stalls pre-launch demo
+            users. Team Finance's Sepolia app handles mint + vesting in the
+            same UI, and because we already index Team Finance on Sepolia the
+            tokens AND the vesting appear in Vestream automatically — no
+            separate block-explorer step. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
           style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b" }}
