@@ -1117,9 +1117,9 @@ export default async function Home() {
           {/* Enterprise (replaces Fund self-serve) */}
           <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 4px 40px rgba(37,99,235,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
+              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
-                Funds, teams &amp; builders
+                Teams &amp; builders
               </span>
             </div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Enterprise</p>
@@ -1150,9 +1150,16 @@ export default async function Home() {
           </Link>
         </p>
 
-        {/* Comparison table */}
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <div className="grid grid-cols-4 px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+        {/* Comparison table — wrapped in overflow-x-auto so the 4-column grid
+            stays legible on mobile (375px) by scrolling horizontally rather
+            than crushing each column to ~80px. The min-w-[640px] inner
+            container preserves desktop layout unchanged. */}
+        <div
+          className="rounded-2xl overflow-x-auto"
+          style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
+        >
+          <div className="min-w-[640px]">
+          <div className="grid grid-cols-4 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#94a3b8" }}>Feature</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#94a3b8" }}>Free</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2563eb" }}>Pro</span>
@@ -1173,7 +1180,7 @@ export default async function Home() {
             ["SSO & custom SLA",           false,            false,          true],
             ["Support",                    false,            "Ticketing",    "Dedicated"],
           ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
-            <div key={feature} className="grid grid-cols-4 px-6 py-3.5 items-center"
+            <div key={feature} className="grid grid-cols-4 px-4 md:px-6 py-3.5 items-center"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
               <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
               {([free, pro, fund] as (string | boolean)[]).map((val, j) => (
@@ -1189,6 +1196,7 @@ export default async function Home() {
               ))}
             </div>
           ))}
+          </div>
         </div>
       </section>
 

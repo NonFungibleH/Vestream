@@ -63,7 +63,11 @@ export function TokenPulse({ pulse, symbol }: Props) {
             Pulse · {symbol}
           </span>
         </div>
-        <span className="text-[11px]" style={{ color: "#94a3b8" }}>
+        {/* Long-form caption hidden on mobile — the pulsing dot + "Pulse"
+            label already communicates "live data". Showing the full
+            sentence alongside on a 375px viewport wraps to a second line
+            and crowds the pill. */}
+        <span className="hidden sm:inline text-[11px]" style={{ color: "#94a3b8" }}>
           Generated from Vestream&rsquo;s indexed cache
         </span>
       </div>

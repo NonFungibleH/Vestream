@@ -55,16 +55,20 @@ export function TokenFAQ({ items, symbol }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="mb-4 flex items-baseline gap-3 flex-wrap">
+      {/* Heading stack: H2 on one line, supporting caption on a dedicated
+          row below. On 375px the old inline layout caused the caption to
+          orphan under the H2 with awkward wrapping — a proper two-row
+          structure reads cleaner. */}
+      <div className="mb-4">
         <h2
           className="text-xl md:text-2xl font-bold"
           style={{ color: "#0f172a", letterSpacing: "-0.02em" }}
         >
           {symbol} token FAQ
         </h2>
-        <span className="text-xs" style={{ color: "#94a3b8" }}>
+        <p className="mt-1 text-xs" style={{ color: "#94a3b8" }}>
           Answers generated from Vestream&rsquo;s indexed data · updated each seed-cache run.
-        </span>
+        </p>
       </div>
 
       <div

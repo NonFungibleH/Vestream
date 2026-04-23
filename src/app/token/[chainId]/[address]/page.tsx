@@ -745,7 +745,13 @@ function UnlockCalendar({
         </div>
       </div>
 
-      {/* Chart body — Y-axis column on the left, bars + overlay on the right */}
+      {/* Chart body — Y-axis column on the left, bars + overlay on the right.
+          The chart's internal min-widths (y-axis column + ~34px × 12 or 24
+          bars) exceed 375px, so the overflow-x-auto lets mobile visitors
+          scroll horizontally. A right-edge fade gradient (position=relative
+          + absolute pseudo-mask below) hints at the scrollable content
+          without the scrollbar being prominent on touch devices. */}
+      <div className="relative">
       <div className="px-4 md:px-5 py-4 overflow-x-auto">
         <div className="flex items-stretch gap-2" style={{ minHeight: 180 }}>
           {/* Y-axis labels (peak-month scale). We keep these on the left so
@@ -903,12 +909,14 @@ function UnlockCalendar({
             </svg>
 
             {/* Month labels under each bar. Past labels render muted so
-                the forward half of the axis reads as primary. */}
+                the forward half of the axis reads as primary.
+                text-[10px] is the accessibility floor for secondary info;
+                lower than that becomes unreadable on small screens. */}
             <div className="flex gap-1 md:gap-2 mt-2">
               {visible.map((b) => (
                 <div
                   key={b.timestamp}
-                  className="text-[9.5px] text-center flex-1 min-w-[34px]"
+                  className="text-[10px] text-center flex-1 min-w-[34px]"
                   style={{ color: b.isPast ? "#cbd5e1" : "#94a3b8" }}
                 >
                   {b.label.split(" ")[0]}
@@ -917,6 +925,17 @@ function UnlockCalendar({
             </div>
           </div>
         </div>
+      </div>
+      {/* Right-edge fade gradient hinting at horizontal scroll on mobile.
+          md:hidden so desktop (where the chart fits without scrolling)
+          doesn't get a visual mask that implies content is hidden. */}
+      <div
+        className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none md:hidden"
+        style={{
+          background: "linear-gradient(to left, rgba(255,255,255,0.95), transparent)",
+        }}
+        aria-hidden
+      />
       </div>
 
       {/* Stats strip — four technical metrics pulled from the same data. */}

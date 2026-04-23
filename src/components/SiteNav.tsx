@@ -99,28 +99,31 @@ export function SiteNav({ theme = "light" }: Props) {
             })}
           </div>
 
-          {/* CTA */}
+          {/* CTA — min-h-[40px] ensures a WCAG-compliant tap target (44px
+              target counting natural padding). Previously `py-1.5` alone
+              gave ~32px, below the 44px accessibility floor. */}
           <a
             href={ctaHref}
-            className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
+            className="text-sm font-semibold px-4 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}
           >
             {ctaLabel}
           </a>
         </div>
 
-        {/* Mobile right — CTA button + hamburger */}
+        {/* Mobile right — CTA button + hamburger. Both bumped to min-h-[40px]
+            / w-11 h-11 for touch accessibility. */}
         <div className="flex md:hidden items-center gap-2">
           <a
             href={ctaHref}
-            className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all duration-150 hover:opacity-90"
+            className="text-xs font-semibold px-3 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}
           >
             Early Access
           </a>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
+            className="relative w-11 h-11 flex items-center justify-center rounded-lg"
             aria-label="Toggle menu"
           >
             {([

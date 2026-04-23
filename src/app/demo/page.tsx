@@ -96,13 +96,15 @@ export default function DemoPage() {
         />
         <InteractiveDemo />
 
-        {/* Small divider with hand-off copy */}
+        {/* Small divider with hand-off copy. Dividers hide at < sm so the
+            label gets full width and doesn't wrap awkwardly between two
+            shrunken rules at 375px. */}
         <div className="flex items-center justify-center gap-4 mt-10 md:mt-12 mb-2">
-          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
-          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#94a3b8" }}>
             Now try the real thing
           </span>
-          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
         </div>
       </section>
 
@@ -155,13 +157,13 @@ export default function DemoPage() {
           </Link>
         </div>
 
-        {/* Divider into Demo C */}
+        {/* Divider into Demo C. Same mobile rule as above. */}
         <div className="flex items-center justify-center gap-4 mt-12 md:mt-14 mb-2">
-          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
-          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#94a3b8" }}>
             Or deploy a real vesting on Sepolia
           </span>
-          <div className="h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
         </div>
       </section>
 

@@ -146,60 +146,68 @@ export function TokenMetaPanel({
         boxShadow:  "0 4px 24px rgba(37,99,235,0.06)",
       }}
     >
-      {/* Row 1 — price + 24h change + core market stats */}
-      <div className="px-5 md:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94a3b8" }}>
-              Price
+      {/* Row 1 — price (left) + market stats (right on desktop, below on mobile).
+          The old layout was a single flex with everything wrapping, which
+          at 375px scattered "Liquidity / 24h volume / FDV" mid-wrap. On
+          mobile we now stack: price on top, stats trio in a 3-column grid
+          below it so each stat gets a consistent column width. */}
+      <div className="px-5 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94a3b8" }}>
+            Price
+          </div>
+          <div className="flex items-baseline gap-2 mt-0.5">
+            <div className="text-2xl font-bold tabular-nums" style={{ color: "#0f172a" }}>
+              {fmtPrice(market.priceUsd)}
             </div>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <div className="text-2xl font-bold tabular-nums" style={{ color: "#0f172a" }}>
-                {fmtPrice(market.priceUsd)}
+            {market.change24h != null && (
+              <div
+                className="text-sm font-semibold tabular-nums"
+                style={{ color: changePositive ? "#10b981" : "#ef4444" }}
+              >
+                {fmtPct(market.change24h)}
               </div>
-              {market.change24h != null && (
-                <div
-                  className="text-sm font-semibold tabular-nums"
-                  style={{ color: changePositive ? "#10b981" : "#ef4444" }}
-                >
-                  {fmtPct(market.change24h)}
-                </div>
-              )}
-            </div>
+            )}
           </div>
+        </div>
 
-          <div className="flex items-center gap-5 text-xs flex-wrap">
-            <Stat label="Liquidity" value={fmtUsd(market.liquidity)} />
-            <Stat label="24h volume" value={fmtUsd(market.volume24h)} />
-            <Stat label="FDV"       value={fmtUsd(market.fdv ?? market.marketCap)} />
-          </div>
+        <div className="grid grid-cols-3 gap-4 md:flex md:items-center md:gap-5 text-xs">
+          <Stat label="Liquidity" value={fmtUsd(market.liquidity)} />
+          <Stat label="24h volume" value={fmtUsd(market.volume24h)} />
+          <Stat label="FDV"       value={fmtUsd(market.fdv ?? market.marketCap)} />
         </div>
       </div>
 
-      {/* Row 2 — Vestream differentiator: indexed locked supply */}
+      {/* Row 2 — Vestream differentiator: indexed locked supply.
+          Two-row layout at mobile so the badge + amount stay on one line
+          and the "locked across N streams · protocols" descriptor sits
+          below in full width, rather than fragmenting mid-phrase when
+          it wraps in-line with the badge. */}
       {lockedDisplay && (
         <div
-          className="px-5 md:px-6 py-3 flex items-center gap-3 flex-wrap text-sm"
+          className="px-5 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2 sm:gap-3 text-sm"
           style={{
             background:   "linear-gradient(90deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))",
             borderTop:    "1px solid rgba(0,0,0,0.05)",
             borderBottom: "1px solid rgba(0,0,0,0.05)",
           }}
         >
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}
-          >
-            🔒 Vestream-indexed
-          </span>
-          <span className="font-semibold" style={{ color: "#0f172a" }}>
-            {lockedDisplay}
-          </span>
-          {lockedUsd && (
-            <span className="font-semibold tabular-nums" style={{ color: "#64748b" }}>
-              ({lockedUsd})
+          <div className="flex items-center gap-3 flex-wrap">
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider"
+              style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}
+            >
+              🔒 Vestream-indexed
             </span>
-          )}
+            <span className="font-semibold" style={{ color: "#0f172a" }}>
+              {lockedDisplay}
+            </span>
+            {lockedUsd && (
+              <span className="font-semibold tabular-nums" style={{ color: "#64748b" }}>
+                ({lockedUsd})
+              </span>
+            )}
+          </div>
           <span style={{ color: "#64748b" }}>
             locked across {overview.activeStreamCount.toLocaleString()}{" "}
             {overview.activeStreamCount === 1 ? "stream" : "streams"}

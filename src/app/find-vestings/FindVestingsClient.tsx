@@ -237,7 +237,7 @@ export default function FindVestingsClient() {
               type="text"
               value={manualAddress}
               onChange={(e) => setManualAddress(e.target.value)}
-              placeholder="0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE"
+              placeholder="0x… paste any wallet address"
               disabled={loading}
               className="flex-1 px-4 py-3 text-sm font-mono rounded-xl outline-none focus:ring-2"
               style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a", minWidth: 240 }}
@@ -434,7 +434,10 @@ function GroupCard({ group }: { group: Group }) {
             <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
               Total
             </div>
-            <div className="font-mono text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+            {/* Allow token total to wrap rather than truncate — the number
+                is the key data on this card and hiding it behind ellipsis
+                on mobile hurts more than a two-line wrap. */}
+            <div className="font-mono text-sm font-semibold break-all" style={{ color: "#0f172a" }}>
               {fmtAmount(tok.totalAmountRaw, tok.decimals)}
             </div>
             {BigInt(tok.claimableNowRaw) > 0n && (
