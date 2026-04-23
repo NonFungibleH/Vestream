@@ -186,37 +186,38 @@ export async function getNextUpcomingUnlock(
 }
 
 /**
- * Top N upcoming unlocks across ALL indexed protocols, ordered by how soon they
- * trigger — with diversification applied. Used by the "Upcoming Unlocks" panel
- * on /protocols (and formerly /unlocks) so the landing page feels varied, not
- * "6 tranches from one recipient".
+ * Top N upcoming unlocks across ALL indexed protocols, strictly ordered by
+ * soonest trigger time. Used by the "Upcoming Unlocks" panel on /protocols.
  *
- * Three rules applied on top of the naive "soonest first":
+ * Two rules layered on top of endTime-ascending sort:
  *
  *   1. Skip linear/continuous streams. Sablier linear and Superfluid
- *      streaming-vesting streams have no discrete "unlock event" at the
- *      endTime — they flow per-second. Showing them here yielded the
- *      "0.0000 USDC" rows the UI can't meaningfully render.
- *      We keep only shape === "steps" (tranched / cliff schedules).
+ *      streaming-vesting streams have no discrete unlock event at the
+ *      endTime — they flow per-second. Including them yielded rows that
+ *      rendered as "0.0000 USDC" because there's no meaningful "amount
+ *      unlocking at this moment" for continuous flow.
+ *      Filter on shape === "steps" (tranched / cliff schedules).
  *
- *   2. Dedupe by recipient. A single wallet with four Sablier tranches
- *      at T+12h, T+13h, T+14h, T+15h used to fill the entire widget
- *      with the same address. Max one row per recipient in the top N.
+ *   2. Dedupe by recipient — keep the earliest-unlocking row per wallet.
+ *      A wallet with four Sablier tranches at T+12h / T+13h / T+14h /
+ *      T+15h used to fill the widget with one address. One row per
+ *      recipient in the display set.
  *
- *   3. Interleave by protocol. After dedupe, round-robin through the
- *      per-protocol queues so no single protocol dominates the list.
- *      A visitor glancing at the panel sees breadth across 4-5
- *      protocols rather than "Sablier Sablier Sablier Sablier".
+ * NOTE on an earlier attempt: a previous revision also round-robined by
+ * protocol to show breadth across protocols. That looked great in theory
+ * but broke the fundamental contract of the widget — rows weren't in
+ * chronological order anymore, so "in 10h" could appear above "in 3d"
+ * above "in 19d" above "in 3d" again. Confusing. Reverted. If we want a
+ * "diverse protocols" view, it belongs on a separate surface, not the
+ * primary upcoming-unlocks feed.
  *
- * We fetch a larger pool than we display (see POOL_MULTIPLIER) so there
- * are enough candidates left after filtering + deduping for the
- * interleave step to produce a full `limit` rows.
+ * Pool: fetch more than we display so dedupe has room to trim same-wallet
+ * rows without yielding fewer than `limit` distinct wallets.
  */
 export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch enough candidates that even after stripping linear streams and
-  // deduping by recipient we have N×5 rows spread across protocols.
-  // 100 rows = ~5ms from the cache table, not a real cost.
+  // Fetch 10× the display count so dedupe has plenty of room to trim
+  // same-wallet entries before we run out of distinct recipients.
   const POOL_MULTIPLIER = 10;
 
   const rows = await db
@@ -244,34 +245,17 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
     .orderBy(asc(vestingStreamsCache.endTime))
     .limit(limit * POOL_MULTIPLIER);
 
-  // Dedupe by recipient — keep the earliest-unlocking row per wallet.
-  // Input is already ordered by endTime asc so the first occurrence wins.
+  // Dedupe by recipient, preserving endTime-asc order (input is already
+  // sorted, so first occurrence = earliest unlock for that wallet). Stop
+  // once we have `limit` distinct recipients — no reason to walk the
+  // rest of the pool.
   const seenRecipients = new Set<string>();
-  const deduped: UnlockSummary[] = [];
+  const out: UnlockSummary[] = [];
   for (const row of rows) {
     if (seenRecipients.has(row.recipient)) continue;
     seenRecipients.add(row.recipient);
-    deduped.push(rowToUnlock(row));
-  }
-
-  // Round-robin interleave by protocol. Build per-protocol queues (preserving
-  // the endTime-asc order within each), then cycle through the queues popping
-  // the head of each until we fill `limit` rows or run out of candidates.
-  const byProtocol = new Map<string, UnlockSummary[]>();
-  for (const u of deduped) {
-    const q = byProtocol.get(u.protocol);
-    if (q) q.push(u);
-    else   byProtocol.set(u.protocol, [u]);
-  }
-
-  const out: UnlockSummary[] = [];
-  while (out.length < limit && byProtocol.size > 0) {
-    for (const [p, q] of Array.from(byProtocol.entries())) {
-      if (out.length >= limit) break;
-      const head = q.shift();
-      if (head) out.push(head);
-      if (q.length === 0) byProtocol.delete(p);
-    }
+    out.push(rowToUnlock(row));
+    if (out.length >= limit) break;
   }
   return out;
 }
