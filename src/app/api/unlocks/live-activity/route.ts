@@ -121,11 +121,15 @@ export async function GET() {
       { totalStreams: 0, activeStreams: 0 },
     );
 
-    const hourAgoMs = Date.now() - 60 * 60 * 1000;
+    // Pass the timestamp as an ISO string (not a Date object). postgres-js
+    // serialises Dates correctly when prepared statements are enabled, but
+    // the fallback path used with the PgBouncer transaction pooler throws
+    // ERR_INVALID_ARG_TYPE on Date. ISO strings work in both modes.
+    const hourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const [{ newInLastHour = 0 } = { newInLastHour: 0 }] = await db
       .select({ newInLastHour: sql<number>`count(*)::int` })
       .from(vestingStreamsCache)
-      .where(sql`${vestingStreamsCache.firstSeenAt} > ${new Date(hourAgoMs)}`);
+      .where(sql`${vestingStreamsCache.firstSeenAt} > ${hourAgoIso}`);
 
     return NextResponse.json(
       {

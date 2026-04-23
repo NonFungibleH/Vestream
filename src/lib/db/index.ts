@@ -26,9 +26,12 @@ import { env } from "@/lib/env";
 // This means the same code works whether DATABASE_URL points at the direct
 // connection or the transaction pooler.
 
-const IS_TXN_POOLER =
-  env.DATABASE_URL.includes(":6543/") ||
-  env.DATABASE_URL.includes("pooler.supabase.com");
+// Match ONLY the transaction pooler port (6543). The session pooler also
+// lives on `pooler.supabase.com` but uses port 5432 and DOES support
+// prepared statements — we must not disable them there, or queries that
+// bind non-primitive params (Date, bigint) will fail in postgres-js's
+// fallback serialization path.
+const IS_TXN_POOLER = env.DATABASE_URL.includes(":6543/");
 
 const client = postgres(env.DATABASE_URL, {
   // Single connection per lambda — Supabase handles pooling upstream.
