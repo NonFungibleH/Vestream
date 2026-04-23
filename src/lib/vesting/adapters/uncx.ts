@@ -20,9 +20,15 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNCX_SUBGRAPH_URL_BSC,
                               "Bq3CVVspv1gunmEhYkAwfRZcMZK5QyaydyCRarCwgE8P"
                             ),
+  // Polygon: the previously-used hosted subgraph ID
+  // (Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD) was deprecated — The Graph
+  // gateway now responds with `subgraph not found: no allocations`, meaning
+  // no indexer is picking it up. UNCX has not published a replacement at the
+  // time of writing, so we skip Polygon by default rather than 404 every
+  // seed run. Set UNCX_SUBGRAPH_URL_POLYGON when a new one becomes available.
   [CHAIN_IDS.POLYGON]:      resolveSubgraphUrl(
                               process.env.UNCX_SUBGRAPH_URL_POLYGON,
-                              "Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD"
+                              undefined,
                             ),
   [CHAIN_IDS.BASE]:         resolveSubgraphUrl(
                               process.env.UNCX_SUBGRAPH_URL_BASE,

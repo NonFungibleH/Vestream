@@ -84,13 +84,28 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
 /**
  * Upserts a batch of VestingStream objects to the persistent cache.
  * Safe to call fire-and-forget — errors are caught and logged, never thrown.
+ *
+ * Returns the number of rows that were actually written. A zero return
+ * combined with a non-empty input means the write failed — the error was
+ * logged but not thrown, so the caller has to check this if it cares.
  */
-export async function writeToCache(streams: VestingStream[]): Promise<void> {
-  if (streams.length === 0) return;
+export async function writeToCache(streams: VestingStream[]): Promise<number> {
+  if (streams.length === 0) return 0;
+
+  // Dedupe by stream id. Postgres' `INSERT ... ON CONFLICT DO UPDATE` rejects
+  // a batch that tries to upsert the same conflict target twice in one
+  // statement ("ON CONFLICT DO UPDATE command cannot affect row a second
+  // time"). We hit this in practice because a single discovery pass can
+  // surface the same stream via multiple recipients (NFT transfers, joint
+  // owners) or via overlapping where-clauses. Keep the LAST occurrence —
+  // later fetches tend to have the freshest mutable fields.
+  const byId = new Map<string, VestingStream>();
+  for (const s of streams) byId.set(s.id, s);
+  const unique = Array.from(byId.values());
 
   try {
     const now = new Date();
-    const rows = streams.map((s) => ({
+    const rows = unique.map((s) => ({
       streamId:        s.id,
       recipient:       s.recipient.toLowerCase(),
       chainId:         s.chainId,
@@ -116,9 +131,11 @@ export async function writeToCache(streams: VestingStream[]): Promise<void> {
           lastRefreshedAt: sql`excluded.last_refreshed_at`,
         },
       });
+    return unique.length;
   } catch (err) {
     // Never block the API response — log and continue
     console.error("[vesting-cache] write failed:", err);
+    return 0;
   }
 }
 

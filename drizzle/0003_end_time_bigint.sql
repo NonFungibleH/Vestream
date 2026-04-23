@@ -1,0 +1,12 @@
+-- Migrate vesting_streams_cache.end_time from INTEGER (32-bit signed) to BIGINT.
+--
+-- Why: INTEGER tops out at 2,147,483,647 — the year 2038 in unix seconds.
+-- Real on-chain vesting contracts occasionally carry end times well past
+-- 2038 (long-dated treasury unlocks, sentinel "effectively-forever" values,
+-- etc.). Seed runs threw `value "9822026400" is out of range for type integer`
+-- against Supabase before this migration.
+--
+-- Postgres will cast existing rows without data loss (every INTEGER value is
+-- representable as BIGINT) and without a table rewrite for this specific
+-- promotion, so this is cheap even on a full cache table.
+ALTER TABLE "vesting_streams_cache" ALTER COLUMN "end_time" SET DATA TYPE bigint;

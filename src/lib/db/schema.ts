@@ -4,6 +4,7 @@ import {
   text,
   boolean,
   integer,
+  bigint,
   timestamp,
   jsonb,
   index,
@@ -143,7 +144,15 @@ export const vestingStreamsCache = pgTable(
     tokenAddress:    text("token_address"),
     tokenSymbol:     text("token_symbol"),
     isFullyVested:   boolean("is_fully_vested").notNull().default(false),
-    endTime:         integer("end_time"),            // unix seconds
+    // BIGINT (not INTEGER). Signed 32-bit INTEGER overflows at 2147483647 ≈
+    // year 2038, and real vesting contracts in the wild carry end-times well
+    // past that (DAO treasury unlocks scheduled decades out, contracts with
+    // sentinel "practically-never" values, etc.). Supabase threw
+    // `value "9822026400" is out of range for type integer` on a seed run —
+    // that was year 2281, but anything after 2038-01-19 breaks.
+    // JS Number is safe up to 2^53 ≈ year 285 million, so `mode: "number"`
+    // is fine for unix seconds.
+    endTime:         bigint("end_time", { mode: "number" }),
     // ── full normalised stream data ───────────────────────────────────────────
     streamData:      jsonb("stream_data").$type<Record<string, unknown>>().notNull(),
     // ── cache bookkeeping ─────────────────────────────────────────────────────

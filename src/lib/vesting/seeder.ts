@@ -49,7 +49,7 @@
 // Run by `/api/cron/seed-cache` on the Vercel cron schedule (daily at 03:00 UTC).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http, parseAbiItem } from "viem";
+import { createPublicClient, http } from "viem";
 import { mainnet, bsc, polygon, base } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
@@ -65,17 +65,18 @@ import { PINKSALE_SEED_WALLETS } from "./seed-wallets";
 // changes, update both here AND in the adapter file — or extract into a
 // shared const in a follow-up. For now, explicit duplication is safer.
 
-const SABLIER_URLS: Partial<Record<SupportedChainId, string>> = {
-  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.SABLIER_SUBGRAPH_URL_ETH,     "AvDAMYYHGaEwn9F9585uqq6MM5CfvRtYcb7KjK7LKPCt") ?? "",
-  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.SABLIER_SUBGRAPH_URL_BSC,     "A8Vc9hi7j45u7P8Uw5dg4uqYJgPo4x1rB4oZtTVaiccK") ?? "",
-  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.SABLIER_SUBGRAPH_URL_POLYGON, "8fgeQMEQ8sskVeWE5nvtsVL2VpezDrAkx2d1VeiHiheu") ?? "",
-  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.SABLIER_SUBGRAPH_URL_BASE ?? process.env.SABLIER_SUBGRAPH_URL, "778GfecD9tsyB4xNnz4wfuAyfHU6rqGr79VCPZKu3t2F") ?? "",
-};
+// Sablier moved off The Graph onto Envio; one unified multi-chain endpoint
+// now serves every network, with chainId filtered inside the query. See the
+// commentary in adapters/sablier.ts for the full migration context.
+const SABLIER_ENVIO_URL =
+  process.env.SABLIER_ENVIO_URL ?? "https://indexer.hyperindex.xyz/53b7e25/v1/graphql";
 
 const UNCX_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_ETH,     "Dp7Nvr9EESRYJC1sVhVdrRiDU2bxPa8G1Zhqdh4vyHnE") ?? "",
   [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_BSC,     "Bq3CVVspv1gunmEhYkAwfRZcMZK5QyaydyCRarCwgE8P") ?? "",
-  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_POLYGON, "Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD") ?? "",
+  // Polygon: hosted subgraph was deprecated ("no allocations"); skipping
+  // until UNCX publishes a replacement. See adapters/uncx.ts for full note.
+  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_POLYGON) ?? "",
   [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNCX_SUBGRAPH_URL_BASE,    "CUQ2qwQcVfivLPF9TsoLaLnJGmPRb3sDYFVRXbtUy78z") ?? "",
 };
 
@@ -147,54 +148,38 @@ async function postGraph<T>(
 }
 
 /**
- * Sablier V2.1 uses `recipient: Bytes!`; sort by startTime desc for newest
- * streams. If the primary query (which filters canceled:false) returns zero
- * recipients, we retry WITHOUT the filter — Sablier's subgraph has
- * occasionally returned empty-with-no-error when a where-clause field has
- * been renamed or a boolean becomes nullable, and the cheapest way to tell
- * "schema changed" from "genuinely zero streams" is to ask without the
- * filter and compare.
+ * Sablier discovery — Envio/Hasura schema. Entity is `LockupStream`, filter
+ * syntax is `{ _eq, _in }`, order is `order_by: {field: desc}`, chainId is
+ * filtered inside the query (one endpoint for every chain).
+ *
+ * If this returns zero, the fallback (no canceled filter) is dropped — in
+ * the old subgraph that fallback existed to detect schema drift on the
+ * `canceled` field, but under Envio the canceled column is stable and a
+ * zero result really does mean "no recent streams on this chain".
  */
 async function discoverSablierRecipients(chainId: SupportedChainId): Promise<string[]> {
-  const url = SABLIER_URLS[chainId];
-  if (!url) return [];
   const tag = `sablier/${chainId}`;
-
-  // Primary: filter out canceled streams (what we actually want to seed).
-  const primary = `
-    query SeedSablierPrimary($first: Int!) {
-      streams(
-        where: { canceled: false }
-        orderBy: startTime
-        orderDirection: desc
-        first: $first
-      ) { recipient }
+  const query = `
+    query SeedSablier($first: Int!, $chainId: numeric!) {
+      LockupStream(
+        where: {
+          chainId:  { _eq: $chainId }
+          canceled: { _eq: false }
+        }
+        order_by: { startTime: desc }
+        limit: $first
+      ) {
+        recipient
+      }
     }
   `;
-  const data1 = await postGraph<{ streams?: Array<{ recipient: string }> }>(url, primary, { first: SEED_LIMIT }, tag);
-  const recipients1 = dedupeAddresses((data1?.streams ?? []).map((s) => s.recipient));
-  if (recipients1.length > 0) return recipients1;
-
-  // Fallback: same query without the canceled filter. If THIS one returns
-  // rows, the `canceled` field (or its boolean type) likely changed in the
-  // subgraph schema — we at least populate the cache and the discrepancy
-  // surfaces in the logs next run.
-  console.warn(`[seeder:${tag}] primary returned 0 recipients; retrying without the canceled filter`);
-  const fallback = `
-    query SeedSablierFallback($first: Int!) {
-      streams(
-        orderBy: startTime
-        orderDirection: desc
-        first: $first
-      ) { recipient }
-    }
-  `;
-  const data2 = await postGraph<{ streams?: Array<{ recipient: string }> }>(url, fallback, { first: SEED_LIMIT }, `${tag}/fallback`);
-  const recipients2 = dedupeAddresses((data2?.streams ?? []).map((s) => s.recipient));
-  if (recipients2.length > 0) {
-    console.warn(`[seeder:${tag}] fallback succeeded with ${recipients2.length} recipients — schema change likely (canceled filter)`);
-  }
-  return recipients2;
+  const data = await postGraph<{ LockupStream?: Array<{ recipient: string }> }>(
+    SABLIER_ENVIO_URL,
+    query,
+    { first: SEED_LIMIT, chainId },
+    tag,
+  );
+  return dedupeAddresses((data?.LockupStream ?? []).map((s) => s.recipient));
 }
 
 /** UNCX locks schema — owner.id is the recipient. Sort by lockDate desc for recent. */
@@ -279,13 +264,26 @@ async function discoverTeamFinanceRecipients(chainId: SupportedChainId): Promise
   return dedupeAddresses((data?.vestingClaims ?? []).map((v) => v.account));
 }
 
-// ─── Hedgey discovery (on-chain event scan) ─────────────────────────────────
+// ─── Hedgey discovery (on-chain ERC721Enumerable reads) ─────────────────────
 //
-// TokenVestingPlans is ERC721 — every minted plan corresponds to a Transfer
-// event from the zero address. We scan the last LOG_BLOCK_WINDOW blocks on
-// each chain for Transfer(0x0 → recipient) events, and extract recipients.
-// Works without a subgraph. RPC cost per run: one eth_getLogs per chain,
-// which all major providers support within their free-tier budgets.
+// TokenVestingPlans is ERC721Enumerable. The previous implementation scanned
+// a 10k-block window of Transfer(0x0 → *) events, which failed on every
+// chain — 10k blocks = ~5h on Polygon/Base, and if no plan was minted in
+// that window the discovery returned zero recipients. Popular as Hedgey is,
+// "a plan every 5 hours" is NOT a safe assumption.
+//
+// Instead, we enumerate the current holder set directly via the ERC721
+// enumerable extension:
+//   totalSupply()          → current plan count N
+//   tokenByIndex(i)        → tokenId at enumeration slot i (in [0, N))
+//   ownerOf(tokenId)       → current holder of that plan
+//
+// Both tokenByIndex and ownerOf are bundled into a single Multicall3 call,
+// so the full discovery is two RPC round-trips per chain regardless of how
+// many plans we inspect. That trivially beats getLogs for seeding.
+//
+// We take the LAST SEED_LIMIT slots (slots [N-SEED_LIMIT, N)) so seeds bias
+// toward recent plans — which are more likely to still be active.
 
 const HEDGEY_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.ETHEREUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
@@ -311,15 +309,25 @@ function getRpcUrl(chainId: SupportedChainId): string | undefined {
   }
 }
 
-/** Block range to scan for recent events. 10k blocks ≈ 5h-33h depending on chain —
- *  enough to find the dozens of recipients per chain we need for a seed, small
- *  enough to fit inside a single eth_getLogs call on every major RPC provider. */
-const LOG_BLOCK_WINDOW = 10_000n;
+// Minimal ERC721Enumerable ABI fragment — inlined here so the adapter's own
+// ABI (which focuses on plans() + balanceOf/tokenOfOwnerByIndex for
+// user-centric reads) doesn't have to grow with seeder-specific functions.
+const HEDGEY_ENUMERABLE_ABI = [
+  { name: "totalSupply",  type: "function", stateMutability: "view", inputs: [],
+    outputs: [{ type: "uint256" }] },
+  { name: "tokenByIndex", type: "function", stateMutability: "view",
+    inputs: [{ name: "index", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { name: "ownerOf",      type: "function", stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }] },
+] as const;
 
 async function discoverHedgeyRecipients(chainId: SupportedChainId): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
   const rpcUrl   = getRpcUrl(chainId);
-  if (!contract || !rpcUrl) return [];
+  if (!contract || !rpcUrl) {
+    console.log(`[seeder:hedgey/${chainId}] skipped — RPC env var not configured`);
+    return [];
+  }
 
   const chain = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
   if (!chain) return [];
@@ -327,24 +335,63 @@ async function discoverHedgeyRecipients(chainId: SupportedChainId): Promise<stri
   const tag = `hedgey/${chainId}`;
   try {
     const client = createPublicClient({ chain, transport: http(rpcUrl) });
-    const head   = await client.getBlockNumber();
-    const from   = head > LOG_BLOCK_WINDOW ? head - LOG_BLOCK_WINDOW : 0n;
 
-    // ERC-721 Transfer. Filter on `from = zero address` to isolate mints —
-    // that's how new plans are issued to recipients.
-    const logs = await client.getLogs({
-      address:  contract,
-      event:    parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"),
-      args:     { from: "0x0000000000000000000000000000000000000000" as `0x${string}` },
-      fromBlock: from,
-      toBlock:   head,
+    const totalSupply = await client.readContract({
+      address: contract,
+      abi: HEDGEY_ENUMERABLE_ABI,
+      functionName: "totalSupply",
+    }) as bigint;
+
+    if (totalSupply === 0n) {
+      console.log(`[seeder:${tag}] totalSupply=0 — no plans minted yet on this chain`);
+      return [];
+    }
+
+    // Slot range [start, N) — newest SEED_LIMIT entries (or all of them if
+    // the contract has fewer than SEED_LIMIT plans outstanding).
+    const N     = Number(totalSupply);
+    const start = Math.max(0, N - SEED_LIMIT);
+    const indices: number[] = [];
+    for (let i = start; i < N; i++) indices.push(i);
+
+    // Round 1: tokenByIndex(i) for every slot.
+    const tokenIdResults = await client.multicall({
+      contracts: indices.map((i) => ({
+        address: contract,
+        abi:     HEDGEY_ENUMERABLE_ABI,
+        functionName: "tokenByIndex" as const,
+        args:    [BigInt(i)] as const,
+      })),
+      allowFailure: true,
     });
+    const tokenIds = tokenIdResults
+      .map((r) => (r.status === "success" ? (r.result as bigint) : null))
+      .filter((x): x is bigint => x !== null);
 
-    const recipients = dedupeAddresses(logs.map((l) => l.args.to).filter(Boolean) as string[]);
-    console.log(`[seeder:${tag}] scanned blocks ${from}..${head}, ${logs.length} mint events → ${recipients.length} recipients`);
+    if (tokenIds.length === 0) {
+      console.warn(`[seeder:${tag}] tokenByIndex multicall returned 0 usable tokenIds (totalSupply=${totalSupply})`);
+      return [];
+    }
+
+    // Round 2: ownerOf(tokenId) for each of those tokenIds.
+    const ownerResults = await client.multicall({
+      contracts: tokenIds.map((tokenId) => ({
+        address: contract,
+        abi:     HEDGEY_ENUMERABLE_ABI,
+        functionName: "ownerOf" as const,
+        args:    [tokenId] as const,
+      })),
+      allowFailure: true,
+    });
+    const owners = ownerResults
+      .map((r) => (r.status === "success" ? (r.result as string) : null))
+      .filter((x): x is string => x !== null);
+
+    const recipients = dedupeAddresses(owners);
+    console.log(`[seeder:${tag}] enumerated ${indices.length} slots (of ${totalSupply} total) → ${recipients.length} unique owners`);
     return recipients;
   } catch (err) {
-    console.error(`[seeder:${tag}] log scan failed:`, err);
+    console.error(`[seeder:${tag}] enumerable read failed:`, err);
     return [];
   }
 }
@@ -390,7 +437,16 @@ export interface SeedRunResult {
   adapterId:            string;
   chainId:              number;
   recipientsDiscovered: number;
-  streamsCached:        number;
+  /** Streams returned by adapter.fetch(). Upper bound — not every fetched stream
+   *  necessarily landed in the cache (see `streamsWritten`). */
+  streamsFetched:       number;
+  /** Streams that actually made it into the DB (post-dedupe, post-upsert). */
+  streamsWritten:       number;
+  /** Number of batches that threw during fetch(). */
+  batchFetchErrors:     number;
+  /** Number of batches where writeToCache returned 0 despite having streams to write. */
+  batchWriteErrors:     number;
+  /** Present only if the entire job failed (e.g. discover threw, adapter missing). */
   error?:               string;
 }
 
@@ -442,12 +498,25 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+function emptyResult(job: SeedJob, error?: string): SeedRunResult {
+  return {
+    adapterId:            job.adapterId,
+    chainId:              job.chainId,
+    recipientsDiscovered: 0,
+    streamsFetched:       0,
+    streamsWritten:       0,
+    batchFetchErrors:     0,
+    batchWriteErrors:     0,
+    ...(error ? { error } : {}),
+  };
+}
+
 async function runJob(job: SeedJob): Promise<SeedRunResult> {
   const tag = `${job.adapterId}/${job.chainId}`;
   const adapter = ADAPTER_REGISTRY.find((a) => a.id === job.adapterId);
   if (!adapter) {
     console.error(`[seeder:${tag}] adapter not registered`);
-    return { adapterId: job.adapterId, chainId: job.chainId, recipientsDiscovered: 0, streamsCached: 0, error: "adapter not registered" };
+    return emptyResult(job, "adapter not registered");
   }
 
   let recipients: string[];
@@ -455,7 +524,7 @@ async function runJob(job: SeedJob): Promise<SeedRunResult> {
     recipients = await job.discover(job.chainId);
   } catch (err) {
     console.error(`[seeder:${tag}] discover threw:`, err);
-    return { adapterId: job.adapterId, chainId: job.chainId, recipientsDiscovered: 0, streamsCached: 0, error: `discover: ${String(err)}` };
+    return emptyResult(job, `discover: ${String(err)}`);
   }
 
   if (recipients.length === 0) {
@@ -463,31 +532,55 @@ async function runJob(job: SeedJob): Promise<SeedRunResult> {
     // (PinkSale) and for chains with no active protocol presence. Log at info
     // level so dashboards can distinguish "empty" from "broken".
     console.log(`[seeder:${tag}] 0 recipients discovered`);
-    return { adapterId: job.adapterId, chainId: job.chainId, recipientsDiscovered: 0, streamsCached: 0 };
+    return emptyResult(job);
   }
 
-  let totalStreams = 0;
-  let batchErrors  = 0;
+  let streamsFetched    = 0;
+  let streamsWritten    = 0;
+  let batchFetchErrors  = 0;
+  let batchWriteErrors  = 0;
   for (const batch of chunk(recipients, BATCH_SIZE)) {
+    let streams: Awaited<ReturnType<typeof adapter.fetch>>;
     try {
-      const streams = await adapter.fetch(batch, job.chainId);
-      if (streams.length > 0) {
-        await writeToCache(streams);
-        totalStreams += streams.length;
-      }
+      streams = await adapter.fetch(batch, job.chainId);
     } catch (err) {
       // Keep going with remaining batches — one bad batch shouldn't sink the whole job
-      batchErrors++;
-      console.error(`[seeder:${tag}] batch failed:`, err);
+      batchFetchErrors++;
+      console.error(`[seeder:${tag}] batch fetch failed:`, err);
+      continue;
     }
+
+    if (streams.length === 0) continue;
+    streamsFetched += streams.length;
+
+    // writeToCache never throws — it catches internally and returns 0 on
+    // failure. A positive return means the batch actually landed in Postgres.
+    const written = await writeToCache(streams);
+    if (written === 0) {
+      batchWriteErrors++;
+      // Don't log the error detail here; writeToCache already logged it via
+      // `[vesting-cache] write failed:` — this line ties it back to the job.
+      console.error(`[seeder:${tag}] batch write failed (${streams.length} streams dropped)`);
+      continue;
+    }
+    streamsWritten += written;
   }
 
-  console.log(`[seeder:${tag}] discovered ${recipients.length} recipients → cached ${totalStreams} streams${batchErrors ? ` (${batchErrors} batch errors)` : ""}`);
+  const errorSuffix =
+    (batchFetchErrors || batchWriteErrors)
+      ? ` (fetch errors: ${batchFetchErrors}, write errors: ${batchWriteErrors})`
+      : "";
+  console.log(
+    `[seeder:${tag}] discovered ${recipients.length} recipients → fetched ${streamsFetched} streams → wrote ${streamsWritten}${errorSuffix}`,
+  );
   return {
     adapterId:            job.adapterId,
     chainId:              job.chainId,
     recipientsDiscovered: recipients.length,
-    streamsCached:        totalStreams,
+    streamsFetched,
+    streamsWritten,
+    batchFetchErrors,
+    batchWriteErrors,
   };
 }
 
@@ -506,18 +599,51 @@ export async function seedAll(): Promise<SeedRunResult[]> {
   return results;
 }
 
-/** Lightweight inspection hook — used by the cron route for the response body. */
+/**
+ * Lightweight inspection hook — used by the cron route for the response body.
+ *
+ * The `errors` count is now the sum of:
+ *   • job-level errors (adapter missing, discover() threw)
+ *   • batch-level fetch errors (adapter.fetch() threw for one sub-batch)
+ *   • batch-level write errors (writeToCache returned 0 — e.g. Postgres type
+ *     overflow, ON CONFLICT dup, or connection drop)
+ *
+ * Previously we only surfaced job-level errors, which meant a seed run could
+ * log dozens of `[vesting-cache] write failed: value out of range` messages
+ * and still return `errors: 0` to the caller. The new definition matches
+ * what ops actually needs to know: "did every stream we fetched land in
+ * Postgres? if not, how many fell out?".
+ */
 export function summariseRun(results: SeedRunResult[]): {
   totalRecipients: number;
-  totalStreams:    number;
-  errors:          number;
+  totalStreamsFetched: number;
+  totalStreamsWritten: number;
+  errors: number;
+  jobErrors: number;
+  batchFetchErrors: number;
+  batchWriteErrors: number;
 } {
   return results.reduce(
-    (acc, r) => ({
-      totalRecipients: acc.totalRecipients + r.recipientsDiscovered,
-      totalStreams:    acc.totalStreams    + r.streamsCached,
-      errors:          acc.errors + (r.error ? 1 : 0),
-    }),
-    { totalRecipients: 0, totalStreams: 0, errors: 0 },
+    (acc, r) => {
+      const jobErr = r.error ? 1 : 0;
+      return {
+        totalRecipients:     acc.totalRecipients     + r.recipientsDiscovered,
+        totalStreamsFetched: acc.totalStreamsFetched + r.streamsFetched,
+        totalStreamsWritten: acc.totalStreamsWritten + r.streamsWritten,
+        jobErrors:           acc.jobErrors           + jobErr,
+        batchFetchErrors:    acc.batchFetchErrors    + r.batchFetchErrors,
+        batchWriteErrors:    acc.batchWriteErrors    + r.batchWriteErrors,
+        errors:              acc.errors + jobErr + r.batchFetchErrors + r.batchWriteErrors,
+      };
+    },
+    {
+      totalRecipients: 0,
+      totalStreamsFetched: 0,
+      totalStreamsWritten: 0,
+      errors: 0,
+      jobErrors: 0,
+      batchFetchErrors: 0,
+      batchWriteErrors: 0,
+    },
   );
 }
