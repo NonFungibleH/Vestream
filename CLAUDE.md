@@ -245,7 +245,8 @@ Use real protocol names (Sablier, Hedgey, UNCX, Unvest, Team Finance) and chain 
 
 ### Public routes (no auth)
 `/`, `/developer`, `/ai`, `/pricing`, `/resources`, `/resources/[slug]`,
-`/early-access`, `/login`, `/privacy`, `/terms`, `/explore/[chainId]/[tokenAddress]`
+`/early-access`, `/login`, `/privacy`, `/terms`, `/faq`, `/contact`,
+`/explore/[chainId]/[tokenAddress]`
 
 ### Gated routes (middleware in `src/middleware.ts`)
 

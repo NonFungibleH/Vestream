@@ -404,15 +404,15 @@ export default async function ProtocolLandingPage(
             style={{ background: "white", border: `1px dashed ${meta.border}` }}
           >
             <p className="text-sm mb-4" style={{ color: "#475569" }}>
-              We're collecting testimonials from {meta.name} recipients using Vestream for unlock alerts.
+              We&apos;re collecting testimonials from {meta.name} recipients using Vestream for unlock alerts.
             </p>
-            <a
-              href="mailto:hello@vestream.io?subject=My Vestream experience"
+            <Link
+              href="/contact"
               className="inline-flex items-center gap-2 text-sm font-semibold"
               style={{ color: meta.color }}
             >
               Share your story →
-            </a>
+            </Link>
           </div>
         )}
       </section>

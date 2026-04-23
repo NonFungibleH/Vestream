@@ -52,6 +52,8 @@ const LINK_GROUPS = [
       { label: "Demo",      href: "/demo"      },
       { label: "Pricing",   href: "/pricing"   },
       { label: "Resources", href: "/resources" },
+      { label: "FAQ",       href: "/faq"       },
+      { label: "Contact",   href: "/contact"   },
     ],
   },
   {
