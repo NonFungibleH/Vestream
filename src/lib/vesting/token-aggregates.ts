@@ -62,6 +62,10 @@ export interface UnlockCalendarBucket {
   }>;
   /** Sum of all protocols for this bucket. */
   totalTokensWhole:  number;
+  /** True when this bucket's month is strictly before the current month.
+   *  The UI uses this to render past unlocks in a muted style while keeping
+   *  future unlocks in full protocol colours. */
+  isPast:            boolean;
 }
 
 export interface TokenRecipient {
@@ -113,6 +117,33 @@ async function fetchActiveStreams(chainId: number, tokenAddress: string): Promis
   return rows;
 }
 
+/**
+ * All streams for a token — active AND fully-vested. Used by the unlock
+ * calendar when we want historical buckets too (past unlock events live on
+ * both active-but-partial streams, via their past tranches, and on
+ * fully-vested streams whose entire schedule is already in history).
+ */
+async function fetchAllStreams(chainId: number, tokenAddress: string): Promise<Row[]> {
+  const lowerAddr = tokenAddress.toLowerCase();
+  const rows = await db
+    .select({
+      streamId:    vestingStreamsCache.streamId,
+      protocol:    vestingStreamsCache.protocol,
+      recipient:   vestingStreamsCache.recipient,
+      tokenSymbol: vestingStreamsCache.tokenSymbol,
+      endTime:     vestingStreamsCache.endTime,
+      streamData:  vestingStreamsCache.streamData,
+    })
+    .from(vestingStreamsCache)
+    .where(
+      and(
+        eq(vestingStreamsCache.chainId, chainId),
+        sql`lower(${vestingStreamsCache.tokenAddress}) = ${lowerAddr}`,
+      ),
+    );
+  return rows;
+}
+
 /** Convert a stringified bigint to whole tokens (lossy above 2^53 but fine for display). */
 function toWhole(raw: string | undefined, decimals: number): number {
   if (!raw) return 0;
@@ -155,6 +186,29 @@ function expandUnlockEvents(
   const tokens  = toWhole(locked, decimals);
   if (tokens <= 0) return [];
   return [{ timestamp: ts, tokensWhole: tokens }];
+}
+
+/**
+ * Like expandUnlockEvents but includes past events too. Only returns
+ * discrete tranches — linear streams are deliberately skipped because
+ * there's no meaningful "X tokens unlocked in month N" for a continuous
+ * flow. Used by the calendar's historical view.
+ *
+ * For fully-vested streams, `totalAmount` is the right denominator (whole
+ * stream has released). For partially-vested streams, `totalAmount` still
+ * works since each tranche's amount sums to it.
+ */
+function expandAllTranches(
+  streamData: Partial<VestingStream>,
+): Array<{ timestamp: number; tokensWhole: number }> {
+  if (streamData.shape !== "steps" || !streamData.unlockSteps?.length) return [];
+  const decimals = streamData.tokenDecimals ?? 18;
+  return streamData.unlockSteps
+    .map((s) => ({
+      timestamp:    s.timestamp,
+      tokensWhole:  toWhole(s.amount, decimals),
+    }))
+    .filter((e) => e.tokensWhole > 0);
 }
 
 // ─── Public: overview ───────────────────────────────────────────────────────
@@ -227,45 +281,90 @@ export async function getTokenOverview(
 
 // ─── Public: 12-month unlock calendar ───────────────────────────────────────
 
+/**
+ * Monthly unlock calendar spanning `monthsBack` months of history plus
+ * `monthsForward` months of upcoming unlocks. The two halves are stitched
+ * into one continuous array — past buckets flagged `isPast: true`, the
+ * current month onwards flagged `isPast: false`.
+ *
+ * Historical buckets are populated only from `shape === "steps"` tranche
+ * timestamps (active streams + fully-vested streams). Linear streams are
+ * skipped for history because there's no discrete "X tokens unlocked in
+ * month N" for continuous flow — same reason we skip them in the
+ * Upcoming Unlocks widget.
+ *
+ * Callers that don't care about history can pass `monthsBack: 0` to get
+ * the original forward-only behaviour. The UI falls back to
+ * forward-only rendering automatically when all historical buckets come
+ * back empty (fresh tokens with no history to show).
+ */
 export async function getTokenUnlockCalendar(
-  chainId:    number,
+  chainId:      number,
   tokenAddress: string,
-  months = 12,
+  opts: { monthsBack?: number; monthsForward?: number } = {},
 ): Promise<UnlockCalendarBucket[]> {
-  const rows = await fetchActiveStreams(chainId, tokenAddress);
+  const monthsBack    = opts.monthsBack    ?? 12;
+  const monthsForward = opts.monthsForward ?? 12;
+
+  // Use fetchAllStreams so fully-vested streams contribute their past
+  // tranches. Active streams' past tranches come along for free since we
+  // expand the whole unlockSteps array for steps-shape streams.
+  const rows = (monthsBack > 0)
+    ? await fetchAllStreams(chainId, tokenAddress)
+    : await fetchActiveStreams(chainId, tokenAddress);
   if (rows.length === 0) return [];
 
-  const now      = new Date();
-  const nowSec   = Math.floor(Date.now() / 1000);
+  const now    = new Date();
+  const nowSec = Math.floor(Date.now() / 1000);
+  // First-of-current-month in UTC — the divider between past and future.
+  const currentMonthStart = Math.floor(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) / 1000,
+  );
 
-  // Build empty buckets for the next `months` months (including current month)
+  // Build empty buckets from (now - monthsBack) through (now + monthsForward - 1).
+  // The current month is always index `monthsBack` in the final array — the
+  // boundary between past and future.
   const buckets: Array<{
     timestamp: number;
     label:     string;
     byProtocol: Map<string, number>;
     total:     number;
+    isPast:    boolean;
   }> = [];
-  for (let i = 0; i < months; i++) {
+  for (let i = -monthsBack; i < monthsForward; i++) {
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1));
+    const ts = Math.floor(d.getTime() / 1000);
     buckets.push({
-      timestamp:   Math.floor(d.getTime() / 1000),
+      timestamp:   ts,
       label:       d.toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
       byProtocol:  new Map(),
       total:       0,
+      isPast:      ts < currentMonthStart,
     });
   }
-  const bucketEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + months, 1));
-  const bucketEndSec = Math.floor(bucketEnd.getTime() / 1000);
+  // Exclusive upper bound of the window (first-of-month for the bucket AFTER
+  // the last one) — we use this to skip events that fall past the window.
+  const windowEndSec = Math.floor(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthsForward, 1) / 1000,
+  );
+  const windowStartSec = buckets[0]?.timestamp ?? currentMonthStart;
 
-  // Assign every unlock event to its bucket
+  // Assign every relevant unlock event to its bucket.
   for (const r of rows) {
     const sd = r.streamData as Partial<VestingStream>;
-    const events = expandUnlockEvents(sd, r.endTime, nowSec);
+    // For tranched streams we iterate ALL tranches — past events included
+    // so historical buckets can be populated. For linear streams we only
+    // care about the future endTime event (via expandUnlockEvents), and
+    // only when monthsForward > 0.
+    const isSteps = sd.shape === "steps" && sd.unlockSteps?.length;
+    const events = isSteps
+      ? expandAllTranches(sd)
+      : (monthsForward > 0 ? expandUnlockEvents(sd, r.endTime, nowSec) : []);
     for (const ev of events) {
-      if (ev.timestamp >= bucketEndSec) continue;
-      // Find bucket: year/month of event
+      if (ev.timestamp < windowStartSec) continue;
+      if (ev.timestamp >= windowEndSec)  continue;
       const d = new Date(ev.timestamp * 1000);
-      const ym = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 1000;
+      const ym = Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 1000);
       const bkt = buckets.find((b) => b.timestamp === ym);
       if (!bkt) continue;
       bkt.byProtocol.set(r.protocol, (bkt.byProtocol.get(r.protocol) ?? 0) + ev.tokensWhole);
@@ -274,12 +373,13 @@ export async function getTokenUnlockCalendar(
   }
 
   return buckets.map((b) => ({
-    timestamp: b.timestamp,
-    label:     b.label,
-    byProtocol: Array.from(b.byProtocol.entries())
+    timestamp:       b.timestamp,
+    label:           b.label,
+    byProtocol:      Array.from(b.byProtocol.entries())
       .map(([protocol, tokensWhole]) => ({ protocol, tokensWhole }))
       .sort((a, b2) => b2.tokensWhole - a.tokensWhole),
     totalTokensWhole: b.total,
+    isPast:          b.isPast,
   }));
 }
 

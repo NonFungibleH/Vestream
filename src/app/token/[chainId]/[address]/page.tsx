@@ -163,7 +163,11 @@ export default async function TokenPage(
 
   const [overview, calendar, recipients, upcoming, market] = await Promise.all([
     getTokenOverview(cid, addr),
-    getTokenUnlockCalendar(cid, addr, 12),
+    // Past 12 + next 12 months = 24 monthly buckets. The calendar UI
+    // auto-folds the historical half away when it's all zero (fresh tokens
+    // with no tranche history to show), so passing monthsBack is safe even
+    // on brand-new listings.
+    getTokenUnlockCalendar(cid, addr, { monthsBack: 12, monthsForward: 12 }),
     getTokenRecipients(cid, addr, 10),
     getTokenUpcomingEvents(cid, addr, 8),
     getTokenMarketData(cid, addr),
@@ -599,45 +603,61 @@ function UnlockCalendar({
   priceUsd:    number | null;
   symbol:      string;
   /** Current locked-supply total — used to compute "share of locked supply
-   *  unlocking in this 12-month window" in the stats footer. */
+   *  unlocking in the forward window" in the stats footer. */
   lockedTotal: number;
 }) {
-  // ── Derived series ────────────────────────────────────────────────────
-  const maxBucket  = Math.max(1, ...calendar.map((b) => b.totalTokensWhole));
-  const grandTotal = calendar.reduce((s, b) => s + b.totalTokensWhole, 0);
+  // ── View mode: 24-month (past + future) or forward-only fallback ──────
+  // The data layer returns past + future buckets, but if all past buckets
+  // are empty (brand-new token with no history to show) we collapse back
+  // to a forward-only view. Saves a lot of empty horizontal space.
+  const hasAnyPast = calendar.some((b) => b.isPast && b.totalTokensWhole > 0);
+  const visible    = hasAnyPast ? calendar : calendar.filter((b) => !b.isPast);
 
-  // Cumulative running total across the 12-month window. Drives the overlay
-  // curve — turns the chart from "12 independent months" into a release
-  // trajectory reading at a glance. Uses reduce rather than a mutable `let`
-  // accumulator to keep the react-hooks/purity rule happy (SSR component,
-  // but the linter doesn't distinguish).
-  const cumulativeRaw: number[] = calendar.reduce<number[]>((acc, b) => {
+  // Index of the first FUTURE bucket in `visible` (the current month). Used
+  // to position the "NOW" marker and split cumulative/stats calculations
+  // between history and forward.
+  const firstFutureIdx = Math.max(0, visible.findIndex((b) => !b.isPast));
+
+  // ── Derived series ────────────────────────────────────────────────────
+  const maxBucket  = Math.max(1, ...visible.map((b) => b.totalTokensWhole));
+  // Forward-only totals power the stats strip — we care about "what's
+  // coming" not "what already released" for the KPI readout.
+  const forward    = visible.filter((b) => !b.isPast);
+  const grandTotal = forward.reduce((s, b) => s + b.totalTokensWhole, 0);
+
+  // Cumulative running total across the visible window (past + future).
+  // Drives the overlay curve — turns the chart from independent months
+  // into a release trajectory reading at a glance.
+  const cumulativeRaw: number[] = visible.reduce<number[]>((acc, b) => {
     const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
     acc.push(prev + b.totalTokensWhole);
     return acc;
   }, []);
   const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1;
 
-  // Peak month (biggest single-bucket unlock) — for the stats strip callout.
-  const peak = calendar.reduce<UnlockCalendarBucket | null>((acc, b) => {
+  // Peak FUTURE month — stats strip asks "biggest unlock ahead".
+  const peak = forward.reduce<UnlockCalendarBucket | null>((acc, b) => {
     if (!acc || b.totalTokensWhole > acc.totalTokensWhole) return b;
     return acc;
   }, null);
 
-  // Share of currently-locked supply unlocking in this 12-month window. A
-  // reading of "90%+ in 12mo" means the vesting is nearly over; "30%" means
+  // Share of currently-locked supply unlocking in the forward window.
+  // A reading of "90%+ in 12mo" means vesting is nearly over; "30%" means
   // most unlocks are further out.
   const unlockShareOfLocked = lockedTotal > 0
     ? Math.min(100, (grandTotal / lockedTotal) * 100)
     : 0;
 
-  // Last non-empty bucket — used for "fully vested by" strip stat.
-  const lastActiveIdx = (() => {
-    for (let i = calendar.length - 1; i >= 0; i--) {
-      if (calendar[i].totalTokensWhole > 0) return i;
+  // Last non-empty forward bucket — drives "Last unlock ahead".
+  const lastActiveForwardIdx = (() => {
+    for (let i = visible.length - 1; i >= firstFutureIdx; i--) {
+      if (visible[i].totalTokensWhole > 0) return i;
     }
     return -1;
   })();
+  const lastActiveMonthsOut = lastActiveForwardIdx >= 0
+    ? lastActiveForwardIdx - firstFutureIdx
+    : -1;
 
   // ── Y-axis scale (0, 25%, 50%, 75%, 100% of peak month) ───────────────
   const yAxisLabels = [1, 0.75, 0.5, 0.25, 0].map((frac) => ({
@@ -651,17 +671,23 @@ function UnlockCalendar({
   //
   // The polyline's X runs from the centre of the first bar to the centre
   // of the last bar. Y is inverted (SVG 0 is top) and scaled against maxCum.
-  const svgPoints = calendar
+  const svgPoints = visible
     .map((_, i) => {
-      const x = ((i + 0.5) / calendar.length) * 100;
+      const x = ((i + 0.5) / visible.length) * 100;
       const y = 100 - (cumulativeRaw[i] / maxCum) * 100;
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(" ");
 
-  // Where does the cumulative curve hit the right edge? Used to position
-  // the final "cumulative" label.
-  const finalCumY = 100 - 100; // ends at top (100% of maxCum), i.e. y=0
+  // Final cumulative Y always lands at the top since maxCum === last entry.
+  const finalCumY = 0;
+
+  // X position of the "now" divider in viewBox units — sits at the left
+  // edge of the first future bar (so the past side ends where future
+  // begins).
+  const nowDividerX = hasAnyPast
+    ? (firstFutureIdx / visible.length) * 100
+    : null;
 
   return (
     <div
@@ -676,9 +702,9 @@ function UnlockCalendar({
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
-            12-month unlock schedule
+            {hasAnyPast ? "24-month unlock timeline" : "12-month unlock schedule"}
           </span>
           {/* Legend chip for the overlay line */}
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#7c3aed" }}>
@@ -694,8 +720,24 @@ function UnlockCalendar({
             />
             cumulative
           </span>
+          {hasAnyPast && (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#94a3b8" }}>
+              <span
+                aria-hidden
+                style={{
+                  display:       "inline-block",
+                  width:         8,
+                  height:        8,
+                  background:    "rgba(148,163,184,0.5)",
+                  borderRadius:  2,
+                }}
+              />
+              past
+            </span>
+          )}
         </div>
         <div className="text-xs" style={{ color: "#64748b" }}>
+          <span style={{ color: "#94a3b8" }}>next 12mo</span>{" "}
           <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
             {fmtTokens(grandTotal)} {symbol}
           </span>
@@ -743,12 +785,14 @@ function UnlockCalendar({
               ))}
             </div>
 
-            {/* Bars themselves */}
+            {/* Bars themselves — iterate `visible` so the history fallback
+                works correctly. Past bars render at 50% opacity to visually
+                recede vs. the forward-looking buckets. */}
             <div className="flex items-end gap-1 md:gap-2" style={{ height: 130 }}>
-              {calendar.map((b, idx) => {
+              {visible.map((b, idx) => {
                 const pct = (b.totalTokensWhole / maxBucket) * 100;
                 const usd = priceUsd ? b.totalTokensWhole * priceUsd : null;
-                const isThisMonth = idx === 0;
+                const isThisMonth = idx === firstFutureIdx;
                 return (
                   <div
                     key={b.timestamp}
@@ -756,8 +800,16 @@ function UnlockCalendar({
                   >
                     <div
                       className="w-full flex flex-col-reverse rounded-t"
-                      style={{ height: "100%", position: "relative" }}
-                      title={`${b.label}: ${fmtTokens(b.totalTokensWhole)} ${symbol}${usd ? ` (${fmtUsd(usd)})` : ""}${
+                      style={{
+                        height:   "100%",
+                        position: "relative",
+                        // Past bars render muted so the eye is pulled to
+                        // future months — which is the decision-relevant
+                        // part. We keep them visible (not invisible) so the
+                        // cumulative curve has context on both sides.
+                        opacity:  b.isPast ? 0.35 : 1,
+                      }}
+                      title={`${b.label}${b.isPast ? " (past)" : ""}: ${fmtTokens(b.totalTokensWhole)} ${symbol}${usd ? ` (${fmtUsd(usd)})` : ""}${
                         b.byProtocol.length > 0
                           ? " · " + b.byProtocol.map((s) => `${protocolName(s.protocol)}: ${fmtTokens(s.tokensWhole)}`).join(", ")
                           : ""
@@ -782,9 +834,8 @@ function UnlockCalendar({
                         })
                       )}
                     </div>
-                    {/* "This month" marker on bucket 0 — a subtle pill above
-                        the bar so users immediately see where "now" is on
-                        the timeline without counting columns. */}
+                    {/* "NOW" pill on the first FUTURE bucket — divider
+                        between the historical and forward halves. */}
                     {isThisMonth && (
                       <div
                         className="absolute -top-3 text-[8.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
@@ -815,6 +866,22 @@ function UnlockCalendar({
               style={{ width: "100%", height: 130 }}
               aria-hidden
             >
+              {/* Vertical "now" divider — sits at the boundary between past
+                  and future buckets. Drawn before the polyline so the curve
+                  stays on top visually. */}
+              {nowDividerX !== null && (
+                <line
+                  x1={nowDividerX}
+                  y1={0}
+                  x2={nowDividerX}
+                  y2={100}
+                  stroke="#7c3aed"
+                  strokeWidth={0.8}
+                  strokeDasharray="2 2"
+                  vectorEffect="non-scaling-stroke"
+                  opacity={0.5}
+                />
+              )}
               <polyline
                 points={svgPoints}
                 fill="none"
@@ -827,7 +894,7 @@ function UnlockCalendar({
               {/* Dot on the final point so the end of the curve has a
                   visual anchor (matches the "cumulative" legend pill). */}
               <circle
-                cx={calendar.length ? ((calendar.length - 0.5) / calendar.length) * 100 : 100}
+                cx={visible.length ? ((visible.length - 0.5) / visible.length) * 100 : 100}
                 cy={finalCumY}
                 r={0.9}
                 fill="#7c3aed"
@@ -835,13 +902,14 @@ function UnlockCalendar({
               />
             </svg>
 
-            {/* Month labels under each bar */}
+            {/* Month labels under each bar. Past labels render muted so
+                the forward half of the axis reads as primary. */}
             <div className="flex gap-1 md:gap-2 mt-2">
-              {calendar.map((b) => (
+              {visible.map((b) => (
                 <div
                   key={b.timestamp}
                   className="text-[9.5px] text-center flex-1 min-w-[34px]"
-                  style={{ color: "#94a3b8" }}
+                  style={{ color: b.isPast ? "#cbd5e1" : "#94a3b8" }}
                 >
                   {b.label.split(" ")[0]}
                 </div>
@@ -875,9 +943,11 @@ function UnlockCalendar({
         />
         <CalendarStat
           label="Last unlock ahead"
-          value={lastActiveIdx >= 0 ? calendar[lastActiveIdx].label : "—"}
-          sub={lastActiveIdx >= 0
-            ? `${lastActiveIdx + 1} month${lastActiveIdx === 0 ? "" : "s"} out`
+          value={lastActiveForwardIdx >= 0 ? visible[lastActiveForwardIdx].label : "—"}
+          sub={lastActiveMonthsOut >= 0
+            ? (lastActiveMonthsOut === 0
+                ? "this month"
+                : `${lastActiveMonthsOut + 1} month${lastActiveMonthsOut === 0 ? "" : "s"} out`)
             : ""}
         />
       </div>
@@ -892,7 +962,7 @@ function UnlockCalendar({
         }}
       >
         <span className="font-semibold" style={{ color: "#64748b" }}>Protocols:</span>
-        {Array.from(new Set(calendar.flatMap((b) => b.byProtocol.map((s) => s.protocol)))).map((p) => (
+        {Array.from(new Set(visible.flatMap((b) => b.byProtocol.map((s) => s.protocol)))).map((p) => (
           <span key={p} className="inline-flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-sm" style={{ background: protocolColour(p) }} />
             {protocolName(p)}
