@@ -60,7 +60,7 @@ server.tool(
   "get_wallet_vestings",
   "Get all token vesting streams for a wallet across every supported protocol " +
   "and chain (including Solana). EVM protocols: Sablier, Hedgey, UNCX, Unvest, " +
-  "Team Finance, Superfluid, PinkSale. Solana protocols: Streamflow. " +
+  "Team Finance, Superfluid, PinkSale. Solana protocols: Streamflow, Jupiter Lock. " +
   "EVM chains: Ethereum, BSC, Polygon, Base. Non-EVM chains: Solana. " +
   "Returns normalised stream data: token, amounts locked/claimable/withdrawn, " +
   "schedule dates, cliff time, next unlock, and claim history — identical " +
@@ -72,7 +72,7 @@ server.tool(
     ),
     protocol: z.string().optional().describe(
       "Comma-separated protocol filter, e.g. 'sablier,streamflow'. " +
-      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow"
+      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow, jupiter-lock"
     ),
     chain: z.string().optional().describe(
       "Comma-separated chain ID filter, e.g. '1,101,8453'. " +

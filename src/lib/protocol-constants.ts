@@ -303,6 +303,38 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
                              // which is a different Streamflow product
     },
   },
+
+  "jupiter-lock": {
+    slug: "jupiter-lock",
+    adapterIds: ["jupiter-lock"],
+    name: "Jupiter Lock",
+    tagline: "Solana's default token locker",
+    description:
+      "Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem — used by JUP's own team-and-investor allocations and the majority of Solana launchpad deals since late 2024. TokenVest reads every active VestingEscrow directly from the program so recipients see their cliff, periodic drip, and claimable amount in one view — no need to open the Jupiter UI.",
+    color: "#fbbf24",        // Jupiter orange-gold
+    bg:    "rgba(251,191,36,0.08)",
+    border:"rgba(251,191,36,0.26)",
+    chainIds: [CHAIN_IDS.SOLANA],
+    officialUrl: "https://lock.jup.ag",
+    claimUrl:   "https://lock.jup.ag",
+    searchKeywords: [
+      "jupiter lock unlock",
+      "jupiter lock vesting",
+      "jup lock tracker",
+      "solana vesting escrow",
+    ],
+    useCases: [
+      { title: "Solana token launches",     body: "Almost every new Solana project vests team and investor tokens via Jupiter Lock since late 2024. TokenVest surfaces every unlock date the moment the escrow is created on-chain." },
+      { title: "Cliff + periodic drip",     body: "Jupiter Lock uses a clean cliff-then-periodic-release model: cliff_unlock_amount at cliff_time, then amount_per_period every frequency seconds. TokenVest flattens that into a per-step timeline with live countdown." },
+      { title: "Second Solana protocol",    body: "TokenVest now indexes two Solana rails — Streamflow and Jupiter Lock — so holders get full coverage whether they received tokens via streaming vesting or traditional lock escrows." },
+    ],
+    relatedSlugs: ["streamflow", "sablier", "hedgey"],
+    testimonials: [],
+    // Jupiter Lock is not listed on DefiLlama as a standalone protocol (it
+    // underlies JUP's own locked allocations which DefiLlama credits to JUP
+    // Station). Our computed TVL from cache-read is the primary source here;
+    // will switch to a DefiLlama entry if one appears later.
+  },
 };
 
 /** Publicly-listed protocols in nav/footer/sitemap order. */
@@ -315,6 +347,7 @@ export const PROTOCOL_SLUGS = [
   "unvest",
   "pinksale",
   "streamflow",
+  "jupiter-lock",
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];

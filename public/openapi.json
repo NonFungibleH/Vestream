@@ -31,7 +31,7 @@
         "required": ["id","protocol","chainId","recipient","tokenAddress","tokenSymbol","tokenDecimals","totalAmount","withdrawnAmount","claimableNow","lockedAmount","startTime","endTime","isFullyVested"],
         "properties": {
           "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID in the format `{protocol}-{chainId}-{nativeId}`. EVM examples: `sablier-1-12345`, `uncx-8453-99`. Solana example: `streamflow-101-7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU`. Use with GET /stream/{streamId} to fetch full detail. URL-safe." },
-          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale","streamflow"], "description": "Source protocol. `uncx-vm` is UNCX's VestingManager contract — merged with `uncx` in most product surfaces. `streamflow` is Solana-only; all others are EVM." },
+          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale","streamflow","jupiter-lock"], "description": "Source protocol. `uncx-vm` is UNCX's VestingManager contract — merged with `uncx` in most product surfaces. `streamflow` and `jupiter-lock` are Solana-only; all others are EVM." },
           "chainId":        { "type": "integer", "example": 1, "description": "Network identifier. EVM chains: 1 (Ethereum), 56 (BNB Chain), 137 (Polygon), 8453 (Base). Non-EVM: 101 (Solana)." },
           "recipient":      { "type": "string",  "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Wallet that receives the vesting tokens. EVM addresses are lowercased hex; Solana pubkeys are base58 (case-sensitive — preserved as returned)." },
           "tokenAddress":   { "type": "string",  "example": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "description": "Contract address of the token. EVM: ERC-20 contract (lowercase hex). Solana: SPL mint pubkey (base58)." },
@@ -109,7 +109,7 @@
             "name": "protocol",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated list of protocol IDs to restrict the scan to. Omit for all protocols. Valid values: `sablier`, `uncx`, `hedgey`, `unvest`, `team-finance`, `superfluid`, `pinksale`, `streamflow`.",
+            "description": "Comma-separated list of protocol IDs to restrict the scan to. Omit for all protocols. Valid values: `sablier`, `uncx`, `hedgey`, `unvest`, `team-finance`, `superfluid`, `pinksale`, `streamflow`, `jupiter-lock`.",
             "example": "sablier,uncx"
           },
           {

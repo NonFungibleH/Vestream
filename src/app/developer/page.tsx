@@ -10,12 +10,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API — TokenVest",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale on four chains. Normalised JSON, agent-native, ready in minutes.",
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://vestream.io/developer" },
   openGraph: {
     title: "Developer API — TokenVest",
     description:
-      "REST + MCP for 8 vesting protocols across 5 chains — EVM and Solana. Normalised JSON, agent-native.",
+      "REST + MCP for 9 vesting protocols across 5 chains — EVM and Solana. Normalised JSON, agent-native.",
     url: "https://vestream.io/developer",
     siteName: "TokenVest",
     type: "website",
@@ -70,9 +70,9 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Team Finance, Superfluid, and PinkSale —
-            served via clean REST API with OpenAPI spec and native MCP support.
-            One integration, every protocol.
+            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock —
+            across Ethereum, BNB Chain, Polygon, Base and Solana.
+            Clean REST API with OpenAPI spec and native MCP support.
           </p>
 
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -94,8 +94,8 @@ export default function DeveloperPage() {
           {/* Stats bar */}
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
-              { value: "7",     label: "Protocols indexed" },
-              { value: "4",     label: "EVM chains" },
+              { value: "9",     label: "Protocols indexed" },
+              { value: "5",     label: "Chains (EVM + Solana)" },
               { value: "3",     label: "API endpoints" },
               { value: "JSON",  label: "Normalised output" },
               { value: "MCP",   label: "Agent-native" },
@@ -118,7 +118,7 @@ export default function DeveloperPage() {
               One API. Every major vesting protocol.
             </h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
             {[
               { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  note: "Linear + tranched" },
               { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   note: "Token locks" },
@@ -127,6 +127,8 @@ export default function DeveloperPage() {
               { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  note: "Team vesting" },
               { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   note: "Streaming vesting" },
               { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  note: "PinkLock V2" },
+              { name: "Streamflow",    color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)",  note: "Solana vesting" },
+              { name: "Jupiter Lock",  color: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)",  note: "Solana locker" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -486,7 +488,7 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For builders and prototyping</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["30 req/min burst · 150/day", "All 3 endpoints", "8 protocols indexed (EVM + Solana)", "Standard JSON responses", "Community support"].map(f => (
+                {["30 req/min burst · 150/day", "All 3 endpoints", "9 protocols indexed (EVM + Solana)", "Standard JSON responses", "Community support"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
@@ -523,7 +525,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "8 protocols · 5 chains (EVM + Solana)",
+                  "9 protocols · 5 chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

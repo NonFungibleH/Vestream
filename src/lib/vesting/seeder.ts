@@ -686,6 +686,68 @@ async function discoverStreamflowRecipients(
   }
 }
 
+// ─── Jupiter Lock discovery (Solana getProgramAccounts + dataSlice) ────────
+//
+// Same trick as Streamflow: getProgramAccounts with a discriminator memcmp
+// filter + a 32-byte dataSlice at the recipient offset returns every active
+// escrow's recipient pubkey in one call with a tiny payload.
+//
+// Program: LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn
+// Account: VestingEscrow, recipient field at offset 8 (immediately after
+//          the 8-byte Anchor discriminator).
+
+const JUPITER_LOCK_PROGRAM_ID = "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn";
+const JUPITER_LOCK_DISC_BS58  = "hteFiUjrzUz"; // base58 of sha256("account:VestingEscrow")[0..8]
+const JUPITER_LOCK_RECIPIENT_OFFSET = 8;
+
+async function discoverJupiterLockRecipients(
+  chainId: SupportedChainId,
+  limit:   number,
+): Promise<string[]> {
+  if (chainId !== CHAIN_IDS.SOLANA) return [];
+  if (process.env.SOLANA_ENABLED !== "true") {
+    console.log("[seeder:jupiter-lock] SOLANA_ENABLED flag off — skipping discovery");
+    return [];
+  }
+  const rpcUrl = process.env.SOLANA_RPC_URL;
+  if (!rpcUrl) {
+    console.error("[seeder:jupiter-lock] SOLANA_RPC_URL not configured");
+    return [];
+  }
+
+  const tag = `jupiter-lock/${chainId}`;
+  try {
+    const connection = new Connection(rpcUrl, "confirmed");
+    const programId  = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
+
+    const accounts = await connection.getProgramAccounts(programId, {
+      commitment: "confirmed",
+      filters: [
+        { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
+      ],
+      dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
+    });
+
+    const recipients: string[] = [];
+    for (const { account } of accounts) {
+      const bytes = account.data;
+      if (bytes.length === 32) {
+        try {
+          recipients.push(new PublicKey(bytes).toBase58());
+        } catch {
+          /* skip malformed pubkey */
+        }
+      }
+    }
+
+    console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} VestingEscrow accounts → ${recipients.length} recipients`);
+    return dedupeAddresses(recipients).slice(0, limit);
+  } catch (err) {
+    console.error(`[seeder:${tag}] discovery failed:`, err);
+    return [];
+  }
+}
+
 // ─── UNCX VestingManager discovery (on-chain event scan, no filter) ─────────
 //
 // The uncx-vm adapter performs per-wallet event scans filtered by
@@ -887,7 +949,9 @@ const SEED_JOBS: SeedJob[] = [
   // Streamflow — Solana mainnet only. Guarded at adapter level by
   // SOLANA_ENABLED flag; safe to list here unconditionally because
   // discoverStreamflowRecipients returns [] when the flag is off.
-  { adapterId: "streamflow",   chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
+  { adapterId: "streamflow",    chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
+  // Jupiter Lock — Solana mainnet only, same flag-gating pattern as Streamflow.
+  { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
 ];
 
 /** How many recipients to feed into a single adapter.fetch() call. */

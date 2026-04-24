@@ -211,16 +211,17 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          {/* Row 2 — now 4 cards (Unvest / Superfluid / PinkSale / Streamflow)
-              to keep both rows symmetrical at 4-across and to reflect our
-              new Solana coverage. Streamflow uses Solana-brand green
-              (#14f195) to visually signal the non-EVM entry. */}
+          {/* Row 2 — 5 cards (Unvest / Superfluid / PinkSale / Streamflow /
+              Jupiter Lock). Streamflow + Jupiter Lock use Solana-ecosystem
+              accent colours (Solana green, Jupiter gold) to signal non-EVM
+              coverage at a glance. */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
               { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
               { name: "Superfluid",   color: "#1db954", bg: "rgba(29,185,84,0.07)",   border: "rgba(29,185,84,0.15)"   },
               { name: "PinkSale",     color: "#ec4899", bg: "rgba(236,72,153,0.07)",  border: "rgba(236,72,153,0.15)"  },
               { name: "Streamflow",   color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)"  },
+              { name: "Jupiter Lock", color: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -558,7 +559,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, and Streamflow — across Ethereum, Base, BSC, Polygon, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -655,7 +656,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "8 protocols scanned simultaneously — every one listed above",
+                "9 protocols scanned simultaneously — every one listed above",
                 "Ethereum, Base, BNB Chain, Polygon & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -1015,7 +1016,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "TokenVest supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), and Streamflow (Solana's #1 vesting protocol) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "TokenVest supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
@@ -1078,7 +1079,7 @@ export default async function Home() {
               Start free →
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["1 wallet — auto-scanned across all chains", "All 8 vesting platforms (EVM + Solana)", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
+              {["1 wallet — auto-scanned across all chains", "All 9 vesting platforms (EVM + Solana)", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}

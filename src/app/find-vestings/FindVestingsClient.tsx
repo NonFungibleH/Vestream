@@ -170,7 +170,7 @@ export default function FindVestingsClient() {
             Connect to see your vestings
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#64748b" }}>
-            We&rsquo;ll scan your wallet across 8 protocols and 5 chains — EVM and Solana. These same vestings will appear live in the TokenVest mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 9 protocols and 5 chains — EVM and Solana. These same vestings will appear live in the TokenVest mobile app with push alerts.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
@@ -320,7 +320,7 @@ export default function FindVestingsClient() {
             </div>
           ))}
           <p className="text-xs text-center mt-2" style={{ color: "#94a3b8" }}>
-            Scanning {scanningLabel} across 8 protocols and 5 chains — takes 10–30 seconds for complex wallets.
+            Scanning {scanningLabel} across 9 protocols and 5 chains — takes 10–30 seconds for complex wallets.
           </p>
         </div>
       )}
@@ -477,7 +477,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#64748b" }}>
-        We scanned 8 vesting protocols across Ethereum, BNB Chain, Polygon, Base and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
+        We scanned 9 vesting protocols across Ethereum, BNB Chain, Polygon, Base and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
       </p>
     </div>
   );
@@ -517,7 +517,7 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
         <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
           {hasResults
             ? "Install TokenVest, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
-            : "TokenVest watches all 8 protocols across 5 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
+            : "TokenVest watches all 9 protocols across 5 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
         </p>
 
         {/* App store badges */}

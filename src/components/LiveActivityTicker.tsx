@@ -199,7 +199,7 @@ export function LiveActivityTicker() {
         {data && rows.length === 0 && (
           <div className="px-4 md:px-5 py-6 text-center">
             <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
-              Watching 8 protocols across 5 chains
+              Watching 9 protocols across 5 chains
             </div>
             <div className="text-xs" style={{ color: "#94a3b8" }}>
               The moment a tracked wallet lands on any protocol, it streams into this feed.

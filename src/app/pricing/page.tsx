@@ -122,7 +122,7 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="1 wallet — auto-scanned across all chains" checkColor="#2563eb" />
-              <FeatureItem text="All 8 vesting platforms (EVM + Solana)" checkColor="#2563eb" />
+              <FeatureItem text="All 9 vesting platforms (EVM + Solana)" checkColor="#2563eb" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#2563eb" />
               <FeatureItem text="Claimable balance tracking" checkColor="#2563eb" />
               <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
@@ -333,7 +333,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans one wallet across every supported chain (including Solana) and all 8 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and CSV/PDF export."
+              a="The Free plan auto-scans one wallet across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and CSV/PDF export."
             />
             <FAQItem
               q="How do the 3 free push alerts work?"

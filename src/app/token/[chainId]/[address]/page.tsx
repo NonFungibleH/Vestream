@@ -418,7 +418,7 @@ export default async function TokenPage(
             </div>
             <p className="text-sm max-w-md mx-auto" style={{ color: "#64748b" }}>
               We haven&apos;t seen any active vesting streams for this token yet.
-              It may not use any of the 8 protocols we track, or no streams have
+              It may not use any of the 9 protocols we track, or no streams have
               reached our cache. If you have a wallet with {symbol} vesting,
               searching it on TokenVest will add it here.
             </p>
@@ -536,7 +536,7 @@ export default async function TokenPage(
             >
               Get a push and email notification the moment {symbol} tokens
               are ready to claim — plus coverage for every other wallet you
-              track, across all 8 protocols and 5 chains — EVM and Solana.
+              track, across all 9 protocols and 5 chains — EVM and Solana.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Link
