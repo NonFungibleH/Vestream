@@ -17,16 +17,16 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ContactFormCard } from "./ContactFormCard";
 
 export const metadata: Metadata = {
-  title: "Contact — Vestream",
+  title: "Contact — TokenVest",
   description:
-    "Get in touch with Vestream. Questions about the product, API access, Enterprise pricing, partnerships, or anything else — we reply within one business day.",
+    "Get in touch with TokenVest. Questions about the product, API access, Enterprise pricing, partnerships, or anything else — we reply within one business day.",
   alternates: { canonical: "https://vestream.io/contact" },
   openGraph: {
-    title: "Contact Vestream",
+    title: "Contact TokenVest",
     description:
       "Send us a message about the product, developer API, Enterprise pricing, or partnerships. We reply within one business day.",
     url: "https://vestream.io/contact",
-    siteName: "Vestream",
+    siteName: "TokenVest",
     type: "website",
   },
 };
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 const CONTACT_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Vestream",
+  name: "TokenVest",
   url: "https://vestream.io",
   contactPoint: [
     {
@@ -122,7 +122,7 @@ export default function ContactPage() {
             />
             <ReasonCard
               title="Protocol integration"
-              body="Building a vesting protocol and want it indexed by Vestream? Share your subgraph or contract details and we'll scope an adapter."
+              body="Building a vesting protocol and want it indexed by TokenVest? Share your subgraph or contract details and we'll scope an adapter."
             />
             <ReasonCard
               title="Press & partnerships"

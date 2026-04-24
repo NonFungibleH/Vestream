@@ -53,9 +53,9 @@ export default async function DeveloperAccount() {
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
+            <span className="text-white font-bold text-sm">T</span>
           </div>
-          <span className="font-bold text-base tracking-tight text-white">Vestream</span>
+          <span className="font-bold text-base tracking-tight text-white">TokenVest</span>
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/api-docs"

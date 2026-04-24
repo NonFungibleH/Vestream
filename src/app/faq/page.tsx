@@ -26,21 +26,21 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "FAQ — Vestream | Token vesting, unlock alerts, developer API",
+  title: "FAQ — TokenVest | Token vesting, unlock alerts, developer API",
   description:
-    "Answers to every common question about Vestream: supported protocols and chains, how unlock alerts work, pricing, security, the developer REST API and MCP server, mobile app, account management, and more.",
+    "Answers to every common question about TokenVest: supported protocols and chains, how unlock alerts work, pricing, security, the developer REST API and MCP server, mobile app, account management, and more.",
   alternates: { canonical: "https://vestream.io/faq" },
   openGraph: {
-    title: "Vestream FAQ",
+    title: "TokenVest FAQ",
     description:
-      "Everything you need to know about tracking token vesting with Vestream — supported protocols, unlock alerts, pricing, developer API, and more.",
+      "Everything you need to know about tracking token vesting with TokenVest — supported protocols, unlock alerts, pricing, developer API, and more.",
     url: "https://vestream.io/faq",
-    siteName: "Vestream",
+    siteName: "TokenVest",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vestream FAQ",
+    title: "TokenVest FAQ",
     description:
       "Supported protocols, unlock alerts, pricing, developer API, mobile app — answered in depth.",
   },
@@ -64,37 +64,37 @@ const FAQ_DATA: FaqCategory[] = [
   {
     slug:    "getting-started",
     title:   "Getting started",
-    summary: "New to Vestream? Start here.",
+    summary: "New to TokenVest? Start here.",
     items: [
       {
-        q: "What is Vestream?",
-        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from seven major platforms — Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale — across Ethereum, Base, BNB Chain, and Polygon, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
+        q: "What is TokenVest?",
+        a: "TokenVest is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from seven major platforms — Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale — across Ethereum, Base, BNB Chain, and Polygon, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
       },
       {
-        q: "Who is Vestream for?",
+        q: "Who is TokenVest for?",
         a: "Three audiences: (1) token holders who need to know when their vested allocations unlock so they can claim, decide whether to sell, or plan tax events; (2) funds and team treasuries tracking investor allocations, cliffs, and unlock schedules across multiple positions; (3) developers and AI agent builders who want programmatic access to normalised vesting data via our REST API or MCP server.",
       },
       {
-        q: "How do I start using Vestream?",
-        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any Ethereum wallet address to your dashboard (your own, a team wallet, an investor allocation, whatever) and Vestream automatically scans it across all 7 protocols and 4 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
+        q: "How do I start using TokenVest?",
+        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any Ethereum wallet address to your dashboard (your own, a team wallet, an investor allocation, whatever) and TokenVest automatically scans it across all 7 protocols and 4 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
       },
       {
-        q: "Do I need to connect my wallet to use Vestream?",
-        a: "No. Vestream is strictly a read-only, address-watching tracker — you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. Email OTP is the only login required.",
+        q: "Do I need to connect my wallet to use TokenVest?",
+        a: "No. TokenVest is strictly a read-only, address-watching tracker — you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. Email OTP is the only login required.",
       },
       {
         q: "Do I need to know what protocol my tokens are vested on?",
-        a: "No. When you add a wallet address, Vestream auto-scans all 7 supported protocols across all 4 chains and surfaces every vesting stream found — you don't need to know in advance which platform your tokens are on.",
+        a: "No. When you add a wallet address, TokenVest auto-scans all 7 supported protocols across all 4 chains and surfaces every vesting stream found — you don't need to know in advance which platform your tokens are on.",
       },
     ],
   },
   {
     slug:    "protocols-and-chains",
     title:   "Protocols & chains",
-    summary: "What Vestream indexes, and how the data gets there.",
+    summary: "What TokenVest indexes, and how the data gets there.",
     items: [
       {
-        q: "Which vesting protocols does Vestream support?",
+        q: "Which vesting protocols does TokenVest support?",
         a: "Seven as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), Team Finance (team token vesting), Superfluid (cliff + linear streaming via its VestingScheduler), and PinkSale PinkLock V2 (TGE + cycle schedules). Each protocol has its own dedicated adapter that normalises its data into a shared VestingStream shape.",
       },
       {
@@ -102,7 +102,7 @@ const FAQ_DATA: FaqCategory[] = [
         a: "Four production chains: Ethereum mainnet (chainId 1), BNB Chain (56), Polygon (137), and Base (8453). Ethereum Sepolia (11155111) and Base Sepolia (84532) are also supported for testing and contract deployments that haven't yet shipped on mainnet.",
       },
       {
-        q: "How does Vestream get the vesting data?",
+        q: "How does TokenVest get the vesting data?",
         a: "For six protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest, Team Finance) we query each protocol's official subgraph on The Graph Network — same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale is the exception: it has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
       },
       {
@@ -153,7 +153,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is the P&L Tracker?",
-        a: "An optional layer on top of your vesting positions where you log your purchase price (entry) and any individual sales (date, token amount, sell price or total USD received). Vestream automatically splits your P&L into realised (already sold) and unrealised (remaining vested tokens at current market price). All P&L data is stored locally in your browser — it's never transmitted to Vestream or any third party.",
+        a: "An optional layer on top of your vesting positions where you log your purchase price (entry) and any individual sales (date, token amount, sell price or total USD received). TokenVest automatically splits your P&L into realised (already sold) and unrealised (remaining vested tokens at current market price). All P&L data is stored locally in your browser — it's never transmitted to TokenVest or any third party.",
       },
       {
         q: "What is the Discover page?",
@@ -169,7 +169,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Can I see on-chain claim history?",
-        a: "Yes — where the source subgraph exposes withdrawal events (most do), the Vestream stream detail view lists every historical claim with timestamp and amount. PinkSale is the exception: since there's no subgraph, we can only show the scheduled unlock plan, not historical withdrawals.",
+        a: "Yes — where the source subgraph exposes withdrawal events (most do), the TokenVest stream detail view lists every historical claim with timestamp and amount. PinkSale is the exception: since there's no subgraph, we can only show the scheduled unlock plan, not historical withdrawals.",
       },
     ],
   },
@@ -179,7 +179,7 @@ const FAQ_DATA: FaqCategory[] = [
     summary: "Free forever for individuals, paid plans for volume users.",
     items: [
       {
-        q: "How much does Vestream cost?",
+        q: "How much does TokenVest cost?",
         a: "Free: $0, 1 wallet, unlimited email alerts on Pro and Enterprise, 3 lifetime push alerts. Pro: $14.99/month or $119.99/year on web ($17.99/$144.99 via the iOS/Android app — the Apple/Google cut is baked into the in-app price) for 3 wallets, unlimited push and email alerts, and the Discover page. Every new Pro signup on web includes a 14-day free trial. Enterprise: contact us — unlimited wallets, REST API + MCP access, Slack/Telegram/WhatsApp, SSO, dedicated support.",
       },
       {
@@ -203,11 +203,11 @@ const FAQ_DATA: FaqCategory[] = [
   {
     slug:    "security",
     title:   "Security & privacy",
-    summary: "How your data is handled and what Vestream never has access to.",
+    summary: "How your data is handled and what TokenVest never has access to.",
     items: [
       {
-        q: "Can Vestream access or move my funds?",
-        a: "No — never. Vestream is strictly read-only. We never request your private key or seed phrase, we don't ask you to connect a wallet, and we have no capability to initiate a transaction. Adding a wallet to your dashboard is typing its public address into a text field; the address is publicly visible on-chain anyway.",
+        q: "Can TokenVest access or move my funds?",
+        a: "No — never. TokenVest is strictly read-only. We never request your private key or seed phrase, we don't ask you to connect a wallet, and we have no capability to initiate a transaction. Adding a wallet to your dashboard is typing its public address into a text field; the address is publicly visible on-chain anyway.",
       },
       {
         q: "What personal data do you store?",
@@ -233,7 +233,7 @@ const FAQ_DATA: FaqCategory[] = [
     summary: "REST API, MCP server, webhooks, and tier limits for programmatic access.",
     items: [
       {
-        q: "Does Vestream have a developer API?",
+        q: "Does TokenVest have a developer API?",
         a: "Yes — a public REST API at /api/v1/ with three primary endpoints: GET /api/v1/wallet/{address}/vestings returns every stream for a wallet; GET /api/v1/wallet/{address}/upcoming-unlocks returns scheduled unlocks within a configurable window; GET /api/v1/stream/{id} returns full detail for a single stream by composite ID. See /api-docs for the Swagger UI and live request builder.",
       },
       {
@@ -242,7 +242,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What is the MCP server?",
-        a: "@vestream/mcp is a Model Context Protocol server published to npm. It exposes three tools to AI agents — get_wallet_vestings, get_upcoming_unlocks, and get_stream — so Claude Desktop, Cursor, or any MCP-compatible client can query Vestream data natively without you writing glue code. See the AI Agents page at /ai for a quick-start config.",
+        a: "@vestream/mcp is a Model Context Protocol server published to npm. It exposes three tools to AI agents — get_wallet_vestings, get_upcoming_unlocks, and get_stream — so Claude Desktop, Cursor, or any MCP-compatible client can query TokenVest data natively without you writing glue code. See the AI Agents page at /ai for a quick-start config.",
       },
       {
         q: "What are the rate limits on the API?",
@@ -273,7 +273,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I manage my subscription on mobile?",
-        a: "Through your device's native subscription management — iOS Settings → Apple ID → Subscriptions, or Google Play → Subscriptions. This is required by Apple and Google for in-app purchases. Web subscriptions are managed in your Vestream account settings.",
+        a: "Through your device's native subscription management — iOS Settings → Apple ID → Subscriptions, or Google Play → Subscriptions. This is required by Apple and Google for in-app purchases. Web subscriptions are managed in your TokenVest account settings.",
       },
     ],
   },
@@ -400,7 +400,7 @@ export default function FaqPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#64748b" }}
           >
-            Everything about how Vestream works — protocols, chains, alerts, pricing,
+            Everything about how TokenVest works — protocols, chains, alerts, pricing,
             the API, mobile, security, and the things that occasionally go wrong.
           </p>
         </div>

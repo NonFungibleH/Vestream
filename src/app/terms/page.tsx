@@ -11,9 +11,9 @@ export default function Terms() {
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
+            <span className="text-white font-bold text-sm">T</span>
           </div>
-          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
+          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>TokenVest</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
           ← Back to home
@@ -32,32 +32,32 @@ export default function Terms() {
           style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
 
           <Section title="1. Acceptance of Terms">
-            By accessing or using Vestream (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use the Service. Vestream reserves the right to update these terms at any time.
+            By accessing or using TokenVest (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use the Service. TokenVest reserves the right to update these terms at any time.
           </Section>
 
           <Section title="2. Description of Service">
-            Vestream is a read-only token vesting dashboard that aggregates on-chain vesting data from multiple protocols (Sablier, Hedgey, Team Finance, UNCX) across Ethereum, Base, and BSC. The Service displays publicly available blockchain data and does not initiate, execute, or manage any blockchain transactions on your behalf.
+            TokenVest is a read-only token vesting dashboard that aggregates on-chain vesting data from multiple protocols (Sablier, Hedgey, Team Finance, UNCX) across Ethereum, Base, and BSC. The Service displays publicly available blockchain data and does not initiate, execute, or manage any blockchain transactions on your behalf.
           </Section>
 
           <Section title="3. Eligibility">
-            You must be at least 18 years of age to use this Service. By using Vestream, you represent and warrant that you meet this requirement and that your use of the Service complies with all applicable laws and regulations in your jurisdiction.
+            You must be at least 18 years of age to use this Service. By using TokenVest, you represent and warrant that you meet this requirement and that your use of the Service complies with all applicable laws and regulations in your jurisdiction.
           </Section>
 
           <Section title="4. Read-Only Access">
-            <p>Vestream operates in a strictly read-only capacity. By using the Service:</p>
+            <p>TokenVest operates in a strictly read-only capacity. By using the Service:</p>
             <ul>
-              <li>You acknowledge that Vestream cannot execute transactions, move funds, or interact with smart contracts on your behalf.</li>
+              <li>You acknowledge that TokenVest cannot execute transactions, move funds, or interact with smart contracts on your behalf.</li>
               <li>Your private keys and seed phrases are never requested, collected, or stored.</li>
               <li>Authentication is performed via Sign-In with Ethereum (SIWE / EIP-4361), a cryptographic signature that proves wallet ownership without granting any permissions.</li>
             </ul>
           </Section>
 
           <Section title="5. No Financial Advice">
-            The information provided by Vestream — including vesting schedules, token valuations, and unlock timelines — is for informational purposes only. Nothing in the Service constitutes financial, investment, legal, or tax advice. You should consult a qualified professional before making any financial decisions. Vestream makes no representations regarding the accuracy, completeness, or reliability of token price data or valuations displayed.
+            The information provided by TokenVest — including vesting schedules, token valuations, and unlock timelines — is for informational purposes only. Nothing in the Service constitutes financial, investment, legal, or tax advice. You should consult a qualified professional before making any financial decisions. TokenVest makes no representations regarding the accuracy, completeness, or reliability of token price data or valuations displayed.
           </Section>
 
           <Section title="6. Accuracy of Data">
-            Vestream sources data from public blockchains and protocol subgraphs operated by third parties. While we strive to display accurate information, we do not guarantee the completeness, accuracy, or timeliness of data. On-chain data may be subject to delays, re-orgs, or indexing lag. You agree that Vestream shall not be liable for any inaccuracies in data displayed.
+            TokenVest sources data from public blockchains and protocol subgraphs operated by third parties. While we strive to display accurate information, we do not guarantee the completeness, accuracy, or timeliness of data. On-chain data may be subject to delays, re-orgs, or indexing lag. You agree that TokenVest shall not be liable for any inaccuracies in data displayed.
           </Section>
 
           <Section title="7. User Responsibilities">
@@ -67,16 +67,16 @@ export default function Terms() {
               <li>Attempt to circumvent any technical measures or access restrictions.</li>
               <li>Use automated tools to scrape or excessively query the Service.</li>
               <li>Impersonate any person or entity or misrepresent your affiliation.</li>
-              <li>Use the Service in any manner that could damage, disable, or impair Vestream infrastructure.</li>
+              <li>Use the Service in any manner that could damage, disable, or impair TokenVest infrastructure.</li>
             </ul>
           </Section>
 
           <Section title="8. Intellectual Property">
-            All content, branding, code, and design elements of Vestream are the property of Vestream and are protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without express written permission, except as permitted by applicable open-source licenses.
+            All content, branding, code, and design elements of TokenVest are the property of TokenVest and are protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without express written permission, except as permitted by applicable open-source licenses.
           </Section>
 
           <Section title="9. Third-Party Services">
-            The Service integrates with third-party services including Alchemy, The Graph, Supabase, and Resend. Your use of these services is subject to their respective terms of service and privacy policies. Vestream is not responsible for the availability or accuracy of third-party services.
+            The Service integrates with third-party services including Alchemy, The Graph, Supabase, and Resend. Your use of these services is subject to their respective terms of service and privacy policies. TokenVest is not responsible for the availability or accuracy of third-party services.
           </Section>
 
           <Section title="10. Disclaimer of Warranties">
@@ -88,7 +88,7 @@ export default function Terms() {
           </Section>
 
           <Section title="12. Termination">
-            Vestream reserves the right to suspend or terminate your access to the Service at any time, for any reason, without notice. You may also terminate your use of the Service at any time by signing out and removing your data.
+            TokenVest reserves the right to suspend or terminate your access to the Service at any time, for any reason, without notice. You may also terminate your use of the Service at any time by signing out and removing your data.
           </Section>
 
           <Section title="13. Governing Law">

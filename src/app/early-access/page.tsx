@@ -106,7 +106,7 @@ export default function EarlyAccessPage() {
         {/* Logo */}
         <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
           style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-          <span className="text-white font-bold text-lg">V</span>
+          <span className="text-white font-bold text-lg">T</span>
         </div>
 
         {betaFull ? (
@@ -195,7 +195,7 @@ export default function EarlyAccessPage() {
                 <button type="submit" disabled={loading || otp.length < 6}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}>
-                  {loading ? "Verifying…" : "Access Vestream →"}
+                  {loading ? "Verifying…" : "Access TokenVest →"}
                 </button>
                 <button type="button" onClick={() => { setStep("email"); setOtp(""); setError(""); }}
                   className="text-xs" style={{ color: "#94a3b8" }}>← Resend to different email</button>

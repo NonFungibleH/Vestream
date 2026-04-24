@@ -172,10 +172,10 @@ function DiscoverSidebar({ tier }: { tier: string }) {
       <Link href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm leading-none">V</span>
+          <span className="text-white font-bold text-sm leading-none">T</span>
         </div>
         <div>
-          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
+          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
         </div>
       </Link>
@@ -651,7 +651,7 @@ export default function DiscoverPage() {
                     Auto-scan unlocks with Pro
                   </p>
                   <p className="text-xs" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
-                    Enter any wallet address and Vestream automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
+                    Enter any wallet address and TokenVest automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
                   </p>
                 </div>
               </div>

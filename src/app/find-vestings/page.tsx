@@ -15,7 +15,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
-  title: "Find your token vestings — scan any wallet · Vestream",
+  title: "Find your token vestings — scan any wallet · TokenVest",
   description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale. Free, no signup.",
   alternates: { canonical: "https://vestream.io/find-vestings" },
 };

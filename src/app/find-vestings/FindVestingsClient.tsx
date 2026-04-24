@@ -173,7 +173,7 @@ export default function FindVestingsClient() {
             Connect to see your vestings
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#64748b" }}>
-            We&rsquo;ll scan your wallet across 7 protocols and 4 chains. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 7 protocols and 4 chains. These same vestings will appear live in the TokenVest mobile app with push alerts.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
@@ -451,7 +451,7 @@ function GroupCard({ group }: { group: Group }) {
 
       {group.tokens.length > 4 && (
         <p className="text-xs mt-3" style={{ color: "#94a3b8" }}>
-          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the Vestream app
+          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the TokenVest app
         </p>
       )}
     </div>
@@ -514,13 +514,13 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
         </div>
         <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
           {hasResults
-            ? "See these vestings live in the Vestream app"
+            ? "See these vestings live in the TokenVest app"
             : "Get the app and try again"}
         </h3>
         <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
           {hasResults
-            ? "Install Vestream, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
-            : "Vestream watches all 7 protocols across 4 chains, 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
+            ? "Install TokenVest, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
+            : "TokenVest watches all 7 protocols across 4 chains, 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
         </p>
 
         {/* App store badges */}

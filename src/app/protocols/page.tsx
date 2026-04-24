@@ -41,16 +41,16 @@ import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Token unlock trackers — Vestream",
+  title: "Token unlock trackers — TokenVest",
   description:
     "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, UNCX, Team Finance, Unvest and PinkSale — across Ethereum, Base, BSC and Polygon.",
   alternates: { canonical: "https://vestream.io/protocols" },
   openGraph: {
-    title: "Token unlock trackers — Vestream",
+    title: "Token unlock trackers — TokenVest",
     description:
       "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
     url: "https://vestream.io/protocols",
-    siteName: "Vestream",
+    siteName: "TokenVest",
     type: "website",
   },
 };
@@ -201,7 +201,7 @@ export default async function UnlocksIndexPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#64748b" }}
           >
-            Vestream tracks every vesting schedule on Sablier, Hedgey, Superfluid, UNCX, Team Finance,
+            TokenVest tracks every vesting schedule on Sablier, Hedgey, Superfluid, UNCX, Team Finance,
             Unvest and PinkSale — across Ethereum, Base, BSC and Polygon. Pick a protocol below to see
             live activity.
           </p>

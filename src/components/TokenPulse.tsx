@@ -9,7 +9,7 @@
 //
 // Deliberate naming decision: this card is labelled "Pulse", NOT
 // "AI Insights" — competitors use that label and we want to stay visually
-// distinct. Pulse also lines up with Vestream's "Live TVL / Live activity"
+// distinct. Pulse also lines up with TokenVest's "Live TVL / Live activity"
 // vocabulary elsewhere on the site.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -68,7 +68,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
             sentence alongside on a 375px viewport wraps to a second line
             and crowds the pill. */}
         <span className="hidden sm:inline text-[11px]" style={{ color: "#94a3b8" }}>
-          Generated from Vestream&rsquo;s indexed cache
+          Generated from TokenVest&rsquo;s indexed cache
         </span>
       </div>
 

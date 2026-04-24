@@ -5,7 +5,7 @@
 // Theme: B2C light (matches the homepage `/` — #f8fafc page, white cards).
 // Brand nod: each page is dominated by the protocol's own accent colour —
 // the primary CTA, hero gradient, live-dot, stat highlights and unlock card
-// borders all take their cue from PROTOCOLS[slug].color. Vestream stays the
+// borders all take their cue from PROTOCOLS[slug].color. TokenVest stays the
 // container; the protocol gets the visual attention.
 //
 // Rendering: ISR with revalidate=60. Stats + latest/upcoming unlock are
@@ -70,7 +70,7 @@ export async function generateMetadata(
   const meta = getProtocol(protocol);
   if (!meta) return { title: "Not found" };
 
-  const title = `${meta.name} unlock tracker & alerts — Vestream`;
+  const title = `${meta.name} unlock tracker & alerts — TokenVest`;
   const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
   const keywords = meta.searchKeywords;
   const url = `https://vestream.io/protocols/${meta.slug}`;
@@ -84,7 +84,7 @@ export async function generateMetadata(
       title,
       description,
       url,
-      siteName: "Vestream",
+      siteName: "TokenVest",
       type: "website",
     },
     twitter: {
@@ -300,7 +300,7 @@ export default async function ProtocolLandingPage(
             What&apos;s happening on {meta.name} right now
           </h2>
           <p className="text-sm max-w-xl mx-auto" style={{ color: "#64748b" }}>
-            Pulled from Vestream&apos;s index — updated every minute so you see what crawlers see.
+            Pulled from TokenVest&apos;s index — updated every minute so you see what crawlers see.
           </p>
         </div>
 
@@ -352,7 +352,7 @@ export default async function ProtocolLandingPage(
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>
-            Why Vestream
+            Why TokenVest
           </p>
           <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
             Purpose-built for {meta.name} recipients
@@ -419,7 +419,7 @@ export default async function ProtocolLandingPage(
             style={{ background: "white", border: `1px dashed ${meta.border}` }}
           >
             <p className="text-sm mb-4" style={{ color: "#475569" }}>
-              We&apos;re collecting testimonials from {meta.name} recipients using Vestream for unlock alerts.
+              We&apos;re collecting testimonials from {meta.name} recipients using TokenVest for unlock alerts.
             </p>
             <Link
               href="/contact"
@@ -499,7 +499,7 @@ export default async function ProtocolLandingPage(
               Never miss another {meta.name} unlock
             </h2>
             <p className="text-sm md:text-base mb-8 max-w-xl mx-auto" style={{ color: "#475569" }}>
-              Add your wallet to Vestream and get a push notification the moment any {meta.name} tranche becomes claimable — across every chain you hold on. No checking dashboards. No missed deadlines.
+              Add your wallet to TokenVest and get a push notification the moment any {meta.name} tranche becomes claimable — across every chain you hold on. No checking dashboards. No missed deadlines.
             </p>
             <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
               <Link
@@ -518,7 +518,7 @@ export default async function ProtocolLandingPage(
               </Link>
             </div>
             <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#94a3b8" }}>
-              Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We&apos;re the alert layer above it.
+              Claims still happen on the audited {meta.name} contract — TokenVest never touches your tokens. We&apos;re the alert layer above it.
             </p>
           </div>
         </div>

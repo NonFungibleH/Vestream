@@ -5,7 +5,7 @@
 // Shows at a glance:
 //   • Live price + 24h change (DexScreener-sourced)
 //   • Liquidity USD · 24h volume · FDV / market cap
-//   • Indexed locked supply (from our own cache) — the Vestream differentiator
+//   • Indexed locked supply (from our own cache) — the TokenVest differentiator
 //   • External links row: block explorer · website · project X · TokenSniffer
 //     · DexScreener · "Search $SYMBOL on X"
 //
@@ -178,7 +178,7 @@ export function TokenMetaPanel({
         </div>
       </div>
 
-      {/* Row 2 — Vestream differentiator: indexed locked supply.
+      {/* Row 2 — TokenVest differentiator: indexed locked supply.
           Two-row layout at mobile so the badge + amount stay on one line
           and the "locked across N streams · protocols" descriptor sits
           below in full width, rather than fragmenting mid-phrase when
@@ -197,7 +197,7 @@ export function TokenMetaPanel({
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider"
               style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}
             >
-              🔒 Vestream-indexed
+              🔒 TokenVest-indexed
             </span>
             <span className="font-semibold" style={{ color: "#0f172a" }}>
               {lockedDisplay}

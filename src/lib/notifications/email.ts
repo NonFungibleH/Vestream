@@ -32,7 +32,7 @@ export async function sendEmailNotification(
   const chainDisplay = CHAIN_NAMES[stream.chainId as SupportedChainId] ?? `Chain ${stream.chainId}`;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestr.xyz";
 
-  const subject = `Vestream: ${amount} ${stream.tokenSymbol} unlocking in ${hoursUntil}h`;
+  const subject = `TokenVest: ${amount} ${stream.tokenSymbol} unlocking in ${hoursUntil}h`;
   const body = `
 Your ${amount} ${stream.tokenSymbol} from ${protocolDisplay} (${chainDisplay}) unlocks at:
 
@@ -41,7 +41,7 @@ ${formatDate(stream.nextUnlockTime!)}
 View your dashboard: ${appUrl}/dashboard
 
 ---
-You're receiving this because you enabled email notifications on Vestream.
+You're receiving this because you enabled email notifications on TokenVest.
 To unsubscribe, visit ${appUrl}/settings
   `.trim();
 

@@ -67,7 +67,7 @@ export function TokenFAQ({ items, symbol }: Props) {
           {symbol} token FAQ
         </h2>
         <p className="mt-1 text-xs" style={{ color: "#94a3b8" }}>
-          Answers generated from Vestream&rsquo;s indexed data · updated each seed-cache run.
+          Answers generated from TokenVest&rsquo;s indexed data · updated each seed-cache run.
         </p>
       </div>
 

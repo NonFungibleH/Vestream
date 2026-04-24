@@ -70,7 +70,7 @@ export function SiteNav({ theme = "light" }: Props) {
         <Link href="/" className="flex items-center hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
           <img
             src={logo}
-            alt="Vestream"
+            alt="TokenVest"
             width={140}
             height={35}
             style={{ height: 35, width: "auto" }}

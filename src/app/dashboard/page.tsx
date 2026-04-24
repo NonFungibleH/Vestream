@@ -3517,7 +3517,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
               style={{ background: "rgba(16,185,129,0.1)" }}>✓</div>
             <p className="font-semibold text-sm" style={{ color: "#0f172a" }}>Thanks for the feedback!</p>
-            <p className="text-xs" style={{ color: "#64748b" }}>We read every response and use it to make Vestream better.</p>
+            <p className="text-xs" style={{ color: "#64748b" }}>We read every response and use it to make TokenVest better.</p>
             <button onClick={onClose}
               className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
@@ -3596,10 +3596,10 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       <a href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm leading-none">V</span>
+          <span className="text-white font-bold text-sm leading-none">T</span>
         </div>
         <div>
-          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
+          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
         </div>
       </a>
@@ -4247,7 +4247,7 @@ export default function Dashboard() {
                         const pnl = ep ? (tx.pricePer - ep) * tx.amount : null;
                         return `<tr><td>${tx.date}</td><td><strong>${tx.sym}</strong></td><td class="num">${fmtN(tx.amount, 4)}</td><td class="num">${fmtUSD(tx.pricePer)}</td><td class="num">${fmtUSD(tx.amount * tx.pricePer)}</td><td class="num">${pnl !== null ? pnlCell(pnl) : "—"}</td></tr>`;
                       }).join("") || `<tr><td colspan="6" class="empty">No sale transactions recorded</td></tr>`;
-                      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Vestream Portfolio Report — ${reportDate}</title>
+                      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TokenVest Portfolio Report — ${reportDate}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:#0f172a;background:#fff;padding:40px 48px}
@@ -4291,7 +4291,7 @@ export default function Dashboard() {
 <table><thead><tr><th>Date</th><th>Token</th><th>Amount</th><th>Price / Token</th><th>Total Paid</th></tr></thead><tbody>${buyRows}</tbody></table>
 <h2>Sale Transactions</h2>
 <table><thead><tr><th>Date</th><th>Token</th><th>Amount</th><th>Price / Token</th><th>Total USD</th><th>Realized P&L</th></tr></thead><tbody>${sellRows}</tbody></table>
-<div class="footer"><span>Vestream · vestream.io</span><span>All data is stored locally — nothing is sent to any server</span></div>
+<div class="footer"><span>TokenVest · vestream.io</span><span>All data is stored locally — nothing is sent to any server</span></div>
 </body></html>`;
                       const win = window.open("", "_blank");
                       if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 400); }
@@ -4331,7 +4331,7 @@ export default function Dashboard() {
           ) : wallets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center mb-2">
-                <span className="text-white font-bold text-2xl">V</span>
+                <span className="text-white font-bold text-2xl">T</span>
               </div>
               <div>
                 <p className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No wallets tracked yet</p>
@@ -4382,7 +4382,7 @@ export default function Dashboard() {
               {/* Footer */}
               <footer className="mt-6 pt-4 pb-2 flex items-center justify-between flex-shrink-0"
                 style={{ borderTop: "1px solid var(--preview-border-2)" }}>
-                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>© 2026 Vestream. All rights reserved.</p>
+                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>© 2026 TokenVest. All rights reserved.</p>
                 <div className="flex items-center gap-5">
                   <a href="/privacy" className="text-[11px] transition-colors hover:underline" style={{ color: "var(--preview-text-3)" }}>Privacy Policy</a>
                   <a href="/terms"   className="text-[11px] transition-colors hover:underline" style={{ color: "var(--preview-text-3)" }}>Terms of Service</a>

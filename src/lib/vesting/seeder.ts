@@ -126,7 +126,7 @@ async function postGraph<T>(
       headers: {
         "Content-Type": "application/json",
         "Accept":       "application/json",
-        "User-Agent":   "Mozilla/5.0 (compatible; Vestream-Seeder/1.0; +https://vestream.io)",
+        "User-Agent":   "Mozilla/5.0 (compatible; TokenVest-Seeder/1.0; +https://vestream.io)",
       },
       body: JSON.stringify({ query, variables }),
       // No Next revalidate: seeder wants fresh data every run

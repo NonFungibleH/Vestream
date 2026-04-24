@@ -68,9 +68,9 @@ export function AuthCard() {
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
+            <span className="text-white font-bold text-sm">T</span>
           </div>
-          <span className="font-bold text-gray-900" style={{ fontSize: 16, letterSpacing: "-0.02em" }}>Vestream</span>
+          <span className="font-bold text-gray-900" style={{ fontSize: 16, letterSpacing: "-0.02em" }}>TokenVest</span>
         </div>
         <p className="text-sm text-gray-500 mt-3">
           {step === "email"

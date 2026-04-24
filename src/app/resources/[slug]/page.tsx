@@ -18,7 +18,7 @@ export async function generateMetadata(
   const article = getArticle(slug);
   if (!article) return {};
   return {
-    title: `${article.title} | Vestream`,
+    title: `${article.title} | TokenVest`,
     description: article.excerpt,
     keywords: article.tags.join(", "),
     openGraph: {
@@ -303,12 +303,12 @@ export default async function ArticlePage(
         dateModified: article.updatedAt,
         author: {
           "@type": "Organization",
-          name: "Vestream",
+          name: "TokenVest",
           url: "https://vestream.io",
         },
         publisher: {
           "@type": "Organization",
-          name: "Vestream",
+          name: "TokenVest",
           url: "https://vestream.io",
           logo: {
             "@type": "ImageObject",
@@ -357,9 +357,9 @@ export default async function ArticlePage(
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-sm">V</span>
+              <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
+            <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>TokenVest</span>
           </Link>
           <div className="flex items-center gap-5">
             <Link href="/resources" className="text-sm font-semibold transition-colors" style={{ color: "#0f172a" }}>
@@ -425,9 +425,9 @@ export default async function ArticlePage(
               <span className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded flex items-center justify-center"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-                  <span className="text-white font-bold text-[8px]">V</span>
+                  <span className="text-white font-bold text-[8px]">T</span>
                 </div>
-                Vestream
+                TokenVest
               </span>
             </div>
           </div>
@@ -459,7 +459,7 @@ export default async function ArticlePage(
                 Track every token unlock in one dashboard
               </h2>
               <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#64748b" }}>
-                Vestream covers Sablier, UNCX, Team Finance, Hedgey, and Unvest — across all chains — in a single real-time view. No sign-up forms.
+                TokenVest covers Sablier, UNCX, Team Finance, Hedgey, and Unvest — across all chains — in a single real-time view. No sign-up forms.
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link
@@ -484,7 +484,7 @@ export default async function ArticlePage(
         {/* ── More articles ─────────────────────────────────────────────────── */}
         {relatedArticles.length > 0 && (
           <section className="max-w-5xl mx-auto px-6 pb-20">
-            <h2 className="text-lg font-bold mb-5" style={{ color: "#0f172a" }}>More from Vestream Resources</h2>
+            <h2 className="text-lg font-bold mb-5" style={{ color: "#0f172a" }}>More from TokenVest Resources</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {relatedArticles.map((a) => (
                 <Link
@@ -512,9 +512,9 @@ export default async function ArticlePage(
           <div className="flex items-center justify-center gap-1.5 mb-3">
             <div className="w-5 h-5 rounded-md flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-xs">V</span>
+              <span className="text-white font-bold text-xs">T</span>
             </div>
-            <span className="font-bold text-sm" style={{ color: "#0f172a" }}>Vestream</span>
+            <span className="font-bold text-sm" style={{ color: "#0f172a" }}>TokenVest</span>
           </div>
           <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>
             <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy</Link>

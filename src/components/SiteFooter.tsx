@@ -174,10 +174,10 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
               >
-                <span className="text-white font-bold text-sm">V</span>
+                <span className="text-white font-bold text-sm">T</span>
               </div>
               <span className="font-semibold text-base" style={{ color: palette.brandName }}>
-                Vestream
+                TokenVest
               </span>
             </Link>
             <p className="text-xs max-w-[18rem] leading-relaxed" style={{ color: palette.copyright }}>
@@ -196,7 +196,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
                 without needing its own row. */}
             <div className="flex items-center gap-2 mt-2">
               <p className="text-xs" style={{ color: palette.copyright }}>
-                © {year} Vestream. All rights reserved.
+                © {year} TokenVest. All rights reserved.
               </p>
               <Link
                 href="/admin"

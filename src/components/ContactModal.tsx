@@ -147,7 +147,7 @@ export default function ContactModal({
                 className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
               >
-                <span className="text-white font-bold text-sm">V</span>
+                <span className="text-white font-bold text-sm">T</span>
               </div>
               <h2 id="contact-modal-title" className="text-xl font-bold mb-1" style={{ color: "#0f172a" }}>
                 Get in touch

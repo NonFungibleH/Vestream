@@ -169,10 +169,10 @@ export default async function AdminPage() {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">V</span>
+            <span className="text-white font-bold text-sm">T</span>
           </div>
           <div>
-            <span className="font-bold text-base">Vestream</span>
+            <span className="font-bold text-base">TokenVest</span>
             <span className="text-xs ml-2 px-2 py-0.5 rounded-md font-semibold"
               style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>Admin</span>
           </div>
