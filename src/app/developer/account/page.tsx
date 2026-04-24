@@ -87,9 +87,13 @@ export default async function DeveloperAccount() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {/* Usage */}
-          <div className="rounded-2xl p-5 col-span-2"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Usage — shows cumulative month-to-date count against the
+              monthly budget. The live rate-limit spec (30/min burst +
+              150/day on Free) is surfaced in the footnote below so devs
+              understand why a request fails before their monthly total
+              is hit. */}
+          <div className="rounded-2xl p-5 md:col-span-2"
             style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-3"
               style={{ color: "rgba(255,255,255,0.3)" }}>
@@ -112,11 +116,21 @@ export default async function DeveloperAccount() {
                   : "linear-gradient(90deg, #2563eb, #7c3aed)",
               }} />
             </div>
-            <p className="text-xs" style={{ color: isNearLimit ? "#f97316" : "rgba(255,255,255,0.3)" }}>
+            <p className="text-xs mb-2" style={{ color: isNearLimit ? "#f97316" : "rgba(255,255,255,0.3)" }}>
               {isNearLimit
                 ? `⚠ ${remaining.toLocaleString()} requests remaining — approaching limit`
                 : `${remaining.toLocaleString()} requests remaining`}
             </p>
+            {/* Rate-limit spec — matches the numbers advertised on
+                /developer. Free is 30/min burst + 150/day; paid is
+                scoped per contract. Surfacing this so devs don't get
+                blindsided by a 429 well before their monthly total. */}
+            <div className="mt-3 pt-3 flex items-center gap-4 text-[11px] flex-wrap"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)" }}>
+              <span><span className="font-mono font-semibold text-white">{isPro ? "Scoped" : "30"}</span> req / min burst</span>
+              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+              <span><span className="font-mono font-semibold text-white">{isPro ? "Scoped" : "150"}</span> req / day</span>
+            </div>
           </div>
 
           {/* Tier */}
@@ -138,7 +152,7 @@ export default async function DeveloperAccount() {
               {key.monthlyLimit.toLocaleString()} req / month
             </p>
             {!isPro && (
-              <Link href="/developer#request-access"
+              <Link href="/contact?subject=pro-api"
                 className="block text-xs mt-3 font-semibold transition-colors hover:opacity-80"
                 style={{ color: "#60a5fa" }}>
                 Upgrade to Pro →
@@ -171,7 +185,7 @@ export default async function DeveloperAccount() {
         </div>
 
         {/* ── Quick links ── */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {[
             {
               title: "API Documentation",
@@ -192,10 +206,13 @@ export default async function DeveloperAccount() {
               border: "rgba(124,58,237,0.18)",
             },
             {
+              // Support routes through the shared /contact surface now
+              // rather than a bare mailto. Keeps support triage in one
+              // inbox and matches the rest of the site's support CTAs.
               title: "Support",
               desc: "Questions, issues, or need a higher rate limit?",
-              href: "mailto:api@vestream.io",
-              cta: "Email us →",
+              href: "/contact?subject=developer-api",
+              cta: "Contact us →",
               color: "#0891b2",
               bg: "rgba(8,145,178,0.08)",
               border: "rgba(8,145,178,0.18)",
@@ -216,7 +233,7 @@ export default async function DeveloperAccount() {
         </div>
 
         {/* ── Auth header example ── */}
-        <div className="rounded-2xl p-6"
+        <div className="rounded-2xl p-6 mb-8"
           style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-3"
             style={{ color: "rgba(255,255,255,0.3)" }}>
@@ -229,6 +246,62 @@ export default async function DeveloperAccount() {
           </pre>
           <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.25)" }}>
             Replace <code style={{ color: "rgba(255,255,255,0.45)" }}>{key.keyPrefix}...</code> with your full API key.
+          </p>
+        </div>
+
+        {/* ── MCP server setup ──────────────────────────────────────────
+            The /ai landing page and the homepage both talk about the
+            MCP integration as a first-class surface, but a developer
+            who just received an API key previously had no setup
+            guidance here — they'd have to go back to /ai to find the
+            Claude Desktop / Cursor config. Now the config lives
+            alongside the REST quick-start so agent builders can copy
+            it without leaving their account. */}
+        <div className="rounded-2xl p-6"
+          style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+            <p className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: "rgba(255,255,255,0.3)" }}>
+              MCP server setup
+            </p>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded"
+              style={{ background: "rgba(124,58,237,0.1)", color: "#a78bfa", border: "1px solid rgba(124,58,237,0.2)" }}>
+              @vestream/mcp
+            </span>
+          </div>
+          <p className="text-xs mb-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+            Your API key also works with the TokenVest MCP server — three
+            agent-native tools (<code style={{ color: "#60a5fa" }}>get_wallet_vestings</code>,{" "}
+            <code style={{ color: "#60a5fa" }}>get_upcoming_unlocks</code>,{" "}
+            <code style={{ color: "#60a5fa" }}>get_stream</code>) over the
+            same REST backend.
+          </p>
+
+          <p className="text-[11px] font-semibold uppercase tracking-widest mb-2"
+            style={{ color: "rgba(255,255,255,0.3)" }}>
+            Claude Desktop config
+          </p>
+          <pre className="text-xs leading-relaxed overflow-x-auto rounded-xl p-4 mb-4"
+            style={{ background: "#0d0f14", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace" }}>
+            <code>{`{
+  "mcpServers": {
+    "vestream": {
+      "command": "npx",
+      "args": ["-y", "@vestream/mcp"],
+      "env": { "VESTREAM_API_KEY": "${key.keyPrefix}..." }
+    }
+  }
+}`}</code>
+          </pre>
+          <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+            Add to{" "}
+            <code style={{ color: "rgba(255,255,255,0.45)" }}>
+              ~/Library/Application Support/Claude/claude_desktop_config.json
+            </code>
+            . Cursor + other MCP clients accept the same block in their
+            equivalent config file. Replace{" "}
+            <code style={{ color: "rgba(255,255,255,0.45)" }}>{key.keyPrefix}...</code>
+            {" "}with the full key you saved when issued.
           </p>
         </div>
 
