@@ -3240,10 +3240,11 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
 // ─── AddWalletBar ─────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"      },
+  { id: "1",        label: "Ethereum",  short: "ETH"     },
   { id: "56",       label: "BNB Chain", short: "BSC"     },
   { id: "137",      label: "Polygon",   short: "Polygon" },
   { id: "8453",     label: "Base",      short: "Base"    },
+  { id: "101",      label: "Solana",    short: "SOL"     },
   { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 
@@ -3313,7 +3314,7 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
       {/* Row 1: address + label */}
       <div className="flex items-center gap-3 flex-wrap">
         <input
-          placeholder="Wallet address (0x…)"
+          placeholder="Wallet address (0x… or Solana pubkey)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}

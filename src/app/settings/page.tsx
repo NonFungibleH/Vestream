@@ -36,10 +36,11 @@ const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
 // supported them. Dropped Sepolia (testnet, not relevant for consumer
 // wallet tracking) and restored Polygon.
 const CHAIN_OPTIONS = [
-  { id: "1",    label: "Ethereum",  short: "ETH"  },
-  { id: "56",   label: "BNB Chain", short: "BSC"  },
+  { id: "1",    label: "Ethereum",  short: "ETH"   },
+  { id: "56",   label: "BNB Chain", short: "BSC"   },
   { id: "137",  label: "Polygon",   short: "MATIC" },
-  { id: "8453", label: "Base",      short: "Base" },
+  { id: "8453", label: "Base",      short: "Base"  },
+  { id: "101",  label: "Solana",    short: "SOL"   },
 ];
 
 // UI-visible protocols (UNCX covers both uncx + uncx-vm on the backend)
@@ -449,7 +450,7 @@ function WalletCard({
                 autoFocus
                 value={tokenAddrValue}
                 onChange={(e) => setTokenAddrValue(e.target.value)}
-                placeholder="0x… (token contract address)"
+                placeholder="Token contract address (0x… or Solana mint)"
                 className="flex-1 text-xs font-mono rounded-lg px-2.5 py-1.5 outline-none"
                 style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
                 onKeyDown={(e) => {
@@ -822,7 +823,7 @@ export default function Settings() {
                 We&apos;ll scan every supported chain &amp; platform for you. Narrow scope later if you want to.
               </p>
               <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
-                <StyledInput placeholder="Wallet address (0x…)" value={newAddress} onChange={setNewAddress} fontMono />
+                <StyledInput placeholder="Wallet address (0x… or Solana pubkey)" value={newAddress} onChange={setNewAddress} fontMono />
                 <StyledInput placeholder="Label (optional — e.g. Team vesting)" value={newLabel} onChange={setNewLabel} />
 
                 {/* Optional advanced filters */}
@@ -862,7 +863,7 @@ export default function Settings() {
                       <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
                         Token contract address <span className="normal-case font-normal">(optional)</span>
                       </p>
-                      <StyledInput placeholder="0x…" value={newTokenAddr} onChange={setNewTokenAddr} fontMono />
+                      <StyledInput placeholder="0x… or Solana mint" value={newTokenAddr} onChange={setNewTokenAddr} fontMono />
                       <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
                         Narrows tracking to a single token. Leave blank to auto-scan all.
                       </p>

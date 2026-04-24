@@ -49,10 +49,11 @@ interface TrackedWallet {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum", short: "ETH"     },
-  { id: "56",       label: "BNB Chain", short: "BSC"    },
+  { id: "1",        label: "Ethereum",  short: "ETH"     },
+  { id: "56",       label: "BNB Chain", short: "BSC"     },
   { id: "137",      label: "Polygon",   short: "Polygon" },
-  { id: "8453",     label: "Base",      short: "Base"   },
+  { id: "8453",     label: "Base",      short: "Base"    },
+  { id: "101",      label: "Solana",    short: "SOL"     },
   { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
 
@@ -687,7 +688,7 @@ export default function DiscoverPage() {
             {/* Input row */}
             <div className="flex gap-3 flex-wrap">
               <input
-                placeholder="Wallet address (0x…)"
+                placeholder="Wallet address (0x… or Solana pubkey)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleScan(); }}

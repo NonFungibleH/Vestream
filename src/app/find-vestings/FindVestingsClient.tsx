@@ -234,7 +234,7 @@ export default function FindVestingsClient() {
               type="text"
               value={manualAddress}
               onChange={(e) => setManualAddress(e.target.value)}
-              placeholder="0x… paste any wallet address"
+              placeholder="Paste any wallet — 0x… or Solana pubkey"
               disabled={loading}
               className="flex-1 px-4 py-3 text-sm font-mono rounded-xl outline-none focus:ring-2"
               style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a", minWidth: 240 }}
