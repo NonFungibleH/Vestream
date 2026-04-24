@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TokenVest Vesting Data API",
-    "version": "1.1.0",
-    "description": "Normalised, chain-indexed token vesting data — the same dataset that powers the TokenVest dashboard and the @vestream/mcp MCP server, exposed as a plain REST API for agents, integrations, and back-office tooling.\n\n## What this API is for\nEvery vesting protocol exposes its own subgraph, contract layout, and data shape. Integrating even one of them takes weeks; integrating seven takes a team. This API hides that complexity behind a single cross-protocol, cross-chain normalised schema — so an agent or app can answer questions like \"what unlocks for this wallet in the next 14 days\" or \"what is this stream's claimable balance right now\" in a single call.\n\n## Coverage\n- **Protocols:** Sablier, Hedgey, UNCX (TokenVesting + VestingManager), Unvest, Team Finance, Superfluid, PinkSale (PinkLock V2)\n- **Chains:** Ethereum (1), BNB Chain (56), Polygon (137), Base (8453)\n- **Data shape:** one `VestingStream` schema for all of them — same fields, same units, same ID format\n\n## Authentication\nAll endpoints require an API key passed as a bearer token:\n```\nAuthorization: Bearer vstr_live_...\n```\nKeys are issued per account from `/developer/account` after access is approved. Free-tier keys are capped at 30 req/min burst and 150 req/day; paid-tier keys are scoped per contract.\n\n## Data freshness\nResponses are served from TokenVest's persistent index — not live on-chain queries. The `last_indexed` field on responses tells you how fresh the data is; it typically trails chain tip by under a minute. No endpoint makes direct RPC or subgraph calls at request time.\n\n## Rate limits\nEvery response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. A 429 means you've hit the monthly cap or the burst/daily window for your tier. Back off and retry — or contact us about a higher tier.\n\nRequest a key: [tokenvest.io/developer](https://tokenvest.io/developer)",
+    "version": "1.2.0",
+    "description": "Normalised, chain-indexed token vesting data — the same dataset that powers the TokenVest dashboard and the @vestream/mcp MCP server, exposed as a plain REST API for agents, integrations, and back-office tooling.\n\n## What this API is for\nEvery vesting protocol exposes its own subgraph, contract layout, and data shape. Integrating even one of them takes weeks; integrating eight across two ecosystems takes a team. This API hides that complexity behind a single cross-protocol, cross-chain, cross-ecosystem normalised schema — so an agent or app can answer questions like \"what unlocks for this wallet in the next 14 days\" or \"what is this stream's claimable balance right now\" in a single call, regardless of whether the wallet is an EVM 0x… address or a Solana base58 pubkey.\n\n## Coverage\n- **Protocols:** Sablier, Hedgey, UNCX (TokenVesting + VestingManager), Unvest, Team Finance, Superfluid, PinkSale (PinkLock V2), Streamflow (Solana)\n- **EVM chains:** Ethereum (1), BNB Chain (56), Polygon (137), Base (8453)\n- **Non-EVM chains:** Solana (101)\n- **Address formats:** EVM 0x-prefixed hex OR Solana base58 pubkeys — the API auto-detects the ecosystem from the input\n- **Data shape:** one `VestingStream` schema for every protocol on every chain — same fields, same units, same ID format\n\n## Authentication\nAll endpoints require an API key passed as a bearer token:\n```\nAuthorization: Bearer vstr_live_...\n```\nKeys are issued per account from `/developer/account` after access is approved. Free-tier keys are capped at 30 req/min burst and 150 req/day; paid-tier keys are scoped per contract.\n\n## Data freshness\nResponses are served from TokenVest's persistent index — not live on-chain queries. The `last_indexed` field on responses tells you how fresh the data is; it typically trails chain tip by under a minute. No endpoint makes direct RPC or subgraph calls at request time.\n\n## Rate limits\nEvery response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. A 429 means you've hit the monthly cap or the burst/daily window for your tier. Back off and retry — or contact us about a higher tier.\n\nRequest a key: [tokenvest.io/developer](https://tokenvest.io/developer)",
     "contact": {
       "name": "TokenVest",
       "url": "https://tokenvest.io"
@@ -30,11 +30,11 @@
         "description": "A single normalised vesting stream. This is the canonical shape every protocol is mapped to — Sablier's per-second linear streams, UNCX's milestone locks, Hedgey's NFT plans, and PinkSale's cycle-based unlocks all come back in this format. Amounts are raw integer strings (not floats — use `tokenDecimals` to format for display). Timestamps are unix seconds.",
         "required": ["id","protocol","chainId","recipient","tokenAddress","tokenSymbol","tokenDecimals","totalAmount","withdrawnAmount","claimableNow","lockedAmount","startTime","endTime","isFullyVested"],
         "properties": {
-          "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID in the format `{protocol}-{chainId}-{nativeId}`. Use this with GET /stream/{streamId} to fetch full detail for a single stream. Always lowercase, always URL-safe." },
-          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale"], "description": "Source protocol. `uncx-vm` is UNCX's VestingManager contract — merged with `uncx` in most product surfaces but kept distinct here for debuggability." },
-          "chainId":        { "type": "integer", "example": 1, "description": "EVM chain ID. Supported: 1 (Ethereum), 56 (BNB Chain), 137 (Polygon), 8453 (Base)." },
-          "recipient":      { "type": "string",  "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Wallet that receives the vesting tokens. Always lowercased hex." },
-          "tokenAddress":   { "type": "string",  "example": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "description": "ERC-20 contract address of the token being vested." },
+          "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID in the format `{protocol}-{chainId}-{nativeId}`. EVM examples: `sablier-1-12345`, `uncx-8453-99`. Solana example: `streamflow-101-7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU`. Use with GET /stream/{streamId} to fetch full detail. URL-safe." },
+          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale","streamflow"], "description": "Source protocol. `uncx-vm` is UNCX's VestingManager contract — merged with `uncx` in most product surfaces. `streamflow` is Solana-only; all others are EVM." },
+          "chainId":        { "type": "integer", "example": 1, "description": "Network identifier. EVM chains: 1 (Ethereum), 56 (BNB Chain), 137 (Polygon), 8453 (Base). Non-EVM: 101 (Solana)." },
+          "recipient":      { "type": "string",  "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Wallet that receives the vesting tokens. EVM addresses are lowercased hex; Solana pubkeys are base58 (case-sensitive — preserved as returned)." },
+          "tokenAddress":   { "type": "string",  "example": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "description": "Contract address of the token. EVM: ERC-20 contract (lowercase hex). Solana: SPL mint pubkey (base58)." },
           "tokenSymbol":    { "type": "string",  "example": "UNI", "description": "Human-readable symbol as reported by the token contract. May be empty if the contract doesn't implement the symbol() view." },
           "tokenDecimals":  { "type": "integer", "example": 18, "description": "ERC-20 decimals. Divide raw amounts by 10^decimals to get a display amount." },
           "totalAmount":    { "type": "string",  "description": "Total tokens allocated to this stream, as a raw integer string (e.g. `\"1000000000000000000000\"` for 1000 tokens at 18 decimals). String format because bigint values exceed JavaScript's safe integer range.", "example": "1000000000000000000000" },
@@ -102,21 +102,21 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "EVM wallet address in 0x-prefixed hex. Case-insensitive — the API lowercases before lookup. Checksum addresses and lowercase both work.",
+            "description": "Wallet address. EVM: 0x-prefixed hex, case-insensitive (the API lowercases before lookup). Solana: base58-encoded pubkey, case-sensitive. The API auto-detects ecosystem from the input format.",
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "protocol",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated list of protocol IDs to restrict the scan to. Omit for all protocols. Valid values: `sablier`, `uncx`, `hedgey`, `unvest`, `team-finance`, `superfluid`, `pinksale`.",
+            "description": "Comma-separated list of protocol IDs to restrict the scan to. Omit for all protocols. Valid values: `sablier`, `uncx`, `hedgey`, `unvest`, `team-finance`, `superfluid`, `pinksale`, `streamflow`.",
             "example": "sablier,uncx"
           },
           {
             "name": "chain",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated list of chain IDs. Omit for all supported chains. Valid values: `1` (Ethereum), `56` (BNB Chain), `137` (Polygon), `8453` (Base).",
+            "description": "Comma-separated list of chain IDs. Omit for all supported chains. Valid values: `1` (Ethereum), `56` (BNB Chain), `137` (Polygon), `8453` (Base), `101` (Solana).",
             "example": "1,8453"
           },
           {
@@ -165,7 +165,7 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "EVM wallet address (case-insensitive).",
+            "description": "Wallet address — EVM 0x hex (case-insensitive) or Solana base58 pubkey (case-sensitive).",
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {

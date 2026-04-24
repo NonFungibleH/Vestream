@@ -58,22 +58,25 @@ const server = new McpServer({
 
 server.tool(
   "get_wallet_vestings",
-  "Get all token vesting streams for an EVM wallet address across all supported " +
-  "protocols (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale) " +
-  "and chains (Ethereum, BSC, Polygon, Base). Returns normalised stream data: " +
-  "token, amounts locked/claimable/withdrawn, schedule dates, cliff time, next " +
-  "unlock, and claim history.",
+  "Get all token vesting streams for a wallet across every supported protocol " +
+  "and chain (including Solana). EVM protocols: Sablier, Hedgey, UNCX, Unvest, " +
+  "Team Finance, Superfluid, PinkSale. Solana protocols: Streamflow. " +
+  "EVM chains: Ethereum, BSC, Polygon, Base. Non-EVM chains: Solana. " +
+  "Returns normalised stream data: token, amounts locked/claimable/withdrawn, " +
+  "schedule dates, cliff time, next unlock, and claim history — identical " +
+  "JSON shape regardless of source protocol or ecosystem.",
   {
     address: z.string().describe(
-      "EVM wallet address in 0x format, e.g. '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'"
+      "Wallet address. EVM: 0x-prefixed hex (e.g. '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'). " +
+      "Solana: base58-encoded pubkey (e.g. '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')"
     ),
     protocol: z.string().optional().describe(
-      "Comma-separated protocol filter, e.g. 'sablier,uncx'. " +
-      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale"
+      "Comma-separated protocol filter, e.g. 'sablier,streamflow'. " +
+      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow"
     ),
     chain: z.string().optional().describe(
-      "Comma-separated chain ID filter, e.g. '1,137,8453'. " +
-      "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base)"
+      "Comma-separated chain ID filter, e.g. '1,101,8453'. " +
+      "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)"
     ),
     active_only: z.boolean().optional().describe(
       "If true, only return streams that are not yet fully vested (default: false)"
@@ -97,18 +100,20 @@ server.tool(
 
 server.tool(
   "get_upcoming_unlocks",
-  "Get all upcoming token unlock events for an EVM wallet within a future time window. " +
-  "Returns cliff completions, tranche unlocks, and linear stream endings sorted by date. " +
-  "Ideal for forecasting when tokens become available, scheduling claims, or building alerts.",
+  "Get all upcoming token unlock events for a wallet within a future time window. " +
+  "Works for both EVM 0x addresses and Solana base58 pubkeys. Returns cliff " +
+  "completions, tranche unlocks, and linear stream endings sorted by date. " +
+  "Ideal for forecasting when tokens become available, scheduling claims, or " +
+  "building alerts.",
   {
     address: z.string().describe(
-      "EVM wallet address in 0x format"
+      "Wallet address — EVM 0x hex or Solana base58 pubkey"
     ),
     days: z.number().optional().describe(
       "Lookahead window in days (default: 30, max: 365)"
     ),
     protocol: z.string().optional().describe(
-      "Comma-separated protocol filter, e.g. 'sablier,uncx'"
+      "Comma-separated protocol filter, e.g. 'sablier,streamflow'"
     ),
   },
   async ({ address, days, protocol }) => {
@@ -130,12 +135,12 @@ server.tool(
   "get_stream",
   "Get full details for a single vesting stream by its composite ID. " +
   "Stream IDs follow the format: {protocol}-{chainId}-{nativeId}, " +
-  "e.g. 'sablier-1-12345' or 'uncx-8453-99'. " +
+  "e.g. 'sablier-1-12345' (EVM) or 'streamflow-101-7xKX...' (Solana). " +
   "Use get_wallet_vestings first to discover stream IDs for a wallet.",
   {
     stream_id: z.string().describe(
       "Composite stream ID in format 'protocol-chainId-nativeId', " +
-      "e.g. 'sablier-1-12345', 'hedgey-8453-42', 'uncx-1-7'"
+      "e.g. 'sablier-1-12345', 'uncx-8453-99', 'streamflow-101-7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'"
     ),
   },
   async ({ stream_id }) => {

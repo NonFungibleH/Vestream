@@ -15,7 +15,7 @@ export default function ApiDocsPage() {
         <div className="flex items-center gap-3">
           <span className="text-white font-semibold text-lg">TokenVest</span>
           <span className="text-gray-400 text-sm">API Reference</span>
-          <span className="bg-blue-500/20 text-blue-400 text-xs font-mono px-2 py-0.5 rounded">v1.1</span>
+          <span className="bg-blue-500/20 text-blue-400 text-xs font-mono px-2 py-0.5 rounded">v1.2</span>
         </div>
         <Link
           href="/"
