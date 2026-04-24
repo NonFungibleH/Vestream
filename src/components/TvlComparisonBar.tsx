@@ -35,7 +35,16 @@ function compactUsd(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
+export function TvlComparisonBar({
+  rows,
+  externallySourced,
+}: {
+  rows:               TvlComparisonRow[];
+  /** Slugs whose TVL came from an external source (e.g. DefiLlama)
+   *  rather than our own priced-cache computation. Rendered with a
+   *  small attribution tag so the reader can distinguish the two. */
+  externallySourced?: Set<string>;
+}) {
   const sorted = [...rows].sort((a, b) => (b.tvl?.tvlUsd ?? 0) - (a.tvl?.tvlUsd ?? 0));
   const maxTvl = Math.max(1, ...sorted.map((r) => r.tvl?.tvlUsd ?? 0));
 
@@ -45,7 +54,8 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
   const totalMed  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.medium ?? 0), 0);
   const totalLow  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.low ?? 0), 0);
 
-  const anyPriced = sorted.some((r) => (r.tvl?.tokensPriced ?? 0) > 0);
+  const anyPriced   = sorted.some((r) => (r.tvl?.tokensPriced ?? 0) > 0);
+  const hasExternal = !!externallySourced && externallySourced.size > 0;
 
   return (
     <div
@@ -143,6 +153,7 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
+              const isExternal  = externallySourced?.has(protocol.slug) ?? false;
 
               return (
                 <Link
@@ -169,13 +180,23 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
                     <span className="text-sm font-bold tabular-nums" style={{ color: hasValue ? "#0f172a" : "#94a3b8" }}>
                       {compactUsd(tvlUsd)}
                     </span>
-                    <span
-                      className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
-                      style={{ color: "#94a3b8", minWidth: 52, textAlign: "right" }}
-                      title={`${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced`}
-                    >
-                      {tvl?.totalTokens ? `${coveragePct}% priced` : "no data"}
-                    </span>
+                    {isExternal ? (
+                      <span
+                        className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
+                        style={{ color: "#7c3aed", minWidth: 52, textAlign: "right" }}
+                        title="Sourced from DefiLlama's protocol API"
+                      >
+                        via DefiLlama
+                      </span>
+                    ) : (
+                      <span
+                        className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
+                        style={{ color: "#94a3b8", minWidth: 52, textAlign: "right" }}
+                        title={`${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced`}
+                      >
+                        {tvl?.totalTokens ? `${coveragePct}% priced` : "no data"}
+                      </span>
+                    )}
                   </div>
                   {/* Bar */}
                   <div
@@ -212,6 +233,12 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
         or <span className="font-semibold" style={{ color: "#64748b" }}>thin</span> ($100–$1k). Tokens below $100
         liquidity with no CoinGecko listing are excluded from the total.
         &ldquo;% priced&rdquo; shows how much of each protocol&apos;s indexed set we could price.
+        {hasExternal && (
+          <>
+            {" "}Rows tagged <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> use
+            DefiLlama&apos;s protocol TVL figure directly — we defer to their index for ecosystems where we don&apos;t operate our own seeder.
+          </>
+        )}
       </div>
     </div>
   );

@@ -51,6 +51,17 @@ export interface ProtocolMeta {
   relatedSlugs: string[];
   /** Testimonials — empty array renders a "collecting" call-out instead. */
   testimonials: Testimonial[];
+  /**
+   * Optional: use an external TVL source instead of computing from the
+   * local cache. Set for protocols where we don't run our own seeder (e.g.
+   * Streamflow → DefiLlama). When set, the /protocols card displays this
+   * source's number with an attribution tag.
+   */
+  externalTvl?: {
+    source:   "defillama";
+    slug:     string;      // DefiLlama protocol slug
+    category?: string;     // Optional filter — "vesting" for Streamflow
+  };
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
@@ -279,6 +290,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "hedgey", "superfluid"],
     testimonials: [],
+    externalTvl: {
+      source:   "defillama",
+      slug:     "streamflow",
+      category: "vesting",   // excludes DefiLlama's "Payments" TVL (~$500k)
+                             // which is a different Streamflow product
+    },
   },
 };
 

@@ -31,6 +31,7 @@ import {
 } from "@/lib/vesting/protocol-stats";
 import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-stats";
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
+import { fetchDefiLlamaTvl } from "@/lib/defillama";
 
 // See note on /protocols/[slug]/page.tsx — same rationale. This index
 // page fans out into all 7 protocols' getProtocolStats() + getGlobalStats()
@@ -69,7 +70,7 @@ export default async function UnlocksIndexPage() {
   //                        "streams tracked" headline number)
   // We display whichever is larger so the page never looks smaller than the
   // on-chain truth, even before the seeder has run.
-  const [statsEntries, globalEntries, tvlMap] = await Promise.all([
+  const [statsEntries, globalEntries, tvlMap, externalTvlEntries] = await Promise.all([
     Promise.all(
       protocols.map(async (p) => {
         try {
@@ -105,10 +106,64 @@ export default async function UnlocksIndexPage() {
         return {};
       }
     })(),
+    // External TVL sources (DefiLlama) — fetched in parallel with the local
+    // pricing pipeline. Used for protocols where we don't run a seeder and
+    // the local cache would report $0 at launch (Streamflow). Failures here
+    // fall back to local TVL (typically null for Streamflow in v1 → the
+    // card would show "no data" instead of a real number, which is the
+    // pre-DefiLlama baseline).
+    Promise.all(
+      protocols
+        .filter((p) => p.externalTvl)
+        .map(async (p) => {
+          const cfg = p.externalTvl!;
+          try {
+            const snap = await fetchDefiLlamaTvl(cfg.slug, cfg.category);
+            return [p.slug, snap] as const;
+          } catch (err) {
+            console.error(`[unlocks] DefiLlama fetch failed for ${p.slug}:`, err);
+            return [p.slug, null] as const;
+          }
+        }),
+    ),
   ]);
   const statsMap  = new Map(statsEntries);
   const globalMap = new Map(globalEntries);
-  const tvlRows   = protocols.map((p) => ({ protocol: p, tvl: tvlMap[p.slug] ?? null }));
+
+  // Merge external TVL sources into the tvl map. For protocols with an
+  // external source configured, we synthesise a ProtocolTvl from the
+  // DefiLlama snapshot so the downstream UI doesn't have to branch.
+  // Track which slugs came from an external source so the UI can surface
+  // attribution (e.g. "via DefiLlama" tag).
+  const externallySourced = new Set<string>();
+  for (const [slug, snap] of externalTvlEntries) {
+    if (!snap) continue;
+    const protocol = protocols.find((p) => p.slug === slug);
+    if (!protocol) continue;
+    externallySourced.add(slug);
+    tvlMap[slug] = {
+      adapterIds:      protocol.adapterIds,
+      tvlUsd:          snap.totalUsd,
+      // All-in-one "high" band — DefiLlama's figure is curated, not sampled.
+      tvlByBand:       { high: snap.totalUsd, medium: 0, low: 0 },
+      pricingSources:  { dexscreener: 0, coingecko: 0 },
+      // Per-chain rows: DefiLlama returns chain NAMES (e.g. "Solana"), not
+      // numeric IDs. We emit a single synthetic chainId=0 row so the UI
+      // doesn't render a broken chain-pill; the per-chain bar isn't the
+      // primary signal on the Streamflow card anyway.
+      perChain:        snap.perChain.length > 0
+                         ? [{ chainId: protocol.chainIds[0] ?? 0, tvlUsd: snap.totalUsd }]
+                         : [],
+      tokensPriced:    snap.perChain.length > 0 ? 1 : 0,
+      tokensSkipped:   0,
+      totalTokens:     snap.perChain.length > 0 ? 1 : 0,
+      coverage:        1,
+      topContributors: [],
+      computedAt:      snap.fetchedAt,
+    };
+  }
+
+  const tvlRows = protocols.map((p) => ({ protocol: p, tvl: tvlMap[p.slug] ?? null }));
 
   // Effective counts: max(local cache, subgraph-reported global). The subgraph
   // ceiling of 1000 per chain can slightly undercount on very large protocols
@@ -214,7 +269,7 @@ export default async function UnlocksIndexPage() {
           state undermines the rest of the page. Swapped in the TVL bar so
           the left column always has content and the two panels feel balanced. */}
       <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TvlComparisonBar rows={tvlRows} />
+        <TvlComparisonBar rows={tvlRows} externallySourced={externallySourced} />
         <UpcomingUnlockTicker />
       </section>
 
