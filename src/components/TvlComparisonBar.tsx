@@ -59,7 +59,7 @@ export function TvlComparisonBar({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="rounded-2xl overflow-hidden flex flex-col h-full"
       style={{
         background: "white",
         border: "1px solid rgba(0,0,0,0.07)",
@@ -88,6 +88,44 @@ export function TvlComparisonBar({
             {compactUsd(totalAll)}
           </span>
           <span>priced across {sorted.length} protocols</span>
+          {/* Methodology info tooltip — replaces the old full-text footer. */}
+          <span
+            className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full cursor-help flex-shrink-0"
+            style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+            tabIndex={0}
+            aria-label="Pricing methodology"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            {/* Tooltip — appears on hover (desktop) or focus (keyboard). Mobile
+                tap triggers focus via tabIndex=0, so the tooltip is still
+                reachable without hover. */}
+            <span
+              className="pointer-events-none absolute right-0 top-full mt-2 w-72 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity z-10 shadow-lg"
+              style={{
+                background: "white",
+                border:     "1px solid rgba(0,0,0,0.08)",
+                color:      "#475569",
+                boxShadow:  "0 8px 24px rgba(15,23,42,0.12)",
+              }}
+              role="tooltip"
+            >
+              Prices come from DexScreener, with CoinGecko as fallback for tokens that don&apos;t have a DEX listing.
+              Each token is tagged <span className="font-semibold" style={{ color: "#0f172a" }}>high</span> (≥$10k DEX liquidity),
+              <span className="font-semibold" style={{ color: "#0f172a" }}> medium</span> ($1k–$10k, or CoinGecko),
+              or <span className="font-semibold" style={{ color: "#0f172a" }}>thin</span> ($100–$1k).
+              Tokens below $100 with no CoinGecko listing are excluded.
+              {hasExternal && (
+                <>
+                  {" "}Rows tagged <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> use
+                  DefiLlama&apos;s protocol TVL directly — we defer to their index for ecosystems without our own seeder.
+                </>
+              )}
+            </span>
+          </span>
         </div>
       </div>
 
@@ -135,8 +173,8 @@ export function TvlComparisonBar({
         </div>
       )}
 
-      {/* Rows */}
-      <div className="px-4 md:px-5 py-4">
+      {/* Rows — flex-1 so the card stretches to match the sibling column */}
+      <div className="px-4 md:px-5 py-4 flex-1">
         {!anyPriced ? (
           <div className="py-6 text-center">
             <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
@@ -218,28 +256,10 @@ export function TvlComparisonBar({
         )}
       </div>
 
-      {/* Footer — methodology, in plain English */}
-      <div
-        className="px-4 md:px-5 py-2.5 text-[10.5px] leading-relaxed"
-        style={{
-          background:  "rgba(0,0,0,0.015)",
-          borderTop:   "1px solid rgba(0,0,0,0.05)",
-          color:       "#94a3b8",
-        }}
-      >
-        Prices come from DexScreener, with CoinGecko as fallback for tokens that don&apos;t have a DEX listing.
-        Each token is tagged <span className="font-semibold" style={{ color: "#64748b" }}>high</span> (≥$10k DEX liquidity),
-        <span className="font-semibold" style={{ color: "#64748b" }}> medium</span> ($1k–$10k, or CoinGecko),
-        or <span className="font-semibold" style={{ color: "#64748b" }}>thin</span> ($100–$1k). Tokens below $100
-        liquidity with no CoinGecko listing are excluded from the total.
-        &ldquo;% priced&rdquo; shows how much of each protocol&apos;s indexed set we could price.
-        {hasExternal && (
-          <>
-            {" "}Rows tagged <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> use
-            DefiLlama&apos;s protocol TVL figure directly — we defer to their index for ecosystems where we don&apos;t operate our own seeder.
-          </>
-        )}
-      </div>
+      {/* Footer intentionally removed — methodology moved into the (i) tooltip
+          next to the header total. Keeps the card visually balanced with its
+          UpcomingUnlockTicker sibling in the /protocols grid, and the detail
+          stays one hover away for anyone who wants it. */}
     </div>
   );
 }

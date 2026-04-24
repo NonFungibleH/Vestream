@@ -35,7 +35,10 @@ type UpcomingResponse = {
 };
 
 const POLL_MS     = 30_000;
-const MAX_VISIBLE = 6;
+// Bumped 6 → 10 so the header's "showing next 10" claim is truthful
+// and the right column balances with the /protocols liquidity bar on
+// its left. API is already queried with limit=10 so no extra cost.
+const MAX_VISIBLE = 10;
 
 // Protocol colour map matches LiveActivityTicker — keep them in sync or extract.
 const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
@@ -127,7 +130,7 @@ export function UpcomingUnlockTicker() {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="rounded-2xl overflow-hidden flex flex-col h-full"
       style={{
         background: "white",
         border: "1px solid rgba(0,0,0,0.07)",
@@ -161,8 +164,8 @@ export function UpcomingUnlockTicker() {
         )}
       </div>
 
-      {/* Rows */}
-      <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+      {/* Rows — flex-1 so the list stretches to match the sibling column */}
+      <div className="divide-y flex-1" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
         {err && !data && (
           <div className="px-4 md:px-5 py-6 text-center text-sm" style={{ color: "#94a3b8" }}>
             Reconnecting…

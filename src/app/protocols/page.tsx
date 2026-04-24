@@ -296,6 +296,7 @@ export default async function UnlocksIndexPage() {
               stats={statsMap.get(p.slug) ?? null}
               effectiveTotal={effectiveTotal(p.slug)}
               effectiveActive={effectiveActive(p.slug)}
+              externalTvlUsd={externallySourced.has(p.slug) ? tvlMap[p.slug]?.tvlUsd : undefined}
             />
           ))}
         </div>
@@ -353,20 +354,40 @@ export default async function UnlocksIndexPage() {
 
 // ─── Card ────────────────────────────────────────────────────────────────────
 
+function compactUsd(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+  return `$${n.toFixed(0)}`;
+}
+
 function ProtocolCard({
   protocol,
   stats,
   effectiveTotal,
   effectiveActive,
+  externalTvlUsd,
 }: {
   protocol:        ProtocolMeta;
   stats:           ProtocolStats | null;
   effectiveTotal:  number;
   effectiveActive: number;
+  /** When set (DefiLlama-backed protocols like Streamflow), the card swaps
+   *  the stream-count stats for a TVL headline — otherwise those protocols
+   *  show "— streams · — active" until user traffic populates the cache,
+   *  which undersells the live TVL we already have. */
+  externalTvlUsd?: number;
 }) {
-  const liveLabel = stats?.lastIndexedAt
-    ? `Indexed ${relativeFreshness(stats.lastIndexedAt)}`
-    : `${protocol.chainIds.length} chains`;
+  // Streamflow-style (external TVL) badge has different semantics than the
+  // "indexed today" freshness badge — it signals "DefiLlama is our live TVL
+  // source" rather than "we just ran a seeder".
+  const liveLabel = externalTvlUsd && externalTvlUsd > 0
+    ? "via DefiLlama"
+    : stats?.lastIndexedAt
+      ? `Indexed ${relativeFreshness(stats.lastIndexedAt)}`
+      : `${protocol.chainIds.length} chains`;
+  const showTvl = externalTvlUsd !== undefined && externalTvlUsd > 0;
 
   // Protocol-colour hover accent — we intensify the tint on hover by upgrading
   // the rgba 0.08 base into a 0.14 halo, purely via CSS.
@@ -419,24 +440,49 @@ function ProtocolCard({
           className="flex items-center gap-4 text-xs pt-3"
           style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}
         >
-          <div>
-            <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
-              {effectiveTotal > 0 ? effectiveTotal.toLocaleString() : "—"}
-            </div>
-            <div style={{ color: "#94a3b8" }}>streams</div>
-          </div>
-          <div>
-            <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
-              {effectiveActive > 0 ? effectiveActive.toLocaleString() : "—"}
-            </div>
-            <div style={{ color: "#94a3b8" }}>active</div>
-          </div>
-          <div>
-            <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
-              {protocol.chainIds.length}
-            </div>
-            <div style={{ color: "#94a3b8" }}>chains</div>
-          </div>
+          {showTvl ? (
+            <>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  {compactUsd(externalTvlUsd!)}
+                </div>
+                <div style={{ color: "#94a3b8" }}>TVL</div>
+              </div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  {protocol.chainIds.length}
+                </div>
+                <div style={{ color: "#94a3b8" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  Live
+                </div>
+                <div style={{ color: "#94a3b8" }}>indexing</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  {effectiveTotal > 0 ? effectiveTotal.toLocaleString() : "—"}
+                </div>
+                <div style={{ color: "#94a3b8" }}>streams</div>
+              </div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  {effectiveActive > 0 ? effectiveActive.toLocaleString() : "—"}
+                </div>
+                <div style={{ color: "#94a3b8" }}>active</div>
+              </div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                  {protocol.chainIds.length}
+                </div>
+                <div style={{ color: "#94a3b8" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Link>
