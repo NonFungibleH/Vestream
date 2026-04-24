@@ -56,10 +56,15 @@ export interface ProtocolMeta {
    * local cache. Set for protocols where we don't run our own seeder (e.g.
    * Streamflow → DefiLlama). When set, the /protocols card displays this
    * source's number with an attribution tag.
+   *
+   * `slug` accepts either a single DefiLlama slug or an array — the array
+   * form is summed at fetch time. Used when DefiLlama splits a protocol
+   * across multiple entries (e.g. UNCX was one entry `uncx-network`, became
+   * `uncx-network-v2` + `uncx-network-v3` — sum them for the combined TVL).
    */
   externalTvl?: {
-    source:   "defillama";
-    slug:     string;      // DefiLlama protocol slug
+    source:    "defillama";
+    slug:      string | readonly string[];
     category?: string;     // Optional filter — "vesting" for Streamflow
   };
 }
@@ -180,7 +185,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["team-finance", "pinksale", "unvest"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "uncx-network" },
+    // DefiLlama split UNCX into two protocol entries in late 2025 — v2
+    // ($138M, legacy TokenVesting contracts) and v3 ($26M, newer
+    // VestingManager). Sum both for the combined TVL; the card still
+    // shows "via DefiLlama" as one entry.
+    externalTvl: { source: "defillama", slug: ["uncx-network-v2", "uncx-network-v3"] },
   },
 
   unvest: {

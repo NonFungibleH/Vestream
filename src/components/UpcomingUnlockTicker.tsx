@@ -35,10 +35,13 @@ type UpcomingResponse = {
 };
 
 const POLL_MS     = 30_000;
-// Bumped 6 → 10 so the header's "showing next 10" claim is truthful
-// and the right column balances with the /protocols liquidity bar on
-// its left. API is already queried with limit=10 so no extra cost.
-const MAX_VISIBLE = 10;
+// Matches the number of protocol rows rendered on the sibling
+// TvlComparisonBar (9: one per supported protocol). Keeping the two
+// columns on /protocols at equal row counts so they line up visually.
+// API is still queried with limit=10 — we ignore the 10th if all 9
+// protocols are represented in the result; the slice+cap makes this a
+// no-op when the set is smaller.
+const MAX_VISIBLE = 9;
 
 // Protocol colour map matches LiveActivityTicker — keep them in sync or extract.
 const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {

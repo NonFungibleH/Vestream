@@ -130,24 +130,55 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
 /**
  * Fetch TVL for a protocol from DefiLlama.
  *
- * @param slug      DefiLlama protocol slug (lowercase — matches the URL on defillama.com)
- * @param category  Accepted for API compatibility but currently ignored; the
- *                  /protocols endpoint we consume already exposes a
- *                  `chainTvls.vesting` aggregate which we always prefer when
+ * @param slug      DefiLlama protocol slug. Accepts either a single string
+ *                  or an array — arrays are summed. Array form is used when
+ *                  DefiLlama splits one protocol into multiple entries
+ *                  (e.g. UNCX = `uncx-network-v2` + `uncx-network-v3`).
+ * @param category  Accepted for API compatibility but currently ignored;
+ *                  the /protocols endpoint already surfaces a
+ *                  `chainTvls.vesting` aggregate which we prefer when
  *                  present. Left in the signature so call sites on
  *                  protocol-constants.ts don't need to change.
  */
 export async function fetchDefiLlamaTvl(
-  slug:     string,
+  slug:     string | readonly string[],
   _category?: string,
 ): Promise<DefiLlamaTvlSnapshot | null> {
   void _category;
 
   const now = Date.now();
-  if (cache && cache.expiresAt > now) {
-    return cache.bySlug.get(slug) ?? null;
+  const source = cache && cache.expiresAt > now
+    ? cache
+    : await loadAllProtocols();
+
+  // Single-slug path — unchanged behaviour for every call site except UNCX.
+  if (typeof slug === "string") {
+    return source.bySlug.get(slug) ?? null;
   }
 
-  const fresh = await loadAllProtocols();
-  return fresh.bySlug.get(slug) ?? null;
+  // Multi-slug path — sum totals, merge per-chain rows.
+  let totalUsd = 0;
+  const perChainMap = new Map<string, number>();
+  let fetchedAt = new Date().toISOString();
+  let any = false;
+
+  for (const s of slug) {
+    const snap = source.bySlug.get(s);
+    if (!snap) continue;
+    any = true;
+    totalUsd += snap.totalUsd;
+    fetchedAt = snap.fetchedAt; // Any entry's timestamp is fine — same fetch
+    for (const row of snap.perChain) {
+      perChainMap.set(row.chain, (perChainMap.get(row.chain) ?? 0) + row.usd);
+    }
+  }
+
+  if (!any) return null;
+  return {
+    totalUsd,
+    perChain:  Array.from(perChainMap.entries())
+                 .map(([chain, usd]) => ({ chain, usd }))
+                 .sort((a, b) => b.usd - a.usd),
+    fetchedAt,
+  };
 }
