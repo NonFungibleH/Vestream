@@ -3596,9 +3596,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       {/* Logo */}
       <a href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm leading-none">T</span>
-        </div>
+        <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7 flex-shrink-0" />
         <div>
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
@@ -4346,9 +4344,7 @@ export default function Dashboard() {
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : wallets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center mb-2">
-                <span className="text-white font-bold text-2xl">T</span>
-              </div>
+              <img src="/logo-icon.svg" alt="TokenVest" className="w-14 h-14 mb-2" />
               <div>
                 <p className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No wallets tracked yet</p>
                 <p className="text-sm" style={{ color: "var(--preview-text-3)" }}>Add a wallet to start tracking vesting schedules.</p>

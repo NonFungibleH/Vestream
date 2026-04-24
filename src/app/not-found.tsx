@@ -13,10 +13,7 @@ export default function NotFound() {
 
       <div className="relative">
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-          <span className="text-white font-bold text-2xl">T</span>
-        </div>
+        <img src="/logo-icon.svg" alt="TokenVest" className="w-16 h-16 mx-auto mb-6" />
 
         {/* 404 */}
         <p className="text-8xl font-bold mb-2 tabular-nums"

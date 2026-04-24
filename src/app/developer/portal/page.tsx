@@ -44,10 +44,7 @@ export default function DeveloperPortal() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10 justify-center">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-8 h-8" />
           <span className="font-bold text-lg tracking-tight text-white">TokenVest</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md ml-1"
             style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>

@@ -51,10 +51,7 @@ export default async function DeveloperAccount() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(13,15,20,0.95)" }}>
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
           <span className="font-bold text-base tracking-tight text-white">TokenVest</span>
         </Link>
         <div className="flex items-center gap-6">

@@ -665,9 +665,7 @@ export default function Settings() {
         {/* Logo */}
         <Link href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
           style={{ borderBottom: "1px solid var(--preview-border)" }}>
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm leading-none">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7 flex-shrink-0" />
           <div>
             <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
             <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
@@ -1004,7 +1002,10 @@ export default function Settings() {
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl"
                 style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.14)" }}>
-                <span className="text-xl mt-0.5">📱</span>
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Mobile push notifications</p>
                   <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
@@ -1056,12 +1057,20 @@ export default function Settings() {
                     <a href="https://apps.apple.com/app/vestream" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
                       style={{ background: "#000", color: "#fff" }}>
-                      🍎 App Store
+                      {/* Apple logo glyph */}
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                      </svg>
+                      App Store
                     </a>
                     <a href="https://play.google.com/store/apps/details?id=io.vestream" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
                       style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }}>
-                      🤖 Google Play
+                      {/* Google Play triangle glyph */}
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M3 20.5V3.5c0-.35.2-.65.5-.8l10.04 9.3L3.5 21.3c-.3-.15-.5-.45-.5-.8zM14.4 12l2.96 2.96-8.9 5.08 5.94-8.04zm0 0L8.46 3.96l8.9 5.08L14.4 12zM20.5 12c0 .4-.2.8-.6 1.02l-2.2 1.26L14.4 12l3.3-2.28 2.2 1.26c.4.22.6.62.6 1.02z"/>
+                      </svg>
+                      Google Play
                     </a>
                   </div>
                 </div>

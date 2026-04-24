@@ -20,10 +20,7 @@ export default async function Login() {
       <nav className="flex items-center justify-between px-8 h-16 bg-white"
         style={{ borderBottom: "1px solid #e5e7eb" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
           <span className="font-bold text-gray-900">TokenVest</span>
         </Link>
       </nav>
@@ -34,10 +31,7 @@ export default async function Login() {
 
           {/* Heading */}
           <div className="text-center mb-7">
-            <div className="w-12 h-12 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-xl">T</span>
-            </div>
+            <img src="/logo-icon.svg" alt="TokenVest" className="w-12 h-12 mx-auto mb-5" />
             <h1 className="text-xl font-bold text-gray-900 mb-1.5">Welcome to TokenVest</h1>
             <p className="text-sm text-gray-500">
               Sign in to your account or create one — it&apos;s free to start

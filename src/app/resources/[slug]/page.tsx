@@ -355,10 +355,7 @@ export default async function ArticlePage(
           style={{ background: "rgba(248,250,252,0.85)", borderBottom: "1px solid rgba(0,0,0,0.07)", backdropFilter: "blur(12px)" }}
         >
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-sm">T</span>
-            </div>
+            <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
             <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>TokenVest</span>
           </Link>
           <div className="flex items-center gap-5">
@@ -423,10 +420,7 @@ export default async function ArticlePage(
               <span>{article.readingTime}</span>
               <span>·</span>
               <span className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-                  <span className="text-white font-bold text-[8px]">T</span>
-                </div>
+                <img src="/logo-icon.svg" alt="TokenVest" className="w-4 h-4" />
                 TokenVest
               </span>
             </div>
@@ -510,10 +504,7 @@ export default async function ArticlePage(
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <footer className="border-t py-8 px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
           <div className="flex items-center justify-center gap-1.5 mb-3">
-            <div className="w-5 h-5 rounded-md flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-              <span className="text-white font-bold text-xs">T</span>
-            </div>
+            <img src="/logo-icon.svg" alt="TokenVest" className="w-5 h-5" />
             <span className="font-bold text-sm" style={{ color: "#0f172a" }}>TokenVest</span>
           </div>
           <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>

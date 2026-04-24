@@ -104,10 +104,7 @@ export default function EarlyAccessPage() {
         style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 8px 40px rgba(15,23,42,0.08)" }}>
 
         {/* Logo */}
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-          <span className="text-white font-bold text-lg">T</span>
-        </div>
+        <img src="/logo-icon.svg" alt="TokenVest" className="w-10 h-10 mb-5" />
 
         {betaFull ? (
           <>

@@ -171,9 +171,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
       {/* Logo */}
       <Link href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm leading-none">T</span>
-        </div>
+        <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7 flex-shrink-0" />
         <div>
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>

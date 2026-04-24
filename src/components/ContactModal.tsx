@@ -143,12 +143,7 @@ export default function ContactModal({
           <>
             {/* Header */}
             <div className="px-8 pt-8 pb-5" style={{ borderBottom: "1px solid #f1f5f9" }}>
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-              >
-                <span className="text-white font-bold text-sm">T</span>
-              </div>
+              <img src="/logo-icon.svg" alt="TokenVest" className="w-10 h-10 mb-4" />
               <h2 id="contact-modal-title" className="text-xl font-bold mb-1" style={{ color: "#0f172a" }}>
                 Get in touch
               </h2>

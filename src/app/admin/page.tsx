@@ -167,10 +167,7 @@ export default async function AdminPage() {
       <header className="px-8 py-5 flex items-center justify-between"
         style={{ borderBottom: "1px solid #1e2330" }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-8 h-8" />
           <div>
             <span className="font-bold text-base">TokenVest</span>
             <span className="text-xs ml-2 px-2 py-0.5 rounded-md font-semibold"

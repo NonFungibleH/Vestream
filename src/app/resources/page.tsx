@@ -254,10 +254,7 @@ export default function ResourcesPage() {
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="border-t py-8 px-4 md:px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
         <div className="flex items-center justify-center gap-1.5 mb-3">
-          <div className="w-5 h-5 rounded-md flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-xs">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-5 h-5" />
           <span className="font-bold text-sm" style={{ color: "#0f172a" }}>TokenVest</span>
         </div>
         <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>

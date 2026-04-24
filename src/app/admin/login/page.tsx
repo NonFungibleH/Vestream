@@ -28,10 +28,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0f14" }}>
       <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: "#141720", border: "1px solid #1e2330" }}>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-6"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-          <span className="text-white font-bold text-sm">T</span>
-        </div>
+        <img src="/logo-icon.svg" alt="TokenVest" className="w-10 h-10 mb-6" />
         <h1 className="font-bold text-lg mb-1" style={{ color: "white" }}>Admin access</h1>
         <p className="text-sm mb-6" style={{ color: "#4b5563" }}>TokenVest internal dashboard</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

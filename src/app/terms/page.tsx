@@ -9,10 +9,7 @@ export default function Terms() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
-            <span className="text-white font-bold text-sm">T</span>
-          </div>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
           <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>TokenVest</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>

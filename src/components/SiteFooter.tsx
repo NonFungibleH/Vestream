@@ -180,12 +180,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
           {/* Brand stack */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity w-fit">
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-              >
-                <span className="text-white font-bold text-sm">T</span>
-              </div>
+              <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
               <span className="font-semibold text-base" style={{ color: palette.brandName }}>
                 TokenVest
               </span>
