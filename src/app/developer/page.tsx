@@ -1,7 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ApiAccessForm } from "@/components/ApiAccessForm";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+
+// OpenGraph metadata — was missing from this page entirely (the /ai page
+// has it, /developer slipped through). Adds LinkedIn/Twitter/Slack unfurl
+// consistency with the rest of the site.
+export const metadata: Metadata = {
+  title: "Developer API — TokenVest",
+  description:
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale on four chains. Normalised JSON, agent-native, ready in minutes.",
+  alternates: { canonical: "https://vestream.io/developer" },
+  openGraph: {
+    title: "Developer API — TokenVest",
+    description:
+      "REST + MCP for 7 vesting protocols across 4 chains. Normalised JSON, agent-native.",
+    url: "https://vestream.io/developer",
+    siteName: "TokenVest",
+    type: "website",
+  },
+};
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
@@ -76,7 +95,7 @@ export default function DeveloperPage() {
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
               { value: "7",     label: "Protocols indexed" },
-              { value: "5",     label: "EVM chains" },
+              { value: "4",     label: "EVM chains" },
               { value: "3",     label: "API endpoints" },
               { value: "JSON",  label: "Normalised output" },
               { value: "MCP",   label: "Agent-native" },
@@ -451,7 +470,7 @@ export default function DeveloperPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Free */}
             <div className="rounded-2xl p-8"
               style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -462,7 +481,7 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For builders and prototyping</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["1,000 API requests / month", "All 3 endpoints", "5 protocols indexed", "Standard JSON responses", "Community support"].map(f => (
+                {["30 req/min burst · 150/day", "All 3 endpoints", "7 protocols indexed", "Standard JSON responses", "Community support"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
@@ -480,18 +499,23 @@ export default function DeveloperPage() {
             <div className="rounded-2xl p-8 relative"
               style={{ background: "#0a1628", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="text-xs font-bold px-3 py-1 rounded-full"
+                <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
                   Most popular
                 </span>
               </div>
               <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#60a5fa" }}>Pro</div>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>$14.99</span>
+                <span className="text-sm" style={{ color: "#4b5563" }}>/month</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mt-2 mb-5"
+                style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", color: "#34d399" }}>
+                14-day free trial
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For production applications</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["100,000+ API requests / month", "All 3 endpoints", "5 protocols · 6 chains", "Priority response SLA", "Dedicated support", "Custom rate limits on request", "Early access to new endpoints"].map(f => (
+                {["5,000 requests / day", "All 3 endpoints", "7 protocols · 4 chains", "Priority response SLA", "Email support", "Early access to new endpoints"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
@@ -503,6 +527,30 @@ export default function DeveloperPage() {
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}>
                 Request Pro Access
               </a>
+            </div>
+
+            {/* Enterprise — new tier card, matches the pricing reality of
+                three public tiers (was previously Free + Pro only). */}
+            <div className="rounded-2xl p-8"
+              style={{ background: "#0a1628", border: "1px solid rgba(99,102,241,0.3)" }}>
+              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#a5b4fc" }}>Enterprise</div>
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
+              </div>
+              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For funds, teams &amp; builders at scale</p>
+              <ul className="flex flex-col gap-3 mb-8">
+                {["Custom rate limits", "All 3 endpoints", "7 protocols · 4 chains", "Dedicated SLA", "Slack / Telegram support", "Team workspace + SSO", "Bespoke endpoint additions"].map(f => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check />
+                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/contact?subject=enterprise-api"
+                className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
+                style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.4)", color: "#a5b4fc" }}>
+                Contact sales
+              </Link>
             </div>
           </div>
         </div>

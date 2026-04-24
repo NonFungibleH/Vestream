@@ -193,7 +193,7 @@ export default function AiPage() {
             params={[
               { name: "address", type: "string", required: true,  desc: "EVM wallet in 0x format" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, uncx, hedgey, team-finance, unvest, superfluid, pinksale" },
-              { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 8453 (Base)" },
+              { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base)" },
               { name: "active_only", type: "boolean", required: false, desc: "Only return streams not yet fully vested" },
             ]}
             example={`get_wallet_vestings({
@@ -278,7 +278,7 @@ export default function AiPage() {
               <Code>{`{
   "unlocks": [
     {
-      "date": "2025-04-02",
+      "date": "2026-05-02",
       "token": "NOVA",
       "amount_usd": 18420.00,
       "protocol": "sablier",
@@ -286,7 +286,7 @@ export default function AiPage() {
       "type": "cliff"
     },
     {
-      "date": "2025-04-08",
+      "date": "2026-05-08",
       "token": "FLUX",
       "amount_usd": 4210.50,
       "protocol": "hedgey",
