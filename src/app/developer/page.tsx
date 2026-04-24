@@ -470,7 +470,12 @@ export default function DeveloperPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Two tiers: Free (self-serve) + Paid (contact for pricing). The
+              developer API doesn't have a public price yet — we're working
+              with early partners to shape it. The consumer-app $14.99 price
+              on the homepage is for retail investors, not for API builders;
+              don't conflate them. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Free */}
             <div className="rounded-2xl p-8"
               style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -495,60 +500,44 @@ export default function DeveloperPage() {
               </a>
             </div>
 
-            {/* Pro */}
+            {/* Paid — contact-for-pricing. Combines what the earlier draft
+                split into Pro + Enterprise: there's one real commercial
+                conversation until we publish a rate card. */}
             <div className="rounded-2xl p-8 relative"
               style={{ background: "#0a1628", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
-                  Most popular
+                  For production
                 </span>
               </div>
               <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#60a5fa" }}>Pro</div>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>$14.99</span>
-                <span className="text-sm" style={{ color: "#4b5563" }}>/month</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Contact</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mt-2 mb-5"
-                style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", color: "#34d399" }}>
-                14-day free trial
-              </div>
-              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For production applications</p>
+              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Higher limits, priority support, and custom shapes for teams
+                shipping production apps or agents on TokenVest data.
+              </p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["5,000 requests / day", "All 3 endpoints", "7 protocols · 4 chains", "Priority response SLA", "Email support", "Early access to new endpoints"].map(f => (
+                {[
+                  "Higher rate limits (scoped to your use case)",
+                  "All 3 endpoints + early access to new ones",
+                  "7 protocols · 4 chains",
+                  "Priority response SLA",
+                  "Dedicated Slack / Telegram channel",
+                  "Team workspace + SSO (on request)",
+                  "Bespoke endpoint additions",
+                ].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
                   </li>
                 ))}
               </ul>
-              <a href="#request-access"
+              <Link href="/contact?subject=pro-api"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}>
-                Request Pro Access
-              </a>
-            </div>
-
-            {/* Enterprise — new tier card, matches the pricing reality of
-                three public tiers (was previously Free + Pro only). */}
-            <div className="rounded-2xl p-8"
-              style={{ background: "#0a1628", border: "1px solid rgba(99,102,241,0.3)" }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#a5b4fc" }}>Enterprise</div>
-              <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
-              </div>
-              <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For funds, teams &amp; builders at scale</p>
-              <ul className="flex flex-col gap-3 mb-8">
-                {["Custom rate limits", "All 3 endpoints", "7 protocols · 4 chains", "Dedicated SLA", "Slack / Telegram support", "Team workspace + SSO", "Bespoke endpoint additions"].map(f => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <Check />
-                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/contact?subject=enterprise-api"
-                className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.4)", color: "#a5b4fc" }}>
                 Contact sales
               </Link>
             </div>
