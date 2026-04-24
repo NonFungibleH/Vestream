@@ -3671,29 +3671,32 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       {/* Footer — tier badge */}
       <div className="px-3 pb-3 flex-shrink-0 space-y-2" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
 
-        {/* Fund plan badge */}
+        {/* Enterprise plan badge (internal tier name "fund" stays in the
+            DB for backward compat; UI displays "Enterprise" per the
+            pricing page). */}
         {tier === "fund" && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
             style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.10))", border: "1px solid rgba(99,102,241,0.25)" }}>
             <span className="text-[10px]">✦</span>
             <div>
-              <p className="text-[10px] font-bold" style={{ color: "#a78bfa" }}>Fund Plan</p>
+              <p className="text-[10px] font-bold" style={{ color: "#a78bfa" }}>Enterprise</p>
               <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited wallets · all features</p>
             </div>
           </div>
         )}
 
-        {/* Pro plan badge (beta version — shows Beta Access branding) */}
+        {/* Pro plan badge — previously said "5 wallets" but the real cap
+            (enforced server-side + on /pricing) is 3. */}
         {tier === "pro" && (
           <div className="px-3 py-2.5 rounded-xl"
             style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(124,58,237,0.2)" }}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Beta Access</span>
+              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>BETA</span>
+                style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>PRO</span>
             </div>
             <p className="text-[9px] mb-2.5" style={{ color: "var(--preview-text-3)" }}>
-              Pro features · 5 wallets · all chains
+              3 wallets · all chains · unlimited alerts
             </p>
             <button
               onClick={onFeedback}
@@ -3704,7 +3707,12 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           </div>
         )}
 
-        {/* Free plan badge */}
+        {/* Free plan badge — previously claimed "1 chain · no alerts"
+            which is wrong on both counts (Free auto-scans all 4 chains
+            AND gets 3 lifetime push alerts per /pricing). Progress bar
+            also used red (read-as-error) at cap; switched to amber
+            ("you're at plan limit") to stop the Free UI feeling broken
+            after adding one wallet. */}
         {tier === "free" && (
           <div className="px-3 py-2.5 rounded-xl"
             style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
@@ -3718,11 +3726,11 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               <div className="h-1 rounded-full transition-all"
                 style={{
                   width: `${Math.min(100, wallets.length * 100)}%`,
-                  background: wallets.length >= 1 ? "#ef4444" : "linear-gradient(90deg, #2563eb, #7c3aed)",
+                  background: wallets.length >= 1 ? "#f59e0b" : "linear-gradient(90deg, #2563eb, #7c3aed)",
                 }} />
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              {wallets.length}/1 wallet · 1 chain · no alerts
+              {wallets.length}/1 wallet · all chains · 3 lifetime alerts
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
@@ -4076,9 +4084,14 @@ export default function Dashboard() {
                   {/* CSV download */}
                   <button
                     onClick={() => {
-                      if (tier !== "fund") {
+                      // CSV + PDF export are Pro+ features per /pricing.
+                      // Previously this required "fund" (Enterprise) which
+                      // would bounce every Pro user to an unnecessary
+                      // upsell — a direct contradiction of what the
+                      // landing page promises.
+                      if (tier === "free") {
                         setExportOpen(false);
-                        setUpsell({ featureName: "CSV Export", requiredTier: "fund" });
+                        setUpsell({ featureName: "CSV Export", requiredTier: "pro" });
                         return;
                       }
                       setExportOpen(false);
@@ -4162,9 +4175,11 @@ export default function Dashboard() {
                   {/* Save as PDF */}
                   <button
                     onClick={() => {
-                      if (tier !== "fund") {
+                      // Same note as CSV export — Pro+ per /pricing,
+                      // never Enterprise-only.
+                      if (tier === "free") {
                         setExportOpen(false);
-                        setUpsell({ featureName: "PDF Report", requiredTier: "fund" });
+                        setUpsell({ featureName: "PDF Report", requiredTier: "pro" });
                         return;
                       }
                       setExportOpen(false);

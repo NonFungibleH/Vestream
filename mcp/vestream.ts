@@ -59,20 +59,21 @@ const server = new McpServer({
 server.tool(
   "get_wallet_vestings",
   "Get all token vesting streams for an EVM wallet address across all supported " +
-  "protocols (Sablier, UNCX, Hedgey, Team Finance, Unvest) and chains (Ethereum, " +
-  "BSC, Base). Returns normalised stream data: token, amounts locked/claimable/" +
-  "withdrawn, schedule dates, cliff time, next unlock, and claim history.",
+  "protocols (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale) " +
+  "and chains (Ethereum, BSC, Polygon, Base). Returns normalised stream data: " +
+  "token, amounts locked/claimable/withdrawn, schedule dates, cliff time, next " +
+  "unlock, and claim history.",
   {
     address: z.string().describe(
       "EVM wallet address in 0x format, e.g. '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'"
     ),
     protocol: z.string().optional().describe(
       "Comma-separated protocol filter, e.g. 'sablier,uncx'. " +
-      "Valid values: sablier, uncx, hedgey, team-finance, unvest"
+      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale"
     ),
     chain: z.string().optional().describe(
-      "Comma-separated chain ID filter, e.g. '1,8453'. " +
-      "Supported: 1 (Ethereum), 56 (BSC), 8453 (Base)"
+      "Comma-separated chain ID filter, e.g. '1,137,8453'. " +
+      "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base)"
     ),
     active_only: z.boolean().optional().describe(
       "If true, only return streams that are not yet fully vested (default: false)"
