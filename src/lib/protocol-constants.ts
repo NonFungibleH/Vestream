@@ -156,7 +156,10 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["uncx", "hedgey", "pinksale"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "team-finance" },
+    // No externalTvl: DefiLlama's `team-finance` slug is Token Locker category
+    // — it includes LP locks and general token locks. We compute the
+    // vesting-specific slice ourselves via tvl-walker/team-finance.ts walking
+    // the Squid `vestingFactoryVestings` entity.
   },
 
   uncx: {
@@ -185,11 +188,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["team-finance", "pinksale", "unvest"],
     testimonials: [],
-    // DefiLlama split UNCX into two protocol entries in late 2025 — v2
-    // ($138M, legacy TokenVesting contracts) and v3 ($26M, newer
-    // VestingManager). Sum both for the combined TVL; the card still
-    // shows "via DefiLlama" as one entry.
-    externalTvl: { source: "defillama", slug: ["uncx-network-v2", "uncx-network-v3"] },
+    // No externalTvl: DefiLlama's `uncx-network-v2` + `-v3` entries are
+    // Token Locker category — includes LP locks (the majority of UNCX's TVL
+    // is actually LP-locked, not vesting). We compute the vesting-only
+    // slice ourselves via tvl-walker/uncx.ts (TokenVesting V3 subgraph) +
+    // tvl-walker/uncx-vm.ts (VestingManager contract events).
   },
 
   unvest: {
@@ -246,7 +249,10 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "hedgey", "unvest"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "superfluid" },
+    // No externalTvl: DefiLlama's `superfluid` entry is Payments category
+    // and its ~$5M total is dominated by streaming + subscriptions, not
+    // vesting. We compute the vesting-only slice ourselves via
+    // tvl-walker/superfluid.ts walking the VestingScheduler subgraph.
   },
 
   pinksale: {
@@ -275,7 +281,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["uncx", "team-finance", "hedgey"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "pinksale" },
+    // No externalTvl: DefiLlama's `pinksale` entry is Launchpad category and
+    // its ~$157M includes active sales + LP locks on top of PinkLock V2's
+    // vesting. We compute the vesting-only slice ourselves via
+    // tvl-walker/pinksale.ts (LockAdded event scan → normalLocksForUser
+    // contract multicall).
   },
 
   streamflow: {
@@ -284,7 +294,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Streamflow",
     tagline: "Solana's #1 vesting protocol",
     description:
-      "Streamflow is the dominant token-vesting protocol on Solana — historically $2.5B+ in TVL across 25,000+ projects and 1.3M+ users. TokenVest indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
+      "Streamflow is the dominant token-vesting protocol on Solana — the go-to rail for SPL token launches, team vesting and investor unlocks. TokenVest indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
     color: "#14f195",         // Solana green
     bg:    "rgba(20,241,149,0.08)",
     border:"rgba(20,241,149,0.24)",

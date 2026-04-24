@@ -139,8 +139,8 @@ export default function AiPage() {
           {/* Stats strip */}
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
-              { value: "7",      label: "Protocols indexed" },
-              { value: "4",      label: "EVM chains"        },
+              { value: "9",      label: "Protocols indexed" },
+              { value: "5",      label: "Chains (EVM+SVM)"  },
               { value: "3",      label: "MCP tools"         },
               { value: "MCP",    label: "Native support"    },
               { value: "REST",   label: "API available"     },
