@@ -61,6 +61,12 @@ const LINK_GROUPS = [
     ],
   },
   {
+    heading: "Corporate",
+    links: [
+      { label: "Token Payroll", href: "/corporate/token-payroll" },
+    ],
+  },
+  {
     heading: "Developers",
     links: [
       { label: "Developer API", href: "/developer" },
@@ -211,7 +217,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
           </div>
 
           {/* Link columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-10 gap-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
             {LINK_GROUPS.map((group) => (
               <div key={group.heading} className="flex flex-col gap-3 min-w-[6.5rem]">
                 <h3
