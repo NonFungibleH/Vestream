@@ -103,7 +103,29 @@ const SUPERFLUID_URLS: Partial<Record<SupportedChainId, string>> = {
 // adapter's fetch() method. This keeps the seeder stateless: it doesn't
 // attempt to reproduce any adapter's math or schema interpretation.
 
-const SEED_LIMIT = 200;  // recipients per (adapter, chain) per run
+// Seed limits — per (adapter, chain) per run.
+//
+//   SEED_LIMIT       — default "incremental" cron run. Bumped 200→500 after
+//                      the April 2026 coverage audit revealed UNCX/Team
+//                      Finance TVL was understated by 2+ orders of magnitude
+//                      because 200 sampled wallets caught almost none of the
+//                      mainstream high-liquidity vestings on either protocol.
+//                      500 gives us 5× the coverage at similar runtime
+//                      because the adapter fetch step batches 50 recipients
+//                      per query (so ~10 batches vs ~4 before — still well
+//                      inside the 300s maxDuration).
+//
+//   DEEP_SEED_LIMIT  — opt-in "deep" pass invoked from /api/cron/seed-cache
+//                      with ?mode=deep. Paginates through subgraph `skip`
+//                      up to 5000 recipients per (adapter, chain). Meant to
+//                      be run manually or via a separate weekly cron — not
+//                      the daily incremental path.
+const SEED_LIMIT      = 500;
+const DEEP_SEED_LIMIT = 5000;
+
+// Subgraph single-query cap. Most The Graph deployments enforce
+// first ≤ 1000; Envio (Sablier) supports higher but 1000 is a safe universal.
+const PAGE_SIZE = 1000;
 
 /**
  * POST a GraphQL query against `url`. Logs enough per-failure context that
@@ -149,90 +171,144 @@ async function postGraph<T>(
   }
 }
 
+// ─── Pagination helper ──────────────────────────────────────────────────────
+//
+// Most The Graph subgraphs cap `first` at 1000 and `skip` at 5000. Rather
+// than duplicate pagination across every discover fn, `paginateDiscover`
+// iterates pages until it hits the requested limit OR the subgraph returns
+// a short/empty page. Each page calls the adapter-specific `fetchPage(first,
+// skip)` closure, which returns an array of addresses for that slice.
+//
+// For incremental mode (limit=500) this runs one page. For deep mode
+// (limit=5000) it runs up to 5 pages, which is the subgraph skip ceiling
+// — going beyond that requires cursor-based pagination per-adapter which
+// we defer until we see a concrete need.
+
+async function paginateDiscover(
+  limit:     number,
+  fetchPage: (first: number, skip: number) => Promise<string[]>,
+): Promise<string[]> {
+  const out: string[] = [];
+  let skip = 0;
+  while (out.length < limit) {
+    const want = Math.min(PAGE_SIZE, limit - out.length);
+    let page: string[];
+    try {
+      page = await fetchPage(want, skip);
+    } catch (err) {
+      console.error(`[seeder:paginate] page at skip=${skip} threw:`, err);
+      break;
+    }
+    if (page.length === 0) break;
+    out.push(...page);
+    skip += page.length;
+    // If the subgraph returned fewer than we asked, we've hit the end
+    if (page.length < want) break;
+  }
+  return out;
+}
+
 /**
  * Sablier discovery — Envio/Hasura schema. Entity is `LockupStream`, filter
  * syntax is `{ _eq, _in }`, order is `order_by: {field: desc}`, chainId is
  * filtered inside the query (one endpoint for every chain).
  *
- * If this returns zero, the fallback (no canceled filter) is dropped — in
- * the old subgraph that fallback existed to detect schema drift on the
- * `canceled` field, but under Envio the canceled column is stable and a
- * zero result really does mean "no recent streams on this chain".
+ * Envio does not enforce the 5000-skip ceiling that The Graph does, so
+ * Sablier deep-seeds can in principle page beyond — but we still cap at
+ * DEEP_SEED_LIMIT so the job stays bounded.
  */
-async function discoverSablierRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverSablierRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `sablier/${chainId}`;
   const query = `
-    query SeedSablier($first: Int!, $chainId: numeric!) {
+    query SeedSablier($first: Int!, $skip: Int!, $chainId: numeric!) {
       LockupStream(
         where: {
           chainId:  { _eq: $chainId }
           canceled: { _eq: false }
         }
         order_by: { startTime: desc }
-        limit: $first
+        limit:  $first
+        offset: $skip
       ) {
         recipient
       }
     }
   `;
-  const data = await postGraph<{ LockupStream?: Array<{ recipient: string }> }>(
-    SABLIER_ENVIO_URL,
-    query,
-    { first: SEED_LIMIT, chainId },
-    tag,
-  );
-  return dedupeAddresses((data?.LockupStream ?? []).map((s) => s.recipient));
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ LockupStream?: Array<{ recipient: string }> }>(
+      SABLIER_ENVIO_URL, query, { first, skip, chainId }, tag,
+    );
+    return (data?.LockupStream ?? []).map((s) => s.recipient);
+  });
+  return dedupeAddresses(all);
 }
 
 /** UNCX locks schema — owner.id is the recipient. Sort by lockDate desc for recent. */
-async function discoverUncxRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverUncxRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const url = UNCX_URLS[chainId];
   if (!url) return [];
   const query = `
-    query SeedUncx($first: Int!) {
-      locks(orderBy: lockDate, orderDirection: desc, first: $first) {
+    query SeedUncx($first: Int!, $skip: Int!) {
+      locks(orderBy: lockDate, orderDirection: desc, first: $first, skip: $skip) {
         owner { id }
       }
     }
   `;
-  const data = await postGraph<{ locks?: Array<{ owner: { id: string } }> }>(url, query, { first: SEED_LIMIT }, `uncx/${chainId}`);
-  return dedupeAddresses((data?.locks ?? []).map((l) => l.owner.id));
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ locks?: Array<{ owner: { id: string } }> }>(
+      url, query, { first, skip }, `uncx/${chainId}`,
+    );
+    return (data?.locks ?? []).map((l) => l.owner.id);
+  });
+  return dedupeAddresses(all);
 }
 
 /** Unvest HolderBalance schema — user = recipient. */
-async function discoverUnvestRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverUnvestRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const url = UNVEST_URLS[chainId];
   if (!url) return [];
   const query = `
-    query SeedUnvest($first: Int!) {
+    query SeedUnvest($first: Int!, $skip: Int!) {
       holderBalances(
         where: { isRecipient: true }
         orderBy: updatedAt
         orderDirection: desc
         first: $first
+        skip: $skip
       ) { user }
     }
   `;
-  const data = await postGraph<{ holderBalances?: Array<{ user: string }> }>(url, query, { first: SEED_LIMIT }, `unvest/${chainId}`);
-  return dedupeAddresses((data?.holderBalances ?? []).map((h) => h.user));
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ holderBalances?: Array<{ user: string }> }>(
+      url, query, { first, skip }, `unvest/${chainId}`,
+    );
+    return (data?.holderBalances ?? []).map((h) => h.user);
+  });
+  return dedupeAddresses(all);
 }
 
 /** Superfluid VestingScheduler — receiver is the recipient. */
-async function discoverSuperfluidRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverSuperfluidRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const url = SUPERFLUID_URLS[chainId];
   if (!url) return [];
   const query = `
-    query SeedSuperfluid($first: Int!) {
+    query SeedSuperfluid($first: Int!, $skip: Int!) {
       vestingSchedules(
         where: { deletedAt: null }
         orderBy: startDate
         orderDirection: desc
         first: $first
+        skip: $skip
       ) { receiver }
     }
   `;
-  const data = await postGraph<{ vestingSchedules?: Array<{ receiver: string }> }>(url, query, { first: SEED_LIMIT }, `superfluid/${chainId}`);
-  return dedupeAddresses((data?.vestingSchedules ?? []).map((v) => v.receiver));
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ vestingSchedules?: Array<{ receiver: string }> }>(
+      url, query, { first, skip }, `superfluid/${chainId}`,
+    );
+    return (data?.vestingSchedules ?? []).map((v) => v.receiver);
+  });
+  return dedupeAddresses(all);
 }
 
 // ─── Team Finance discovery (Squid, not The Graph) ──────────────────────────
@@ -247,23 +323,26 @@ async function discoverSuperfluidRecipients(chainId: SupportedChainId): Promise<
 
 const TEAM_FINANCE_SQUID = "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
 
-async function discoverTeamFinanceRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverTeamFinanceRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+  // Squid supports offset/limit pagination with standard semantics; we can
+  // iterate the same way as the subgraph discoverers.
   const query = `
-    query SeedTeamFinance($chainId: Int!, $first: Int!) {
+    query SeedTeamFinance($chainId: Int!, $first: Int!, $skip: Int!) {
       vestingClaims(
         where: { chainId_eq: $chainId }
         orderBy: timestamp_DESC
-        limit: $first
+        limit:  $first
+        offset: $skip
       ) { account }
     }
   `;
-  const data = await postGraph<{ vestingClaims?: Array<{ account: string }> }>(
-    TEAM_FINANCE_SQUID,
-    query,
-    { chainId, first: SEED_LIMIT },
-    `team-finance/${chainId}`,
-  );
-  const recipients = dedupeAddresses((data?.vestingClaims ?? []).map((v) => v.account));
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ vestingClaims?: Array<{ account: string }> }>(
+      TEAM_FINANCE_SQUID, query, { chainId, first, skip }, `team-finance/${chainId}`,
+    );
+    return (data?.vestingClaims ?? []).map((v) => v.account);
+  });
+  const recipients = dedupeAddresses(all);
 
   // Team Finance's Squid indexer has no Base data as of writing — verified
   // directly against the endpoint. ETH/BSC/Polygon have tens of thousands
@@ -339,7 +418,7 @@ const HEDGEY_ENUMERABLE_ABI = [
     inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }] },
 ] as const;
 
-async function discoverHedgeyRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
   const rpcUrl   = getRpcUrl(chainId);
   if (!contract || !rpcUrl) {
@@ -365,10 +444,10 @@ async function discoverHedgeyRecipients(chainId: SupportedChainId): Promise<stri
       return [];
     }
 
-    // Slot range [start, N) — newest SEED_LIMIT entries (or all of them if
-    // the contract has fewer than SEED_LIMIT plans outstanding).
+    // Slot range [start, N) — newest `limit` entries (or all of them if
+    // the contract has fewer than `limit` plans outstanding).
     const N     = Number(totalSupply);
-    const start = Math.max(0, N - SEED_LIMIT);
+    const start = Math.max(0, N - limit);
     const indices: number[] = [];
     for (let i = start; i < N; i++) indices.push(i);
 
@@ -414,19 +493,109 @@ async function discoverHedgeyRecipients(chainId: SupportedChainId): Promise<stri
   }
 }
 
-/**
- * PinkSale discovery — reads from the curated wallet list in seed-wallets.ts.
- * Kept as a static list because PinkLock V2's event signatures haven't been
- * fully mapped into the seeder yet, and guessing them risks sending garbage
- * addresses into adapter.fetch() (which silently returns [] for non-locks
- * but wastes RPC budget).
- */
-async function discoverPinksaleRecipients(chainId: SupportedChainId): Promise<string[]> {
-  const wallets = PINKSALE_SEED_WALLETS[chainId] ?? [];
-  if (wallets.length === 0) {
-    console.log(`[seeder:pinksale/${chainId}] curated wallet list empty; protocol card will show 'no data' until populated`);
+// ─── PinkSale discovery (on-chain event scan) ──────────────────────────────
+//
+// PinkLock V2 has no subgraph. Prior to this commit the seeder relied on a
+// hand-curated wallet list (seed-wallets.ts) which shipped empty at launch
+// and required ops to add wallets manually — the /protocols card for
+// PinkSale consequently read "no data" indefinitely.
+//
+// Replaced with a proper event scan mirroring the uncx-vm approach:
+//   - LockAdded(uint256 indexed id, address token, address indexed owner, uint256 amount, uint256 unlockDate)
+//   - topic[0] = signature hash (precomputed below from viem keccak256)
+//   - topic[2] = owner (the indexed address we care about)
+// Scan the last PINKSALE_WINDOW blocks in PINKSALE_CHUNK-sized requests,
+// parallelised 10 at a time.
+//
+// The curated list in seed-wallets.ts is UNIONed in as a safety net — if
+// event discovery throws or returns zero (RPC outage, topic hash drift, a
+// fresh deploy with no locks yet), we still seed whatever ops has
+// hand-populated. Zero cost if the list is empty (the default).
+
+const PINKSALE_CONTRACTS_SEEDER: Partial<Record<SupportedChainId, `0x${string}`>> = {
+  [CHAIN_IDS.ETHEREUM]: "0x33d4cc8716beb13f814f538ad3b2de3b036f5e2a",
+  [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
+  [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
+  [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
+};
+
+// keccak256("LockAdded(uint256,address,address,uint256,uint256)")
+const PINKSALE_LOCK_ADDED_TOPIC =
+  "0x694af1cc8727cdd0afbdd53d9b87b69248bd490224e9dd090e788546506e076f" as Hex;
+
+const PINKSALE_CHUNK  = 49_999n;   // PublicNode caps eth_getLogs at 50k blocks
+const PINKSALE_WINDOW = 2_000_000n; // ~10 months ETH, ~6 weeks BSC, ~6 weeks Polygon, ~45 days Base
+
+async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+  const contract = PINKSALE_CONTRACTS_SEEDER[chainId];
+  const rpcUrl   = getRpcUrl(chainId);
+  const chain    = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
+  const tag      = `pinksale/${chainId}`;
+
+  // Safety-net list (usually empty; populated by ops for emergencies).
+  const curated = PINKSALE_SEED_WALLETS[chainId] ?? [];
+  // `limit` is used to cap the returned set after dedupe, not the scan window
+  // (PinkLock volume is too high to size the window off a recipient count).
+
+  if (!contract || !rpcUrl || !chain) {
+    console.log(`[seeder:${tag}] no contract / RPC / chain config; falling back to curated list (${curated.length})`);
+    return dedupeAddresses(curated);
   }
-  return dedupeAddresses(wallets);
+
+  let eventRecipients: string[] = [];
+  try {
+    const client      = createPublicClient({ chain, transport: http(rpcUrl) });
+    const latestBlock = await client.getBlockNumber();
+    const fromBlock   = latestBlock > PINKSALE_WINDOW ? latestBlock - PINKSALE_WINDOW : 0n;
+
+    // Build 50k-block chunks.
+    const chunks: Array<{ from: bigint; to: bigint }> = [];
+    for (let from = fromBlock; from <= latestBlock; from += PINKSALE_CHUNK + 1n) {
+      chunks.push({ from, to: from + PINKSALE_CHUNK > latestBlock ? latestBlock : from + PINKSALE_CHUNK });
+    }
+
+    // Parallel batches of 10 — matches uncx-vm.
+    const BATCH = 10;
+    const rawLogs: Array<{ topics: readonly (Hex | null | undefined)[] }> = [];
+    for (let i = 0; i < chunks.length; i += BATCH) {
+      const batch   = chunks.slice(i, i + BATCH);
+      const results = await Promise.allSettled(
+        batch.map(({ from, to }) =>
+          client.getLogs({
+            address:   contract,
+            event:     undefined,
+            args:      undefined,
+            fromBlock: from,
+            toBlock:   to,
+          }).then((logs) =>
+            logs.filter((l) => l.topics[0] === PINKSALE_LOCK_ADDED_TOPIC),
+          ),
+        ),
+      );
+      for (const r of results) {
+        if (r.status === "fulfilled") rawLogs.push(...r.value);
+        else                          console.error(`[seeder:${tag}] chunk error:`, r.reason);
+      }
+    }
+
+    // topic[2] = owner (indexed address, left-padded to 32 bytes).
+    for (const log of rawLogs) {
+      const t2 = log.topics[2];
+      if (typeof t2 === "string" && t2.length === 66) {
+        eventRecipients.push(`0x${t2.slice(26)}`);
+      }
+    }
+
+    console.log(`[seeder:${tag}] scanned ${chunks.length} chunks (blocks ${fromBlock}..${latestBlock}), ${rawLogs.length} LockAdded → ${eventRecipients.length} raw owners`);
+  } catch (err) {
+    console.error(`[seeder:${tag}] event scan failed; falling back to curated list:`, err);
+    eventRecipients = [];
+  }
+
+  // Union event scan + curated safety-net list. dedupeAddresses handles
+  // case-normalisation, so overlap is harmless. Cap at `limit` so the deep
+  // cron can ask for a bigger sweep than the daily pass.
+  return dedupeAddresses([...eventRecipients, ...curated]).slice(0, limit);
 }
 
 // ─── UNCX VestingManager discovery (on-chain event scan, no filter) ─────────
@@ -458,7 +627,7 @@ const UNCX_VM_VESTING_CREATED_TOPIC =
 const UNCX_VM_CHUNK  = 49_999n;  // PublicNode caps eth_getLogs at 50k blocks
 const UNCX_VM_WINDOW = 500_000n; // ~69 days ETH, ~11 days BSC, ~11 days Base
 
-async function discoverUncxVmRecipients(chainId: SupportedChainId): Promise<string[]> {
+async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const config = UNCX_VM_CONFIG[chainId];
   const rpcUrl = getRpcUrl(chainId);
   const chain  = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
@@ -517,7 +686,7 @@ async function discoverUncxVmRecipients(chainId: SupportedChainId): Promise<stri
       }
     }
 
-    const recipients = dedupeAddresses(beneficiaries).slice(0, SEED_LIMIT);
+    const recipients = dedupeAddresses(beneficiaries).slice(0, limit);
     console.log(`[seeder:${tag}] scanned ${chunks.length} chunks (blocks ${fromBlock}..${latestBlock}), ${rawLogs.length} VestingCreated → ${recipients.length} unique recipients`);
     return recipients;
   } catch (err) {
@@ -544,8 +713,14 @@ function dedupeAddresses(addresses: string[]): string[] {
 export interface SeedJob {
   adapterId: string;
   chainId:   SupportedChainId;
-  /** Discovery fn — produces recipients for this (adapter, chain) pair. */
-  discover:  (chainId: SupportedChainId) => Promise<string[]>;
+  /** Discovery fn — produces up to `limit` recipients for this (adapter, chain) pair. */
+  discover:  (chainId: SupportedChainId, limit: number) => Promise<string[]>;
+}
+
+export type SeedMode = "incremental" | "deep";
+
+function limitFor(mode: SeedMode): number {
+  return mode === "deep" ? DEEP_SEED_LIMIT : SEED_LIMIT;
 }
 
 export interface SeedRunResult {
@@ -642,7 +817,7 @@ function emptyResult(job: SeedJob, error?: string): SeedRunResult {
   };
 }
 
-async function runJob(job: SeedJob): Promise<SeedRunResult> {
+async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   const tag = `${job.adapterId}/${job.chainId}`;
   const adapter = ADAPTER_REGISTRY.find((a) => a.id === job.adapterId);
   if (!adapter) {
@@ -652,7 +827,7 @@ async function runJob(job: SeedJob): Promise<SeedRunResult> {
 
   let recipients: string[];
   try {
-    recipients = await job.discover(job.chainId);
+    recipients = await job.discover(job.chainId, limit);
   } catch (err) {
     console.error(`[seeder:${tag}] discover threw:`, err);
     return emptyResult(job, `discover: ${String(err)}`);
@@ -718,13 +893,22 @@ async function runJob(job: SeedJob): Promise<SeedRunResult> {
 /**
  * Seed the cache across every (adapter, chain) pair. Runs jobs in parallel,
  * three at a time, to avoid hammering the subgraph gateway.
+ *
+ * `mode`:
+ *   - `"incremental"` (default) uses SEED_LIMIT recipients per job — the
+ *     daily cron pass. Fast, bounded, under the Vercel 300s maxDuration.
+ *   - `"deep"` uses DEEP_SEED_LIMIT recipients per job — a much thicker
+ *     sweep for filling historical coverage. Expected to take multiple
+ *     minutes; run via the `?mode=deep` query parameter on the cron route
+ *     (manually or via a separate weekly cron), not on every tick.
  */
-export async function seedAll(): Promise<SeedRunResult[]> {
+export async function seedAll(mode: SeedMode = "incremental"): Promise<SeedRunResult[]> {
+  const limit    = limitFor(mode);
   const PARALLEL = 3;
   const results: SeedRunResult[] = [];
   for (let i = 0; i < SEED_JOBS.length; i += PARALLEL) {
     const batch   = SEED_JOBS.slice(i, i + PARALLEL);
-    const batchR  = await Promise.all(batch.map(runJob));
+    const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
   }
   return results;
