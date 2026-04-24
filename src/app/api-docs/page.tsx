@@ -15,13 +15,13 @@ export default function ApiDocsPage() {
         <div className="flex items-center gap-3">
           <span className="text-white font-semibold text-lg">TokenVest</span>
           <span className="text-gray-400 text-sm">API Reference</span>
-          <span className="bg-blue-500/20 text-blue-400 text-xs font-mono px-2 py-0.5 rounded">v1.0</span>
+          <span className="bg-blue-500/20 text-blue-400 text-xs font-mono px-2 py-0.5 rounded">v1.1</span>
         </div>
         <Link
           href="/"
           className="text-gray-400 hover:text-white text-sm transition-colors"
         >
-          ← Back to vestream.io
+          ← Back to TokenVest
         </Link>
       </div>
 

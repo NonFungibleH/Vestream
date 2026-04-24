@@ -1,16 +1,16 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Vestream Vesting Data API",
-    "version": "1.0.0",
-    "description": "Normalised, chain-indexed vesting data across Sablier, UNCX, Hedgey, Unvest, and Team Finance. Built for AI agents, wallets, and developer integrations.\n\n**Authentication:** All endpoints require an API key passed as a Bearer token.\n```\nAuthorization: Bearer vstr_live_...\n```\n\nTo request access: [vestream.io](https://vestream.io)",
+    "title": "TokenVest Vesting Data API",
+    "version": "1.1.0",
+    "description": "Normalised, chain-indexed token vesting data — the same dataset that powers the TokenVest dashboard and the @vestream/mcp MCP server, exposed as a plain REST API for agents, integrations, and back-office tooling.\n\n## What this API is for\nEvery vesting protocol exposes its own subgraph, contract layout, and data shape. Integrating even one of them takes weeks; integrating seven takes a team. This API hides that complexity behind a single cross-protocol, cross-chain normalised schema — so an agent or app can answer questions like \"what unlocks for this wallet in the next 14 days\" or \"what is this stream's claimable balance right now\" in a single call.\n\n## Coverage\n- **Protocols:** Sablier, Hedgey, UNCX (TokenVesting + VestingManager), Unvest, Team Finance, Superfluid, PinkSale (PinkLock V2)\n- **Chains:** Ethereum (1), BNB Chain (56), Polygon (137), Base (8453)\n- **Data shape:** one `VestingStream` schema for all of them — same fields, same units, same ID format\n\n## Authentication\nAll endpoints require an API key passed as a bearer token:\n```\nAuthorization: Bearer vstr_live_...\n```\nKeys are issued per account from `/developer/account` after access is approved. Free-tier keys are capped at 30 req/min burst and 150 req/day; paid-tier keys are scoped per contract.\n\n## Data freshness\nResponses are served from TokenVest's persistent index — not live on-chain queries. The `last_indexed` field on responses tells you how fresh the data is; it typically trails chain tip by under a minute. No endpoint makes direct RPC or subgraph calls at request time.\n\n## Rate limits\nEvery response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. A 429 means you've hit the monthly cap or the burst/daily window for your tier. Back off and retry — or contact us about a higher tier.\n\nRequest a key: [tokenvest.io/developer](https://tokenvest.io/developer)",
     "contact": {
-      "name": "Vestream",
-      "url": "https://vestream.io"
+      "name": "TokenVest",
+      "url": "https://tokenvest.io"
     }
   },
   "servers": [
-    { "url": "https://vestream.io/api/v1", "description": "Production" }
+    { "url": "https://tokenvest.io/api/v1", "description": "Production" }
   ],
   "security": [
     { "BearerAuth": [] }
@@ -21,36 +21,37 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "vstr_live_...",
-        "description": "API key issued by Vestream. Format: vstr_live_{64 hex chars}"
+        "description": "API key issued by TokenVest. Format: `vstr_live_` followed by 64 hex characters. Generate keys from /developer/account once access is approved."
       }
     },
     "schemas": {
       "VestingStream": {
         "type": "object",
-        "description": "A normalised vesting stream, consistent across all supported protocols.",
+        "description": "A single normalised vesting stream. This is the canonical shape every protocol is mapped to — Sablier's per-second linear streams, UNCX's milestone locks, Hedgey's NFT plans, and PinkSale's cycle-based unlocks all come back in this format. Amounts are raw integer strings (not floats — use `tokenDecimals` to format for display). Timestamps are unix seconds.",
         "required": ["id","protocol","chainId","recipient","tokenAddress","tokenSymbol","tokenDecimals","totalAmount","withdrawnAmount","claimableNow","lockedAmount","startTime","endTime","isFullyVested"],
         "properties": {
-          "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID: {protocol}-{chainId}-{nativeId}" },
-          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale"] },
-          "chainId":        { "type": "integer", "example": 1, "description": "EVM chain ID" },
-          "recipient":      { "type": "string",  "example": "0xabc..." },
-          "tokenAddress":   { "type": "string",  "example": "0xdef..." },
-          "tokenSymbol":    { "type": "string",  "example": "UNI" },
-          "tokenDecimals":  { "type": "integer", "example": 18 },
-          "totalAmount":    { "type": "string",  "description": "Total tokens in the stream (raw, 18 decimals)", "example": "1000000000000000000000" },
-          "withdrawnAmount":{ "type": "string",  "description": "Amount already claimed" },
-          "claimableNow":   { "type": "string",  "description": "Amount claimable at the time of last index" },
-          "lockedAmount":   { "type": "string",  "description": "Amount still locked" },
-          "startTime":      { "type": "integer", "description": "Unix timestamp (seconds)" },
-          "endTime":        { "type": "integer", "description": "Unix timestamp (seconds)" },
-          "cliffTime":      { "type": "integer", "nullable": true, "description": "Unix timestamp of cliff, if applicable" },
-          "isFullyVested":  { "type": "boolean" },
-          "nextUnlockTime": { "type": "integer", "nullable": true },
-          "cancelable":     { "type": "boolean", "nullable": true },
-          "shape":          { "type": "string",  "enum": ["linear","steps"], "nullable": true },
+          "id":             { "type": "string",  "example": "sablier-1-12345", "description": "Composite ID in the format `{protocol}-{chainId}-{nativeId}`. Use this with GET /stream/{streamId} to fetch full detail for a single stream. Always lowercase, always URL-safe." },
+          "protocol":       { "type": "string",  "example": "sablier", "enum": ["sablier","uncx","uncx-vm","hedgey","unvest","team-finance","superfluid","pinksale"], "description": "Source protocol. `uncx-vm` is UNCX's VestingManager contract — merged with `uncx` in most product surfaces but kept distinct here for debuggability." },
+          "chainId":        { "type": "integer", "example": 1, "description": "EVM chain ID. Supported: 1 (Ethereum), 56 (BNB Chain), 137 (Polygon), 8453 (Base)." },
+          "recipient":      { "type": "string",  "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Wallet that receives the vesting tokens. Always lowercased hex." },
+          "tokenAddress":   { "type": "string",  "example": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984", "description": "ERC-20 contract address of the token being vested." },
+          "tokenSymbol":    { "type": "string",  "example": "UNI", "description": "Human-readable symbol as reported by the token contract. May be empty if the contract doesn't implement the symbol() view." },
+          "tokenDecimals":  { "type": "integer", "example": 18, "description": "ERC-20 decimals. Divide raw amounts by 10^decimals to get a display amount." },
+          "totalAmount":    { "type": "string",  "description": "Total tokens allocated to this stream, as a raw integer string (e.g. `\"1000000000000000000000\"` for 1000 tokens at 18 decimals). String format because bigint values exceed JavaScript's safe integer range.", "example": "1000000000000000000000" },
+          "withdrawnAmount":{ "type": "string",  "description": "Amount already claimed by the recipient to date (raw integer string)." },
+          "claimableNow":   { "type": "string",  "description": "Amount vested and immediately claimable at the time of the last index. `totalAmount - withdrawnAmount - lockedAmount` gives you this value." },
+          "lockedAmount":   { "type": "string",  "description": "Amount still locked — not yet vested. Goes to 0 when the stream is fully vested." },
+          "startTime":      { "type": "integer", "description": "Stream start (unix seconds). For cliff schedules, vesting doesn't actually begin until `cliffTime`." },
+          "endTime":        { "type": "integer", "description": "Stream end (unix seconds). At this point `lockedAmount` becomes 0 and `isFullyVested` becomes true." },
+          "cliffTime":      { "type": "integer", "nullable": true, "description": "Unix timestamp at which the cliff unlocks (null if the schedule has no cliff). Between `startTime` and `cliffTime`, no tokens are claimable." },
+          "isFullyVested":  { "type": "boolean", "description": "True when `lockedAmount === 0`. `claimableNow` may still be > 0 if the recipient hasn't withdrawn the final tranche yet." },
+          "nextUnlockTime": { "type": "integer", "nullable": true, "description": "Unix timestamp of the next incremental unlock — useful for building alerts. Null when the stream is fully vested or streams continuously (linear schedules return the end time here)." },
+          "cancelable":     { "type": "boolean", "nullable": true, "description": "Whether the stream can be cancelled by the sender. Protocol-specific; null when the protocol doesn't expose this." },
+          "shape":          { "type": "string",  "enum": ["linear","steps"], "nullable": true, "description": "Stream shape. `linear` means continuous per-second vesting (Sablier, Superfluid). `steps` means discrete unlocks at fixed times (UNCX, Team Finance, PinkSale tranched schedules)." },
           "unlockSteps":    {
             "type": "array",
             "nullable": true,
+            "description": "Full ordered list of discrete unlock events for step-shaped schedules — each element has a `timestamp` (unix seconds) and `amount` (raw integer string). Empty/null for linear schedules.",
             "items": {
               "type": "object",
               "properties": {
@@ -62,7 +63,7 @@
           "claimEvents": {
             "type": "array",
             "nullable": true,
-            "description": "Historical claim/withdrawal events (newest first)",
+            "description": "Historical claim / withdrawal transactions, newest first. Useful for computing time-series of claim behaviour. Each event has `timestamp` (unix seconds) and `amount` (raw integer string of tokens claimed).",
             "items": {
               "type": "object",
               "properties": {
@@ -75,24 +76,25 @@
       },
       "Error": {
         "type": "object",
+        "description": "Standard error envelope returned for any non-2xx response.",
         "properties": {
-          "error": { "type": "string" },
-          "docs":  { "type": "string", "example": "https://vestream.io/api-docs" }
+          "error": { "type": "string", "description": "Short machine-readable error slug suitable for branching in client code." },
+          "docs":  { "type": "string", "example": "https://tokenvest.io/api-docs", "description": "Link to the relevant section of these docs." }
         }
       }
     },
     "headers": {
-      "X-RateLimit-Limit":     { "schema": { "type": "integer" }, "description": "Monthly request limit for your key" },
-      "X-RateLimit-Remaining": { "schema": { "type": "integer" }, "description": "Remaining requests this month" },
-      "X-RateLimit-Reset":     { "schema": { "type": "integer" }, "description": "Unix timestamp when the counter resets" }
+      "X-RateLimit-Limit":     { "schema": { "type": "integer" }, "description": "Monthly request quota for your API key." },
+      "X-RateLimit-Remaining": { "schema": { "type": "integer" }, "description": "Remaining requests in the current month." },
+      "X-RateLimit-Reset":     { "schema": { "type": "integer" }, "description": "Unix timestamp at which the monthly counter resets." }
     }
   },
   "paths": {
     "/wallet/{address}/vestings": {
       "get": {
         "operationId": "getWalletVestings",
-        "summary": "Get all vesting streams for a wallet",
-        "description": "Returns all indexed vesting streams for a given wallet address across all supported protocols and chains. Data is served from Vestream's persistent cache — no live on-chain queries.",
+        "summary": "List all vesting streams for a wallet",
+        "description": "Returns every indexed vesting stream where the given wallet is the recipient — across all 7 supported protocols and all 4 chains in a single call. Use this to build portfolio views, power wallet-level dashboards, or answer questions like \"how much of token X is this wallet vesting across Sablier and Hedgey combined?\"\n\nResponses include linear and step-shaped streams, claimed and unclaimed balances, cliff times, and the full `unlockSteps` array for stepped schedules — everything a client needs to render a timeline or compute a forecast without a second call.\n\nCache hint: data is served from TokenVest's index, not from live on-chain queries. The `last_indexed` timestamp tells you how fresh it is; this call does not trigger a fresh subgraph fetch.",
         "tags": ["Wallet"],
         "parameters": [
           {
@@ -100,33 +102,33 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "EVM wallet address (0x...)",
+            "description": "EVM wallet address in 0x-prefixed hex. Case-insensitive — the API lowercases before lookup. Checksum addresses and lowercase both work.",
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "protocol",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated protocol filter",
+            "description": "Comma-separated list of protocol IDs to restrict the scan to. Omit for all protocols. Valid values: `sablier`, `uncx`, `hedgey`, `unvest`, `team-finance`, `superfluid`, `pinksale`.",
             "example": "sablier,uncx"
           },
           {
             "name": "chain",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated chain ID filter",
+            "description": "Comma-separated list of chain IDs. Omit for all supported chains. Valid values: `1` (Ethereum), `56` (BNB Chain), `137` (Polygon), `8453` (Base).",
             "example": "1,8453"
           },
           {
             "name": "active_only",
             "in": "query",
             "schema": { "type": "boolean" },
-            "description": "If true, excludes fully-vested streams"
+            "description": "When true, excludes streams where `isFullyVested === true`. Useful for building live dashboards where you only care about streams still releasing tokens. Default: false (returns all streams including historical/finished ones)."
           }
         ],
         "responses": {
           "200": {
-            "description": "List of vesting streams",
+            "description": "List of vesting streams matching the filters. An empty `streams` array means the wallet has no indexed vestings on the selected protocols/chains — not an error.",
             "headers": {
               "X-RateLimit-Limit":     { "$ref": "#/components/headers/X-RateLimit-Limit" },
               "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
@@ -137,25 +139,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "wallet":       { "type": "string" },
-                    "count":        { "type": "integer" },
-                    "last_indexed": { "type": "string", "format": "date-time", "nullable": true },
-                    "streams":      { "type": "array", "items": { "$ref": "#/components/schemas/VestingStream" } }
+                    "wallet":       { "type": "string", "description": "The wallet address that was queried, lowercased." },
+                    "count":        { "type": "integer", "description": "Number of streams in the response." },
+                    "last_indexed": { "type": "string", "format": "date-time", "nullable": true, "description": "When the backing index was last refreshed for this wallet's protocols. Typically under one minute old." },
+                    "streams":      { "type": "array", "items": { "$ref": "#/components/schemas/VestingStream" }, "description": "Ordered newest-first by `startTime`." }
                   }
                 }
               }
             }
           },
-          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "429": { "description": "Monthly limit exceeded",     "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": { "description": "Missing, malformed, or revoked API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Rate limit exceeded — either the per-minute burst, per-day, or monthly quota for your tier.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/wallet/{address}/upcoming-unlocks": {
       "get": {
         "operationId": "getUpcomingUnlocks",
-        "summary": "Get upcoming unlock events for a wallet",
-        "description": "Returns all vesting unlock events (cliffs, tranches, linear endings) due within a time window. Ideal for AI agents building forecasts, alerts, or claim strategies.",
+        "summary": "List upcoming unlock events for a wallet",
+        "description": "Returns every unlock event (cliff completion, tranche release, linear stream endpoint) scheduled to occur within a future time window, sorted ascending by date. Purpose-built for forecasting, alerts, and claim-planning agents: one call tells you exactly what tokens a wallet can claim over the next N days and when.\n\nTypical uses: agents building unlock calendars, bots that notify users before an unlock, compliance tools tracking vesting cash-flow exposure. Prefer this endpoint over `GET /wallet/{address}/vestings` when you only care about the next unlock per stream — it's ~10× cheaper to parse on the client.",
         "tags": ["Wallet"],
         "parameters": [
           {
@@ -163,45 +165,47 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
+            "description": "EVM wallet address (case-insensitive).",
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "days",
             "in": "query",
             "schema": { "type": "integer", "default": 30, "maximum": 365 },
-            "description": "Lookahead window in days (default: 30, max: 365)"
+            "description": "Lookahead window in days, counting from now. Default: 30. Maximum: 365 (values above are clamped)."
           },
           {
             "name": "protocol",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "Comma-separated protocol filter"
+            "description": "Comma-separated protocol filter — same semantics as on the vestings endpoint. Omit to include every protocol."
           }
         ],
         "responses": {
           "200": {
-            "description": "Upcoming unlock events sorted by date",
+            "description": "Upcoming unlock events sorted ascending by `unlock_time`. An empty `unlocks` array means nothing vests for this wallet within the window.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "wallet":       { "type": "string" },
-                    "window_days":  { "type": "integer" },
+                    "window_days":  { "type": "integer", "description": "Echo of the `days` parameter (after clamping)." },
                     "count":        { "type": "integer" },
                     "unlocks": {
                       "type": "array",
+                      "description": "Each element is one scheduled unlock event. Multiple events may belong to the same `stream_id` when a schedule has multiple tranches inside the window.",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "stream_id":        { "type": "string" },
+                          "stream_id":        { "type": "string", "description": "Composite stream ID — pass to GET /stream/{streamId} for full detail." },
                           "protocol":         { "type": "string" },
                           "chain_id":         { "type": "integer" },
                           "token_symbol":     { "type": "string" },
                           "token_address":    { "type": "string" },
-                          "unlock_time":      { "type": "integer", "description": "Unix timestamp" },
-                          "unlock_type":      { "type": "string", "enum": ["cliff","end","tranche"] },
-                          "amount_unlocking": { "type": "string", "description": "Raw token amount" }
+                          "unlock_time":      { "type": "integer", "description": "Unix timestamp (seconds) when this event fires." },
+                          "unlock_type":      { "type": "string", "enum": ["cliff","end","tranche"], "description": "`cliff` = a cliff completion; `tranche` = a step in a stepped schedule; `end` = a linear stream's fully-vested timestamp." },
+                          "amount_unlocking": { "type": "string", "description": "Tokens releasing at this event (raw integer string; divide by token decimals for display)." }
                         }
                       }
                     }
@@ -210,15 +214,15 @@
               }
             }
           },
-          "401": { "description": "Invalid or missing API key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": { "description": "Missing, malformed, or revoked API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/stream/{streamId}": {
       "get": {
         "operationId": "getStream",
-        "summary": "Get a single vesting stream by ID",
-        "description": "Returns full details for a specific vesting stream. Stream IDs follow the format: {protocol}-{chainId}-{nativeId}",
+        "summary": "Get full detail for a single vesting stream",
+        "description": "Returns every field of the `VestingStream` schema for one specific stream, plus the indexer-level metadata (`first_seen`, `last_indexed`). Use this after discovering a `stream_id` from the wallet-level endpoints — never as a first call unless you already have the composite ID from elsewhere (an on-chain event, a user-pasted URL, etc.).\n\nStream IDs are composite: `{protocol}-{chainId}-{nativeId}`. Example: `sablier-1-12345` is Sablier stream 12345 on Ethereum. IDs are stable and URL-safe.",
         "tags": ["Streams"],
         "parameters": [
           {
@@ -226,13 +230,13 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "Stream composite ID",
+            "description": "Composite stream ID in the format `{protocol}-{chainId}-{nativeId}`, always lowercase. Obtainable via the wallet endpoints or directly constructible if you have the protocol and native ID.",
             "example": "sablier-1-12345"
           }
         ],
         "responses": {
           "200": {
-            "description": "Vesting stream details",
+            "description": "Full stream detail, including `first_seen` (when the indexer first saw this stream) and `last_indexed` (how fresh the data is).",
             "content": {
               "application/json": {
                 "schema": {
@@ -246,14 +250,14 @@
               }
             }
           },
-          "401": { "description": "Invalid or missing API key" },
-          "404": { "description": "Stream not found in index" }
+          "401": { "description": "Missing, malformed, or revoked API key." },
+          "404": { "description": "Stream ID not found in the TokenVest index. Possible causes: the ID is malformed, the protocol isn't indexed, or the stream was created after the last subgraph sync (rare — usually resolves within a minute)." }
         }
       }
     }
   },
   "tags": [
-    { "name": "Wallet",  "description": "Wallet-level vesting queries" },
-    { "name": "Streams", "description": "Individual stream queries" }
+    { "name": "Wallet",  "description": "Wallet-level queries — use these when your input is an address and you want everything indexed for it." },
+    { "name": "Streams", "description": "Stream-level queries — use these when you already have a specific stream ID in hand." }
   ]
 }
