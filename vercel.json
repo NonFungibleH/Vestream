@@ -5,6 +5,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/seed-cache?mode=deep",
+      "schedule": "0 4 * * 0"
+    },
+    {
       "path": "/api/cron/notify",
       "schedule": "0 9 * * *"
     }

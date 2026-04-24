@@ -20,6 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { seedAll, summariseRun, type SeedMode } from "@/lib/vesting/seeder";
 import { env } from "@/lib/env";
 
@@ -33,6 +34,15 @@ function parseMode(req: NextRequest): SeedMode {
   return raw === "deep" ? "deep" : "incremental";
 }
 
+// Incremental mode runs inline (under ~2 min; fits inside the typical
+// Cloudflare/Vercel edge HTTP/2 stream window).
+//
+// Deep mode is kicked off via `after()` so the HTTP response returns
+// immediately — the work then continues on the server up to the route's
+// maxDuration. This avoids the "HTTP/2 stream … PROTOCOL_ERROR" a client
+// would get when the 5–15 minute deep-seed runs past the edge gateway's
+// idle timeout. Client polls /api/admin/cache-stats (or just refreshes
+// /protocols) to see progress; Vercel log drains show per-job completion.
 async function handle(req: NextRequest) {
   const cronSecret = env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
@@ -40,17 +50,38 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const mode      = parseMode(req);
+  const mode = parseMode(req);
+
+  if (mode === "deep") {
+    after(async () => {
+      const startedAt = Date.now();
+      try {
+        const results = await seedAll("deep");
+        const summary = summariseRun(results);
+        const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
+        console.log(`[cron/seed-cache] deep-seed complete in ${elapsed}s —`, summary);
+      } catch (err) {
+        console.error("[cron/seed-cache] deep-seed failed in background:", err);
+      }
+    });
+    return NextResponse.json({
+      ok:         true,
+      mode:       "deep",
+      accepted:   true,
+      message:    "Deep seed kicked off in background. Check Vercel logs for completion (~5–15 min). Poll /api/unlocks/tvl or /protocols to see cache fill up.",
+      startedAt:  new Date().toISOString(),
+    }, { status: 202 });
+  }
+
+  // Incremental — inline for caller feedback on the daily cron.
   const startedAt = Date.now();
-
   try {
-    const results = await seedAll(mode);
+    const results = await seedAll("incremental");
     const summary = summariseRun(results);
-    const elapsed = Math.round((Date.now() - startedAt) / 100) / 10; // tenths of seconds
-
+    const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
     return NextResponse.json({
       ok:            true,
-      mode,
+      mode:          "incremental",
       elapsedSec:    elapsed,
       summary,
       perJobResults: results,
