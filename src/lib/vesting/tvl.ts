@@ -1,32 +1,46 @@
 // src/lib/vesting/tvl.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Per-protocol Total Value Locked (TVL) computed from the `vestingStreamsCache`
-// table + DexScreener spot prices.
+// Per-protocol Total Value Locked (TVL) computed from `vestingStreamsCache`
+// + multi-source pricing.
 //
 // Why NOT query the subgraphs directly for amounts:
 //   • We already aggregate normalised `lockedAmount` into the cache via the
 //     seeder + real user traffic — one source of truth is enough.
-//   • Subgraph schemas differ (Sablier has depositAmount, Unvest has locked,
-//     Superfluid has totalAmount − all the per-adapter arithmetic is already
-//     implemented in the adapter `.fetch()` methods).
+//   • Subgraph schemas differ; per-adapter arithmetic lives in adapter
+//     `.fetch()` methods.
 //
-// Algorithm
-//   1. SELECT chain_id, token_address, max(symbol), SUM(locked), max(decimals)
-//      FROM vesting_streams_cache WHERE protocol IN (...) AND is_fully_vested = false
-//      GROUP BY chain_id, token_address
-//   2. Batch DexScreener /latest/dex/tokens/{addr1,addr2,...} (up to 30 per call)
-//      with a small concurrency limit to stay under the 300 req/min rate cap.
-//   3. For each aggregate with a priced pair, add tokens × priceUsd to the total.
+// Pricing pipeline (April 2026 rewrite):
+//   1. Aggregate locked tokens from the cache (GROUP BY chain, tokenAddress)
+//   2. PASS A — DexScreener batch /latest/dex/tokens/{addrs}. Classify each
+//      priced pair by its DEX liquidity:
+//         ≥ $10k    → confidence "high"
+//         $1k–$10k  → confidence "medium"
+//         $100–$1k  → confidence "low"     (was excluded before the rewrite;
+//                                           added so memecoin-heavy protocols
+//                                           like UNCX aren't reported as $0)
+//         < $100    → skipped (not trustworthy)
+//   3. PASS B — For tokens DexScreener returned nothing for, try CoinGecko
+//      /simple/token_price/{platform}. Tagged as confidence "medium" with
+//      source "coingecko". Free-tier API (30 req/min) — we batch up to 100
+//      contracts per call and leave ~2s between batches to stay safe.
+//   4. Sum tokens × priceUsd into `tvlUsd` (all bands combined) AND per-band
+//      totals, so the UI can show high-confidence + breakdown independently.
 //
-// Caveats to surface in the UI
-//   • Coverage: not every token has a DexScreener pair — report priced/total
-//     so the user knows what fraction of protocols' TVL we're actually seeing.
-//   • Liquidity floor: pairs with < $1k liquidity are ignored — their priceUsd
-//     can be wildly wrong. This preserves directional accuracy.
-//   • Seed bias: protocols outside the seeder set (hedgey / pinksale / team-
-//     finance) will under-report TVL until real visitors search their wallets.
+// Why the floor dropped $1000 → $100:
+//   Before the rewrite, a memecoin with $800 of DEX liquidity was considered
+//   unpriced and contributed $0 to the protocol's TVL. UNCX is used almost
+//   exclusively for pre-launch/low-cap tokens, so 90% of its locks fell
+//   below the floor — causing the dashboard to show $56K TVL across 3,000
+//   streams. The new tiered system keeps those tokens in the total but
+//   flags them as lower-confidence; aggregate numbers stay directionally
+//   honest without hiding the long tail.
 //
-// Results memoised per-process for 10 min — same cadence as getGlobalStats().
+// Caveats the UI must surface:
+//   • Seed bias: protocols outside the seeder's high-volume set under-
+//     report TVL until real visitors search their wallets. (Fixed
+//     separately by the SEED_LIMIT bump + deep-seed mode in seeder.ts.)
+//
+// Results memoised per-process for 10 min.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, eq, inArray, sql } from "drizzle-orm";
@@ -34,9 +48,7 @@ import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import { fetchWithRetry } from "../fetch-with-retry";
 
-// ─── DexScreener chain slug mapping ──────────────────────────────────────────
-// Only these chains have DexScreener coverage — tokens on other chains are
-// reported under `tokensSkipped`.
+// ─── Chain slug maps (DexScreener + CoinGecko use different names) ───────────
 
 const DS_CHAIN_SLUG: Record<number, string> = {
   1:    "ethereum",
@@ -45,36 +57,73 @@ const DS_CHAIN_SLUG: Record<number, string> = {
   8453: "base",
 };
 
-const LIQUIDITY_FLOOR_USD  = 1_000;     // below this we don't trust the price
-const PRICE_BATCH_SIZE     = 30;         // DexScreener max tokens per request
-const PRICE_CONCURRENCY    = 4;          // simultaneous DexScreener requests
-const TTL_MS               = 10 * 60 * 1000;
+const CG_PLATFORM_SLUG: Record<number, string> = {
+  1:    "ethereum",
+  56:   "binance-smart-chain",
+  137:  "polygon-pos",
+  8453: "base",
+};
+
+// Pricing thresholds (USD liquidity) — tiered to preserve the long tail
+// without over-trusting thin markets.
+const LIQUIDITY_FLOOR_USD = 100;
+const LIQUIDITY_MEDIUM    = 1_000;
+const LIQUIDITY_HIGH      = 10_000;
+
+const DS_BATCH_SIZE       = 30;    // DexScreener max tokens per request
+const DS_CONCURRENCY      = 4;
+const CG_BATCH_SIZE       = 100;   // CoinGecko contract_addresses cap
+const CG_CONCURRENCY      = 2;     // Stay well under 30 req/min free tier
+const TTL_MS              = 10 * 60 * 1000;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+export type PriceConfidence = "high" | "medium" | "low";
+export type PriceSource     = "dexscreener" | "coingecko";
+
+export interface PriceInfo {
+  priceUsd:     number;
+  source:       PriceSource;
+  confidence:   PriceConfidence;
+  liquidityUsd: number | null; // null when source = coingecko
+}
 
 export interface ProtocolTvl {
   /** Adapter IDs this TVL aggregate covers. */
   adapterIds:       readonly string[];
-  /** Total USD value of all *active* locked tokens we could price. */
+  /** Total USD value across ALL bands (high + medium + low). */
   tvlUsd:           number;
+  /** Per-confidence-band totals — lets the UI show a main headline + a
+   *  breakdown footer without re-running the calc. */
+  tvlByBand: {
+    high:      number;
+    medium:    number;
+    low:       number;
+  };
+  /** How many tokens each pricing source contributed. */
+  pricingSources: {
+    dexscreener: number;
+    coingecko:   number;
+  };
   /** Per-chain breakdown sorted desc by tvl. */
   perChain:         Array<{ chainId: number; tvlUsd: number }>;
-  /** How many (chainId, tokenAddress) pairs had a usable DexScreener price. */
+  /** Total tokens we got a usable price for (any band, any source). */
   tokensPriced:     number;
-  /** How many were skipped because no price / no DEX pair / non-mainnet chain. */
+  /** Tokens skipped (no price from any source or below the floor). */
   tokensSkipped:    number;
   /** Total unique (chainId, tokenAddress) pairs with a non-null address. */
   totalTokens:      number;
-  /** 0..1 fraction = priced / total. Useful confidence indicator in the UI. */
+  /** 0..1 = priced / total. */
   coverage:         number;
-  /** Top 5 single-token contributions by USD — lets UI explain "what's driving TVL". */
+  /** Top 5 single-token contributions by USD. */
   topContributors:  Array<{
     tokenSymbol:  string | null;
     tokenAddress: string;
     chainId:      number;
     usd:          number;
+    confidence:   PriceConfidence;
+    source:       PriceSource;
   }>;
-  /** ISO timestamp of compute time. */
   computedAt:       string;
 }
 
@@ -83,7 +132,7 @@ interface LockedTokenAggregate {
   tokenAddress:  string;
   tokenSymbol:   string | null;
   tokenDecimals: number;
-  totalLocked:   string;    // stringified bigint — SUM can exceed 2^53
+  totalLocked:   string;    // stringified bigint
 }
 
 // ─── Cache-table aggregation ─────────────────────────────────────────────────
@@ -97,11 +146,8 @@ async function getLockedAggregates(
     .select({
       chainId:       vestingStreamsCache.chainId,
       tokenAddress:  vestingStreamsCache.tokenAddress,
-      // max(symbol) — there's only one symbol per address anyway
       tokenSymbol:   sql<string | null>`max(${vestingStreamsCache.tokenSymbol})`,
-      // Decimals live inside the jsonb blob. Default to 18.
       tokenDecimals: sql<number>`coalesce(max((${vestingStreamsCache.streamData}->>'tokenDecimals')::int), 18)`,
-      // Sum of locked amounts — huge bigints, return as text.
       totalLocked:   sql<string>`coalesce(sum(nullif(${vestingStreamsCache.streamData}->>'lockedAmount', '')::numeric), 0)::text`,
     })
     .from(vestingStreamsCache)
@@ -124,7 +170,7 @@ async function getLockedAggregates(
     }));
 }
 
-// ─── DexScreener pricing ─────────────────────────────────────────────────────
+// ─── DexScreener (primary pricing source) ────────────────────────────────────
 
 interface DexPair {
   chainId:    string;
@@ -134,21 +180,19 @@ interface DexPair {
   liquidity?: { usd?: number };
 }
 
-async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
-  const out = new Map<string, number>();
+function confidenceFromLiquidity(liqUsd: number): PriceConfidence | null {
+  if (liqUsd >= LIQUIDITY_HIGH)      return "high";
+  if (liqUsd >= LIQUIDITY_MEDIUM)    return "medium";
+  if (liqUsd >= LIQUIDITY_FLOOR_USD) return "low";
+  return null; // below floor → skip
+}
+
+async function dexScreenerBatch(addresses: string[]): Promise<Map<string, PriceInfo>> {
+  const out = new Map<string, PriceInfo>();
   if (addresses.length === 0) return out;
 
   try {
     const url = `https://api.dexscreener.com/latest/dex/tokens/${addresses.join(",")}`;
-    // Align the fetch cache lifetime with the page's `revalidate = 60`. Using
-    // `no-store` forces the entire calling route into dynamic rendering,
-    // which defeats SSG for /protocols (the page is a rainbow grid of protocol
-    // cards that are genuinely ISR-friendly). 60s keeps TVL numbers fresh
-    // without 500'ing the static build.
-    //
-    // fetchWithRetry auto-retries 5xx + 429 (DexScreener has both) with
-    // exponential backoff + jitter, so a brief upstream blip no longer
-    // blanks every user's TVL bar for 60s.
     const res = await fetchWithRetry(url, {
       next: { revalidate: 60 },
       headers: { Accept: "application/json" },
@@ -156,9 +200,8 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
     if (!res || !res.ok) return out;
     const data = (await res.json()) as { pairs?: DexPair[] };
 
-    // For each (chainSlug:tokenAddress) key, pick the highest-volume pair that
-    // has at least LIQUIDITY_FLOOR_USD of liquidity — matches DexScreener's
-    // own "primary pair" ranking logic.
+    // Group by chain:address, pick the highest-volume pair that passes the
+    // floor (matches DexScreener's own primary-pair ranking logic).
     const best = new Map<string, DexPair>();
     for (const pair of data.pairs ?? []) {
       const price = parseFloat(pair.priceUsd ?? "0");
@@ -173,7 +216,15 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
       }
     }
     for (const [key, pair] of best) {
-      out.set(key, parseFloat(pair.priceUsd!));
+      const liqUsd = pair.liquidity?.usd ?? 0;
+      const conf   = confidenceFromLiquidity(liqUsd);
+      if (!conf) continue;
+      out.set(key, {
+        priceUsd:     parseFloat(pair.priceUsd!),
+        source:       "dexscreener",
+        confidence:   conf,
+        liquidityUsd: liqUsd,
+      });
     }
   } catch (err) {
     console.error("[tvl] DexScreener batch failed:", err);
@@ -181,28 +232,105 @@ async function priceBatch(addresses: string[]): Promise<Map<string, number>> {
   return out;
 }
 
-async function priceAll(addresses: string[]): Promise<Map<string, number>> {
-  const all = new Map<string, number>();
-  if (addresses.length === 0) return all;
+async function priceViaDexScreener(
+  aggs: LockedTokenAggregate[],
+): Promise<Map<string, PriceInfo>> {
+  const priceable = aggs.filter((a) => DS_CHAIN_SLUG[a.chainId]);
+  const unique = Array.from(new Set(priceable.map((a) => a.tokenAddress.toLowerCase())));
 
-  // Dedupe
-  const unique = Array.from(new Set(addresses.map((a) => a.toLowerCase())));
-
-  // Split into size-30 batches, run up to PRICE_CONCURRENCY in parallel
   const batches: string[][] = [];
-  for (let i = 0; i < unique.length; i += PRICE_BATCH_SIZE) {
-    batches.push(unique.slice(i, i + PRICE_BATCH_SIZE));
+  for (let i = 0; i < unique.length; i += DS_BATCH_SIZE) {
+    batches.push(unique.slice(i, i + DS_BATCH_SIZE));
   }
 
-  for (let i = 0; i < batches.length; i += PRICE_CONCURRENCY) {
-    const group   = batches.slice(i, i + PRICE_CONCURRENCY);
-    const results = await Promise.all(group.map(priceBatch));
+  const all = new Map<string, PriceInfo>();
+  for (let i = 0; i < batches.length; i += DS_CONCURRENCY) {
+    const group   = batches.slice(i, i + DS_CONCURRENCY);
+    const results = await Promise.all(group.map(dexScreenerBatch));
     for (const m of results) for (const [k, v] of m) all.set(k, v);
   }
   return all;
 }
 
-// ─── Main compute ────────────────────────────────────────────────────────────
+// ─── CoinGecko (fallback pricing source) ─────────────────────────────────────
+//
+// Used only for tokens DexScreener returned nothing for. Free-tier API is
+// rate-limited to ~30 req/min — at CG_CONCURRENCY=2 and ~1s per batch we
+// cap at ~120 req/min in absolute terms but realistic parallel groups of 2
+// with each batch up to 100 contracts = ~200 contracts priced per second
+// theoretical, ~10-20 contracts/sec practical with rate limiting.
+//
+// Response shape:
+//   { "0xabc...": { "usd": 0.123, "usd_24h_vol": 1234 }, ... }
+// No explicit liquidity — we tag everything "medium" confidence since
+// CoinGecko's inclusion is itself a quality signal (they curate
+// aggressively).
+
+async function coinGeckoBatch(
+  platform: string,
+  addresses: string[],
+): Promise<Map<string, PriceInfo>> {
+  const out = new Map<string, PriceInfo>();
+  if (addresses.length === 0) return out;
+
+  try {
+    const url = `https://api.coingecko.com/api/v3/simple/token_price/${platform}`
+              + `?contract_addresses=${addresses.join(",")}`
+              + `&vs_currencies=usd`;
+    const res = await fetchWithRetry(url, {
+      next: { revalidate: 300 },
+      headers: { Accept: "application/json" },
+    }, { tag: "coingecko-tvl", retries: 1 });
+    if (!res || !res.ok) return out;
+    const data = (await res.json()) as Record<string, { usd?: number }>;
+    for (const [addr, body] of Object.entries(data)) {
+      const price = body?.usd;
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+      const key = `${platform}:${addr.toLowerCase()}`;
+      out.set(key, {
+        priceUsd:     price,
+        source:       "coingecko",
+        confidence:   "medium",
+        liquidityUsd: null,
+      });
+    }
+  } catch (err) {
+    console.error(`[tvl] CoinGecko batch (${platform}) failed:`, err);
+  }
+  return out;
+}
+
+async function priceViaCoinGecko(
+  unpriced: LockedTokenAggregate[],
+): Promise<Map<string, PriceInfo>> {
+  // Group remaining tokens by chain so we can hit the per-platform endpoint.
+  const byPlatform = new Map<string, string[]>();
+  for (const a of unpriced) {
+    const platform = CG_PLATFORM_SLUG[a.chainId];
+    if (!platform) continue;
+    const addr = a.tokenAddress.toLowerCase();
+    if (!byPlatform.has(platform)) byPlatform.set(platform, []);
+    byPlatform.get(platform)!.push(addr);
+  }
+
+  const all = new Map<string, PriceInfo>();
+  for (const [platform, addrs] of byPlatform) {
+    const unique = Array.from(new Set(addrs));
+    const batches: string[][] = [];
+    for (let i = 0; i < unique.length; i += CG_BATCH_SIZE) {
+      batches.push(unique.slice(i, i + CG_BATCH_SIZE));
+    }
+
+    for (let i = 0; i < batches.length; i += CG_CONCURRENCY) {
+      const group   = batches.slice(i, i + CG_CONCURRENCY);
+      const results = await Promise.all(group.map((b) => coinGeckoBatch(platform, b)));
+      for (const m of results) for (const [k, v] of m) all.set(k, v);
+    }
+  }
+  return all;
+}
+
+// ─── Per-process memoisation ─────────────────────────────────────────────────
 
 interface CacheEntry {
   value:     ProtocolTvl;
@@ -214,6 +342,8 @@ function cacheKey(adapterIds: readonly string[]): string {
   return Array.from(adapterIds).slice().sort().join("+");
 }
 
+// ─── Main compute ────────────────────────────────────────────────────────────
+
 export async function getProtocolTvl(
   adapterIds: readonly string[],
 ): Promise<ProtocolTvl> {
@@ -223,13 +353,39 @@ export async function getProtocolTvl(
 
   const aggs = await getLockedAggregates(adapterIds);
 
-  // Only fetch prices for addresses on chains DexScreener covers
-  const priceable = aggs.filter((a) => DS_CHAIN_SLUG[a.chainId]);
-  const prices    = await priceAll(priceable.map((a) => a.tokenAddress));
+  // Pass A: DexScreener for every aggregate on a supported chain.
+  const dsPrices = await priceViaDexScreener(aggs);
+
+  // Pass B: CoinGecko for any aggregate DexScreener didn't price.
+  const unpriced = aggs.filter((a) => {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    return !dsChain || !dsPrices.has(`${dsChain}:${a.tokenAddress}`);
+  });
+  const cgPrices = await priceViaCoinGecko(unpriced);
+
+  // Merge. Keep DexScreener results where present (they carry liquidity
+  // metadata which matters for the high/medium/low split).
+  const prices = new Map<string, PriceInfo>(dsPrices);
+  for (const a of unpriced) {
+    const platform = CG_PLATFORM_SLUG[a.chainId];
+    if (!platform) continue;
+    const cgKey    = `${platform}:${a.tokenAddress}`;
+    const info     = cgPrices.get(cgKey);
+    if (!info) continue;
+    // Re-key under the DexScreener-style slug so the downstream loop has a
+    // single lookup convention.
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
+  }
 
   let tvlUsd        = 0;
+  let tvlHigh       = 0;
+  let tvlMedium     = 0;
+  let tvlLow        = 0;
   let tokensPriced  = 0;
   let tokensSkipped = 0;
+  let srcDex        = 0;
+  let srcCg         = 0;
   const perChainMap = new Map<number, number>();
   const contribs: ProtocolTvl["topContributors"] = [];
 
@@ -237,11 +393,9 @@ export async function getProtocolTvl(
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     if (!dsChain) { tokensSkipped++; continue; }
 
-    const price = prices.get(`${dsChain}:${a.tokenAddress}`);
-    if (!price) { tokensSkipped++; continue; }
+    const info = prices.get(`${dsChain}:${a.tokenAddress}`);
+    if (!info) { tokensSkipped++; continue; }
 
-    // Convert stringified bigint → float. SUM is NUMERIC so it may be non-integer;
-    // try BigInt first (exact for integer sums), fall back to Number for safety.
     let wholeTokens: number;
     try {
       wholeTokens = Number(BigInt(a.totalLocked.split(".")[0] ?? "0")) / 10 ** a.tokenDecimals;
@@ -252,16 +406,24 @@ export async function getProtocolTvl(
     }
     if (!Number.isFinite(wholeTokens) || wholeTokens <= 0) { tokensSkipped++; continue; }
 
-    const usd = wholeTokens * price;
+    const usd = wholeTokens * info.priceUsd;
     if (!Number.isFinite(usd) || usd <= 0) { tokensSkipped++; continue; }
 
     tvlUsd += usd;
+    if      (info.confidence === "high")   tvlHigh   += usd;
+    else if (info.confidence === "medium") tvlMedium += usd;
+    else                                   tvlLow    += usd;
+    if      (info.source === "dexscreener") srcDex++;
+    else                                    srcCg++;
+
     perChainMap.set(a.chainId, (perChainMap.get(a.chainId) ?? 0) + usd);
     contribs.push({
       tokenSymbol:  a.tokenSymbol,
       tokenAddress: a.tokenAddress,
       chainId:      a.chainId,
       usd,
+      confidence:   info.confidence,
+      source:       info.source,
     });
     tokensPriced++;
   }
@@ -271,6 +433,15 @@ export async function getProtocolTvl(
   const result: ProtocolTvl = {
     adapterIds,
     tvlUsd,
+    tvlByBand: {
+      high:   tvlHigh,
+      medium: tvlMedium,
+      low:    tvlLow,
+    },
+    pricingSources: {
+      dexscreener: srcDex,
+      coingecko:   srcCg,
+    },
     perChain:       Array.from(perChainMap.entries())
       .map(([chainId, tvl]) => ({ chainId, tvlUsd: tvl }))
       .sort((a, b) => b.tvlUsd - a.tvlUsd),
@@ -310,6 +481,8 @@ function emptyTvl(adapterIds: readonly string[]): ProtocolTvl {
   return {
     adapterIds,
     tvlUsd:          0,
+    tvlByBand:       { high: 0, medium: 0, low: 0 },
+    pricingSources:  { dexscreener: 0, coingecko: 0 },
     perChain:        [],
     tokensPriced:    0,
     tokensSkipped:   0,

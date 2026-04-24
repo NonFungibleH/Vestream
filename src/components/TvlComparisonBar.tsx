@@ -1,17 +1,21 @@
 // src/components/TvlComparisonBar.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Server component — renders a horizontal bar chart comparing TVL across
-// every indexed vesting protocol. Sized relative to the leader so eyeballs
-// can quickly judge protocol share.
+// Server component — horizontal bar chart comparing TVL across every indexed
+// protocol, with honest confidence-band reporting.
 //
 // Each row shows:
-//   • Protocol name (brand colour)
+//   • Protocol brand tile + name
 //   • Horizontal bar: width = tvl / maxTvl
-//   • USD amount (right-aligned, compact: "$1.24B", "$412M")
-//   • Priced-token coverage (right-aligned, muted) — gives an honest
-//     confidence score so the viewer isn't misled by thin coverage
+//   • USD total (all bands combined)
+//   • Priced-token coverage (tokens we priced / tokens indexed)
 //
-// Empty state (coverage = 0 for all): shows a subtle "Indexing…" hint.
+// The header reports both the all-bands total AND the high-confidence subset,
+// so a reader gets directional accuracy without having to trust the long
+// tail. The footer explains the methodology in plain English — two pricing
+// sources (DexScreener + CoinGecko) and the three liquidity bands that
+// determine confidence.
+//
+// Empty state (no priced tokens anywhere): shows a subtle "Indexing…" hint.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
@@ -32,9 +36,15 @@ function compactUsd(n: number): string {
 }
 
 export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
-  const sorted   = [...rows].sort((a, b) => (b.tvl?.tvlUsd ?? 0) - (a.tvl?.tvlUsd ?? 0));
-  const maxTvl   = Math.max(1, ...sorted.map((r) => r.tvl?.tvlUsd ?? 0));
-  const totalTvl = sorted.reduce((s, r) => s + (r.tvl?.tvlUsd ?? 0), 0);
+  const sorted = [...rows].sort((a, b) => (b.tvl?.tvlUsd ?? 0) - (a.tvl?.tvlUsd ?? 0));
+  const maxTvl = Math.max(1, ...sorted.map((r) => r.tvl?.tvlUsd ?? 0));
+
+  // Aggregate totals across all protocols, split by confidence.
+  const totalAll  = sorted.reduce((s, r) => s + (r.tvl?.tvlUsd ?? 0), 0);
+  const totalHigh = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.high ?? 0), 0);
+  const totalMed  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.medium ?? 0), 0);
+  const totalLow  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.low ?? 0), 0);
+
   const anyPriced = sorted.some((r) => (r.tvl?.tokensPriced ?? 0) > 0);
 
   return (
@@ -60,16 +70,60 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
             <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#2563eb" }} />
           </span>
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
-            Live TVL by protocol
+            Indexed liquidity by protocol
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs" style={{ color: "#64748b" }}>
           <span className="font-mono font-semibold tabular-nums" style={{ color: "#0f172a" }}>
-            {compactUsd(totalTvl)}
+            {compactUsd(totalAll)}
           </span>
-          <span>locked across {sorted.length} protocols</span>
+          <span>priced across {sorted.length} protocols</span>
         </div>
       </div>
+
+      {/* High-confidence sub-header — reassures the reader the top line isn't
+          inflated by long-tail thin-liquidity entries. */}
+      {anyPriced && (
+        <div
+          className="px-4 md:px-5 py-1.5 flex items-center gap-2 text-[11px]"
+          style={{
+            borderBottom: "1px solid rgba(0,0,0,0.04)",
+            background:   "rgba(37,99,235,0.02)",
+            color:        "#64748b",
+          }}
+        >
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ background: "#2563eb" }}
+          />
+          <span>
+            <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+              {compactUsd(totalHigh)}
+            </span>
+            <span className="ml-1" style={{ color: "#64748b" }}>
+              high-confidence (≥$10k DEX liquidity)
+            </span>
+            {totalMed > 0 && (
+              <>
+                <span className="mx-1.5" style={{ color: "#cbd5e1" }}>·</span>
+                <span className="font-semibold tabular-nums" style={{ color: "#334155" }}>
+                  {compactUsd(totalMed)}
+                </span>
+                <span className="ml-1">medium</span>
+              </>
+            )}
+            {totalLow > 0 && (
+              <>
+                <span className="mx-1.5" style={{ color: "#cbd5e1" }}>·</span>
+                <span className="font-semibold tabular-nums" style={{ color: "#64748b" }}>
+                  {compactUsd(totalLow)}
+                </span>
+                <span className="ml-1">thin</span>
+              </>
+            )}
+          </span>
+        </div>
+      )}
 
       {/* Rows */}
       <div className="px-4 md:px-5 py-4">
@@ -85,10 +139,10 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
         ) : (
           <div className="space-y-3">
             {sorted.map(({ protocol, tvl }) => {
-              const tvlUsd       = tvl?.tvlUsd ?? 0;
-              const coveragePct  = tvl ? Math.round(tvl.coverage * 100) : 0;
-              const widthPct     = Math.max(2, (tvlUsd / maxTvl) * 100); // min 2% so the bar is always visible
-              const hasValue     = tvlUsd > 0;
+              const tvlUsd      = tvl?.tvlUsd ?? 0;
+              const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
+              const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
+              const hasValue    = tvlUsd > 0;
 
               return (
                 <Link
@@ -143,7 +197,7 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
         )}
       </div>
 
-      {/* Footer note — honest caveat */}
+      {/* Footer — methodology, in plain English */}
       <div
         className="px-4 md:px-5 py-2.5 text-[10.5px] leading-relaxed"
         style={{
@@ -152,8 +206,12 @@ export function TvlComparisonBar({ rows }: { rows: TvlComparisonRow[] }) {
           color:       "#94a3b8",
         }}
       >
-        TVL = sum of locked tokens × DexScreener spot price. Only tokens with liquid DEX pairs (&gt;$1k) are counted.
-        Coverage shows the share of indexed tokens we could price — the rest fall out of the total.
+        Prices come from DexScreener, with CoinGecko as fallback for tokens that don&apos;t have a DEX listing.
+        Each token is tagged <span className="font-semibold" style={{ color: "#64748b" }}>high</span> (≥$10k DEX liquidity),
+        <span className="font-semibold" style={{ color: "#64748b" }}> medium</span> ($1k–$10k, or CoinGecko),
+        or <span className="font-semibold" style={{ color: "#64748b" }}>thin</span> ($100–$1k). Tokens below $100
+        liquidity with no CoinGecko listing are excluded from the total.
+        &ldquo;% priced&rdquo; shows how much of each protocol&apos;s indexed set we could price.
       </div>
     </div>
   );
