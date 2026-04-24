@@ -38,7 +38,7 @@ test.describe("homepage", () => {
   test("renders with correct page title", async ({ page }) => {
     await page.goto("/");
     // Title comes from layout metadata — no dependency on any API call.
-    await expect(page).toHaveTitle(/Vestream.*Token Vesting Tracker/i);
+    await expect(page).toHaveTitle(/TokenVest.*Token Vesting Tracker/i);
   });
 
   test("nav links to /developer and /ai are present", async ({ page }) => {
@@ -64,7 +64,7 @@ test.describe("token explorer", () => {
     // Accept 200 (rendered) or 404 (no streams for this token yet). 500 fails.
     expect(resp?.status()).toBeLessThan(500);
     // Whatever path we take, the site chrome should render.
-    await expect(page).toHaveTitle(/Vestream/i);
+    await expect(page).toHaveTitle(/TokenVest/i);
   });
 
   test("/explore/1/<USDC> permanent-redirects to /token/1/<USDC>", async ({ page }) => {
