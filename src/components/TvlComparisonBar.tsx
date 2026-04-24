@@ -38,12 +38,17 @@ function compactUsd(n: number): string {
 export function TvlComparisonBar({
   rows,
   externallySourced,
+  snapshotAgeHours,
 }: {
   rows:               TvlComparisonRow[];
   /** Slugs whose TVL came from an external source (e.g. DefiLlama)
    *  rather than our own priced-cache computation. Rendered with a
    *  small attribution tag so the reader can distinguish the two. */
   externallySourced?: Set<string>;
+  /** Age of the oldest snapshot row (hours). Surfaced in the (i) tooltip
+   *  as a "last verified X ago" signal so the reader knows how fresh the
+   *  numbers are. Null when no snapshot exists yet. */
+  snapshotAgeHours?:  number | null;
 }) {
   const sorted = [...rows].sort((a, b) => (b.tvl?.tvlUsd ?? 0) - (a.tvl?.tvlUsd ?? 0));
   const maxTvl = Math.max(1, ...sorted.map((r) => r.tvl?.tvlUsd ?? 0));
@@ -83,14 +88,14 @@ export function TvlComparisonBar({
             <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#2563eb" }} />
           </span>
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
-            Indexed liquidity by protocol
+            Vesting TVL by protocol
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs" style={{ color: "#64748b" }}>
           <span className="font-mono font-semibold tabular-nums" style={{ color: "#0f172a" }}>
             {compactUsd(totalAll)}
           </span>
-          <span>priced across {sorted.length} protocols</span>
+          <span>across {sorted.length} protocols</span>
           {/* Methodology info tooltip. Uses a containing element with a wider
               bounding box + left-positioned tooltip (anchored to the RIGHT
               side of the card instead of the icon) so the tooltip never
@@ -115,7 +120,7 @@ export function TvlComparisonBar({
             <span
               className="pointer-events-none absolute top-full mt-2 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity z-20 shadow-lg"
               style={{
-                width:      "min(18rem, calc(100vw - 2rem))",
+                width:      "min(20rem, calc(100vw - 2rem))",
                 right:      "-4px",
                 background: "white",
                 border:     "1px solid rgba(0,0,0,0.08)",
@@ -124,15 +129,22 @@ export function TvlComparisonBar({
               }}
               role="tooltip"
             >
-              Prices come from DexScreener, with CoinGecko as fallback for tokens that don&apos;t have a DEX listing.
-              Each token is tagged <span className="font-semibold" style={{ color: "#0f172a" }}>high</span> (≥$10k DEX liquidity),
-              <span className="font-semibold" style={{ color: "#0f172a" }}> medium</span> ($1k–$10k, or CoinGecko),
-              or <span className="font-semibold" style={{ color: "#0f172a" }}>thin</span> ($100–$1k).
-              Tokens below $100 with no CoinGecko listing are excluded.
-              {hasExternal && (
+              Every number here is <span className="font-semibold" style={{ color: "#0f172a" }}>vesting-specific TVL</span>
+              {" "}— no LP locks, no launchpad escrows, no staking. Two methodologies, depending on the protocol:
+              <br /><br />
+              <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> — for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
+              {" "}<span className="font-mono text-[10px]">chainTvls.vesting</span> aggregate, which they already report as a vesting-only slice.
+              <br /><br />
+              <span className="font-semibold" style={{ color: "#2563eb" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s
+              data source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts,
+              and price each token via DexScreener (≥$10k liquidity = high confidence, $1k–$10k = medium, $100–$1k = thin) with CoinGecko as fallback.
+              {snapshotAgeHours !== null && snapshotAgeHours !== undefined && (
                 <>
-                  {" "}Rows tagged <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> use
-                  DefiLlama&apos;s protocol TVL directly — we defer to their index for ecosystems without our own seeder.
+                  <br /><br />
+                  <span style={{ color: "#94a3b8" }}>
+                    Last verified {snapshotAgeHours < 1 ? "less than an hour" : `${snapshotAgeHours}h`} ago.
+                    Refreshes daily.
+                  </span>
                 </>
               )}
             </span>
@@ -184,10 +196,14 @@ export function TvlComparisonBar({
         </div>
       )}
 
-      {/* Rows — flex-1 so the card stretches to match the sibling column */}
-      <div className="px-4 md:px-5 py-4 flex-1">
+      {/* Rows — flex-1 so the card stretches to match the sibling column.
+          We use divide-y + per-row py-2.5 (instead of space-y-3) to match the
+          row rhythm of the UpcomingUnlockTicker sibling exactly — otherwise
+          the two columns on /protocols drift out of alignment by a few pixels
+          per row, which compounds to a visible offset over 9 rows. */}
+      <div className="flex-1 flex flex-col">
         {!anyPriced ? (
-          <div className="py-6 text-center">
+          <div className="px-4 md:px-5 py-6 text-center">
             <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
               Pricing indexed tokens…
             </div>
@@ -196,21 +212,27 @@ export function TvlComparisonBar({
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
             {sorted.map(({ protocol, tvl }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
+              // Rows where we have NO data yet (zero priced tokens, no external
+              // source) get the "Indexing…" label instead of a terse "no data"
+              // — makes the empty state feel intentional rather than broken.
+              // Currently only Jupiter Lock (Solana, no DefiLlama entry, cache
+              // not yet seeded) lands here.
+              const isIndexing = !isExternal && !hasValue;
 
               return (
                 <Link
                   key={protocol.slug}
                   href={`/protocols/${protocol.slug}`}
-                  className="block group"
+                  className="block group px-4 md:px-5 py-2.5 flex-1 flex flex-col justify-center"
                 >
-                  <div className="flex items-center gap-3 mb-1">
+                  <div className="flex items-center gap-3 mb-1.5">
                     {/* Icon tile */}
                     <div
                       className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold"
@@ -226,24 +248,45 @@ export function TvlComparisonBar({
                       {protocol.name}
                     </span>
                     <div className="flex-1" />
-                    <span className="text-sm font-bold tabular-nums" style={{ color: hasValue ? "#0f172a" : "#94a3b8" }}>
-                      {compactUsd(tvlUsd)}
+                    <span
+                      className="text-sm font-bold tabular-nums"
+                      style={{ color: hasValue ? "#0f172a" : "#94a3b8" }}
+                    >
+                      {isIndexing ? "—" : compactUsd(tvlUsd)}
                     </span>
                     {isExternal ? (
                       <span
                         className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
-                        style={{ color: "#7c3aed", minWidth: 52, textAlign: "right" }}
+                        style={{ color: "#7c3aed", minWidth: 66, textAlign: "right" }}
                         title="Sourced from DefiLlama's protocol API"
                       >
                         via DefiLlama
                       </span>
+                    ) : isIndexing ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold whitespace-nowrap"
+                        style={{ color: protocol.color, minWidth: 66, justifyContent: "flex-end" }}
+                        title="Coverage starting — we're indexing this protocol now"
+                      >
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span
+                            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                            style={{ background: protocol.color }}
+                          />
+                          <span
+                            className="relative inline-flex rounded-full h-1.5 w-1.5"
+                            style={{ background: protocol.color }}
+                          />
+                        </span>
+                        Indexing
+                      </span>
                     ) : (
                       <span
                         className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
-                        style={{ color: "#94a3b8", minWidth: 52, textAlign: "right" }}
+                        style={{ color: "#94a3b8", minWidth: 66, textAlign: "right" }}
                         title={`${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced`}
                       >
-                        {tvl?.totalTokens ? `${coveragePct}% priced` : "no data"}
+                        {coveragePct}% priced
                       </span>
                     )}
                   </div>

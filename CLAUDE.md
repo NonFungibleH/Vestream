@@ -430,6 +430,86 @@ Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapte
 
 ---
 
+## TVL Methodology (internal — honest-TVL pass, April 2026)
+
+**The rule:** every TVL number we show is vesting-specific. **Never** a protocol's total TVL if that number includes LP locks, launchpad escrows, streaming payments, or staking. If DefiLlama mixes categories, we don't use their headline — we compute the vesting slice ourselves.
+
+### Source-of-truth table (keep up-to-date as protocols are added)
+
+| Protocol | TVL source | Methodology tag | Why |
+|---|---|---|---|
+| Sablier | DefiLlama `chainTvls.vesting` ($513M) | `defillama-vesting` | DefiLlama already publishes a vesting-specific slice; no point reinventing |
+| Hedgey | DefiLlama `chainTvls.vesting` ($142M) | `defillama-vesting` | Same |
+| Streamflow | DefiLlama `chainTvls.vesting` ($762M) + category=vesting filter | `defillama-vesting` | Same — excludes Streamflow's "payments" product |
+| UNCX + UNCX-VM | **Self-indexed** — subgraph walk of TokenVesting (V3) + event scan of VestingManager | `subgraph-walk-v1` / `contract-reads-v1` | DefiLlama's `uncx-network-v2+v3` is Token Locker category — includes LP locks |
+| Team Finance | **Self-indexed** — Squid `vestingFactoryVestings` exhaustive walk | `subgraph-walk-v1` | DefiLlama's `team-finance` is Token Locker category — includes general token locks |
+| PinkSale | **Self-indexed** — `LockAdded` event scan → `normalLocksForUser` multicall | `contract-reads-v1` | DefiLlama's `pinksale` is Launchpad category — includes active sales + LP locks |
+| Superfluid | **Self-indexed** — hosted subgraph walk of `vestingSchedules` | `subgraph-walk-v1` | DefiLlama's `superfluid` total includes streaming payments + subscriptions |
+| Unvest | **Self-indexed** — The Graph walk of `holderBalances` | `subgraph-walk-v1` | No DefiLlama entry |
+| Jupiter Lock | **Self-indexed** — Solana `getProgramAccounts` + discriminator filter | `program-scan-v1` | No DefiLlama entry |
+
+### Pipeline
+
+```
+/api/cron/tvl-snapshot  (daily 03:15 UTC)
+  │
+  ├─ for each protocol in protocol-constants.ts:
+  │    ├─ externalTvl present?  → runDefiLlamaSnapshot(slug, category?)
+  │    │                          → fetchDefiLlamaTvl → per-chain rows
+  │    └─ externalTvl absent?   → runWalkerSnapshot(slug, chainIds)
+  │                               → for each chain: runWalker(slug, chainId)
+  │                                   ├─ WALKER_REGISTRY[slug] — enumerates ALL streams
+  │                                   │  (no recipient filter, paginated/full-scan)
+  │                                   ├─ aggregates by (chainId, tokenAddress)
+  │                                   └─ returns TokenAggregate[] with lockedAmount
+  │                               → priceAggregates(tokens)
+  │                                   ├─ Pass A: DexScreener batch /latest/dex/tokens
+  │                                   │   liquidity bands: ≥$10k high, $1k-$10k medium,
+  │                                   │   $100-$1k thin, <$100 skipped
+  │                                   └─ Pass B: CoinGecko /simple/token_price (medium)
+  │                               → upsert one row per (protocol, chainId)
+  │                                 into protocolTvlSnapshots
+  │
+/protocols page
+  └─ unstable_cache(5min) → readAllSnapshots() → aggregate per-protocol →
+     render TvlComparisonBar + ProtocolCard rows
+```
+
+### Adding a new protocol
+
+If the new protocol's DefiLlama entry exposes `chainTvls.vesting`, set `externalTvl` in `protocol-constants.ts` — that's the whole integration.
+
+Otherwise:
+1. Write `src/lib/vesting/tvl-walker/{slug}.ts` — export `walk{Slug}(chainId)` that returns `WalkerResult`
+2. Register it in `src/lib/vesting/tvl-walker/index.ts`
+3. Omit `externalTvl` from the ProtocolMeta entry
+4. The daily cron picks it up automatically; manual first run: `POST /api/cron/tvl-snapshot?protocol={slug}` with `Authorization: Bearer ${CRON_SECRET}`
+
+### Cron + manual ops
+
+```bash
+# Full refresh (all 9 protocols, daily cron default)
+curl -X POST https://vestream.io/api/cron/tvl-snapshot \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Single-protocol rerun (use for debugging or staggered slow walkers)
+curl -X POST "https://vestream.io/api/cron/tvl-snapshot?protocol=pinksale" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Background mode (returns 202 immediately, work continues 2-5 min)
+curl -X POST "https://vestream.io/api/cron/tvl-snapshot?protocol=uncx-vm&background=true" \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+### Pitfalls / things to audit before changing
+
+- **Never drop the `chainTvls.vesting` check** in `src/lib/defillama.ts` — if DefiLlama stops exposing a vesting slice, we fall back to their `tvl` which WILL include non-vesting categories for Sablier/Hedgey/Streamflow. A silent accuracy regression. Alerting opportunity.
+- **Walker correctness = CORE product integrity.** Every walker's locked-amount math must match the protocol's on-chain vesting semantics. Unit tests per walker are the single most valuable thing we can add.
+- **Confidence bands** (`LIQUIDITY_HIGH=10_000`, `LIQUIDITY_MEDIUM=1_000`, `LIQUIDITY_FLOOR_USD=100`) live in `src/lib/vesting/tvl.ts`. If these change, the change applies to both the live `/protocols` render and the snapshot cron — by design (single source of truth for pricing).
+- **snapshot table `methodology` column** — any new methodology gets a versioned tag (`-v2`, `-v3`) so we can migrate without nuking old rows.
+
+---
+
 ## MCP Package (`mcp/`)
 
 The `@vestream/mcp` npm package is a separate TypeScript project.

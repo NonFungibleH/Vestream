@@ -32,40 +32,43 @@ import {
   relativeFreshness,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
-import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
-import { fetchDefiLlamaTvl } from "@/lib/defillama";
+import type { ProtocolTvl } from "@/lib/vesting/tvl";
+import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 
 // Page stays force-dynamic (DB-dependent data can't be pre-rendered at build
 // time — ECONNREFUSED without DATABASE_URL). Perf comes from caching one
 // level deeper: the entire "load /protocols data" payload is wrapped in
 // unstable_cache with a 5-min TTL, stored in Vercel's Data Cache (shared
-// across serverless instances, unlike in-process module state). Net:
+// across serverless instances, unlike in-process module state).
 //
-//   - First request in any 5-min window: ~1-2s (DB + DefiLlama + optional
-//     local TVL pipeline for Unvest + Jupiter Lock only)
-//   - Every other request in that window (across every Vercel instance):
-//     ~50-100ms. Single Redis-backed lookup. No DB, no subgraph, no
-//     DexScreener, no CoinGecko.
+// TVL data model (April 2026 rewrite — honest-TVL pass):
+//   TVL no longer gets computed at page-render time. The daily cron
+//   `/api/cron/tvl-snapshot` runs at 03:15 UTC — it dispatches per-protocol
+//   to either (a) the DefiLlama vesting-aggregate passthrough (Sablier,
+//   Hedgey, Streamflow), or (b) our own exhaustive walker + DexScreener/
+//   CoinGecko pricing pipeline (UNCX, Unvest, Superfluid, Team Finance,
+//   PinkSale, Jupiter Lock). Results land in `protocolTvlSnapshots`.
 //
-// Rough daily cost at steady state with this design:
-//   24h / 5min = 288 refreshes/day
-//   Each refresh = 1 DefiLlama call + 9 DB queries + 2 small pricing passes
-//   ≈ <1000 DB queries/day for the whole /protocols route
-// Traffic-insensitive. A 10× traffic spike doesn't 10× the compute.
+// This page reads that table — one SELECT across all 9 protocols × up to 4
+// chains each, sums per protocol for the headline, preserves per-chain
+// breakdown for the bar, and surfaces the `methodology` + `computedAt`
+// columns to the UI so every TVL number is traceable to how it was derived
+// and when. See CLAUDE.md "TVL Methodology" section for the full rules.
+//
+// Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
+// (Data Cache hit) is ~50-100ms.
 export const dynamic = "force-dynamic";
 const CACHE_TTL_SECONDS = 300;  // 5 min — marketing-page data, slow-changing
 
 /**
- * All DB + external-API work the /protocols page needs, wrapped in Vercel
- * Data Cache. Serialisable so it survives KV round-trips cleanly — no Maps
- * or class instances escape the cache boundary.
+ * All DB work the /protocols page needs, wrapped in Vercel Data Cache. Pure
+ * DB reads — no external API calls on the render path.
  */
 const loadProtocolsData = unstable_cache(
   async () => {
     const protocols = listProtocols();
-    const localTvlProtocols = protocols.filter((p) => !p.externalTvl);
 
-    const [statsEntries, tvlMap, externalTvlEntries] = await Promise.all([
+    const [statsEntries, snapshotRows] = await Promise.all([
       Promise.all(
         protocols.map(async (p) => {
           try {
@@ -76,35 +79,77 @@ const loadProtocolsData = unstable_cache(
           }
         }),
       ),
-      (async (): Promise<Record<string, ProtocolTvl>> => {
-        if (localTvlProtocols.length === 0) return {};
-        try {
-          const byId = Object.fromEntries(localTvlProtocols.map((p) => [p.slug, p.adapterIds] as const));
-          return await getAllProtocolsTvl(byId);
-        } catch (err) {
-          console.error("[unlocks] tvl aggregate failed:", err);
-          return {};
-        }
-      })(),
-      Promise.all(
-        protocols
-          .filter((p) => p.externalTvl)
-          .map(async (p) => {
-            const cfg = p.externalTvl!;
-            try {
-              const snap = await fetchDefiLlamaTvl(cfg.slug, cfg.category);
-              return [p.slug, snap] as const;
-            } catch (err) {
-              console.error(`[unlocks] DefiLlama fetch failed for ${p.slug}:`, err);
-              return [p.slug, null] as const;
-            }
-          }),
-      ),
+      readAllSnapshots().catch((err) => {
+        console.error("[unlocks] snapshot read failed:", err);
+        return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
+      }),
     ]);
 
-    return { statsEntries, tvlMap, externalTvlEntries };
+    // Aggregate snapshot rows by protocol — sum across chains.
+    const tvlMap: Record<string, ProtocolTvl> = {};
+    const methodologyMap: Record<string, string> = {};
+    const computedAtMap: Record<string, string> = {};
+
+    for (const p of protocols) {
+      const rows = snapshotRows.filter((r) => {
+        // Protocol may be aggregated from multiple adapter IDs (e.g. UNCX
+        // displays uncx + uncx-vm). Match any of them.
+        return p.adapterIds.includes(r.protocol);
+      });
+      if (rows.length === 0) continue;
+
+      let tvlUsd = 0;
+      let tvlHigh = 0;
+      let tvlMedium = 0;
+      let tvlLow = 0;
+      let tokensPriced = 0;
+      let tokensTotal  = 0;
+      const perChainMap = new Map<number, number>();
+      let latestComputedAt: Date | null = null;
+      // Methodology: if ANY row is defillama-vesting, mark the protocol as
+      // externally sourced for the UI tag. Walker rows win for display of
+      // methodology if there's a mix (unlikely but possible).
+      let methodology = rows[0].methodology;
+      for (const r of rows) {
+        tvlUsd    += r.tvlUsd;
+        tvlHigh   += r.tvlHigh;
+        tvlMedium += r.tvlMedium;
+        tvlLow    += r.tvlLow;
+        tokensPriced += r.tokensPriced;
+        tokensTotal  += r.tokensTotal;
+        perChainMap.set(r.chainId, (perChainMap.get(r.chainId) ?? 0) + r.tvlUsd);
+        if (!latestComputedAt || r.computedAt > latestComputedAt) {
+          latestComputedAt = r.computedAt;
+        }
+        // Prefer the less-precise methodology tag for display — if we have
+        // both defillama and walker rows for the same protocol, the walker
+        // methodology is the more "accurate" label to show.
+        if (r.methodology !== "defillama-vesting") methodology = r.methodology;
+      }
+
+      methodologyMap[p.slug] = methodology;
+      computedAtMap[p.slug] = (latestComputedAt ?? new Date()).toISOString();
+
+      tvlMap[p.slug] = {
+        adapterIds:      p.adapterIds,
+        tvlUsd,
+        tvlByBand:       { high: tvlHigh, medium: tvlMedium, low: tvlLow },
+        pricingSources:  { dexscreener: 0, coingecko: 0 }, // aggregate-level — per-token not stored
+        perChain:        Array.from(perChainMap.entries())
+          .map(([chainId, usd]) => ({ chainId, tvlUsd: usd }))
+          .sort((a, b) => b.tvlUsd - a.tvlUsd),
+        tokensPriced,
+        tokensSkipped:   Math.max(0, tokensTotal - tokensPriced),
+        totalTokens:     tokensTotal,
+        coverage:        tokensTotal > 0 ? tokensPriced / tokensTotal : (tvlUsd > 0 ? 1 : 0),
+        topContributors: [],   // available in snapshot row.topContributors if needed
+        computedAt:      (latestComputedAt ?? new Date()).toISOString(),
+      };
+    }
+
+    return { statsEntries, tvlMap, methodologyMap, computedAtMap };
   },
-  ["protocols-page-data-v2"],
+  ["protocols-page-data-v3"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
@@ -129,66 +174,33 @@ export const metadata: Metadata = {
 export default async function UnlocksIndexPage() {
   const protocols = listProtocols();
 
-  // Page data — the April 2026 perf rewrite cut two major offenders from
-  // the hot path and wrapped what's left in Vercel Data Cache:
-  //
-  //   1. getGlobalStats was querying every subgraph × every chain to build
-  //      a "live on-chain stream count" number that was redundant with the
-  //      cache count. Dropped entirely. Saves ~5-12s of subgraph round-trips
-  //      on cold Vercel instances. The stream-count column now renders from
-  //      cache-only — directionally correct and scales with indexed coverage.
-  //
-  //   2. getAllProtocolsTvl was computing DexScreener + CoinGecko prices
-  //      for every protocol — but 7 of 9 protocols have a DefiLlama entry
-  //      that's both more accurate and orders of magnitude cheaper. We now
-  //      only run the local pricing pipeline for protocols WITHOUT
-  //      externalTvl configured (Unvest + Jupiter Lock today). Saves
-  //      another ~2-10s of DexScreener / CoinGecko batches.
-  //
-  //   3. Everything that remains is wrapped in unstable_cache with a 5-min
-  //      TTL. First request in each 5-min window recomputes; all subsequent
-  //      requests across every Vercel instance read from the shared Data
-  //      Cache in ~50-100ms.
-  //
-  // Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
-  // (Data Cache hit) is ~50-100ms.
-  const { statsEntries, tvlMap, externalTvlEntries } = await loadProtocolsData();
+  // Load from Vercel Data Cache — wraps a single SELECT over the
+  // protocolTvlSnapshots table + per-protocol stream counts. The snapshot
+  // table itself is populated daily by /api/cron/tvl-snapshot at 03:15 UTC;
+  // render path is pure DB, no DefiLlama/subgraph/RPC calls.
+  const { statsEntries, tvlMap, methodologyMap, computedAtMap } =
+    await loadProtocolsData();
   const statsMap = new Map(statsEntries);
 
-  // Merge external TVL sources into the tvl map. For protocols with an
-  // external source configured, we synthesise a ProtocolTvl from the
-  // DefiLlama snapshot so the downstream UI doesn't have to branch.
-  // Track which slugs came from an external source so the UI can surface
-  // attribution (e.g. "via DefiLlama" tag).
+  // Rows whose snapshot methodology is "defillama-vesting" — the UI surfaces
+  // these with a "via DefiLlama" attribution tag. Everything else was
+  // computed by our own walker + pricing pipeline.
   const externallySourced = new Set<string>();
-  for (const [slug, snap] of externalTvlEntries) {
-    if (!snap) continue;
-    const protocol = protocols.find((p) => p.slug === slug);
-    if (!protocol) continue;
-    externallySourced.add(slug);
-    tvlMap[slug] = {
-      adapterIds:      protocol.adapterIds,
-      tvlUsd:          snap.totalUsd,
-      // All-in-one "high" band — DefiLlama's figure is curated, not sampled.
-      tvlByBand:       { high: snap.totalUsd, medium: 0, low: 0 },
-      pricingSources:  { dexscreener: 0, coingecko: 0 },
-      // Per-chain rows: DefiLlama returns chain NAMES (e.g. "Solana"), not
-      // numeric IDs. We emit a single synthetic chainId=0 row so the UI
-      // doesn't render a broken chain-pill; the per-chain bar isn't the
-      // primary signal on the Streamflow card anyway.
-      perChain:        snap.perChain.length > 0
-                         ? [{ chainId: protocol.chainIds[0] ?? 0, tvlUsd: snap.totalUsd }]
-                         : [],
-      tokensPriced:    snap.perChain.length > 0 ? 1 : 0,
-      tokensSkipped:   0,
-      totalTokens:     snap.perChain.length > 0 ? 1 : 0,
-      coverage:        1,
-      topContributors: [],
-      computedAt:      snap.fetchedAt,
-    };
+  for (const slug of Object.keys(methodologyMap)) {
+    if (methodologyMap[slug] === "defillama-vesting") externallySourced.add(slug);
   }
 
   const tvlRows = protocols.map((p) => ({ protocol: p, tvl: tvlMap[p.slug] ?? null }));
+
+  // Oldest snapshot age across rendered protocols, used by the
+  // TvlComparisonBar tooltip as a "last verified X ago" signal.
+  const computedAtValues = Object.values(computedAtMap);
+  const oldestSnapshot = computedAtValues.length > 0
+    ? new Date(Math.min(...computedAtValues.map((s) => new Date(s).getTime())))
+    : null;
+  const snapshotAgeHours = oldestSnapshot
+    ? Math.max(0, Math.round((Date.now() - oldestSnapshot.getTime()) / 3_600_000))
+    : null;
 
   // Stream counts come from our indexed cache only. Historically we also
   // queried every subgraph for a "global" count and took the max — but that
@@ -290,7 +302,11 @@ export default async function UnlocksIndexPage() {
           state undermines the rest of the page. Swapped in the TVL bar so
           the left column always has content and the two panels feel balanced. */}
       <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TvlComparisonBar rows={tvlRows} externallySourced={externallySourced} />
+        <TvlComparisonBar
+          rows={tvlRows}
+          externallySourced={externallySourced}
+          snapshotAgeHours={snapshotAgeHours}
+        />
         <UpcomingUnlockTicker />
       </section>
 

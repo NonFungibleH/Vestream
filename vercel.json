@@ -9,6 +9,10 @@
       "schedule": "0 4 * * 0"
     },
     {
+      "path": "/api/cron/tvl-snapshot",
+      "schedule": "15 3 * * *"
+    },
+    {
       "path": "/api/cron/notify",
       "schedule": "0 9 * * *"
     }

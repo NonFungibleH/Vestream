@@ -494,3 +494,116 @@ function emptyTvl(adapterIds: readonly string[]): ProtocolTvl {
     computedAt:      new Date().toISOString(),
   };
 }
+
+// ─── Shared pricing primitive for external callers (tvl-snapshot.ts) ─────────
+//
+// Same math as `getProtocolTvl` above, but takes aggregates as an argument
+// instead of reading from `vestingStreamsCache`. The /protocols page still
+// uses the DB path; the TVL snapshot cron uses exhaustive walker output via
+// `priceAggregates` directly. Keeping one pricing pipeline — so a
+// methodology change here automatically ripples to both paths.
+
+export interface PricedAggregate {
+  chainId:      number;
+  tokenAddress: string;
+  tokenSymbol:  string | null;
+  /** Whole-token amount (already divided by 10^decimals). */
+  amount:       number;
+  /** USD value = amount × priceUsd. */
+  usd:          number;
+  confidence:   PriceConfidence;
+  source:       PriceSource;
+}
+
+export interface PricingSummary {
+  /** Per-token priced rows (one per (chainId, tokenAddress) that we successfully priced). */
+  priced:         PricedAggregate[];
+  /** Count of aggregates we couldn't price (no DEX liquidity + no CoinGecko listing). */
+  tokensSkipped:  number;
+}
+
+/**
+ * Price an arbitrary list of per-token locked aggregates. Used by both
+ * `getProtocolTvl` (cache-backed) and the TVL snapshot cron (walker-backed).
+ *
+ * Input shape is intentionally minimal — any caller can adapt their own
+ * aggregate type into this shape.
+ */
+export async function priceAggregates(
+  aggs: Array<{
+    chainId:       number;
+    tokenAddress:  string;
+    tokenSymbol:   string | null;
+    tokenDecimals: number;
+    /** Stringified bigint — raw locked token units. */
+    lockedAmount:  string;
+  }>,
+): Promise<PricingSummary> {
+  if (aggs.length === 0) return { priced: [], tokensSkipped: 0 };
+
+  // Map walker-style input into the internal aggregate shape used by the DS/CG
+  // helpers (they still expect `totalLocked`).
+  const internalAggs: LockedTokenAggregate[] = aggs.map((a) => ({
+    chainId:       a.chainId,
+    tokenAddress:  a.tokenAddress.toLowerCase(),
+    tokenSymbol:   a.tokenSymbol,
+    tokenDecimals: a.tokenDecimals,
+    totalLocked:   a.lockedAmount,
+  }));
+
+  // Pass A — DexScreener.
+  const dsPrices = await priceViaDexScreener(internalAggs);
+  // Pass B — CoinGecko for what DexScreener didn't price.
+  const unpriced = internalAggs.filter((a) => {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    return !dsChain || !dsPrices.has(`${dsChain}:${a.tokenAddress}`);
+  });
+  const cgPrices = await priceViaCoinGecko(unpriced);
+
+  // Merge into one lookup map keyed by DS-style slug.
+  const prices = new Map<string, PriceInfo>(dsPrices);
+  for (const a of unpriced) {
+    const platform = CG_PLATFORM_SLUG[a.chainId];
+    if (!platform) continue;
+    const info    = cgPrices.get(`${platform}:${a.tokenAddress}`);
+    if (!info) continue;
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
+  }
+
+  const priced: PricedAggregate[] = [];
+  let tokensSkipped = 0;
+
+  for (const a of internalAggs) {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (!dsChain) { tokensSkipped++; continue; }
+
+    const info = prices.get(`${dsChain}:${a.tokenAddress}`);
+    if (!info) { tokensSkipped++; continue; }
+
+    let wholeTokens: number;
+    try {
+      wholeTokens = Number(BigInt(a.totalLocked.split(".")[0] ?? "0")) / 10 ** a.tokenDecimals;
+    } catch {
+      const asNum = Number(a.totalLocked);
+      if (!Number.isFinite(asNum)) { tokensSkipped++; continue; }
+      wholeTokens = asNum / 10 ** a.tokenDecimals;
+    }
+    if (!Number.isFinite(wholeTokens) || wholeTokens <= 0) { tokensSkipped++; continue; }
+
+    const usd = wholeTokens * info.priceUsd;
+    if (!Number.isFinite(usd) || usd <= 0) { tokensSkipped++; continue; }
+
+    priced.push({
+      chainId:      a.chainId,
+      tokenAddress: a.tokenAddress,
+      tokenSymbol:  a.tokenSymbol,
+      amount:       wholeTokens,
+      usd,
+      confidence:   info.confidence,
+      source:       info.source,
+    });
+  }
+
+  return { priced, tokensSkipped };
+}

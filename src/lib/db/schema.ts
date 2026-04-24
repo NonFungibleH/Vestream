@@ -8,6 +8,8 @@ import {
   timestamp,
   jsonb,
   index,
+  uniqueIndex,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -189,6 +191,73 @@ export const mobileOtps = pgTable("mobile_otps", {
   used:      boolean("used").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── Protocol TVL snapshots ────────────────────────────────────────────────────
+// One row per (protocol, chainId). Upserted daily by the TVL snapshot cron —
+// see src/app/api/cron/tvl-snapshot/route.ts.
+//
+// Source of truth for /protocols page TVL + all cross-protocol TVL widgets.
+// Replaces the previous "compute live on every request" approach which was
+// (a) slow and (b) mixed DefiLlama's total-protocol figures in as if they
+// were vesting-specific.
+//
+// Two sources supplied per row, distinguished by the `methodology` column:
+//   - "defillama-vesting"  — pulled from api.llama.fi /protocols, chainTvls.vesting
+//                            Only used for Sablier, Hedgey, Streamflow — the
+//                            three protocols where DefiLlama exposes a genuine
+//                            vesting-specific breakdown.
+//   - "subgraph-walk-v1"   — exhaustive subgraph pagination, priced via our
+//                            own DexScreener+CoinGecko pipeline (same confidence
+//                            bands as existing tvl.ts). Used for UNCX, Unvest,
+//                            Team Finance, Superfluid.
+//   - "contract-reads-v1"  — EVM contract-read sweep (PinkSale PinkLock V2).
+//   - "program-scan-v1"    — Solana getProgramAccounts sweep (Jupiter Lock).
+//
+// We store per (protocol, chainId) rather than aggregating because the
+// confidence-band breakdown is chain-specific and the /protocols page can
+// SUM across rows cheaply.
+export const protocolTvlSnapshots = pgTable(
+  "protocol_tvl_snapshots",
+  {
+    id:           uuid("id").primaryKey().defaultRandom(),
+    // Composite natural key — one row per (protocol, chainId). Upsert target.
+    protocol:     text("protocol").notNull(),      // matches ProtocolMeta.slug
+    chainId:      integer("chain_id").notNull(),   // matches SupportedChainId
+    // ── USD figures (numeric for precision; stored as decimal strings) ────────
+    tvlUsd:       numeric("tvl_usd",    { precision: 24, scale: 2 }).notNull(),
+    tvlHigh:      numeric("tvl_high",   { precision: 24, scale: 2 }).notNull().default("0"),
+    tvlMedium:    numeric("tvl_medium", { precision: 24, scale: 2 }).notNull().default("0"),
+    tvlLow:       numeric("tvl_low",    { precision: 24, scale: 2 }).notNull().default("0"),
+    // ── coverage / quality ────────────────────────────────────────────────────
+    streamCount:  integer("stream_count").notNull().default(0),  // distinct streams enumerated
+    tokensPriced: integer("tokens_priced").notNull().default(0), // tokens we got a USD price for
+    tokensTotal:  integer("tokens_total").notNull().default(0),  // distinct tokens seen in locked amounts
+    // ── provenance ────────────────────────────────────────────────────────────
+    methodology:  text("methodology").notNull(),    // see header comment for valid values
+    // Optional: top N token contributions for UI tooltips + audit trail.
+    // Shape: Array<{ tokenSymbol, tokenAddress, usd, confidence }>
+    topContributors: jsonb("top_contributors").$type<Array<{
+                       tokenSymbol?:  string;
+                       tokenAddress:  string;
+                       usd:           number;
+                       confidence:    "high" | "medium" | "low";
+                       source:        "dexscreener" | "coingecko" | "defillama";
+                     }>>().default([]).notNull(),
+    // ── bookkeeping ───────────────────────────────────────────────────────────
+    computedAt:   timestamp("computed_at").defaultNow().notNull(),
+    // Free-text audit trail — which cron ran this, how long it took, any
+    // subgraph errors encountered. Never shown in UI; internal only.
+    notes:        text("notes"),
+  },
+  (t) => [
+    // Upsert target — one row per protocol × chain.
+    uniqueIndex("ptvs_protocol_chain_idx").on(t.protocol, t.chainId),
+    // Hot path: "give me all rows for this protocol, sum tvlUsd" on /protocols.
+    index("ptvs_protocol_idx").on(t.protocol),
+    // History-style lookups (once we stop overwriting).
+    index("ptvs_protocol_computed_idx").on(t.protocol, t.computedAt),
+  ]
+);
 
 // ── Demo web-push subscriptions ───────────────────────────────────────────────
 // Anonymous push subscriptions for the 15-minute vesting demo on /demo.
