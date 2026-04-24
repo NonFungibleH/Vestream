@@ -2515,6 +2515,187 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 12 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "what-is-a-token",
+    title:       "What Is a Token? A Plain-English Guide for People New to Crypto",
+    excerpt:     "A token is a unit of value that lives inside a smart contract. This guide explains what tokens are, how they differ from coins, the main types you will encounter, and how to track tokens you actually own — without the jargon.",
+    publishedAt: "2026-04-24",
+    updatedAt:   "2026-04-24",
+    readingTime: "9 min read",
+    category:    "Fundamentals",
+    tags:        ["token", "crypto token", "ERC-20", "utility token", "governance token", "stablecoin"],
+    content: [
+      {
+        type: "p",
+        html: "Almost every article about crypto starts by saying \"token\" as though everyone already knows what that means. Most people do not — and asking feels like admitting you have not been paying attention. This guide fixes that. No jargon, no handwaving: just a clear explanation of what a token is, the different kinds you will run into, and what actually happens when you hold one.",
+      },
+      {
+        type: "p",
+        html: "By the end of this you will be able to read almost any crypto-project landing page, token-sale announcement, or vesting contract and understand exactly what is being offered. You will also know why tokens — not blockchains — are the primary unit you interact with when you use crypto in daily life.",
+      },
+
+      { type: "h2", text: "What Is a Token, Really?" },
+      {
+        type: "p",
+        html: "A token is a unit of value or utility that is recorded inside a smart contract on a blockchain. That is the precise definition, but it is not the most useful one. The more useful way to think about it: a token is an entry in a ledger that says <em>\"this address owns X of this thing.\"</em> The smart contract is the set of rules that says how the thing can move, who can move it, and how many can exist.",
+      },
+      {
+        type: "callout",
+        emoji: "📌",
+        title: "Simple definition",
+        body:  "A token is a digital unit of ownership that lives inside a smart contract. The contract keeps track of who owns how much, and enforces the rules about how it can be transferred.",
+      },
+      {
+        type: "p",
+        html: "When you \"hold\" a token, you do not have a physical object and you do not have a file on your computer. What you have is a private key that proves control of a wallet address — and the smart contract's ledger says that address owns N units of the token. Moving tokens means signing a transaction with your key, which tells the contract to update the ledger.",
+      },
+
+      { type: "h2", text: "Tokens vs. Coins — The Distinction That Actually Matters" },
+      {
+        type: "p",
+        html: "People use \"token\" and \"coin\" interchangeably, and most of the time it does not matter. But if you want to sound like you know what you are talking about, here is the distinction:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>A coin is native to its own blockchain.</strong> ETH is the coin of the Ethereum network. BNB is the coin of BNB Chain. MATIC was the coin of Polygon. You need the coin to pay transaction fees on that chain.",
+          "<strong>A token lives on top of an existing blockchain.</strong> USDC, UNI, LINK, and thousands of others are tokens that exist as smart contracts on Ethereum (and other chains). They use the chain's infrastructure but have their own rules.",
+          "<strong>The practical difference:</strong> coins are backed by the economic security of the whole chain. Tokens are backed by whatever the issuing smart contract and its issuers say they are backed by.",
+        ],
+      },
+
+      { type: "h2", text: "The Main Types of Tokens" },
+      {
+        type: "p",
+        html: "Tokens are a general-purpose tool, and people have used them for a huge range of things. Most of what you will encounter falls into one of these categories:",
+      },
+      {
+        type: "table",
+        headers: ["Type", "What it represents", "Examples"],
+        rows: [
+          ["Utility token",    "Access to a product or service — think of it as a pre-paid credit",        "BAT, GRT, FIL"],
+          ["Governance token", "A vote on decisions made by a protocol or DAO",                            "UNI, AAVE, MKR"],
+          ["Stablecoin",       "A claim on a stable asset — usually $1 USD or a fiat equivalent",          "USDC, USDT, DAI"],
+          ["Wrapped asset",    "A tokenised version of another asset (often cross-chain)",                 "WBTC, WETH"],
+          ["Security token",   "A regulated security represented on-chain (ownership, dividends, etc.)",   "Real-estate tokens, tokenised equity"],
+          ["NFT",              "A unique, non-interchangeable token — usually ERC-721 rather than ERC-20", "Bored Apes, ENS names, game items"],
+          ["LP token",         "Proof that you supplied liquidity to a DEX pool",                          "Uniswap V2/V3 positions, Curve LP"],
+        ],
+      },
+      {
+        type: "p",
+        html: "A single project often issues more than one token. A DeFi protocol might have a governance token you vote with, LP tokens you get for providing liquidity, and receipt tokens you get for depositing into a vault. Each is a separate smart contract with its own rules.",
+      },
+
+      { type: "h2", text: "Token Standards: Why ERC-20 Matters" },
+      {
+        type: "p",
+        html: "The reason wallets, exchanges, and dashboards can display any token without special-casing each one is a set of technical standards that define what functions a token contract must implement. The most important standard is <strong>ERC-20</strong>, which defines fungible tokens on Ethereum and every EVM-compatible chain.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>ERC-20</strong> — fungible tokens (every unit is interchangeable: 1 USDC = 1 USDC)",
+          "<strong>ERC-721</strong> — non-fungible tokens (each one is unique — this is the NFT standard)",
+          "<strong>ERC-1155</strong> — a multi-token standard that can hold both fungible and non-fungible together, popular in gaming",
+          "<strong>BEP-20, TRC-20, SPL</strong> — the equivalent standards on BNB Chain, Tron, and Solana respectively",
+        ],
+      },
+      {
+        type: "p",
+        html: "If a token is ERC-20 compliant, any wallet, exchange, or protocol that supports ERC-20 supports that token — automatically. This is why listing a new token on Uniswap or MetaMask does not require any engineering work: the standard does the heavy lifting.",
+      },
+
+      { type: "h2", text: "How You Actually Get Tokens" },
+      {
+        type: "p",
+        html: "There are five common ways a token ends up in a wallet. Understanding which applies to your situation matters, because each has different tax, unlock, and risk implications.",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Purchase on an exchange.</strong> You buy the token on a centralised exchange (Coinbase, Binance) or a decentralised one (Uniswap, 1inch). The token is delivered to your wallet immediately — no vesting, no lock-up.",
+          "<strong>Airdrop.</strong> The project sends tokens to eligible wallets for free — usually to reward early users, protocol activity, or governance participation.",
+          "<strong>Token sale / ICO / IDO.</strong> You buy the token directly from the project at an agreed price. These allocations are almost always subject to a vesting schedule.",
+          "<strong>Rewards or yield.</strong> You stake, provide liquidity, or use a protocol, and it emits tokens to you over time.",
+          "<strong>Grant or compensation.</strong> You are a founder, team member, advisor, or investor, and the project has granted you a token allocation — almost always with a multi-year vesting schedule enforced by a vesting contract.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔒",
+        title: "Vested tokens are not liquid tokens",
+        body:  "If you received tokens through a token sale, grant, or advisory role, you probably do not have full access to them yet. They sit in a vesting contract that releases them gradually. This is where token holders most often get confused: seeing a large allocation on paper and assuming it is immediately sellable. It usually is not.",
+      },
+
+      { type: "h2", text: "Where Tokens Live: Chains" },
+      {
+        type: "p",
+        html: "Every token is deployed on a specific chain. An ERC-20 token on Ethereum is a different thing from an ERC-20 token with the same name on Base or Polygon — even if they share a symbol. This trips people up often: USDC on Ethereum, USDC on Base, and USDC on Solana are three different smart contracts (bridged or natively issued by Circle), and moving between them requires a bridge.",
+      },
+      {
+        type: "p",
+        html: "The main EVM chains you will encounter tokens on are <strong>Ethereum</strong> (the most liquid, most expensive), <strong>Base</strong> (Coinbase's L2, low fees, growing fast), <strong>BNB Chain</strong> (large retail user base, cheap), and <strong>Polygon</strong> (general-purpose, widely used). There are many others, but those four cover most real volume.",
+      },
+
+      { type: "h2", text: "Tracking Tokens You Own" },
+      {
+        type: "p",
+        html: "Once you have tokens, tracking them is more complex than it sounds — especially if you received them through a vesting agreement. Your wallet balance only shows you what you can move today. It does not show you tokens that are locked in vesting contracts, tokens that are staked, tokens that are earning yield, or tokens that are sitting in LP positions.",
+      },
+      {
+        type: "p",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #2563eb; text-decoration: underline;\">TokenVest</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+      },
+
+      { type: "h2", text: "What to Know Before You Hold Any Token" },
+      {
+        type: "p",
+        html: "Before you treat a token as an asset, ask four questions:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>What does the smart contract actually do?</strong> Is it a standard ERC-20 with no special functions, or can the issuer mint more, pause transfers, or freeze balances? Look at the contract on a block explorer.",
+          "<strong>Is my allocation vested?</strong> If it is, when do the tokens actually unlock? You can check this at the contract level on a vesting aggregator.",
+          "<strong>Where does the liquidity live?</strong> If there is no DEX pool or exchange listing for the token, the paper value is meaningless.",
+          "<strong>What is the circulating vs. total supply?</strong> A token with 1% circulating supply and a 12-month aggressive unlock schedule is exposed to massive sell pressure. Check the unlock calendar.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Holding tokens is not like holding equity. The rules are enforced by code, not contract law, and the only way to really know what you own is to read the contract and the vesting schedule. Fortunately, that information is all on-chain and publicly verifiable — you just need the right tools to surface it.",
+      },
+
+      {
+        type: "faq",
+        items: [
+          {
+            q: "What is the difference between a token and a cryptocurrency?",
+            a: "Cryptocurrency is the general umbrella term. It includes both coins (native assets of a blockchain, like ETH or BTC) and tokens (assets built on top of an existing blockchain, like USDC or UNI). All tokens are cryptocurrencies; not all cryptocurrencies are tokens.",
+          },
+          {
+            q: "Can I lose a token after I receive it?",
+            a: "If you lose access to the private key of the wallet that holds the token, yes — no one else can recover it for you. There is no customer-support line. This is why self-custody requires discipline about backup and security.",
+          },
+          {
+            q: "If a project issues a new token, where does it come from?",
+            a: "The project deploys a smart contract that defines the token and the initial supply. The contract is code — it runs on the blockchain and has to follow the rules of the token standard (ERC-20, etc.). The initial supply is allocated to specific addresses at deployment, typically including treasury, team, investors, community, and liquidity.",
+          },
+          {
+            q: "Do I pay tax when I receive a token?",
+            a: "In most jurisdictions, yes — receiving tokens (via airdrop, reward, or vesting unlock) is usually treated as income at the fair market value at the time of receipt. Selling that token later creates a separate capital gains event. This varies significantly by country; consult a crypto-literate tax professional.",
+          },
+          {
+            q: "How do I find out if my tokens are locked in a vesting contract?",
+            a: "Ask the project which vesting protocol they use (Sablier, UNCX, Hedgey, etc.) and check your wallet on that protocol's dashboard. Or use an aggregator that reads all major vesting contracts and shows you the complete unlock schedule for your wallet — see our <a href=\"/resources/how-to-track-token-vesting\" style=\"color: #2563eb; text-decoration: underline;\">guide to tracking token vesting</a> for the step-by-step.",
+          },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {
