@@ -55,6 +55,7 @@ const DS_CHAIN_SLUG: Record<number, string> = {
   56:   "bsc",
   137:  "polygon",
   8453: "base",
+  101:  "solana",     // DexScreener Solana slug — works for SPL mints
 };
 
 const CG_PLATFORM_SLUG: Record<number, string> = {
@@ -62,6 +63,7 @@ const CG_PLATFORM_SLUG: Record<number, string> = {
   56:   "binance-smart-chain",
   137:  "polygon-pos",
   8453: "base",
+  101:  "solana",    // CoinGecko platform slug for SPL tokens
 };
 
 // Pricing thresholds (USD liquidity) — tiered to preserve the long tail
