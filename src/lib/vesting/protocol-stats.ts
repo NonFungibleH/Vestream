@@ -68,6 +68,12 @@ function rowToUnlock(row: {
   streamData:   Record<string, unknown>;
 }): UnlockSummary {
   const sd = row.streamData as Partial<VestingStream>;
+  // `lockedAmount` reflects what's still to vest as of last index — correct
+  // for both shapes:
+  //   stepped:  sum of all future-step amounts still pending
+  //   linear:   whole vest remaining (monotonically decreasing over time)
+  // Fallback to totalAmount for legacy cache rows without lockedAmount.
+  const amount = sd.lockedAmount ?? sd.totalAmount ?? null;
   return {
     streamId:     row.streamId,
     protocol:     row.protocol,
@@ -78,7 +84,7 @@ function rowToUnlock(row: {
     // streamData blob. Any adapter written since inception sets it.
     tokenDecimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
     endTime:      row.endTime ?? null,
-    amount:       sd.totalAmount ?? null,
+    amount,
     recipient:    row.recipient,
   };
 }
@@ -189,36 +195,39 @@ export async function getNextUpcomingUnlock(
  * Top N upcoming unlocks across ALL indexed protocols, strictly ordered by
  * soonest trigger time. Used by the "Upcoming Unlocks" panel on /protocols.
  *
- * Two rules layered on top of endTime-ascending sort:
+ * Rules layered on top of endTime-ascending sort:
  *
- *   1. Skip linear/continuous streams. Sablier linear and Superfluid
- *      streaming-vesting streams have no discrete unlock event at the
- *      endTime — they flow per-second. Including them yielded rows that
- *      rendered as "0.0000 USDC" because there's no meaningful "amount
- *      unlocking at this moment" for continuous flow.
- *      Filter on shape === "steps" (tranched / cliff schedules).
+ *   1. Include both stepped and linear schedules. Earlier versions filtered
+ *      on shape === "steps" to avoid "0.0000 USDC" amounts on continuous
+ *      streams, but that excluded Team Finance, Superfluid, Hedgey, UNCX
+ *      and Sablier linear — i.e. most of our integrated protocols —
+ *      leaving the widget dominated by whichever protocol happened to
+ *      use stepped schedules (Unvest milestones, PinkSale).
+ *      We now render every active stream whose endTime is in the future
+ *      and use `lockedAmount` (what's still to vest) as the displayed
+ *      amount — accurate for both shapes and no longer zero for linear.
  *
- *   2. Dedupe by recipient — keep the earliest-unlocking row per wallet.
- *      A wallet with four Sablier tranches at T+12h / T+13h / T+14h /
- *      T+15h used to fill the widget with one address. One row per
- *      recipient in the display set.
+ *   2. Round-robin by protocol so the list shows breadth. Previously the
+ *      widget was dominated by a single prolific protocol (9 Unvest + 1
+ *      Sablier in one audit) even though 6+ protocols had imminent
+ *      unlocks. We still sort the candidate pool by endTime asc, but
+ *      then build the output by taking the earliest-unlocking stream
+ *      from each protocol in turn before going back for seconds.
+ *      Pulls evenly across protocols without losing chronological
+ *      ordering within each protocol's contributions.
  *
- * NOTE on an earlier attempt: a previous revision also round-robined by
- * protocol to show breadth across protocols. That looked great in theory
- * but broke the fundamental contract of the widget — rows weren't in
- * chronological order anymore, so "in 10h" could appear above "in 3d"
- * above "in 19d" above "in 3d" again. Confusing. Reverted. If we want a
- * "diverse protocols" view, it belongs on a separate surface, not the
- * primary upcoming-unlocks feed.
+ *   3. Dedupe by recipient. A wallet with 4 tranches at T+12h / T+13h /
+ *      T+14h / T+15h shouldn't fill the widget with one address.
  *
- * Pool: fetch more than we display so dedupe has room to trim same-wallet
- * rows without yielding fewer than `limit` distinct wallets.
+ * Pool: fetch more than we display so dedupe + round-robin has room to
+ * trim same-wallet rows without yielding fewer than `limit` distinct
+ * entries.
  */
 export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch 10× the display count so dedupe has plenty of room to trim
-  // same-wallet entries before we run out of distinct recipients.
-  const POOL_MULTIPLIER = 10;
+  // Fetch 15× the display count so the round-robin has plenty to pull
+  // from each protocol without running out on the prolific ones.
+  const POOL_MULTIPLIER = 15;
 
   const rows = await db
     .select({
@@ -236,26 +245,44 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
       and(
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
-        // JSONB filter: only streams with a discrete unlock step at endTime.
-        // Linear / continuous streams store shape: "linear" (or absent);
-        // tranched / cliff streams store shape: "steps".
-        sql`${vestingStreamsCache.streamData}->>'shape' = 'steps'`,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
     .limit(limit * POOL_MULTIPLIER);
 
-  // Dedupe by recipient, preserving endTime-asc order (input is already
-  // sorted, so first occurrence = earliest unlock for that wallet). Stop
-  // once we have `limit` distinct recipients — no reason to walk the
-  // rest of the pool.
+  // Step 1 — dedupe by recipient to avoid one wallet dominating.
   const seenRecipients = new Set<string>();
-  const out: UnlockSummary[] = [];
+  const deduped: typeof rows = [];
   for (const row of rows) {
     if (seenRecipients.has(row.recipient)) continue;
     seenRecipients.add(row.recipient);
-    out.push(rowToUnlock(row));
-    if (out.length >= limit) break;
+    deduped.push(row);
+  }
+
+  // Step 2 — round-robin by protocol. Group into per-protocol queues
+  // (each still endTime-asc since the parent list was sorted), then
+  // take one from each queue in turn until we have `limit` entries.
+  // Merge uncx-vm into uncx for display purposes — they share a card.
+  const queuesByProtocol = new Map<string, typeof rows>();
+  for (const row of deduped) {
+    const proto = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
+    if (!queuesByProtocol.has(proto)) queuesByProtocol.set(proto, []);
+    queuesByProtocol.get(proto)!.push(row);
+  }
+
+  const out: UnlockSummary[] = [];
+  // Keep round-robining until the output is full or every queue is empty
+  while (out.length < limit) {
+    let advanced = false;
+    for (const queue of queuesByProtocol.values()) {
+      if (out.length >= limit) break;
+      const row = queue.shift();
+      if (row) {
+        out.push(rowToUnlock(row));
+        advanced = true;
+      }
+    }
+    if (!advanced) break;
   }
   return out;
 }
