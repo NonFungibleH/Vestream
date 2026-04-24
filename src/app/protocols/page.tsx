@@ -33,15 +33,17 @@ import { getGlobalStats, type GlobalProtocolStats } from "@/lib/vesting/global-s
 import { getAllProtocolsTvl, type ProtocolTvl } from "@/lib/vesting/tvl";
 import { fetchDefiLlamaTvl } from "@/lib/defillama";
 
-// ISR with 60s revalidation. The page fans out into several slow
-// upstreams (per-protocol DB stats + per-chain subgraph counts + TVL
-// pricing + DefiLlama) — force-dynamic meant every visitor paid that
-// full cold-start cost (~1 min when all caches were cold), since the
-// rendered HTML wasn't shared. Revalidating at 60s means the first
-// visitor in each 60-second window pays for the refresh in the
-// background while all others get near-instant cached HTML served by
-// the CDN edge. Honest freshness for slow-moving data.
-export const revalidate = 60;
+// Rendered on every request — ISR at the page level can't be used because
+// this page's data sources (DB, subgraphs, DefiLlama) are unreachable from
+// the build environment, and `revalidate = N` forces Next to attempt a
+// static build-time render that fails with ECONNREFUSED on the DB.
+//
+// Perf for repeat visitors is handled a layer deeper: fetchDefiLlamaTvl,
+// getAllProtocolsTvl, getGlobalStats, getProtocolStats all memoise their
+// results in-process with 10-min TTLs, so successive requests hitting a
+// warm Vercel serverless instance return in ~100ms. Cold instances take
+// longer but that's the trade we accept to keep the build healthy.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Token unlock trackers — TokenVest",
