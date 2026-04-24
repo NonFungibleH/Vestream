@@ -35,7 +35,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(37,99,235,0.2)",
           }}
         >
-          Free · No signup · 7 protocols · 4 chains
+          Free · No signup · 8 protocols · 5 chains
         </div>
 
         <h1

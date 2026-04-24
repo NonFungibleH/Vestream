@@ -328,8 +328,8 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Track your wallet across all 7 protocols. Get an email and push notification
-              the moment any of your tokens unlock — no matter the chain or schedule.
+              Track your wallet across all 8 protocols — EVM and Solana. Get an email and push notification
+              the moment any of your tokens unlock, no matter the chain or schedule.
             </p>
             <Link
               href="/early-access"

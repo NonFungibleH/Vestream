@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Developer API — TokenVest",
     description:
-      "REST + MCP for 7 vesting protocols across 4 chains. Normalised JSON, agent-native.",
+      "REST + MCP for 8 vesting protocols across 5 chains — EVM and Solana. Normalised JSON, agent-native.",
     url: "https://vestream.io/developer",
     siteName: "TokenVest",
     type: "website",
@@ -486,7 +486,7 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For builders and prototyping</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["30 req/min burst · 150/day", "All 3 endpoints", "7 protocols indexed", "Standard JSON responses", "Community support"].map(f => (
+                {["30 req/min burst · 150/day", "All 3 endpoints", "8 protocols indexed (EVM + Solana)", "Standard JSON responses", "Community support"].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check />
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
@@ -523,7 +523,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "7 protocols · 4 chains",
+                  "8 protocols · 5 chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

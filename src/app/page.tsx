@@ -650,8 +650,8 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "7 protocols scanned simultaneously — every one listed above",
-                "Ethereum, Base, BNB Chain & Polygon",
+                "8 protocols scanned simultaneously — every one listed above",
+                "Ethereum, Base, BNB Chain, Polygon & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
                 <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#0f172a" }}>
@@ -1073,7 +1073,7 @@ export default async function Home() {
               Start free →
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["1 wallet — auto-scanned across all chains", "All 7 vesting platforms", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
+              {["1 wallet — auto-scanned across all chains", "All 8 vesting platforms (EVM + Solana)", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}

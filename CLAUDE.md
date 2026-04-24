@@ -395,14 +395,17 @@ interface VestingStream {
 ```
 
 ### Supported chains
-| Chain | ID |
-|---|---|
-| Ethereum | 1 |
-| BNB Chain | 56 |
-| Polygon | 137 |
-| Base | 8453 |
-| Sepolia (testnet) | 11155111 |
-| Base Sepolia (testnet) | 84532 |
+| Chain | ID | Ecosystem |
+|---|---|---|
+| Ethereum | 1 | EVM |
+| BNB Chain | 56 | EVM |
+| Polygon | 137 | EVM |
+| Base | 8453 | EVM |
+| Solana | 101 | Non-EVM (SVM) |
+| Sepolia (testnet) | 11155111 | EVM |
+| Base Sepolia (testnet) | 84532 | EVM |
+
+Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 101 matches Solana's cluster enum convention). EVM address format: 0x-prefixed hex. Solana format: base58 pubkey. Address validation is centralised in `src/lib/address-validation.ts`; call `isValidWalletAddress(addr)` anywhere you'd previously have called `viem.isAddress(addr)`.
 
 ### Supported protocols
 | Protocol | ID | Chains | Data source | Notes |
@@ -415,6 +418,7 @@ interface VestingStream {
 | Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Team token vesting — used in Demo C on /demo |
 | Superfluid | `superfluid` | ETH, BSC, Polygon, Base | Superfluid hosted subgraph (no GRAPH_API_KEY) | Cliff + linear streaming; endpoint: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler` |
 | PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem | TGE + cycle-based schedule; no subgraph |
+| Streamflow | `streamflow` | Solana | @streamflow/stream SDK + Alchemy free Solana RPC | First non-EVM protocol. Per-user fetches only (no seeder in v1). /protocols card TVL sourced from DefiLlama (api.llama.fi/protocol/streamflow, "vesting" category). AlignedContract variant skipped. Feature-flagged behind `SOLANA_ENABLED=true`. |
 
 ### Adding a new adapter
 Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapter` object with `id`, `name`, `supportedChainIds`, and `fetch(wallets, chainId)`. Register it in `adapters/index.ts`.
@@ -422,6 +426,7 @@ Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapte
 **Subgraph-based adapters** (most protocols): use `resolveSubgraphUrl()` from `graph.ts` with the GRAPH_API_KEY.
 **Superfluid exception**: uses its own hosted endpoints — no GRAPH_API_KEY, endpoint format: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler`
 **Contract-read adapters** (PinkSale): use viem `createPublicClient` + `http()` transport with RPC env vars. No subgraph.
+**Non-EVM adapters** (Streamflow): use the protocol's own TS SDK (e.g. `@streamflow/stream`'s `SolanaStreamClient`) against a Solana RPC URL set in `SOLANA_RPC_URL`. For TVL display on the /protocols card, consider sourcing from DefiLlama (`src/lib/defillama.ts`) via the optional `externalTvl` field on `ProtocolMeta` rather than our own priced-cache pipeline. Feature-flag non-EVM adapters behind an env var (e.g. `SOLANA_ENABLED=true`) so EVM-only environments are unaffected.
 
 ---
 
