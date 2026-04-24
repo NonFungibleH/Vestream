@@ -211,12 +211,16 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          {/* Row 2 */}
+          {/* Row 2 — now 4 cards (Unvest / Superfluid / PinkSale / Streamflow)
+              to keep both rows symmetrical at 4-across and to reflect our
+              new Solana coverage. Streamflow uses Solana-brand green
+              (#14f195) to visually signal the non-EVM entry. */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
               { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
               { name: "Superfluid",   color: "#1db954", bg: "rgba(29,185,84,0.07)",   border: "rgba(29,185,84,0.15)"   },
               { name: "PinkSale",     color: "#ec4899", bg: "rgba(236,72,153,0.07)",  border: "rgba(236,72,153,0.15)"  },
+              { name: "Streamflow",   color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -230,10 +234,11 @@ export default async function Home() {
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#cbd5e1" }}>on</p>
             {[
-              { name: "Ethereum", color: "#6366f1", bg: "rgba(99,102,241,0.07)",   border: "rgba(99,102,241,0.16)"   },
-              { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",   border: "rgba(234,179,8,0.16)"    },
-              { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.16)"   },
-              { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",  border: "rgba(139,92,246,0.16)"   },
+              { name: "Ethereum",  color: "#6366f1", bg: "rgba(99,102,241,0.07)",   border: "rgba(99,102,241,0.16)"   },
+              { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
+              { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
+              { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
+              { name: "Solana",    color: "#14f195", bg: "rgba(20,241,149,0.08)",   border: "rgba(20,241,149,0.22)"   },
             ].map((c) => (
               <div key={c.name} className="flex items-center px-3 py-1 rounded-full"
                 style={{ background: c.bg, border: `1px solid ${c.border}` }}>
@@ -553,7 +558,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale — across Ethereum, Base, BSC, and Polygon.",
+              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, and Streamflow — across Ethereum, Base, BSC, Polygon, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -1010,7 +1015,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "TokenVest supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), and PinkSale (PinkLock V2) — on Ethereum, Base, BSC, and Polygon. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "TokenVest supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), and Streamflow (Solana's #1 vesting protocol) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
