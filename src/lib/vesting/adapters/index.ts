@@ -27,6 +27,7 @@ import { uncxVmAdapter }      from "./uncx-vm";
 import { unvestAdapter }      from "./unvest";
 import { superfluidAdapter }  from "./superfluid";
 import { pinksaleAdapter }    from "./pinksale";
+import { streamflowAdapter }  from "./streamflow";
 
 export const ADAPTER_REGISTRY: VestingAdapter[] = [
   sablierAdapter,
@@ -37,4 +38,8 @@ export const ADAPTER_REGISTRY: VestingAdapter[] = [
   unvestAdapter,
   superfluidAdapter,
   pinksaleAdapter,
+  // Streamflow is Solana-only and behind SOLANA_ENABLED=true gate.
+  // Adapter returns [] when the flag is off so EVM-only builds aren't
+  // impacted.
+  streamflowAdapter,
 ];

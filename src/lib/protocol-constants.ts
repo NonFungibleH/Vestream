@@ -251,9 +251,38 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     relatedSlugs: ["uncx", "team-finance", "hedgey"],
     testimonials: [],
   },
+
+  streamflow: {
+    slug: "streamflow",
+    adapterIds: ["streamflow"],
+    name: "Streamflow",
+    tagline: "Solana's #1 vesting protocol",
+    description:
+      "Streamflow is the dominant token-vesting protocol on Solana — historically $2.5B+ in TVL across 25,000+ projects and 1.3M+ users. TokenVest indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
+    color: "#14f195",         // Solana green
+    bg:    "rgba(20,241,149,0.08)",
+    border:"rgba(20,241,149,0.24)",
+    chainIds: [CHAIN_IDS.SOLANA],
+    officialUrl: "https://streamflow.finance",
+    claimUrl:   "https://app.streamflow.finance/vesting",
+    searchKeywords: [
+      "streamflow unlock",
+      "streamflow vesting",
+      "solana vesting tracker",
+      "spl token unlock",
+      "streamflow tracker",
+    ],
+    useCases: [
+      { title: "Solana token launches",     body: "Streamflow is the default vesting rail for new Solana projects. Team, investor and advisor allocations almost always pass through it — and TokenVest surfaces every unlock date the moment the stream is created." },
+      { title: "Cross-ecosystem holders",   body: "Many active traders hold both EVM and Solana positions. TokenVest is the first tracker that puts Streamflow unlocks next to Sablier and Hedgey in one view — no per-chain app switching." },
+      { title: "SPL payroll + grants",      body: "Solana-native teams using Streamflow for recurring SPL token payments get the same unlock calendar, push alerts and claim reminders as their EVM-paid counterparts." },
+    ],
+    relatedSlugs: ["sablier", "hedgey", "superfluid"],
+    testimonials: [],
+  },
 };
 
-/** Publicly-listed protocols in nav/footer/sitemap order (the 7 consumer-facing ones). */
+/** Publicly-listed protocols in nav/footer/sitemap order. */
 export const PROTOCOL_SLUGS = [
   "sablier",
   "hedgey",
@@ -262,6 +291,7 @@ export const PROTOCOL_SLUGS = [
   "team-finance",
   "unvest",
   "pinksale",
+  "streamflow",
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];
