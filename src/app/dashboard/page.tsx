@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import useSWR from "swr";
-import { isAddress } from "viem";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
@@ -3278,14 +3278,14 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
 
   async function handleAdd() {
     setError(null);
-    if (!isAddress(address)) { setError("Invalid address"); return; }
+    if (!isValidWalletAddress(address)) { setError("Invalid address — expected EVM 0x… or Solana pubkey"); return; }
     if (!selChain || !selProtocol) { setError("Select a chain and platform"); return; }
     setLoading(true);
     try {
       const chains    = [parseInt(selChain)];
       // UNCX UI option covers both UNCX v1 and UNCX VestingManager (uncx-vm)
       const protocols = selProtocol === "uncx" ? ["uncx", "uncx-vm"] : [selProtocol];
-      const tokenAddress = selTokenAddr.trim() && isAddress(selTokenAddr.trim()) ? selTokenAddr.trim() : undefined;
+      const tokenAddress = selTokenAddr.trim() && isValidWalletAddress(selTokenAddr.trim()) ? selTokenAddr.trim() : undefined;
 
       const res = await fetch("/api/wallets", {
         method: "POST",

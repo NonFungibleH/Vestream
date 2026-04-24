@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { isAddress } from "viem";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +20,8 @@ export function WalletInput({ onAdd }: WalletInputProps) {
     e.preventDefault();
     setError(null);
 
-    if (!isAddress(address)) {
-      setError("Invalid Ethereum address");
+    if (!isValidWalletAddress(address)) {
+      setError("Enter a valid wallet address (EVM 0x… or Solana pubkey)");
       return;
     }
 
@@ -60,7 +60,7 @@ export function WalletInput({ onAdd }: WalletInputProps) {
         <Label htmlFor="address">Wallet Address</Label>
         <Input
           id="address"
-          placeholder="0x..."
+          placeholder="0x… or Solana pubkey"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           className="font-mono mt-1"

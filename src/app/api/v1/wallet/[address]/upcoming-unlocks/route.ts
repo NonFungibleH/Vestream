@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import { db } from "@/lib/db";
 import { vestingStreamsCache } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -26,9 +26,9 @@ export async function GET(
 
   const { address } = await params;
 
-  if (!isAddress(address)) {
+  if (!isValidWalletAddress(address)) {
     return NextResponse.json(
-      { error: "Invalid wallet address. Expected a 0x EVM address." },
+      { error: "Invalid wallet address. Expected an EVM 0x… address or a Solana base58 pubkey." },
       { status: 400 }
     );
   }

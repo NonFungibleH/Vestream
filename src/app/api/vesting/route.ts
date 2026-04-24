@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
   const wallets = walletsParam
     .split(",")
     .map((w) => w.trim())
-    .filter((w) => isAddress(w));
+    .filter((w) => isValidWalletAddress(w));
 
   if (wallets.length === 0) {
     return NextResponse.json({ error: "No valid addresses" }, { status: 400 });
@@ -89,8 +89,8 @@ export async function GET(req: NextRequest) {
   if (tokenFiltersParam) {
     for (const pair of tokenFiltersParam.split(",")) {
       const [walletAddr, tokenAddr] = pair.split(":").map(s => s.trim());
-      if (walletAddr && tokenAddr && isAddress(walletAddr) && isAddress(tokenAddr)) {
-        tokenFilters[walletAddr.toLowerCase()] = tokenAddr.toLowerCase();
+      if (walletAddr && tokenAddr && isValidWalletAddress(walletAddr) && isValidWalletAddress(tokenAddr)) {
+        tokenFilters[normaliseAddress(walletAddr)] = normaliseAddress(tokenAddr);
       }
     }
   }

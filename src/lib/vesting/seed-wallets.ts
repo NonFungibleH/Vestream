@@ -45,4 +45,5 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   [CHAIN_IDS.BASE]:         [],
   [CHAIN_IDS.SEPOLIA]:      [],
   [CHAIN_IDS.BASE_SEPOLIA]: [],
+  [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };

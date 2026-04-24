@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
 import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig, FREE_PUSH_ALERT_LIMIT } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
 // Wallet limits per tier: free=1, pro=3, fund=unlimited (null)
 const WALLET_LIMITS: Record<string, number | null> = {
@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
     const rawProtocols: unknown = body.protocols;
     const rawTokenAddress: unknown = body.tokenAddress;
 
-    if (!address || !isAddress(address)) {
-      return NextResponse.json({ error: "Invalid address" }, { status: 400 });
+    if (!address || !isValidWalletAddress(address)) {
+      return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
 
     // Validate chains — must be subset of ALL_CHAIN_IDS
@@ -98,10 +98,12 @@ export async function POST(req: NextRequest) {
       protocols = valid.length > 0 ? valid : null;
     }
 
-    // Validate tokenAddress — must be a valid EVM address if provided
+    // Validate tokenAddress — must be a valid EVM ERC-20 contract address
+    // OR a Solana SPL mint (base58) if provided. normaliseAddress handles
+    // the ecosystem-specific casing (lowercase for EVM, as-is for Solana).
     const tokenAddress: string | null =
-      typeof rawTokenAddress === "string" && isAddress(rawTokenAddress)
-        ? rawTokenAddress.toLowerCase()
+      typeof rawTokenAddress === "string" && isValidWalletAddress(rawTokenAddress)
+        ? normaliseAddress(rawTokenAddress)
         : null;
 
     const user = await getUserByAddress(session.address);
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
     }
 
     const alreadyAdded = existingWallets.some(
-      (w) => w.address === address.toLowerCase()
+      (w) => w.address === normaliseAddress(address)
     );
     if (alreadyAdded) {
       return NextResponse.json({ error: "Wallet already added" }, { status: 409 });
@@ -156,8 +158,8 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
     const { address } = body;
-    if (!address || !isAddress(address)) {
-      return NextResponse.json({ error: "Invalid address" }, { status: 400 });
+    if (!address || !isValidWalletAddress(address)) {
+      return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
 
     const rawChains:    unknown = body.chains;

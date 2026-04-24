@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { vestingStreamsCache } from "@/lib/db/schema";
 import { inArray, and, gte, sql } from "drizzle-orm";
 import { VestingStream } from "./types";
+import { normaliseAddress } from "@/lib/address-validation";
 
 /** How old cached data can be before we re-fetch from subgraphs */
 const ACTIVE_TTL_SECONDS   = 30 * 60;      // 30 min for active streams (tighten when needed)
@@ -41,14 +42,17 @@ export interface CacheReadResult {
 export async function readFromCache(wallets: string[]): Promise<CacheReadResult> {
   if (wallets.length === 0) return { streams: [], isFresh: true, staleWallets: [] };
 
-  const lowerWallets = wallets.map((w) => w.toLowerCase());
+  // Ecosystem-aware normalisation — EVM → lowercase, Solana → as-is.
+  // Preserves the old behaviour for EVM addresses while keeping Solana
+  // base58 intact (lowercasing would corrupt the pubkey).
+  const normalisedWallets = wallets.map(normaliseAddress);
   const now = new Date();
 
   // Fetch all cached rows for these wallets
   const rows = await db
     .select()
     .from(vestingStreamsCache)
-    .where(inArray(vestingStreamsCache.recipient, lowerWallets));
+    .where(inArray(vestingStreamsCache.recipient, normalisedWallets));
 
   if (rows.length === 0) {
     return { streams: [], isFresh: false, staleWallets: wallets };
@@ -70,7 +74,7 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
   }
 
   // Any wallet that had no fresh rows needs a re-fetch
-  const staleWallets = lowerWallets.filter((w) => !freshWallets.has(w));
+  const staleWallets = normalisedWallets.filter((w) => !freshWallets.has(w));
 
   return {
     streams,

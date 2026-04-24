@@ -27,6 +27,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_BASE_SEPOLIA,
                               "CZxkjYEnom7ijhKv77n3Qf2WGuPMLkfVsyZzRB6EhMmP"
                             ),
+  [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 
 // ─── Schema variants ───────────────────────────────────────────────────────────

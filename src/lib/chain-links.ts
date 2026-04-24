@@ -7,16 +7,20 @@
 //
 // Returns null for unsupported chains or malformed inputs — render logic
 // should hide the link in that case instead of rendering a broken "#" anchor.
+//
+// Ecosystem scope: EVM only as of this module. Solana explorer links
+// (Solscan, SolanaFM) get their own builders in a follow-up commit; callers
+// that handle Solana must branch on chainId before calling these helpers.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const EVM_ADDR = /^0x[0-9a-fA-F]{40}$/;
+import { isValidEvmAddress } from "@/lib/address-validation";
 
 /**
  * Block-explorer URL for a contract on a given EVM chain.
  * Uses the canonical explorer per chain (Etherscan, BscScan, etc.).
  */
 export function blockExplorerUrl(chainId: number, address: string): string | null {
-  if (!EVM_ADDR.test(address)) return null;
+  if (!isValidEvmAddress(address)) return null;
   const addr = address.toLowerCase();
   switch (chainId) {
     case 1:        return `https://etherscan.io/token/${addr}`;
@@ -35,7 +39,7 @@ export function blockExplorerUrl(chainId: number, address: string): string | nul
  * Docs: https://tokensniffer.com/
  */
 export function tokenSnifferUrl(chainId: number, address: string): string | null {
-  if (!EVM_ADDR.test(address)) return null;
+  if (!isValidEvmAddress(address)) return null;
   const addr = address.toLowerCase();
   const chain = (() => {
     switch (chainId) {
@@ -64,7 +68,7 @@ export function tokenSnifferUrl(chainId: number, address: string): string | null
  * is a clean but narrower search.
  */
 export function xSearchUrl(symbol: string | null, address: string): string | null {
-  if (!EVM_ADDR.test(address)) return null;
+  if (!isValidEvmAddress(address)) return null;
   const addr = address.toLowerCase();
   const truncated = `${addr.slice(0, 6)}`;       // "0xabc1" — narrow enough
   const q = symbol

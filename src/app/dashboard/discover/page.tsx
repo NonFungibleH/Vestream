@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { isAddress } from "viem";
+import { isValidWalletAddress } from "@/lib/address-validation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -432,8 +432,8 @@ export default function DiscoverPage() {
     setScanError(null);
     setScanData(null);
     setWatchStatus({});
-    if (!isAddress(address)) {
-      setScanError("Enter a valid Ethereum wallet address (0x…)");
+    if (!isValidWalletAddress(address)) {
+      setScanError("Enter a valid wallet address (EVM 0x… or Solana pubkey)");
       return;
     }
     setScanning(true);

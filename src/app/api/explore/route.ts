@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import { getUserByAddress } from "@/lib/db/queries";
 import { explorerFetch } from "@/lib/vesting/explorer";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
     const token   = searchParams.get("token");
     const chainId = Number(searchParams.get("chainId") ?? "1");
 
-    if (!token || !isAddress(token)) {
-      return NextResponse.json({ error: "Invalid token address" }, { status: 400 });
+    if (!token || !isValidWalletAddress(token)) {
+      return NextResponse.json({ error: "Invalid token address — expected EVM 0x… or Solana SPL mint" }, { status: 400 });
     }
     if (!ALL_CHAIN_IDS.includes(chainId as SupportedChainId)) {
       return NextResponse.json({ error: "Unsupported chainId" }, { status: 400 });

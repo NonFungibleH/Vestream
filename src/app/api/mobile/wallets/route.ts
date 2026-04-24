@@ -1,7 +1,7 @@
 // src/app/api/mobile/wallets/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { extractBearerToken, validateMobileToken, getMobileUser } from "@/lib/mobile-auth";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { db } from "@/lib/db";
 import { wallets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { address, label, chains, protocols, tokenAddress: rawToken } = body;
 
-  if (!address) return NextResponse.json({ error: "Address required" }, { status: 400 });
+  if (!address || !isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+  }
 
   const user = await getMobileUser(userId);
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -47,13 +49,13 @@ export async function POST(req: NextRequest) {
   // null = scan everything; non-null = restrict to listed IDs
   const chainFilter    = Array.isArray(chains)    && chains.length    > 0 ? chains.map(String)    : null;
   const protocolFilter = Array.isArray(protocols) && protocols.length > 0 ? protocols as string[] : null;
-  const tokenAddress   = typeof rawToken === "string" && isAddress(rawToken) ? rawToken.toLowerCase() : null;
+  const tokenAddress   = typeof rawToken === "string" && isValidWalletAddress(rawToken) ? normaliseAddress(rawToken) : null;
 
   // All tiers now support auto-discovery (no token address required).
   // Differentiation is on wallet count + advanced features (alerts, Discover, API), not wallet-add flow.
 
   const [wallet] = await db.insert(wallets)
-    .values({ userId, address: address.toLowerCase(), label, chains: chainFilter, protocols: protocolFilter, tokenAddress })
+    .values({ userId, address: normaliseAddress(address), label, chains: chainFilter, protocols: protocolFilter, tokenAddress })
     .returning();
 
   return NextResponse.json({ wallet });
@@ -66,20 +68,22 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const { address, label, chains, protocols, tokenAddress: rawToken } = body;
-  if (!address) return NextResponse.json({ error: "Address required" }, { status: 400 });
+  if (!address || !isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+  }
 
   const user = await getMobileUser(userId);
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const chainFilter    = Array.isArray(chains)    && chains.length    > 0 ? chains.map(String)    : null;
   const protocolFilter = Array.isArray(protocols) && protocols.length > 0 ? protocols as string[] : null;
-  const tokenAddress   = typeof rawToken === "string" && isAddress(rawToken) ? rawToken.toLowerCase() : null;
+  const tokenAddress   = typeof rawToken === "string" && isValidWalletAddress(rawToken) ? normaliseAddress(rawToken) : null;
 
   // All tiers now support auto-discovery; no per-tier edit gating.
 
   const [wallet] = await db.update(wallets)
     .set({ label: label ?? null, chains: chainFilter, protocols: protocolFilter, tokenAddress })
-    .where(and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase())))
+    .where(and(eq(wallets.userId, userId), eq(wallets.address, normaliseAddress(address))))
     .returning();
 
   if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
@@ -92,8 +96,11 @@ export async function DELETE(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { address } = await req.json().catch(() => ({}));
+  if (!address || !isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+  }
   await db.delete(wallets)
-    .where(and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase())));
+    .where(and(eq(wallets.userId, userId), eq(wallets.address, normaliseAddress(address))));
 
   return NextResponse.json({ ok: true });
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAddress } from "viem";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { UpsellModal } from "@/components/UpsellModal";
 
@@ -580,7 +580,7 @@ export default function Settings() {
   async function handleAddWallet(e: React.FormEvent) {
     e.preventDefault();
     setAddError(null);
-    if (!isAddress(newAddress)) { setAddError("Invalid Ethereum address"); return; }
+    if (!isValidWalletAddress(newAddress)) { setAddError("Enter a valid wallet address (EVM 0x… or Solana pubkey)"); return; }
     setAdding(true);
     try {
       // All optional — wallet-add defaults to auto-scan all chains + platforms.
@@ -590,7 +590,7 @@ export default function Settings() {
       const protocols = newSelProtocol
         ? (newSelProtocol === "uncx" ? ["uncx", "uncx-vm"] : [newSelProtocol])
         : undefined;
-      const tokenAddress = newTokenAddr.trim() && isAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
+      const tokenAddress = newTokenAddr.trim() && isValidWalletAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -40,6 +40,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               "5foyqAtEVWtcSJX62sMC6fVR7FmetsFy8eYRKRT2E7DU"
                             ),
   [CHAIN_IDS.BASE_SEPOLIA]: undefined, // UNCX is on Sepolia, not Base Sepolia
+  [CHAIN_IDS.SOLANA]:       undefined, // UNCX does not deploy on Solana
 };
 
 // ─── GraphQL query ─────────────────────────────────────────────────────────────

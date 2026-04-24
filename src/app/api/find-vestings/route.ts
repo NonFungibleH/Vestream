@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
@@ -78,12 +78,12 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const address = searchParams.get("address");
-  if (!address || !isAddress(address)) {
-    return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
+  if (!address || !isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid wallet address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
 
   try {
-    const streams = await aggregateVestingStreams([address.toLowerCase()], SCAN_CHAINS);
+    const streams = await aggregateVestingStreams([normaliseAddress(address)], SCAN_CHAINS);
 
     // Group by protocol × chain, then per-token
     const byKey = new Map<string, { group: FindVestingsGroup; tokenMap: Map<string, FindVestingsTokenSummary> }>();

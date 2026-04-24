@@ -17,6 +17,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
 // ── Shape mirrored from /api/find-vestings route ───────────────────────────
 
@@ -66,10 +67,6 @@ function fmtAmount(raw: string, decimals: number): string {
   return `${wholeStr}.${fracStr}`;
 }
 
-function isAddress(v: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(v.trim());
-}
-
 function truncateAddr(a: string): string {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
@@ -95,14 +92,14 @@ export default function FindVestingsClient() {
   const lastScanned = useRef<string | null>(null);
 
   const scanAddress = useCallback(async (addr: string) => {
-    if (!isAddress(addr)) {
-      setError("That doesn't look like a valid EVM address (0x followed by 40 hex chars).");
+    if (!isValidWalletAddress(addr)) {
+      setError("That doesn't look like a valid address. Paste an EVM 0x… address or a Solana base58 pubkey.");
       return;
     }
     setLoading(true);
     setError(null);
     setResult(null);
-    lastScanned.current = addr.toLowerCase();
+    lastScanned.current = normaliseAddress(addr);
     try {
       const res  = await fetch(`/api/find-vestings?address=${addr}`, { cache: "no-store" });
       const body = await res.json();

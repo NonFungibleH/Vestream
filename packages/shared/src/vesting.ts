@@ -23,6 +23,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Chain IDs ───────────────────────────────────────────────────────────────
+//
+// `SupportedChainId` is a network identifier — it's named after the EVM
+// `chainId` concept (which is where we started) but it's not EVM-exclusive.
+// Non-EVM networks don't have a canonical EVM-style chainId, so we pick
+// stable synthetic numbers that can't collide with real EVM chains:
+//   - Solana uses 101 (Solana's own cluster enum convention)
+//
+// When adding a new non-EVM chain, add it here, add a CHAIN_NAMES entry,
+// add it to ALL_CHAIN_IDS, and add it to NON_EVM_CHAIN_IDS. Downstream
+// ecosystem-aware helpers (isEvmChain, address validation) pick it up
+// automatically.
 export const CHAIN_IDS = {
   ETHEREUM:     1,
   BSC:          56,
@@ -30,6 +41,7 @@ export const CHAIN_IDS = {
   BASE:         8453,
   SEPOLIA:      11155111,  // Ethereum Sepolia testnet
   BASE_SEPOLIA: 84532,     // Base Sepolia testnet
+  SOLANA:       101,       // Solana mainnet-beta (non-EVM)
 } as const;
 
 export type SupportedChainId = (typeof CHAIN_IDS)[keyof typeof CHAIN_IDS];
@@ -41,6 +53,7 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.BASE]:         "Base",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",
   [CHAIN_IDS.BASE_SEPOLIA]: "Base Sepolia",
+  [CHAIN_IDS.SOLANA]:       "Solana",
 };
 
 export const TESTNET_CHAIN_IDS: SupportedChainId[] = [
@@ -48,13 +61,30 @@ export const TESTNET_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.BASE_SEPOLIA,
 ];
 
-export const ALL_CHAIN_IDS: SupportedChainId[] = [
+// Explicit EVM / non-EVM partitioning — used by address validators,
+// ecosystem-aware UI helpers, and adapters that need to branch on network
+// family rather than on individual chain IDs.
+export const NON_EVM_CHAIN_IDS: SupportedChainId[] = [
+  CHAIN_IDS.SOLANA,
+];
+
+export const EVM_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
   CHAIN_IDS.POLYGON,
   CHAIN_IDS.BASE,
   CHAIN_IDS.SEPOLIA,
   CHAIN_IDS.BASE_SEPOLIA,
+];
+
+/** True when the given chainId belongs to an EVM-compatible network. */
+export function isEvmChain(id: SupportedChainId): boolean {
+  return EVM_CHAIN_IDS.includes(id);
+}
+
+export const ALL_CHAIN_IDS: SupportedChainId[] = [
+  ...EVM_CHAIN_IDS,
+  ...NON_EVM_CHAIN_IDS,
 ];
 
 // ── Normalised vesting stream ──────────────────────────────────────────────

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
 import { getUserByAddress, deleteWallet, updateWallet, getWalletsForUser } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
 export async function DELETE(
   _req: NextRequest,
@@ -22,7 +22,7 @@ export async function DELETE(
   }
 
   const existing = await getWalletsForUser(user.id);
-  const found = existing.find((w) => w.address === address.toLowerCase());
+  const found = existing.find((w) => w.address === normaliseAddress(address));
   if (!found) {
     return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
   }
@@ -79,8 +79,8 @@ export async function PATCH(
 
   if ("tokenAddress" in body) {
     const raw = body.tokenAddress;
-    patchData.tokenAddress = (typeof raw === "string" && isAddress(raw))
-      ? raw.toLowerCase()
+    patchData.tokenAddress = (typeof raw === "string" && isValidWalletAddress(raw))
+      ? normaliseAddress(raw)
       : null;
   }
 

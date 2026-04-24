@@ -6,8 +6,8 @@
  * so the user can pick individual token vestings to watch.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
+import { isValidWalletAddress } from "@/lib/address-validation";
 import { getUserByAddress, checkAndIncrementScanCount } from "@/lib/db/queries";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
@@ -70,8 +70,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const address = searchParams.get("address");
-    if (!address || !isAddress(address)) {
-      return NextResponse.json({ error: "Invalid address" }, { status: 400 });
+    if (!address || !isValidWalletAddress(address)) {
+      return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
 
     // Optional chain/protocol filters — narrows the scan for speed
