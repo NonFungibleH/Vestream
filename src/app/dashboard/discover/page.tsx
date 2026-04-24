@@ -610,7 +610,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Discover Vestings</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 6 platforms × 4 chains to find every active vesting for a wallet
+              Scan 7 platforms × 4 chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -679,7 +679,7 @@ export default function DiscoverPage() {
                   Find all vestings for a wallet
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Enter any wallet address and we&apos;ll scan every supported platform across all 5 chains.
+                  Enter any wallet address and we&apos;ll scan every supported platform across all 4 chains.
                   Results appear below — click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   add individual vestings to your dashboard.
                 </p>
@@ -829,7 +829,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 6 platforms × 4 chains. This may take 10–20 seconds.
+                Checking 7 platforms × 4 chains. This may take 10–20 seconds.
               </p>
             </div>
           )}

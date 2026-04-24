@@ -215,9 +215,11 @@ function WalletCard({
   const [tokenAddrValue,   setTokenAddrValue]   = useState(wallet.tokenAddress ?? "");
   const [savingTokenAddr,  setSavingTokenAddr]  = useState(false);
 
-  // All tiers now support auto-discovery + per-wallet scan config.
-  // Tier differentiation lives on wallet count, Discover, alerts, and API — not the wallet-add flow.
-  const isPro = true;
+  // Per-wallet scan config (chains, platforms, token filter) is available
+  // to every tier — differentiation lives on wallet count, Discover, alerts
+  // and API access, not on the wallet-add flow. `tier` is received so this
+  // component's prop signature stays aligned with future tier gating
+  // without touching the call sites when we eventually need it.
   void tier;
 
   async function saveLabel() {
@@ -370,100 +372,69 @@ function WalletCard({
       {/* ── Config: chains + platforms + token filter ── */}
       <div className="px-4 pb-3 space-y-2.5" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
 
-        {/* Chains / protocols — Pro multi-select; Free shows read-only badges + upsell */}
-        {isPro ? (
-          <>
-            <div>
-              <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                Chains to scan
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {CHAIN_OPTIONS.map((c) => (
-                  <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} saving={savingConfig} />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                Platforms to scan
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {PROTOCOL_OPTIONS.map((p) => {
-                  // UNCX pill is active if either uncx or uncx-vm is selected
-                  const isActive = p.id === "uncx"
-                    ? (selProtocols.has("uncx") || selProtocols.has("uncx-vm"))
-                    : selProtocols.has(p.id);
-                  return (
-                    <TogglePill key={p.id} label={p.label} active={isActive} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Status + summary */}
-            <div className="flex items-center gap-2">
-              {savingConfig ? (
-                <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
-              ) : configSaved ? (
-                <span className="text-[10px] text-emerald-500">✓ Saved</span>
-              ) : (
-                <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                  {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === ALL_BACKEND_PROTOCOL_IDS.length
-                    ? "Scanning all chains & platforms"
-                    : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${[...selProtocols].filter(p => p !== "uncx-vm").length} platform${[...selProtocols].filter(p => p !== "uncx-vm").length !== 1 ? "s" : ""}`
-                  }
-                </span>
-              )}
-            </div>
-
-            {/* ── Discover link ── */}
-            <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                Not sure which platforms this wallet uses?{" "}
-                <a href="/dashboard/discover" className="font-semibold underline" style={{ color: "#60a5fa" }}>
-                  Scan all platforms in Discover →
-                </a>
-              </p>
-            </div>
-          </>
-        ) : (
-          /* Free plan: read-only badges + upgrade prompt */
-          <div className="space-y-2">
-            <div className="flex flex-wrap gap-1.5">
-              {wallet.chains?.map((c) => (
-                <span key={c} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
-                  {CHAIN_OPTIONS.find(x => x.id === String(c))?.short ?? c}
-                </span>
-              ))}
-              {wallet.protocols?.map((p) => (
-                <span key={p} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
-                  {PROTOCOL_OPTIONS.find(x => x.id === p)?.label ?? p}
-                </span>
-              ))}
-            </div>
-            <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-              <a href="/pricing" className="font-semibold underline" style={{ color: "#3b82f6" }}>
-                Upgrade to Pro
-              </a>
-              {" "}to scan all chains and platforms automatically.
-            </p>
+        {/* Chains / platforms multi-select — available on every tier. */}
+        <div>
+          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Chains to scan
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CHAIN_OPTIONS.map((c) => (
+              <TogglePill key={c.id} label={c.short} active={selChains.has(c.id)} onClick={() => toggleChain(c.id)} saving={savingConfig} />
+            ))}
           </div>
-        )}
+        </div>
+        <div>
+          <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Platforms to scan
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {PROTOCOL_OPTIONS.map((p) => {
+              // UNCX pill is active if either uncx or uncx-vm is selected
+              const isActive = p.id === "uncx"
+                ? (selProtocols.has("uncx") || selProtocols.has("uncx-vm"))
+                : selProtocols.has(p.id);
+              return (
+                <TogglePill key={p.id} label={p.label} active={isActive} onClick={() => toggleProtocol(p.id)} saving={savingConfig} />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Status + summary */}
+        <div className="flex items-center gap-2">
+          {savingConfig ? (
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
+          ) : configSaved ? (
+            <span className="text-[10px] text-emerald-500">✓ Saved</span>
+          ) : (
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+              {selChains.size === CHAIN_OPTIONS.length && selProtocols.size === ALL_BACKEND_PROTOCOL_IDS.length
+                ? "Scanning all chains & platforms"
+                : `Scanning ${selChains.size} chain${selChains.size !== 1 ? "s" : ""} · ${[...selProtocols].filter(p => p !== "uncx-vm").length} platform${[...selProtocols].filter(p => p !== "uncx-vm").length !== 1 ? "s" : ""}`
+              }
+            </span>
+          )}
+        </div>
+
+        {/* ── Discover link ── */}
+        <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+            Not sure which platforms this wallet uses?{" "}
+            <a href="/dashboard/discover" className="font-semibold underline" style={{ color: "#60a5fa" }}>
+              Scan all platforms in Discover →
+            </a>
+          </p>
+        </div>
 
         {/* ── Token address filter ── */}
         <div className="pt-2.5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
           <div className="flex items-center gap-2 mb-1.5">
             <p className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "var(--preview-text-3)" }}>
-              {isPro ? "Token filter" : "Token contract address"}
-              {isPro
-                ? <span className="normal-case font-normal tracking-normal"> (optional)</span>
-                : <span style={{ color: "#ef4444" }}> *</span>
-              }
+              Token filter
+              <span className="normal-case font-normal tracking-normal"> (optional)</span>
             </p>
             {wallet.tokenAddress && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full"
@@ -507,12 +478,12 @@ function WalletCard({
                 </>
               ) : (
                 <>
-                  <p className="text-[10px] italic" style={{ color: isPro ? "var(--preview-text-3)" : "#f87171" }}>
-                    {isPro ? "None — scanning all tokens" : "Required — enter token contract address"}
+                  <p className="text-[10px] italic" style={{ color: "var(--preview-text-3)" }}>
+                    None — scanning all tokens
                   </p>
                   <button onClick={() => setEditingTokenAddr(true)}
                     className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>
-                    {isPro ? "Set filter" : "Set"}
+                    Set filter
                   </button>
                 </>
               )}
@@ -535,6 +506,11 @@ export default function Settings() {
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
   const [tier, setTier]                   = useState<string>("free");
   const [walletLimit, setWalletLimit]     = useState<number | null>(1);
+  // Push-alert credit counter — Free has 3 lifetime credits, paid tiers are
+  // unmetered (pushAlertsLimit === null). Surfaces the same counter the
+  // mobile app shows so users see the same number on every surface.
+  const [pushAlertsSent,  setPushAlertsSent]  = useState<number>(0);
+  const [pushAlertsLimit, setPushAlertsLimit] = useState<number | null>(null);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
   const [activeSection, setActiveSection] = useState<"wallets" | "notifications" | "account">("wallets");
 
@@ -580,6 +556,8 @@ export default function Settings() {
       setSessionAddress(json.sessionAddress ?? null);
       setTier(json.tier ?? "free");
       setWalletLimit(json.walletLimit ?? 1);
+      setPushAlertsSent(json.pushAlertsSent ?? 0);
+      setPushAlertsLimit(json.pushAlertsLimit ?? null);
     }
   }, [router]);
 
@@ -1032,6 +1010,48 @@ export default function Settings() {
                   <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
                     Get instant push notifications the moment a token unlocks — straight to your phone. Available in the TokenVest app.
                   </p>
+
+                  {/* Push-credit counter — Free is 3 lifetime, paid is
+                      unmetered. Same counter the mobile app surfaces so
+                      users see the identical number on every platform
+                      (pushAlertsLimit === null ⇒ unmetered). */}
+                  {pushAlertsLimit !== null ? (
+                    <div className="mb-3 px-3 py-2 rounded-lg"
+                      style={{
+                        background: pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.08)" : "rgba(59,130,246,0.06)",
+                        border: `1px solid ${pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.25)" : "rgba(59,130,246,0.18)"}`,
+                      }}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#d97706" : "#2563eb" }}>
+                          {pushAlertsSent >= pushAlertsLimit
+                            ? `${pushAlertsLimit} of ${pushAlertsLimit} lifetime push alerts used`
+                            : `${pushAlertsSent} of ${pushAlertsLimit} lifetime push alerts used`}
+                        </p>
+                        {pushAlertsSent >= pushAlertsLimit && (
+                          <a href="/pricing" className="text-[10px] font-semibold underline" style={{ color: "#d97706" }}>
+                            Upgrade →
+                          </a>
+                        )}
+                      </div>
+                      <div className="mt-1.5 h-1 rounded-full overflow-hidden"
+                        style={{ background: "rgba(0,0,0,0.05)" }}>
+                        <div className="h-full transition-all"
+                          style={{
+                            width: `${Math.min(100, (pushAlertsSent / pushAlertsLimit) * 100)}%`,
+                            background: pushAlertsSent >= pushAlertsLimit ? "#f59e0b" : "#2563eb",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-3 px-3 py-2 rounded-lg inline-block"
+                      style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                      <p className="text-[11px] font-semibold" style={{ color: "#059669" }}>
+                        ✓ Unlimited push alerts ({tier === "fund" ? "Enterprise" : "Pro"})
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <a href="https://apps.apple.com/app/vestream" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"

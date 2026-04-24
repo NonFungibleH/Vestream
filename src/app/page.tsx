@@ -1034,7 +1034,7 @@ export default async function Home() {
             },
             {
               q: "Is TokenVest free to use?",
-              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, plus 3 free push alerts so you can try the unlock notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets and unlimited push + email alerts, or contact us for Enterprise if you're a fund, team, or building on our data.",
+              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, unlimited email alerts, and 3 free push alerts so you can try mobile notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets, unlimited push alerts, the Token Vesting Explorer (Discover), and CSV/PDF export — or contact us for Enterprise if you're a fund, team, or building on our data.",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1172,7 +1172,7 @@ export default async function Home() {
             ["Claimable balance tracking", true,             true,           true],
             ["Unlock calendar",            true,             true,           true],
             ["Push notifications",         "3 lifetime",     "Unlimited",    "Unlimited"],
-            ["Email alerts",               false,            true,           true],
+            ["Email alerts",               true,             true,           true],
             ["Token Vesting Explorer",     false,            true,           true],
             ["CSV & PDF export",           false,            true,           true],
             ["REST API + MCP server",      false,            false,          true],

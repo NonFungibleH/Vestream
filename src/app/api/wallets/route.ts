@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { getSession } from "@/lib/auth/session";
-import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig } from "@/lib/db/queries";
+import { getUserByAddress, getWalletsForUser, addWallet, updateWalletConfig, FREE_PUSH_ALERT_LIMIT } from "@/lib/db/queries";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
@@ -31,16 +31,27 @@ export async function GET() {
         sessionAddress: session.address,
         tier: "free",
         walletLimit: 1,
+        pushAlertsSent: 0,
+        pushAlertsLimit: FREE_PUSH_ALERT_LIMIT,
       });
     }
 
     const wallets = await getWalletsForUser(user.id);
+
+    // Free tier: 3 lifetime push credits. Paid tiers: unmetered (null).
+    // Surfaced so /settings can show "N of 3 lifetime alerts used" without
+    // needing a second mobile-only endpoint.
+    const isFree = !user.tier || user.tier === "free";
+    const pushAlertsSent  = user.pushAlertsSent ?? 0;
+    const pushAlertsLimit = isFree ? FREE_PUSH_ALERT_LIMIT : null;
 
     return NextResponse.json({
       wallets,
       sessionAddress: session.address,
       tier: user.tier,
       walletLimit: walletLimitForTier(user.tier),
+      pushAlertsSent,
+      pushAlertsLimit,
     });
   } catch (err) {
     console.error("GET /api/wallets error:", err);
@@ -106,7 +117,9 @@ export async function POST(req: NextRequest) {
     // Enforce per-tier wallet limit
     const limit = walletLimitForTier(user.tier);
     if (limit !== null && existingWallets.length >= limit) {
-      const planName = user.tier === "free" ? "Free" : user.tier === "pro" ? "Pro" : "Fund";
+      // User-facing tier label — internal "fund" surfaces as "Enterprise"
+      // everywhere in the UI per the /pricing page.
+      const planName = user.tier === "free" ? "Free" : user.tier === "pro" ? "Pro" : "Enterprise";
       return NextResponse.json(
         {
           error: `${planName} plan limit reached`,

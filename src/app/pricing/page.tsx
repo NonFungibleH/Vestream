@@ -126,9 +126,9 @@ export default function Pricing() {
               <FeatureItem text="Real-time vesting dashboard" checkColor="#2563eb" />
               <FeatureItem text="Claimable balance tracking" checkColor="#2563eb" />
               <FeatureItem text="Unlock calendar" checkColor="#2563eb" />
+              <FeatureItem text="Unlimited email alerts" checkColor="#2563eb" />
               <FeatureItem text="3 free push alerts (lifetime)" checkColor="#2563eb" />
               <FeatureItem text="Unlimited push alerts" included={false} />
-              <FeatureItem text="Email alerts" included={false} />
               <FeatureItem text="Multiple wallets" included={false} />
             </ul>
           </div>
@@ -268,7 +268,7 @@ export default function Pricing() {
               ["Claimable balance tracking",    true,              true,            true],
               ["Unlock calendar",               true,              true,            true],
               ["Push notifications",            "3 (lifetime)",    "Unlimited",     "Unlimited"],
-              ["Email alerts",                  false,             true,            true],
+              ["Email alerts",                  true,              true,            true],
               ["Token Vesting Explorer",        false,             true,            true],
               ["CSV & PDF export",              false,             true,            true],
               ["REST API + MCP server",         false,             false,           true],
@@ -333,7 +333,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans one wallet across every supported chain and all 7 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 3 free push notifications (lifetime) to try alerts. Pro unlocks unlimited push alerts, email alerts, more wallets, and Discover."
+              a="The Free plan auto-scans one wallet across every supported chain and all 7 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and CSV/PDF export."
             />
             <FAQItem
               q="How do the 3 free push alerts work?"

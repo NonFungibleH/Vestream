@@ -3295,7 +3295,8 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
       if (res.status === 409) { setError("Already added"); return; }
       if (res.status === 402) {
         const j = await res.json();
-        const nextPlan = j.tier === "free" ? "Pro" : "Fund";
+        // Internal tier name "fund" surfaces as "Enterprise" in all UI.
+        const nextPlan = j.tier === "free" ? "Pro" : "Enterprise";
         setError(`${j.error ?? "Plan limit reached"} — upgrade to ${nextPlan} to add more wallets.`);
         return;
       }
@@ -3648,7 +3649,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           <div className="mt-2 mx-1 px-3 py-2 rounded-xl"
             style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
             <p className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
-              {walletLimit}/{walletLimit} wallets — {tier === "free" ? "upgrade to add more" : "upgrade to Fund for unlimited"}
+              {walletLimit}/{walletLimit} wallets — {tier === "free" ? "upgrade to add more" : "contact us for Enterprise"}
             </p>
           </div>
         ) : (
