@@ -128,6 +128,29 @@ export function UpcomingUnlockTicker() {
 
   const rows = useMemo(() => (data?.unlocks ?? []).slice(0, MAX_VISIBLE), [data]);
 
+  // Aggregate stats for the sub-header — matches the confidence-band
+  // sub-header on TvlComparisonBar so the two columns line up visually.
+  // Soonest = countdown to the nearest upcoming unlock; "N protocols"
+  // = distinct protocols represented in the current set.
+  const soonestMs = useMemo(() => {
+    if (rows.length === 0) return null;
+    const first = rows[0];
+    if (!first?.endTime) return null;
+    return first.endTime * 1000 - nowMs;
+  }, [rows, nowMs]);
+  const uniqueProtocols = useMemo(
+    () => new Set(rows.map((r) => (r.protocol === "uncx-vm" ? "uncx" : r.protocol))).size,
+    [rows],
+  );
+
+  function formatCountdown(ms: number): string {
+    if (ms <= 0) return "now";
+    const sec = Math.floor(ms / 1000);
+    if (sec < 3600)   return `${Math.floor(sec / 60)} min`;
+    if (sec < 86400)  return `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m`;
+    return `${Math.floor(sec / 86400)}d ${Math.floor((sec % 86400) / 3600)}h`;
+  }
+
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col h-full"
@@ -163,6 +186,40 @@ export function UpcomingUnlockTicker() {
           </div>
         )}
       </div>
+
+      {/* Sub-header — mirrors the confidence-band strip on the TvlComparisonBar
+          sibling so the two columns line up visually. Shows the soonest unlock
+          countdown + protocol diversity of the current set. */}
+      {rows.length > 0 && (
+        <div
+          className="px-4 md:px-5 py-1.5 flex items-center gap-2 text-[11px]"
+          style={{
+            borderBottom: "1px solid rgba(0,0,0,0.04)",
+            background:   "rgba(249,115,22,0.02)",
+            color:        "#64748b",
+          }}
+        >
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ background: "#f97316" }}
+          />
+          <span>
+            {soonestMs != null && (
+              <>
+                Next in{" "}
+                <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+                  {formatCountdown(soonestMs)}
+                </span>
+              </>
+            )}
+            <span className="mx-1.5" style={{ color: "#cbd5e1" }}>·</span>
+            <span className="font-semibold tabular-nums" style={{ color: "#334155" }}>
+              {uniqueProtocols}
+            </span>
+            <span className="ml-1">{uniqueProtocols === 1 ? "protocol" : "protocols"}</span>
+          </span>
+        </div>
+      )}
 
       {/* Rows — flex-1 so the list stretches to match the sibling column */}
       <div className="divide-y flex-1" style={{ borderColor: "rgba(0,0,0,0.05)" }}>

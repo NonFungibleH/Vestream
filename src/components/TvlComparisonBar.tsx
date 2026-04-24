@@ -58,8 +58,11 @@ export function TvlComparisonBar({
   const hasExternal = !!externallySourced && externallySourced.size > 0;
 
   return (
+    // overflow-visible so the methodology tooltip can extend past the card
+    // edge without being clipped. Rounded corners still look clean because
+    // each internal section clips to its own padding.
     <div
-      className="rounded-2xl overflow-hidden flex flex-col h-full"
+      className="rounded-2xl flex flex-col h-full relative"
       style={{
         background: "white",
         border: "1px solid rgba(0,0,0,0.07)",
@@ -68,7 +71,7 @@ export function TvlComparisonBar({
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap"
+        className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap rounded-t-2xl"
         style={{
           background: "linear-gradient(90deg, rgba(37,99,235,0.05), rgba(124,58,237,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
@@ -88,7 +91,10 @@ export function TvlComparisonBar({
             {compactUsd(totalAll)}
           </span>
           <span>priced across {sorted.length} protocols</span>
-          {/* Methodology info tooltip — replaces the old full-text footer. */}
+          {/* Methodology info tooltip. Uses a containing element with a wider
+              bounding box + left-positioned tooltip (anchored to the RIGHT
+              side of the card instead of the icon) so the tooltip never
+              extends past the left edge on a narrow card. */}
           <span
             className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full cursor-help flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
@@ -100,12 +106,17 @@ export function TvlComparisonBar({
               <line x1="12" y1="16" x2="12" y2="12"/>
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            {/* Tooltip — appears on hover (desktop) or focus (keyboard). Mobile
-                tap triggers focus via tabIndex=0, so the tooltip is still
-                reachable without hover. */}
+            {/* Tooltip — appears on hover (desktop) or focus (keyboard).
+                Width caps at 18rem but shrinks on narrow viewports so it
+                never exceeds the screen width. Positioned BELOW + slight
+                LEFT of the icon; arrow → icon. Mobile tap triggers focus
+                via tabIndex=0, so the tooltip is still reachable without
+                hover. */}
             <span
-              className="pointer-events-none absolute right-0 top-full mt-2 w-72 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity z-10 shadow-lg"
+              className="pointer-events-none absolute top-full mt-2 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity z-20 shadow-lg"
               style={{
+                width:      "min(18rem, calc(100vw - 2rem))",
+                right:      "-4px",
                 background: "white",
                 border:     "1px solid rgba(0,0,0,0.08)",
                 color:      "#475569",
