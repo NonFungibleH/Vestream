@@ -48,6 +48,10 @@ interface Props {
 // Grouped link structure. Order matters within each column — matches the
 // order the user approved: Protocols, Demo, Pricing, Resources for Platform;
 // Developer API, AI Agents for Developers; Privacy, Terms for Legal.
+// Column order: Platform → Developers → Corporate → Legal.
+// Reads "what can I do today → what do builders get → what's for companies
+// → what's the fine print" which matches how visitors move through the
+// funnel rather than an arbitrary alphabetical arrangement.
 const LINK_GROUPS = [
   {
     heading: "Platform",
@@ -61,16 +65,16 @@ const LINK_GROUPS = [
     ],
   },
   {
-    heading: "Corporate",
-    links: [
-      { label: "Token Payroll", href: "/corporate/token-payroll" },
-    ],
-  },
-  {
     heading: "Developers",
     links: [
       { label: "Developer API", href: "/developer" },
       { label: "AI Agents",     href: "/ai"        },
+    ],
+  },
+  {
+    heading: "Corporate",
+    links: [
+      { label: "Token Payroll", href: "/corporate/token-payroll" },
     ],
   },
   {
