@@ -250,41 +250,41 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
     .orderBy(asc(vestingStreamsCache.endTime))
     .limit(limit * POOL_MULTIPLIER);
 
-  // Step 1 — dedupe by recipient to avoid one wallet dominating.
-  const seenRecipients = new Set<string>();
-  const deduped: typeof rows = [];
+  // Pass 1 — strict time order with two fairness guards:
+  //   - dedupe by recipient (one wallet can't fill the list)
+  //   - cap at PER_PROTOCOL_MAX entries per protocol (one prolific protocol
+  //     can't hog the top of the list either)
+  // Both guards operate while iterating the already-endTime-asc pool, so the
+  // final order stays strictly chronological across whatever passes through.
+  const PER_PROTOCOL_MAX = 3;
+  const seenRecipients   = new Set<string>();
+  const countPerProto    = new Map<string, number>();
+  const selected: typeof rows = [];
   for (const row of rows) {
     if (seenRecipients.has(row.recipient)) continue;
-    seenRecipients.add(row.recipient);
-    deduped.push(row);
-  }
-
-  // Step 2 — round-robin by protocol. Group into per-protocol queues
-  // (each still endTime-asc since the parent list was sorted), then
-  // take one from each queue in turn until we have `limit` entries.
-  // Merge uncx-vm into uncx for display purposes — they share a card.
-  const queuesByProtocol = new Map<string, typeof rows>();
-  for (const row of deduped) {
+    // Merge uncx-vm → uncx for display purposes (shared card).
     const proto = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
-    if (!queuesByProtocol.has(proto)) queuesByProtocol.set(proto, []);
-    queuesByProtocol.get(proto)!.push(row);
+    if ((countPerProto.get(proto) ?? 0) >= PER_PROTOCOL_MAX) continue;
+    seenRecipients.add(row.recipient);
+    countPerProto.set(proto, (countPerProto.get(proto) ?? 0) + 1);
+    selected.push(row);
+    if (selected.length >= limit) break;
   }
 
-  const out: UnlockSummary[] = [];
-  // Keep round-robining until the output is full or every queue is empty
-  while (out.length < limit) {
-    let advanced = false;
-    for (const queue of queuesByProtocol.values()) {
-      if (out.length >= limit) break;
-      const row = queue.shift();
-      if (row) {
-        out.push(rowToUnlock(row));
-        advanced = true;
-      }
+  // Pass 2 — if the per-protocol cap starved us of `limit` rows (some
+  // protocols just don't have enough imminent unlocks), fill the remainder
+  // with the next earliest unlocks from anywhere, ignoring the cap but
+  // still deduping by recipient.
+  if (selected.length < limit) {
+    for (const row of rows) {
+      if (seenRecipients.has(row.recipient)) continue;
+      seenRecipients.add(row.recipient);
+      selected.push(row);
+      if (selected.length >= limit) break;
     }
-    if (!advanced) break;
   }
-  return out;
+
+  return selected.map(rowToUnlock);
 }
 
 /**

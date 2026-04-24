@@ -93,6 +93,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "hedgey", "uncx"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "sablier-lockup" },
   },
 
   hedgey: {
@@ -121,6 +122,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "team-finance", "uncx"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "hedgey" },
   },
 
   "team-finance": {
@@ -149,6 +151,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["uncx", "hedgey", "pinksale"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "team-finance" },
   },
 
   uncx: {
@@ -177,6 +180,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["team-finance", "pinksale", "unvest"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "uncx-network" },
   },
 
   unvest: {
@@ -233,6 +237,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "hedgey", "unvest"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "superfluid" },
   },
 
   pinksale: {
@@ -261,6 +266,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["uncx", "team-finance", "hedgey"],
     testimonials: [],
+    externalTvl: { source: "defillama", slug: "pinksale" },
   },
 
   streamflow: {
