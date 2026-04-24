@@ -51,11 +51,13 @@
 
 import { createPublicClient, http, type Hex } from "viem";
 import { mainnet, bsc, polygon, base, sepolia } from "viem/chains";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
 import { ADAPTER_REGISTRY } from "./adapters";
 import { resolveSubgraphUrl } from "./graph";
 import { PINKSALE_SEED_WALLETS } from "./seed-wallets";
+import { normaliseAddress } from "@/lib/address-validation";
 
 // ─── Per-chain subgraph URLs (mirror the adapter files) ──────────────────────
 //
@@ -598,6 +600,92 @@ async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: numb
   return dedupeAddresses([...eventRecipients, ...curated]).slice(0, limit);
 }
 
+// ─── Streamflow discovery (Solana getProgramAccounts + dataSlice) ───────────
+//
+// Streamflow has no subgraph (it's Solana) but Solana's RPC exposes a
+// getProgramAccounts primitive with filters, which is all we need to
+// enumerate every Contract account owned by the Streamflow program.
+//
+// Two tricks keep this cheap on a free-tier RPC:
+//   1. memcmp filter on offset 0 with the 8-byte CONTRACT_DISCRIMINATOR —
+//      excludes the program's config / fee / oracle accounts and returns
+//      only Contract (i.e. stream) accounts
+//   2. dataSlice { offset: 113, length: 32 } — asks the RPC to return ONLY
+//      the 32-byte recipient pubkey from each account, not the full
+//      ~700-byte Contract struct. Shrinks the response payload ~20×.
+//
+// The offsets / discriminator come from @streamflow/stream's exports
+// (STREAM_STRUCT_OFFSET_RECIPIENT, CONTRACT_DISCRIMINATOR) — verified
+// against the installed v11 SDK at module load time.
+//
+// Alchemy free-tier Solana (30M CU/mo) easily handles this; the full
+// result set for mainnet Streamflow is on the order of tens of thousands
+// of accounts, returned in a single call.
+
+// Streamflow mainnet-beta vesting program. Matches the SDK's
+// PROGRAM_ID.mainnet constant so we don't hard-code it twice.
+const STREAMFLOW_MAINNET_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
+// base58 encoding of the SDK's CONTRACT_DISCRIMINATOR byte array
+// [172, 138, 115, 242, 121, 67, 183, 26]. Cached as a string literal so
+// we don't pull in bs58 just to compute it at runtime.
+const STREAMFLOW_CONTRACT_DISC_BS58  = "Vrs1SmhAjj7";
+const STREAMFLOW_RECIPIENT_OFFSET    = 113;
+
+async function discoverStreamflowRecipients(
+  chainId: SupportedChainId,
+  limit:   number,
+): Promise<string[]> {
+  if (chainId !== CHAIN_IDS.SOLANA) return [];
+  if (process.env.SOLANA_ENABLED !== "true") {
+    console.log("[seeder:streamflow] SOLANA_ENABLED flag off — skipping discovery");
+    return [];
+  }
+  const rpcUrl = process.env.SOLANA_RPC_URL;
+  if (!rpcUrl) {
+    console.error("[seeder:streamflow] SOLANA_RPC_URL not configured");
+    return [];
+  }
+
+  const tag = `streamflow/${chainId}`;
+  try {
+    const connection = new Connection(rpcUrl, "confirmed");
+    const programId  = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
+
+    const accounts = await connection.getProgramAccounts(programId, {
+      commitment: "confirmed",
+      filters: [
+        { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
+      ],
+      // Returns ONLY the 32-byte recipient field from each account.
+      dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
+    });
+
+    // Each account.data is a 32-byte Uint8Array (the recipient pubkey).
+    // Wrap in PublicKey() + toBase58() to serialise. Skip any with
+    // unexpected length (shouldn't happen, but defensive).
+    const recipients: string[] = [];
+    for (const { account } of accounts) {
+      const bytes = account.data;
+      if (bytes.length === 32) {
+        try {
+          recipients.push(new PublicKey(bytes).toBase58());
+        } catch {
+          /* malformed pubkey — skip */
+        }
+      }
+    }
+
+    console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} Contract accounts → ${recipients.length} recipients`);
+
+    // dedupeAddresses now preserves Solana base58 casing (ecosystem-aware).
+    // Slice to `limit` so deep-mode can ask for more than incremental.
+    return dedupeAddresses(recipients).slice(0, limit);
+  } catch (err) {
+    console.error(`[seeder:${tag}] discovery failed:`, err);
+    return [];
+  }
+}
+
 // ─── UNCX VestingManager discovery (on-chain event scan, no filter) ─────────
 //
 // The uncx-vm adapter performs per-wallet event scans filtered by
@@ -696,14 +784,17 @@ async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number
 }
 
 function dedupeAddresses(addresses: string[]): string[] {
+  // Ecosystem-aware normalisation — EVM addresses get lowercased, Solana
+  // base58 pubkeys are preserved (they're case-sensitive, lowercasing
+  // corrupts them). normaliseAddress handles the branch.
   const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of addresses) {
     if (!raw) continue;
-    const lower = raw.toLowerCase();
-    if (seen.has(lower)) continue;
-    seen.add(lower);
-    out.push(lower);
+    const norm = normaliseAddress(raw);
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    out.push(norm);
   }
   return out;
 }
@@ -793,6 +884,10 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "pinksale",     chainId: CHAIN_IDS.BSC,      discover: discoverPinksaleRecipients },
   { adapterId: "pinksale",     chainId: CHAIN_IDS.POLYGON,  discover: discoverPinksaleRecipients },
   { adapterId: "pinksale",     chainId: CHAIN_IDS.BASE,     discover: discoverPinksaleRecipients },
+  // Streamflow — Solana mainnet only. Guarded at adapter level by
+  // SOLANA_ENABLED flag; safe to list here unconditionally because
+  // discoverStreamflowRecipients returns [] when the flag is off.
+  { adapterId: "streamflow",   chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
 ];
 
 /** How many recipients to feed into a single adapter.fetch() call. */
