@@ -39,9 +39,12 @@ const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
 // Multicall3 — same address on all 4 supported chains.
 const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
 
-// Inclusive-exclusive ranges. Free-tier RPC response-size caps drove the 100
-// page size; lower if "response too large" errors appear.
-const PAGE_SIZE = 100;
+// Inclusive-exclusive ranges. Tuned conservatively for free-tier RPC quirks:
+// * BSC/Base dRPC return sporadic HTTP 500 — small chunks let retries pick up.
+// * ETH PinkLock has historical locks whose ABI-decode trips up viem on some
+//   tokens — small chunks contain the blast radius (lose 50 locks not 5000).
+// * Polygon worked at 100 in production; could re-raise per-chain later.
+const PAGE_SIZE = 50;
 // Realistic chain max: ~3-4k for BSC, much less elsewhere. Hitting this logs.
 const MAX_TOKENS = 5000;
 
@@ -136,12 +139,16 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3
     } catch (err) {
       lastErr = err;
       const msg = err instanceof Error ? err.message : String(err);
+      // Treat 500-series as transient too — dRPC BSC/Base sporadically returns
+      // 500 on cold connections. Confirmed in prod: same call succeeds 1-2s later.
       const isTransient =
         msg.includes("Temporary internal error") ||
         msg.toLowerCase().includes("too many request") ||
         msg.toLowerCase().includes("rate limit") ||
         msg.includes("503") ||
-        msg.includes("502");
+        msg.includes("502") ||
+        msg.includes("500") ||
+        msg.toLowerCase().includes("http request failed");
       if (!isTransient || attempt === maxAttempts - 1) throw err;
       void label;  // intentionally unused — retained for future telemetry
       await new Promise((r) => setTimeout(r, 1_000 * Math.pow(2, attempt)));
@@ -165,6 +172,14 @@ interface PinkLockRaw {
 // Run `calls` via Multicall3.tryAggregate in fixed-size chunks. Per-call
 // results align with input order; failed calls become null + push a labelled
 // error. Top-level chunk failures push an error and skip that chunk only.
+//
+// Two-pass retry strategy:
+//   Pass 1 — batched multicall (fast path, ~95% of calls succeed)
+//   Pass 2 — for any calls that failed in pass 1, retry them INDIVIDUALLY
+//            via direct readContract with withRetry's exponential backoff.
+//            Catches transient HTTP 500s on dRPC BSC/Base + viem's batch
+//            decode hiccups when one bad token's lock data poisons the
+//            whole multicall response.
 type Call = { address: `0x${string}`; abi: readonly unknown[]; functionName: string; args?: readonly unknown[] };
 async function chunkedMulticall<T>(
   client: ReturnType<typeof makeClient>,
@@ -174,6 +189,9 @@ async function chunkedMulticall<T>(
   errors: string[],
 ): Promise<(T | null)[]> {
   const out: (T | null)[] = new Array(calls.length).fill(null);
+  const failedIndices: number[] = [];
+
+  // Pass 1 — batched multicall, fast path.
   for (let i = 0; i < calls.length; i += chunkSize) {
     const slice = calls.slice(i, i + chunkSize);
     try {
@@ -185,10 +203,44 @@ async function chunkedMulticall<T>(
       for (let j = 0; j < results.length; j++) {
         const r = results[j];
         if (r.status === "success") out[i + j] = r.result as T;
-        else errors.push(`${label} #${i + j}: ${r.error instanceof Error ? r.error.message : String(r.error ?? "unknown")}`);
+        else failedIndices.push(i + j);
       }
     } catch (err) {
-      errors.push(`${label} chunk ${i}: ${err instanceof Error ? err.message : String(err)}`);
+      // Whole-chunk failure (e.g. RPC went down mid-batch). Mark every call
+      // in the chunk as failed so pass-2 picks them up individually.
+      void err;
+      for (let j = 0; j < slice.length; j++) failedIndices.push(i + j);
+    }
+  }
+
+  // Pass 2 — direct readContract for the failures. Slower, but each call has
+  // its own retry budget, and individual readContract calls don't share the
+  // multicall response-size / decode-poison failure modes.
+  if (failedIndices.length > 0) {
+    // Cap pass-2 work — if HALF the calls failed in pass 1, the underlying
+    // RPC is broken and individually retrying just wastes time. Better to
+    // skip and report the partial result than burn 5min hitting a dead host.
+    if (failedIndices.length > calls.length / 2) {
+      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls — skipping pass-2`);
+      return out;
+    }
+    for (const idx of failedIndices) {
+      const call = calls[idx];
+      try {
+        const result = await withRetry(`${label}#${idx} retry`, () =>
+          client.readContract({
+            address:      call.address,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            abi:          call.abi as any,
+            functionName: call.functionName,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            args:         (call.args ?? []) as any,
+          }),
+        );
+        out[idx] = result as T;
+      } catch (err) {
+        errors.push(`${label} #${idx}: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
   }
   return out;
