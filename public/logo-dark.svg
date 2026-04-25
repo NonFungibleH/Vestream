@@ -1,38 +1,16 @@
-<svg viewBox="0 0 380 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="iconBgD" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#7c3aed"/>
-    </linearGradient>
-  </defs>
-
-  <!-- ── Icon mark ──────────────────────────────────────────
-       Identical to the light variant — the mark already reads
-       cleanly on any background. -->
-  <rect width="80" height="80" rx="18" fill="url(#iconBgD)"/>
-
-  <line x1="40" y1="53.5" x2="65.5" y2="20.5"
-    stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.18"/>
-  <line x1="14.5" y1="20.5" x2="40" y2="53.5"
-    stroke="white" stroke-width="7.2" stroke-linecap="round"/>
-
-  <circle cx="40" cy="53.5" r="9"   fill="white" fill-opacity="0.12"/>
-  <circle cx="40" cy="53.5" r="4.4" fill="white"/>
-
-  <circle cx="46.4" cy="45.2" r="3.6" fill="white" fill-opacity="0.78"/>
-  <circle cx="52.8" cy="37"   r="2.8" fill="white" fill-opacity="0.52"/>
-  <circle cx="59.2" cy="28.7" r="2.0" fill="white" fill-opacity="0.30"/>
-  <circle cx="65.5" cy="20.5" r="1.4" fill="white" fill-opacity="0.15"/>
-
-  <!-- ── Wordmark (white for dark backgrounds) ─────────────
-       Single fill since the dark background reverses contrast;
-       the brand-gradient treatment lives only in the light logo. -->
-  <text
-    x="97" y="52"
-    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
-    font-size="40"
-    font-weight="800"
-    letter-spacing="-0.03em"
-    fill="white"
-  >Vestream</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <style>
+    .w {
+      font-family: "Inter Tight", system-ui, -apple-system, sans-serif;
+      font-weight: 700;
+      font-size: 36px;
+      letter-spacing: -1.62px; /* -0.045em at 36px, per brand brief §05 */
+    }
+  </style>
+  <g transform="translate(8 16) scale(0.48)">
+    <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="#ffffff" opacity="0.35"/>
+    <path d="M22 46 L70 46 L78 54 L22 54 Z" fill="#ffffff" opacity="0.65"/>
+    <path d="M22 62 L78 62 L86 70 L22 70 Z" fill="#1cb8b8" opacity="1"/>
+  </g>
+  <text x="68" y="56" class="w" fill="#ffffff"><tspan fill="#1cb8b8">V</tspan>estream</text>
 </svg>

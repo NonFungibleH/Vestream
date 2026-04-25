@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 160" width="800" height="160">
+  <title>Vestream lockup — mono white</title>
+  
+  <g transform="translate(0 30)">
+    <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="#ffffff" opacity="0.4"></path>
+    <path d="M22 46 L70 46 L78 54 L22 54 Z" fill="#ffffff" opacity="0.7"></path>
+    <path d="M22 62 L78 62 L86 70 L22 70 Z" fill="#ffffff"></path>
+  </g>
+  <text x="140" y="125" class="w" fill="#ffffff">Vestream</text>
+</svg>
