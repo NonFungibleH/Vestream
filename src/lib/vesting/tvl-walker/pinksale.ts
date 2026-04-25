@@ -266,8 +266,13 @@ async function fetchAllLockedTokens(
     });
   }
 
+  // Chunk at 20 — one multicall returning 20 pages of up to 50 token-info
+  // tuples each = up to 1000 tuples per response, well within dRPC limits.
+  // Sending the whole call list in a single multicall (the previous
+  // behaviour) overloaded dRPC on BSC where ~5k tokens means ~100 paged
+  // calls in one request → 100% pass-1 failure observed in production.
   const results = await chunkedMulticall<readonly CumulativeLockInfoRaw[]>(
-    makeClient(chainId), calls, /* chunkSize */ calls.length || 1, "cumulativeTokenInfo", errors,
+    makeClient(chainId), calls, 20, "cumulativeTokenInfo", errors,
   );
 
   const tokens = new Set<string>();
@@ -294,7 +299,7 @@ async function fetchLockCounts(
     functionName: "totalLockCountForToken",
     args: [token as `0x${string}`],
   }));
-  const results = await chunkedMulticall<bigint>(makeClient(chainId), calls, 200, "lockCount", errors);
+  const results = await chunkedMulticall<bigint>(makeClient(chainId), calls, 100, "lockCount", errors);
   for (let i = 0; i < tokens.length; i++) {
     if (results[i] != null) result.set(tokens[i], Number(results[i] as bigint));
   }
@@ -321,10 +326,12 @@ async function fetchAllLocks(
     }
   }
 
-  // 50 page-calls × 100 structs = up to 5000 Lock structs per response —
-  // below typical RPC caps even with description strings.
+  // 25 page-calls × 50 structs = up to 1250 Lock structs per response.
+  // Conservative for dRPC free-tier; ETH "Position 281 out of bounds" was
+  // a single token's bad encoding poisoning the whole 50-call multicall —
+  // smaller chunks contain blast radius.
   const results = await chunkedMulticall<readonly PinkLockRaw[]>(
-    makeClient(chainId), calls, 50, "locksForToken", errors,
+    makeClient(chainId), calls, 25, "locksForToken", errors,
   );
 
   const locks: PinkLockRaw[] = [];
@@ -344,8 +351,9 @@ async function fetchTokenMeta(
     { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   },
     { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "decimals" },
   ]);
-  // 250 tokens × 2 calls each = 500 returns/response
-  const results = await chunkedMulticall<unknown>(makeClient(chainId), calls, 500, "tokenMeta", errors);
+  // 50 tokens × 2 calls each = 100 returns/response. Was 500/response which
+  // overloaded dRPC on chains with many distinct tokens.
+  const results = await chunkedMulticall<unknown>(makeClient(chainId), calls, 100, "tokenMeta", errors);
   for (let i = 0; i < tokenAddresses.length; i++) {
     const sym = results[i * 2];
     const dec = results[i * 2 + 1];
