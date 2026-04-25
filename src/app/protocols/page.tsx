@@ -309,9 +309,8 @@ export default async function UnlocksIndexPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#8B8E92" }}
           >
-            Vestream tracks every vesting schedule on Sablier, Hedgey, Superfluid, UNCX, Team Finance,
-            Unvest, PinkSale, Streamflow and Jupiter Lock — across Ethereum, Base, BSC, Polygon and
-            Solana. Pick a protocol below to see live activity.
+            Every major vesting schedule across Ethereum, Base, BSC, Polygon and Solana — indexed in
+            real time. Pick a protocol below to see live activity.
           </p>
         </div>
       </section>
