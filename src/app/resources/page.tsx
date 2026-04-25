@@ -20,8 +20,8 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }>
   Fundamentals:      { bg: "rgba(59,130,246,0.10)",  text: "#60a5fa", dot: "#3b82f6" },
   Tokenomics:        { bg: "rgba(167,139,250,0.12)", text: "#a78bfa", dot: "#0F8A8A" },
   Guides:            { bg: "rgba(52,211,153,0.10)",  text: "#34d399", dot: "#2D8A4A" },
-  "Market Analysis": { bg: "rgba(251,146,60,0.12)",  text: "#fb923c", dot: "#f97316" },
-  Research:          { bg: "rgba(244,114,182,0.12)", text: "#f472b6", dot: "#ec4899" },
+  "Market Analysis": { bg: "rgba(251,146,60,0.12)",  text: "#fb923c", dot: "#C47A1A" },
+  Research:          { bg: "rgba(244,114,182,0.12)", text: "#f472b6", dot: "#B85585" },
 };
 
 export default function ResourcesPage() {

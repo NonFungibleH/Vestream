@@ -763,11 +763,11 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
     return (
       <div
         className="mt-5 rounded-xl p-4 flex items-start gap-3"
-        style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.22)" }}
+        style={{ background: "rgba(45,138,74,0.06)", border: "1px solid rgba(45,138,74,0.22)" }}
       >
         <div
           className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(16,185,129,0.12)", color: "#059669" }}
+          style={{ background: "rgba(45,138,74,0.12)", color: "#059669" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>

@@ -26,12 +26,12 @@ const CHAIN_COLORS: Record<number, string> = {
 };
 
 const PROTOCOL_COLORS: Record<string, string> = {
-  sablier:        "#f97316",
+  sablier:        "#C47A1A",
   hedgey:         "#1CB8B8",
   "team-finance": "#2D8A4A",
   uncx:           "#C47A1A",
   "uncx-vm":      "#C47A1A",
-  unvest:         "#0891b2",
+  unvest:         "#4A7A82",
 };
 
 function formatDate(d: Date | null | string) {
@@ -194,7 +194,7 @@ export default async function AdminPage() {
             <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#0F8A8A" />
             <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#1CB8B8" />
             <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2D8A4A" />
-            <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#f97316" />
+            <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#C47A1A" />
             <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
             <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#C47A1A" />
           </div>
@@ -353,7 +353,7 @@ export default async function AdminPage() {
                 </div>
                 <div className="flex items-center justify-between mt-1.5">
                   <span className="text-xs" style={{ color: "#4b5563" }}>Users at wallet limit (3)</span>
-                  <span className="text-xs font-semibold" style={{ color: "#fbbf24" }}>
+                  <span className="text-xs font-semibold" style={{ color: "#C4A04A" }}>
                     {userRows.filter(u => walletRows.filter(w => w.userId === u.id).length >= 3).length}
                   </span>
                 </div>
@@ -491,7 +491,7 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
-                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(16,185,129,0.1)",
+                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(45,138,74,0.1)",
                             color:      k.tier === "pro" ? "#1CB8B8"               : "#34d399",
                           }}>
                           {k.tier}
@@ -560,8 +560,8 @@ export default async function AdminPage() {
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                         style={{
-                          background: r.reviewed ? "rgba(16,185,129,0.1)"  : "rgba(245,158,11,0.1)",
-                          color:      r.reviewed ? "#34d399"                : "#fbbf24",
+                          background: r.reviewed ? "rgba(45,138,74,0.1)"  : "rgba(245,158,11,0.1)",
+                          color:      r.reviewed ? "#34d399"                : "#C4A04A",
                         }}>
                         {r.reviewed ? "reviewed" : "pending"}
                       </span>

@@ -501,7 +501,7 @@ export default function TokenPayrollPage() {
                 <div className="px-3 pb-2">
                   <div
                     className="rounded-lg p-2"
-                    style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${THEME.accentGreenBr}` }}
+                    style={{ background: "rgba(45,138,74,0.08)", border: `1px solid ${THEME.accentGreenBr}` }}
                   >
                     <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: THEME.accentGreen }}>
                       Next unlock

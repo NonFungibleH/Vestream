@@ -64,7 +64,7 @@ const STREAMS: DemoStream[] = [
   },
   {
     protocolId: "team-finance", protocolName: "Team Finance",
-    token: "VEST", tokenColors: ["#2D8A4A", "#0891b2"],
+    token: "VEST", tokenColors: ["#2D8A4A", "#4A7A82"],
     chain: "BNB Chain",
     totalAmount: 50_000, claimable: 12_500, vested: 30_000, percent: 60,
     unlockInHrs: 6,
@@ -423,8 +423,8 @@ function ScanStep({
                   key={p.id}
                   className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors"
                   style={{
-                    background: isPinging ? "rgba(28,184,184,0.05)" : isDone && p.hit ? "rgba(16,185,129,0.04)" : "transparent",
-                    border: "1px solid " + (isPinging ? "rgba(28,184,184,0.2)" : isDone && p.hit ? "rgba(16,185,129,0.15)" : "transparent"),
+                    background: isPinging ? "rgba(28,184,184,0.05)" : isDone && p.hit ? "rgba(45,138,74,0.04)" : "transparent",
+                    border: "1px solid " + (isPinging ? "rgba(28,184,184,0.2)" : isDone && p.hit ? "rgba(45,138,74,0.15)" : "transparent"),
                   }}
                 >
                   {/* Icon */}
@@ -553,7 +553,7 @@ function AlertStep({
       <div className="md:col-span-2 order-2 md:order-1">
         <div
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold mb-3"
-          style={{ background: "rgba(16,185,129,0.1)", color: "#059669" }}
+          style={{ background: "rgba(45,138,74,0.1)", color: "#059669" }}
         >
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2D8A4A" }} />
@@ -804,7 +804,7 @@ function ClaimStep({
       <div className="text-center py-10">
         <div
           className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-          style={{ background: "rgba(16,185,129,0.12)" }}
+          style={{ background: "rgba(45,138,74,0.12)" }}
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>
@@ -1030,7 +1030,7 @@ function WalletPopup({ onConfirm }: { onConfirm: () => void }) {
       <div className="flex items-center gap-2 mb-3">
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #f97316, #eab308)" }}
+          style={{ background: "linear-gradient(135deg, #C47A1A, #eab308)" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 7l8 5 8-5-8-5zM4 17l8 5 8-5M4 12l8 5 8-5"/></svg>
         </div>

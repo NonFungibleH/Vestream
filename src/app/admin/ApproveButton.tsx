@@ -52,7 +52,7 @@ export function ApproveButton({ requestId, email, name }: Props) {
   if (state === "done" && apiKey) {
     return (
       <div className="flex flex-col gap-3 min-w-0 max-w-xs">
-        <div className="rounded-xl p-3" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
+        <div className="rounded-xl p-3" style={{ background: "rgba(45,138,74,0.08)", border: "1px solid rgba(45,138,74,0.2)" }}>
           <p className="text-xs font-semibold mb-1.5" style={{ color: "#34d399" }}>
             ✓ Key issued — copy now, it won&apos;t be shown again
           </p>
@@ -64,8 +64,8 @@ export function ApproveButton({ requestId, email, name }: Props) {
           onClick={copyKey}
           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
           style={{
-            background: copied ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)",
-            border: "1px solid rgba(16,185,129,0.25)",
+            background: copied ? "rgba(45,138,74,0.15)" : "rgba(45,138,74,0.1)",
+            border: "1px solid rgba(45,138,74,0.25)",
             color: "#34d399",
           }}
         >

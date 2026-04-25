@@ -117,15 +117,15 @@ export default function DeveloperPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
             {[
-              { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  note: "Linear + tranched" },
+              { name: "Sablier",       color: "#C47A1A", bg: "rgba(196,122,26,0.08)",  border: "rgba(196,122,26,0.18)",  note: "Linear + tranched" },
               { name: "UNCX",          color: "#1CB8B8", bg: "rgba(28,184,184,0.08)",   border: "rgba(28,184,184,0.18)",   note: "Token locks" },
               { name: "Hedgey",        color: "#0F8A8A", bg: "rgba(15,138,138,0.08)",  border: "rgba(15,138,138,0.18)",  note: "NFT-based vesting" },
-              { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   note: "Multi-chain" },
-              { name: "Team Finance",  color: "#2D8A4A", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  note: "Team vesting" },
-              { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   note: "Streaming vesting" },
-              { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  note: "PinkLock V2" },
-              { name: "Streamflow",    color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)",  note: "Solana vesting" },
-              { name: "Jupiter Lock",  color: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)",  note: "Solana locker" },
+              { name: "Unvest",        color: "#4A7A82", bg: "rgba(74,122,130,0.08)",   border: "rgba(74,122,130,0.18)",   note: "Multi-chain" },
+              { name: "Team Finance",  color: "#2D8A4A", bg: "rgba(45,138,74,0.08)",  border: "rgba(45,138,74,0.18)",  note: "Team vesting" },
+              { name: "Superfluid",    color: "#1F7A64", bg: "rgba(31,122,100,0.08)",   border: "rgba(31,122,100,0.18)",   note: "Streaming vesting" },
+              { name: "PinkSale",      color: "#B85585", bg: "rgba(184,85,133,0.08)",  border: "rgba(184,85,133,0.18)",  note: "PinkLock V2" },
+              { name: "Streamflow",    color: "#7DB89A", bg: "rgba(125,184,154,0.08)",  border: "rgba(125,184,154,0.22)",  note: "Solana vesting" },
+              { name: "Jupiter Lock",  color: "#C4A04A", bg: "rgba(196,160,74,0.08)",  border: "rgba(196,160,74,0.22)",  note: "Solana locker" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -183,9 +183,9 @@ export default function DeveloperPage() {
               },
               {
                 icon: "⬡",
-                color: "#0891b2",
-                bg: "rgba(8,145,178,0.08)",
-                border: "rgba(8,145,178,0.18)",
+                color: "#4A7A82",
+                bg: "rgba(74,122,130,0.08)",
+                border: "rgba(74,122,130,0.18)",
                 title: "AI agent-native (MCP)",
                 description: "Published as an MCP server so AI agents — Claude, GPT, LangChain, CrewAI — can call our API as a native tool with zero custom integration code. One config block and your agent understands vesting.",
                 points: ["Anthropic MCP server included", "OpenAPI spec for function calling", "Structured JSON for LLM parsing", "Forecast + unlock tools built in"],

@@ -269,7 +269,7 @@ export default function AiPage() {
             {/* Tool response */}
             <div className="ml-10">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(16,185,129,0.1)", color: "#34d399" }}>
+                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(45,138,74,0.1)", color: "#34d399" }}>
                   ← result
                 </span>
               </div>
@@ -406,13 +406,13 @@ export default function AiPage() {
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-              color: "#0891b2", bg: "rgba(8,145,178,0.1)", border: "rgba(8,145,178,0.2)",
+              color: "#4A7A82", bg: "rgba(74,122,130,0.1)", border: "rgba(74,122,130,0.2)",
               title: "Compliance & reporting agents",
               body: "Generate audit-ready vesting reports for any wallet or team — cliff dates, tranches, claimed amounts — structured and exportable on demand.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-              color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.2)",
+              color: "#C47A1A", bg: "rgba(196,122,26,0.1)", border: "rgba(196,122,26,0.2)",
               title: "DeFi strategy agents",
               body: "Combine upcoming unlock data with on-chain prices to automatically evaluate whether to hold, hedge, or exit a position as vesting cliffs approach.",
             },
@@ -449,7 +449,7 @@ export default function AiPage() {
               name: "@vestream/mcp",
               desc: "Install via npx — no global install required. Works anywhere Node.js runs.",
               cmd: "npx -y @vestream/mcp",
-              color: "#f97316",
+              color: "#C47A1A",
             },
             {
               label: "MCP Registry",

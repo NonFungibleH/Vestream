@@ -1047,7 +1047,7 @@ export default function Settings() {
                     </div>
                   ) : (
                     <div className="mb-3 px-3 py-2 rounded-lg inline-block"
-                      style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }}>
+                      style={{ background: "rgba(45,138,74,0.08)", border: "1px solid rgba(45,138,74,0.25)" }}>
                       <p className="text-[11px] font-semibold" style={{ color: "#059669" }}>
                         ✓ Unlimited push alerts ({tier === "fund" ? "Enterprise" : "Pro"})
                       </p>

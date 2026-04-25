@@ -188,8 +188,8 @@ const CATEGORY_COLORS: Record<string, { dot: string }> = {
   Fundamentals:      { dot: "#3b82f6" },
   Tokenomics:        { dot: "#0F8A8A" },
   Guides:            { dot: "#2D8A4A" },
-  "Market Analysis": { dot: "#f97316" },
-  Research:          { dot: "#ec4899" },
+  "Market Analysis": { dot: "#C47A1A" },
+  Research:          { dot: "#B85585" },
 };
 
 function ArticleSidebar({

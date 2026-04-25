@@ -68,14 +68,14 @@ const PROTOCOL_OPTIONS = [
 ];
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.25)"  },
+  sablier:        { text: "#C47A1A", bg: "rgba(196,122,26,0.12)",  border: "rgba(196,122,26,0.25)"  },
   hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.12)",   border: "rgba(28,184,184,0.25)"   },
-  "team-finance": { text: "#2D8A4A", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
+  "team-finance": { text: "#2D8A4A", bg: "rgba(45,138,74,0.12)",  border: "rgba(45,138,74,0.25)"  },
   uncx:           { text: "#C47A1A", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   "uncx-vm":      { text: "#C47A1A", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.12)",   border: "rgba(8,145,178,0.25)"   },
-  superfluid:     { text: "#1db954", bg: "rgba(29,185,84,0.12)",   border: "rgba(29,185,84,0.25)"   },
-  pinksale:       { text: "#ec4899", bg: "rgba(236,72,153,0.12)",  border: "rgba(236,72,153,0.25)"  },
+  unvest:         { text: "#4A7A82", bg: "rgba(74,122,130,0.12)",   border: "rgba(74,122,130,0.25)"   },
+  superfluid:     { text: "#1F7A64", bg: "rgba(31,122,100,0.12)",   border: "rgba(31,122,100,0.25)"   },
+  pinksale:       { text: "#B85585", bg: "rgba(184,85,133,0.12)",  border: "rgba(184,85,133,0.25)"  },
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }

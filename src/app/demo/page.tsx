@@ -202,8 +202,8 @@ export default function DemoPage() {
             href={TEAM_FINANCE_VESTING}
             cta="Open Team Finance Vesting"
             accent="#2D8A4A"
-            accentBg="rgba(16,185,129,0.08)"
-            accentBorder="rgba(16,185,129,0.22)"
+            accentBg="rgba(45,138,74,0.08)"
+            accentBorder="rgba(45,138,74,0.22)"
           />
         </div>
 

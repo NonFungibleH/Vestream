@@ -78,7 +78,7 @@ export default async function Home() {
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {([
                 { symbol: "USDC", pct: 67, color: "#1CB8B8" },
-                { symbol: "NOVA", pct: 22, color: "#f97316" },
+                { symbol: "NOVA", pct: 22, color: "#C47A1A" },
                 { symbol: "FLUX", pct: 11, color: "#0F8A8A" },
               ] as const).map((t) => (
                 <div key={t.symbol}>
@@ -105,7 +105,7 @@ export default async function Home() {
           <div style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(0,0,0,0.45)", width: "210px", padding: "16px" }}>
             <p style={{ color: "#4b5563", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "10px" }}>Token Unlock Status</p>
             {/* Streaming now */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", marginBottom: "7px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(45,138,74,0.08)", border: "1px solid rgba(45,138,74,0.2)", marginBottom: "7px" }}>
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2D8A4A", flexShrink: 0 }} />
               <div>
                 <p style={{ color: "#2D8A4A", fontSize: "10px", fontWeight: "700" }}>USDC · Streaming now</p>
@@ -202,10 +202,10 @@ export default async function Home() {
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
-              { name: "Sablier",      color: "#f97316", bg: "rgba(249,115,22,0.07)",  border: "rgba(249,115,22,0.15)"  },
+              { name: "Sablier",      color: "#C47A1A", bg: "rgba(196,122,26,0.07)",  border: "rgba(196,122,26,0.15)"  },
               { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
               { name: "UNCX",         color: "#C47A1A", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-              { name: "Team Finance", color: "#2D8A4A", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
+              { name: "Team Finance", color: "#2D8A4A", bg: "rgba(45,138,74,0.07)",  border: "rgba(45,138,74,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -223,10 +223,10 @@ export default async function Home() {
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
               { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
-              { name: "Superfluid",   color: "#1db954", bg: "rgba(29,185,84,0.07)",   border: "rgba(29,185,84,0.15)"   },
-              { name: "PinkSale",     color: "#ec4899", bg: "rgba(236,72,153,0.07)",  border: "rgba(236,72,153,0.15)"  },
-              { name: "Streamflow",   color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)"  },
-              { name: "Jupiter Lock", color: "#fbbf24", bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.22)"  },
+              { name: "Superfluid",   color: "#1F7A64", bg: "rgba(31,122,100,0.07)",   border: "rgba(31,122,100,0.15)"   },
+              { name: "PinkSale",     color: "#B85585", bg: "rgba(184,85,133,0.07)",  border: "rgba(184,85,133,0.15)"  },
+              { name: "Streamflow",   color: "#7DB89A", bg: "rgba(125,184,154,0.08)",  border: "rgba(125,184,154,0.22)"  },
+              { name: "Jupiter Lock", color: "#C4A04A", bg: "rgba(196,160,74,0.08)",  border: "rgba(196,160,74,0.22)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -244,7 +244,7 @@ export default async function Home() {
               { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
               { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
               { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
-              { name: "Solana",    color: "#14f195", bg: "rgba(20,241,149,0.08)",   border: "rgba(20,241,149,0.22)"   },
+              { name: "Solana",    color: "#7DB89A", bg: "rgba(125,184,154,0.08)",   border: "rgba(125,184,154,0.22)"   },
             ].map((c) => (
               <div key={c.name} className="flex items-center px-3 py-1 rounded-full"
                 style={{ background: c.bg, border: `1px solid ${c.border}` }}>
@@ -324,8 +324,8 @@ export default async function Home() {
                   {[
                     { l: "Claimable", v: "$5,650",  c: "rgba(52,211,153,0.15)"  },
                     { l: "Locked",    v: "$200,850", c: "rgba(147,197,253,0.15)" },
-                    { l: "Streams",   v: "4 active", c: "rgba(251,191,36,0.12)"  },
-                    { l: "Next",      v: "14d 6h",   c: "rgba(251,191,36,0.15)"  },
+                    { l: "Streams",   v: "4 active", c: "rgba(196,160,74,0.12)"  },
+                    { l: "Next",      v: "14d 6h",   c: "rgba(196,160,74,0.15)"  },
                   ].map((s) => (
                     <div key={s.l} className="rounded-lg px-2.5 py-1.5 flex-1" style={{ background: s.c, border: "1px solid rgba(255,255,255,0.06)" }}>
                       <p className="text-[7px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.l}</p>
@@ -343,7 +343,7 @@ export default async function Home() {
                   <div className="space-y-2">
                     {[
                       { s: "USDC", clPct: 12, lkPct: 88, color: "#1CB8B8", total: "$137,500" },
-                      { s: "NOVA", clPct:  8, lkPct: 92, color: "#f97316", total: "$45,000"  },
+                      { s: "NOVA", clPct:  8, lkPct: 92, color: "#C47A1A", total: "$45,000"  },
                       { s: "FLUX", clPct:  5, lkPct: 95, color: "#0F8A8A", total: "$24,000"  },
                     ].map((t) => (
                       <div key={t.s}>
@@ -511,7 +511,7 @@ export default async function Home() {
             <div className="px-4 pb-4 space-y-2">
               {[
                 { sym: "VOLT", price: "$1.04",    mc: "$38.7B", liq: "$741M", color: "#1CB8B8" },
-                { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#f97316" },
+                { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#C47A1A" },
                 { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#0F8A8A" },
               ].map((t) => (
                 <div key={t.sym} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "9px", padding: "8px 10px" }}>
@@ -635,13 +635,13 @@ export default async function Home() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { name: "Sablier",      color: "#f97316" },
+                  { name: "Sablier",      color: "#C47A1A" },
                   { name: "Hedgey",       color: "#3b82f6" },
                   { name: "UNCX",         color: "#C47A1A" },
                   { name: "Unvest",       color: "#06b6d4" },
                   { name: "Team Finance", color: "#2D8A4A" },
-                  { name: "Superfluid",   color: "#1db954" },
-                  { name: "PinkSale",     color: "#ec4899" },
+                  { name: "Superfluid",   color: "#1F7A64" },
+                  { name: "PinkSale",     color: "#B85585" },
                 ].map((p) => (
                   <span
                     key={p.name}
@@ -686,13 +686,13 @@ export default async function Home() {
             {/* Result rows — one per supported protocol so a visitor sees all 7
                 integrations represented, not just a convenient subset. */}
             {[
-              { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "12,500", color: "#f97316" },
+              { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "12,500", color: "#C47A1A" },
               { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
               { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#C47A1A" },
               { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
               { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#2D8A4A" },
-              { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#1db954" },
-              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#ec4899" },
+              { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#1F7A64" },
+              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#B85585" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#141720", border: "1px solid #1e2330" }}>
@@ -718,7 +718,7 @@ export default async function Home() {
           {/* Text */}
           <div className="flex-1 md:max-w-[420px]">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
-              style={{ background: "rgba(8,145,178,0.08)", border: "1px solid rgba(8,145,178,0.14)", color: "#0891b2" }}>
+              style={{ background: "rgba(74,122,130,0.08)", border: "1px solid rgba(74,122,130,0.14)", color: "#4A7A82" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h2 className="text-3xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
@@ -759,7 +759,7 @@ export default async function Home() {
                   </div>
                 </div>
                 <div className="h-1 rounded-full" style={{ background: "#1e2330" }}>
-                  <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #0891b2, #1CB8B8)" }} />
+                  <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #4A7A82, #1CB8B8)" }} />
                 </div>
               </div>
             ))}
@@ -866,7 +866,7 @@ export default async function Home() {
               <text x="14" y="157" fontSize="7.5" fontWeight="600" fill="rgba(255,255,255,0.3)" fontFamily="system-ui" letterSpacing="1">PORTFOLIO</text>
               {/* Portfolio rows */}
               {[
-                { y: 178, label: "NOVA", val: "$4,218", color: "#f97316" },
+                { y: 178, label: "NOVA", val: "$4,218", color: "#C47A1A" },
                 { y: 206, label: "FLUX", val: "$1,840", color: "#3b82f6" },
                 { y: 234, label: "VEST", val: "$920",   color: "#2D8A4A" },
               ].map(r => (
@@ -1107,7 +1107,7 @@ export default async function Home() {
               $14.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
-              style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#059669" }}>
+              style={{ background: "rgba(45,138,74,0.1)", border: "1px solid rgba(45,138,74,0.25)", color: "#059669" }}>
               14-day free trial
             </div>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>For active holders who want every unlock on their radar.</p>

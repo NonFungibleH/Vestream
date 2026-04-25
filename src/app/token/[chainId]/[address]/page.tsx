@@ -371,19 +371,19 @@ export default async function TokenPage(
             label="Unlocking next 7d"
             value={upcoming7Usd != null ? fmtUsd(upcoming7Usd) : (overview ? fmtTokens(overview.upcoming7dTokens) : "—")}
             sub={overview ? `${fmtTokens(overview.upcoming7dTokens)} ${symbol}` : ""}
-            accent="#ec4899"
+            accent="#B85585"
           />
           <HeroStat
             label="Unlocking next 30d"
             value={upcoming30Usd != null ? fmtUsd(upcoming30Usd) : (overview ? fmtTokens(overview.upcoming30dTokens) : "—")}
             sub={overview ? `${fmtTokens(overview.upcoming30dTokens)} ${symbol}` : ""}
-            accent="#f97316"
+            accent="#C47A1A"
           />
           <HeroStat
             label="Recipients"
             value={overview ? overview.recipientCount.toLocaleString() : "—"}
             sub={overview ? `${overview.streamCount} active streams` : ""}
-            accent="#0891b2"
+            accent="#4A7A82"
           />
         </div>
       </section>
@@ -1153,11 +1153,11 @@ function UpcomingEvents({
       <div
         className="px-4 md:px-5 py-3"
         style={{
-          background: "linear-gradient(90deg, rgba(249,115,22,0.06), rgba(236,72,153,0.04))",
+          background: "linear-gradient(90deg, rgba(196,122,26,0.06), rgba(184,85,133,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#f97316" }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#C47A1A" }}>
           Upcoming unlock events
         </span>
       </div>
@@ -1183,7 +1183,7 @@ function UpcomingEvents({
               </div>
               <div
                 className="flex-shrink-0 text-[11px] font-bold px-2.5 py-0.5 rounded-full tabular-nums"
-                style={{ background: "rgba(249,115,22,0.1)", color: "#ea580c" }}
+                style={{ background: "rgba(196,122,26,0.1)", color: "#ea580c" }}
               >
                 {relUntil(e.timestamp)}
               </div>

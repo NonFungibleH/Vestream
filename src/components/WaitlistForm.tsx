@@ -38,8 +38,8 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
         <div
           className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold"
           style={dark
-            ? { background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7" }
-            : { background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#059669" }
+            ? { background: "rgba(45,138,74,0.15)", border: "1px solid rgba(45,138,74,0.3)", color: "#6ee7b7" }
+            : { background: "rgba(45,138,74,0.08)", border: "1px solid rgba(45,138,74,0.2)", color: "#059669" }
           }
         >
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
