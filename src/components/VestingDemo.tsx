@@ -308,7 +308,7 @@ export function VestingDemo() {
             <Stat
               label="Claimed"
               value={`${fmtAmount(state.withdrawn, state.tokenDecimals)} ${state.tokenSymbol}`}
-              tint="#2D8A4A"
+              tint="#3FA568"
             />
             <Stat
               label="Locked"
@@ -361,7 +361,7 @@ export function VestingDemo() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:underline font-mono"
-                  style={{ color: "#2D8A4A" }}
+                  style={{ color: "#3FA568" }}
                 >
                   Latest claim tx: {state.lastClaimTx.slice(0, 10)}…
                 </a>
@@ -763,11 +763,11 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
     return (
       <div
         className="mt-5 rounded-xl p-4 flex items-start gap-3"
-        style={{ background: "rgba(45,138,74,0.06)", border: "1px solid rgba(45,138,74,0.22)" }}
+        style={{ background: "rgba(63,165,104,0.06)", border: "1px solid rgba(63,165,104,0.22)" }}
       >
         <div
           className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(45,138,74,0.12)", color: "#059669" }}
+          style={{ background: "rgba(63,165,104,0.12)", color: "#059669" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>
@@ -823,7 +823,7 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
           <div className="text-xs mt-0.5" style={{ color: "#8B8E92" }}>
             One-tap opt-in — no account, no email. You&rsquo;ll feel the pings land at 25%, 50%, 75% and 100%.
             {isIOSSafariWebkit() && (
-              <span className="block mt-1" style={{ color: "#C47A1A" }}>
+              <span className="block mt-1" style={{ color: "#E89A3D" }}>
                 iPhone: add Vestream to your Home Screen first (Share → Add to Home Screen) for push.
               </span>
             )}

@@ -25,18 +25,18 @@ export const metadata: Metadata = {
 // visual would be nice but for now consistent literal lists keep the two
 // pages tightly aligned.
 const PROTOCOLS_ROW_1 = [
-  { name: "Sablier",      color: "#C47A1A", bg: "rgba(196,122,26,0.07)",  border: "rgba(196,122,26,0.15)"  },
+  { name: "Sablier",      color: "#E89A3D", bg: "rgba(232,154,61,0.07)",  border: "rgba(232,154,61,0.15)"  },
   { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
-  { name: "UNCX",         color: "#C47A1A", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-  { name: "Team Finance", color: "#2D8A4A", bg: "rgba(45,138,74,0.07)",  border: "rgba(45,138,74,0.15)"  },
+  { name: "UNCX",         color: "#E89A3D", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
+  { name: "Team Finance", color: "#3FA568", bg: "rgba(63,165,104,0.07)",  border: "rgba(63,165,104,0.15)"  },
 ] as const;
 
 const PROTOCOLS_ROW_2 = [
   { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
-  { name: "Superfluid",   color: "#1F7A64", bg: "rgba(31,122,100,0.07)",   border: "rgba(31,122,100,0.15)"   },
-  { name: "PinkSale",     color: "#B85585", bg: "rgba(184,85,133,0.07)",  border: "rgba(184,85,133,0.15)"  },
-  { name: "Streamflow",   color: "#7DB89A", bg: "rgba(125,184,154,0.08)",  border: "rgba(125,184,154,0.22)"  },
-  { name: "Jupiter Lock", color: "#C4A04A", bg: "rgba(196,160,74,0.08)",  border: "rgba(196,160,74,0.22)"  },
+  { name: "Superfluid",   color: "#3CA386", bg: "rgba(60,163,134,0.07)",   border: "rgba(60,163,134,0.15)"   },
+  { name: "PinkSale",     color: "#D67099", bg: "rgba(214,112,153,0.07)",  border: "rgba(214,112,153,0.15)"  },
+  { name: "Streamflow",   color: "#8DD3AB", bg: "rgba(141,211,171,0.08)",  border: "rgba(141,211,171,0.22)"  },
+  { name: "Jupiter Lock", color: "#E8C46B", bg: "rgba(232,196,107,0.08)",  border: "rgba(232,196,107,0.22)"  },
 ] as const;
 
 const CHAINS = [
@@ -44,7 +44,7 @@ const CHAINS = [
   { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
   { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
   { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
-  { name: "Solana",    color: "#7DB89A", bg: "rgba(125,184,154,0.08)",   border: "rgba(125,184,154,0.22)"   },
+  { name: "Solana",    color: "#8DD3AB", bg: "rgba(141,211,171,0.08)",   border: "rgba(141,211,171,0.22)"   },
 ] as const;
 
 export default function FindVestingsPage() {

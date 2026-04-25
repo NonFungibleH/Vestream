@@ -49,13 +49,13 @@ interface ScanResponse {
 }
 
 const PROTOCOL_COLOURS: Record<string, string> = {
-  sablier:        "#C47A1A",
+  sablier:        "#E89A3D",
   hedgey:         "#a855f7",
   uncx:           "#0ea5e9",
   unvest:         "#14b8a6",
   "team-finance": "#f59e0b",
-  superfluid:     "#2D8A4A",
-  pinksale:       "#B85585",
+  superfluid:     "#3FA568",
+  pinksale:       "#D67099",
 };
 
 function fmtAmount(raw: string, decimals: number): string {
@@ -249,17 +249,17 @@ export default function FindVestingsClient() {
         <div
           className="rounded-2xl p-4 flex items-center justify-between flex-wrap gap-3"
           style={{
-            background: "rgba(45,138,74,0.05)",
-            border: "1px solid rgba(45,138,74,0.2)",
+            background: "rgba(63,165,104,0.05)",
+            border: "1px solid rgba(63,165,104,0.2)",
           }}
         >
           <div className="flex items-center gap-3">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2D8A4A" }} />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: "#2D8A4A" }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#3FA568" }} />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: "#3FA568" }} />
             </span>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#2D8A4A" }}>
+              <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#3FA568" }}>
                 Connected
               </div>
               <div className="font-mono text-sm" style={{ color: "#1A1D20" }}>
@@ -620,7 +620,7 @@ function GroupCard({ group }: { group: Group }) {
               {fmtAmount(tok.totalAmountRaw, tok.decimals)}
             </div>
             {BigInt(tok.claimableNowRaw) > 0n && (
-              <div className="text-[11px] font-mono mt-1" style={{ color: "#2D8A4A" }}>
+              <div className="text-[11px] font-mono mt-1" style={{ color: "#3FA568" }}>
                 {fmtAmount(tok.claimableNowRaw, tok.decimals)} claimable now
               </div>
             )}

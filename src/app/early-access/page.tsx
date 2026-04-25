@@ -141,7 +141,7 @@ export default function EarlyAccessPage() {
             <p className="text-sm" style={{ color: "#8B8E92" }}>{stepSubs[step]}</p>
 
             {slotsLeft !== null && slotsLeft <= 20 && step === "code" ? (
-              <p className="text-xs font-semibold mt-2 mb-6" style={{ color: "#C47A1A" }}>
+              <p className="text-xs font-semibold mt-2 mb-6" style={{ color: "#E89A3D" }}>
                 {slotsLeft} spot{slotsLeft !== 1 ? "s" : ""} remaining
               </p>
             ) : <div className="mb-6" />}

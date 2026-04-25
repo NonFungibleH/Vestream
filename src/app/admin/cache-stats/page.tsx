@@ -270,8 +270,8 @@ function CellContent({ cell }: { cell: GridCell }) {
     : 0;
   // Highlight low tokenSymbol coverage — the classic "RPC flaked, rows are
   // in the DB but we couldn't read symbols" signal.
-  const symbolColor = symbolPct >= 90 ? "#2D8A4A"
-    : symbolPct >= 70 ? "#C47A1A"
+  const symbolColor = symbolPct >= 90 ? "#3FA568"
+    : symbolPct >= 70 ? "#E89A3D"
     : "#B3322E";
 
   return (

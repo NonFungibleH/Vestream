@@ -1024,13 +1024,13 @@ export default function Settings() {
                         border: `1px solid ${pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.25)" : "rgba(28,184,184,0.18)"}`,
                       }}>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#C47A1A" : "#1CB8B8" }}>
+                        <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#E89A3D" : "#1CB8B8" }}>
                           {pushAlertsSent >= pushAlertsLimit
                             ? `${pushAlertsLimit} of ${pushAlertsLimit} lifetime push alerts used`
                             : `${pushAlertsSent} of ${pushAlertsLimit} lifetime push alerts used`}
                         </p>
                         {pushAlertsSent >= pushAlertsLimit && (
-                          <a href="/pricing" className="text-[10px] font-semibold underline" style={{ color: "#C47A1A" }}>
+                          <a href="/pricing" className="text-[10px] font-semibold underline" style={{ color: "#E89A3D" }}>
                             Upgrade →
                           </a>
                         )}
@@ -1040,14 +1040,14 @@ export default function Settings() {
                         <div className="h-full transition-all"
                           style={{
                             width: `${Math.min(100, (pushAlertsSent / pushAlertsLimit) * 100)}%`,
-                            background: pushAlertsSent >= pushAlertsLimit ? "#C47A1A" : "#1CB8B8",
+                            background: pushAlertsSent >= pushAlertsLimit ? "#E89A3D" : "#1CB8B8",
                           }}
                         />
                       </div>
                     </div>
                   ) : (
                     <div className="mb-3 px-3 py-2 rounded-lg inline-block"
-                      style={{ background: "rgba(45,138,74,0.08)", border: "1px solid rgba(45,138,74,0.25)" }}>
+                      style={{ background: "rgba(63,165,104,0.08)", border: "1px solid rgba(63,165,104,0.25)" }}>
                       <p className="text-[11px] font-semibold" style={{ color: "#059669" }}>
                         ✓ Unlimited push alerts ({tier === "fund" ? "Enterprise" : "Pro"})
                       </p>
@@ -1066,7 +1066,7 @@ export default function Settings() {
                     </a>
                     <a href="https://play.google.com/store/apps/details?id=io.vestream" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
-                      style={{ background: "linear-gradient(135deg, #2D8A4A, #059669)", color: "#fff" }}>
+                      style={{ background: "linear-gradient(135deg, #3FA568, #059669)", color: "#fff" }}>
                       {/* Google Play triangle glyph */}
                       <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M3 20.5V3.5c0-.35.2-.65.5-.8l10.04 9.3L3.5 21.3c-.3-.15-.5-.45-.5-.8zM14.4 12l2.96 2.96-8.9 5.08 5.94-8.04zm0 0L8.46 3.96l8.9 5.08L14.4 12zM20.5 12c0 .4-.2.8-.6 1.02l-2.2 1.26L14.4 12l3.3-2.28 2.2 1.26c.4.22.6.62.6 1.02z"/>

@@ -163,7 +163,7 @@ export function TokenMetaPanel({
             {market.change24h != null && (
               <div
                 className="text-sm font-semibold tabular-nums"
-                style={{ color: changePositive ? "#2D8A4A" : "#B3322E" }}
+                style={{ color: changePositive ? "#3FA568" : "#B3322E" }}
               >
                 {fmtPct(market.change24h)}
               </div>

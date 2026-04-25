@@ -36,9 +36,9 @@ export function ApiAccessForm() {
     return (
       <div className="text-center py-10">
         <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
-          style={{ background: "rgba(45,138,74,0.12)", border: "1px solid rgba(45,138,74,0.25)" }}>
+          style={{ background: "rgba(63,165,104,0.12)", border: "1px solid rgba(63,165,104,0.25)" }}>
           <svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-            <path d="M5 12l4 4 10-10" stroke="#2D8A4A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M5 12l4 4 10-10" stroke="#3FA568" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <h3 className="font-bold text-xl mb-2" style={{ color: "white" }}>Request received</h3>

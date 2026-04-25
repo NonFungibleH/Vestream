@@ -325,7 +325,7 @@ export default async function TokenPage(
                   {market.change24h != null && (
                     <span
                       className="tabular-nums font-semibold"
-                      style={{ color: market.change24h >= 0 ? "#2D8A4A" : "#B3322E" }}
+                      style={{ color: market.change24h >= 0 ? "#3FA568" : "#B3322E" }}
                     >
                       {fmtPct(market.change24h)}
                     </span>
@@ -371,19 +371,19 @@ export default async function TokenPage(
             label="Unlocking next 7d"
             value={upcoming7Usd != null ? fmtUsd(upcoming7Usd) : (overview ? fmtTokens(overview.upcoming7dTokens) : "—")}
             sub={overview ? `${fmtTokens(overview.upcoming7dTokens)} ${symbol}` : ""}
-            accent="#B85585"
+            accent="#D67099"
           />
           <HeroStat
             label="Unlocking next 30d"
             value={upcoming30Usd != null ? fmtUsd(upcoming30Usd) : (overview ? fmtTokens(overview.upcoming30dTokens) : "—")}
             sub={overview ? `${fmtTokens(overview.upcoming30dTokens)} ${symbol}` : ""}
-            accent="#C47A1A"
+            accent="#E89A3D"
           />
           <HeroStat
             label="Recipients"
             value={overview ? overview.recipientCount.toLocaleString() : "—"}
             sub={overview ? `${overview.streamCount} active streams` : ""}
-            accent="#4A7A82"
+            accent="#5C9FA8"
           />
         </div>
       </section>
@@ -1153,11 +1153,11 @@ function UpcomingEvents({
       <div
         className="px-4 md:px-5 py-3"
         style={{
-          background: "linear-gradient(90deg, rgba(196,122,26,0.06), rgba(184,85,133,0.04))",
+          background: "linear-gradient(90deg, rgba(232,154,61,0.06), rgba(214,112,153,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#C47A1A" }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#E89A3D" }}>
           Upcoming unlock events
         </span>
       </div>
@@ -1183,7 +1183,7 @@ function UpcomingEvents({
               </div>
               <div
                 className="flex-shrink-0 text-[11px] font-bold px-2.5 py-0.5 rounded-full tabular-nums"
-                style={{ background: "rgba(196,122,26,0.1)", color: "#ea580c" }}
+                style={{ background: "rgba(232,154,61,0.1)", color: "#ea580c" }}
               >
                 {relUntil(e.timestamp)}
               </div>
