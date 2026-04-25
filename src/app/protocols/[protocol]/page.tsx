@@ -264,7 +264,7 @@ export default async function ProtocolLandingPage(
       {/* ── Live stat strip ──────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
         <div
-          className="rounded-2xl px-6 py-5 md:px-8 md:py-6 grid grid-cols-2 md:grid-cols-5 gap-5 md:gap-2"
+          className="rounded-2xl px-4 py-5 md:px-8 md:py-6 grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-2"
           style={{ background: "white", border: `1px solid ${meta.border}`, boxShadow: `0 2px 10px ${accentWash}` }}
         >
           <Stat

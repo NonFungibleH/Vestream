@@ -363,9 +363,9 @@ function WalletCard({
         </div>
         <button onClick={onRemove}
           className="flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors mt-0.5"
-          style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+          style={{ color: "#B3322E", background: "rgba(179,50,46,0.1)" }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.18)")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.1)")}>
           Remove
         </button>
       </div>
@@ -439,7 +439,7 @@ function WalletCard({
             </p>
             {wallet.tokenAddress && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
+                style={{ background: "rgba(63,165,104,0.10)", color: "#3FA568", border: "1px solid rgba(63,165,104,0.2)" }}>
                 active
               </span>
             )}
@@ -475,7 +475,7 @@ function WalletCard({
                   <button onClick={() => { setEditingTokenAddr(true); setTokenAddrValue(wallet.tokenAddress ?? ""); }}
                     className="text-[10px] flex-shrink-0 underline" style={{ color: "#1CB8B8" }}>Edit</button>
                   <button onClick={() => saveTokenAddrRaw(null)} disabled={savingTokenAddr}
-                    className="text-[10px] flex-shrink-0 underline disabled:opacity-60" style={{ color: "#f87171" }}>Clear</button>
+                    className="text-[10px] flex-shrink-0 underline disabled:opacity-60" style={{ color: "#B3322E" }}>Clear</button>
                 </>
               ) : (
                 <>
@@ -1096,9 +1096,9 @@ export default function Settings() {
                   router.refresh();
                 }}
                 className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
-                style={{ color: "#f87171", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.18)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)")}>
+                style={{ color: "#B3322E", background: "rgba(179,50,46,0.1)", border: "1px solid rgba(179,50,46,0.2)" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.18)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.1)")}>
                 Sign out
               </button>
             </div>
@@ -1107,7 +1107,7 @@ export default function Settings() {
             <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium" style={{ color: "#f87171" }}>Delete account</p>
+                  <p className="text-sm font-medium" style={{ color: "#B3322E" }}>Delete account</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
                     Permanently removes your account, all tracked wallets, and notification settings. This cannot be undone.
                   </p>
@@ -1116,9 +1116,9 @@ export default function Settings() {
                   <button
                     onClick={() => setDeleteConfirm(true)}
                     className="flex-shrink-0 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors"
-                    style={{ color: "#f87171", background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.18)" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.12)")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.06)")}>
+                    style={{ color: "#B3322E", background: "rgba(179,50,46,0.06)", border: "1px solid rgba(179,50,46,0.18)" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.12)")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(179,50,46,0.06)")}>
                     Delete account
                   </button>
                 ) : (

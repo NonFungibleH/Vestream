@@ -258,14 +258,14 @@ function WatchBtn({ isWatching, isAdding, onClick, size = "sm" }: {
       disabled={isWatching || isAdding}
       className={`flex items-center gap-1.5 ${px} rounded-lg ${fs} font-semibold transition-all flex-shrink-0 disabled:cursor-default`}
       style={isWatching
-        ? { background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }
+        ? { background: "rgba(63,165,104,0.10)", color: "#3FA568", border: "1px solid rgba(63,165,104,0.25)" }
         : { background: "rgba(28,184,184,0.10)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)", cursor: "pointer" }
       }
     >
       {isAdding ? (
         <>
           <svg className="animate-spin" width={10} height={10} viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.3)" strokeWidth="3" />
+            <circle cx="12" cy="12" r="10" stroke="rgba(28,184,184,0.3)" strokeWidth="3" />
             <path d="M12 2a10 10 0 0 1 10 10" stroke="#1CB8B8" strokeWidth="3" strokeLinecap="round" />
           </svg>
           Adding…
@@ -304,7 +304,7 @@ function ResultCard({
   isGroupWatching: boolean;
   isTokenWatching: (tokenAddress: string) => boolean;
 }) {
-  const pc       = PROTOCOL_COLORS[result.protocolId] ?? { text: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
+  const pc       = PROTOCOL_COLORS[result.protocolId] ?? { text: "#8B8E92", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
   const chainOpt = CHAIN_OPTIONS.find(c => c.id === String(result.chainId));
   const groupKey = `${result.chainId}:${result.protocolId}`;
 
@@ -322,7 +322,7 @@ function ResultCard({
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{result.protocolName}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
-              style={{ background: "rgba(28,184,184,0.10)", color: "#93c5fd" }}>
+              style={{ background: "rgba(28,184,184,0.10)", color: "#1CB8B8" }}>
               {chainOpt?.short ?? result.chainName}
             </span>
           </div>
@@ -366,7 +366,7 @@ function ResultCard({
                     </span>
                   </div>
                   <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                    <span style={{ color: "#34d399" }}>{fmtTokenAmount(tok.claimableNowRaw, tok.decimals)} claimable</span>
+                    <span style={{ color: "#3FA568" }}>{fmtTokenAmount(tok.claimableNowRaw, tok.decimals)} claimable</span>
                     {" · "}
                     {fmtTokenAmount(tok.totalAmountRaw, tok.decimals)} total
                   </p>
@@ -780,11 +780,11 @@ export default function DiscoverPage() {
             {/* Error banner */}
             {scanError && (
               <div className="mt-3 flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                style={{ background: "rgba(179,50,46,0.08)", border: "1px solid rgba(179,50,46,0.2)" }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#B3322E" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <span className="text-xs flex-1" style={{ color: "#f87171" }}>{scanError}</span>
+                <span className="text-xs flex-1" style={{ color: "#B3322E" }}>{scanError}</span>
                 {scanError.includes("Pro plan") && (
                   <a href="/pricing" className="text-[11px] font-semibold underline flex-shrink-0" style={{ color: "#1CB8B8" }}>
                     Upgrade →
@@ -797,7 +797,7 @@ export default function DiscoverPage() {
             <div className="mt-4 pt-4 flex flex-wrap items-center gap-2" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "var(--preview-text-3)" }}>Covers</span>
               {PROTOCOL_OPTIONS.map(p => {
-                const pc = PROTOCOL_COLORS[p.id] ?? { text: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
+                const pc = PROTOCOL_COLORS[p.id] ?? { text: "#8B8E92", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" };
                 return (
                   <span key={p.id} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                     style={{ background: pc.bg, color: pc.text }}>
@@ -808,7 +808,7 @@ export default function DiscoverPage() {
               <span className="text-[9px] font-bold tracking-widest uppercase ml-1" style={{ color: "var(--preview-text-3)" }}>on</span>
               {CHAIN_OPTIONS.map(c => (
                 <span key={c.id} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(28,184,184,0.10)", color: "#93c5fd" }}>
+                  style={{ background: "rgba(28,184,184,0.10)", color: "#1CB8B8" }}>
                   {c.label}
                 </span>
               ))}
@@ -822,7 +822,7 @@ export default function DiscoverPage() {
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
                 style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(15,138,138,0.08))", border: "1px solid rgba(59,130,246,0.12)" }}>
                 <svg className="animate-spin" width={24} height={24} viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.2)" strokeWidth="3" />
+                  <circle cx="12" cy="12" r="10" stroke="rgba(28,184,184,0.2)" strokeWidth="3" />
                   <path d="M12 2a10 10 0 0 1 10 10" stroke="#1CB8B8" strokeWidth="3" strokeLinecap="round" />
                 </svg>
               </div>

@@ -247,10 +247,14 @@ export default function Pricing() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl font-bold text-center mb-8" style={{ color: "#1A1D20" }}>Compare plans</h2>
 
-          <div className="rounded-2xl overflow-hidden"
+          {/* Outer wrapper handles horizontal scroll on small screens —
+              375px can't fit a 4-column comparison grid without crushing
+              feature labels. Inner min-w-[640px] preserves desktop layout. */}
+          <div className="rounded-2xl overflow-x-auto"
             style={{ border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <div className="min-w-[640px]">
             {/* Header */}
-            <div className="grid grid-cols-4 px-6 py-4"
+            <div className="grid grid-cols-4 px-4 md:px-6 py-4"
               style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
@@ -277,7 +281,7 @@ export default function Pricing() {
               ["Support",                       false,             "Ticketing",     "Dedicated"],
             ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
               <div key={feature}
-                className="grid grid-cols-4 px-6 py-3.5 items-center"
+                className="grid grid-cols-4 px-4 md:px-6 py-3.5 items-center"
                 style={{
                   borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined,
                   background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)",
@@ -315,6 +319,7 @@ export default function Pricing() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </section>

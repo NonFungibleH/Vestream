@@ -82,12 +82,12 @@ export default function FindVestingsPage() {
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>
             We scan
           </p>
-          <div className="flex items-center justify-center gap-2 flex-wrap mb-2">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2 flex-wrap mb-2">
             {PROTOCOLS_ROW_1.map((p) => (
               <ProtocolPill key={p.name} {...p} />
             ))}
           </div>
-          <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2 flex-wrap">
             {PROTOCOLS_ROW_2.map((p) => (
               <ProtocolPill key={p.name} {...p} />
             ))}
