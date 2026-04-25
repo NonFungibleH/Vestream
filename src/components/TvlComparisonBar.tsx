@@ -57,7 +57,8 @@ export function TvlComparisonBar({
   const totalAll  = sorted.reduce((s, r) => s + (r.tvl?.tvlUsd ?? 0), 0);
   const totalHigh = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.high ?? 0), 0);
   const totalMed  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.medium ?? 0), 0);
-  const totalLow  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.low ?? 0), 0);
+  // tvlByBand.low intentionally NOT summed for display — see the sub-header
+  // comment block. The thin-band aggregate is forensic-audit data only.
 
   const anyPriced   = sorted.some((r) => (r.tvl?.tokensPriced ?? 0) > 0);
   const hasExternal = !!externallySourced && externallySourced.size > 0;
@@ -155,7 +156,14 @@ export function TvlComparisonBar({
       </div>
 
       {/* High-confidence sub-header — reassures the reader the top line isn't
-          inflated by long-tail thin-liquidity entries. */}
+          inflated by long-tail thin-liquidity entries.
+          Note: we deliberately DON'T surface the THIN band total here. It's
+          a forensic-audit field (tvl_low column = capped-overflow + thin-
+          liquidity contributions held back from the headline) and can
+          aggregate to absurd-looking totals (e.g. $2.7 TRILLION) when memecoin
+          dust is in play. The methodology tooltip explains why; the actual
+          number is queryable per row in Supabase for ops audits. Keeping it
+          off the public page is the whole point of having a cap. */}
       {anyPriced && (
         <div
           className="px-4 md:px-5 py-1.5 flex items-center gap-2 text-[11px]"
@@ -183,15 +191,6 @@ export function TvlComparisonBar({
                   {compactUsd(totalMed)}
                 </span>
                 <span className="ml-1">medium</span>
-              </>
-            )}
-            {totalLow > 0 && (
-              <>
-                <span className="mx-1.5" style={{ color: "#cbd5e1" }}>·</span>
-                <span className="font-semibold tabular-nums" style={{ color: "#64748b" }}>
-                  {compactUsd(totalLow)}
-                </span>
-                <span className="ml-1">thin</span>
               </>
             )}
           </span>
