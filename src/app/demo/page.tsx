@@ -25,6 +25,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InteractiveDemo } from "@/components/InteractiveDemo";
 import { VestingDemo } from "@/components/VestingDemo";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title: "Interactive + live vesting demo · Vestream",
@@ -308,18 +309,12 @@ export default function DemoPage() {
             <p className="text-sm md:text-base max-w-xl mx-auto mb-7" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
               The demo you just ran is exactly what the real app does &mdash; except it runs 24/7 on your wallets, in the background, and pings you the second a token unlocks.
             </p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link
-                href="/early-access"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-                style={{
-                  background: "#1CB8B8",
-                  color: "white",
-                  boxShadow: "0 4px 20px rgba(28,184,184,0.4)",
-                }}
-              >
-                Get early access →
-              </Link>
+            {/* Section is framed around the mobile app ("This, on your phone")
+                so the primary action is the App Store / Play Store download.
+                Secondary keeps the "Scan my wallet" web fallback for visitors
+                who want to try it now without leaving the browser. */}
+            <div className="flex flex-col items-center gap-4">
+              <AppStoreBadges align="center" comingSoon />
               <Link
                 href="/find-vestings"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all hover:opacity-90"
@@ -329,7 +324,7 @@ export default function DemoPage() {
                   border: "1px solid rgba(255,255,255,0.15)",
                 }}
               >
-                Scan my wallet →
+                Or scan my wallet on web →
               </Link>
             </div>
           </div>

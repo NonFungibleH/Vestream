@@ -70,7 +70,7 @@ export default function FindVestingsPage() {
           style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}
         >
           Find every vesting<br className="hidden md:block" />{" "}
-          <span style={{ color: "#1CB8B8" }}>on your wallet</span>
+          <span style={{ color: "#1CB8B8" }}>to your wallet</span>
         </h1>
         <p className="text-base md:text-lg max-w-xl mx-auto mb-8" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
           Paste any address. We&rsquo;ll scan every major vesting protocol across EVM and Solana — instantly.

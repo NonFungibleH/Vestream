@@ -146,12 +146,15 @@ export default async function Home() {
           Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
         </p>
 
-        {/* Primary CTA — "Start now" routes to early access sign-up. Under it,
-            the App Store + Play Store download badges surface the mobile
-            option for visitors who prefer to start on their phone. */}
+        {/* Primary CTA — points straight at the find-vestings scanner. The
+            old "Start now → /early-access" routed users into a waitlist
+            sign-up; we now want them to immediately try the product (paste
+            an address, see what's owed) before being asked for an email.
+            Email capture happens on /find-vestings results when they ask
+            for alerts. App badges below offer the mobile path. */}
         <div className="relative flex flex-col items-center gap-5 w-full">
           <Link
-            href="/early-access"
+            href="/find-vestings"
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
             style={{
               background: "#1CB8B8",
@@ -159,7 +162,7 @@ export default async function Home() {
               boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
             }}
           >
-            Start now — it&apos;s free →
+            Find my vestings →
           </Link>
 
           <div className="flex flex-col items-center gap-2">

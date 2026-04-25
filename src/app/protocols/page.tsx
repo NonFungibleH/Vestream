@@ -380,17 +380,17 @@ export default async function UnlocksIndexPage() {
               className="text-2xl md:text-3xl font-bold mb-4"
               style={{ letterSpacing: "-0.02em", color: "white" }}
             >
-              Ready to get alerted on your unlocks?
+              See what&apos;s vesting to your wallet
             </h2>
             <p
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Track your wallet across all 9 protocols — EVM and Solana. Get an email and push notification
-              the moment any of your tokens unlock, no matter the chain or schedule.
+              Paste any address — we&apos;ll scan all 9 protocols across EVM and Solana
+              and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link
-              href="/early-access"
+              href="/find-vestings"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
               style={{
                 background: "#1CB8B8",
@@ -398,7 +398,7 @@ export default async function UnlocksIndexPage() {
                 boxShadow: "0 4px 24px rgba(15,138,138,0.4)",
               }}
             >
-              Get early access →
+              Find my vestings →
             </Link>
           </div>
         </div>
