@@ -67,7 +67,11 @@ interface SnapshotRow {
   topContributors: Array<{
     tokenSymbol?:  string;
     tokenAddress:  string;
+    /** Post-cap (credited) USD — matches what fed the headline. */
     usd:           number;
+    /** Pre-cap raw USD — kept for forensic audit when cap binds. Optional
+     *  because DefiLlama-passthrough rows don't go through capping. */
+    usdRaw?:       number;
     confidence:    "high" | "medium" | "low";
     source:        "dexscreener" | "coingecko" | "defillama";
   }>;
@@ -181,14 +185,25 @@ export async function runWalkerSnapshot(
   // Run every chain's walker in parallel — they hit different subgraphs / RPCs
   // so there's no contention. Price each chain's aggregates separately so a
   // DexScreener outage on one chain doesn't nuke all of them.
+  interface CreditedToken {
+    chainId:      number;
+    tokenAddress: string;
+    tokenSymbol:  string | null;
+    usdRaw:       number;
+    usdCredited:  number;
+    confidence:   "high" | "medium" | "low";
+    source:       "dexscreener" | "coingecko";
+  }
+
   const chainResults = await Promise.all(
     chainIds.map(async (chainId): Promise<{
-      chainId:  SupportedChainId;
-      walker:   WalkerResult | null;
-      priced:   PricedAggregate[];
-      skipped:  number;
-      perChain: { tvl: number; high: number; medium: number; low: number };
-      error:    string | null;
+      chainId:           SupportedChainId;
+      walker:            WalkerResult | null;
+      priced:            PricedAggregate[];
+      skipped:           number;
+      perChain:          { tvl: number; high: number; medium: number; low: number };
+      creditedByToken:   CreditedToken[];
+      error:             string | null;
     }> => {
       const walker = await runWalker(protocol, chainId);
       if (!walker) {
@@ -198,6 +213,7 @@ export async function runWalkerSnapshot(
           priced: [],
           skipped: 0,
           perChain: { tvl: 0, high: 0, medium: 0, low: 0 },
+          creditedByToken: [],
           error: `no walker for ${protocol}`,
         };
       }
@@ -229,26 +245,47 @@ export async function runWalkerSnapshot(
       //    100B-token lock multiplied to a $2B fake TVL — the LOCK might be
       //    real, but the USD claim isn't credible.
       //
-      //    Concrete numbers:
-      //      - Token with $10k liquidity → cap ~$1M (the floor)
-      //      - Token with $100k liquidity → cap $10M
-      //      - Token with $1M liquidity → cap $100M
-      //      - Token with $10M+ liquidity → cap $1B+ (rarely binds)
+      //    Multiplier 10x — empirically tuned in production (April 2026):
+      //    100x left memecoin locks claiming hundreds of millions because
+      //    their pool quotes were nominally HIGH-confidence (≥$10k liq) but
+      //    the underlying token supply was 1T+. 10x is conservative against
+      //    this failure mode while still letting properly-deep tokens (USDC,
+      //    ETH, well-traded governance tokens) credit at face value.
+      //
+      //    Concrete numbers at 10x:
+      //      - Token with $10k liquidity → cap = $1M (the floor)
+      //      - Token with $100k liquidity → cap = $1M (still floor — 10x = $1M)
+      //      - Token with $1M liquidity → cap = $10M
+      //      - Token with $10M liquidity → cap = $100M
+      //      - Token with $100M+ liquidity → cap = $1B+ (rarely binds)
       //    Capped contributions get reclassified into the THIN bucket, so
       //    they're visible in breakdown but don't pollute the headline.
       //
       //    For CoinGecko-priced tokens (no liquidity field), we fall back to
-      //    a conservative $50M cap — CG inclusion is a quality signal but
-      //    not a depth signal.
-      const LIQUIDITY_MULTIPLIER          = 100;
+      //    a conservative $20M cap — CG inclusion is a quality signal but
+      //    not a depth signal, and most CG-only tokens are early/thin.
+      const LIQUIDITY_MULTIPLIER          = 10;
       const MIN_PER_TOKEN_CEILING_USD     = 1_000_000;        // $1M floor
-      const COINGECKO_PER_TOKEN_CEILING   = 50_000_000;       // $50M for CG-priced tokens
+      const COINGECKO_PER_TOKEN_CEILING   = 20_000_000;       // $20M for CG-priced tokens
 
       function perTokenCeiling(p: typeof priced[number]): number {
         if (p.source === "coingecko") return COINGECKO_PER_TOKEN_CEILING;
         const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
         return Math.max(MIN_PER_TOKEN_CEILING_USD, liquidityBased);
       }
+
+      // Per-token after-cap totals, used for both the per-band sums AND for
+      // the top-contributors list — so the audit trail shows what was
+      // actually credited rather than misleadingly large raw values.
+      const creditedByToken: Array<{
+        chainId:      number;
+        tokenAddress: string;
+        tokenSymbol:  string | null;
+        usdRaw:       number;   // pre-cap value (kept for forensic audit)
+        usdCredited:  number;   // post-cap value (what fed the headline)
+        confidence:   "high" | "medium" | "low";
+        source:       "dexscreener" | "coingecko";
+      }> = [];
 
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
@@ -264,6 +301,16 @@ export async function runWalkerSnapshot(
         // Anything above the cap goes into the LOW bucket as "excess" —
         // visible in breakdown for auditability, never in headline.
         if (overflow > 0) perChain.low += overflow;
+
+        creditedByToken.push({
+          chainId:      p.chainId,
+          tokenAddress: p.tokenAddress,
+          tokenSymbol:  p.tokenSymbol,
+          usdRaw:       p.usd,
+          usdCredited:  credited,
+          confidence:   p.confidence,
+          source:       p.source,
+        });
       }
 
       return {
@@ -272,6 +319,7 @@ export async function runWalkerSnapshot(
         priced,
         skipped: tokensSkipped,
         perChain,
+        creditedByToken,
         error: walker.error,
       };
     }),
@@ -286,15 +334,19 @@ export async function runWalkerSnapshot(
       continue;
     }
 
-    // Top-5 contributors by USD — for tooltips + audit trail.
-    const topContributors = r.priced
+    // Top-5 contributors by USD CREDITED (post-cap) — matches what actually
+    // fed the headline. The pre-cap raw value is kept in topContributors.usd
+    // alongside the credited amount for forensic audit, but the sort is on
+    // the credited contribution so the row reflects real impact.
+    const topContributors = r.creditedByToken
       .slice()
-      .sort((a, b) => b.usd - a.usd)
+      .sort((a, b) => b.usdCredited - a.usdCredited)
       .slice(0, 5)
       .map((p) => ({
         tokenSymbol:  p.tokenSymbol ?? undefined,
         tokenAddress: p.tokenAddress,
-        usd:          p.usd,
+        usd:          p.usdCredited,         // post-cap, matches headline
+        usdRaw:       p.usdRaw,              // pre-cap, for audit
         confidence:   p.confidence,
         source:       p.source,
       }));

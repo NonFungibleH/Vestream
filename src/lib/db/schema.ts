@@ -239,7 +239,12 @@ export const protocolTvlSnapshots = pgTable(
     topContributors: jsonb("top_contributors").$type<Array<{
                        tokenSymbol?:  string;
                        tokenAddress:  string;
+                       /** Post-cap (credited) USD — matches what fed the headline. */
                        usd:           number;
+                       /** Pre-cap raw USD — kept for forensic audit when the
+                        *  per-token liquidity-multiplier cap binds. Optional
+                        *  because DefiLlama-passthrough rows skip capping. */
+                       usdRaw?:       number;
                        confidence:    "high" | "medium" | "low";
                        source:        "dexscreener" | "coingecko" | "defillama";
                      }>>().default([]).notNull(),
