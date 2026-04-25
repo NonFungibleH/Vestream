@@ -16,7 +16,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
 // ── Shape mirrored from /api/find-vestings route ───────────────────────────
@@ -74,12 +75,7 @@ function truncateAddr(a: string): string {
 export default function FindVestingsClient() {
   // ── Wallet state ─────────────────────────────────────────────────────────
   const { address: connectedAddress, isConnected } = useAccount();
-  const { connect, connectors, isPending: connecting, error: connectError } = useConnect();
   const { disconnect } = useDisconnect();
-
-  // Pick one of each connector type for two explicit buttons
-  const injectedConnector      = connectors.find((c) => c.type === "injected");
-  const walletConnectConnector = connectors.find((c) => c.type === "walletConnect");
 
   // ── Manual-address fallback ─────────────────────────────────────────────
   const [manualMode,    setManualMode]    = useState(false);
@@ -173,42 +169,27 @@ export default function FindVestingsClient() {
             We&rsquo;ll scan your wallet across 9 protocols and 5 chains — EVM and Solana. These same vestings will appear live in the TokenVest mobile app with push alerts.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
-            {injectedConnector && (
-              <button
-                onClick={() => connect({ connector: injectedConnector })}
-                disabled={connecting}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
-                style={{
-                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                  color: "white",
-                  boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
-                }}
-              >
-                {connecting ? "Connecting…" : "Connect wallet"}
-              </button>
-            )}
-            {walletConnectConnector && (
-              <button
-                onClick={() => connect({ connector: walletConnectConnector })}
-                disabled={connecting}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all hover:opacity-80 disabled:opacity-60"
-                style={{
-                  background: "white",
-                  color: "#0f172a",
-                  border: "1px solid rgba(0,0,0,0.09)",
-                }}
-              >
-                WalletConnect
-              </button>
-            )}
+          {/* Single brand-styled trigger; RainbowKit's modal handles the
+              actual wallet picker (MetaMask, Rainbow, Coinbase, WalletConnect,
+              Trust, Phantom-injected, Ledger, Safe, etc.). */}
+          <div className="flex items-center justify-center max-w-md mx-auto">
+            <ConnectButton.Custom>
+              {({ openConnectModal, mounted }) => (
+                <button
+                  onClick={openConnectModal}
+                  disabled={!mounted}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{
+                    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                    color: "white",
+                    boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+                  }}
+                >
+                  Connect wallet
+                </button>
+              )}
+            </ConnectButton.Custom>
           </div>
-
-          {connectError && (
-            <p className="text-xs mt-4" style={{ color: "#dc2626" }}>
-              {connectError.message}
-            </p>
-          )}
 
           <div className="mt-6 pt-5" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
             <button
