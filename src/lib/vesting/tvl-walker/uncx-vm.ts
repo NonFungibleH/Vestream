@@ -27,20 +27,23 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n,
     chain:           mainnet,
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH ?? "https://ethereum.publicnode.com",
+    // Same fallback strategy as the PinkSale walker — see its getRpcUrl
+    // comment block. publicnode prunes; Ankr's free tier requires an API
+    // key as of April 2026; llamarpc is unauthenticated + reliable.
+    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH ?? "https://eth.llamarpc.com",
   },
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     fromBlock:       43_187_425n,
     chain:           base,
     getRpcUrl:       () =>
-      process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL ?? "https://base.publicnode.com",
+      process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL ?? "https://base.llamarpc.com",
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     fromBlock:       85_818_300n,
     chain:           bsc,
-    getRpcUrl:       () => process.env.BSC_RPC_URL ?? "https://bsc.publicnode.com",
+    getRpcUrl:       () => process.env.BSC_RPC_URL ?? "https://binance.llamarpc.com",
   },
 };
 

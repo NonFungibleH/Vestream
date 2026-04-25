@@ -82,21 +82,25 @@ const ERC20_ABI = [
 // ─── viem helpers ──────────────────────────────────────────────────────────────
 
 // IMPORTANT: PinkSale uses an event scan (eth_getLogs) to discover lock owners
-// across the last several hundred thousand blocks. publicnode endpoints PRUNE
-// historical logs aggressively — confirmed in production: BSC publicnode
-// rejects logs older than ~17 days, Polygon publicnode rejects logs older
-// than ~10 days. Both with "History has been pruned for this block".
+// across the last several hundred thousand blocks. RPC choice matters a LOT:
 //
-// Defaults below are Ankr's free public endpoints, which retain a much longer
-// log history. If a paid Alchemy/QuickNode URL is set in env, that's used
-// instead. Do NOT default to publicnode for chains with event-scan walkers.
+//   - publicnode endpoints PRUNE historical logs aggressively (BSC ~17d,
+//     Polygon ~10d) — confirmed in production.
+//   - Ankr's free public endpoints (no API key) returned "Unauthorized" as
+//     of late April 2026 — they now require a signup-issued key.
+//   - DefiLlama's `*.llamarpc.com` relay endpoints are unauthenticated, free,
+//     and proxy to multiple backends — confirmed reliable for log scans.
+//
+// Defaults below are llamarpc. Override with a paid Alchemy/QuickNode/Ankr
+// URL in env for higher rate limits in production. Do NOT default to
+// publicnode for chains with event-scan walkers.
 function getRpcUrl(chainId: SupportedChainId): string {
   switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://rpc.ankr.com/eth";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://rpc.ankr.com/bsc";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://rpc.ankr.com/polygon";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://rpc.ankr.com/base";
-    default:                 return "https://rpc.ankr.com/eth";
+    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.llamarpc.com";
+    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://binance.llamarpc.com";
+    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.llamarpc.com";
+    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.llamarpc.com";
+    default:                 return "https://eth.llamarpc.com";
   }
 }
 
