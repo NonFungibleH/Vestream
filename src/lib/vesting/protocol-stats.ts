@@ -26,6 +26,11 @@ export interface ProtocolStats {
   chainIds: number[];
   /** Distinct ERC-20 token contract addresses seen for this protocol. */
   tokensTracked: number;
+  /** Distinct recipient wallets across all streams for this protocol —
+   *  mirrors the `Recipients` stat shown on /token/[chainId]/[address] so a
+   *  visitor on the protocol page can see at a glance whether the protocol's
+   *  vesting is concentrated to a few wallets or spread across many. */
+  recipientCount: number;
   /** Most recent cache-refresh timestamp across all streams for this protocol.
    *  Typed as `Date | string | null` because Next.js's `unstable_cache` JSON-
    *  roundtrips Date instances into ISO strings on rehydration — every
@@ -139,6 +144,7 @@ export async function getProtocolStats(
       total:       sql<number>`count(*)::int`,
       active:      sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
       tokens:      sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
+      recipients:  sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
       chains:      sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed: sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
@@ -151,10 +157,11 @@ export async function getProtocolStats(
   const lastIndexedAt = toDate(statsRow?.lastIndexed);
 
   return {
-    totalStreams:  statsRow?.total  ?? 0,
-    activeStreams: statsRow?.active ?? 0,
-    tokensTracked: statsRow?.tokens ?? 0,
-    chainIds:      (statsRow?.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
+    totalStreams:   statsRow?.total      ?? 0,
+    activeStreams:  statsRow?.active     ?? 0,
+    tokensTracked:  statsRow?.tokens     ?? 0,
+    recipientCount: statsRow?.recipients ?? 0,
+    chainIds:       (statsRow?.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
     lastIndexedAt,
   };
 }
