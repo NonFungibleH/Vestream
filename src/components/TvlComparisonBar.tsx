@@ -71,29 +71,29 @@ export function TvlComparisonBar({
       className="rounded-2xl flex flex-col h-full relative"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 4px 24px rgba(37,99,235,0.07)",
+        border: "1px solid rgba(21,23,26,0.10)",
+        boxShadow: "0 4px 24px rgba(28,184,184,0.07)",
       }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap rounded-t-2xl"
         style={{
-          background: "linear-gradient(90deg, rgba(37,99,235,0.05), rgba(124,58,237,0.04))",
+          background: "linear-gradient(90deg, rgba(28,184,184,0.05), rgba(15,138,138,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2563eb" }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#2563eb" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#1CB8B8" }} />
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1CB8B8" }}>
             Vesting TVL by protocol
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: "#64748b" }}>
-          <span className="font-mono font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+        <div className="flex items-center gap-1.5 text-xs" style={{ color: "#8B8E92" }}>
+          <span className="font-mono font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
             {compactUsd(totalAll)}
           </span>
           <span>across {sorted.length} protocols</span>
@@ -103,7 +103,7 @@ export function TvlComparisonBar({
               extends past the left edge on a narrow card. */}
           <span
             className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full cursor-help flex-shrink-0"
-            style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+            style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
             tabIndex={0}
             aria-label="Pricing methodology"
           >
@@ -124,27 +124,27 @@ export function TvlComparisonBar({
                 width:      "min(20rem, calc(100vw - 2rem))",
                 right:      "-4px",
                 background: "white",
-                border:     "1px solid rgba(0,0,0,0.08)",
+                border:     "1px solid rgba(21,23,26,0.10)",
                 color:      "#475569",
                 boxShadow:  "0 8px 24px rgba(15,23,42,0.12)",
               }}
               role="tooltip"
             >
-              Every number here is <span className="font-semibold" style={{ color: "#0f172a" }}>vesting-specific TVL</span>
+              Every number here is <span className="font-semibold" style={{ color: "#1A1D20" }}>vesting-specific TVL</span>
               {" "}— no LP locks, no launchpad escrows, no staking. Two methodologies, depending on the protocol:
               <br /><br />
-              <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> — for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
+              <span className="font-semibold" style={{ color: "#0F8A8A" }}>via DefiLlama</span> — for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
               {" "}<span className="font-mono text-[10px]">chainTvls.vesting</span> aggregate, which they already report as a vesting-only slice.
               <br /><br />
-              <span className="font-semibold" style={{ color: "#2563eb" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s data
+              <span className="font-semibold" style={{ color: "#1CB8B8" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s data
               source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts, and price each
-              token via DexScreener with CoinGecko as fallback. Tokens with ≥$10k DEX liquidity are <span className="font-semibold" style={{ color: "#0f172a" }}>high</span> confidence,
-              {" "}$1k–$10k <span className="font-semibold" style={{ color: "#0f172a" }}>medium</span>; the headline excludes anything thinner. Single-token
+              token via DexScreener with CoinGecko as fallback. Tokens with ≥$10k DEX liquidity are <span className="font-semibold" style={{ color: "#1A1D20" }}>high</span> confidence,
+              {" "}$1k–$10k <span className="font-semibold" style={{ color: "#1A1D20" }}>medium</span>; the headline excludes anything thinner. Single-token
               contributions over $200M must be high-confidence to count.
               {snapshotAgeHours !== null && snapshotAgeHours !== undefined && (
                 <>
                   <br /><br />
-                  <span style={{ color: "#94a3b8" }}>
+                  <span style={{ color: "#B8BABD" }}>
                     Last verified {snapshotAgeHours < 1 ? "less than an hour" : `${snapshotAgeHours}h`} ago.
                     Refreshes daily.
                   </span>
@@ -169,19 +169,19 @@ export function TvlComparisonBar({
           className="px-4 md:px-5 py-1.5 flex items-center gap-2 text-[11px]"
           style={{
             borderBottom: "1px solid rgba(0,0,0,0.04)",
-            background:   "rgba(37,99,235,0.02)",
-            color:        "#64748b",
+            background:   "rgba(28,184,184,0.02)",
+            color:        "#8B8E92",
           }}
         >
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{ background: "#2563eb" }}
+            style={{ background: "#1CB8B8" }}
           />
           <span>
-            <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+            <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
               {compactUsd(totalHigh)}
             </span>
-            <span className="ml-1" style={{ color: "#64748b" }}>
+            <span className="ml-1" style={{ color: "#8B8E92" }}>
               high-confidence (≥$10k DEX liquidity)
             </span>
             {totalMed > 0 && (
@@ -205,10 +205,10 @@ export function TvlComparisonBar({
       <div className="flex-1 flex flex-col">
         {!anyPriced ? (
           <div className="px-4 md:px-5 py-6 text-center">
-            <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#1A1D20" }}>
               Pricing indexed tokens…
             </div>
-            <div className="text-xs" style={{ color: "#94a3b8" }}>
+            <div className="text-xs" style={{ color: "#B8BABD" }}>
               TVL appears here as soon as we&apos;ve priced the locked assets.
             </div>
           </div>
@@ -245,20 +245,20 @@ export function TvlComparisonBar({
                     >
                       {protocol.name.charAt(0)}
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+                    <span className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
                       {protocol.name}
                     </span>
                     <div className="flex-1" />
                     <span
                       className="text-sm font-bold tabular-nums"
-                      style={{ color: hasValue ? "#0f172a" : "#94a3b8" }}
+                      style={{ color: hasValue ? "#1A1D20" : "#B8BABD" }}
                     >
                       {isIndexing ? "—" : compactUsd(tvlUsd)}
                     </span>
                     {isExternal ? (
                       <span
                         className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
-                        style={{ color: "#7c3aed", minWidth: 66, textAlign: "right" }}
+                        style={{ color: "#0F8A8A", minWidth: 66, textAlign: "right" }}
                         title="Sourced from DefiLlama's protocol API"
                       >
                         via DefiLlama
@@ -291,7 +291,7 @@ export function TvlComparisonBar({
                       // DefiLlama" pattern as a methodology attribution.
                       <span
                         className="text-[10px] font-semibold whitespace-nowrap"
-                        style={{ color: "#64748b", minWidth: 66, textAlign: "right" }}
+                        style={{ color: "#8B8E92", minWidth: 66, textAlign: "right" }}
                         title={`Self-indexed · ${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced (${coveragePct}%)`}
                       >
                         self-indexed

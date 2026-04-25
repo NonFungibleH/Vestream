@@ -38,10 +38,10 @@ export default function AdminLogin() {
             className="px-4 py-3 rounded-xl text-sm outline-none"
             style={{ background: "#0d0f14", border: "1px solid #1e2330", color: "white" }}
           />
-          {error && <p className="text-xs" style={{ color: "#ef4444" }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: "#B3322E" }}>{error}</p>}
           <button type="submit" disabled={loading}
             className="py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}>
             {loading ? "Signing in..." : "Sign in →"}
           </button>
         </form>

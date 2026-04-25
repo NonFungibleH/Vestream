@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   Fundamentals:      { bg: "rgba(59,130,246,0.10)",  text: "#60a5fa", dot: "#3b82f6" },
-  Tokenomics:        { bg: "rgba(167,139,250,0.12)", text: "#a78bfa", dot: "#7c3aed" },
-  Guides:            { bg: "rgba(52,211,153,0.10)",  text: "#34d399", dot: "#10b981" },
+  Tokenomics:        { bg: "rgba(167,139,250,0.12)", text: "#a78bfa", dot: "#0F8A8A" },
+  Guides:            { bg: "rgba(52,211,153,0.10)",  text: "#34d399", dot: "#2D8A4A" },
   "Market Analysis": { bg: "rgba(251,146,60,0.12)",  text: "#fb923c", dot: "#f97316" },
   Research:          { bg: "rgba(244,114,182,0.12)", text: "#f472b6", dot: "#ec4899" },
 };
@@ -39,7 +39,7 @@ export default function ResourcesPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <SiteNav />
@@ -52,22 +52,22 @@ export default function ResourcesPage() {
         />
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at top, rgba(37,99,235,0.06) 0%, transparent 65%)" }}
+          style={{ background: "radial-gradient(ellipse at top, rgba(28,184,184,0.06) 0%, transparent 65%)" }}
         />
         <div className="relative">
           <span
             className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-5 tracking-widest uppercase"
-            style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb", border: "1px solid rgba(37,99,235,0.15)" }}
+            style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }}
           >
             Resources
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 max-w-2xl mx-auto leading-tight">
             Everything you need to know about{" "}
-            <span style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               token vesting
             </span>
           </h1>
-          <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "#64748b" }}>
+          <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "#8B8E92" }}>
             In-depth guides for investors, project teams, and Web3 professionals — covering vesting schedules, unlock tracking, tokenomics, and more.
           </p>
         </div>
@@ -82,12 +82,12 @@ export default function ResourcesPage() {
 
             {/* Categories */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>
                 Browse by category
               </p>
               <ul className="space-y-0.5">
                 {categoryOrder.map((cat) => {
-                  const style = CATEGORY_COLORS[cat] ?? { bg: "rgba(100,116,139,0.1)", text: "#64748b", dot: "#64748b" };
+                  const style = CATEGORY_COLORS[cat] ?? { bg: "rgba(100,116,139,0.1)", text: "#8B8E92", dot: "#8B8E92" };
                   const anchor = cat.toLowerCase().replace(/\s+/g, "-");
                   return (
                     <li key={cat}>
@@ -100,7 +100,7 @@ export default function ResourcesPage() {
                           <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: style.dot }} />
                           {cat}
                         </span>
-                        <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#94a3b8" }}>
+                        <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#B8BABD" }}>
                           {byCategory[cat].length}
                         </span>
                       </a>
@@ -112,7 +112,7 @@ export default function ResourcesPage() {
 
             {/* All articles */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>
                 All articles
               </p>
               <ul className="space-y-0.5">
@@ -121,7 +121,7 @@ export default function ResourcesPage() {
                     <Link
                       href={`/resources/${a.slug}`}
                       className="block text-xs leading-snug px-2.5 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
-                      style={{ color: "#64748b" }}
+                      style={{ color: "#8B8E92" }}
                     >
                       {a.title}
                     </Link>
@@ -131,13 +131,13 @@ export default function ResourcesPage() {
             </div>
 
             {/* Mini CTA */}
-            <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.12)" }}>
-              <p className="text-xs font-semibold mb-1" style={{ color: "#0f172a" }}>Track your unlocks</p>
-              <p className="text-[11px] mb-3" style={{ color: "#64748b" }}>Free dashboard. No signup form.</p>
+            <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(28,184,184,0.12)" }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: "#1A1D20" }}>Track your unlocks</p>
+              <p className="text-[11px] mb-3" style={{ color: "#8B8E92" }}>Free dashboard. No signup form.</p>
               <Link
                 href="/early-access"
                 className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
               >
                 Early Access →
               </Link>
@@ -149,7 +149,7 @@ export default function ResourcesPage() {
         {/* ── Article grid grouped by category ──────────────────────────── */}
         <div className="flex-1 min-w-0 space-y-14">
           {categoryOrder.map((cat) => {
-            const catStyle = CATEGORY_COLORS[cat] ?? { bg: "rgba(100,116,139,0.1)", text: "#64748b", dot: "#64748b" };
+            const catStyle = CATEGORY_COLORS[cat] ?? { bg: "rgba(100,116,139,0.1)", text: "#8B8E92", dot: "#8B8E92" };
             const anchor = cat.toLowerCase().replace(/\s+/g, "-");
             return (
               <section key={cat} id={anchor} className="scroll-mt-24">
@@ -161,7 +161,7 @@ export default function ResourcesPage() {
                   >
                     {cat}
                   </span>
-                  <span className="text-xs" style={{ color: "#94a3b8" }}>
+                  <span className="text-xs" style={{ color: "#B8BABD" }}>
                     {byCategory[cat].length} {byCategory[cat].length === 1 ? "article" : "articles"}
                   </span>
                 </div>
@@ -173,27 +173,27 @@ export default function ResourcesPage() {
                       key={article.slug}
                       href={`/resources/${article.slug}`}
                       className="group flex-shrink-0 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl snap-start"
-                      style={{ width: "300px", background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+                      style={{ width: "300px", background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
                     >
                       {/* Card accent */}
-                      <div className="h-1.5" style={{ background: "linear-gradient(90deg, #2563eb, #7c3aed)" }} />
+                      <div className="h-1.5" style={{ background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)" }} />
 
                       <div className="p-6">
                         {/* Reading time */}
                         <div className="flex items-center justify-end mb-3">
-                          <span className="text-[11px]" style={{ color: "#94a3b8" }}>{article.readingTime}</span>
+                          <span className="text-[11px]" style={{ color: "#B8BABD" }}>{article.readingTime}</span>
                         </div>
 
                         {/* Title */}
                         <h2
                           className="text-base font-bold leading-snug mb-3 group-hover:text-blue-600 transition-colors"
-                          style={{ color: "#0f172a" }}
+                          style={{ color: "#1A1D20" }}
                         >
                           {article.title}
                         </h2>
 
                         {/* Excerpt */}
-                        <p className="text-sm leading-relaxed mb-4 line-clamp-3" style={{ color: "#64748b" }}>
+                        <p className="text-sm leading-relaxed mb-4 line-clamp-3" style={{ color: "#8B8E92" }}>
                           {article.excerpt}
                         </p>
 
@@ -203,7 +203,7 @@ export default function ResourcesPage() {
                             <span
                               key={tag}
                               className="text-[10px] px-2 py-0.5 rounded-full"
-                              style={{ background: "#f1f5f9", color: "#64748b" }}
+                              style={{ background: "#f1f5f9", color: "#8B8E92" }}
                             >
                               {tag}
                             </span>
@@ -212,10 +212,10 @@ export default function ResourcesPage() {
 
                         {/* Footer */}
                         <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid #f1f5f9" }}>
-                          <span className="text-[11px]" style={{ color: "#94a3b8" }}>
+                          <span className="text-[11px]" style={{ color: "#B8BABD" }}>
                             {new Date(article.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                           </span>
-                          <span className="text-xs font-semibold" style={{ color: "#2563eb" }}>
+                          <span className="text-xs font-semibold" style={{ color: "#1CB8B8" }}>
                             Read →
                           </span>
                         </div>
@@ -233,18 +233,18 @@ export default function ResourcesPage() {
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <div
           className="rounded-3xl p-10 text-center"
-          style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.12)" }}
+          style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(28,184,184,0.12)" }}
         >
-          <h2 className="text-2xl font-bold mb-3" style={{ color: "#0f172a" }}>
+          <h2 className="text-2xl font-bold mb-3" style={{ color: "#1A1D20" }}>
             Track your token vestings in one place
           </h2>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#8B8E92" }}>
             Vestream connects to all major vesting protocols across every supported chain — so you never miss an unlock.
           </p>
           <Link
             href="/early-access"
             className="inline-block text-sm font-bold px-6 py-3 rounded-xl text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 20px rgba(37,99,235,0.3)" }}
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}
           >
             Early Access →
           </Link>
@@ -252,12 +252,12 @@ export default function ResourcesPage() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t py-8 px-4 md:px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
+      <footer className="border-t py-8 px-4 md:px-6 text-center" style={{ borderColor: "rgba(21,23,26,0.10)" }}>
         <div className="flex items-center justify-center gap-1.5 mb-3">
           <img src="/logo-icon.svg" alt="Vestream" className="w-5 h-5" />
-          <span className="font-bold text-sm" style={{ color: "#0f172a" }}>Vestream</span>
+          <span className="font-bold text-sm" style={{ color: "#1A1D20" }}>Vestream</span>
         </div>
-        <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>
+        <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#B8BABD" }}>
           <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-slate-600 transition-colors">Terms</Link>
           <Link href="/pricing" className="hover:text-slate-600 transition-colors">Pricing</Link>

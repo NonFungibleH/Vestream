@@ -50,21 +50,21 @@ interface DemoStream {
 const STREAMS: DemoStream[] = [
   {
     protocolId: "sablier", protocolName: "Sablier",
-    token: "NOVA", tokenColors: ["#f59e0b", "#ef4444"],
+    token: "NOVA", tokenColors: ["#C47A1A", "#B3322E"],
     chain: "Ethereum",
     totalAmount: 12_000, claimable: 4_200, vested: 7_800, percent: 65,
     unlockInHrs: 24,
   },
   {
     protocolId: "hedgey", protocolName: "Hedgey",
-    token: "FLUX", tokenColors: ["#2563eb", "#7c3aed"],
+    token: "FLUX", tokenColors: ["#1CB8B8", "#0F8A8A"],
     chain: "Base",
     totalAmount: 3_500, claimable: 875, vested: 1_575, percent: 45,
     unlockInHrs: 72,
   },
   {
     protocolId: "team-finance", protocolName: "Team Finance",
-    token: "VEST", tokenColors: ["#10b981", "#0891b2"],
+    token: "VEST", tokenColors: ["#2D8A4A", "#0891b2"],
     chain: "BNB Chain",
     totalAmount: 50_000, claimable: 12_500, vested: 30_000, percent: 60,
     unlockInHrs: 6,
@@ -184,14 +184,14 @@ export function InteractiveDemo() {
         className="absolute -top-3 left-6 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
         style={{
           background: "white",
-          color: "#2563eb",
-          border: "1px solid rgba(37,99,235,0.3)",
-          boxShadow: "0 2px 8px rgba(37,99,235,0.1)",
+          color: "#1CB8B8",
+          border: "1px solid rgba(28,184,184,0.3)",
+          boxShadow: "0 2px 8px rgba(28,184,184,0.1)",
         }}
       >
         <span className="relative flex h-1.5 w-1.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2563eb" }} />
-          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#2563eb" }} />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
         </span>
         Interactive demo
       </div>
@@ -201,8 +201,8 @@ export function InteractiveDemo() {
         style={{
           background: "white",
           // Distinct blue outline + halo, so the widget reads as a demo not a page section
-          border: "2px dashed rgba(37,99,235,0.35)",
-          boxShadow: "0 0 0 4px rgba(37,99,235,0.05), 0 20px 50px rgba(37,99,235,0.12)",
+          border: "2px dashed rgba(28,184,184,0.35)",
+          boxShadow: "0 0 0 4px rgba(28,184,184,0.05), 0 20px 50px rgba(28,184,184,0.12)",
         }}
       >
         {/* Step indicator */}
@@ -239,12 +239,12 @@ export function InteractiveDemo() {
       {/* Global keyframes for pulse + tap ring */}
       <style>{`
         @keyframes demoPulse {
-          0%, 100% { box-shadow: 0 4px 20px rgba(37,99,235,0.35), 0 0 0 0 rgba(37,99,235,0.55); }
-          50%      { box-shadow: 0 4px 20px rgba(37,99,235,0.35), 0 0 0 10px rgba(37,99,235,0); }
+          0%, 100% { box-shadow: 0 4px 20px rgba(28,184,184,0.35), 0 0 0 0 rgba(28,184,184,0.55); }
+          50%      { box-shadow: 0 4px 20px rgba(28,184,184,0.35), 0 0 0 10px rgba(28,184,184,0); }
         }
         @keyframes demoTapRing {
-          0%, 100% { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 0 rgba(37,99,235,0.6), 0 0 0 1px rgba(0,0,0,0.04); }
-          50%      { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 6px rgba(37,99,235,0), 0 0 0 1px rgba(0,0,0,0.04); }
+          0%, 100% { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 0 rgba(28,184,184,0.6), 0 0 0 1px rgba(0,0,0,0.04); }
+          50%      { box-shadow: 0 10px 40px rgba(15,23,42,0.25), 0 0 0 6px rgba(28,184,184,0), 0 0 0 1px rgba(0,0,0,0.04); }
         }
       `}</style>
     </div>
@@ -272,18 +272,18 @@ function StepIndicator({ step }: { step: Step }) {
           <div key={s.id} className="flex items-center gap-2 flex-1">
             <div
               className="flex items-center gap-2 transition-colors"
-              style={{ color: isActive ? "#2563eb" : isComplete ? "#10b981" : "#94a3b8" }}
+              style={{ color: isActive ? "#1CB8B8" : isComplete ? "#2D8A4A" : "#B8BABD" }}
             >
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all"
                 style={{
                   background: isActive
-                    ? "linear-gradient(135deg, #2563eb, #7c3aed)"
+                    ? "linear-gradient(135deg, #1CB8B8, #0F8A8A)"
                     : isComplete
-                    ? "#10b981"
+                    ? "#2D8A4A"
                     : "rgba(148,163,184,0.15)",
-                  color: (isActive || isComplete) ? "white" : "#94a3b8",
-                  boxShadow: isActive ? "0 0 0 4px rgba(37,99,235,0.15)" : "none",
+                  color: (isActive || isComplete) ? "white" : "#B8BABD",
+                  boxShadow: isActive ? "0 0 0 4px rgba(28,184,184,0.15)" : "none",
                 }}
               >
                 {isComplete ? "✓" : i + 1}
@@ -295,7 +295,7 @@ function StepIndicator({ step }: { step: Step }) {
             {i < steps.length - 1 && (
               <div
                 className="flex-1 h-px mx-1"
-                style={{ background: isComplete ? "#10b981" : "rgba(148,163,184,0.2)" }}
+                style={{ background: isComplete ? "#2D8A4A" : "rgba(148,163,184,0.2)" }}
               />
             )}
           </div>
@@ -321,7 +321,7 @@ function PulseAdvanceButton({
       onClick={onClick}
       className={`${txt} font-semibold ${pad} rounded-xl transition-all duration-150 hover:opacity-90 whitespace-nowrap`}
       style={{
-        background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+        background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
         color: "white",
         animation: "demoPulse 2s ease-in-out infinite",
       }}
@@ -357,10 +357,10 @@ function ScanStep({
   return (
     <div>
       {/* Wallet header */}
-      <div className="flex items-center gap-3 mb-5 p-3 rounded-xl" style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}>
+      <div className="flex items-center gap-3 mb-5 p-3 rounded-xl" style={{ background: "#F5F5F3", border: "1px solid rgba(0,0,0,0.05)" }}>
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
             <rect x="2" y="6" width="20" height="14" rx="2"/>
@@ -368,16 +368,16 @@ function ScanStep({
           </svg>
         </div>
         <div className="flex-1">
-          <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+          <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
             Scanning wallet
           </div>
-          <div className="text-sm font-mono font-semibold" style={{ color: "#0f172a" }}>
+          <div className="text-sm font-mono font-semibold" style={{ color: "#1A1D20" }}>
             {DEMO_WALLET_SHORT}
           </div>
         </div>
         {phase === "done" && (
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
               Total claimable
             </div>
             <div className="text-sm font-bold font-mono" style={{ color: "#059669" }}>
@@ -392,16 +392,16 @@ function ScanStep({
         <div className="text-center py-12">
           <div
             className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1))" }}
+            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.1), rgba(15,138,138,0.1))" }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
             </svg>
           </div>
-          <h3 className="text-lg md:text-xl font-bold mb-2" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <h3 className="text-lg md:text-xl font-bold mb-2" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             Scan a wallet across every vesting protocol
           </h3>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#64748b", lineHeight: 1.55 }}>
+          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
             We&rsquo;ll ping every integrated vesting protocol in parallel &mdash; across Ethereum, BNB, Polygon and Base.
           </p>
           <PulseAdvanceButton onClick={onStart} size="lg">
@@ -423,20 +423,20 @@ function ScanStep({
                   key={p.id}
                   className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors"
                   style={{
-                    background: isPinging ? "rgba(37,99,235,0.05)" : isDone && p.hit ? "rgba(16,185,129,0.04)" : "transparent",
-                    border: "1px solid " + (isPinging ? "rgba(37,99,235,0.2)" : isDone && p.hit ? "rgba(16,185,129,0.15)" : "transparent"),
+                    background: isPinging ? "rgba(28,184,184,0.05)" : isDone && p.hit ? "rgba(16,185,129,0.04)" : "transparent",
+                    border: "1px solid " + (isPinging ? "rgba(28,184,184,0.2)" : isDone && p.hit ? "rgba(16,185,129,0.15)" : "transparent"),
                   }}
                 >
                   {/* Icon */}
                   <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
                     {isQueued && <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#cbd5e1" }} />}
                     {isPinging && (
-                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round">
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth="2.5" strokeLinecap="round">
                         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                       </svg>
                     )}
                     {isDone && p.hit && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8A4A" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     )}
@@ -447,20 +447,20 @@ function ScanStep({
 
                   <span
                     className="font-medium flex-1"
-                    style={{ color: isPinging ? "#0f172a" : isDone ? (p.hit ? "#0f172a" : "#94a3b8") : "#cbd5e1" }}
+                    style={{ color: isPinging ? "#1A1D20" : isDone ? (p.hit ? "#1A1D20" : "#B8BABD") : "#cbd5e1" }}
                   >
                     {p.name}
                   </span>
 
                   <span className="text-xs text-right" style={{
-                    color: isPinging ? "#2563eb" : isDone ? (p.hit ? "#059669" : "#94a3b8") : "#cbd5e1",
+                    color: isPinging ? "#1CB8B8" : isDone ? (p.hit ? "#059669" : "#B8BABD") : "#cbd5e1",
                     fontWeight: isDone && p.hit ? 600 : 400,
                   }}>
                     {isPinging && "Checking…"}
                     {isDone && p.hit && stream && (
                       <span>
                         {stream.claimable.toLocaleString()} {stream.token}
-                        <span className="ml-1.5 font-normal" style={{ color: "#94a3b8" }}>
+                        <span className="ml-1.5 font-normal" style={{ color: "#B8BABD" }}>
                           · {fmtUSD(usdOf(stream.token, stream.claimable))}
                         </span>
                       </span>
@@ -484,7 +484,7 @@ function ScanStep({
               </div>
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-xs" style={{ color: "#64748b" }}>
+                <p className="text-xs" style={{ color: "#8B8E92" }}>
                   Scan took <span className="font-semibold">4.6s</span> · <span className="font-semibold">{foundCount} streams</span> worth <span className="font-semibold" style={{ color: "#059669" }}>{fmtUsdExact(foundUsdTotal)}</span> claimable.
                 </p>
                 <PulseAdvanceButton onClick={onNext}>
@@ -505,8 +505,8 @@ function StreamHitCard({ stream }: { stream: DemoStream }) {
     <div
       className="rounded-xl p-3 flex items-center gap-3"
       style={{
-        background: "linear-gradient(135deg, rgba(37,99,235,0.03), rgba(124,58,237,0.03))",
-        border: "1px solid rgba(37,99,235,0.12)",
+        background: "linear-gradient(135deg, rgba(28,184,184,0.03), rgba(15,138,138,0.03))",
+        border: "1px solid rgba(28,184,184,0.12)",
       }}
     >
       <div
@@ -516,21 +516,21 @@ function StreamHitCard({ stream }: { stream: DemoStream }) {
         {stream.token}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] mb-0.5" style={{ color: "#64748b" }}>
+        <div className="text-[11px] mb-0.5" style={{ color: "#8B8E92" }}>
           {stream.protocolName} · {stream.chain}
         </div>
-        <div className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+        <div className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
           {stream.totalAmount.toLocaleString()} {stream.token} · {stream.percent}% vested
         </div>
       </div>
       <div className="text-right flex-shrink-0">
-        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
           Claimable
         </div>
         <div className="text-sm font-bold font-mono leading-tight" style={{ color: "#059669" }}>
           {stream.claimable.toLocaleString()}
         </div>
-        <div className="text-[10px] font-mono" style={{ color: "#94a3b8" }}>
+        <div className="text-[10px] font-mono" style={{ color: "#B8BABD" }}>
           {fmtUsdExact(usd)}
         </div>
       </div>
@@ -556,15 +556,15 @@ function AlertStep({
           style={{ background: "rgba(16,185,129,0.1)", color: "#059669" }}
         >
           <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#10b981" }} />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#10b981" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2D8A4A" }} />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#2D8A4A" }} />
           </span>
           Live monitoring
         </div>
-        <h3 className="text-lg md:text-xl font-bold mb-3" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+        <h3 className="text-lg md:text-xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
           Get alerted the moment your tokens unlock
         </h3>
-        <p className="text-sm mb-5" style={{ color: "#64748b", lineHeight: 1.55 }}>
+        <p className="text-sm mb-5" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
           Vestream watches every stream 24/7. When tokens vest, you get an instant push alert &mdash; before your wallet app even knows.
         </p>
 
@@ -580,7 +580,7 @@ function AlertStep({
           </PulseAdvanceButton>
         )}
         {phase !== "detail" && (
-          <p className="text-xs flex items-center gap-1.5" style={{ color: phase === "pushed" ? "#2563eb" : "#94a3b8" }}>
+          <p className="text-xs flex items-center gap-1.5" style={{ color: phase === "pushed" ? "#1CB8B8" : "#B8BABD" }}>
             {phase === "list" ? (
               "Waiting for an unlock event…"
             ) : (
@@ -599,11 +599,11 @@ function AlertStep({
       <div className="md:col-span-3 order-1 md:order-2 flex justify-center">
         <PhoneFrame>
           {/* Status bar */}
-          <div className="flex items-center justify-between px-6 py-3 text-[11px] font-semibold" style={{ color: "#0f172a" }}>
+          <div className="flex items-center justify-between px-6 py-3 text-[11px] font-semibold" style={{ color: "#1A1D20" }}>
             <span>9:41</span>
             <span className="flex items-center gap-1">
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="#0f172a"><rect x="0" y="4" width="2" height="6" rx="0.5"/><rect x="4" y="2" width="2" height="8" rx="0.5"/><rect x="8" y="0" width="2" height="10" rx="0.5"/></svg>
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="#0f172a" strokeWidth="1.5"><rect x="1" y="1" width="10" height="8" rx="1.5"/><rect x="3" y="3" width="6" height="4" fill="#0f172a"/><rect x="12" y="3" width="1.5" height="4" rx="0.5" fill="#0f172a"/></svg>
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="#1A1D20"><rect x="0" y="4" width="2" height="6" rx="0.5"/><rect x="4" y="2" width="2" height="8" rx="0.5"/><rect x="8" y="0" width="2" height="10" rx="0.5"/></svg>
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="#1A1D20" strokeWidth="1.5"><rect x="1" y="1" width="10" height="8" rx="1.5"/><rect x="3" y="3" width="6" height="4" fill="#1A1D20"/><rect x="12" y="3" width="1.5" height="4" rx="0.5" fill="#1A1D20"/></svg>
             </span>
           </div>
 
@@ -611,14 +611,14 @@ function AlertStep({
           <div className="px-5 pt-2 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+                <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
                   Portfolio
                 </div>
-                <div className="text-lg font-bold font-mono" style={{ color: "#0f172a" }}>
+                <div className="text-lg font-bold font-mono" style={{ color: "#1A1D20" }}>
                   $8,412.50
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-full" style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }} />
+              <div className="w-8 h-8 rounded-full" style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }} />
             </div>
           </div>
 
@@ -630,8 +630,8 @@ function AlertStep({
               className="w-full text-left rounded-2xl p-4 transition-all"
               style={{
                 background: "white",
-                border: "1px solid rgba(0,0,0,0.07)",
-                boxShadow: phase === "detail" ? "0 0 0 2px #2563eb" : "0 1px 3px rgba(0,0,0,0.04)",
+                border: "1px solid rgba(21,23,26,0.10)",
+                boxShadow: phase === "detail" ? "0 0 0 2px #1CB8B8" : "0 1px 3px rgba(0,0,0,0.04)",
                 cursor: phase === "pushed" ? "pointer" : "default",
               }}
             >
@@ -643,21 +643,21 @@ function AlertStep({
                   {FEATURED.token}
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs font-semibold" style={{ color: "#0f172a" }}>{FEATURED.token}</div>
-                  <div className="text-[10px]" style={{ color: "#94a3b8" }}>{FEATURED.protocolName} · {FEATURED.chain}</div>
+                  <div className="text-xs font-semibold" style={{ color: "#1A1D20" }}>{FEATURED.token}</div>
+                  <div className="text-[10px]" style={{ color: "#B8BABD" }}>{FEATURED.protocolName} · {FEATURED.chain}</div>
                 </div>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "#C47A1A" }}>
                   {FEATURED.unlockInHrs}h
                 </span>
               </div>
               <div className="h-1.5 rounded-full mb-1.5" style={{ background: "rgba(0,0,0,0.06)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #2563eb, #7c3aed)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)" }}
                 />
               </div>
               <div className="flex justify-between text-[10px]">
-                <span style={{ color: "#64748b" }}>{FEATURED.percent}% vested</span>
+                <span style={{ color: "#8B8E92" }}>{FEATURED.percent}% vested</span>
                 <span className="font-semibold" style={{ color: "#059669" }}>
                   {FEATURED.claimable.toLocaleString()} {FEATURED.token} · {fmtUsdExact(featuredUsd)}
                 </span>
@@ -667,10 +667,10 @@ function AlertStep({
             {phase === "detail" && (
               <div
                 className="mt-3 rounded-2xl p-3 text-center"
-                style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)" }}
+                style={{ background: "rgba(28,184,184,0.05)", border: "1px solid rgba(28,184,184,0.15)" }}
               >
-                <div className="text-[10px] mb-1" style={{ color: "#64748b" }}>Next unlock</div>
-                <div className="text-xs font-bold" style={{ color: "#0f172a" }}>
+                <div className="text-[10px] mb-1" style={{ color: "#8B8E92" }}>Next unlock</div>
+                <div className="text-xs font-bold" style={{ color: "#1A1D20" }}>
                   {FEATURED.claimable.toLocaleString()} {FEATURED.token} &middot; {fmtUsdExact(featuredUsd)} &middot; in {FEATURED.unlockInHrs} hours
                 </div>
               </div>
@@ -690,7 +690,7 @@ function AlertStep({
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round">
+      <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8A4A" strokeWidth="2.5" strokeLinecap="round">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
       <span>{children}</span>
@@ -713,13 +713,13 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
         className="relative rounded-[32px] overflow-hidden"
         style={{
           height: 480,
-          background: "#f8fafc",
+          background: "#F5F5F3",
         }}
       >
         {/* Notch */}
         <div
           className="absolute left-1/2 -translate-x-1/2 z-10"
-          style={{ top: 8, width: 90, height: 22, borderRadius: 12, background: "#0f172a" }}
+          style={{ top: 8, width: 90, height: 22, borderRadius: 12, background: "#1A1D20" }}
         />
         {children}
       </div>
@@ -744,7 +744,7 @@ function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredU
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -753,10 +753,10 @@ function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredU
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline justify-between gap-1">
-              <span className="text-[11px] font-semibold" style={{ color: "#0f172a" }}>Vestream</span>
-              <span className="text-[9px]" style={{ color: "#94a3b8" }}>now</span>
+              <span className="text-[11px] font-semibold" style={{ color: "#1A1D20" }}>Vestream</span>
+              <span className="text-[9px]" style={{ color: "#B8BABD" }}>now</span>
             </div>
-            <div className="text-[10.5px] font-semibold mb-0.5" style={{ color: "#0f172a" }}>
+            <div className="text-[10.5px] font-semibold mb-0.5" style={{ color: "#1A1D20" }}>
               Unlock in {FEATURED.unlockInHrs} hours
             </div>
             <div className="text-[10px]" style={{ color: "#475569", lineHeight: 1.3 }}>
@@ -770,7 +770,7 @@ function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredU
         className="absolute left-1/2 -translate-x-1/2 text-[9px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 pointer-events-none"
         style={{
           top: 120,
-          background: "rgba(37,99,235,0.95)",
+          background: "rgba(28,184,184,0.95)",
           color: "white",
           animation: "slideInFromTop 0.5s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
@@ -810,21 +810,21 @@ function ClaimStep({
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 className="text-xl md:text-2xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+        <h3 className="text-xl md:text-2xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
           {FEATURED.claimable.toLocaleString()} {FEATURED.token} claimed
         </h3>
         <div className="text-sm font-semibold mb-3" style={{ color: "#059669" }}>
           Worth {fmtUsdExact(featuredUsd)}
         </div>
-        <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: "#64748b" }}>
+        <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: "#8B8E92" }}>
           Transaction confirmed on Ethereum. In the real product, Vestream tracks the claim and updates your portfolio instantly.
         </p>
 
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-8 font-mono text-xs"
-          style={{ background: "#f8fafc", color: "#64748b", border: "1px solid rgba(0,0,0,0.05)" }}
+          style={{ background: "#F5F5F3", color: "#8B8E92", border: "1px solid rgba(0,0,0,0.05)" }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D8A4A" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           Tx: 0x8f3a…c42e
@@ -835,9 +835,9 @@ function ClaimStep({
             href="/early-access"
             className="text-sm font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-90"
             style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
               color: "white",
-              boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+              boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
             }}
           >
             Get Vestream →
@@ -860,17 +860,17 @@ function ClaimStep({
       <div className="md:col-span-2 order-2 md:order-1">
         <div
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold mb-3"
-          style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb" }}
+          style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8" }}
         >
           Deep-link to protocol
         </div>
-        <h3 className="text-lg md:text-xl font-bold mb-3" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+        <h3 className="text-lg md:text-xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
           One tap to claim on the source protocol
         </h3>
-        <p className="text-sm mb-4" style={{ color: "#64748b", lineHeight: 1.55 }}>
+        <p className="text-sm mb-4" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
           Vestream never touches your tokens &mdash; claims happen on the protocol&rsquo;s own contract. We just surface the stream and open the claim flow for you.
         </p>
-        <p className="text-xs" style={{ color: "#94a3b8" }}>
+        <p className="text-xs" style={{ color: "#B8BABD" }}>
           {phase === "idle"    && "Try it →"}
           {phase === "wallet"  && "Approve the transaction in your wallet →"}
           {phase === "pending" && "Waiting for confirmation on Ethereum…"}
@@ -936,7 +936,7 @@ function ClaimStep({
                 label="Claimable"
                 value={FEATURED.claimable.toLocaleString()}
                 sub={fmtUsdExact(featuredUsd)}
-                tint="#f59e0b"
+                tint="#C47A1A"
               />
             </div>
 
@@ -945,7 +945,7 @@ function ClaimStep({
               <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #f59e0b, #ef4444)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #C47A1A, #B3322E)" }}
                 />
               </div>
               <div className="flex justify-between text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -960,7 +960,7 @@ function ClaimStep({
                 onClick={onStartClaim}
                 className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                  background: "linear-gradient(135deg, #C47A1A, #B3322E)",
                   color: "white",
                   boxShadow: "0 4px 20px rgba(245,158,11,0.25)",
                 }}
@@ -971,7 +971,7 @@ function ClaimStep({
             {phase === "pending" && (
               <div
                 className="flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.25)" }}
+                style={{ background: "rgba(245,158,11,0.1)", color: "#C47A1A", border: "1px solid rgba(245,158,11,0.25)" }}
               >
                 <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
@@ -1022,7 +1022,7 @@ function WalletPopup({ onConfirm }: { onConfirm: () => void }) {
       className="rounded-2xl p-4 w-72"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.08)",
+        border: "1px solid rgba(21,23,26,0.10)",
         boxShadow: "0 20px 50px rgba(15,23,42,0.2)",
         animation: "popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
@@ -1035,26 +1035,26 @@ function WalletPopup({ onConfirm }: { onConfirm: () => void }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 7l8 5 8-5-8-5zM4 17l8 5 8-5M4 12l8 5 8-5"/></svg>
         </div>
         <div>
-          <div className="text-xs font-semibold" style={{ color: "#0f172a" }}>MetaMask</div>
-          <div className="text-[10px]" style={{ color: "#94a3b8" }}>Ethereum mainnet</div>
+          <div className="text-xs font-semibold" style={{ color: "#1A1D20" }}>MetaMask</div>
+          <div className="text-[10px]" style={{ color: "#B8BABD" }}>Ethereum mainnet</div>
         </div>
       </div>
 
-      <div className="text-xs font-semibold mb-2" style={{ color: "#0f172a" }}>Confirm transaction</div>
-      <div className="space-y-1 text-[10.5px] mb-4 font-mono" style={{ color: "#64748b" }}>
-        <div className="flex justify-between"><span>Method</span><span style={{ color: "#0f172a" }}>withdraw()</span></div>
-        <div className="flex justify-between"><span>Contract</span><span style={{ color: "#0f172a" }}>Sablier</span></div>
-        <div className="flex justify-between"><span>Gas fee</span><span style={{ color: "#0f172a" }}>~$1.80</span></div>
+      <div className="text-xs font-semibold mb-2" style={{ color: "#1A1D20" }}>Confirm transaction</div>
+      <div className="space-y-1 text-[10.5px] mb-4 font-mono" style={{ color: "#8B8E92" }}>
+        <div className="flex justify-between"><span>Method</span><span style={{ color: "#1A1D20" }}>withdraw()</span></div>
+        <div className="flex justify-between"><span>Contract</span><span style={{ color: "#1A1D20" }}>Sablier</span></div>
+        <div className="flex justify-between"><span>Gas fee</span><span style={{ color: "#1A1D20" }}>~$1.80</span></div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <button className="py-2 text-xs font-semibold rounded-lg" style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}>
+        <button className="py-2 text-xs font-semibold rounded-lg" style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}>
           Reject
         </button>
         <button
           onClick={onConfirm}
           className="py-2 text-xs font-semibold rounded-lg transition-opacity hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}
+          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
         >
           Confirm
         </button>

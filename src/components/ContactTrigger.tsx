@@ -10,7 +10,7 @@ interface ContactTriggerProps {
 }
 
 const DEFAULT_STYLE: React.CSSProperties = {
-  color: "#2563eb",
+  color: "#1CB8B8",
   background: "none",
   border: "none",
   cursor: "pointer",

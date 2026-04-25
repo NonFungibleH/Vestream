@@ -108,8 +108,8 @@ function LinkPill({
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
       style={{
         background: "rgba(0,0,0,0.04)",
-        border:     "1px solid rgba(0,0,0,0.08)",
-        color:      "#0f172a",
+        border:     "1px solid rgba(21,23,26,0.10)",
+        color:      "#1A1D20",
       }}
     >
       {label}
@@ -142,8 +142,8 @@ export function TokenMetaPanel({
       className="rounded-2xl overflow-hidden"
       style={{
         background: "white",
-        border:     "1px solid rgba(0,0,0,0.07)",
-        boxShadow:  "0 4px 24px rgba(37,99,235,0.06)",
+        border:     "1px solid rgba(21,23,26,0.10)",
+        boxShadow:  "0 4px 24px rgba(28,184,184,0.06)",
       }}
     >
       {/* Row 1 — price (left) + market stats (right on desktop, below on mobile).
@@ -153,17 +153,17 @@ export function TokenMetaPanel({
           below it so each stat gets a consistent column width. */}
       <div className="px-5 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94a3b8" }}>
+          <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#B8BABD" }}>
             Price
           </div>
           <div className="flex items-baseline gap-2 mt-0.5">
-            <div className="text-2xl font-bold tabular-nums" style={{ color: "#0f172a" }}>
+            <div className="text-2xl font-bold tabular-nums" style={{ color: "#1A1D20" }}>
               {fmtPrice(market.priceUsd)}
             </div>
             {market.change24h != null && (
               <div
                 className="text-sm font-semibold tabular-nums"
-                style={{ color: changePositive ? "#10b981" : "#ef4444" }}
+                style={{ color: changePositive ? "#2D8A4A" : "#B3322E" }}
               >
                 {fmtPct(market.change24h)}
               </div>
@@ -187,7 +187,7 @@ export function TokenMetaPanel({
         <div
           className="px-5 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2 sm:gap-3 text-sm"
           style={{
-            background:   "linear-gradient(90deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))",
+            background:   "linear-gradient(90deg, rgba(28,184,184,0.04), rgba(15,138,138,0.04))",
             borderTop:    "1px solid rgba(0,0,0,0.05)",
             borderBottom: "1px solid rgba(0,0,0,0.05)",
           }}
@@ -195,20 +195,20 @@ export function TokenMetaPanel({
           <div className="flex items-center gap-3 flex-wrap">
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider"
-              style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}
+              style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8" }}
             >
               🔒 Vestream-indexed
             </span>
-            <span className="font-semibold" style={{ color: "#0f172a" }}>
+            <span className="font-semibold" style={{ color: "#1A1D20" }}>
               {lockedDisplay}
             </span>
             {lockedUsd && (
-              <span className="font-semibold tabular-nums" style={{ color: "#64748b" }}>
+              <span className="font-semibold tabular-nums" style={{ color: "#8B8E92" }}>
                 ({lockedUsd})
               </span>
             )}
           </div>
-          <span style={{ color: "#64748b" }}>
+          <span style={{ color: "#8B8E92" }}>
             locked across {overview.activeStreamCount.toLocaleString()}{" "}
             {overview.activeStreamCount === 1 ? "stream" : "streams"}
             {protocolSummary && ` · ${protocolSummary}`}
@@ -257,10 +257,10 @@ export function TokenMetaPanel({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94a3b8" }}>
+      <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#B8BABD" }}>
         {label}
       </div>
-      <div className="font-semibold tabular-nums mt-0.5" style={{ color: "#0f172a" }}>
+      <div className="font-semibold tabular-nums mt-0.5" style={{ color: "#1A1D20" }}>
         {value}
       </div>
     </div>

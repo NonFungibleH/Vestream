@@ -62,9 +62,9 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
       <a href="/login"
         className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150"
         style={{
-          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
           color: "white",
-          boxShadow: "0 2px 12px rgba(37,99,235,0.35)",
+          boxShadow: "0 2px 12px rgba(28,184,184,0.35)",
         }}
       >
         Sign in
@@ -105,8 +105,8 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
           disabled={loading || !email}
           className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-all duration-150 disabled:opacity-60 hover:scale-[1.02]"
           style={{
-            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-            boxShadow: "0 4px 24px rgba(37,99,235,0.4)",
+            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            boxShadow: "0 4px 24px rgba(28,184,184,0.4)",
           }}
         >
           {loading ? "Sending…" : "Send sign-in code →"}
@@ -144,8 +144,8 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
         disabled={loading || code.length < 6}
         className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-all duration-150 disabled:opacity-60 hover:scale-[1.02]"
         style={{
-          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-          boxShadow: "0 4px 24px rgba(37,99,235,0.4)",
+          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+          boxShadow: "0 4px 24px rgba(28,184,184,0.4)",
         }}
       >
         {loading ? "Signing in…" : "Verify code →"}

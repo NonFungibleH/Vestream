@@ -47,7 +47,7 @@ export default function DeveloperPortal() {
           <img src="/logo-icon.svg" alt="Vestream" className="w-8 h-8" />
           <span className="font-bold text-lg tracking-tight text-white">Vestream</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md ml-1"
-            style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>
+            style={{ background: "rgba(28,184,184,0.15)", color: "#60a5fa", border: "1px solid rgba(28,184,184,0.25)" }}>
             Developer
           </span>
         </div>
@@ -96,8 +96,8 @@ export default function DeveloperPortal() {
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 disabled:opacity-50"
               style={{
-                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+                background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
               }}
             >
               {loading ? "Verifying…" : "Sign in →"}

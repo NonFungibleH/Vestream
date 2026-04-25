@@ -58,7 +58,7 @@ export default function CookieBanner() {
           style={{
             background: "rgba(255,255,255,0.06)",
             borderColor: "rgba(255,255,255,0.12)",
-            color: "#94a3b8",
+            color: "#B8BABD",
           }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.12)")}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
@@ -69,8 +69,8 @@ export default function CookieBanner() {
           onClick={() => accept("all")}
           className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all duration-150"
           style={{
-            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-            boxShadow: "0 2px 8px rgba(37,99,235,0.35)",
+            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            boxShadow: "0 2px 8px rgba(28,184,184,0.35)",
           }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.9")}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}

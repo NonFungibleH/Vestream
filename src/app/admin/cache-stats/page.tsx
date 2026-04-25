@@ -111,7 +111,7 @@ export default async function CacheStatsPage() {
   }
 
   return (
-    <main className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <main className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-14">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
@@ -119,7 +119,7 @@ export default async function CacheStatsPage() {
             <h1 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>
               Cache stats
             </h1>
-            <p className="text-sm mt-1" style={{ color: "#64748b" }}>
+            <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
               Rows per (protocol × chain) in <code>vesting_streams_cache</code>. Use this to verify the seeder is producing data on every chain before trusting public numbers.
             </p>
           </div>
@@ -127,7 +127,7 @@ export default async function CacheStatsPage() {
             <Link
               href="/admin"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a" }}
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", color: "#1A1D20" }}
             >
               ← Admin home
             </Link>
@@ -145,23 +145,23 @@ export default async function CacheStatsPage() {
         {/* Pivot table */}
         <div
           className="rounded-2xl overflow-x-auto"
-          style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+          style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
         >
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: "rgba(0,0,0,0.02)", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-                <th className="text-left px-4 py-3 font-semibold" style={{ color: "#64748b" }}>
+              <tr style={{ background: "rgba(0,0,0,0.02)", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
+                <th className="text-left px-4 py-3 font-semibold" style={{ color: "#8B8E92" }}>
                   Protocol
                 </th>
                 {CHAIN_ORDER.map((c) => (
-                  <th key={c.id} className="text-right px-3 py-3 font-semibold" style={{ color: "#64748b" }}>
+                  <th key={c.id} className="text-right px-3 py-3 font-semibold" style={{ color: "#8B8E92" }}>
                     {c.label}
                   </th>
                 ))}
-                <th className="text-right px-4 py-3 font-semibold" style={{ color: "#0f172a" }}>
+                <th className="text-right px-4 py-3 font-semibold" style={{ color: "#1A1D20" }}>
                   Total
                 </th>
-                <th className="text-right px-4 py-3 font-semibold" style={{ color: "#64748b" }}>
+                <th className="text-right px-4 py-3 font-semibold" style={{ color: "#8B8E92" }}>
                   Freshest
                 </th>
               </tr>
@@ -169,7 +169,7 @@ export default async function CacheStatsPage() {
             <tbody>
               {protocols.length === 0 && (
                 <tr>
-                  <td colSpan={CHAIN_ORDER.length + 3} className="px-4 py-8 text-center" style={{ color: "#94a3b8" }}>
+                  <td colSpan={CHAIN_ORDER.length + 3} className="px-4 py-8 text-center" style={{ color: "#B8BABD" }}>
                     Cache is empty. Trigger a seed-cache run and refresh.
                   </td>
                 </tr>
@@ -195,7 +195,7 @@ export default async function CacheStatsPage() {
                     <td className="text-right px-4 py-3 tabular-nums font-semibold">
                       {rowStreams.toLocaleString()}
                     </td>
-                    <td className="text-right px-4 py-3 whitespace-nowrap" style={{ color: "#64748b" }}>
+                    <td className="text-right px-4 py-3 whitespace-nowrap" style={{ color: "#8B8E92" }}>
                       {relSince(rowFreshest, nowMs)}
                     </td>
                   </tr>
@@ -204,7 +204,7 @@ export default async function CacheStatsPage() {
               {/* Column totals footer */}
               {protocols.length > 0 && (
                 <tr style={{ background: "rgba(0,0,0,0.02)" }}>
-                  <td className="px-4 py-3 font-semibold" style={{ color: "#64748b" }}>
+                  <td className="px-4 py-3 font-semibold" style={{ color: "#8B8E92" }}>
                     Total
                   </td>
                   {CHAIN_ORDER.map((c) => {
@@ -228,9 +228,9 @@ export default async function CacheStatsPage() {
         {/* Legend */}
         <div
           className="mt-4 rounded-xl p-4 text-xs"
-          style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b", lineHeight: 1.7 }}
+          style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", color: "#8B8E92", lineHeight: 1.7 }}
         >
-          <div className="font-semibold mb-1.5" style={{ color: "#0f172a" }}>
+          <div className="font-semibold mb-1.5" style={{ color: "#1A1D20" }}>
             Reading a cell
           </div>
           <div>
@@ -254,9 +254,9 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="rounded-xl p-4"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
     >
-      <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+      <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
         {label}
       </div>
       <div className="text-xl font-bold mt-1 tabular-nums">{value}</div>
@@ -270,16 +270,16 @@ function CellContent({ cell }: { cell: GridCell }) {
     : 0;
   // Highlight low tokenSymbol coverage — the classic "RPC flaked, rows are
   // in the DB but we couldn't read symbols" signal.
-  const symbolColor = symbolPct >= 90 ? "#10b981"
-    : symbolPct >= 70 ? "#f59e0b"
-    : "#ef4444";
+  const symbolColor = symbolPct >= 90 ? "#2D8A4A"
+    : symbolPct >= 70 ? "#C47A1A"
+    : "#B3322E";
 
   return (
     <div>
-      <div className="font-semibold" style={{ color: "#0f172a" }}>
+      <div className="font-semibold" style={{ color: "#1A1D20" }}>
         {cell.streams.toLocaleString()}
       </div>
-      <div className="text-[11px] leading-tight mt-0.5" style={{ color: "#94a3b8" }}>
+      <div className="text-[11px] leading-tight mt-0.5" style={{ color: "#B8BABD" }}>
         {cell.active.toLocaleString()} active
       </div>
       <div className="text-[10px] leading-tight mt-0.5" style={{ color: symbolColor }}>

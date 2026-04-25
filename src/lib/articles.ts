@@ -2646,7 +2646,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #2563eb; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
       },
 
       { type: "h2", text: "What to Know Before You Hold Any Token" },
@@ -2689,7 +2689,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I find out if my tokens are locked in a vesting contract?",
-            a: "Ask the project which vesting protocol they use (Sablier, UNCX, Hedgey, etc.) and check your wallet on that protocol's dashboard. Or use an aggregator that reads all major vesting contracts and shows you the complete unlock schedule for your wallet — see our <a href=\"/resources/how-to-track-token-vesting\" style=\"color: #2563eb; text-decoration: underline;\">guide to tracking token vesting</a> for the step-by-step.",
+            a: "Ask the project which vesting protocol they use (Sablier, UNCX, Hedgey, etc.) and check your wallet on that protocol's dashboard. Or use an aggregator that reads all major vesting contracts and shows you the complete unlock schedule for your wallet — see our <a href=\"/resources/how-to-track-token-vesting\" style=\"color: #1CB8B8; text-decoration: underline;\">guide to tracking token vesting</a> for the step-by-step.",
           },
         ],
       },

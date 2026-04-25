@@ -28,11 +28,11 @@ const FALLBACK_PRICES: Record<string, number> = { USDC: 1, USDT: 1, DAI: 1, WETH
 
 // Known-token palette (overrides hash-based colours)
 const TOKEN_COLORS_PRESET: Record<string, string> = {
-  USDC: "#2563eb",
+  USDC: "#1CB8B8",
   USDT: "#26a17b",
   DAI:  "#f5a623",
-  WETH: "#7c3aed",
-  ETH:  "#7c3aed",
+  WETH: "#0F8A8A",
+  ETH:  "#0F8A8A",
   OP:   "#ff0420",
   ARB:  "#12aaff",
   BNB:  "#f3ba2f",
@@ -69,10 +69,10 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   sablier:        { text: "#f97316", bg: "rgba(249,115,22,0.1)",   border: "rgba(249,115,22,0.2)"  },
-  hedgey:         { text: "#2563eb", bg: "rgba(37,99,235,0.1)",    border: "rgba(37,99,235,0.2)"   },
-  "team-finance": { text: "#10b981", bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.2)"  },
-  uncx:           { text: "#f59e0b", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
-  "uncx-vm":      { text: "#f59e0b", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.1)",    border: "rgba(28,184,184,0.2)"   },
+  "team-finance": { text: "#2D8A4A", bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.2)"  },
+  uncx:           { text: "#C47A1A", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  "uncx-vm":      { text: "#C47A1A", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
   unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.1)",    border: "rgba(8,145,178,0.2)"   },
   superfluid:     { text: "#1db954", bg: "rgba(29,185,84,0.1)",    border: "rgba(29,185,84,0.2)"   },
   pinksale:       { text: "#ec4899", bg: "rgba(236,72,153,0.1)",   border: "rgba(236,72,153,0.2)"  },
@@ -933,7 +933,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
 
   const gradientStyle = dark
     ? { background: "linear-gradient(135deg, #0d0f14 0%, #0f1f4a 50%, #1a1035 100%)" }
-    : { background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%)" };
+    : { background: "linear-gradient(135deg, #1A1D20 0%, #1e3a8a 55%, #1CB8B8 100%)" };
 
   return (
     <div className="rounded-2xl overflow-hidden mb-5 relative" style={gradientStyle}>
@@ -1452,7 +1452,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                     ) : hasCliff ? (
                       <div>
                         <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: "#f59e0b" }}>Cliff</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: "#C47A1A" }}>Cliff</span>
                           {s.nextUnlockTime && (
                             <span className="text-[11px] font-semibold tabular-nums" style={{ color: "var(--preview-text)" }}>
                               {fmtDate(s.nextUnlockTime)}
@@ -1881,7 +1881,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
             { label: "Claimable", opacity: 0.9  },
             { label: "Locked",    opacity: 0.1  },
             { label: "Today",     dashed: true   },
-            { label: "Cliff",     color: "#f59e0b" },
+            { label: "Cliff",     color: "#C47A1A" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
               {item.dashed ? (
@@ -2034,7 +2034,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
                 {/* Cliff marker */}
                 {s.cliffTime && s.cliffTime > s.startTime && s.cliffTime < s.endTime && (
                   <div className="absolute top-0 bottom-0 w-0.5"
-                    style={{ left: `${((s.cliffTime - s.startTime) / (s.endTime - s.startTime)) * 100}%`, background: "#f59e0b" }} />
+                    style={{ left: `${((s.cliffTime - s.startTime) / (s.endTime - s.startTime)) * 100}%`, background: "#C47A1A" }} />
                 )}
                 {/* Token label inside bar */}
                 <div className="absolute inset-0 flex items-center px-2 pointer-events-none">
@@ -2291,8 +2291,8 @@ function MonthlyCashFlow({
                     ) : (
                       <div className="w-full h-full" style={{
                         background: isCur
-                          ? "linear-gradient(180deg, #93c5fd 0%, #2563eb 100%)"
-                          : "linear-gradient(180deg, rgba(147,197,253,0.55) 0%, rgba(37,99,235,0.42) 100%)",
+                          ? "linear-gradient(180deg, #93c5fd 0%, #1CB8B8 100%)"
+                          : "linear-gradient(180deg, rgba(147,197,253,0.55) 0%, rgba(28,184,184,0.42) 100%)",
                       }} />
                     )}
                   </div>
@@ -3213,7 +3213,7 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1.5 w-64 rounded-2xl border z-50 p-1 overflow-hidden"
-          style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", boxShadow: "0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)" }}>
+          style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", boxShadow: "0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(21,23,26,0.10)" }}>
           <div className="px-3 py-3 mb-1" style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
             <div className="flex items-center gap-2.5 mb-2">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[11px] font-bold text-white">{initials}</div>
@@ -3464,7 +3464,7 @@ function WalletRow({
             const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
             return (
               <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(124,58,237,0.10)", color: "#c4b5fd" }}>
+                style={{ background: "rgba(15,138,138,0.10)", color: "#c4b5fd" }}>
                 {pr?.label ?? p}
               </span>
             );
@@ -3513,16 +3513,16 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
       style={{ background: "rgba(0,0,0,0.5)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+        style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         {done ? (
           <div className="flex flex-col items-center text-center py-4 gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
               style={{ background: "rgba(16,185,129,0.1)" }}>✓</div>
-            <p className="font-semibold text-sm" style={{ color: "#0f172a" }}>Thanks for the feedback!</p>
-            <p className="text-xs" style={{ color: "#64748b" }}>We read every response and use it to make Vestream better.</p>
+            <p className="font-semibold text-sm" style={{ color: "#1A1D20" }}>Thanks for the feedback!</p>
+            <p className="text-xs" style={{ color: "#8B8E92" }}>We read every response and use it to make Vestream better.</p>
             <button onClick={onClose}
               className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
               Close
             </button>
           </div>
@@ -3530,10 +3530,10 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
           <>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="font-bold text-sm" style={{ color: "#0f172a" }}>Share feedback</p>
-                <p className="text-xs mt-0.5" style={{ color: "#64748b" }}>Help us build a better product</p>
+                <p className="font-bold text-sm" style={{ color: "#1A1D20" }}>Share feedback</p>
+                <p className="text-xs mt-0.5" style={{ color: "#8B8E92" }}>Help us build a better product</p>
               </div>
-              <button onClick={onClose} className="text-lg leading-none" style={{ color: "#94a3b8" }}>×</button>
+              <button onClick={onClose} className="text-lg leading-none" style={{ color: "#B8BABD" }}>×</button>
             </div>
 
             {/* Star rating */}
@@ -3541,12 +3541,12 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               {[1, 2, 3, 4, 5].map((n) => (
                 <button key={n} onClick={() => setRating(n)}
                   className="text-2xl transition-transform hover:scale-110"
-                  style={{ color: rating !== null && n <= rating ? "#f59e0b" : "#e2e8f0" }}>
+                  style={{ color: rating !== null && n <= rating ? "#C47A1A" : "#e2e8f0" }}>
                   ★
                 </button>
               ))}
               {rating && (
-                <span className="text-xs self-center ml-1" style={{ color: "#64748b" }}>
+                <span className="text-xs self-center ml-1" style={{ color: "#8B8E92" }}>
                   {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
                 </span>
               )}
@@ -3560,12 +3560,12 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 rows={4}
                 maxLength={2000}
                 className="w-full text-sm px-4 py-3 rounded-xl resize-none outline-none"
-                style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a", lineHeight: 1.5 }}
+                style={{ background: "#F5F5F3", border: "1px solid rgba(0,0,0,0.1)", color: "#1A1D20", lineHeight: 1.5 }}
               />
               <button type="submit"
                 disabled={!message.trim() || submitting}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
                 {submitting ? "Sending…" : "Send feedback"}
               </button>
             </form>
@@ -3613,7 +3613,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               onClick={() => router.push(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
-                ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
                 : { color: isDiscoverLocked ? "var(--preview-text-3)" : "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
               onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
@@ -3622,7 +3622,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               {item.label}
               {isDiscoverLocked && (
                 <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                  style={{ background: "rgba(37,99,235,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)" }}>
+                  style={{ background: "rgba(28,184,184,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)" }}>
                   Pro
                 </span>
               )}
@@ -3689,11 +3689,11 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             (enforced server-side + on /pricing) is 3. */}
         {tier === "pro" && (
           <div className="px-3 py-2.5 rounded-xl"
-            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(124,58,237,0.2)" }}>
+            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(15,138,138,0.2)" }}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>PRO</span>
+                style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>PRO</span>
             </div>
             <p className="text-[9px] mb-2.5" style={{ color: "var(--preview-text-3)" }}>
               3 wallets · all chains · unlimited alerts
@@ -3701,7 +3701,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             <button
               onClick={onFeedback}
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
               Share feedback →
             </button>
           </div>
@@ -3726,7 +3726,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               <div className="h-1 rounded-full transition-all"
                 style={{
                   width: `${Math.min(100, wallets.length * 100)}%`,
-                  background: wallets.length >= 1 ? "#f59e0b" : "linear-gradient(90deg, #2563eb, #7c3aed)",
+                  background: wallets.length >= 1 ? "#C47A1A" : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
                 }} />
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
@@ -3734,7 +3734,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
               Upgrade to Pro →
             </a>
           </div>
@@ -3762,10 +3762,10 @@ function LoadingSkeleton({ walletCount, chainUnion, protocolUnion }: {
         style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
         {/* Animated spinner */}
         <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #2563eb22, #7c3aed22)", border: "1px solid #7c3aed30" }}>
+          style={{ background: "linear-gradient(135deg, #1CB8B822, #0F8A8A22)", border: "1px solid #0F8A8A30" }}>
           <svg className="animate-spin" width={16} height={16} viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="var(--preview-border-2)" strokeWidth="3" />
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="#7c3aed" strokeWidth="3" strokeLinecap="round" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#0F8A8A" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </div>
         <div>
@@ -4265,30 +4265,30 @@ export default function Dashboard() {
                       const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Vestream Portfolio Report — ${reportDate}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:#0f172a;background:#fff;padding:40px 48px}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:#1A1D20;background:#fff;padding:40px 48px}
   .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:2px solid #e2e8f0;margin-bottom:28px}
-  .logo{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#2563eb}
-  .logo span{color:#7c3aed}
-  .meta{text-align:right;font-size:11px;color:#94a3b8;line-height:1.6}
-  .meta strong{color:#64748b}
+  .logo{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#1CB8B8}
+  .logo span{color:#0F8A8A}
+  .meta{text-align:right;font-size:11px;color:#B8BABD;line-height:1.6}
+  .meta strong{color:#8B8E92}
   .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
-  .kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px}
-  .kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#94a3b8;margin-bottom:5px}
-  .kpi-value{font-size:19px;font-weight:800;color:#0f172a;letter-spacing:-0.02em}
-  .kpi-value.pos{color:#059669}.kpi-value.neg{color:#dc2626}
-  h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#64748b;margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
+  .kpi{background:#F5F5F3;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px}
+  .kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#B8BABD;margin-bottom:5px}
+  .kpi-value{font-size:19px;font-weight:800;color:#1A1D20;letter-spacing:-0.02em}
+  .kpi-value.pos{color:#059669}.kpi-value.neg{color:#B3322E}
+  h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#8B8E92;margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
   table{width:100%;border-collapse:collapse;margin-bottom:4px}
-  th{background:#f8fafc;text-align:left;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;border-bottom:1px solid #e2e8f0}
+  th{background:#F5F5F3;text-align:left;padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#B8BABD;border-bottom:1px solid #e2e8f0}
   td{padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#334155}
   td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,"SF Mono",monospace}
-  td.empty{text-align:center;color:#94a3b8;font-style:italic;padding:16px}
+  td.empty{text-align:center;color:#B8BABD;font-style:italic;padding:16px}
   tr:last-child td{border-bottom:none}
-  .pos{color:#059669;font-weight:600}.neg{color:#dc2626;font-weight:600}
-  .footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;display:flex;justify-content:space-between}
+  .pos{color:#059669;font-weight:600}.neg{color:#B3322E;font-weight:600}
+  .footer{margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:10px;color:#B8BABD;display:flex;justify-content:space-between}
   @media print{@page{margin:1.5cm;size:A4}body{padding:0}h2{break-before:avoid}table{break-inside:avoid}}
 </style></head><body>
 <div class="header">
-  <div><div class="logo">Ve<span>stream</span></div><div style="font-size:13px;color:#64748b;margin-top:4px">Portfolio Report</div></div>
+  <div><div class="logo">Ve<span>stream</span></div><div style="font-size:13px;color:#8B8E92;margin-top:4px">Portfolio Report</div></div>
   <div class="meta"><strong>Generated</strong><br>${reportDate}<br>${sessionAddress ? `<strong>Wallet</strong><br>${sessionAddress.slice(0,6)}…${sessionAddress.slice(-4)}` : ""}</div>
 </div>
 <div class="kpi-row">
@@ -4352,7 +4352,7 @@ export default function Dashboard() {
               </div>
               <button onClick={() => setShowAddWallet(true)}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
                 <IconPlus /> Add your first wallet
               </button>
             </div>

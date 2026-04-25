@@ -214,8 +214,8 @@ export function VestingDemo() {
       className="rounded-3xl p-6 md:p-8"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 10px 40px rgba(37,99,235,0.08)",
+        border: "1px solid rgba(21,23,26,0.10)",
+        boxShadow: "0 10px 40px rgba(28,184,184,0.08)",
       }}
     >
       {/* Header row */}
@@ -224,23 +224,23 @@ export function VestingDemo() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3"
             style={{
-              background: "rgba(37,99,235,0.08)",
-              color: "#2563eb",
-              border: "1px solid rgba(37,99,235,0.18)",
+              background: "rgba(28,184,184,0.08)",
+              color: "#1CB8B8",
+              border: "1px solid rgba(28,184,184,0.18)",
             }}
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2563eb" }} />
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#2563eb" }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#1CB8B8" }} />
             </span>
             Demo — simulated vesting
           </div>
-          <h3 className="text-xl md:text-2xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <h3 className="text-xl md:text-2xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             {isActive
               ? `Your ${state!.tokenSymbol} vesting is live`
               : "Design your vesting schedule"}
           </h3>
-          <p className="text-sm mt-1" style={{ color: "#64748b" }}>
+          <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
             {isActive
               ? "Linear unlock in real time. Claim anytime — gas-free."
               : "Name the token, pick the amount and duration, and watch it vest."}
@@ -253,9 +253,9 @@ export function VestingDemo() {
             disabled={loading}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
             style={{
-              color: "#64748b",
+              color: "#8B8E92",
               background: "rgba(0,0,0,0.03)",
-              border: "1px solid rgba(0,0,0,0.07)",
+              border: "1px solid rgba(21,23,26,0.10)",
             }}
           >
             Reset demo
@@ -278,7 +278,7 @@ export function VestingDemo() {
         <>
           {/* Progress bar */}
           <div className="mb-5">
-            <div className="flex justify-between text-xs mb-2" style={{ color: "#64748b" }}>
+            <div className="flex justify-between text-xs mb-2" style={{ color: "#8B8E92" }}>
               <span className="font-medium">{isDone ? "Fully vested" : `${fmtDuration(state.remainingSec)} until fully vested`}</span>
               <span className="font-mono">{Math.round(state.progress * 100)}%</span>
             </div>
@@ -287,7 +287,7 @@ export function VestingDemo() {
                 className="h-full rounded-full transition-all duration-300 ease-linear"
                 style={{
                   width: `${Math.max(1, state.progress * 100)}%`,
-                  background: "linear-gradient(90deg, #2563eb, #7c3aed)",
+                  background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
                 }}
               />
             </div>
@@ -298,32 +298,32 @@ export function VestingDemo() {
             <Stat
               label="Total"
               value={`${fmtAmount(state.total, state.tokenDecimals)} ${state.tokenSymbol}`}
-              tint="#64748b"
+              tint="#8B8E92"
             />
             <Stat
               label="Vested"
               value={`${fmtAmount(state.vested, state.tokenDecimals)} ${state.tokenSymbol}`}
-              tint="#2563eb"
+              tint="#1CB8B8"
             />
             <Stat
               label="Claimed"
               value={`${fmtAmount(state.withdrawn, state.tokenDecimals)} ${state.tokenSymbol}`}
-              tint="#10b981"
+              tint="#2D8A4A"
             />
             <Stat
               label="Locked"
               value={`${fmtAmount(state.locked, state.tokenDecimals)} ${state.tokenSymbol}`}
-              tint="#94a3b8"
+              tint="#B8BABD"
             />
           </div>
 
           {/* Claim button + claimable badge */}
           <div className="flex items-center justify-between flex-wrap gap-4 pt-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
             <div>
-              <div className="text-xs uppercase tracking-wider font-semibold mb-1" style={{ color: "#94a3b8" }}>
+              <div className="text-xs uppercase tracking-wider font-semibold mb-1" style={{ color: "#B8BABD" }}>
                 Available to claim now
               </div>
-              <div className="text-2xl font-bold font-mono" style={{ color: "#0f172a" }}>
+              <div className="text-2xl font-bold font-mono" style={{ color: "#1A1D20" }}>
                 {fmtAmount(state.claimableNow, state.tokenDecimals)} {state.tokenSymbol}
               </div>
             </div>
@@ -335,9 +335,9 @@ export function VestingDemo() {
               style={{
                 background: claimable === 0n
                   ? "rgba(0,0,0,0.05)"
-                  : "linear-gradient(135deg, #2563eb, #7c3aed)",
-                color: claimable === 0n ? "#94a3b8" : "white",
-                boxShadow: claimable === 0n ? "none" : "0 4px 20px rgba(37,99,235,0.3)",
+                  : "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                color: claimable === 0n ? "#B8BABD" : "white",
+                boxShadow: claimable === 0n ? "none" : "0 4px 20px rgba(28,184,184,0.3)",
               }}
             >
               {claiming ? "Claiming…" : claimable === 0n ? "Nothing to claim yet" : `Claim ${state.tokenSymbol}`}
@@ -349,9 +349,9 @@ export function VestingDemo() {
 
           {/* Etherscan links (Sepolia only) */}
           {(state.explorerUrl || state.lastClaimTx) && (
-            <div className="mt-5 pt-4 flex flex-wrap gap-4 text-xs" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", color: "#64748b" }}>
+            <div className="mt-5 pt-4 flex flex-wrap gap-4 text-xs" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", color: "#8B8E92" }}>
               {state.explorerUrl && (
-                <a href={state.explorerUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "#2563eb" }}>
+                <a href={state.explorerUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "#1CB8B8" }}>
                   View contract on Etherscan ↗
                 </a>
               )}
@@ -361,7 +361,7 @@ export function VestingDemo() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:underline font-mono"
-                  style={{ color: "#10b981" }}
+                  style={{ color: "#2D8A4A" }}
                 >
                   Latest claim tx: {state.lastClaimTx.slice(0, 10)}…
                 </a>
@@ -375,7 +375,7 @@ export function VestingDemo() {
       {error && (
         <div
           className="mt-4 px-4 py-3 rounded-xl text-sm"
-          style={{ background: "rgba(220,38,38,0.06)", color: "#dc2626", border: "1px solid rgba(220,38,38,0.18)" }}
+          style={{ background: "rgba(220,38,38,0.06)", color: "#B3322E", border: "1px solid rgba(220,38,38,0.18)" }}
         >
           {error}
         </div>
@@ -388,9 +388,9 @@ function Stat({ label, value, tint }: { label: string; value: string; tint: stri
   return (
     <div
       className="rounded-xl p-3"
-      style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}
+      style={{ background: "#F5F5F3", border: "1px solid rgba(0,0,0,0.05)" }}
     >
-      <div className="text-[10px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#94a3b8" }}>
+      <div className="text-[10px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#B8BABD" }}>
         {label}
       </div>
       <div className="text-sm font-mono font-semibold truncate" style={{ color: tint }}>
@@ -436,24 +436,24 @@ function DemoConfigForm({
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
           style={{
-            background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))",
-            border: "1px solid rgba(37,99,235,0.2)",
+            background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))",
+            border: "1px solid rgba(28,184,184,0.2)",
             color: "#1e40af",
           }}
         >
-          <span style={{ color: "#64748b" }}>Preview:</span>
-          <span className="font-mono" style={{ color: "#0f172a" }}>
+          <span style={{ color: "#8B8E92" }}>Preview:</span>
+          <span className="font-mono" style={{ color: "#1A1D20" }}>
             {formatAmountPreview(config.totalAmount)} {symTrimmed || "—"}
           </span>
-          <span style={{ color: "#94a3b8" }}>over</span>
-          <span className="font-mono" style={{ color: "#0f172a" }}>{durationLabel}</span>
+          <span style={{ color: "#B8BABD" }}>over</span>
+          <span className="font-mono" style={{ color: "#1A1D20" }}>{durationLabel}</span>
         </div>
       </div>
 
       <div className="space-y-6 max-w-md mx-auto">
         {/* Token symbol */}
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#64748b" }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#8B8E92" }}>
             Token symbol
           </label>
           <div className="flex flex-wrap gap-2 mb-2">
@@ -466,10 +466,10 @@ function DemoConfigForm({
                   onClick={() => setConfig({ ...config, tokenSymbol: t })}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-colors"
                   style={{
-                    background: active ? "rgba(37,99,235,0.1)" : "rgba(0,0,0,0.03)",
-                    color:      active ? "#2563eb" : "#64748b",
+                    background: active ? "rgba(28,184,184,0.1)" : "rgba(0,0,0,0.03)",
+                    color:      active ? "#1CB8B8" : "#8B8E92",
                     border: active
-                      ? "1px solid rgba(37,99,235,0.3)"
+                      ? "1px solid rgba(28,184,184,0.3)"
                       : "1px solid rgba(0,0,0,0.05)",
                   }}
                 >
@@ -490,10 +490,10 @@ function DemoConfigForm({
             maxLength={10}
             placeholder="NOVA"
             className="w-full px-3 py-2 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-300"
-            style={{ background: "white", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a" }}
+            style={{ background: "white", border: "1px solid rgba(0,0,0,0.1)", color: "#1A1D20" }}
           />
           {symError && (
-            <p className="text-xs mt-1" style={{ color: "#dc2626" }}>
+            <p className="text-xs mt-1" style={{ color: "#B3322E" }}>
               1–10 uppercase letters or digits.
             </p>
           )}
@@ -501,7 +501,7 @@ function DemoConfigForm({
 
         {/* Total amount */}
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#64748b" }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#8B8E92" }}>
             Total amount
           </label>
           <div className="flex flex-wrap gap-2 mb-2">
@@ -514,10 +514,10 @@ function DemoConfigForm({
                   onClick={() => setConfig({ ...config, totalAmount: p.value })}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: active ? "rgba(37,99,235,0.1)" : "rgba(0,0,0,0.03)",
-                    color:      active ? "#2563eb" : "#64748b",
+                    background: active ? "rgba(28,184,184,0.1)" : "rgba(0,0,0,0.03)",
+                    color:      active ? "#1CB8B8" : "#8B8E92",
                     border: active
-                      ? "1px solid rgba(37,99,235,0.3)"
+                      ? "1px solid rgba(28,184,184,0.3)"
                       : "1px solid rgba(0,0,0,0.05)",
                   }}
                 >
@@ -536,17 +536,17 @@ function DemoConfigForm({
               value={config.totalAmount}
               onChange={(e) => setConfig({ ...config, totalAmount: e.target.value })}
               className="w-full px-3 py-2 pr-20 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-300"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.1)", color: "#0f172a" }}
+              style={{ background: "white", border: "1px solid rgba(0,0,0,0.1)", color: "#1A1D20" }}
             />
             <div
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-semibold"
-              style={{ color: "#94a3b8" }}
+              style={{ color: "#B8BABD" }}
             >
               {symTrimmed || "—"}
             </div>
           </div>
           {amountError && (
-            <p className="text-xs mt-1" style={{ color: "#dc2626" }}>
+            <p className="text-xs mt-1" style={{ color: "#B3322E" }}>
               Between 1 and 1,000,000,000.
             </p>
           )}
@@ -554,7 +554,7 @@ function DemoConfigForm({
 
         {/* Duration */}
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#64748b" }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#8B8E92" }}>
             Vesting duration
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -567,10 +567,10 @@ function DemoConfigForm({
                   onClick={() => setConfig({ ...config, durationSec: p.value })}
                   className="px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: active ? "rgba(37,99,235,0.1)" : "rgba(0,0,0,0.03)",
-                    color:      active ? "#2563eb" : "#64748b",
+                    background: active ? "rgba(28,184,184,0.1)" : "rgba(0,0,0,0.03)",
+                    color:      active ? "#1CB8B8" : "#8B8E92",
                     border: active
-                      ? "1px solid rgba(37,99,235,0.3)"
+                      ? "1px solid rgba(28,184,184,0.3)"
                       : "1px solid rgba(0,0,0,0.05)",
                   }}
                 >
@@ -579,7 +579,7 @@ function DemoConfigForm({
               );
             })}
           </div>
-          <p className="text-xs mt-2" style={{ color: "#94a3b8" }}>
+          <p className="text-xs mt-2" style={{ color: "#B8BABD" }}>
             You&rsquo;ll get a push at 25%, 50%, 75% and 100% of this window.
           </p>
         </div>
@@ -593,15 +593,15 @@ function DemoConfigForm({
         <div
           className="rounded-2xl p-5"
           style={{
-            background: "linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))",
-            border: "1px solid rgba(37,99,235,0.18)",
+            background: "linear-gradient(135deg, rgba(28,184,184,0.04), rgba(15,138,138,0.04))",
+            border: "1px solid rgba(28,184,184,0.18)",
           }}
         >
           <div className="text-center mb-4">
-            <p className="text-sm font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+            <p className="text-sm font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.01em" }}>
               Watch your {symTrimmed || "VEST"} vesting go live on your phone
             </p>
-            <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
+            <p className="text-xs" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
               Download the Vestream app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
             </p>
           </div>
@@ -614,7 +614,7 @@ function DemoConfigForm({
         <details className="text-center">
           <summary
             className="text-xs cursor-pointer inline-block select-none"
-            style={{ color: "#94a3b8" }}
+            style={{ color: "#B8BABD" }}
           >
             Or run a quick simulation in the browser
           </summary>
@@ -625,7 +625,7 @@ function DemoConfigForm({
             style={{
               background: "rgba(0,0,0,0.04)",
               color: "#475569",
-              border: "1px solid rgba(0,0,0,0.08)",
+              border: "1px solid rgba(21,23,26,0.10)",
             }}
           >
             {loading ? "Starting…" : "Run simulation"}
@@ -753,7 +753,7 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
   // ── Render branches ───────────────────────────────────────────────────────
   if (status === "unsupported") {
     return (
-      <div className="mt-5 pt-4 text-xs" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", color: "#94a3b8" }}>
+      <div className="mt-5 pt-4 text-xs" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", color: "#B8BABD" }}>
         Push alerts aren&rsquo;t supported in this browser. Try Chrome, Edge, or iOS Safari (after adding to Home Screen).
       </div>
     );
@@ -804,12 +804,12 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
   return (
     <div
       className="mt-5 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap"
-      style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.2)" }}
+      style={{ background: "rgba(28,184,184,0.05)", border: "1px solid rgba(28,184,184,0.2)" }}
     >
       <div className="min-w-0 flex items-start gap-3">
         <div
           className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(37,99,235,0.12)", color: "#2563eb" }}
+          style={{ background: "rgba(28,184,184,0.12)", color: "#1CB8B8" }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -817,13 +817,13 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
           </svg>
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+          <div className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
             Get a real push alert at every milestone
           </div>
-          <div className="text-xs mt-0.5" style={{ color: "#64748b" }}>
+          <div className="text-xs mt-0.5" style={{ color: "#8B8E92" }}>
             One-tap opt-in — no account, no email. You&rsquo;ll feel the pings land at 25%, 50%, 75% and 100%.
             {isIOSSafariWebkit() && (
-              <span className="block mt-1" style={{ color: "#d97706" }}>
+              <span className="block mt-1" style={{ color: "#C47A1A" }}>
                 iPhone: add Vestream to your Home Screen first (Share → Add to Home Screen) for push.
               </span>
             )}
@@ -839,9 +839,9 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
         disabled={busy || !sessionId}
         className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
         style={{
-          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
           color: "white",
-          boxShadow: "0 4px 14px rgba(37,99,235,0.25)",
+          boxShadow: "0 4px 14px rgba(28,184,184,0.25)",
         }}
       >
         {busy ? "Enabling…" : "🔔 Enable alerts"}

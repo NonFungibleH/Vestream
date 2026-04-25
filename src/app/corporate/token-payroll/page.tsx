@@ -49,18 +49,18 @@ export const metadata: Metadata = {
 const THEME = {
   pageBg:         "#f1f5f9",         // slate-100 — between retail white and dev navy
   surface:        "white",
-  navyDeep:       "#0f172a",
+  navyDeep:       "#1A1D20",
   navyMid:        "#1e293b",
   slateBody:      "#475569",
-  slateFaint:     "#94a3b8",
+  slateFaint:     "#B8BABD",
   border:         "rgba(15,23,42,0.08)",
   accentIndigo:   "#4f46e5",         // enterprise / trust
   accentIndigoBg: "rgba(79,70,229,0.08)",
   accentIndigoBr: "rgba(79,70,229,0.22)",
-  accentGreen:    "#10b981",         // payroll / money
+  accentGreen:    "#2D8A4A",         // payroll / money
   accentGreenBg:  "rgba(16,185,129,0.08)",
   accentGreenBr:  "rgba(16,185,129,0.22)",
-  heroGradFrom:   "#0f172a",
+  heroGradFrom:   "#1A1D20",
   heroGradVia:    "#1e3a8a",
   heroGradTo:     "#4f46e5",
 } as const;
@@ -179,7 +179,7 @@ export default function TokenPayrollPage() {
               href="/contact?subject=token-payroll"
               className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm w-full sm:w-auto"
               style={{
-                background: `linear-gradient(135deg, ${THEME.accentIndigo}, #7c3aed)`,
+                background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
                 color: "white",
                 boxShadow: "0 4px 24px rgba(79,70,229,0.3)",
               }}
@@ -476,7 +476,7 @@ export default function TokenPayrollPage() {
                   style={{ background: "#0b1222" }}
                   aria-hidden
                 />
-                <div className="pt-7 pb-3 px-3" style={{ background: "#f8fafc" }}>
+                <div className="pt-7 pb-3 px-3" style={{ background: "#F5F5F3" }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: THEME.slateFaint }}>
                     Acme Corp
                   </div>
@@ -493,7 +493,7 @@ export default function TokenPayrollPage() {
                   <div
                     className="rounded-xl p-3"
                     style={{
-                      background: `linear-gradient(135deg, ${THEME.accentIndigo}, #7c3aed)`,
+                      background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
                       color: "white",
                     }}
                   >
@@ -732,7 +732,7 @@ export default function TokenPayrollPage() {
                 href="/contact?subject=token-payroll"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm"
                 style={{
-                  background: `linear-gradient(135deg, ${THEME.accentIndigo}, #7c3aed)`,
+                  background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
                   color: "white",
                   boxShadow: "0 4px 24px rgba(79,70,229,0.3)",
                 }}
@@ -803,7 +803,7 @@ function StepCard({ n, title, body }: { n: number; title: string; body: string }
       <div
         className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold tabular-nums"
         style={{
-          background: `linear-gradient(135deg, ${THEME.accentIndigo}, #7c3aed)`,
+          background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
           color: "white",
         }}
       >

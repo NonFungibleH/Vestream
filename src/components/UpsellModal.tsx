@@ -4,8 +4,8 @@
 const TIERS = {
   pro: {
     label:    "Pro",
-    gradient: "linear-gradient(135deg, #2563eb, #7c3aed)",
-    accent:   "#2563eb",
+    gradient: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+    accent:   "#1CB8B8",
     features: [
       "Up to 3 wallet addresses",
       "All blockchains (ETH, BSC, Base & more)",

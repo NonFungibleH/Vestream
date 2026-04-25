@@ -1,9 +1,9 @@
 <svg viewBox="0 0 300 60" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Brand gradient on "Token" — matches the combined-lockup logos -->
+    <!-- Brand gradient on "Vest" — matches the combined-lockup logos -->
     <linearGradient id="tGradW" x1="0" y1="0" x2="140" y2="0" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#7c3aed"/>
+      <stop stop-color="#1CB8B8"/>
+      <stop offset="1" stop-color="#0F8A8A"/>
     </linearGradient>
   </defs>
 
@@ -14,6 +14,6 @@
     font-weight="800"
     letter-spacing="-0.03em"
   >
-    <tspan fill="url(#tGradW)">Token</tspan><tspan fill="#0f172a" font-weight="700">Vest</tspan>
+    <tspan fill="url(#tGradW)">Vest</tspan><tspan fill="#1A1D20" font-weight="700">ream</tspan>
   </text>
 </svg>

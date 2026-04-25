@@ -90,7 +90,7 @@ function StoreBadge({ href, label, caption, wordmark, icon, comingSoon }: BadgeP
         <span
           className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
           style={{
-            background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+            background: "linear-gradient(135deg, #C47A1A, #B3322E)",
             color: "white",
             boxShadow: "0 2px 6px rgba(245,158,11,0.4)",
           }}

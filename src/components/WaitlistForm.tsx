@@ -47,7 +47,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
           </svg>
           You&apos;re on the list!
         </div>
-        <p className="text-xs" style={{ color: dark ? "rgba(255,255,255,0.4)" : "#94a3b8" }}>
+        <p className="text-xs" style={{ color: dark ? "rgba(255,255,255,0.4)" : "#B8BABD" }}>
           We&apos;ll email you as soon as we launch.
         </p>
       </div>
@@ -74,7 +74,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
             : {
                 background: "white",
                 border: "1px solid rgba(0,0,0,0.12)",
-                color: "#0f172a",
+                color: "#1A1D20",
               }
           }
         />
@@ -82,15 +82,15 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
           type="submit"
           disabled={status === "loading"}
           className="flex-shrink-0 px-5 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}
+          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
         >
           {status === "loading" ? "..." : "Notify me →"}
         </button>
       </div>
       {status === "error" && (
-        <p className="text-xs" style={{ color: "#ef4444" }}>{error}</p>
+        <p className="text-xs" style={{ color: "#B3322E" }}>{error}</p>
       )}
-      <p className="text-xs" style={{ color: dark ? "rgba(255,255,255,0.4)" : "#94a3b8" }}>
+      <p className="text-xs" style={{ color: dark ? "rgba(255,255,255,0.4)" : "#B8BABD" }}>
         Be the first to access Vestream when we launch.
       </p>
     </form>

@@ -23,8 +23,8 @@ export function MobileAppBanner() {
   return (
     <div
       style={{
-        background: "rgba(37,99,235,0.07)",
-        border: "1px solid rgba(37,99,235,0.15)",
+        background: "rgba(28,184,184,0.07)",
+        border: "1px solid rgba(28,184,184,0.15)",
         borderRadius: "12px",
         padding: "10px 16px",
         display: "flex",

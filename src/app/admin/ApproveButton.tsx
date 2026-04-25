@@ -82,7 +82,7 @@ export function ApproveButton({ requestId, email, name }: Props) {
         disabled={state === "loading"}
         className="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all hover:opacity-90 disabled:opacity-50"
         style={{
-          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
           color: "white",
         }}
       >

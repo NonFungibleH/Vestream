@@ -55,18 +55,18 @@ export default async function Home() {
   const liveStats = await getHomepageLiveStats();
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNav />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative flex flex-col items-center justify-center text-center px-5 pt-24 pb-16 md:pt-40 md:pb-32 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px)`, backgroundSize: "28px 28px" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(circle, rgba(21,23,26,0.10) 1px, transparent 1px)`, backgroundSize: "28px 28px" }} />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at top, rgba(37,99,235,0.07) 0%, transparent 65%)" }} />
+          style={{ background: "radial-gradient(ellipse at top, rgba(28,184,184,0.07) 0%, transparent 65%)" }} />
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
         {/* Floating left card — portfolio value */}
         <div className="absolute hidden xl:block pointer-events-none"
@@ -74,12 +74,12 @@ export default async function Home() {
           <div style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(0,0,0,0.45)", width: "210px", padding: "16px" }}>
             <p style={{ color: "#4b5563", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Total Portfolio Value</p>
             <p style={{ color: "white", fontSize: "22px", fontWeight: "800", lineHeight: 1.1, marginBottom: "2px" }}>$206,500</p>
-            <p style={{ color: "#10b981", fontSize: "11px", fontWeight: "600", marginBottom: "14px" }}>$5,650 claimable now</p>
+            <p style={{ color: "#2D8A4A", fontSize: "11px", fontWeight: "600", marginBottom: "14px" }}>$5,650 claimable now</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {([
-                { symbol: "USDC", pct: 67, color: "#2563eb" },
+                { symbol: "USDC", pct: 67, color: "#1CB8B8" },
                 { symbol: "NOVA", pct: 22, color: "#f97316" },
-                { symbol: "FLUX", pct: 11, color: "#7c3aed" },
+                { symbol: "FLUX", pct: 11, color: "#0F8A8A" },
               ] as const).map((t) => (
                 <div key={t.symbol}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -93,7 +93,7 @@ export default async function Home() {
               ))}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "12px" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2D8A4A", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: "#4b5563", fontSize: "9px" }}>Live · Updated just now</span>
             </div>
           </div>
@@ -106,14 +106,14 @@ export default async function Home() {
             <p style={{ color: "#4b5563", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "10px" }}>Token Unlock Status</p>
             {/* Streaming now */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", marginBottom: "7px" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2D8A4A", flexShrink: 0 }} />
               <div>
-                <p style={{ color: "#10b981", fontSize: "10px", fontWeight: "700" }}>USDC · Streaming now</p>
+                <p style={{ color: "#2D8A4A", fontSize: "10px", fontWeight: "700" }}>USDC · Streaming now</p>
                 <p style={{ color: "#4b5563", fontSize: "9px", marginTop: "1px" }}>Continuous · claim any time</p>
               </div>
             </div>
             {/* Countdown */}
-            <div style={{ padding: "8px 10px", borderRadius: "10px", background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)" }}>
+            <div style={{ padding: "8px 10px", borderRadius: "10px", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.2)" }}>
               <p style={{ color: "#60a5fa", fontSize: "10px", fontWeight: "700", marginBottom: "6px" }}>NOVA · Next unlock</p>
               <div style={{ display: "flex", gap: "5px" }}>
                 {([["14", "days"], ["6", "hrs"], ["22", "min"]] as const).map(([v, l]) => (
@@ -132,17 +132,17 @@ export default async function Home() {
             CTA replaces the previous waitlist capture. */}
 
         <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
-          style={{ letterSpacing: "-0.03em", color: "#0f172a" }}>
+          style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}>
           Never miss a<br />
-          <span style={{ background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 60%, #6366f1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <span style={{ background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #6366f1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             token unlock.
           </span>
         </h1>
 
-        <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#64748b" }}>
+        <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#8B8E92" }}>
           Find and track every vesting you&apos;re owed — across all protocols and chains — and get push notifications the moment a token is ready to claim.
         </p>
-        <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#94a3b8" }}>
+        <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#B8BABD" }}>
           Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
         </p>
 
@@ -154,16 +154,16 @@ export default async function Home() {
             href="/early-access"
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
             style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
               color: "white",
-              boxShadow: "0 8px 24px rgba(37,99,235,0.35)",
+              boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
             }}
           >
             Start now — it&apos;s free →
           </Link>
 
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#94a3b8" }}>
+            <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
               Or get it on your phone
             </p>
             <AppStoreBadges comingSoon />
@@ -178,18 +178,18 @@ export default async function Home() {
             href="/protocols"
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:opacity-90"
             style={{
-              background: "rgba(37,99,235,0.05)",
-              borderColor: "rgba(37,99,235,0.18)",
-              color: "#2563eb",
+              background: "rgba(28,184,184,0.05)",
+              borderColor: "rgba(28,184,184,0.18)",
+              color: "#1CB8B8",
             }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: "#2563eb" }}
+              style={{ background: "#1CB8B8" }}
             />
             Live · {liveStats.totalStreams.toLocaleString()} {liveStats.totalStreams === 1 ? "stream" : "streams"} indexed across {liveStats.protocolCount} protocols
             {liveStats.lastIndexedAt && (
-              <span style={{ color: "#64748b", fontWeight: 500 }}>
+              <span style={{ color: "#8B8E92", fontWeight: 500 }}>
                 · refreshed {relativeFreshness(liveStats.lastIndexedAt)}
               </span>
             )}
@@ -198,14 +198,14 @@ export default async function Home() {
 
         {/* Protocol strip */}
         <div className="relative mt-8">
-          <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#94a3b8" }}>Integrated with</p>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#B8BABD" }}>Integrated with</p>
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
               { name: "Sablier",      color: "#f97316", bg: "rgba(249,115,22,0.07)",  border: "rgba(249,115,22,0.15)"  },
               { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
-              { name: "UNCX",         color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-              { name: "Team Finance", color: "#10b981", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
+              { name: "UNCX",         color: "#C47A1A", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
+              { name: "Team Finance", color: "#2D8A4A", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -258,10 +258,10 @@ export default async function Home() {
       {/* ── Dashboard preview (updated to match real UI) ─────────────────── */}
       <section className="px-3 md:px-8 pb-16 md:pb-24 flex justify-center">
         <div className="relative w-full max-w-5xl rounded-2xl overflow-hidden"
-          style={{ border: "1px solid rgba(0,0,0,0.09)", boxShadow: "0 32px 80px rgba(15,23,42,0.14), 0 4px 16px rgba(15,23,42,0.06)" }}>
+          style={{ border: "1px solid rgba(21,23,26,0.12)", boxShadow: "0 32px 80px rgba(15,23,42,0.14), 0 4px 16px rgba(15,23,42,0.06)" }}>
           {/* Browser chrome */}
           <div className="flex items-center gap-2 px-4 py-3"
-            style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+            style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
             <div className="flex gap-1.5">
               {["#ff5f57","#febc2e","#28c840"].map((c) => (
                 <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
@@ -270,11 +270,11 @@ export default async function Home() {
             <div className="flex-1 mx-4">
               <div className="max-w-xs mx-auto h-5 rounded-md flex items-center px-3"
                 style={{ background: "white", border: "1px solid rgba(0,0,0,0.1)" }}>
-                <span className="text-[10px]" style={{ color: "#94a3b8" }}>app.vestream.io/dashboard</span>
+                <span className="text-[10px]" style={{ color: "#B8BABD" }}>app.vestream.io/dashboard</span>
               </div>
             </div>
             {/* Export badge in chrome */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-medium" style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb", border: "1px solid rgba(37,99,235,0.15)" }}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-medium" style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }}>
               <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export CSV / PDF
             </div>
@@ -285,7 +285,7 @@ export default async function Home() {
             {/* Sidebar — hidden on mobile */}
             <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#141720", borderRight: "1px solid #1e2330" }}>
               <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid #1e2330" }}>
-                <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+                <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#1CB8B8,#0F8A8A)" }}>
                   <span className="text-white text-[9px] font-bold">T</span>
                 </div>
                 <span className="text-xs font-bold text-white">Vestream</span>
@@ -298,7 +298,7 @@ export default async function Home() {
                   { label: "Settings",  active: false, icon: "⚙" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
-                    style={item.active ? { background: "rgba(37,99,235,0.15)", color: "#60a5fa" } : { color: "rgba(255,255,255,0.35)" }}>
+                    style={item.active ? { background: "rgba(28,184,184,0.15)", color: "#60a5fa" } : { color: "rgba(255,255,255,0.35)" }}>
                     <span className="text-[10px]">{item.icon}</span>{item.label}
                   </div>
                 ))}
@@ -316,7 +316,7 @@ export default async function Home() {
             {/* Main content */}
             <div className="flex-1 p-4 space-y-3 overflow-hidden">
               {/* PortfolioHero gradient card */}
-              <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#0f172a,#1e3a8a 55%,#1d4ed8)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#1e3a8a 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Total Portfolio Value</p>
                 <p className="text-2xl font-bold text-white tabular-nums">$206,500</p>
                 <p className="text-[10px] mt-0.5" style={{ color: "rgba(52,211,153,0.9)" }}>● $5,650 claimable now · 2 wallets tracked</p>
@@ -342,9 +342,9 @@ export default async function Home() {
                   <p className="text-[9px] font-semibold text-white mb-2.5">Token Snapshot</p>
                   <div className="space-y-2">
                     {[
-                      { s: "USDC", clPct: 12, lkPct: 88, color: "#2563eb", total: "$137,500" },
+                      { s: "USDC", clPct: 12, lkPct: 88, color: "#1CB8B8", total: "$137,500" },
                       { s: "NOVA", clPct:  8, lkPct: 92, color: "#f97316", total: "$45,000"  },
-                      { s: "FLUX", clPct:  5, lkPct: 95, color: "#7c3aed", total: "$24,000"  },
+                      { s: "FLUX", clPct:  5, lkPct: 95, color: "#0F8A8A", total: "$24,000"  },
                     ].map((t) => (
                       <div key={t.s}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -353,7 +353,7 @@ export default async function Home() {
                         </div>
                         <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: "4px", height: "5px", overflow: "hidden" }}>
                           <div style={{ display: "flex", height: "100%" }}>
-                            <div style={{ width: `${t.clPct}%`, background: "#10b981" }} />
+                            <div style={{ width: `${t.clPct}%`, background: "#2D8A4A" }} />
                             <div style={{ width: `${t.lkPct}%`, background: t.color + "60" }} />
                           </div>
                         </div>
@@ -369,9 +369,9 @@ export default async function Home() {
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}>4 streams</span>
                   </div>
                   {[
-                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#2563eb", proto: "#a78bfa", prog: 15 },
+                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#a78bfa", prog: 15 },
                     { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
-                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#7c3aed", proto: "#fb923c", prog: 5  },
+                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#fb923c", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid #1e2330" : undefined }}>
@@ -406,11 +406,11 @@ export default async function Home() {
       {/* ── Feature showcase panels ──────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Deeper than a simple tracker</p>
-          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Deeper than a simple tracker</p>
+          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Built for the full lifecycle
           </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
             From the first cliff to the final claim — forecast cashflows, track every sale, and export your records.
           </p>
         </div>
@@ -436,7 +436,7 @@ export default async function Home() {
                   <div key={r.m} className="flex items-center gap-2">
                     <span style={{ color: "#4b5563", fontSize: "9px", width: "52px", flexShrink: 0 }}>{r.m}</span>
                     <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: "3px", height: "14px", overflow: "hidden" }}>
-                      <div style={{ width: `${r.w}%`, height: "100%", background: "linear-gradient(90deg, #2563eb, #7c3aed)", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
+                      <div style={{ width: `${r.w}%`, height: "100%", background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
                         <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "8px", fontWeight: 700 }}>${(r.v/1000).toFixed(0)}k</span>
                       </div>
                     </div>
@@ -463,7 +463,7 @@ export default async function Home() {
               {/* Token row */}
               <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "10px", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <div style={{ width: "22px", height: "22px", borderRadius: "7px", background: "rgba(37,99,235,0.2)", border: "1px solid rgba(37,99,235,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: "22px", height: "22px", borderRadius: "7px", background: "rgba(28,184,184,0.2)", border: "1px solid rgba(28,184,184,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span style={{ color: "#60a5fa", fontSize: "8px", fontWeight: 800 }}>PRI</span>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -490,7 +490,7 @@ export default async function Home() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "6px" }}>
-                <div style={{ flex: 1, background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: "7px", padding: "5px 8px" }}>
+                <div style={{ flex: 1, background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.2)", borderRadius: "7px", padding: "5px 8px" }}>
                   <p style={{ color: "#4b5563", fontSize: "8px" }}>Realized</p>
                   <p style={{ color: "#60a5fa", fontSize: "10px", fontWeight: 800 }}>+$250</p>
                 </div>
@@ -510,9 +510,9 @@ export default async function Home() {
             </div>
             <div className="px-4 pb-4 space-y-2">
               {[
-                { sym: "VOLT", price: "$1.04",    mc: "$38.7B", liq: "$741M", color: "#2563eb" },
+                { sym: "VOLT", price: "$1.04",    mc: "$38.7B", liq: "$741M", color: "#1CB8B8" },
                 { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#f97316" },
-                { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#7c3aed" },
+                { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#0F8A8A" },
               ].map((t) => (
                 <div key={t.sym} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "9px", padding: "8px 10px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -532,11 +532,11 @@ export default async function Home() {
               ))}
               {/* Export buttons */}
               <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-                <div style={{ flex: 1, background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
+                <div style={{ flex: 1, background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
                   <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   <span style={{ color: "#60a5fa", fontSize: "9px", fontWeight: 700 }}>CSV / Excel</span>
                 </div>
-                <div style={{ flex: 1, background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
+                <div style={{ flex: 1, background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
                   <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                   <span style={{ color: "#a78bfa", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
                 </div>
@@ -550,10 +550,10 @@ export default async function Home() {
       {/* ── Features grid ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Everything in one place
           </h2>
-          <p className="text-base" style={{ color: "#64748b" }}>
+          <p className="text-base" style={{ color: "#8B8E92" }}>
             Built for teams and individuals managing token allocations across multiple protocols.
           </p>
         </div>
@@ -562,13 +562,13 @@ export default async function Home() {
           {[
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-              color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.14)",
+              color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
               body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-              color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.14)",
+              color: "#0F8A8A", bg: "rgba(15,138,138,0.08)", border: "rgba(15,138,138,0.14)",
               title: "Push + email alerts",
               body: "Native push notifications on iOS & Android, plus email — so you always know when a token is ready to claim, before you open the app.",
             },
@@ -598,13 +598,13 @@ export default async function Home() {
             },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
                 style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color }}>
                 {f.icon}
               </div>
-              <h3 className="text-sm font-semibold mb-2" style={{ color: "#0f172a" }} dangerouslySetInnerHTML={{ __html: f.title }} />
-              <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>{f.body}</p>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: "#1A1D20" }} dangerouslySetInnerHTML={{ __html: f.title }} />
+              <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>{f.body}</p>
             </div>
           ))}
         </div>
@@ -616,13 +616,13 @@ export default async function Home() {
           {/* Text */}
           <div className="flex-1 md:max-w-[420px]">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
-              style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.14)", color: "#2563eb" }}>
+              style={{ background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.14)", color: "#1CB8B8" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
               Find every vesting in one search
             </h2>
-            <p className="text-base leading-relaxed mb-7" style={{ color: "#64748b" }}>
+            <p className="text-base leading-relaxed mb-7" style={{ color: "#8B8E92" }}>
               Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
@@ -630,16 +630,16 @@ export default async function Home() {
                 with its brand accent. Matches the 7 rows in the mockup on the right
                 so a visitor can't accidentally assume we've quietly dropped one. */}
             <div className="mb-6">
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>
                 Protocols scanned on every search
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
                   { name: "Sablier",      color: "#f97316" },
                   { name: "Hedgey",       color: "#3b82f6" },
-                  { name: "UNCX",         color: "#f59e0b" },
+                  { name: "UNCX",         color: "#C47A1A" },
                   { name: "Unvest",       color: "#06b6d4" },
-                  { name: "Team Finance", color: "#10b981" },
+                  { name: "Team Finance", color: "#2D8A4A" },
                   { name: "Superfluid",   color: "#1db954" },
                   { name: "PinkSale",     color: "#ec4899" },
                 ].map((p) => (
@@ -665,9 +665,9 @@ export default async function Home() {
                 "Ethereum, Base, BNB Chain, Polygon & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
-                <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#0f172a" }}>
+                <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#1A1D20" }}>
                   <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
-                    style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb" }}>
+                    style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8" }}>
                     <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </span>
                   {item}
@@ -681,16 +681,16 @@ export default async function Home() {
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: "#141720", border: "1px solid #2a3040" }}>
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <span style={{ color: "#6b7280", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(37,99,235,0.18)", color: "#60a5fa" }}>Scan all</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(28,184,184,0.18)", color: "#60a5fa" }}>Scan all</span>
             </div>
             {/* Result rows — one per supported protocol so a visitor sees all 7
                 integrations represented, not just a convenient subset. */}
             {[
               { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "12,500", color: "#f97316" },
               { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
-              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#f59e0b" },
+              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#C47A1A" },
               { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
-              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#10b981" },
+              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#2D8A4A" },
               { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#1db954" },
               { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#ec4899" },
             ].map((r) => (
@@ -721,10 +721,10 @@ export default async function Home() {
               style={{ background: "rgba(8,145,178,0.08)", border: "1px solid rgba(8,145,178,0.14)", color: "#0891b2" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
               See who else is vesting your token
             </h2>
-            <p className="text-base leading-relaxed" style={{ color: "#64748b" }}>
+            <p className="text-base leading-relaxed" style={{ color: "#8B8E92" }}>
               Search any token and see the complete global picture — every wallet, every protocol, every upcoming unlock. Large unlock events create selling pressure. Spotting a cluster 30 days out lets you hedge, hold, or exit with conviction — not guesswork.
             </p>
           </div>
@@ -759,7 +759,7 @@ export default async function Home() {
                   </div>
                 </div>
                 <div className="h-1 rounded-full" style={{ background: "#1e2330" }}>
-                  <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #0891b2, #2563eb)" }} />
+                  <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #0891b2, #1CB8B8)" }} />
                 </div>
               </div>
             ))}
@@ -781,7 +781,7 @@ export default async function Home() {
           <div className="relative flex-1 md:pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
               style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#2D8A4A" }} />
               Available on iOS &amp; Android
             </div>
             <h2 className="text-3xl font-bold mb-4" style={{ color: "white", letterSpacing: "-0.02em" }}>
@@ -815,8 +815,8 @@ export default async function Home() {
             <svg width={150} height={310} viewBox="0 0 150 310" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop stopColor="#2563eb"/>
-                  <stop offset="1" stopColor="#7c3aed"/>
+                  <stop stopColor="#1CB8B8"/>
+                  <stop offset="1" stopColor="#0F8A8A"/>
                 </linearGradient>
               </defs>
               {/* Phone body */}
@@ -851,7 +851,7 @@ export default async function Home() {
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
               {/* Bell icon background */}
-              <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(124,58,237,0.45)"/>
+              <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(15,138,138,0.45)"/>
               {/* Bell SVG path */}
               <path d="M32 92.5c-2.2 0-4 1.8-4 4v.8c-.8.4-1 1-1 1.7h10c0-.7-.2-1.3-1-1.7v-.8c0-2.2-1.8-4-4-4z" fill="white" fillOpacity="0.9"/>
               <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="white" fillOpacity="0.9"/>
@@ -867,7 +867,7 @@ export default async function Home() {
               {[
                 { y: 178, label: "NOVA", val: "$4,218", color: "#f97316" },
                 { y: 206, label: "FLUX", val: "$1,840", color: "#3b82f6" },
-                { y: 234, label: "VEST", val: "$920",   color: "#10b981" },
+                { y: 234, label: "VEST", val: "$920",   color: "#2D8A4A" },
               ].map(r => (
                 <g key={r.label}>
                   <rect x="14" y={r.y - 14} width="122" height="22" rx="8" fill="#141720"/>
@@ -887,11 +887,11 @@ export default async function Home() {
       {/* ── Who it's for ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Built for</p>
-          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Built for</p>
+          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Who uses Vestream?
           </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
             Token vesting spans multiple protocols, chains, and wallets. We make it simple for anyone with tokens on a schedule.
           </p>
         </div>
@@ -900,7 +900,7 @@ export default async function Home() {
           {[
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
-              color: "#2563eb", bg: "rgba(37,99,235,0.07)", border: "rgba(37,99,235,0.12)",
+              color: "#1CB8B8", bg: "rgba(28,184,184,0.07)", border: "rgba(28,184,184,0.12)",
               audience: "Investors & Community Members",
               description: "You hold token allocations from projects you backed or contributed to. Whether you're a retail investor, community participant, or early supporter, you shouldn't need to read smart contracts to know when you can claim.",
               bullets: ["Check claimable balance across every major protocol in seconds", "See exact unlock dates — cliff events, streaming rates, tranches", "Get notified before every unlock event by email"],
@@ -914,20 +914,20 @@ export default async function Home() {
             },
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-              color: "#7c3aed", bg: "rgba(124,58,237,0.07)", border: "rgba(124,58,237,0.12)",
+              color: "#0F8A8A", bg: "rgba(15,138,138,0.07)", border: "rgba(15,138,138,0.12)",
               audience: "VCs & Funds",
               description: "Your portfolio spans dozens of projects, chains, and wallets. Missing a liquidity event or miscalculating claimable balances isn't an option — you need a system that scales.",
               bullets: ["Track every portfolio wallet and token allocation in one place", "Real-time claimable value with entry price and P&L tracking", "Bulk CSV export for compliance, LP reporting, and audit trails"],
             },
           ].map((card) => (
             <div key={card.audience} className="rounded-2xl p-6"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
                 style={{ background: card.bg, border: `1px solid ${card.border}`, color: card.color }}>
                 {card.icon}
               </div>
-              <h3 className="text-base font-bold mb-2.5" style={{ color: "#0f172a" }}>{card.audience}</h3>
-              <p className="text-sm leading-relaxed mb-5" style={{ color: "#64748b" }}>{card.description}</p>
+              <h3 className="text-base font-bold mb-2.5" style={{ color: "#1A1D20" }}>{card.audience}</h3>
+              <p className="text-sm leading-relaxed mb-5" style={{ color: "#8B8E92" }}>{card.description}</p>
               <ul className="space-y-2">
                 {card.bullets.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm" style={{ color: "#475569" }}>
@@ -952,26 +952,26 @@ export default async function Home() {
       {/* ── How it works ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Simple by design</p>
-          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Simple by design</p>
+          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Up and running in 60 seconds
           </h2>
-          <p className="text-base" style={{ color: "#64748b" }}>No sign-up forms. No email verification. No KYC.</p>
+          <p className="text-base" style={{ color: "#8B8E92" }}>No sign-up forms. No email verification. No KYC.</p>
         </div>
 
         <div className="relative">
           <div className="absolute top-8 left-[calc(16.67%+16px)] right-[calc(16.67%+16px)] h-px hidden md:block"
-            style={{ background: "linear-gradient(90deg, rgba(37,99,235,0.2), rgba(124,58,237,0.2))" }} />
+            style={{ background: "linear-gradient(90deg, rgba(28,184,184,0.2), rgba(15,138,138,0.2))" }} />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                step: "01", color: "#2563eb", bg: "rgba(37,99,235,0.08)", border: "rgba(37,99,235,0.18)",
+                step: "01", color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.18)",
                 title: "Connect your wallet",
                 body: "Click \"Launch App\" and sign a message with your Ethereum wallet. No password, no account, no personal data required.",
                 icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>,
               },
               {
-                step: "02", color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.18)",
+                step: "02", color: "#0F8A8A", bg: "rgba(15,138,138,0.08)", border: "rgba(15,138,138,0.18)",
                 title: "Add wallets to track",
                 body: "Paste any Ethereum address — yours, your team's, or an investor's. Track as many wallets as you need with optional labels.",
                 icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
@@ -994,8 +994,8 @@ export default async function Home() {
                     {s.step.replace("0", "")}
                   </div>
                 </div>
-                <h3 className="text-base font-bold mb-2" style={{ color: "#0f172a" }}>{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>{s.body}</p>
+                <h3 className="text-base font-bold mb-2" style={{ color: "#1A1D20" }}>{s.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>{s.body}</p>
               </div>
             ))}
           </div>
@@ -1005,8 +1005,8 @@ export default async function Home() {
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Got questions</p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>Frequently asked</h2>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Got questions</p>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>Frequently asked</h2>
         </div>
 
         <div className="space-y-3">
@@ -1061,13 +1061,13 @@ export default async function Home() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6"
-            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
+            style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
             Simple, transparent pricing
           </div>
-          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Start free. Scale when you&apos;re ready.
           </h2>
-          <p className="text-base" style={{ color: "#64748b" }}>
+          <p className="text-base" style={{ color: "#8B8E92" }}>
             From solo investors to investment funds — a plan for every stage.
           </p>
         </div>
@@ -1075,18 +1075,18 @@ export default async function Home() {
         {/* Tier cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
           {/* Free */}
-          <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#94a3b8" }}>Free</p>
-            <p className="text-3xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>$0</p>
-            <p className="text-sm mb-6" style={{ color: "#64748b" }}>Free forever. No credit card needed.</p>
+          <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
+            <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$0</p>
+            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Free forever. No credit card needed.</p>
             <Link href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
-              style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}>
+              style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
               Start free →
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {["1 wallet — auto-scanned across all chains", "All 9 vesting platforms (EVM + Solana)", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
@@ -1094,31 +1094,31 @@ export default async function Home() {
           </div>
 
           {/* Pro (featured) */}
-          <div className="relative rounded-2xl p-7" style={{ background: "white", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}>
+          <div className="relative rounded-2xl p-7" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 12px rgba(37,99,235,0.4)" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
                 Most popular
               </span>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2563eb" }}>Pro</p>
-            <p className="text-3xl font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
-              $14.99<span className="text-base font-semibold" style={{ color: "#64748b" }}>/mo</span>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro</p>
+            <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
+              $14.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
               style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#059669" }}>
               14-day free trial
             </div>
-            <p className="text-sm mb-6" style={{ color: "#64748b" }}>For active holders who want every unlock on their radar.</p>
+            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>For active holders who want every unlock on their radar.</p>
             <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
               Get Pro →
             </Link>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Everything in Free, plus:</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {["3 wallet addresses", "Unlimited push alerts", "Email unlock alerts", "Token Vesting Explorer (Discover)", "Priority data refresh (60s)", "CSV & PDF export"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
@@ -1126,7 +1126,7 @@ export default async function Home() {
           </div>
 
           {/* Enterprise (replaces Fund self-serve) */}
-          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 4px 40px rgba(37,99,235,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
+          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 4px 40px rgba(28,184,184,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
@@ -1145,7 +1145,7 @@ export default async function Home() {
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {["Unlimited wallet addresses", "REST API + MCP server access", "Team workspace", "SSO & custom SLA", "Slack, Telegram & WhatsApp alerts", "Dedicated support channel"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#e5e7eb" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#10b981" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#10b981" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2D8A4A" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#2D8A4A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
@@ -1154,9 +1154,9 @@ export default async function Home() {
         </div>
 
         {/* B2B / developer nudge */}
-        <p className="text-center text-sm mt-4 mb-8" style={{ color: "#64748b" }}>
+        <p className="text-center text-sm mt-4 mb-8" style={{ color: "#8B8E92" }}>
           Building on Vestream data?{" "}
-          <Link href="/developer" className="font-semibold" style={{ color: "#2563eb" }}>
+          <Link href="/developer" className="font-semibold" style={{ color: "#1CB8B8" }}>
             See the Developer API →
           </Link>
         </p>
@@ -1167,13 +1167,13 @@ export default async function Home() {
             container preserves desktop layout unchanged. */}
         <div
           className="rounded-2xl overflow-x-auto"
-          style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
+          style={{ border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
         >
           <div className="min-w-[640px]">
           <div className="grid grid-cols-4 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#94a3b8" }}>Feature</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#94a3b8" }}>Free</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2563eb" }}>Pro</span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Enterprise</span>
           </div>
           {([
@@ -1198,10 +1198,10 @@ export default async function Home() {
                 <div key={j} className="flex justify-center">
                   {typeof val === "boolean" ? (
                     val
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill={j === 2 ? "#10b981" : "#2563eb"} fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke={j === 2 ? "#10b981" : "#2563eb"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#94a3b8" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill={j === 2 ? "#2D8A4A" : "#1CB8B8"} fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke={j === 2 ? "#2D8A4A" : "#1CB8B8"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#2563eb" : "#6366f1" }}>{val}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#1CB8B8" : "#6366f1" }}>{val}</span>
                   )}
                 </div>
               ))}
@@ -1214,7 +1214,7 @@ export default async function Home() {
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-20 md:pb-32 flex flex-col items-center text-center">
         <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-6 md:px-10 py-12 md:py-16"
-          style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #1e3a8a 55%, #1CB8B8 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
           <div className="absolute -left-8 bottom-0 w-48 h-48 rounded-full pointer-events-none"
@@ -1240,19 +1240,19 @@ export default async function Home() {
 function FAQItem({ q, a }: { q: string; a: string }) {
   return (
     <details className="group rounded-2xl border overflow-hidden"
-      style={{ background: "white", borderColor: "rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      style={{ background: "white", borderColor: "rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <summary className="flex items-center justify-between gap-4 px-6 py-4 cursor-pointer list-none select-none"
-        style={{ color: "#0f172a" }}>
+        style={{ color: "#1A1D20" }}>
         <span className="text-sm font-semibold">{q}</span>
         <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all group-open:rotate-180"
-          style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb" }}>
+          style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8" }}>
           <svg width={10} height={10} viewBox="0 0 10 10" fill="none">
             <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
       </summary>
       <div className="px-6 pb-5 pt-1">
-        <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>{a}</p>
+        <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>{a}</p>
       </div>
     </details>
   );

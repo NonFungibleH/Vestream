@@ -30,8 +30,8 @@ export function TokenPulse({ pulse, symbol }: Props) {
       className="rounded-2xl overflow-hidden"
       style={{
         background: "white",
-        border:     "1px solid rgba(0,0,0,0.07)",
-        boxShadow:  "0 4px 24px rgba(37,99,235,0.06)",
+        border:     "1px solid rgba(21,23,26,0.10)",
+        boxShadow:  "0 4px 24px rgba(28,184,184,0.06)",
       }}
     >
       {/* Header strip — blue/purple gradient matching the rest of the site's
@@ -41,7 +41,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
       <div
         className="flex items-center justify-between px-5 md:px-6 py-3 gap-3 flex-wrap"
         style={{
-          background:   "linear-gradient(90deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05))",
+          background:   "linear-gradient(90deg, rgba(28,184,184,0.05), rgba(15,138,138,0.05))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
@@ -49,16 +49,16 @@ export function TokenPulse({ pulse, symbol }: Props) {
           <span className="relative flex h-2 w-2" aria-hidden>
             <span
               className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              style={{ background: "#7c3aed" }}
+              style={{ background: "#0F8A8A" }}
             />
             <span
               className="relative inline-flex rounded-full h-2 w-2"
-              style={{ background: "#7c3aed" }}
+              style={{ background: "#0F8A8A" }}
             />
           </span>
           <span
             className="text-xs font-bold uppercase tracking-wider"
-            style={{ color: "#7c3aed" }}
+            style={{ color: "#0F8A8A" }}
           >
             Pulse · {symbol}
           </span>
@@ -67,7 +67,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
             label already communicates "live data". Showing the full
             sentence alongside on a 375px viewport wraps to a second line
             and crowds the pill. */}
-        <span className="hidden sm:inline text-[11px]" style={{ color: "#94a3b8" }}>
+        <span className="hidden sm:inline text-[11px]" style={{ color: "#B8BABD" }}>
           Generated from Vestream&rsquo;s indexed cache
         </span>
       </div>
@@ -84,12 +84,12 @@ export function TokenPulse({ pulse, symbol }: Props) {
           <li
             key={i}
             className="flex gap-3 text-sm leading-relaxed"
-            style={{ color: "#0f172a" }}
+            style={{ color: "#1A1D20" }}
           >
             <span
               aria-hidden
               className="flex-shrink-0 mt-2 w-1.5 h-1.5 rounded-full"
-              style={{ background: "#7c3aed" }}
+              style={{ background: "#0F8A8A" }}
             />
             <span>{b}</span>
           </li>

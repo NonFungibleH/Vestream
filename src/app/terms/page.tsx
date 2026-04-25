@@ -3,16 +3,16 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 export default function Terms() {
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 h-16"
-        style={{ background: "white", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        style={{ background: "white", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
         <Link href="/" className="flex items-center gap-2.5">
           <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
+          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
         </Link>
-        <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
+        <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
           ← Back to home
         </Link>
       </nav>
@@ -20,13 +20,13 @@ export default function Terms() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="mb-10">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Legal</p>
-          <h1 className="text-4xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>Terms of Service</h1>
-          <p className="text-sm" style={{ color: "#94a3b8" }}>Last updated: January 2026</p>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Legal</p>
+          <h1 className="text-4xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>Terms of Service</h1>
+          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: January 2026</p>
         </div>
 
         <div className="rounded-2xl p-8 space-y-8"
-          style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
 
           <Section title="1. Acceptance of Terms">
             By accessing or using Vestream (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use the Service. Vestream reserves the right to update these terms at any time.
@@ -94,7 +94,7 @@ export default function Terms() {
 
           <Section title="14. Contact">
             If you have questions about these Terms, please contact us at{" "}
-            <a href="mailto:legal@vestream.io" style={{ color: "#2563eb" }}>legal@vestream.io</a>.
+            <a href="mailto:legal@vestream.io" style={{ color: "#1CB8B8" }}>legal@vestream.io</a>.
           </Section>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function Terms() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: "1.5rem" }}>
-      <h2 className="text-base font-bold mb-3" style={{ color: "#0f172a" }}>{title}</h2>
+      <h2 className="text-base font-bold mb-3" style={{ color: "#1A1D20" }}>{title}</h2>
       <div className="text-sm leading-relaxed space-y-2" style={{ color: "#475569" }}>
         {typeof children === "string" ? <p>{children}</p> : children}
       </div>

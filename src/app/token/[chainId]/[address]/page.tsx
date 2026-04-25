@@ -98,7 +98,7 @@ function relUntil(ts: number | null): string {
 
 function protocolColour(protocol: string): string {
   const meta = Object.values(PROTOCOLS).find((p) => p.adapterIds.includes(protocol));
-  return meta?.color ?? "#64748b";
+  return meta?.color ?? "#8B8E92";
 }
 
 function protocolName(protocol: string): string {
@@ -220,7 +220,7 @@ export default async function TokenPage(
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
       {/* BreadcrumbList JSON-LD — rendered first so crawlers see the
@@ -243,7 +243,7 @@ export default async function TokenPage(
         className="pt-24 md:pt-28 pb-2 px-4 md:px-8 max-w-5xl mx-auto"
         aria-label="Breadcrumb"
       >
-        <ol className="flex items-center gap-1.5 flex-wrap text-xs" style={{ color: "#94a3b8" }}>
+        <ol className="flex items-center gap-1.5 flex-wrap text-xs" style={{ color: "#B8BABD" }}>
           {breadcrumbs.map((b, i) => {
             const isLast = i === breadcrumbs.length - 1;
             return (
@@ -254,7 +254,7 @@ export default async function TokenPage(
                 {isLast ? (
                   <span
                     className="font-semibold truncate max-w-[240px]"
-                    style={{ color: "#0f172a" }}
+                    style={{ color: "#1A1D20" }}
                     aria-current="page"
                   >
                     {b.name}
@@ -263,7 +263,7 @@ export default async function TokenPage(
                   <Link
                     href={b.url.replace("https://vestream.io", "")}
                     className="transition-colors hover:underline"
-                    style={{ color: "#64748b" }}
+                    style={{ color: "#8B8E92" }}
                   >
                     {b.name}
                   </Link>
@@ -285,12 +285,12 @@ export default async function TokenPage(
               width={64}
               height={64}
               className="rounded-full flex-shrink-0"
-              style={{ border: "1px solid rgba(0,0,0,0.08)", background: "white" }}
+              style={{ border: "1px solid rgba(21,23,26,0.10)", background: "white" }}
             />
           ) : (
             <div
               className="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold"
-              style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.22)", color: "#2563eb" }}
+              style={{ background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.22)", color: "#1CB8B8" }}
             >
               {symbol.charAt(0).toUpperCase()}
             </div>
@@ -298,34 +298,34 @@ export default async function TokenPage(
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+              <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
                 {symbol}
               </h1>
               {market.tokenName && market.tokenName !== symbol && (
-                <span className="text-sm" style={{ color: "#94a3b8" }}>
+                <span className="text-sm" style={{ color: "#B8BABD" }}>
                   · {market.tokenName}
                 </span>
               )}
               <span
                 className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+                style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
               >
                 {CHAIN_NAMES[cid]}
               </span>
             </div>
             <div className="mt-1 flex items-center gap-3 flex-wrap text-sm">
-              <span className="font-mono" style={{ color: "#64748b" }}>
+              <span className="font-mono" style={{ color: "#8B8E92" }}>
                 {truncate(addr, 6)}
               </span>
               {priceUsd && (
                 <>
-                  <span className="font-bold tabular-nums" style={{ color: "#0f172a" }}>
+                  <span className="font-bold tabular-nums" style={{ color: "#1A1D20" }}>
                     {fmtUsd(priceUsd, false)}
                   </span>
                   {market.change24h != null && (
                     <span
                       className="tabular-nums font-semibold"
-                      style={{ color: market.change24h >= 0 ? "#10b981" : "#ef4444" }}
+                      style={{ color: market.change24h >= 0 ? "#2D8A4A" : "#B3322E" }}
                     >
                       {fmtPct(market.change24h)}
                     </span>
@@ -365,7 +365,7 @@ export default async function TokenPage(
             label="Locked"
             value={lockedUsd != null ? fmtUsd(lockedUsd) : (overview ? `${fmtTokens(overview.lockedTokensWhole)} ${symbol}` : "—")}
             sub={overhangPct != null ? `${overhangPct.toFixed(1)}% of FDV` : (market.fdv ? "—" : "no price data")}
-            accent="#2563eb"
+            accent="#1CB8B8"
           />
           <HeroStat
             label="Unlocking next 7d"
@@ -411,12 +411,12 @@ export default async function TokenPage(
         <section className="px-4 md:px-8 pb-16 max-w-5xl mx-auto">
           <div
             className="rounded-2xl p-8 md:p-10 text-center"
-            style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+            style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
           >
-            <div className="text-base font-semibold mb-2" style={{ color: "#0f172a" }}>
+            <div className="text-base font-semibold mb-2" style={{ color: "#1A1D20" }}>
               No vesting activity indexed for {symbol}
             </div>
-            <p className="text-sm max-w-md mx-auto" style={{ color: "#64748b" }}>
+            <p className="text-sm max-w-md mx-auto" style={{ color: "#8B8E92" }}>
               We haven&apos;t seen any active vesting streams for this token yet.
               It may not use any of the 9 protocols we track, or no streams have
               reached our cache. If you have a wallet with {symbol} vesting,
@@ -426,9 +426,9 @@ export default async function TokenPage(
               href="/find-vestings"
               className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl font-semibold text-sm"
               style={{
-                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
                 color: "white",
-                boxShadow: "0 4px 16px rgba(37,99,235,0.3)",
+                boxShadow: "0 4px 16px rgba(28,184,184,0.3)",
               }}
             >
               Scan a wallet →
@@ -514,13 +514,13 @@ export default async function TokenPage(
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
           style={{
             background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)",
-            border: "1px solid rgba(124,58,237,0.25)",
+            border: "1px solid rgba(15,138,138,0.25)",
           }}
         >
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(15,138,138,0.18) 0%, transparent 70%)",
             }}
           />
           <div className="relative">
@@ -543,9 +543,9 @@ export default async function TokenPage(
                 href="/early-access"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+                  background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)",
                   color: "white",
-                  boxShadow: "0 4px 24px rgba(124,58,237,0.4)",
+                  boxShadow: "0 4px 24px rgba(15,138,138,0.4)",
                 }}
               >
                 Get early access →
@@ -579,16 +579,16 @@ function HeroStat({
   return (
     <div
       className="rounded-2xl p-4"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: accent }}>
         {label}
       </div>
-      <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+      <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
         {value}
       </div>
       {sub && (
-        <div className="text-[11px] mt-1" style={{ color: "#94a3b8" }}>
+        <div className="text-[11px] mt-1" style={{ color: "#B8BABD" }}>
           {sub}
         </div>
       )}
@@ -692,36 +692,36 @@ function UnlockCalendar({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 flex-wrap gap-2"
         style={{
-          background:   "linear-gradient(90deg, rgba(37,99,235,0.05), rgba(124,58,237,0.04))",
+          background:   "linear-gradient(90deg, rgba(28,184,184,0.05), rgba(15,138,138,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#2563eb" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1CB8B8" }}>
             {hasAnyPast ? "24-month unlock timeline" : "12-month unlock schedule"}
           </span>
           {/* Legend chip for the overlay line */}
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#7c3aed" }}>
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#0F8A8A" }}>
             <span
               aria-hidden
               style={{
                 display:       "inline-block",
                 width:         14,
                 height:        2,
-                background:    "#7c3aed",
+                background:    "#0F8A8A",
                 borderRadius:  1,
               }}
             />
             cumulative
           </span>
           {hasAnyPast && (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#94a3b8" }}>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "#B8BABD" }}>
               <span
                 aria-hidden
                 style={{
@@ -736,9 +736,9 @@ function UnlockCalendar({
             </span>
           )}
         </div>
-        <div className="text-xs" style={{ color: "#64748b" }}>
-          <span style={{ color: "#94a3b8" }}>next 12mo</span>{" "}
-          <span className="font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+        <div className="text-xs" style={{ color: "#8B8E92" }}>
+          <span style={{ color: "#B8BABD" }}>next 12mo</span>{" "}
+          <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
             {fmtTokens(grandTotal)} {symbol}
           </span>
           {priceUsd && <span className="ml-1">· {fmtUsd(grandTotal * priceUsd)}</span>}
@@ -846,7 +846,7 @@ function UnlockCalendar({
                       <div
                         className="absolute -top-3 text-[8.5px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
                         style={{
-                          background: "#7c3aed",
+                          background: "#0F8A8A",
                           color:      "white",
                           letterSpacing: "0.08em",
                           whiteSpace: "nowrap",
@@ -881,7 +881,7 @@ function UnlockCalendar({
                   y1={0}
                   x2={nowDividerX}
                   y2={100}
-                  stroke="#7c3aed"
+                  stroke="#0F8A8A"
                   strokeWidth={0.8}
                   strokeDasharray="2 2"
                   vectorEffect="non-scaling-stroke"
@@ -891,7 +891,7 @@ function UnlockCalendar({
               <polyline
                 points={svgPoints}
                 fill="none"
-                stroke="#7c3aed"
+                stroke="#0F8A8A"
                 strokeWidth={1.5}
                 vectorEffect="non-scaling-stroke"
                 strokeLinejoin="round"
@@ -903,7 +903,7 @@ function UnlockCalendar({
                 cx={visible.length ? ((visible.length - 0.5) / visible.length) * 100 : 100}
                 cy={finalCumY}
                 r={0.9}
-                fill="#7c3aed"
+                fill="#0F8A8A"
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
@@ -917,7 +917,7 @@ function UnlockCalendar({
                 <div
                   key={b.timestamp}
                   className="text-[10px] text-center flex-1 min-w-[34px]"
-                  style={{ color: b.isPast ? "#cbd5e1" : "#94a3b8" }}
+                  style={{ color: b.isPast ? "#cbd5e1" : "#B8BABD" }}
                 >
                   {b.label.split(" ")[0]}
                 </div>
@@ -977,10 +977,10 @@ function UnlockCalendar({
         style={{
           background:  "rgba(0,0,0,0.015)",
           borderTop:   "1px solid rgba(0,0,0,0.05)",
-          color:       "#94a3b8",
+          color:       "#B8BABD",
         }}
       >
-        <span className="font-semibold" style={{ color: "#64748b" }}>Protocols:</span>
+        <span className="font-semibold" style={{ color: "#8B8E92" }}>Protocols:</span>
         {Array.from(new Set(visible.flatMap((b) => b.byProtocol.map((s) => s.protocol)))).map((p) => (
           <span key={p} className="inline-flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-sm" style={{ background: protocolColour(p) }} />
@@ -1001,15 +1001,15 @@ function CalendarStat({
     <div>
       <div
         className="text-[10px] font-semibold uppercase tracking-wider"
-        style={{ color: "#94a3b8" }}
+        style={{ color: "#B8BABD" }}
       >
         {label}
       </div>
-      <div className="text-sm font-semibold tabular-nums mt-0.5" style={{ color: "#0f172a" }}>
+      <div className="text-sm font-semibold tabular-nums mt-0.5" style={{ color: "#1A1D20" }}>
         {value}
       </div>
       {sub && (
-        <div className="text-[10.5px] mt-0.5" style={{ color: "#64748b" }}>
+        <div className="text-[10.5px] mt-0.5" style={{ color: "#8B8E92" }}>
           {sub}
         </div>
       )}
@@ -1023,7 +1023,7 @@ function ProtocolMix({
   return (
     <div
       className="rounded-2xl overflow-hidden h-full"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       <div
         className="px-4 md:px-5 py-3"
@@ -1032,7 +1032,7 @@ function ProtocolMix({
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#0f172a" }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1A1D20" }}>
           Protocol mix
         </span>
       </div>
@@ -1045,18 +1045,18 @@ function ProtocolMix({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-sm" style={{ background: protocolColour(p.protocol) }} />
-                  <span className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+                  <span className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
                     {protocolName(p.protocol)}
                   </span>
                 </div>
-                <span className="text-xs font-bold tabular-nums" style={{ color: "#0f172a" }}>
+                <span className="text-xs font-bold tabular-nums" style={{ color: "#1A1D20" }}>
                   {pct.toFixed(1)}%
                 </span>
               </div>
               <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.04)" }}>
                 <div className="h-full" style={{ width: `${Math.max(2, pct)}%`, background: protocolColour(p.protocol) }} />
               </div>
-              <div className="text-[10px] mt-1" style={{ color: "#94a3b8" }}>
+              <div className="text-[10px] mt-1" style={{ color: "#B8BABD" }}>
                 {p.streams} stream{p.streams === 1 ? "" : "s"}
               </div>
             </>
@@ -1080,7 +1080,7 @@ function RecipientTable({
   return (
     <div
       className="rounded-2xl overflow-hidden h-full"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       <div
         className="px-4 md:px-5 py-3 flex items-center justify-between"
@@ -1089,10 +1089,10 @@ function RecipientTable({
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#0f172a" }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1A1D20" }}>
           Top recipients
         </span>
-        <span className="text-xs" style={{ color: "#94a3b8" }}>{rows.length} shown</span>
+        <span className="text-xs" style={{ color: "#B8BABD" }}>{rows.length} shown</span>
       </div>
       <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
         {rows.map((r, idx) => {
@@ -1101,12 +1101,12 @@ function RecipientTable({
             <div key={r.recipient} className="px-4 md:px-5 py-3 flex items-center gap-3">
               <div
                 className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold tabular-nums"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+                style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
               >
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-mono truncate" style={{ color: "#0f172a" }}>
+                <div className="text-xs font-mono truncate" style={{ color: "#1A1D20" }}>
                   {truncate(r.recipient)}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -1119,17 +1119,17 @@ function RecipientTable({
                       {protocolName(p)}
                     </span>
                   ))}
-                  <span className="text-[10px]" style={{ color: "#94a3b8" }}>
+                  <span className="text-[10px]" style={{ color: "#B8BABD" }}>
                     next {relUntil(r.nextUnlockTime)}
                   </span>
                 </div>
               </div>
               <div className="flex-shrink-0 text-right">
-                <div className="text-sm font-bold tabular-nums" style={{ color: "#0f172a" }}>
+                <div className="text-sm font-bold tabular-nums" style={{ color: "#1A1D20" }}>
                   {lockedUsd != null ? fmtUsd(lockedUsd) : fmtTokens(r.lockedTokensWhole)}
                 </div>
                 {lockedUsd != null && (
-                  <div className="text-[10px] tabular-nums" style={{ color: "#94a3b8" }}>
+                  <div className="text-[10px] tabular-nums" style={{ color: "#B8BABD" }}>
                     {fmtTokens(r.lockedTokensWhole)} {symbol}
                   </div>
                 )}
@@ -1148,7 +1148,7 @@ function UpcomingEvents({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       <div
         className="px-4 md:px-5 py-3"
@@ -1173,11 +1173,11 @@ function UpcomingEvents({
                 {protocolName(e.protocol).charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+                <div className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
                   {fmtTokens(e.tokensWhole)} {symbol}
-                  {usd && <span className="ml-1.5 text-xs font-normal" style={{ color: "#64748b" }}>({fmtUsd(usd)})</span>}
+                  {usd && <span className="ml-1.5 text-xs font-normal" style={{ color: "#8B8E92" }}>({fmtUsd(usd)})</span>}
                 </div>
-                <div className="text-[10.5px] mt-0.5 font-mono" style={{ color: "#94a3b8" }}>
+                <div className="text-[10.5px] mt-0.5 font-mono" style={{ color: "#B8BABD" }}>
                   {protocolName(e.protocol)} · {truncate(e.recipient)}
                 </div>
               </div>

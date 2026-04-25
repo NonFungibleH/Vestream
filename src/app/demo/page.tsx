@@ -50,7 +50,7 @@ const TEAM_FINANCE_VESTING  = "https://www.team.finance/vesting";
 
 export default function DemoPage() {
   return (
-    <main className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <main className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -59,9 +59,9 @@ export default function DemoPage() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
             style={{
-              background: "rgba(37,99,235,0.06)",
-              color: "#2563eb",
-              border: "1px solid rgba(37,99,235,0.2)",
+              background: "rgba(28,184,184,0.06)",
+              color: "#1CB8B8",
+              border: "1px solid rgba(28,184,184,0.2)",
             }}
           >
             Three demos · No signup for A + B · ~90s → ~10min
@@ -71,17 +71,17 @@ export default function DemoPage() {
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5"
             style={{
               letterSpacing: "-0.03em",
-              background: "linear-gradient(135deg, #0f172a 0%, #2563eb 50%, #7c3aed 100%)",
+              background: "linear-gradient(135deg, #1A1D20 0%, #1CB8B8 50%, #0F8A8A 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
             See the claim flow,<br className="hidden md:block" /> then try it live
           </h1>
-          <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#64748b", lineHeight: 1.6 }}>
-            <strong style={{ color: "#0f172a" }}>A.</strong> A 90-second interactive walkthrough.{" "}
-            <strong style={{ color: "#0f172a" }}>B.</strong> Design a vesting and watch it live on the mobile app.{" "}
-            <strong style={{ color: "#0f172a" }}>C.</strong> Deploy a real on-chain vesting on Sepolia via thirdweb.
+          <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
+            <strong style={{ color: "#1A1D20" }}>A.</strong> A 90-second interactive walkthrough.{" "}
+            <strong style={{ color: "#1A1D20" }}>B.</strong> Design a vesting and watch it live on the mobile app.{" "}
+            <strong style={{ color: "#1A1D20" }}>C.</strong> Deploy a real on-chain vesting on Sepolia via thirdweb.
           </p>
         </div>
       </section>
@@ -100,11 +100,11 @@ export default function DemoPage() {
             label gets full width and doesn't wrap awkwardly between two
             shrunken rules at 375px. */}
         <div className="flex items-center justify-center gap-4 mt-10 md:mt-12 mb-2">
-          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
-          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#94a3b8" }}>
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(21,23,26,0.10)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#B8BABD" }}>
             Now try the real thing
           </span>
-          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(21,23,26,0.10)" }} />
         </div>
       </section>
 
@@ -143,7 +143,7 @@ export default function DemoPage() {
           <Link
             href="/find-vestings"
             className="font-medium hover:underline"
-            style={{ color: "#2563eb" }}
+            style={{ color: "#1CB8B8" }}
           >
             Scan your own wallet →
           </Link>
@@ -151,7 +151,7 @@ export default function DemoPage() {
           <Link
             href="/early-access"
             className="font-medium hover:underline"
-            style={{ color: "#2563eb" }}
+            style={{ color: "#1CB8B8" }}
           >
             Get early access on web →
           </Link>
@@ -159,11 +159,11 @@ export default function DemoPage() {
 
         {/* Divider into Demo C. Same mobile rule as above. */}
         <div className="flex items-center justify-center gap-4 mt-12 md:mt-14 mb-2">
-          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
-          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#94a3b8" }}>
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(21,23,26,0.10)" }} />
+          <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#B8BABD" }}>
             Or deploy a real vesting on Sepolia
           </span>
-          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(0,0,0,0.08)" }} />
+          <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(21,23,26,0.10)" }} />
         </div>
       </section>
 
@@ -183,7 +183,7 @@ export default function DemoPage() {
             body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for minting the token and creating the vesting. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
             href={SEPOLIA_ETH_FAUCET}
             cta="Open the Google Cloud faucet"
-            accent="#d97706"
+            accent="#C47A1A"
             accentBg="rgba(245,158,11,0.08)"
             accentBorder="rgba(245,158,11,0.22)"
           />
@@ -194,9 +194,9 @@ export default function DemoPage() {
             body="Team Finance's Token Mint deploys a real ERC-20 on Sepolia with a custom name, symbol, and supply. Connect, switch chain to Sepolia, name your token, and mint — you now have something to vest in step 3."
             href={TEAM_FINANCE_MINT}
             cta="Open Team Finance Mint"
-            accent="#2563eb"
-            accentBg="rgba(37,99,235,0.08)"
-            accentBorder="rgba(37,99,235,0.22)"
+            accent="#1CB8B8"
+            accentBg="rgba(28,184,184,0.08)"
+            accentBorder="rgba(28,184,184,0.22)"
           />
 
           <DeployStep
@@ -205,7 +205,7 @@ export default function DemoPage() {
             body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute Vestream auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
             href={TEAM_FINANCE_VESTING}
             cta="Open Team Finance Vesting"
-            accent="#10b981"
+            accent="#2D8A4A"
             accentBg="rgba(16,185,129,0.08)"
             accentBorder="rgba(16,185,129,0.22)"
           />
@@ -221,7 +221,7 @@ export default function DemoPage() {
             separate block-explorer step. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
-          style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", color: "#64748b" }}
+          style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(21,23,26,0.10)", color: "#8B8E92" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
             <circle cx="12" cy="12" r="10"/>
@@ -229,7 +229,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch Vestream index it.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>Find vestings</Link> to watch Vestream index it.
           </p>
         </div>
       </section>
@@ -237,10 +237,10 @@ export default function DemoPage() {
       {/* ── Why this matters ────────────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             What you just saw, in real life
           </h2>
-          <p className="text-sm md:text-base max-w-2xl mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-sm md:text-base max-w-2xl mx-auto" style={{ color: "#8B8E92" }}>
             The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using Vestream day-to-day.
           </p>
         </div>
@@ -285,14 +285,14 @@ export default function DemoPage() {
         <div
           className="rounded-3xl p-8 md:p-12 text-center overflow-hidden relative"
           style={{
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+            background: "linear-gradient(135deg, #1A1D20 0%, #1e293b 100%)",
             boxShadow: "0 20px 50px rgba(15,23,42,0.2)",
           }}
         >
           <div
             className="absolute inset-0 opacity-30 pointer-events-none"
             style={{
-              backgroundImage: "radial-gradient(circle at 20% 30%, rgba(37,99,235,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(124,58,237,0.4), transparent 40%)",
+              backgroundImage: "radial-gradient(circle at 20% 30%, rgba(28,184,184,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(15,138,138,0.4), transparent 40%)",
             }}
           />
           <div className="relative">
@@ -317,9 +317,9 @@ export default function DemoPage() {
                 href="/early-access"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                  background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
                   color: "white",
-                  boxShadow: "0 4px 20px rgba(37,99,235,0.4)",
+                  boxShadow: "0 4px 20px rgba(28,184,184,0.4)",
                 }}
               >
                 Get early access →
@@ -357,21 +357,21 @@ function DemoIntro({
       <div
         className="flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg md:text-xl font-extrabold"
         style={{
-          background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
           color: "white",
-          boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
+          boxShadow: "0 4px 20px rgba(28,184,184,0.25)",
         }}
       >
         {letter}
       </div>
       <div className="min-w-0">
-        <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#94a3b8" }}>
+        <div className="text-[11px] uppercase tracking-wider font-semibold mb-1" style={{ color: "#B8BABD" }}>
           {eyebrow}
         </div>
-        <h2 className="text-xl md:text-2xl font-bold mb-1.5" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+        <h2 className="text-xl md:text-2xl font-bold mb-1.5" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
           {title}
         </h2>
-        <p className="text-sm md:text-base" style={{ color: "#64748b", lineHeight: 1.55 }}>
+        <p className="text-sm md:text-base" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
           {copy}
         </p>
       </div>
@@ -383,20 +383,20 @@ function GuideCard({ n, title, body }: { n: string; title: string; body: string 
   return (
     <div
       className="rounded-xl p-4"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
     >
       <div className="flex items-center gap-2 mb-2">
         <div
           className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
         >
           {n}
         </div>
-        <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+        <div className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
           {title}
         </div>
       </div>
-      <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
+      <p className="text-xs" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
         {body}
       </p>
     </div>
@@ -418,7 +418,7 @@ function DeployStep({
   return (
     <div
       className="rounded-2xl p-5 flex flex-col"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
       <div className="flex items-center gap-2 mb-3">
         <div
@@ -427,14 +427,14 @@ function DeployStep({
         >
           {n}
         </div>
-        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+        <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
           Step {n}
         </div>
       </div>
-      <h3 className="text-base font-semibold mb-1.5" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+      <h3 className="text-base font-semibold mb-1.5" style={{ color: "#1A1D20", letterSpacing: "-0.01em" }}>
         {title}
       </h3>
-      <p className="text-sm flex-1 mb-4" style={{ color: "#64748b", lineHeight: 1.55 }}>
+      <p className="text-sm flex-1 mb-4" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
         {body}
       </p>
       <a
@@ -454,26 +454,26 @@ function Step({ n, title, body, icon }: { n: string; title: string; body: string
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
     >
       <div className="flex items-center gap-2 mb-3">
         <div
           className="w-8 h-8 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb" }}
+          style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8" }}
         >
           {icon}
         </div>
         <div
           className="text-[10px] uppercase tracking-wider font-semibold"
-          style={{ color: "#94a3b8" }}
+          style={{ color: "#B8BABD" }}
         >
           Step {n}
         </div>
       </div>
-      <h3 className="text-base font-semibold mb-1.5" style={{ color: "#0f172a" }}>
+      <h3 className="text-base font-semibold mb-1.5" style={{ color: "#1A1D20" }}>
         {title}
       </h3>
-      <p className="text-sm" style={{ color: "#64748b", lineHeight: 1.55 }}>
+      <p className="text-sm" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
         {body}
       </p>
     </div>

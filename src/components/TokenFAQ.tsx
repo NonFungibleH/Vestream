@@ -62,11 +62,11 @@ export function TokenFAQ({ items, symbol }: Props) {
       <div className="mb-4">
         <h2
           className="text-xl md:text-2xl font-bold"
-          style={{ color: "#0f172a", letterSpacing: "-0.02em" }}
+          style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
         >
           {symbol} token FAQ
         </h2>
-        <p className="mt-1 text-xs" style={{ color: "#94a3b8" }}>
+        <p className="mt-1 text-xs" style={{ color: "#B8BABD" }}>
           Answers generated from Vestream&rsquo;s indexed data · updated each seed-cache run.
         </p>
       </div>
@@ -75,7 +75,7 @@ export function TokenFAQ({ items, symbol }: Props) {
         className="rounded-2xl overflow-hidden"
         style={{
           background: "white",
-          border:     "1px solid rgba(0,0,0,0.07)",
+          border:     "1px solid rgba(21,23,26,0.10)",
           boxShadow:  "0 1px 3px rgba(0,0,0,0.04)",
         }}
       >
@@ -89,7 +89,7 @@ export function TokenFAQ({ items, symbol }: Props) {
           >
             <summary
               className="px-4 md:px-6 py-4 cursor-pointer select-none flex items-center justify-between gap-4 transition-colors hover:bg-slate-50/60"
-              style={{ color: "#0f172a" }}
+              style={{ color: "#1A1D20" }}
             >
               <span className="text-sm md:text-base font-semibold">
                 {it.question}
@@ -98,7 +98,7 @@ export function TokenFAQ({ items, symbol }: Props) {
                   sibling selector handles the transform. */}
               <span
                 className="flex-shrink-0 text-xs transition-transform group-open:rotate-180"
-                style={{ color: "#94a3b8" }}
+                style={{ color: "#B8BABD" }}
                 aria-hidden
               >
                 ▼

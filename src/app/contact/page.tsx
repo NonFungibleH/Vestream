@@ -51,7 +51,7 @@ const CONTACT_JSON_LD = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(CONTACT_JSON_LD) }}
@@ -65,7 +65,7 @@ export default function ContactPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.08) 0%, transparent 70%)",
           }}
         />
 
@@ -73,9 +73,9 @@ export default function ContactPage() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6"
             style={{
-              background: "rgba(37,99,235,0.06)",
-              borderColor: "rgba(37,99,235,0.2)",
-              color: "#2563eb",
+              background: "rgba(28,184,184,0.06)",
+              borderColor: "rgba(28,184,184,0.2)",
+              color: "#1CB8B8",
             }}
           >
             Get in touch
@@ -87,7 +87,7 @@ export default function ContactPage() {
               fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
               lineHeight: 1.08,
               letterSpacing: "-0.03em",
-              color: "#0f172a",
+              color: "#1A1D20",
             }}
           >
             Let&apos;s talk.
@@ -95,7 +95,7 @@ export default function ContactPage() {
 
           <p
             className="text-base md:text-lg leading-relaxed max-w-xl mx-auto"
-            style={{ color: "#64748b" }}
+            style={{ color: "#8B8E92" }}
           >
             Questions about the product, developer API access, Enterprise pricing,
             partnerships, or something we haven&apos;t thought of — we reply within
@@ -135,7 +135,7 @@ export default function ContactPage() {
                 <Link
                   href="/faq"
                   className="text-xs font-semibold inline-flex items-center gap-1 mt-1"
-                  style={{ color: "#2563eb" }}
+                  style={{ color: "#1CB8B8" }}
                 >
                   Browse the FAQ first →
                 </Link>
@@ -164,17 +164,17 @@ function ReasonCard({
       className="rounded-2xl p-5"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
+        border: "1px solid rgba(21,23,26,0.10)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
       <h3
         className="text-sm font-bold mb-1.5"
-        style={{ color: "#0f172a", letterSpacing: "-0.01em" }}
+        style={{ color: "#1A1D20", letterSpacing: "-0.01em" }}
       >
         {title}
       </h3>
-      <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
+      <p className="text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
         {body}
       </p>
       {footer}

@@ -27,8 +27,8 @@ export const metadata: Metadata = {
 function Check() {
   return (
     <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-      <circle cx="8" cy="8" r="8" fill="#10b981" fillOpacity={0.12} />
-      <path d="M5 8l2 2 4-4" stroke="#10b981" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="8" fill="#2D8A4A" fillOpacity={0.12} />
+      <path d="M5 8l2 2 4-4" stroke="#2D8A4A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -46,15 +46,15 @@ export default function DeveloperPage() {
       <section className="relative overflow-hidden pt-24 pb-16 md:pt-40 md:pb-28 px-4 md:px-8 text-center">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 70%)"
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.12) 0%, transparent 70%)"
         }} />
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.4), transparent)" }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.4), transparent)" }} />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
-            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.2)", color: "#2563eb" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#2563eb" }} />
+            style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1CB8B8" }} />
             Developer API · Invite-only Beta
           </div>
 
@@ -62,7 +62,7 @@ export default function DeveloperPage() {
             style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "white" }}>
             The vesting data layer<br />
             <span style={{
-              background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 60%, #6366f1 100%)",
+              background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #6366f1 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
             }}>
               for AI agents and platforms
@@ -78,7 +78,7 @@ export default function DeveloperPage() {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <a href="#request-access"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 20px rgba(37,99,235,0.3)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}>
               Request API Access
               <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -86,7 +86,7 @@ export default function DeveloperPage() {
             </a>
             <Link href="/api-docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)", color: "#60a5fa" }}>
+              style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#60a5fa" }}>
               View API Docs →
             </Link>
           </div>
@@ -113,7 +113,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Indexed protocols</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Indexed protocols</p>
             <h2 className="font-bold text-2xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               One API. Every major vesting protocol.
             </h2>
@@ -121,10 +121,10 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
             {[
               { name: "Sablier",       color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.18)",  note: "Linear + tranched" },
-              { name: "UNCX",          color: "#2563eb", bg: "rgba(37,99,235,0.08)",   border: "rgba(37,99,235,0.18)",   note: "Token locks" },
-              { name: "Hedgey",        color: "#7c3aed", bg: "rgba(124,58,237,0.08)",  border: "rgba(124,58,237,0.18)",  note: "NFT-based vesting" },
+              { name: "UNCX",          color: "#1CB8B8", bg: "rgba(28,184,184,0.08)",   border: "rgba(28,184,184,0.18)",   note: "Token locks" },
+              { name: "Hedgey",        color: "#0F8A8A", bg: "rgba(15,138,138,0.08)",  border: "rgba(15,138,138,0.18)",  note: "NFT-based vesting" },
               { name: "Unvest",        color: "#0891b2", bg: "rgba(8,145,178,0.08)",   border: "rgba(8,145,178,0.18)",   note: "Multi-chain" },
-              { name: "Team Finance",  color: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  note: "Team vesting" },
+              { name: "Team Finance",  color: "#2D8A4A", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.18)",  note: "Team vesting" },
               { name: "Superfluid",    color: "#1db954", bg: "rgba(29,185,84,0.08)",   border: "rgba(29,185,84,0.18)",   note: "Streaming vesting" },
               { name: "PinkSale",      color: "#ec4899", bg: "rgba(236,72,153,0.08)",  border: "rgba(236,72,153,0.18)",  note: "PinkLock V2" },
               { name: "Streamflow",    color: "#14f195", bg: "rgba(20,241,149,0.08)",  border: "rgba(20,241,149,0.22)",  note: "Solana vesting" },
@@ -158,7 +158,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why Vestream API</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Why Vestream API</p>
             <h2 className="font-bold text-2xl md:text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Built for the next generation of financial infrastructure
             </h2>
@@ -168,18 +168,18 @@ export default function DeveloperPage() {
             {[
               {
                 icon: "⬡",
-                color: "#2563eb",
-                bg: "rgba(37,99,235,0.08)",
-                border: "rgba(37,99,235,0.18)",
+                color: "#1CB8B8",
+                bg: "rgba(28,184,184,0.08)",
+                border: "rgba(28,184,184,0.18)",
                 title: "Normalised schema",
                 description: "Every protocol speaks a different language on-chain. We translate everything into one consistent VestingStream format — same field names, same units, same structure, regardless of protocol.",
                 points: ["Unified token amounts (raw + USD)", "Consistent cliff, start, end timestamps", "Cross-protocol claim history", "Protocol-agnostic stream IDs"],
               },
               {
                 icon: "⬡",
-                color: "#7c3aed",
-                bg: "rgba(124,58,237,0.08)",
-                border: "rgba(124,58,237,0.18)",
+                color: "#0F8A8A",
+                bg: "rgba(15,138,138,0.08)",
+                border: "rgba(15,138,138,0.18)",
                 title: "REST API + OpenAPI",
                 description: "Three clean endpoints that return structured JSON instantly from our persistent index. Interactive Swagger docs, full OpenAPI 3.1 spec, and standard Bearer auth — exactly what developers and integrations expect.",
                 points: ["Instant responses from DB cache", "Standard Bearer token auth", "Rate limit headers on every response", "Interactive Swagger UI at /api-docs"],
@@ -223,7 +223,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 py-16 md:py-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>API reference</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>API reference</p>
             <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Three endpoints. Everything you need.
             </h2>
@@ -299,7 +299,7 @@ export default function DeveloperPage() {
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex items-start gap-4 p-6 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                   <span className="text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 mt-0.5"
-                    style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb", fontFamily: "monospace" }}>
+                    style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8", fontFamily: "monospace" }}>
                     GET
                   </span>
                   <div className="flex-1 min-w-0">
@@ -316,7 +316,7 @@ export default function DeveloperPage() {
                   </div>
                 </div>
                 <div className="p-5" style={{ background: "#0a1628" }}>
-                  <pre className="text-xs leading-relaxed overflow-x-auto" style={{ color: "#94a3b8", fontFamily: "monospace" }}>
+                  <pre className="text-xs leading-relaxed overflow-x-auto" style={{ color: "#B8BABD", fontFamily: "monospace" }}>
                     <code>{ep.example}</code>
                   </pre>
                 </div>
@@ -338,7 +338,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Use cases</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Use cases</p>
             <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Who builds with Vestream API
             </h2>
@@ -391,7 +391,7 @@ export default function DeveloperPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {u.tags.map(t => (
                     <span key={t} className="text-xs px-2 py-1 rounded-md font-medium"
-                      style={{ background: "rgba(37,99,235,0.12)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>
+                      style={{ background: "rgba(28,184,184,0.12)", color: "#60a5fa", border: "1px solid rgba(28,184,184,0.25)" }}>
                       {t}
                     </span>
                   ))}
@@ -427,7 +427,7 @@ export default function DeveloperPage() {
                   without any custom glue code.
                 </p>
                 <div className="rounded-xl p-4 font-mono text-xs leading-relaxed"
-                  style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}>
+                  style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.07)", color: "#B8BABD" }}>
                   {/* Inline JSON snippet — wrapping the raw ASCII comment in a JSX expression
                       prevents eslint's react/jsx-no-comment-textnodes rule from mistaking it
                       for a misplaced JS comment, and escaping the quotes satisfies
@@ -436,12 +436,12 @@ export default function DeveloperPage() {
                   <span style={{ color: "#6366f1" }}>{'"mcpServers"'}</span>
                   {": { "}<span style={{ color: "#6366f1" }}>{'"vestream"'}</span>{": {"}{"\n"}
                   {"  "}<span style={{ color: "#6366f1" }}>{'"command"'}</span>
-                  {": "}<span style={{ color: "#10b981" }}>{'"npx"'}</span>{","}{"\n"}
+                  {": "}<span style={{ color: "#2D8A4A" }}>{'"npx"'}</span>{","}{"\n"}
                   {"  "}<span style={{ color: "#6366f1" }}>{'"args"'}</span>
-                  {": ["}<span style={{ color: "#10b981" }}>{'"-y"'}</span>{", "}<span style={{ color: "#10b981" }}>{'"@vestream/mcp"'}</span>{"],"}{"\n"}
+                  {": ["}<span style={{ color: "#2D8A4A" }}>{'"-y"'}</span>{", "}<span style={{ color: "#2D8A4A" }}>{'"@vestream/mcp"'}</span>{"],"}{"\n"}
                   {"  "}<span style={{ color: "#6366f1" }}>{'"env"'}</span>
                   {": { "}<span style={{ color: "#6366f1" }}>{'"VESTREAM_API_KEY"'}</span>
-                  {": "}<span style={{ color: "#10b981" }}>{'"vstr_live_..."'}</span>{" }"}{"\n"}
+                  {": "}<span style={{ color: "#2D8A4A" }}>{'"vstr_live_..."'}</span>{" }"}{"\n"}
                   {" } }"}
                 </div>
               </div>
@@ -466,7 +466,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Pricing</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Pricing</p>
             <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Simple, transparent access
             </h2>
@@ -497,7 +497,7 @@ export default function DeveloperPage() {
               </ul>
               <a href="#request-access"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
-                style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.3)", color: "#60a5fa" }}>
+                style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#60a5fa" }}>
                 Request Access
               </a>
             </div>
@@ -506,10 +506,10 @@ export default function DeveloperPage() {
                 split into Pro + Enterprise: there's one real commercial
                 conversation until we publish a rate card. */}
             <div className="rounded-2xl p-8 relative"
-              style={{ background: "#0a1628", border: "2px solid #2563eb", boxShadow: "0 8px 32px rgba(37,99,235,0.25)" }}>
+              style={{ background: "#0a1628", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}>
                   For production
                 </span>
               </div>
@@ -539,7 +539,7 @@ export default function DeveloperPage() {
               </ul>
               <Link href="/contact?subject=pro-api"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                 Contact sales
               </Link>
             </div>
@@ -551,7 +551,7 @@ export default function DeveloperPage() {
       <section id="request-access" className="px-4 md:px-8 py-16 md:py-24" style={{ background: "#0a1628", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Get started</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Get started</p>
             <h2 className="font-bold text-3xl tracking-tight mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Request API access
             </h2>

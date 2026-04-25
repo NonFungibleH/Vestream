@@ -14,7 +14,7 @@ export default async function Login() {
   if (session.address) redirect("/dashboard");
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#f8fafc" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3" }}>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 h-16 bg-white"

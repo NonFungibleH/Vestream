@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center px-6"
-      style={{ background: "#f8fafc" }}>
+      style={{ background: "#F5F5F3" }}>
 
       {/* Subtle dot grid */}
       <div className="fixed inset-0 pointer-events-none" style={{
@@ -18,7 +18,7 @@ export default function NotFound() {
         {/* 404 */}
         <p className="text-8xl font-bold mb-2 tabular-nums"
           style={{
-            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             letterSpacing: "-0.04em",
@@ -26,10 +26,10 @@ export default function NotFound() {
           404
         </p>
 
-        <h1 className="text-xl font-bold mb-2" style={{ color: "#0f172a" }}>
+        <h1 className="text-xl font-bold mb-2" style={{ color: "#1A1D20" }}>
           Page not found
         </h1>
-        <p className="text-sm max-w-xs mx-auto mb-8 leading-relaxed" style={{ color: "#64748b" }}>
+        <p className="text-sm max-w-xs mx-auto mb-8 leading-relaxed" style={{ color: "#8B8E92" }}>
           This page doesn&apos;t exist or may have been moved. Head back to the dashboard or homepage.
         </p>
 
@@ -38,8 +38,8 @@ export default function NotFound() {
             href="/dashboard"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
             style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              boxShadow: "0 4px 16px rgba(37,99,235,0.3)",
+              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+              boxShadow: "0 4px 16px rgba(28,184,184,0.3)",
             }}
           >
             Go to dashboard
@@ -49,8 +49,8 @@ export default function NotFound() {
             className="px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
             style={{
               background: "white",
-              border: "1px solid rgba(0,0,0,0.08)",
-              color: "#64748b",
+              border: "1px solid rgba(21,23,26,0.10)",
+              color: "#8B8E92",
               boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
             }}
           >

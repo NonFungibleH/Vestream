@@ -174,7 +174,7 @@ function TogglePill({ label, active, onClick, saving }: {
       disabled={saving}
       className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-100 flex-shrink-0 disabled:opacity-60"
       style={{
-        background: active ? "rgba(37,99,235,0.12)" : "var(--preview-muted-2)",
+        background: active ? "rgba(28,184,184,0.12)" : "var(--preview-muted-2)",
         color:      active ? "#3b82f6"               : "var(--preview-text-3)",
         border:     active ? "1px solid rgba(59,130,246,0.3)" : "1px solid var(--preview-border-2)",
       }}
@@ -333,7 +333,7 @@ function WalletCard({
               />
               <button onClick={saveLabel} disabled={savingLabel}
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white disabled:opacity-60"
-                style={{ background: "#2563eb" }}>
+                style={{ background: "#1CB8B8" }}>
                 {savingLabel ? "…" : "Save"}
               </button>
               <button onClick={() => { setEditingLabel(false); setLabelValue(wallet.label ?? ""); }}
@@ -460,7 +460,7 @@ function WalletCard({
               />
               <button onClick={saveTokenAddr} disabled={savingTokenAddr}
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white disabled:opacity-60"
-                style={{ background: "#2563eb" }}>
+                style={{ background: "#1CB8B8" }}>
                 {savingTokenAddr ? "…" : "Save"}
               </button>
               <button onClick={() => { setEditingTokenAddr(false); setTokenAddrValue(wallet.tokenAddress ?? ""); }}
@@ -683,7 +683,7 @@ export default function Settings() {
             <Link key={item.label} href={item.href}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
-                ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)", display: "flex" }
+                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)", display: "flex" }
                 : { color: "var(--preview-text-2)", border: "1px solid transparent", display: "flex" }}
               onMouseEnter={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
               onMouseLeave={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -706,7 +706,7 @@ export default function Settings() {
               onClick={() => setActiveSection(sec.id)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-left"
               style={activeSection === sec.id
-                ? { background: "rgba(37,99,235,0.08)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.12)" }
+                ? { background: "rgba(28,184,184,0.08)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.12)" }
                 : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
               onMouseLeave={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -800,7 +800,7 @@ export default function Settings() {
             {/* Add wallet form — gated for free plan at limit */}
             {walletLimit !== null && wallets.length >= walletLimit && tier === "free" ? (
               <div className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl"
-                style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.18)", borderTop: "1px solid var(--preview-border-2)", marginTop: "0.25rem" }}>
+                style={{ background: "rgba(28,184,184,0.05)", border: "1px solid rgba(28,184,184,0.18)", borderTop: "1px solid var(--preview-border-2)", marginTop: "0.25rem" }}>
                 <div className="flex items-center gap-2.5">
                   <span className="text-base">🔒</span>
                   <div>
@@ -812,7 +812,7 @@ export default function Settings() {
                 </div>
                 <a href="/pricing"
                   className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-white"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
                   Upgrade →
                 </a>
               </div>
@@ -882,7 +882,7 @@ export default function Settings() {
                 <button type="submit"
                   disabled={adding || !newAddress}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 2px 8px rgba(28,184,184,0.3)" }}>
                   <IconPlus /> {adding ? "Adding…" : "Track wallet"}
                 </button>
               </form>
@@ -916,7 +916,7 @@ export default function Settings() {
                     setPrefs((p) => ({ ...p, emailEnabled: !p.emailEnabled }));
                   }}
                   className="relative w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0"
-                  style={{ background: prefs.emailEnabled ? "#2563eb" : "var(--preview-border)", border: "none", outline: "none" }}>
+                  style={{ background: prefs.emailEnabled ? "#1CB8B8" : "var(--preview-border)", border: "none", outline: "none" }}>
                   <span className="w-5 h-5 rounded-full bg-white shadow transition-all duration-200 block"
                     style={{ transform: prefs.emailEnabled ? "translateX(16px)" : "translateX(0)" }} />
                 </button>
@@ -944,8 +944,8 @@ export default function Settings() {
                             onClick={() => setPrefs((p) => ({ ...p, hoursBeforeUnlock: h }))}
                             className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-150"
                             style={{
-                              background: isActive ? "#2563eb18" : "var(--preview-muted-2)",
-                              borderColor: isActive ? "#2563eb55" : "var(--preview-border-2)",
+                              background: isActive ? "#1CB8B818" : "var(--preview-muted-2)",
+                              borderColor: isActive ? "#1CB8B855" : "var(--preview-border-2)",
                               color: isActive ? "#3b82f6" : "var(--preview-text-3)",
                             }}>
                             {h < 24 ? `${h}h` : `${h / 24}d`} before
@@ -976,7 +976,7 @@ export default function Settings() {
                             aria-checked={prefs[key]}
                             onClick={() => setPrefs((p) => ({ ...p, [key]: !p[key] }))}
                             className="w-10 h-6 rounded-full flex items-center transition-all duration-200 cursor-pointer px-0.5 flex-shrink-0 mt-0.5"
-                            style={{ background: prefs[key] ? "#2563eb" : "var(--preview-border)", border: "none", outline: "none" }}>
+                            style={{ background: prefs[key] ? "#1CB8B8" : "var(--preview-border)", border: "none", outline: "none" }}>
                             <span className="w-5 h-5 rounded-full bg-white shadow transition-all duration-200 block"
                               style={{ transform: prefs[key] ? "translateX(16px)" : "translateX(0)" }} />
                           </button>
@@ -993,7 +993,7 @@ export default function Settings() {
               <div className="flex items-center gap-3 pt-1">
                 <button type="submit" disabled={saving}
                   className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 2px 8px rgba(37,99,235,0.25)" }}>
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 2px 8px rgba(28,184,184,0.25)" }}>
                   {saving ? "Saving…" : "Save preferences"}
                 </button>
               </div>
@@ -1024,13 +1024,13 @@ export default function Settings() {
                         border: `1px solid ${pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.25)" : "rgba(59,130,246,0.18)"}`,
                       }}>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#d97706" : "#2563eb" }}>
+                        <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#C47A1A" : "#1CB8B8" }}>
                           {pushAlertsSent >= pushAlertsLimit
                             ? `${pushAlertsLimit} of ${pushAlertsLimit} lifetime push alerts used`
                             : `${pushAlertsSent} of ${pushAlertsLimit} lifetime push alerts used`}
                         </p>
                         {pushAlertsSent >= pushAlertsLimit && (
-                          <a href="/pricing" className="text-[10px] font-semibold underline" style={{ color: "#d97706" }}>
+                          <a href="/pricing" className="text-[10px] font-semibold underline" style={{ color: "#C47A1A" }}>
                             Upgrade →
                           </a>
                         )}
@@ -1040,7 +1040,7 @@ export default function Settings() {
                         <div className="h-full transition-all"
                           style={{
                             width: `${Math.min(100, (pushAlertsSent / pushAlertsLimit) * 100)}%`,
-                            background: pushAlertsSent >= pushAlertsLimit ? "#f59e0b" : "#2563eb",
+                            background: pushAlertsSent >= pushAlertsLimit ? "#C47A1A" : "#1CB8B8",
                           }}
                         />
                       </div>
@@ -1066,7 +1066,7 @@ export default function Settings() {
                     </a>
                     <a href="https://play.google.com/store/apps/details?id=io.vestream" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
-                      style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff" }}>
+                      style={{ background: "linear-gradient(135deg, #2D8A4A, #059669)", color: "#fff" }}>
                       {/* Google Play triangle glyph */}
                       <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M3 20.5V3.5c0-.35.2-.65.5-.8l10.04 9.3L3.5 21.3c-.3-.15-.5-.45-.5-.8zM14.4 12l2.96 2.96-8.9 5.08 5.94-8.04zm0 0L8.46 3.96l8.9 5.08L14.4 12zM20.5 12c0 .4-.2.8-.6 1.02l-2.2 1.26L14.4 12l3.3-2.28 2.2 1.26c.4.22.6.62.6 1.02z"/>
@@ -1134,7 +1134,7 @@ export default function Settings() {
                       onClick={handleDeleteAccount}
                       disabled={deleting}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-60"
-                      style={{ background: "#dc2626" }}>
+                      style={{ background: "#B3322E" }}>
                       {deleting ? "Deleting…" : "Yes, delete"}
                     </button>
                   </div>

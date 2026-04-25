@@ -21,16 +21,16 @@ const CHAIN_COLORS: Record<number, string> = {
   1:        "#627eea",
   56:       "#f3ba2f",
   137:      "#8247e5",
-  8453:     "#2563eb",
-  11155111: "#94a3b8",
+  8453:     "#1CB8B8",
+  11155111: "#B8BABD",
 };
 
 const PROTOCOL_COLORS: Record<string, string> = {
   sablier:        "#f97316",
-  hedgey:         "#2563eb",
-  "team-finance": "#10b981",
-  uncx:           "#f59e0b",
-  "uncx-vm":      "#f59e0b",
+  hedgey:         "#1CB8B8",
+  "team-finance": "#2D8A4A",
+  uncx:           "#C47A1A",
+  "uncx-vm":      "#C47A1A",
   unvest:         "#0891b2",
 };
 
@@ -184,19 +184,19 @@ export default async function AdminPage() {
           <div className="flex items-center gap-3 mb-6">
             <h2 className="font-bold text-xl">Beta Analytics</h2>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(124,58,237,0.2)", color: "#a78bfa" }}>
+              style={{ background: "rgba(15,138,138,0.2)", color: "#a78bfa" }}>
               {totalUsers} / {BETA_MAX} spots
             </span>
           </div>
 
           {/* Row 1: key metrics */}
           <div className="grid grid-cols-6 gap-3 mb-6">
-            <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#7c3aed" />
-            <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#2563eb" />
-            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#10b981" />
+            <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#0F8A8A" />
+            <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#1CB8B8" />
+            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2D8A4A" />
             <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#f97316" />
             <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
-            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#f59e0b" />
+            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#C47A1A" />
           </div>
 
           {/* Row 2: beta cap bar + sign-up trend */}
@@ -213,14 +213,14 @@ export default async function AdminPage() {
                 <div className="h-3 rounded-full transition-all"
                   style={{
                     width: `${Math.min(100, (totalUsers / BETA_MAX) * 100)}%`,
-                    background: totalUsers >= BETA_MAX ? "#ef4444" : "linear-gradient(90deg, #2563eb, #7c3aed)",
+                    background: totalUsers >= BETA_MAX ? "#B3322E" : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
                   }} />
               </div>
               <div className="flex gap-3 flex-wrap">
                 {Object.entries(tierCounts).map(([tier, n]) => (
                   <span key={tier} className="text-xs px-2 py-0.5 rounded-md font-semibold"
                     style={{
-                      background: tier === "fund" ? "rgba(99,102,241,0.15)" : tier === "pro" ? "rgba(124,58,237,0.15)" : "rgba(75,85,99,0.2)",
+                      background: tier === "fund" ? "rgba(99,102,241,0.15)" : tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(75,85,99,0.2)",
                       color: tier === "fund" ? "#818cf8" : tier === "pro" ? "#a78bfa" : "#9ca3af",
                     }}>
                     {n} {tier}
@@ -238,7 +238,7 @@ export default async function AdminPage() {
                     <div className="w-full rounded-sm transition-all"
                       style={{
                         height: `${Math.max(4, (cnt / maxTrend) * 100)}%`,
-                        background: cnt > 0 ? "linear-gradient(180deg, #7c3aed, #2563eb)" : "#1e2330",
+                        background: cnt > 0 ? "linear-gradient(180deg, #0F8A8A, #1CB8B8)" : "#1e2330",
                         minHeight: "4px",
                       }} />
                     {/* tooltip on hover */}
@@ -367,7 +367,7 @@ export default async function AdminPage() {
                 <div className="flex items-center gap-1">
                   {[1,2,3,4,5].map(n => (
                     <span key={n} className="text-sm"
-                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#f59e0b" : "#1e2330" }}>★</span>
+                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#C47A1A" : "#1e2330" }}>★</span>
                   ))}
                   <span className="text-xs ml-1" style={{ color: "#9ca3af" }}>{avgRating}</span>
                 </div>
@@ -380,7 +380,7 @@ export default async function AdminPage() {
                     <div key={f.id} className="rounded-xl px-4 py-3" style={{ background: "#0d0f14", border: "1px solid #1e2330" }}>
                       <div className="flex items-center gap-2 mb-1">
                         {f.rating && (
-                          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>{"★".repeat(f.rating)}</span>
+                          <span className="text-xs font-semibold" style={{ color: "#C47A1A" }}>{"★".repeat(f.rating)}</span>
                         )}
                         <span className="text-[10px]" style={{ color: "#4b5563" }}>{formatDate(f.createdAt)}</span>
                         {f.userAddress && (
@@ -424,14 +424,14 @@ export default async function AdminPage() {
             <div className="flex flex-col gap-3">
               {pendingRequests.map(r => (
                 <div key={r.id} className="rounded-2xl p-6"
-                  style={{ background: "#141720", border: "1px solid #2563eb33" }}>
+                  style={{ background: "#141720", border: "1px solid #1CB8B833" }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <span className="font-semibold text-sm">{r.name}</span>
                         {r.company && (
                           <span className="text-xs px-2 py-0.5 rounded-md"
-                            style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}>
+                            style={{ background: "rgba(28,184,184,0.15)", color: "#60a5fa" }}>
                             {r.company}
                           </span>
                         )}
@@ -443,7 +443,7 @@ export default async function AdminPage() {
                         <div className="flex gap-2 flex-wrap">
                           {r.protocols.map(p => (
                             <span key={p} className="text-xs px-2 py-0.5 rounded-md"
-                              style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>
+                              style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
                               {p}
                             </span>
                           ))}
@@ -491,7 +491,7 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
-                            background: k.tier === "pro" ? "rgba(124,58,237,0.15)" : "rgba(16,185,129,0.1)",
+                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(16,185,129,0.1)",
                             color:      k.tier === "pro" ? "#a78bfa"               : "#34d399",
                           }}>
                           {k.tier}
@@ -503,7 +503,7 @@ export default async function AdminPage() {
                         </span>
                         <div className="w-20 h-1 rounded-full mt-1" style={{ background: "#1e2330" }}>
                           <div className="h-1 rounded-full" style={{
-                            background: "#2563eb",
+                            background: "#1CB8B8",
                             width: `${Math.min(100, (k.usageThisMonth / k.monthlyLimit) * 100)}%`,
                           }} />
                         </div>
@@ -553,7 +553,7 @@ export default async function AdminPage() {
                       <div className="flex flex-wrap gap-1">
                         {(r.protocols ?? []).map(p => (
                           <span key={p} className="text-xs px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(124,58,237,0.12)", color: "#a78bfa" }}>{p}</span>
+                            style={{ background: "rgba(15,138,138,0.12)", color: "#a78bfa" }}>{p}</span>
                         ))}
                       </div>
                     </td>

@@ -44,7 +44,7 @@ function ToolCard({
         <div className="flex items-center gap-2 mb-2">
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-md"
-            style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
+            style={{ background: "rgba(28,184,184,0.15)", color: "#60a5fa" }}
           >
             tool
           </span>
@@ -85,16 +85,16 @@ export default function AiPage() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-24 pb-16 md:pt-40 md:pb-28 px-4 md:px-8 text-center">
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(124,58,237,0.14) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(15,138,138,0.14) 0%, transparent 70%)",
         }} />
         <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.5), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(15,138,138,0.5), transparent)",
         }} />
 
         <div className="relative max-w-4xl mx-auto">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
-            style={{ background: "rgba(124,58,237,0.08)", borderColor: "rgba(124,58,237,0.25)", color: "#a78bfa" }}
+            style={{ background: "rgba(15,138,138,0.08)", borderColor: "rgba(15,138,138,0.25)", color: "#a78bfa" }}
           >
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#a78bfa" }} />
             MCP · REST · AI-native
@@ -106,7 +106,7 @@ export default function AiPage() {
           >
             The vesting data layer<br />
             <span style={{
-              background: "linear-gradient(135deg, #7c3aed 0%, #2563eb 60%, #6366f1 100%)",
+              background: "linear-gradient(135deg, #0F8A8A 0%, #1CB8B8 60%, #6366f1 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}>
@@ -123,14 +123,14 @@ export default function AiPage() {
             <Link
               href="/developer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)", color: "white", boxShadow: "0 4px 20px rgba(124,58,237,0.3)" }}
+              style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)", color: "white", boxShadow: "0 4px 20px rgba(15,138,138,0.3)" }}
             >
               Get an API key →
             </Link>
             <Link
               href="/api-docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa" }}
+              style={{ background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.3)", color: "#a78bfa" }}
             >
               View API docs →
             </Link>
@@ -158,10 +158,10 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
         <div
           className="rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start gap-6"
-          style={{ background: "#141720", border: "1px solid rgba(124,58,237,0.15)" }}
+          style={{ background: "#141720", border: "1px solid rgba(15,138,138,0.15)" }}
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>
+            style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
             <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
@@ -239,16 +239,16 @@ export default function AiPage() {
         <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
           {/* Terminal bar */}
           <div className="flex items-center gap-2 px-4 py-3" style={{ background: "#0a0c12", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div className="w-3 h-3 rounded-full" style={{ background: "#ef4444" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#f59e0b" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#10b981" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "#B3322E" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "#C47A1A" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "#2D8A4A" }} />
             <span className="ml-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Claude · Vestream MCP connected</span>
           </div>
 
           <div className="p-6 flex flex-col gap-5" style={{ background: "#0d0f14" }}>
             {/* User message */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(37,99,235,0.2)", color: "#60a5fa" }}>U</div>
+              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(28,184,184,0.2)", color: "#60a5fa" }}>U</div>
               <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm" style={{ background: "#1e2330", color: "white", maxWidth: "80%" }}>
                 Check wallet 0x3f5CE96...8b2e for any token unlocks in the next 14 days. Summarise the total USD value and which protocols are involved.
               </div>
@@ -257,7 +257,7 @@ export default function AiPage() {
             {/* Tool call */}
             <div className="ml-10">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(124,58,237,0.15)", color: "#a78bfa" }}>
+                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
                   → calling tool
                 </span>
                 <code className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>get_upcoming_unlocks</code>
@@ -301,7 +301,7 @@ export default function AiPage() {
 
             {/* Agent reply */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}>
+              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
@@ -331,7 +331,7 @@ export default function AiPage() {
           {/* Claude Desktop */}
           <div className="rounded-2xl p-6" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
@@ -390,13 +390,13 @@ export default function AiPage() {
           {[
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-              color: "#7c3aed", bg: "rgba(124,58,237,0.1)", border: "rgba(124,58,237,0.2)",
+              color: "#0F8A8A", bg: "rgba(15,138,138,0.1)", border: "rgba(15,138,138,0.2)",
               title: "Unlock alert agents",
               body: "Monitor wallets 24/7 and ping Slack, Telegram, or email the moment a cliff or tranche unlock is due — before you'd normally even check.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-              color: "#2563eb", bg: "rgba(37,99,235,0.1)", border: "rgba(37,99,235,0.2)",
+              color: "#1CB8B8", bg: "rgba(28,184,184,0.1)", border: "rgba(28,184,184,0.2)",
               title: "Portfolio analysis agents",
               body: "Ask your agent 'what's my total locked value across all my wallets?' and get a structured, cross-protocol breakdown in seconds.",
             },
@@ -458,14 +458,14 @@ export default function AiPage() {
               name: "modelcontextprotocol/servers",
               desc: "Listed in the official Anthropic MCP server registry for Claude users.",
               cmd: "github.com/modelcontextprotocol/servers",
-              color: "#7c3aed",
+              color: "#0F8A8A",
             },
             {
               label: "Smithery",
               name: "smithery.ai",
               desc: "Discoverable in the Smithery MCP marketplace for agent builders.",
               cmd: "smithery.ai/server/vestream",
-              color: "#2563eb",
+              color: "#1CB8B8",
             },
           ].map((r) => (
             <div key={r.label} className="rounded-2xl p-6" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -487,10 +487,10 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-24 max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)", border: "1px solid rgba(124,58,237,0.2)" }}
+          style={{ background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)", border: "1px solid rgba(15,138,138,0.2)" }}
         >
           <div className="absolute inset-0 pointer-events-none" style={{
-            background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(15,138,138,0.15) 0%, transparent 70%)",
           }} />
           <div className="relative">
             <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Ready to give your agent vesting superpowers?</h2>
@@ -501,7 +501,7 @@ export default function AiPage() {
               <Link
                 href="/developer"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)", color: "white", boxShadow: "0 4px 24px rgba(124,58,237,0.35)" }}
+                style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)", color: "white", boxShadow: "0 4px 24px rgba(15,138,138,0.35)" }}
               >
                 Get an API key →
               </Link>

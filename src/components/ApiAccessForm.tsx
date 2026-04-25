@@ -38,7 +38,7 @@ export function ApiAccessForm() {
         <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
           style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)" }}>
           <svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-            <path d="M5 12l4 4 10-10" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M5 12l4 4 10-10" stroke="#2D8A4A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <h3 className="font-bold text-xl mb-2" style={{ color: "white" }}>Request received</h3>
@@ -101,8 +101,8 @@ export function ApiAccessForm() {
               <button key={p} type="button" onClick={() => toggleProtocol(p)}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
                 style={{
-                  background: active ? "rgba(37,99,235,0.15)" : "rgba(255,255,255,0.05)",
-                  border: active ? "1px solid rgba(37,99,235,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                  background: active ? "rgba(28,184,184,0.15)" : "rgba(255,255,255,0.05)",
+                  border: active ? "1px solid rgba(28,184,184,0.4)" : "1px solid rgba(255,255,255,0.1)",
                   color: active ? "#60a5fa" : "rgba(255,255,255,0.45)",
                 }}>
                 {p}
@@ -120,7 +120,7 @@ export function ApiAccessForm() {
 
       <button type="submit" disabled={status === "loading"}
         className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60 mt-1"
-        style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 4px 20px rgba(37,99,235,0.35)" }}>
+        style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.35)" }}>
         {status === "loading" ? "Submitting..." : "Request API Access →"}
       </button>
 

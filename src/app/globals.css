@@ -55,18 +55,18 @@
   --card-foreground: #0f1117;
   --popover: #ffffff;
   --popover-foreground: #0f1117;
-  --primary: #2563eb;
+  --primary: #1CB8B8;
   --primary-foreground: #ffffff;
-  --secondary: #f1f4f9;
+  --secondary: #F5F5F3;
   --secondary-foreground: #374151;
-  --muted: #f1f4f9;
+  --muted: #F5F5F3;
   --muted-foreground: #6b7280;
   --accent: #eff6ff;
-  --accent-foreground: #1d4ed8;
-  --destructive: #ef4444;
-  --border: #e5e9f0;
-  --input: #e5e9f0;
-  --ring: #2563eb;
+  --accent-foreground: #1CB8B8;
+  --destructive: #B3322E;
+  --border: rgba(21,23,26,0.10);
+  --input: rgba(21,23,26,0.10);
+  --ring: #1CB8B8;
 }
 
 /* Dark mode overrides for preview page */
@@ -88,12 +88,12 @@
   --preview-bg:        #f8f9fb;
   --preview-card:      #ffffff;
   --preview-card-2:    #fafbfc;
-  --preview-border:    #e5e9f0;
-  --preview-border-2:  #f1f4f9;
+  --preview-border:    rgba(21,23,26,0.10);
+  --preview-border-2:  #F5F5F3;
   --preview-text:      #0f1117;
   --preview-text-2:    #6b7280;
   --preview-text-3:    #9ca3af;
-  --preview-muted:     #f1f4f9;
+  --preview-muted:     #F5F5F3;
   --preview-muted-2:   #f8f9fb;
   --preview-hover:     #fafbfc;
 }

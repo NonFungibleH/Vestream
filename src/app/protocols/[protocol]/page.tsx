@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-protocol SEO landing page.
 //
-// Theme: B2C light (matches the homepage `/` — #f8fafc page, white cards).
+// Theme: B2C light (matches the homepage `/` — #F5F5F3 page, white cards).
 // Brand nod: each page is dominated by the protocol's own accent colour —
 // the primary CTA, hero gradient, live-dot, stat highlights and unlock card
 // borders all take their cue from PROTOCOLS[slug].color. Vestream stays the
@@ -183,7 +183,7 @@ export default async function ProtocolLandingPage(
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -227,11 +227,11 @@ export default async function ProtocolLandingPage(
 
           <h1
             className="font-bold tracking-tight mb-4"
-            style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#0f172a" }}
+            style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#1A1D20" }}
           >
             {meta.name} unlock<br />
             <span style={{
-              background: `linear-gradient(135deg, ${meta.color} 0%, #7c3aed 70%, #2563eb 100%)`,
+              background: `linear-gradient(135deg, ${meta.color} 0%, #0F8A8A 70%, #1CB8B8 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}>
@@ -243,7 +243,7 @@ export default async function ProtocolLandingPage(
             {meta.tagline}
           </p>
 
-          <p className="text-sm md:text-base leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "#64748b" }}>
+          <p className="text-sm md:text-base leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "#8B8E92" }}>
             {meta.description}
           </p>
 
@@ -259,7 +259,7 @@ export default async function ProtocolLandingPage(
             <Link
               href="/protocols"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "white", border: `1px solid ${meta.border}`, color: "#0f172a" }}
+              style={{ background: "white", border: `1px solid ${meta.border}`, color: "#1A1D20" }}
             >
               See all trackers →
             </Link>
@@ -307,10 +307,10 @@ export default async function ProtocolLandingPage(
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: meta.color }}>
             Live activity
           </p>
-          <h2 className="text-3xl font-bold mb-2" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold mb-2" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             What&apos;s happening on {meta.name} right now
           </h2>
-          <p className="text-sm max-w-xl mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-sm max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
             Pulled from Vestream&apos;s index — updated every minute so you see what crawlers see.
           </p>
         </div>
@@ -341,7 +341,7 @@ export default async function ProtocolLandingPage(
               <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: meta.color }}>
                 Upcoming queue
               </p>
-              <p className="text-xs" style={{ color: "#94a3b8" }}>
+              <p className="text-xs" style={{ color: "#B8BABD" }}>
                 next {upcomingList.length} scheduled releases
               </p>
             </div>
@@ -362,10 +362,10 @@ export default async function ProtocolLandingPage(
       {/* ── Use cases ────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>
             Why Vestream
           </p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Purpose-built for {meta.name} recipients
           </h2>
         </div>
@@ -375,7 +375,7 @@ export default async function ProtocolLandingPage(
             <div
               key={uc.title}
               className="rounded-2xl p-5"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center mb-4 text-sm font-bold"
@@ -383,8 +383,8 @@ export default async function ProtocolLandingPage(
               >
                 ✓
               </div>
-              <h3 className="text-sm font-semibold mb-2" style={{ color: "#0f172a" }}>{uc.title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: "#1A1D20" }}>{uc.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
                 {uc.body}
               </p>
             </div>
@@ -395,10 +395,10 @@ export default async function ProtocolLandingPage(
       {/* ── Testimonials ─────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>
             From recipients
           </p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             What {meta.name} users say
           </h2>
         </div>
@@ -409,7 +409,7 @@ export default async function ProtocolLandingPage(
               <div
                 key={`${meta.slug}-testimonial-${i}`}
                 className="rounded-2xl p-6"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+                style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
               >
                 <svg width={20} height={20} viewBox="0 0 24 24" fill={meta.color} className="mb-4" aria-hidden="true">
                   <path d="M7.17 3C4.31 3 2 5.31 2 8.17v5.68C2 16.71 4.31 19 7.17 19h.34c.55 0 1 .45 1 1 0 .55-.45 1-1 1H5.5c-.55 0-1 .45-1 1s.45 1 1 1h4.17c1.38 0 2.5-1.12 2.5-2.5v-8.33C12.17 6.31 9.86 3 7 3h.17zm10 0c-2.86 0-5.17 2.31-5.17 5.17v5.68c0 2.86 2.31 5.15 5.17 5.15h.34c.55 0 1 .45 1 1 0 .55-.45 1-1 1H15.5c-.55 0-1 .45-1 1s.45 1 1 1h4.17c1.38 0 2.5-1.12 2.5-2.5v-8.33C22.17 6.31 19.86 3 17 3h.17z"/>
@@ -417,8 +417,8 @@ export default async function ProtocolLandingPage(
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "#334155" }}>
                   &ldquo;{t.quote}&rdquo;
                 </p>
-                <p className="text-xs" style={{ color: "#94a3b8" }}>
-                  <span className="font-semibold" style={{ color: "#0f172a" }}>{t.author}</span>
+                <p className="text-xs" style={{ color: "#B8BABD" }}>
+                  <span className="font-semibold" style={{ color: "#1A1D20" }}>{t.author}</span>
                   {t.role ? ` · ${t.role}` : ""}
                 </p>
               </div>
@@ -446,10 +446,10 @@ export default async function ProtocolLandingPage(
       {/* ── Related protocols ────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>
             More trackers
           </p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Other protocols we index
           </h2>
         </div>
@@ -468,8 +468,8 @@ export default async function ProtocolLandingPage(
               >
                 {r.name.charAt(0)}
               </div>
-              <h3 className="text-sm font-semibold mb-1.5" style={{ color: "#0f172a" }}>{r.name}</h3>
-              <p className="text-xs leading-relaxed mb-3" style={{ color: "#64748b" }}>
+              <h3 className="text-sm font-semibold mb-1.5" style={{ color: "#1A1D20" }}>{r.name}</h3>
+              <p className="text-xs leading-relaxed mb-3" style={{ color: "#8B8E92" }}>
                 {r.tagline}
               </p>
               <span className="text-xs font-semibold" style={{ color: r.color }}>
@@ -483,7 +483,7 @@ export default async function ProtocolLandingPage(
           <Link
             href="/protocols"
             className="text-sm font-semibold"
-            style={{ color: "#64748b" }}
+            style={{ color: "#8B8E92" }}
           >
             Browse all {listProtocols().length} protocol trackers →
           </Link>
@@ -506,7 +506,7 @@ export default async function ProtocolLandingPage(
             >
               📱 Mobile alerts for {meta.name}
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
               Never miss another {meta.name} unlock
             </h2>
             <p className="text-sm md:text-base mb-8 max-w-xl mx-auto" style={{ color: "#475569" }}>
@@ -523,12 +523,12 @@ export default async function ProtocolLandingPage(
               <Link
                 href="/find-vestings"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:bg-slate-50"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a" }}
+                style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", color: "#1A1D20" }}
               >
                 Scan a wallet now →
               </Link>
             </div>
-            <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#94a3b8" }}>
+            <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#B8BABD" }}>
               Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We&apos;re the alert layer above it.
             </p>
           </div>
@@ -548,7 +548,7 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
       <div className="font-bold text-xl md:text-2xl tracking-tight" style={{ letterSpacing: "-0.02em", color }}>
         {value}
       </div>
-      <div className="text-[11px] md:text-xs mt-0.5" style={{ color: "#94a3b8" }}>
+      <div className="text-[11px] md:text-xs mt-0.5" style={{ color: "#B8BABD" }}>
         {label}
       </div>
     </div>
@@ -564,12 +564,12 @@ function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
     <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+          <span className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
             {amount}
           </span>
           <span
             className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider"
-            style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
+            style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
           >
             {chainLabel(u.chainId)}
           </span>
@@ -579,7 +579,7 @@ function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
             </span>
           )}
         </div>
-        <div className="text-[10.5px] font-mono truncate" style={{ color: "#94a3b8" }}>
+        <div className="text-[10.5px] font-mono truncate" style={{ color: "#B8BABD" }}>
           for {truncateAddress(u.recipient)}
         </div>
       </div>
@@ -628,8 +628,8 @@ function UnlockCard({
         <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: accent }}>
           {title}
         </p>
-        <h3 className="text-base font-semibold mb-2" style={{ color: "#0f172a" }}>{emptyTitle}</h3>
-        <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
+        <h3 className="text-base font-semibold mb-2" style={{ color: "#1A1D20" }}>{emptyTitle}</h3>
+        <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
           {emptyBody}
         </p>
       </div>
@@ -664,10 +664,10 @@ function UnlockCard({
             {chainLabel(unlock.chainId)}
           </span>
         </div>
-        <p className="text-2xl font-bold mb-1" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+        <p className="text-2xl font-bold mb-1" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
           {amountDisplay}
         </p>
-        <p className="text-xs" style={{ color: "#64748b" }}>
+        <p className="text-xs" style={{ color: "#8B8E92" }}>
           for <code style={{ fontFamily: "monospace", color: "#334155" }}>{truncateAddress(unlock.recipient)}</code> · {relative}
         </p>
       </div>

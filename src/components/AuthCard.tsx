@@ -55,8 +55,8 @@ export function AuthCard() {
   }
 
   const primaryBtn: React.CSSProperties = {
-    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-    boxShadow:  "0 4px 16px rgba(37,99,235,0.25)",
+    background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+    boxShadow:  "0 4px 16px rgba(28,184,184,0.25)",
   };
 
   return (

@@ -47,14 +47,14 @@ function RenderBlock({ block }: { block: Block }) {
       return (
         <h2 id={block.text.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
           className="text-2xl font-bold mt-12 mb-4 scroll-mt-24"
-          style={{ color: "#0f172a" }}>
+          style={{ color: "#1A1D20" }}>
           {block.text}
         </h2>
       );
 
     case "h3":
       return (
-        <h3 className="text-lg font-bold mt-8 mb-3" style={{ color: "#0f172a" }}>
+        <h3 className="text-lg font-bold mt-8 mb-3" style={{ color: "#1A1D20" }}>
           {block.text}
         </h3>
       );
@@ -71,7 +71,7 @@ function RenderBlock({ block }: { block: Block }) {
           {block.items.map((item, i) => (
             <li key={i} className="flex gap-3 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", marginTop: "9px" }} />
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", marginTop: "9px" }} />
               <span dangerouslySetInnerHTML={{ __html: item }} />
             </li>
           ))}
@@ -85,7 +85,7 @@ function RenderBlock({ block }: { block: Block }) {
             <li key={i} className="flex gap-4 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span
                 className="flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white mt-0.5"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", minWidth: "24px" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", minWidth: "24px" }}>
                 {i + 1}
               </span>
               <span dangerouslySetInnerHTML={{ __html: item }} />
@@ -97,7 +97,7 @@ function RenderBlock({ block }: { block: Block }) {
     case "callout":
       return (
         <div className="my-6 rounded-2xl p-5"
-          style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.05))", border: "1px solid rgba(37,99,235,0.15)" }}>
+          style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.05), rgba(15,138,138,0.05))", border: "1px solid rgba(28,184,184,0.15)" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">{block.emoji}</span>
             <span className="font-bold text-sm" style={{ color: "#1e40af" }}>{block.title}</span>
@@ -111,9 +111,9 @@ function RenderBlock({ block }: { block: Block }) {
         <div className="my-6 overflow-x-auto rounded-2xl" style={{ border: "1px solid #e2e8f0" }}>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              <tr style={{ background: "#F5F5F3", borderBottom: "1px solid #e2e8f0" }}>
                 {block.headers.map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left font-semibold" style={{ color: "#0f172a" }}>
+                  <th key={i} className="px-4 py-3 text-left font-semibold" style={{ color: "#1A1D20" }}>
                     {h}
                   </th>
                 ))}
@@ -137,12 +137,12 @@ function RenderBlock({ block }: { block: Block }) {
     case "faq":
       return (
         <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: "#0f172a" }}>Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold mb-6" style={{ color: "#1A1D20" }}>Frequently Asked Questions</h2>
           <div className="space-y-4">
             {block.items.map((item, i) => (
               <div key={i} className="rounded-2xl p-5"
                 style={{ background: "white", border: "1px solid #e2e8f0" }}>
-                <h3 className="font-bold mb-2 text-sm" style={{ color: "#0f172a" }}>{item.q}</h3>
+                <h3 className="font-bold mb-2 text-sm" style={{ color: "#1A1D20" }}>{item.q}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>{item.a}</p>
               </div>
             ))}
@@ -162,8 +162,8 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
   if (headings.length < 3) return null;
   return (
     <nav className="rounded-2xl p-5 mb-8"
-      style={{ background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.12)" }}>
-      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#2563eb" }}>
+      style={{ background: "rgba(28,184,184,0.04)", border: "1px solid rgba(28,184,184,0.12)" }}>
+      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1CB8B8" }}>
         In this article
       </p>
       <ol className="space-y-1.5">
@@ -186,8 +186,8 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
 
 const CATEGORY_COLORS: Record<string, { dot: string }> = {
   Fundamentals:      { dot: "#3b82f6" },
-  Tokenomics:        { dot: "#7c3aed" },
-  Guides:            { dot: "#10b981" },
+  Tokenomics:        { dot: "#0F8A8A" },
+  Guides:            { dot: "#2D8A4A" },
   "Market Analysis": { dot: "#f97316" },
   Research:          { dot: "#ec4899" },
 };
@@ -217,7 +217,7 @@ function ArticleSidebar({
         <Link
           href="/resources"
           className="flex items-center gap-1.5 text-xs font-semibold transition-colors hover:text-blue-600"
-          style={{ color: "#64748b" }}
+          style={{ color: "#8B8E92" }}
         >
           <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
             <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -227,12 +227,12 @@ function ArticleSidebar({
 
         {/* Articles by category */}
         {categoryOrder.map((cat) => {
-          const dotColor = CATEGORY_COLORS[cat]?.dot ?? "#64748b";
+          const dotColor = CATEGORY_COLORS[cat]?.dot ?? "#8B8E92";
           return (
             <div key={cat}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotColor }} />
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#B8BABD" }}>
                   {cat}
                 </p>
               </div>
@@ -245,8 +245,8 @@ function ArticleSidebar({
                         href={`/resources/${a.slug}`}
                         className="block text-xs leading-snug px-2.5 py-1.5 rounded-lg transition-colors"
                         style={{
-                          color: isCurrent ? "#2563eb" : "#64748b",
-                          background: isCurrent ? "rgba(37,99,235,0.07)" : "transparent",
+                          color: isCurrent ? "#1CB8B8" : "#8B8E92",
+                          background: isCurrent ? "rgba(28,184,184,0.07)" : "transparent",
                           fontWeight: isCurrent ? 600 : 400,
                         }}
                       >
@@ -261,13 +261,13 @@ function ArticleSidebar({
         })}
 
         {/* Mini CTA */}
-        <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.12)" }}>
-          <p className="text-xs font-semibold mb-1" style={{ color: "#0f172a" }}>Track your unlocks</p>
-          <p className="text-[11px] mb-3" style={{ color: "#64748b" }}>Free. No signup form.</p>
+        <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(28,184,184,0.12)" }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: "#1A1D20" }}>Track your unlocks</p>
+          <p className="text-[11px] mb-3" style={{ color: "#8B8E92" }}>Free. No signup form.</p>
           <Link
             href="/login"
             className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
           >
             Launch App →
           </Link>
@@ -347,28 +347,28 @@ export default async function ArticlePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+      <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
         {/* ── Nav ─────────────────────────────────────────────────────────── */}
         <nav
           className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
-          style={{ background: "rgba(248,250,252,0.85)", borderBottom: "1px solid rgba(0,0,0,0.07)", backdropFilter: "blur(12px)" }}
+          style={{ background: "rgba(248,250,252,0.85)", borderBottom: "1px solid rgba(21,23,26,0.10)", backdropFilter: "blur(12px)" }}
         >
           <Link href="/" className="flex items-center gap-2.5">
             <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
-            <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
+            <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
           </Link>
           <div className="flex items-center gap-5">
-            <Link href="/resources" className="text-sm font-semibold transition-colors" style={{ color: "#0f172a" }}>
+            <Link href="/resources" className="text-sm font-semibold transition-colors" style={{ color: "#1A1D20" }}>
               Resources
             </Link>
-            <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
+            <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
               Pricing
             </Link>
             <Link
               href="/login"
               className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
             >
               Launch App →
             </Link>
@@ -384,7 +384,7 @@ export default async function ArticlePage(
           />
           <div className="relative max-w-3xl mx-auto">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm mb-6" style={{ color: "#94a3b8" }}>
+            <div className="flex items-center gap-2 text-sm mb-6" style={{ color: "#B8BABD" }}>
               <Link href="/" className="hover:text-slate-600 transition-colors">Home</Link>
               <span>/</span>
               <Link href="/resources" className="hover:text-slate-600 transition-colors">Resources</Link>
@@ -395,24 +395,24 @@ export default async function ArticlePage(
             {/* Category badge */}
             <span
               className="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest mb-4"
-              style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb", border: "1px solid rgba(37,99,235,0.15)" }}
+              style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }}
             >
               {article.category}
             </span>
 
             {/* Title */}
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 leading-tight"
-              style={{ color: "#0f172a" }}>
+              style={{ color: "#1A1D20" }}>
               {article.title}
             </h1>
 
             {/* Excerpt */}
-            <p className="text-lg leading-relaxed mb-6" style={{ color: "#64748b" }}>
+            <p className="text-lg leading-relaxed mb-6" style={{ color: "#8B8E92" }}>
               {article.excerpt}
             </p>
 
             {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: "#94a3b8" }}>
+            <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: "#B8BABD" }}>
               <span>
                 {new Date(article.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
               </span>
@@ -448,18 +448,18 @@ export default async function ArticlePage(
 
             {/* ── In-article CTA ──────────────────────────────────────────── */}
             <div className="mt-16 rounded-3xl p-8 text-center"
-              style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(37,99,235,0.15)" }}>
-              <h2 className="text-xl font-bold mb-2" style={{ color: "#0f172a" }}>
+              style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(28,184,184,0.15)" }}>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1D20" }}>
                 Track every token unlock in one dashboard
               </h2>
-              <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#64748b" }}>
+              <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#8B8E92" }}>
                 Vestream covers Sablier, UNCX, Team Finance, Hedgey, and Unvest — across all chains — in a single real-time view. No sign-up forms.
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link
                   href="/login"
                   className="text-sm font-bold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.3)" }}
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}
                 >
                   Launch Dashboard →
                 </Link>
@@ -478,7 +478,7 @@ export default async function ArticlePage(
         {/* ── More articles ─────────────────────────────────────────────────── */}
         {relatedArticles.length > 0 && (
           <section className="max-w-5xl mx-auto px-6 pb-20">
-            <h2 className="text-lg font-bold mb-5" style={{ color: "#0f172a" }}>More from Vestream Resources</h2>
+            <h2 className="text-lg font-bold mb-5" style={{ color: "#1A1D20" }}>More from Vestream Resources</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {relatedArticles.map((a) => (
                 <Link
@@ -487,14 +487,14 @@ export default async function ArticlePage(
                   className="group block rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
                   style={{ background: "white", border: "1px solid #e2e8f0" }}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#2563eb" }}>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#1CB8B8" }}>
                     {a.category}
                   </span>
                   <h3 className="text-sm font-semibold mt-1 mb-1.5 group-hover:text-blue-600 transition-colors leading-snug"
-                    style={{ color: "#0f172a" }}>
+                    style={{ color: "#1A1D20" }}>
                     {a.title}
                   </h3>
-                  <span className="text-xs" style={{ color: "#94a3b8" }}>{a.readingTime}</span>
+                  <span className="text-xs" style={{ color: "#B8BABD" }}>{a.readingTime}</span>
                 </Link>
               ))}
             </div>
@@ -502,12 +502,12 @@ export default async function ArticlePage(
         )}
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className="border-t py-8 px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
+        <footer className="border-t py-8 px-6 text-center" style={{ borderColor: "rgba(21,23,26,0.10)" }}>
           <div className="flex items-center justify-center gap-1.5 mb-3">
             <img src="/logo-icon.svg" alt="Vestream" className="w-5 h-5" />
-            <span className="font-bold text-sm" style={{ color: "#0f172a" }}>Vestream</span>
+            <span className="font-bold text-sm" style={{ color: "#1A1D20" }}>Vestream</span>
           </div>
-          <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>
+          <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#B8BABD" }}>
             <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-slate-600 transition-colors">Terms</Link>
             <Link href="/pricing" className="hover:text-slate-600 transition-colors">Pricing</Link>

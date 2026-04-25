@@ -354,7 +354,7 @@ export default function FaqPage() {
   const totalQuestions = FAQ_DATA.reduce((n, c) => n + c.items.length, 0);
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: buildFaqJsonLd(FAQ_DATA) }}
@@ -368,7 +368,7 @@ export default function FaqPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.08) 0%, transparent 70%)",
           }}
         />
 
@@ -376,9 +376,9 @@ export default function FaqPage() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6"
             style={{
-              background: "rgba(37,99,235,0.06)",
-              borderColor: "rgba(37,99,235,0.2)",
-              color: "#2563eb",
+              background: "rgba(28,184,184,0.06)",
+              borderColor: "rgba(28,184,184,0.2)",
+              color: "#1CB8B8",
             }}
           >
             FAQ · {totalQuestions} answered questions
@@ -390,7 +390,7 @@ export default function FaqPage() {
               fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
               lineHeight: 1.08,
               letterSpacing: "-0.03em",
-              color: "#0f172a",
+              color: "#1A1D20",
             }}
           >
             Questions, answered.
@@ -398,7 +398,7 @@ export default function FaqPage() {
 
           <p
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
-            style={{ color: "#64748b" }}
+            style={{ color: "#8B8E92" }}
           >
             Everything about how Vestream works — protocols, chains, alerts, pricing,
             the API, mobile, security, and the things that occasionally go wrong.
@@ -416,7 +416,7 @@ export default function FaqPage() {
               className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:-translate-y-0.5"
               style={{
                 background: "white",
-                border: "1px solid rgba(0,0,0,0.08)",
+                border: "1px solid rgba(21,23,26,0.10)",
                 color: "#475569",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
               }}
@@ -434,11 +434,11 @@ export default function FaqPage() {
             <div className="mb-6">
               <h2
                 className="text-2xl md:text-3xl font-bold mb-1.5"
-                style={{ color: "#0f172a", letterSpacing: "-0.02em" }}
+                style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
               >
                 {cat.title}
               </h2>
-              <p className="text-sm" style={{ color: "#64748b" }}>
+              <p className="text-sm" style={{ color: "#8B8E92" }}>
                 {cat.summary}
               </p>
             </div>
@@ -457,26 +457,26 @@ export default function FaqPage() {
         <div
           className="rounded-3xl p-8 md:p-10 text-center relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(124,58,237,0.04) 100%)",
-            border: "1px solid rgba(37,99,235,0.12)",
+            background: "linear-gradient(135deg, rgba(28,184,184,0.04) 0%, rgba(15,138,138,0.04) 100%)",
+            border: "1px solid rgba(28,184,184,0.12)",
           }}
         >
           <h2
             className="text-xl md:text-2xl font-bold mb-3"
-            style={{ letterSpacing: "-0.02em", color: "#0f172a" }}
+            style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}
           >
             Still have a question?
           </h2>
-          <p className="text-sm md:text-base mb-6 max-w-xl mx-auto" style={{ color: "#64748b" }}>
+          <p className="text-sm md:text-base mb-6 max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
             If your question isn&apos;t answered above, send us a note — we reply within one business day.
           </p>
           <Link
             href="/contact"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
             style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
               color: "white",
-              boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+              boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
             }}
           >
             Contact us →
@@ -500,7 +500,7 @@ function FaqEntry({ q, a }: FaqItem) {
       className="group rounded-2xl p-5 md:p-6 transition-all"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
+        border: "1px solid rgba(21,23,26,0.10)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
@@ -509,13 +509,13 @@ function FaqEntry({ q, a }: FaqItem) {
       >
         <h3
           className="font-semibold text-base md:text-[1.05rem] leading-snug flex-1"
-          style={{ color: "#0f172a", letterSpacing: "-0.01em" }}
+          style={{ color: "#1A1D20", letterSpacing: "-0.01em" }}
         >
           {q}
         </h3>
         <span
           className="flex-shrink-0 mt-1 w-6 h-6 rounded-full flex items-center justify-center transition-transform group-open:rotate-45"
-          style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb" }}
+          style={{ background: "rgba(28,184,184,0.08)", color: "#1CB8B8" }}
           aria-hidden="true"
         >
           <svg width={12} height={12} viewBox="0 0 12 12" fill="none">

@@ -57,7 +57,7 @@ export default async function DeveloperAccount() {
         <div className="flex items-center gap-6">
           <Link href="/api-docs"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-            style={{ background: "rgba(37,99,235,0.12)", border: "1px solid rgba(37,99,235,0.25)", color: "#60a5fa" }}>
+            style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.25)", color: "#60a5fa" }}>
             API Docs →
           </Link>
           <form action="/api/developer/logout" method="POST">
@@ -109,8 +109,8 @@ export default async function DeveloperAccount() {
               <div className="h-2 rounded-full transition-all" style={{
                 width: `${usagePct}%`,
                 background: isNearLimit
-                  ? "linear-gradient(90deg, #f97316, #ef4444)"
-                  : "linear-gradient(90deg, #2563eb, #7c3aed)",
+                  ? "linear-gradient(90deg, #f97316, #B3322E)"
+                  : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
               }} />
             </div>
             <p className="text-xs mb-2" style={{ color: isNearLimit ? "#f97316" : "rgba(255,255,255,0.3)" }}>
@@ -139,9 +139,9 @@ export default async function DeveloperAccount() {
             </p>
             <span className="inline-block text-sm font-bold px-3 py-1 rounded-lg mb-3"
               style={{
-                background: isPro ? "rgba(124,58,237,0.15)" : "rgba(52,211,153,0.1)",
+                background: isPro ? "rgba(15,138,138,0.15)" : "rgba(52,211,153,0.1)",
                 color:      isPro ? "#a78bfa"               : "#34d399",
-                border:     `1px solid ${isPro ? "rgba(124,58,237,0.25)" : "rgba(52,211,153,0.2)"}`,
+                border:     `1px solid ${isPro ? "rgba(15,138,138,0.25)" : "rgba(52,211,153,0.2)"}`,
               }}>
               {isPro ? "Pro" : "Free"}
             </span>
@@ -189,18 +189,18 @@ export default async function DeveloperAccount() {
               desc: "Interactive Swagger UI — test endpoints with your key",
               href: "/api-docs",
               cta: "Open Docs →",
-              color: "#2563eb",
-              bg: "rgba(37,99,235,0.08)",
-              border: "rgba(37,99,235,0.18)",
+              color: "#1CB8B8",
+              bg: "rgba(28,184,184,0.08)",
+              border: "rgba(28,184,184,0.18)",
             },
             {
               title: "OpenAPI Spec",
               desc: "Machine-readable OpenAPI 3.1 JSON for code generation",
               href: "/openapi.json",
               cta: "Download →",
-              color: "#7c3aed",
-              bg: "rgba(124,58,237,0.08)",
-              border: "rgba(124,58,237,0.18)",
+              color: "#0F8A8A",
+              bg: "rgba(15,138,138,0.08)",
+              border: "rgba(15,138,138,0.18)",
             },
             {
               // Support routes through the shared /contact surface now
@@ -237,7 +237,7 @@ export default async function DeveloperAccount() {
             Making API requests
           </p>
           <pre className="text-xs leading-relaxed overflow-x-auto rounded-xl p-4"
-            style={{ background: "#0d0f14", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace" }}>
+            style={{ background: "#0d0f14", color: "#B8BABD", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace" }}>
             <code>{`curl https://vestream.io/api/v1/wallet/{address}/vestings \\
   -H "Authorization: Bearer ${key.keyPrefix}..."`}</code>
           </pre>
@@ -262,7 +262,7 @@ export default async function DeveloperAccount() {
               MCP server setup
             </p>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded"
-              style={{ background: "rgba(124,58,237,0.1)", color: "#a78bfa", border: "1px solid rgba(124,58,237,0.2)" }}>
+              style={{ background: "rgba(15,138,138,0.1)", color: "#a78bfa", border: "1px solid rgba(15,138,138,0.2)" }}>
               @vestream/mcp
             </span>
           </div>
@@ -279,7 +279,7 @@ export default async function DeveloperAccount() {
             Claude Desktop config
           </p>
           <pre className="text-xs leading-relaxed overflow-x-auto rounded-xl p-4 mb-4"
-            style={{ background: "#0d0f14", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace" }}>
+            style={{ background: "#0d0f14", color: "#B8BABD", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace" }}>
             <code>{`{
   "mcpServers": {
     "vestream": {

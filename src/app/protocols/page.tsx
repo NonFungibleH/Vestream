@@ -254,7 +254,7 @@ export default async function UnlocksIndexPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -267,13 +267,13 @@ export default async function UnlocksIndexPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.08) 0%, transparent 70%)",
           }}
         />
         <div
           className="absolute top-0 left-0 right-0 h-px"
           style={{
-            background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.3), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.3), transparent)",
           }}
         />
 
@@ -281,12 +281,12 @@ export default async function UnlocksIndexPage() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
             style={{
-              background: "rgba(37,99,235,0.06)",
-              borderColor: "rgba(37,99,235,0.2)",
-              color: "#2563eb",
+              background: "rgba(28,184,184,0.06)",
+              borderColor: "rgba(28,184,184,0.2)",
+              color: "#1CB8B8",
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#2563eb" }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#1CB8B8" }} />
             Live · {protocols.length} protocols · {grandTotal.toLocaleString()} streams indexed
           </div>
 
@@ -296,13 +296,13 @@ export default async function UnlocksIndexPage() {
               fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
               lineHeight: 1.08,
               letterSpacing: "-0.03em",
-              color: "#0f172a",
+              color: "#1A1D20",
             }}
           >
             Every major token unlock,<br />
             <span
               style={{
-                background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 60%, #ec4899 100%)",
+                background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #ec4899 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -313,7 +313,7 @@ export default async function UnlocksIndexPage() {
 
           <p
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
-            style={{ color: "#64748b" }}
+            style={{ color: "#8B8E92" }}
           >
             Vestream tracks every vesting schedule on Sablier, Hedgey, Superfluid, UNCX, Team Finance,
             Unvest, PinkSale, Streamflow and Jupiter Lock — across Ethereum, Base, BSC, Polygon and
@@ -342,11 +342,11 @@ export default async function UnlocksIndexPage() {
           <div>
             <h2
               className="text-xl md:text-2xl font-bold"
-              style={{ color: "#0f172a", letterSpacing: "-0.02em" }}
+              style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
             >
               Browse by protocol
             </h2>
-            <p className="text-sm mt-1" style={{ color: "#64748b" }}>
+            <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
               {protocols.length} protocols indexed · dive into any one for the full feed.
             </p>
           </div>
@@ -371,14 +371,14 @@ export default async function UnlocksIndexPage() {
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
           style={{
             background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)",
-            border: "1px solid rgba(124,58,237,0.25)",
+            border: "1px solid rgba(15,138,138,0.25)",
           }}
         >
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%)",
+                "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(15,138,138,0.18) 0%, transparent 70%)",
             }}
           />
           <div className="relative">
@@ -399,9 +399,9 @@ export default async function UnlocksIndexPage() {
               href="/early-access"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
               style={{
-                background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+                background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)",
                 color: "white",
-                boxShadow: "0 4px 24px rgba(124,58,237,0.4)",
+                boxShadow: "0 4px 24px rgba(15,138,138,0.4)",
               }}
             >
               Get early access →
@@ -462,7 +462,7 @@ function ProtocolCard({
       className="rounded-2xl p-5 relative overflow-hidden transition-all hover:-translate-y-0.5"
       style={{
         background: "white",
-        border: "1px solid rgba(0,0,0,0.07)",
+        border: "1px solid rgba(21,23,26,0.10)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
       }}
     >
@@ -492,10 +492,10 @@ function ProtocolCard({
           </span>
         </div>
 
-        <h3 className="text-base font-bold mb-1" style={{ color: "#0f172a" }}>
+        <h3 className="text-base font-bold mb-1" style={{ color: "#1A1D20" }}>
           {protocol.name}
         </h3>
-        <p className="text-xs leading-relaxed mb-4" style={{ color: "#64748b" }}>
+        <p className="text-xs leading-relaxed mb-4" style={{ color: "#8B8E92" }}>
           {protocol.tagline}
         </p>
 
@@ -506,43 +506,43 @@ function ProtocolCard({
           {showTvl ? (
             <>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   {compactUsd(externalTvlUsd!)}
                 </div>
-                <div style={{ color: "#94a3b8" }}>TVL</div>
+                <div style={{ color: "#B8BABD" }}>TVL</div>
               </div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   {protocol.chainIds.length}
                 </div>
-                <div style={{ color: "#94a3b8" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
+                <div style={{ color: "#B8BABD" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
               </div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   Live
                 </div>
-                <div style={{ color: "#94a3b8" }}>indexing</div>
+                <div style={{ color: "#B8BABD" }}>indexing</div>
               </div>
             </>
           ) : (
             <>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   {effectiveTotal > 0 ? effectiveTotal.toLocaleString() : "—"}
                 </div>
-                <div style={{ color: "#94a3b8" }}>streams</div>
+                <div style={{ color: "#B8BABD" }}>streams</div>
               </div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   {effectiveActive > 0 ? effectiveActive.toLocaleString() : "—"}
                 </div>
-                <div style={{ color: "#94a3b8" }}>active</div>
+                <div style={{ color: "#B8BABD" }}>active</div>
               </div>
               <div>
-                <div className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                   {protocol.chainIds.length}
                 </div>
-                <div style={{ color: "#94a3b8" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
+                <div style={{ color: "#B8BABD" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
               </div>
             </>
           )}

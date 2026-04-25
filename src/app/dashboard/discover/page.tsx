@@ -69,10 +69,10 @@ const PROTOCOL_OPTIONS = [
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   sablier:        { text: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.25)"  },
-  hedgey:         { text: "#2563eb", bg: "rgba(37,99,235,0.12)",   border: "rgba(37,99,235,0.25)"   },
-  "team-finance": { text: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
-  uncx:           { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  "uncx-vm":      { text: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.12)",   border: "rgba(28,184,184,0.25)"   },
+  "team-finance": { text: "#2D8A4A", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
+  uncx:           { text: "#C47A1A", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  "uncx-vm":      { text: "#C47A1A", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   unvest:         { text: "#0891b2", bg: "rgba(8,145,178,0.12)",   border: "rgba(8,145,178,0.25)"   },
   superfluid:     { text: "#1db954", bg: "rgba(29,185,84,0.12)",   border: "rgba(29,185,84,0.25)"   },
   pinksale:       { text: "#ec4899", bg: "rgba(236,72,153,0.12)",  border: "rgba(236,72,153,0.25)"  },
@@ -185,7 +185,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
           <button key={item.label} onClick={() => router.push(item.href)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
             style={item.active
-              ? { background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+              ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
               : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
             onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
             onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
@@ -214,7 +214,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
               Upgrade to Pro →
             </a>
           </div>
@@ -642,7 +642,7 @@ export default function DiscoverPage() {
           {/* Free-tier paywall banner */}
           {tier === "free" && (
             <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl mb-6"
-              style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(124,58,237,0.2)" }}>
+              style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(15,138,138,0.2)" }}>
               <div className="flex items-start gap-3">
                 <span className="text-xl mt-0.5">🔍</span>
                 <div>
@@ -656,7 +656,7 @@ export default function DiscoverPage() {
               </div>
               <a href="/pricing"
                 className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl text-white transition-all hover:brightness-110"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
                 Upgrade →
               </a>
             </div>
@@ -668,7 +668,7 @@ export default function DiscoverPage() {
 
             <div className="flex items-start gap-4 mb-5">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08))", border: "1px solid rgba(59,130,246,0.2)" }}>
+                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", border: "1px solid rgba(59,130,246,0.2)" }}>
                 <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
@@ -696,7 +696,7 @@ export default function DiscoverPage() {
                 style={{
                   color: "var(--preview-text)",
                   background: "var(--preview-muted-2)",
-                  border: `1px solid ${scanError ? "#ef4444" : "var(--preview-border)"}`,
+                  border: `1px solid ${scanError ? "#B3322E" : "var(--preview-border)"}`,
                 }}
               />
               <select
@@ -725,7 +725,7 @@ export default function DiscoverPage() {
                 onClick={handleScan}
                 disabled={scanning || !address || tier === "free"}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all flex-shrink-0"
-                style={{ background: scanning ? "var(--preview-muted-2)" : "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+                style={{ background: scanning ? "var(--preview-muted-2)" : "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
               >
                 {scanning ? (
                   <>
@@ -761,12 +761,12 @@ export default function DiscoverPage() {
                       style={{
                         background: i < (3 - scansRemaining)
                           ? "var(--preview-border)"
-                          : "linear-gradient(135deg, #2563eb, #7c3aed)",
+                          : "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
                       }}
                     />
                   ))}
                 </div>
-                <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#f59e0b" }}>
+                <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#C47A1A" }}>
                   {scansRemaining > 0
                     ? `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
                     : scanResetAt
@@ -820,7 +820,7 @@ export default function DiscoverPage() {
             <div className="rounded-2xl p-8 text-center"
               style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(59,130,246,0.12)" }}>
+                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(15,138,138,0.08))", border: "1px solid rgba(59,130,246,0.12)" }}>
                 <svg className="animate-spin" width={24} height={24} viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.2)" strokeWidth="3" />
                   <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
@@ -856,7 +856,7 @@ export default function DiscoverPage() {
                     <button
                       onClick={handleWatchAll}
                       className="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08))", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}
+                      style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}
                     >
                       Watch all {scanData.results.length} →
                     </button>
@@ -902,7 +902,7 @@ export default function DiscoverPage() {
             <div className="rounded-2xl p-10 text-center"
               style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border-2)" }}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(124,58,237,0.06))", border: "1px solid rgba(59,130,246,0.10)" }}>
+                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(59,130,246,0.10)" }}>
                 <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>

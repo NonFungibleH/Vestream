@@ -23,12 +23,12 @@ const NAV_LINKS = [
 const THEME = {
   light: {
     navBg:          "rgba(248,250,252,0.85)",
-    navBorder:      "rgba(0,0,0,0.07)",
-    linkBase:       "#64748b",
-    linkActive:     "#0f172a",
-    mobileMenuBg:   "#f8fafc",
-    activeDot:      "#2563eb",
-    mobileActiveBg: "rgba(37,99,235,0.05)",
+    navBorder:      "rgba(21,23,26,0.10)",
+    linkBase:       "#8B8E92",
+    linkActive:     "#1A1D20",
+    mobileMenuBg:   "#F5F5F3",
+    activeDot:      "#1CB8B8",
+    mobileActiveBg: "rgba(28,184,184,0.05)",
     logo:           "/logo.svg",
   },
   navy: {
@@ -112,7 +112,7 @@ export function SiteNav({ theme = "light" }: Props) {
           <a
             href={ctaHref}
             className="text-sm font-semibold px-4 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", boxShadow: "0 2px 12px rgba(37,99,235,0.3)" }}
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
           >
             {ctaLabel}
           </a>
@@ -124,7 +124,7 @@ export function SiteNav({ theme = "light" }: Props) {
           <a
             href={ctaHref}
             className="text-xs font-semibold px-3 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
-            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
           >
             {ctaLabelShort}
           </a>

@@ -27,8 +27,8 @@ export const metadata: Metadata = {
 const PROTOCOLS_ROW_1 = [
   { name: "Sablier",      color: "#f97316", bg: "rgba(249,115,22,0.07)",  border: "rgba(249,115,22,0.15)"  },
   { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
-  { name: "UNCX",         color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-  { name: "Team Finance", color: "#10b981", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
+  { name: "UNCX",         color: "#C47A1A", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
+  { name: "Team Finance", color: "#2D8A4A", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.15)"  },
 ] as const;
 
 const PROTOCOLS_ROW_2 = [
@@ -49,7 +49,7 @@ const CHAINS = [
 
 export default function FindVestingsPage() {
   return (
-    <main className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
+    <main className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -57,9 +57,9 @@ export default function FindVestingsPage() {
         <div
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
           style={{
-            background: "rgba(37,99,235,0.06)",
-            color: "#2563eb",
-            border: "1px solid rgba(37,99,235,0.2)",
+            background: "rgba(28,184,184,0.06)",
+            color: "#1CB8B8",
+            border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
           Free · No signup · 9 protocols · 5 chains
@@ -69,21 +69,21 @@ export default function FindVestingsPage() {
           className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5"
           style={{
             letterSpacing: "-0.03em",
-            background: "linear-gradient(135deg, #0f172a 0%, #2563eb 50%, #7c3aed 100%)",
+            background: "linear-gradient(135deg, #1A1D20 0%, #1CB8B8 50%, #0F8A8A 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
         >
           Find every vesting<br className="hidden md:block" /> on your wallet
         </h1>
-        <p className="text-base md:text-lg max-w-xl mx-auto mb-8" style={{ color: "#64748b", lineHeight: 1.6 }}>
+        <p className="text-base md:text-lg max-w-xl mx-auto mb-8" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
           Paste any address. We&rsquo;ll scan every major vesting protocol across EVM and Solana — instantly.
         </p>
 
         {/* Protocol + chain pills — mirrors the homepage "Integrated with"
             strip so the visual treatment is consistent across the funnel. */}
         <div className="mt-2">
-          <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>
             We scan
           </p>
           <div className="flex items-center justify-center gap-2 flex-wrap mb-2">

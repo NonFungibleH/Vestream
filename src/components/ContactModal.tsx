@@ -102,7 +102,7 @@ export default function ContactModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-xl transition-colors hover:bg-slate-100"
-          style={{ color: "#94a3b8" }}
+          style={{ color: "#B8BABD" }}
           aria-label="Close"
         >
           <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
@@ -116,22 +116,22 @@ export default function ContactModal({
           <div className="px-8 py-10 text-center">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
-              style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(37,99,235,0.15)" }}
+              style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(15,138,138,0.08))", border: "1px solid rgba(28,184,184,0.15)" }}
             >
               <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                <path d="M5 12l5 5 9-9" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M5 12l5 5 9-9" stroke="#1CB8B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h2 className="text-lg font-bold mb-2" style={{ color: "#0f172a" }}>
+            <h2 className="text-lg font-bold mb-2" style={{ color: "#1A1D20" }}>
               Message sent!
             </h2>
-            <p className="text-sm leading-relaxed mb-6" style={{ color: "#64748b" }}>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: "#8B8E92" }}>
               Thanks for reaching out. We&apos;ll get back to you shortly.
             </p>
             <button
               onClick={onClose}
               className="text-sm font-semibold px-5 py-2 rounded-xl transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}
+              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
             >
               Done
             </button>
@@ -144,10 +144,10 @@ export default function ContactModal({
             {/* Header */}
             <div className="px-8 pt-8 pb-5" style={{ borderBottom: "1px solid #f1f5f9" }}>
               <img src="/logo-icon.svg" alt="Vestream" className="w-10 h-10 mb-4" />
-              <h2 id="contact-modal-title" className="text-xl font-bold mb-1" style={{ color: "#0f172a" }}>
+              <h2 id="contact-modal-title" className="text-xl font-bold mb-1" style={{ color: "#1A1D20" }}>
                 Get in touch
               </h2>
-              <p className="text-sm" style={{ color: "#64748b" }}>
+              <p className="text-sm" style={{ color: "#8B8E92" }}>
                 Tell us about your portfolio or integration needs — we&apos;ll come back to you within one business day.
               </p>
             </div>
@@ -159,7 +159,7 @@ export default function ContactModal({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>
-                    Name <span style={{ color: "#ef4444" }}>*</span>
+                    Name <span style={{ color: "#B3322E" }}>*</span>
                   </label>
                   <input
                     ref={firstInput}
@@ -170,9 +170,9 @@ export default function ContactModal({
                     placeholder="Jane Smith"
                     className="w-full px-3 py-2.5 rounded-xl text-sm transition-all outline-none"
                     style={{
-                      background: "#f8fafc",
+                      background: "#F5F5F3",
                       border: "1px solid #e2e8f0",
-                      color: "#0f172a",
+                      color: "#1A1D20",
                     }}
                   />
                 </div>
@@ -187,9 +187,9 @@ export default function ContactModal({
                     placeholder="Acme Fund"
                     className="w-full px-3 py-2.5 rounded-xl text-sm transition-all outline-none"
                     style={{
-                      background: "#f8fafc",
+                      background: "#F5F5F3",
                       border: "1px solid #e2e8f0",
-                      color: "#0f172a",
+                      color: "#1A1D20",
                     }}
                   />
                 </div>
@@ -198,7 +198,7 @@ export default function ContactModal({
               {/* Email */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>
-                  Email <span style={{ color: "#ef4444" }}>*</span>
+                  Email <span style={{ color: "#B3322E" }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -208,9 +208,9 @@ export default function ContactModal({
                   placeholder="jane@example.com"
                   className="w-full px-3 py-2.5 rounded-xl text-sm transition-all outline-none"
                   style={{
-                    background: "#f8fafc",
+                    background: "#F5F5F3",
                     border: "1px solid #e2e8f0",
-                    color: "#0f172a",
+                    color: "#1A1D20",
                   }}
                 />
               </div>
@@ -218,7 +218,7 @@ export default function ContactModal({
               {/* Message */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>
-                  Message <span style={{ color: "#ef4444" }}>*</span>
+                  Message <span style={{ color: "#B3322E" }}>*</span>
                 </label>
                 <textarea
                   required
@@ -228,9 +228,9 @@ export default function ContactModal({
                   placeholder="Tell us about your portfolio size, chains you track, or any custom integration needs..."
                   className="w-full px-3 py-2.5 rounded-xl text-sm transition-all outline-none resize-none"
                   style={{
-                    background: "#f8fafc",
+                    background: "#F5F5F3",
                     border: "1px solid #e2e8f0",
-                    color: "#0f172a",
+                    color: "#1A1D20",
                     lineHeight: 1.6,
                   }}
                 />
@@ -240,7 +240,7 @@ export default function ContactModal({
               {state === "error" && error && (
                 <div
                   className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl text-xs"
-                  style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", color: "#dc2626" }}
+                  style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", color: "#B3322E" }}
                 >
                   <svg width={14} height={14} viewBox="0 0 14 14" fill="none" className="flex-shrink-0 mt-0.5">
                     <circle cx="7" cy="7" r="6.5" stroke="currentColor" strokeWidth="1.2" />
@@ -255,7 +255,7 @@ export default function ContactModal({
                 type="submit"
                 disabled={state === "submitting"}
                 className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-60 mt-2"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", boxShadow: "0 4px 16px rgba(37,99,235,0.25)" }}
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}
               >
                 {state === "submitting" ? (
                   <span className="flex items-center justify-center gap-2">
@@ -269,7 +269,7 @@ export default function ContactModal({
                 )}
               </button>
 
-              <p className="text-center text-[11px]" style={{ color: "#94a3b8" }}>
+              <p className="text-center text-[11px]" style={{ color: "#B8BABD" }}>
                 We reply within one business day.
               </p>
 
