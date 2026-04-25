@@ -513,6 +513,11 @@ export interface PricedAggregate {
   usd:          number;
   confidence:   PriceConfidence;
   source:       PriceSource;
+  /** DexScreener pool depth in USD when source="dexscreener"; null for
+   *  CoinGecko-priced tokens (no liquidity field exposed). Used by the TVL
+   *  snapshot pipeline to apply a liquidity-multiplier ceiling so a single
+   *  thin-pool token with a trillion-unit lock can't fake a $billions TVL. */
+  liquidityUsd: number | null;
 }
 
 export interface PricingSummary {
@@ -602,6 +607,7 @@ export async function priceAggregates(
       usd,
       confidence:   info.confidence,
       source:       info.source,
+      liquidityUsd: info.liquidityUsd,
     });
   }
 

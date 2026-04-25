@@ -220,25 +220,50 @@ export async function runWalkerSnapshot(
       //    depth without slipping the price >50%. Tracked separately for
       //    transparency in the breakdown UI.
       //
-      // 2. Per-token sanity ceiling. A single token contribution > $200M
-      //    must be HIGH-confidence to count toward the headline. This
-      //    defends against the Team Finance-shaped failure: a memecoin
-      //    locked in trillion-unit quantities with a thin DEX pair quoting
-      //    a fractional cent → multiplies to a fake $5B+ headline. Such
-      //    contributions are bumped to the THIN column instead so the
-      //    breakdown still surfaces them but they don't pollute the lede.
-      const SINGLE_TOKEN_HIGH_CONF_CEILING = 200_000_000;
+      // 2. Liquidity-multiplier ceiling: a single token's contribution to
+      //    headline TVL is capped at MAX(MIN_FLOOR, liquidityUsd × MULTIPLIER).
+      //    The market literally can't absorb more than a multiple of its DEX
+      //    pool depth without major slippage, so claiming more locked value
+      //    than that is fictional. This defends against the Team-Finance-
+      //    shaped failure where a memecoin with $50k DEX liquidity but a
+      //    100B-token lock multiplied to a $2B fake TVL — the LOCK might be
+      //    real, but the USD claim isn't credible.
+      //
+      //    Concrete numbers:
+      //      - Token with $10k liquidity → cap ~$1M (the floor)
+      //      - Token with $100k liquidity → cap $10M
+      //      - Token with $1M liquidity → cap $100M
+      //      - Token with $10M+ liquidity → cap $1B+ (rarely binds)
+      //    Capped contributions get reclassified into the THIN bucket, so
+      //    they're visible in breakdown but don't pollute the headline.
+      //
+      //    For CoinGecko-priced tokens (no liquidity field), we fall back to
+      //    a conservative $50M cap — CG inclusion is a quality signal but
+      //    not a depth signal.
+      const LIQUIDITY_MULTIPLIER          = 100;
+      const MIN_PER_TOKEN_CEILING_USD     = 1_000_000;        // $1M floor
+      const COINGECKO_PER_TOKEN_CEILING   = 50_000_000;       // $50M for CG-priced tokens
+
+      function perTokenCeiling(p: typeof priced[number]): number {
+        if (p.source === "coingecko") return COINGECKO_PER_TOKEN_CEILING;
+        const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
+        return Math.max(MIN_PER_TOKEN_CEILING_USD, liquidityBased);
+      }
+
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
-        const isOversizedNonHigh = p.usd > SINGLE_TOKEN_HIGH_CONF_CEILING && p.confidence !== "high";
-        if (isOversizedNonHigh) {
-          // Reclassify down to thin — surfaces in breakdown, excluded from headline.
-          perChain.low += p.usd;
-          continue;
-        }
-        if      (p.confidence === "high")   { perChain.high   += p.usd; perChain.tvl += p.usd; }
-        else if (p.confidence === "medium") { perChain.medium += p.usd; perChain.tvl += p.usd; }
-        else                                  perChain.low    += p.usd;   // tracked, NOT in headline
+        const cap = perTokenCeiling(p);
+        const credited = Math.min(p.usd, cap);
+        const overflow = Math.max(0, p.usd - cap);
+
+        // Bucket the credited (capped) portion by confidence.
+        if      (p.confidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
+        else if (p.confidence === "medium") { perChain.medium += credited; perChain.tvl += credited; }
+        else                                  perChain.low    += credited;   // thin, excluded from headline
+
+        // Anything above the cap goes into the LOW bucket as "excess" —
+        // visible in breakdown for auditability, never in headline.
+        if (overflow > 0) perChain.low += overflow;
       }
 
       return {

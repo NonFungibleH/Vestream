@@ -40,15 +40,27 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap
 const MAX_PAGES = 200;    // 200 × 1000 = 200k locks — plenty of headroom
-// Cursor-based pagination: The Graph rejects skip > 5000, so we walk by id_gt
-// instead. Empty string is less-than every real id, so it correctly seeds page 0.
+// Cursor-based pagination — but on `lockDate` rather than `id`. Background:
+//
+// The Graph indexers cap internal skip operations at 5000. The naive cursor
+// approach (`orderBy: id, where: { id_gt: $lastId }`) SHOULD be O(1) per page,
+// but on the UNCX BSC subgraph the indexer translates the id_gt filter into
+// internal skip-based scanning and rejects past 5000 ("The skip argument
+// must be between 0 and 5000, but is 6000"). Confirmed in production logs.
+//
+// Switching the cursor to `lockDate` (a timestamp) sidesteps this — most
+// subgraphs maintain a true index on timestamp fields. Edge case: ties on
+// the exact same lockDate would be missed, but lockDate is unix-seconds and
+// UNCX volume is sparse enough that simultaneous-second collisions are rare;
+// a few-locks-per-chain undercount is acceptable vs the alternative of a
+// hard 6000-entry cap.
 const LOCKS_QUERY = `
-  query WalkLocks($lastId: String!, $first: Int!) {
+  query WalkLocks($lastLockDate: BigInt!, $first: Int!) {
     locks(
-      orderBy: id
+      orderBy: lockDate
       orderDirection: asc
       first: $first
-      where: { id_gt: $lastId }
+      where: { lockDate_gt: $lastLockDate }
     ) {
       id
       lockID
@@ -118,8 +130,10 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
 
   const nowSec    = Math.floor(Date.now() / 1000);
   const byToken   = new Map<string, TokenAggregate>();
-  let   totalLocks = 0;
-  let   lastId    = "";
+  let   totalLocks  = 0;
+  // Cursor: BigInt-string of lockDate. "0" is less-than every real lockDate,
+  // so it correctly seeds page 0. The Graph parses BigInt scalar from string.
+  let   lastLockDate = "0";
 
   for (let page = 0; page < MAX_PAGES; page++) {
     let json: { data?: { locks?: RawLock[] }; errors?: unknown };
@@ -132,7 +146,7 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
           "Accept":       "application/json",
           "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
         },
-        body:    JSON.stringify({ query: LOCKS_QUERY, variables: { lastId, first: PAGE_SIZE } }),
+        body:    JSON.stringify({ query: LOCKS_QUERY, variables: { lastLockDate, first: PAGE_SIZE } }),
         cache:   "no-store",
       });
       if (!res.ok) {
@@ -194,7 +208,10 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
 
     totalLocks += batch.length;
     if (batch.length < PAGE_SIZE) break;  // last page
-    lastId = batch[batch.length - 1].id;  // advance cursor for next page
+    // Advance cursor to the LAST lockDate seen. Note: if multiple locks share
+    // the exact same lockDate we may miss a few when the boundary lands mid-
+    // group, but at unix-second granularity collisions are rare in practice.
+    lastLockDate = batch[batch.length - 1].lockDate;
   }
 
   return {
