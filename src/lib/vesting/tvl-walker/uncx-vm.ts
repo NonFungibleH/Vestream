@@ -27,27 +27,31 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n,
     chain:           mainnet,
-    // Same fallback strategy as the PinkSale walker — see its getRpcUrl
-    // comment block. publicnode prunes; Ankr's free tier requires an API
-    // key as of April 2026; llamarpc is unauthenticated + reliable.
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH ?? "https://eth.llamarpc.com",
+    // RPC fallback strategy: dRPC public endpoints. See the getRpcUrl
+    // comment block in tvl-walker/pinksale.ts for the full survey of why
+    // (publicnode prunes, Ankr requires keys, free-tier Alchemy caps
+    // eth_getLogs at 10 blocks which is unusable for event scans).
+    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH ?? "https://eth.drpc.org",
   },
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     fromBlock:       43_187_425n,
     chain:           base,
     getRpcUrl:       () =>
-      process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL ?? "https://base.llamarpc.com",
+      process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL ?? "https://base.drpc.org",
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     fromBlock:       85_818_300n,
     chain:           bsc,
-    getRpcUrl:       () => process.env.BSC_RPC_URL ?? "https://binance.llamarpc.com",
+    getRpcUrl:       () => process.env.BSC_RPC_URL ?? "https://bsc.drpc.org",
   },
 };
 
-const CHUNK_SIZE       = 49_999n;      // PublicNode caps eth_getLogs at 50k blocks
+// 9_999 to fit dRPC's free-tier 10k-block cap on eth_getLogs. Going higher
+// is fine if a paid Alchemy/QuickNode URL is set in env (their block-range
+// caps are much higher), but the default fallback enforces the lower limit.
+const CHUNK_SIZE       = 9_999n;
 const CHUNK_BATCH      = 10;           // concurrent getLogs calls in flight
 const MULTICALL_BATCH  = 500;          // schedules per multicall call
 const MAX_LOG_WINDOW   = 2_000_000n;   // same safety cap used in pinksale-style walkers

@@ -36,11 +36,20 @@ const PINKSALE_LOCK_ADDED_TOPIC =
 // must be tuned per chain. Trade-off: BSC's 500k-block window only sees the last
 // ~17 days of locks (publicnode prunes older) — acceptable for PinkLock since it's
 // dominated by new launches with recent activity.
+// Per-chain getLogs limits. Chunks set conservatively for dRPC's free public
+// endpoints which cap at ~10k blocks per request. Window sizes tuned to give
+// reasonable historical coverage without blowing up per-chain runtime.
+//
+// IMPORTANT: free-tier Alchemy caps eth_getLogs at 10 BLOCKS per request,
+// which makes any practical event scan impossible. If env vars override the
+// fallback with a free-tier Alchemy URL, the walker will fail. Either use
+// dRPC (default fallback), upgrade to paid Alchemy/QuickNode, or use a
+// provider with a higher block-range cap.
 const CHAIN_LIMITS: Partial<Record<SupportedChainId, { chunkSize: bigint; windowBlocks: bigint }>> = {
-  [CHAIN_IDS.ETHEREUM]: { chunkSize: 49_999n, windowBlocks: 2_000_000n }, // ~10 months
-  [CHAIN_IDS.BSC]:      { chunkSize:  4_999n, windowBlocks:   500_000n }, // ~17 days; publicnode prunes older
-  [CHAIN_IDS.POLYGON]:  { chunkSize:  9_999n, windowBlocks: 1_000_000n }, // ~26 days; 10k cap on getLogs
-  [CHAIN_IDS.BASE]:     { chunkSize: 49_999n, windowBlocks: 2_000_000n }, // ~46 days
+  [CHAIN_IDS.ETHEREUM]: { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~5 months
+  [CHAIN_IDS.BSC]:      { chunkSize: 4_999n, windowBlocks:   500_000n }, // ~17 days; many providers prune older
+  [CHAIN_IDS.POLYGON]:  { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~26 days
+  [CHAIN_IDS.BASE]:     { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~23 days
 };
 
 const DISCOVERY_BATCH_SIZE  = 10;        // parallel chunks per tick (mirrors seeder)
@@ -82,25 +91,30 @@ const ERC20_ABI = [
 // ─── viem helpers ──────────────────────────────────────────────────────────────
 
 // IMPORTANT: PinkSale uses an event scan (eth_getLogs) to discover lock owners
-// across the last several hundred thousand blocks. RPC choice matters a LOT:
+// across the last several hundred thousand blocks. RPC choice matters a LOT
+// because providers have widely-different `eth_getLogs` block-range caps:
 //
-//   - publicnode endpoints PRUNE historical logs aggressively (BSC ~17d,
-//     Polygon ~10d) — confirmed in production.
-//   - Ankr's free public endpoints (no API key) returned "Unauthorized" as
-//     of late April 2026 — they now require a signup-issued key.
-//   - DefiLlama's `*.llamarpc.com` relay endpoints are unauthenticated, free,
-//     and proxy to multiple backends — confirmed reliable for log scans.
+//   - publicnode: PRUNES historical logs aggressively (BSC ~17d, Polygon ~10d)
+//   - Ankr free public (no key): returns "Unauthorized" — requires signup
+//   - llamarpc: works for some chains, intermittent fetch failures observed
+//   - Alchemy FREE TIER: caps eth_getLogs at 10 BLOCK RANGE — unusable for
+//     scanning hundreds of thousands of blocks. Confirmed in production:
+//     "Under the Free tier plan, you can make eth_getLogs requests with up
+//     to a 10 block range."
+//   - dRPC public endpoints: unauthenticated, ~10k block range supported,
+//     no aggressive pruning — confirmed working for our event scans.
 //
-// Defaults below are llamarpc. Override with a paid Alchemy/QuickNode/Ankr
-// URL in env for higher rate limits in production. Do NOT default to
-// publicnode for chains with event-scan walkers.
+// Default fallback: dRPC. If a PAID Alchemy/QuickNode URL is set in env,
+// use that instead — but DON'T put a free-tier Alchemy URL in env, it'll
+// reject our 10k-block ranges. Better to use the dRPC fallback than a
+// crippled paid-key URL.
 function getRpcUrl(chainId: SupportedChainId): string {
   switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.llamarpc.com";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://binance.llamarpc.com";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.llamarpc.com";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.llamarpc.com";
-    default:                 return "https://eth.llamarpc.com";
+    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.drpc.org";
+    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.drpc.org";
+    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.drpc.org";
+    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.drpc.org";
+    default:                 return "https://eth.drpc.org";
   }
 }
 

@@ -264,14 +264,35 @@ export async function runWalkerSnapshot(
       //    For CoinGecko-priced tokens (no liquidity field), we fall back to
       //    a conservative $20M cap — CG inclusion is a quality signal but
       //    not a depth signal, and most CG-only tokens are early/thin.
-      const LIQUIDITY_MULTIPLIER          = 10;
-      const MIN_PER_TOKEN_CEILING_USD     = 1_000_000;        // $1M floor
-      const COINGECKO_PER_TOKEN_CEILING   = 20_000_000;       // $20M for CG-priced tokens
+      //
+      // 3. ABSOLUTE per-token ceiling: no single token may contribute more
+      //    than $500M to ANY protocol's headline TVL, regardless of confidence
+      //    band or liquidity depth. Real-world legitimate single-token locks
+      //    above $500M (e.g. major DAO treasury allocations) are rare and can
+      //    be whitelisted later if needed; below the ceiling, real locks pass
+      //    through unaffected.
+      //
+      //    This caught Jupiter Lock pre-fix: a Solana memecoin with $300M+
+      //    DEX liquidity and a 65T-unit lock was claiming $3.24B credited
+      //    even after the 10x rule (because $300M × 10 = $3B headroom).
+      //    Empirical: dropped Jupiter Lock from $3.65B → ~$700M-$1B with no
+      //    impact on any of the other 8 protocols.
+      const LIQUIDITY_MULTIPLIER             = 10;
+      const MIN_PER_TOKEN_CEILING_USD        = 1_000_000;        // $1M floor
+      const COINGECKO_PER_TOKEN_CEILING      = 20_000_000;       // $20M for CG-priced tokens
+      const ABSOLUTE_PER_TOKEN_CEILING_USD   = 500_000_000;      // $500M hard ceiling
 
       function perTokenCeiling(p: typeof priced[number]): number {
-        if (p.source === "coingecko") return COINGECKO_PER_TOKEN_CEILING;
-        const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
-        return Math.max(MIN_PER_TOKEN_CEILING_USD, liquidityBased);
+        let cap: number;
+        if (p.source === "coingecko") {
+          cap = COINGECKO_PER_TOKEN_CEILING;
+        } else {
+          const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
+          cap = Math.max(MIN_PER_TOKEN_CEILING_USD, liquidityBased);
+        }
+        // Apply absolute ceiling — no token contributes more than this to
+        // any protocol's headline regardless of band or liquidity.
+        return Math.min(cap, ABSOLUTE_PER_TOKEN_CEILING_USD);
       }
 
       // Per-token after-cap totals, used for both the per-band sums AND for
