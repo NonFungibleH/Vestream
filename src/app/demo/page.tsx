@@ -179,7 +179,7 @@ export default function DemoPage() {
             body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for minting the token and creating the vesting. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
             href={SEPOLIA_ETH_FAUCET}
             cta="Open the Google Cloud faucet"
-            accent="#E89A3D"
+            accent="#F0992E"
             accentBg="rgba(245,158,11,0.08)"
             accentBorder="rgba(245,158,11,0.22)"
           />
@@ -201,9 +201,9 @@ export default function DemoPage() {
             body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute Vestream auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
             href={TEAM_FINANCE_VESTING}
             cta="Open Team Finance Vesting"
-            accent="#3FA568"
-            accentBg="rgba(63,165,104,0.08)"
-            accentBorder="rgba(63,165,104,0.22)"
+            accent="#2DB36A"
+            accentBg="rgba(45,179,106,0.08)"
+            accentBorder="rgba(45,179,106,0.22)"
           />
         </div>
 

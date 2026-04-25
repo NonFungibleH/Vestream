@@ -109,11 +109,11 @@ export default async function DeveloperAccount() {
               <div className="h-2 rounded-full transition-all" style={{
                 width: `${usagePct}%`,
                 background: isNearLimit
-                  ? "linear-gradient(90deg, #E89A3D, #B3322E)"
+                  ? "linear-gradient(90deg, #F0992E, #B3322E)"
                   : "#1CB8B8",
               }} />
             </div>
-            <p className="text-xs mb-2" style={{ color: isNearLimit ? "#E89A3D" : "rgba(255,255,255,0.3)" }}>
+            <p className="text-xs mb-2" style={{ color: isNearLimit ? "#F0992E" : "rgba(255,255,255,0.3)" }}>
               {isNearLimit
                 ? `⚠ ${remaining.toLocaleString()} requests remaining — approaching limit`
                 : `${remaining.toLocaleString()} requests remaining`}
@@ -176,7 +176,7 @@ export default async function DeveloperAccount() {
             <span>Last used {formatDate(key.lastUsedAt)}</span>
           </div>
           <p className="text-xs mt-3 px-3 py-2 rounded-lg"
-            style={{ background: "rgba(245,158,11,0.06)", color: "rgba(232,196,107,0.7)", border: "1px solid rgba(245,158,11,0.12)" }}>
+            style={{ background: "rgba(245,158,11,0.06)", color: "rgba(240,184,61,0.7)", border: "1px solid rgba(245,158,11,0.12)" }}>
             Your full API key was shown once when issued. If you&apos;ve lost it, contact us and we&apos;ll revoke and reissue.
           </p>
         </div>
@@ -210,9 +210,9 @@ export default async function DeveloperAccount() {
               desc: "Questions, issues, or need a higher rate limit?",
               href: "/contact?subject=developer-api",
               cta: "Contact us →",
-              color: "#5C9FA8",
-              bg: "rgba(92,159,168,0.08)",
-              border: "rgba(92,159,168,0.18)",
+              color: "#0BA0CB",
+              bg: "rgba(11,160,203,0.08)",
+              border: "rgba(11,160,203,0.18)",
             },
           ].map(l => (
             <a key={l.title} href={l.href}

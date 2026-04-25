@@ -26,12 +26,12 @@ const CHAIN_COLORS: Record<number, string> = {
 };
 
 const PROTOCOL_COLORS: Record<string, string> = {
-  sablier:        "#E89A3D",
+  sablier:        "#F0992E",
   hedgey:         "#1CB8B8",
-  "team-finance": "#3FA568",
-  uncx:           "#E89A3D",
-  "uncx-vm":      "#E89A3D",
-  unvest:         "#5C9FA8",
+  "team-finance": "#2DB36A",
+  uncx:           "#F0992E",
+  "uncx-vm":      "#F0992E",
+  unvest:         "#0BA0CB",
 };
 
 function formatDate(d: Date | null | string) {
@@ -193,10 +193,10 @@ export default async function AdminPage() {
           <div className="grid grid-cols-6 gap-3 mb-6">
             <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#0F8A8A" />
             <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#1CB8B8" />
-            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#3FA568" />
-            <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#E89A3D" />
+            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2DB36A" />
+            <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#F0992E" />
             <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
-            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#E89A3D" />
+            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#F0992E" />
           </div>
 
           {/* Row 2: beta cap bar + sign-up trend */}
@@ -220,8 +220,8 @@ export default async function AdminPage() {
                 {Object.entries(tierCounts).map(([tier, n]) => (
                   <span key={tier} className="text-xs px-2 py-0.5 rounded-md font-semibold"
                     style={{
-                      background: tier === "fund" ? "rgba(63,165,104,0.15)" : tier === "pro" ? "rgba(28,184,184,0.15)" : "rgba(75,85,99,0.2)",
-                      color: tier === "fund" ? "#3FA568" : tier === "pro" ? "#1CB8B8" : "#9ca3af",
+                      background: tier === "fund" ? "rgba(45,179,106,0.15)" : tier === "pro" ? "rgba(28,184,184,0.15)" : "rgba(75,85,99,0.2)",
+                      color: tier === "fund" ? "#2DB36A" : tier === "pro" ? "#1CB8B8" : "#9ca3af",
                     }}>
                     {n} {tier}
                   </span>
@@ -353,7 +353,7 @@ export default async function AdminPage() {
                 </div>
                 <div className="flex items-center justify-between mt-1.5">
                   <span className="text-xs" style={{ color: "#4b5563" }}>Users at wallet limit (3)</span>
-                  <span className="text-xs font-semibold" style={{ color: "#E8C46B" }}>
+                  <span className="text-xs font-semibold" style={{ color: "#F0B83D" }}>
                     {userRows.filter(u => walletRows.filter(w => w.userId === u.id).length >= 3).length}
                   </span>
                 </div>
@@ -367,7 +367,7 @@ export default async function AdminPage() {
                 <div className="flex items-center gap-1">
                   {[1,2,3,4,5].map(n => (
                     <span key={n} className="text-sm"
-                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#E89A3D" : "#1e2330" }}>★</span>
+                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#F0992E" : "#1e2330" }}>★</span>
                   ))}
                   <span className="text-xs ml-1" style={{ color: "#9ca3af" }}>{avgRating}</span>
                 </div>
@@ -380,7 +380,7 @@ export default async function AdminPage() {
                     <div key={f.id} className="rounded-xl px-4 py-3" style={{ background: "#0d0f14", border: "1px solid #1e2330" }}>
                       <div className="flex items-center gap-2 mb-1">
                         {f.rating && (
-                          <span className="text-xs font-semibold" style={{ color: "#E89A3D" }}>{"★".repeat(f.rating)}</span>
+                          <span className="text-xs font-semibold" style={{ color: "#F0992E" }}>{"★".repeat(f.rating)}</span>
                         )}
                         <span className="text-[10px]" style={{ color: "#4b5563" }}>{formatDate(f.createdAt)}</span>
                         {f.userAddress && (
@@ -491,7 +491,7 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
-                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(63,165,104,0.1)",
+                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(45,179,106,0.1)",
                             color:      k.tier === "pro" ? "#1CB8B8"               : "#34d399",
                           }}>
                           {k.tier}
@@ -560,8 +560,8 @@ export default async function AdminPage() {
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                         style={{
-                          background: r.reviewed ? "rgba(63,165,104,0.1)"  : "rgba(245,158,11,0.1)",
-                          color:      r.reviewed ? "#34d399"                : "#E8C46B",
+                          background: r.reviewed ? "rgba(45,179,106,0.1)"  : "rgba(245,158,11,0.1)",
+                          color:      r.reviewed ? "#34d399"                : "#F0B83D",
                         }}>
                         {r.reviewed ? "reviewed" : "pending"}
                       </span>

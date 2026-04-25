@@ -68,14 +68,14 @@ const PROTOCOL_OPTIONS = [
 ];
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#E89A3D", bg: "rgba(232,154,61,0.12)",  border: "rgba(232,154,61,0.25)"  },
+  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.12)",  border: "rgba(240,153,46,0.25)"  },
   hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.12)",   border: "rgba(28,184,184,0.25)"   },
-  "team-finance": { text: "#3FA568", bg: "rgba(63,165,104,0.12)",  border: "rgba(63,165,104,0.25)"  },
-  uncx:           { text: "#E89A3D", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  "uncx-vm":      { text: "#E89A3D", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  unvest:         { text: "#5C9FA8", bg: "rgba(92,159,168,0.12)",   border: "rgba(92,159,168,0.25)"   },
-  superfluid:     { text: "#3CA386", bg: "rgba(60,163,134,0.12)",   border: "rgba(60,163,134,0.25)"   },
-  pinksale:       { text: "#D67099", bg: "rgba(214,112,153,0.12)",  border: "rgba(214,112,153,0.25)"  },
+  "team-finance": { text: "#2DB36A", bg: "rgba(45,179,106,0.12)",  border: "rgba(45,179,106,0.25)"  },
+  uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
+  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.12)",   border: "rgba(11,160,203,0.25)"   },
+  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.12)",   border: "rgba(40,184,149,0.25)"   },
+  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.12)",  border: "rgba(224,99,160,0.25)"  },
 };
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
@@ -766,7 +766,7 @@ export default function DiscoverPage() {
                     />
                   ))}
                 </div>
-                <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#E89A3D" }}>
+                <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#F0992E" }}>
                   {scansRemaining > 0
                     ? `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
                     : scanResetAt

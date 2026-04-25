@@ -54,14 +54,14 @@ const POLL_INTERVAL_MS = 10_000;
 const MAX_VISIBLE_ROWS = 6;
 
 const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
-  sablier:        { color: "#E89A3D", bg: "rgba(232,154,61,0.08)",  border: "rgba(232,154,61,0.22)",  name: "Sablier" },
-  hedgey:         { color: "#8B7AD6", bg: "rgba(139,122,214,0.08)",  border: "rgba(139,122,214,0.22)",  name: "Hedgey" },
-  uncx:           { color: "#5577A8", bg: "rgba(85,119,168,0.08)",   border: "rgba(85,119,168,0.22)",   name: "UNCX" },
-  "uncx-vm":      { color: "#5577A8", bg: "rgba(85,119,168,0.08)",   border: "rgba(85,119,168,0.22)",   name: "UNCX" },
-  unvest:         { color: "#5C9FA8", bg: "rgba(92,159,168,0.08)",   border: "rgba(92,159,168,0.22)",   name: "Unvest" },
-  "team-finance": { color: "#3FA568", bg: "rgba(63,165,104,0.08)",  border: "rgba(63,165,104,0.22)",  name: "Team Finance" },
-  superfluid:     { color: "#3CA386", bg: "rgba(60,163,134,0.08)",   border: "rgba(60,163,134,0.22)",   name: "Superfluid" },
-  pinksale:       { color: "#D67099", bg: "rgba(214,112,153,0.08)",  border: "rgba(214,112,153,0.22)",  name: "PinkSale" },
+  sablier:        { color: "#F0992E", bg: "rgba(240,153,46,0.08)",  border: "rgba(240,153,46,0.22)",  name: "Sablier" },
+  hedgey:         { color: "#8169E0", bg: "rgba(129,105,224,0.08)",  border: "rgba(129,105,224,0.22)",  name: "Hedgey" },
+  uncx:           { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
+  "uncx-vm":      { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
+  unvest:         { color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.22)",   name: "Unvest" },
+  "team-finance": { color: "#2DB36A", bg: "rgba(45,179,106,0.08)",  border: "rgba(45,179,106,0.22)",  name: "Team Finance" },
+  superfluid:     { color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.22)",   name: "Superfluid" },
+  pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
 };
 
 function chainLabel(id: number): string {
@@ -140,20 +140,20 @@ export function LiveActivityTicker() {
       style={{
         background: "white",
         border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 4px 24px rgba(85,119,168,0.06)",
+        boxShadow: "0 4px 24px rgba(61,127,208,0.06)",
       }}
     >
       {/* Header strip */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap"
-        style={{ background: "linear-gradient(90deg, rgba(85,119,168,0.04), rgba(139,122,214,0.04))", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
+        style={{ background: "linear-gradient(90deg, rgba(61,127,208,0.04), rgba(129,105,224,0.04))", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
       >
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#5577A8" }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#5577A8" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#3D7FD0" }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#3D7FD0" }} />
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#5577A8" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#3D7FD0" }}>
             Live platform activity
           </span>
         </div>
@@ -280,11 +280,11 @@ function ActivityRow({ row, nowMs }: { row: Activity; nowMs: number }) {
         {isFresh ? (
           <div
             className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ background: "rgba(63,165,104,0.1)", color: "#059669" }}
+            style={{ background: "rgba(45,179,106,0.1)", color: "#059669" }}
           >
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#3FA568" }} />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#3FA568" }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2DB36A" }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#2DB36A" }} />
             </span>
             NEW
           </div>

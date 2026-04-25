@@ -238,8 +238,8 @@ export default function AiPage() {
           {/* Terminal bar */}
           <div className="flex items-center gap-2 px-4 py-3" style={{ background: "#0a0c12", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="w-3 h-3 rounded-full" style={{ background: "#B3322E" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#E89A3D" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#3FA568" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "#F0992E" }} />
+            <div className="w-3 h-3 rounded-full" style={{ background: "#2DB36A" }} />
             <span className="ml-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Claude · Vestream MCP connected</span>
           </div>
 
@@ -269,7 +269,7 @@ export default function AiPage() {
             {/* Tool response */}
             <div className="ml-10">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(63,165,104,0.1)", color: "#34d399" }}>
+                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(45,179,106,0.1)", color: "#34d399" }}>
                   ← result
                 </span>
               </div>
@@ -406,19 +406,19 @@ export default function AiPage() {
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-              color: "#5C9FA8", bg: "rgba(92,159,168,0.1)", border: "rgba(92,159,168,0.2)",
+              color: "#0BA0CB", bg: "rgba(11,160,203,0.1)", border: "rgba(11,160,203,0.2)",
               title: "Compliance & reporting agents",
               body: "Generate audit-ready vesting reports for any wallet or team — cliff dates, tranches, claimed amounts — structured and exportable on demand.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-              color: "#E89A3D", bg: "rgba(232,154,61,0.1)", border: "rgba(232,154,61,0.2)",
+              color: "#F0992E", bg: "rgba(240,153,46,0.1)", border: "rgba(240,153,46,0.2)",
               title: "DeFi strategy agents",
               body: "Combine upcoming unlock data with on-chain prices to automatically evaluate whether to hold, hedge, or exit a position as vesting cliffs approach.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-              color: "#E89A3D", bg: "rgba(232,154,61,0.1)", border: "rgba(232,154,61,0.2)",
+              color: "#F0992E", bg: "rgba(240,153,46,0.1)", border: "rgba(240,153,46,0.2)",
               title: "Wallet app integrations",
               body: "Embed Vestream vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
             },
@@ -449,7 +449,7 @@ export default function AiPage() {
               name: "@vestream/mcp",
               desc: "Install via npx — no global install required. Works anywhere Node.js runs.",
               cmd: "npx -y @vestream/mcp",
-              color: "#E89A3D",
+              color: "#F0992E",
             },
             {
               label: "MCP Registry",

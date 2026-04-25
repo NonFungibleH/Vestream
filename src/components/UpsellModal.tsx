@@ -16,8 +16,8 @@ const TIERS = {
   },
   fund: {
     label:    "Fund",
-    gradient: "#3FA568",
-    accent:   "#3FA568",
+    gradient: "#2DB36A",
+    accent:   "#2DB36A",
     features: [
       "Everything in Pro",
       "CSV & PDF portfolio exports",

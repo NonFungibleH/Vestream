@@ -157,7 +157,7 @@ export default function Pricing() {
                   than a pushy marketing flag. Sits under the price so the visitor
                   clocks "free trial" before "how much will this cost me". */}
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-2"
-                style={{ background: "rgba(63,165,104,0.1)", border: "1px solid rgba(63,165,104,0.25)", color: "#059669" }}>
+                style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
                 14-day free trial
               </div>
               <p className="text-sm" style={{ color: "#8B8E92" }}>

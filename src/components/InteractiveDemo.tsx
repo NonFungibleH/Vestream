@@ -50,7 +50,7 @@ interface DemoStream {
 const STREAMS: DemoStream[] = [
   {
     protocolId: "sablier", protocolName: "Sablier",
-    token: "NOVA", tokenColors: ["#E89A3D", "#B3322E"],
+    token: "NOVA", tokenColors: ["#F0992E", "#B3322E"],
     chain: "Ethereum",
     totalAmount: 12_000, claimable: 4_200, vested: 7_800, percent: 65,
     unlockInHrs: 24,
@@ -64,7 +64,7 @@ const STREAMS: DemoStream[] = [
   },
   {
     protocolId: "team-finance", protocolName: "Team Finance",
-    token: "VEST", tokenColors: ["#3FA568", "#5C9FA8"],
+    token: "VEST", tokenColors: ["#2DB36A", "#0BA0CB"],
     chain: "BNB Chain",
     totalAmount: 50_000, claimable: 12_500, vested: 30_000, percent: 60,
     unlockInHrs: 6,
@@ -272,7 +272,7 @@ function StepIndicator({ step }: { step: Step }) {
           <div key={s.id} className="flex items-center gap-2 flex-1">
             <div
               className="flex items-center gap-2 transition-colors"
-              style={{ color: isActive ? "#1CB8B8" : isComplete ? "#3FA568" : "#B8BABD" }}
+              style={{ color: isActive ? "#1CB8B8" : isComplete ? "#2DB36A" : "#B8BABD" }}
             >
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all"
@@ -280,7 +280,7 @@ function StepIndicator({ step }: { step: Step }) {
                   background: isActive
                     ? "#1CB8B8"
                     : isComplete
-                    ? "#3FA568"
+                    ? "#2DB36A"
                     : "rgba(148,163,184,0.15)",
                   color: (isActive || isComplete) ? "white" : "#B8BABD",
                   boxShadow: isActive ? "0 0 0 4px rgba(28,184,184,0.15)" : "none",
@@ -295,7 +295,7 @@ function StepIndicator({ step }: { step: Step }) {
             {i < steps.length - 1 && (
               <div
                 className="flex-1 h-px mx-1"
-                style={{ background: isComplete ? "#3FA568" : "rgba(148,163,184,0.2)" }}
+                style={{ background: isComplete ? "#2DB36A" : "rgba(148,163,184,0.2)" }}
               />
             )}
           </div>
@@ -423,8 +423,8 @@ function ScanStep({
                   key={p.id}
                   className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors"
                   style={{
-                    background: isPinging ? "rgba(28,184,184,0.05)" : isDone && p.hit ? "rgba(63,165,104,0.04)" : "transparent",
-                    border: "1px solid " + (isPinging ? "rgba(28,184,184,0.2)" : isDone && p.hit ? "rgba(63,165,104,0.15)" : "transparent"),
+                    background: isPinging ? "rgba(28,184,184,0.05)" : isDone && p.hit ? "rgba(45,179,106,0.04)" : "transparent",
+                    border: "1px solid " + (isPinging ? "rgba(28,184,184,0.2)" : isDone && p.hit ? "rgba(45,179,106,0.15)" : "transparent"),
                   }}
                 >
                   {/* Icon */}
@@ -436,7 +436,7 @@ function ScanStep({
                       </svg>
                     )}
                     {isDone && p.hit && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3FA568" strokeWidth="2.5" strokeLinecap="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2DB36A" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     )}
@@ -553,11 +553,11 @@ function AlertStep({
       <div className="md:col-span-2 order-2 md:order-1">
         <div
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold mb-3"
-          style={{ background: "rgba(63,165,104,0.1)", color: "#059669" }}
+          style={{ background: "rgba(45,179,106,0.1)", color: "#059669" }}
         >
           <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#3FA568" }} />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#3FA568" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#2DB36A" }} />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#2DB36A" }} />
           </span>
           Live monitoring
         </div>
@@ -646,7 +646,7 @@ function AlertStep({
                   <div className="text-xs font-semibold" style={{ color: "#1A1D20" }}>{FEATURED.token}</div>
                   <div className="text-[10px]" style={{ color: "#B8BABD" }}>{FEATURED.protocolName} · {FEATURED.chain}</div>
                 </div>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "#E89A3D" }}>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "#F0992E" }}>
                   {FEATURED.unlockInHrs}h
                 </span>
               </div>
@@ -690,7 +690,7 @@ function AlertStep({
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3FA568" strokeWidth="2.5" strokeLinecap="round">
+      <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2DB36A" strokeWidth="2.5" strokeLinecap="round">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
       <span>{children}</span>
@@ -804,7 +804,7 @@ function ClaimStep({
       <div className="text-center py-10">
         <div
           className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-          style={{ background: "rgba(63,165,104,0.12)" }}
+          style={{ background: "rgba(45,179,106,0.12)" }}
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>
@@ -824,7 +824,7 @@ function ClaimStep({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-8 font-mono text-xs"
           style={{ background: "#F5F5F3", color: "#8B8E92", border: "1px solid rgba(0,0,0,0.05)" }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3FA568" strokeWidth="2.5" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2DB36A" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           Tx: 0x8f3a…c42e
@@ -936,7 +936,7 @@ function ClaimStep({
                 label="Claimable"
                 value={FEATURED.claimable.toLocaleString()}
                 sub={fmtUsdExact(featuredUsd)}
-                tint="#E89A3D"
+                tint="#F0992E"
               />
             </div>
 
@@ -945,7 +945,7 @@ function ClaimStep({
               <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #E89A3D, #B3322E)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #F0992E, #B3322E)" }}
                 />
               </div>
               <div className="flex justify-between text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -960,7 +960,7 @@ function ClaimStep({
                 onClick={onStartClaim}
                 className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #E89A3D, #B3322E)",
+                  background: "linear-gradient(135deg, #F0992E, #B3322E)",
                   color: "white",
                   boxShadow: "0 4px 20px rgba(245,158,11,0.25)",
                 }}
@@ -971,7 +971,7 @@ function ClaimStep({
             {phase === "pending" && (
               <div
                 className="flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "rgba(245,158,11,0.1)", color: "#E89A3D", border: "1px solid rgba(245,158,11,0.25)" }}
+                style={{ background: "rgba(245,158,11,0.1)", color: "#F0992E", border: "1px solid rgba(245,158,11,0.25)" }}
               >
                 <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
@@ -1030,7 +1030,7 @@ function WalletPopup({ onConfirm }: { onConfirm: () => void }) {
       <div className="flex items-center gap-2 mb-3">
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #E89A3D, #eab308)" }}
+          style={{ background: "linear-gradient(135deg, #F0992E, #eab308)" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 7l8 5 8-5-8-5zM4 17l8 5 8-5M4 12l8 5 8-5"/></svg>
         </div>

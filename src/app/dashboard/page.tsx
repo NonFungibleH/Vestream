@@ -68,14 +68,14 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 };
 
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#E89A3D", bg: "rgba(232,154,61,0.1)",   border: "rgba(232,154,61,0.2)"  },
+  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.1)",   border: "rgba(240,153,46,0.2)"  },
   hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.1)",    border: "rgba(28,184,184,0.2)"   },
-  "team-finance": { text: "#3FA568", bg: "rgba(63,165,104,0.1)",   border: "rgba(63,165,104,0.2)"  },
-  uncx:           { text: "#E89A3D", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
-  "uncx-vm":      { text: "#E89A3D", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
-  unvest:         { text: "#5C9FA8", bg: "rgba(92,159,168,0.1)",    border: "rgba(92,159,168,0.2)"   },
-  superfluid:     { text: "#3CA386", bg: "rgba(60,163,134,0.1)",    border: "rgba(60,163,134,0.2)"   },
-  pinksale:       { text: "#D67099", bg: "rgba(214,112,153,0.1)",   border: "rgba(214,112,153,0.2)"  },
+  "team-finance": { text: "#2DB36A", bg: "rgba(45,179,106,0.1)",   border: "rgba(45,179,106,0.2)"  },
+  uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
+  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.1)",    border: "rgba(11,160,203,0.2)"   },
+  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.1)",    border: "rgba(40,184,149,0.2)"   },
+  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.1)",   border: "rgba(224,99,160,0.2)"  },
 };
 
 const CLAIM_LINKS: Record<string, string> = {
@@ -1071,7 +1071,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
             <div className="rounded-xl px-4 py-3 min-w-[108px]"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2"
-                style={{ background: "rgba(232,196,107,0.15)", color: "#E8C46B" }}>
+                style={{ background: "rgba(240,184,61,0.15)", color: "#F0B83D" }}>
                 <IconLock />
               </div>
               <p className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>Next Event</p>
@@ -1452,7 +1452,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                     ) : hasCliff ? (
                       <div>
                         <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: "#E89A3D" }}>Cliff</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: "#F0992E" }}>Cliff</span>
                           {s.nextUnlockTime && (
                             <span className="text-[11px] font-semibold tabular-nums" style={{ color: "var(--preview-text)" }}>
                               {fmtDate(s.nextUnlockTime)}
@@ -1881,7 +1881,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
             { label: "Claimable", opacity: 0.9  },
             { label: "Locked",    opacity: 0.1  },
             { label: "Today",     dashed: true   },
-            { label: "Cliff",     color: "#E89A3D" },
+            { label: "Cliff",     color: "#F0992E" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
               {item.dashed ? (
@@ -2034,7 +2034,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
                 {/* Cliff marker */}
                 {s.cliffTime && s.cliffTime > s.startTime && s.cliffTime < s.endTime && (
                   <div className="absolute top-0 bottom-0 w-0.5"
-                    style={{ left: `${((s.cliffTime - s.startTime) / (s.endTime - s.startTime)) * 100}%`, background: "#E89A3D" }} />
+                    style={{ left: `${((s.cliffTime - s.startTime) / (s.endTime - s.startTime)) * 100}%`, background: "#F0992E" }} />
                 )}
                 {/* Token label inside bar */}
                 <div className="absolute inset-0 flex items-center px-2 pointer-events-none">
@@ -2378,7 +2378,7 @@ function fmtCompact(n: number | null): string {
 
 const LIQUIDITY_LABEL: Record<TokenMarket["liquidity"], { label: string; color: string; bg: string }> = {
   high:    { label: "High",    color: "#34d399", bg: "rgba(52,211,153,0.1)" },
-  medium:  { label: "Medium",  color: "#E8C46B", bg: "rgba(232,196,107,0.1)" },
+  medium:  { label: "Medium",  color: "#F0B83D", bg: "rgba(240,184,61,0.1)" },
   low:     { label: "Low",     color: "#f87171", bg: "rgba(248,113,113,0.1)" },
   unknown: { label: "Unknown", color: "#9ca3af", bg: "rgba(156,163,175,0.1)" },
 };
@@ -3517,7 +3517,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
         {done ? (
           <div className="flex flex-col items-center text-center py-4 gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-              style={{ background: "rgba(63,165,104,0.1)" }}>✓</div>
+              style={{ background: "rgba(45,179,106,0.1)" }}>✓</div>
             <p className="font-semibold text-sm" style={{ color: "#1A1D20" }}>Thanks for the feedback!</p>
             <p className="text-xs" style={{ color: "#8B8E92" }}>We read every response and use it to make Vestream better.</p>
             <button onClick={onClose}
@@ -3541,7 +3541,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               {[1, 2, 3, 4, 5].map((n) => (
                 <button key={n} onClick={() => setRating(n)}
                   className="text-2xl transition-transform hover:scale-110"
-                  style={{ color: rating !== null && n <= rating ? "#E89A3D" : "#e2e8f0" }}>
+                  style={{ color: rating !== null && n <= rating ? "#F0992E" : "#e2e8f0" }}>
                   ★
                 </button>
               ))}
@@ -3726,7 +3726,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               <div className="h-1 rounded-full transition-all"
                 style={{
                   width: `${Math.min(100, wallets.length * 100)}%`,
-                  background: wallets.length >= 1 ? "#E89A3D" : "#1CB8B8",
+                  background: wallets.length >= 1 ? "#F0992E" : "#1CB8B8",
                 }} />
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>

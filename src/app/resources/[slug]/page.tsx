@@ -187,9 +187,9 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
 const CATEGORY_COLORS: Record<string, { dot: string }> = {
   Fundamentals:      { dot: "#3b82f6" },
   Tokenomics:        { dot: "#0F8A8A" },
-  Guides:            { dot: "#3FA568" },
-  "Market Analysis": { dot: "#E89A3D" },
-  Research:          { dot: "#D67099" },
+  Guides:            { dot: "#2DB36A" },
+  "Market Analysis": { dot: "#F0992E" },
+  Research:          { dot: "#E063A0" },
 };
 
 function ArticleSidebar({

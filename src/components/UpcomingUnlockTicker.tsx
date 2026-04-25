@@ -82,14 +82,14 @@ const MAX_VISIBLE = 9;
 
 // Protocol colour map matches LiveActivityTicker — keep them in sync or extract.
 const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
-  sablier:        { color: "#E89A3D", bg: "rgba(232,154,61,0.08)",  border: "rgba(232,154,61,0.22)",  name: "Sablier" },
-  hedgey:         { color: "#8B7AD6", bg: "rgba(139,122,214,0.08)",  border: "rgba(139,122,214,0.22)",  name: "Hedgey" },
-  uncx:           { color: "#5577A8", bg: "rgba(85,119,168,0.08)",   border: "rgba(85,119,168,0.22)",   name: "UNCX" },
-  "uncx-vm":      { color: "#5577A8", bg: "rgba(85,119,168,0.08)",   border: "rgba(85,119,168,0.22)",   name: "UNCX" },
-  unvest:         { color: "#5C9FA8", bg: "rgba(92,159,168,0.08)",   border: "rgba(92,159,168,0.22)",   name: "Unvest" },
-  "team-finance": { color: "#3FA568", bg: "rgba(63,165,104,0.08)",  border: "rgba(63,165,104,0.22)",  name: "Team Finance" },
-  superfluid:     { color: "#3CA386", bg: "rgba(60,163,134,0.08)",   border: "rgba(60,163,134,0.22)",   name: "Superfluid" },
-  pinksale:       { color: "#D67099", bg: "rgba(214,112,153,0.08)",  border: "rgba(214,112,153,0.22)",  name: "PinkSale" },
+  sablier:        { color: "#F0992E", bg: "rgba(240,153,46,0.08)",  border: "rgba(240,153,46,0.22)",  name: "Sablier" },
+  hedgey:         { color: "#8169E0", bg: "rgba(129,105,224,0.08)",  border: "rgba(129,105,224,0.22)",  name: "Hedgey" },
+  uncx:           { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
+  "uncx-vm":      { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
+  unvest:         { color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.22)",   name: "Unvest" },
+  "team-finance": { color: "#2DB36A", bg: "rgba(45,179,106,0.08)",  border: "rgba(45,179,106,0.22)",  name: "Team Finance" },
+  superfluid:     { color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.22)",   name: "Superfluid" },
+  pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
 };
 
 function chainLabel(id: number): string {
@@ -197,23 +197,23 @@ export function UpcomingUnlockTicker() {
       style={{
         background: "white",
         border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 4px 24px rgba(232,154,61,0.07)",
+        boxShadow: "0 4px 24px rgba(240,153,46,0.07)",
       }}
     >
       {/* Header strip — orange to contrast with the blue "live activity" feed */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap"
         style={{
-          background:   "linear-gradient(90deg, rgba(232,154,61,0.06), rgba(214,112,153,0.04))",
+          background:   "linear-gradient(90deg, rgba(240,153,46,0.06), rgba(224,99,160,0.04))",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#E89A3D" }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#E89A3D" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#F0992E" }} />
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#F0992E" }} />
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#E89A3D" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#F0992E" }}>
             Upcoming unlocks
           </span>
         </div>
@@ -235,13 +235,13 @@ export function UpcomingUnlockTicker() {
           className="px-4 md:px-5 py-1.5 flex items-center gap-2 text-[11px]"
           style={{
             borderBottom: "1px solid rgba(0,0,0,0.04)",
-            background:   "rgba(232,154,61,0.02)",
+            background:   "rgba(240,153,46,0.02)",
             color:        "#64748b",
           }}
         >
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{ background: "#E89A3D" }}
+            style={{ background: "#F0992E" }}
           />
           <span>
             {soonestMs != null && (
@@ -357,14 +357,14 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
         <div
           className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
           style={{
-            background: imminent ? "rgba(214,112,153,0.1)" : "rgba(232,154,61,0.1)",
+            background: imminent ? "rgba(224,99,160,0.1)" : "rgba(240,153,46,0.1)",
             color:      imminent ? "#db2777"              : "#ea580c",
           }}
         >
           {imminent && (
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#D67099" }} />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#D67099" }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#E063A0" }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#E063A0" }} />
             </span>
           )}
           in {ttl}
