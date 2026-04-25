@@ -185,7 +185,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
           <button key={item.label} onClick={() => router.push(item.href)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
             style={item.active
-              ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+              ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }
               : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
             onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
             onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
@@ -207,7 +207,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Free Plan</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>FREE</span>
+                style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>FREE</span>
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
               Upgrade to Pro to use Discover
@@ -223,7 +223,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
             style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>PRO</span>
+              style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>PRO</span>
             <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
           </div>
         )}
@@ -259,14 +259,14 @@ function WatchBtn({ isWatching, isAdding, onClick, size = "sm" }: {
       className={`flex items-center gap-1.5 ${px} rounded-lg ${fs} font-semibold transition-all flex-shrink-0 disabled:cursor-default`}
       style={isWatching
         ? { background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }
-        : { background: "rgba(59,130,246,0.10)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.25)", cursor: "pointer" }
+        : { background: "rgba(28,184,184,0.10)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)", cursor: "pointer" }
       }
     >
       {isAdding ? (
         <>
           <svg className="animate-spin" width={10} height={10} viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.3)" strokeWidth="3" />
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#1CB8B8" strokeWidth="3" strokeLinecap="round" />
           </svg>
           Adding…
         </>
@@ -322,7 +322,7 @@ function ResultCard({
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{result.protocolName}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
-              style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+              style={{ background: "rgba(28,184,184,0.10)", color: "#93c5fd" }}>
               {chainOpt?.short ?? result.chainName}
             </span>
           </div>
@@ -668,8 +668,8 @@ export default function DiscoverPage() {
 
             <div className="flex items-start gap-4 mb-5">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", border: "1px solid rgba(59,130,246,0.2)" }}>
-                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", border: "1px solid rgba(28,184,184,0.2)" }}>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
@@ -786,7 +786,7 @@ export default function DiscoverPage() {
                 </svg>
                 <span className="text-xs flex-1" style={{ color: "#f87171" }}>{scanError}</span>
                 {scanError.includes("Pro plan") && (
-                  <a href="/pricing" className="text-[11px] font-semibold underline flex-shrink-0" style={{ color: "#60a5fa" }}>
+                  <a href="/pricing" className="text-[11px] font-semibold underline flex-shrink-0" style={{ color: "#1CB8B8" }}>
                     Upgrade →
                   </a>
                 )}
@@ -808,7 +808,7 @@ export default function DiscoverPage() {
               <span className="text-[9px] font-bold tracking-widest uppercase ml-1" style={{ color: "var(--preview-text-3)" }}>on</span>
               {CHAIN_OPTIONS.map(c => (
                 <span key={c.id} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(59,130,246,0.10)", color: "#93c5fd" }}>
+                  style={{ background: "rgba(28,184,184,0.10)", color: "#93c5fd" }}>
                   {c.label}
                 </span>
               ))}
@@ -823,7 +823,7 @@ export default function DiscoverPage() {
                 style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(15,138,138,0.08))", border: "1px solid rgba(59,130,246,0.12)" }}>
                 <svg className="animate-spin" width={24} height={24} viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="rgba(96,165,250,0.2)" strokeWidth="3" />
-                  <path d="M12 2a10 10 0 0 1 10 10" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="#1CB8B8" strokeWidth="3" strokeLinecap="round" />
                 </svg>
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
@@ -856,7 +856,7 @@ export default function DiscoverPage() {
                     <button
                       onClick={handleWatchAll}
                       className="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}
+                      style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.10), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.2)" }}
                     >
                       Watch all {scanData.results.length} →
                     </button>
@@ -902,8 +902,8 @@ export default function DiscoverPage() {
             <div className="rounded-2xl p-10 text-center"
               style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border-2)" }}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(59,130,246,0.10)" }}>
-                <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(15,138,138,0.06))", border: "1px solid rgba(28,184,184,0.10)" }}>
+                <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   <line x1="11" y1="8" x2="11" y2="14"/>

@@ -60,7 +60,7 @@ export function MobileAppBanner() {
         style={{
           fontSize: "13px",
           fontWeight: 600,
-          color: "#60a5fa",
+          color: "#1CB8B8",
           whiteSpace: "nowrap",
           textDecoration: "none",
           flexShrink: 0,

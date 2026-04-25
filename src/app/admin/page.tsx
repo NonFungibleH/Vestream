@@ -220,8 +220,8 @@ export default async function AdminPage() {
                 {Object.entries(tierCounts).map(([tier, n]) => (
                   <span key={tier} className="text-xs px-2 py-0.5 rounded-md font-semibold"
                     style={{
-                      background: tier === "fund" ? "rgba(99,102,241,0.15)" : tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(75,85,99,0.2)",
-                      color: tier === "fund" ? "#818cf8" : tier === "pro" ? "#a78bfa" : "#9ca3af",
+                      background: tier === "fund" ? "rgba(45,138,74,0.15)" : tier === "pro" ? "rgba(28,184,184,0.15)" : "rgba(75,85,99,0.2)",
+                      color: tier === "fund" ? "#2D8A4A" : tier === "pro" ? "#1CB8B8" : "#9ca3af",
                     }}>
                     {n} {tier}
                   </span>
@@ -306,7 +306,7 @@ export default async function AdminPage() {
               ) : (
                 <div className="flex flex-col gap-3">
                   {streamsByToken.map(r => (
-                    <HBar key={r.symbol ?? "?"} label={r.symbol ?? "Unknown"} value={Number(r.cnt)} max={maxTokenStreams} color="#60a5fa" />
+                    <HBar key={r.symbol ?? "?"} label={r.symbol ?? "Unknown"} value={Number(r.cnt)} max={maxTokenStreams} color="#1CB8B8" />
                   ))}
                 </div>
               )}
@@ -431,7 +431,7 @@ export default async function AdminPage() {
                         <span className="font-semibold text-sm">{r.name}</span>
                         {r.company && (
                           <span className="text-xs px-2 py-0.5 rounded-md"
-                            style={{ background: "rgba(28,184,184,0.15)", color: "#60a5fa" }}>
+                            style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>
                             {r.company}
                           </span>
                         )}
@@ -486,7 +486,7 @@ export default async function AdminPage() {
                         {k.ownerName && <div className="text-xs" style={{ color: "#4b5563" }}>{k.ownerName}</div>}
                       </td>
                       <td className="px-4 py-3">
-                        <code className="text-xs" style={{ color: "#60a5fa" }}>{k.keyPrefix}...</code>
+                        <code className="text-xs" style={{ color: "#1CB8B8" }}>{k.keyPrefix}...</code>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"

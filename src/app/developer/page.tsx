@@ -61,10 +61,7 @@ export default function DeveloperPage() {
           <h1 className="font-bold tracking-tight mb-6"
             style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "white" }}>
             The vesting data layer<br />
-            <span style={{
-              background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #6366f1 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-            }}>
+            <span style={{ color: "#1CB8B8" }}>
               for AI agents and platforms
             </span>
           </h1>
@@ -86,7 +83,7 @@ export default function DeveloperPage() {
             </a>
             <Link href="/api-docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#60a5fa" }}>
+              style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#1CB8B8" }}>
               View API Docs →
             </Link>
           </div>
@@ -327,7 +324,7 @@ export default function DeveloperPage() {
           <div className="text-center mt-8">
             <Link href="/api-docs"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-all"
-              style={{ color: "#60a5fa" }}>
+              style={{ color: "#1CB8B8" }}>
               View full interactive documentation →
             </Link>
           </div>
@@ -391,7 +388,7 @@ export default function DeveloperPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {u.tags.map(t => (
                     <span key={t} className="text-xs px-2 py-1 rounded-md font-medium"
-                      style={{ background: "rgba(28,184,184,0.12)", color: "#60a5fa", border: "1px solid rgba(28,184,184,0.25)" }}>
+                      style={{ background: "rgba(28,184,184,0.12)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }}>
                       {t}
                     </span>
                   ))}
@@ -414,8 +411,8 @@ export default function DeveloperPage() {
             <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-8">
               <div className="flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-5"
-                  style={{ background: "rgba(99,102,241,0.15)", borderColor: "rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366f1" }} />
+                  style={{ background: "rgba(28,184,184,0.15)", borderColor: "rgba(28,184,184,0.3)", color: "#1CB8B8" }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1CB8B8" }} />
                   MCP Server included
                 </div>
                 <h2 className="font-bold text-2xl mb-3 tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
@@ -433,14 +430,14 @@ export default function DeveloperPage() {
                       for a misplaced JS comment, and escaping the quotes satisfies
                       react/no-unescaped-entities. */}
                   <span style={{ color: "#475569" }}>{"// Claude Desktop config"}</span>{"\n"}
-                  <span style={{ color: "#6366f1" }}>{'"mcpServers"'}</span>
-                  {": { "}<span style={{ color: "#6366f1" }}>{'"vestream"'}</span>{": {"}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>{'"command"'}</span>
+                  <span style={{ color: "#1CB8B8" }}>{'"mcpServers"'}</span>
+                  {": { "}<span style={{ color: "#1CB8B8" }}>{'"vestream"'}</span>{": {"}{"\n"}
+                  {"  "}<span style={{ color: "#1CB8B8" }}>{'"command"'}</span>
                   {": "}<span style={{ color: "#2D8A4A" }}>{'"npx"'}</span>{","}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>{'"args"'}</span>
+                  {"  "}<span style={{ color: "#1CB8B8" }}>{'"args"'}</span>
                   {": ["}<span style={{ color: "#2D8A4A" }}>{'"-y"'}</span>{", "}<span style={{ color: "#2D8A4A" }}>{'"@vestream/mcp"'}</span>{"],"}{"\n"}
-                  {"  "}<span style={{ color: "#6366f1" }}>{'"env"'}</span>
-                  {": { "}<span style={{ color: "#6366f1" }}>{'"VESTREAM_API_KEY"'}</span>
+                  {"  "}<span style={{ color: "#1CB8B8" }}>{'"env"'}</span>
+                  {": { "}<span style={{ color: "#1CB8B8" }}>{'"VESTREAM_API_KEY"'}</span>
                   {": "}<span style={{ color: "#2D8A4A" }}>{'"vstr_live_..."'}</span>{" }"}{"\n"}
                   {" } }"}
                 </div>
@@ -497,7 +494,7 @@ export default function DeveloperPage() {
               </ul>
               <a href="#request-access"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
-                style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#60a5fa" }}>
+                style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#1CB8B8" }}>
                 Request Access
               </a>
             </div>
@@ -513,7 +510,7 @@ export default function DeveloperPage() {
                   For production
                 </span>
               </div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#60a5fa" }}>Pro</div>
+              <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#1CB8B8" }}>Pro</div>
               <div className="flex items-baseline gap-1.5 mb-1">
                 <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Contact</span>
               </div>
@@ -568,7 +565,7 @@ export default function DeveloperPage() {
 
           <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.3)" }}>
             Already have an API key?{" "}
-            <Link href="/developer/portal" className="font-semibold transition-colors hover:opacity-80" style={{ color: "#60a5fa" }}>
+            <Link href="/developer/portal" className="font-semibold transition-colors hover:opacity-80" style={{ color: "#1CB8B8" }}>
               Access the docs →
             </Link>
           </p>

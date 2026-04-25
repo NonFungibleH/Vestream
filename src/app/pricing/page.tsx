@@ -85,11 +85,7 @@ export default function Pricing() {
         <h1 className="relative text-5xl font-bold tracking-tight mb-4 max-w-2xl"
           style={{ letterSpacing: "-0.03em", lineHeight: 1.1 }}>
           Start free.{" "}
-          <span style={{
-            background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #6366f1 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
+          <span style={{ color: "#1CB8B8" }}>
             Scale when you&apos;re ready.
           </span>
         </h1>
@@ -196,19 +192,19 @@ export default function Pricing() {
           <div className="relative rounded-2xl p-7"
             style={{
               background: "#0d0f14",
-              border: "1px solid rgba(99,102,241,0.3)",
-              boxShadow: "0 4px 40px rgba(28,184,184,0.18), 0 24px 64px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06)",
+              border: "1px solid rgba(45,138,74,0.3)",
+              boxShadow: "0 4px 40px rgba(45,138,74,0.18), 0 24px 64px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06)",
             }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 12px rgba(99,102,241,0.4)" }}>
+                style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
                 Funds &amp; teams
               </span>
             </div>
 
             <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#6366f1" }}>Enterprise</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2D8A4A" }}>Enterprise</p>
               <div className="flex items-end gap-1 mb-0.5">
                 <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
               </div>
@@ -220,7 +216,7 @@ export default function Pricing() {
             <ContactTrigger
               label="Contact us →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", textDecoration: "none" }}
+              style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", textDecoration: "none" }}
             />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
@@ -259,7 +255,7 @@ export default function Pricing() {
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#6366f1" }}>Enterprise</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2D8A4A" }}>Enterprise</span>
             </div>
 
             {([
@@ -314,7 +310,7 @@ export default function Pricing() {
                       ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2D8A4A" fillOpacity={0.12}/><path d="M5 8l2 2 4-4" stroke="#2D8A4A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: "#6366f1" }}>{fund}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: "#2D8A4A" }}>{fund}</span>
                   )}
                 </div>
               </div>
@@ -368,10 +364,10 @@ export default function Pricing() {
       <section className="px-6 pb-24">
         <div className="max-w-2xl mx-auto rounded-3xl px-10 py-12 text-center"
           style={{
-            background: "linear-gradient(135deg, #1e3a5f 0%, #1a1040 100%)",
+            background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)",
             boxShadow: "0 24px 64px rgba(15,23,42,0.22)",
           }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#6366f1" }}>Ready to start?</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#1CB8B8" }}>Ready to start?</p>
           <h2 className="text-3xl font-bold mb-3 tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
             Never miss an unlock again.
           </h2>

@@ -54,15 +54,15 @@ const THEME = {
   slateBody:      "#475569",
   slateFaint:     "#B8BABD",
   border:         "rgba(15,23,42,0.08)",
-  accentIndigo:   "#4f46e5",         // enterprise / trust
-  accentIndigoBg: "rgba(79,70,229,0.08)",
-  accentIndigoBr: "rgba(79,70,229,0.22)",
-  accentGreen:    "#2D8A4A",         // payroll / money
-  accentGreenBg:  "rgba(16,185,129,0.08)",
-  accentGreenBr:  "rgba(16,185,129,0.22)",
+  accentIndigo:   "#2D8A4A",         // enterprise / trust — forest green for premium signal
+  accentIndigoBg: "rgba(45,138,74,0.08)",
+  accentIndigoBr: "rgba(45,138,74,0.22)",
+  accentGreen:    "#0F8A8A",         // payroll / money — deep teal pairs with brand
+  accentGreenBg:  "rgba(15,138,138,0.08)",
+  accentGreenBr:  "rgba(15,138,138,0.22)",
   heroGradFrom:   "#1A1D20",
-  heroGradVia:    "#1e3a8a",
-  heroGradTo:     "#4f46e5",
+  heroGradVia:    "#0F8A8A",
+  heroGradTo:     "#1CB8B8",
 } as const;
 
 // ─── Icon primitives (inline SVG, stroke-based lucide-style) ────────────────

@@ -370,7 +370,7 @@ export default async function UnlocksIndexPage() {
         <div
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)",
+            background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)",
             border: "1px solid rgba(15,138,138,0.25)",
           }}
         >

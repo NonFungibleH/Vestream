@@ -95,7 +95,7 @@ export function AuthCard() {
                 onChange={e => setEmail(e.target.value)}
                 className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none text-gray-900 transition-colors"
                 style={{ background: "#f9fafb", border: "1px solid #e5e7eb" }}
-                onFocus={e => (e.target.style.borderColor = "#3b82f6")}
+                onFocus={e => (e.target.style.borderColor = "#1CB8B8")}
                 onBlur={e  => (e.target.style.borderColor = "#e5e7eb")}
               />
             </div>
@@ -124,7 +124,7 @@ export function AuthCard() {
                 background: "#f9fafb", border: "1px solid #e5e7eb",
                 fontSize: "1.5rem", letterSpacing: "0.4em",
               }}
-              onFocus={e => (e.target.style.borderColor = "#3b82f6")}
+              onFocus={e => (e.target.style.borderColor = "#1CB8B8")}
               onBlur={e  => (e.target.style.borderColor = "#e5e7eb")}
             />
 

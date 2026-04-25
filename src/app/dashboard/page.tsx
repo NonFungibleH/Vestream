@@ -647,7 +647,7 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
             <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>Locked</span>
           </div>
           <div className="flex items-center gap-1">
-            <svg width={10} height={10}><line x1={5} y1={0} x2={5} y2={10} stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="2 2"/></svg>
+            <svg width={10} height={10}><line x1={5} y1={0} x2={5} y2={10} stroke="#1CB8B8" strokeWidth={1.5} strokeDasharray="2 2"/></svg>
             <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>Today</span>
           </div>
         </div>
@@ -704,8 +704,8 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
         {nowSec > stream.startTime && nowSec < stream.endTime && (
           <>
             <line x1={nowX} y1={PAD.top} x2={nowX} y2={PAD.top + chartH}
-              stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 3" />
-            <text x={nowX + 4} y={PAD.top + 10} fontSize={8} fill="#60a5fa" fontWeight={600}>now</text>
+              stroke="#1CB8B8" strokeWidth={1.5} strokeDasharray="4 3" />
+            <text x={nowX + 4} y={PAD.top + 10} fontSize={8} fill="#1CB8B8" fontWeight={600}>now</text>
           </>
         )}
 
@@ -876,7 +876,7 @@ function MiniSparkline({ stream }: { stream: VestingStream }) {
       <path d={pathD} fill="none" stroke={color} strokeWidth={1.5} strokeOpacity={0.65} strokeLinejoin="round" />
       {/* Now line */}
       {inRange && (
-        <line x1={nowX} y1={0} x2={nowX} y2={H} stroke="#3b82f6" strokeWidth={1} strokeDasharray="2 2" strokeOpacity={0.9} />
+        <line x1={nowX} y1={0} x2={nowX} y2={H} stroke="#1CB8B8" strokeWidth={1} strokeDasharray="2 2" strokeOpacity={0.9} />
       )}
     </svg>
   );
@@ -933,7 +933,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
 
   const gradientStyle = dark
     ? { background: "linear-gradient(135deg, #0d0f14 0%, #0f1f4a 50%, #1a1035 100%)" }
-    : { background: "linear-gradient(135deg, #1A1D20 0%, #1e3a8a 55%, #1CB8B8 100%)" };
+    : { background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 55%, #1CB8B8 100%)" };
 
   return (
     <div className="rounded-2xl overflow-hidden mb-5 relative" style={gradientStyle}>
@@ -1528,7 +1528,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                       onClick={(e) => e.stopPropagation()}
                       title="See all vesting holders for this token"
                       className="text-[9px] font-semibold px-2 py-0.5 rounded-md transition-all duration-150 hover:brightness-125 flex-shrink-0"
-                      style={{ color: "#818cf8", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                      style={{ color: "#1CB8B8", background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)" }}>
                       All holders ↗
                     </a>
                     {claimableAmt > 0 ? (
@@ -1845,7 +1845,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
   // Convert a timestamp to a % position along the chart axis (0–100)
   const toX      = (ts: number) => totalSpan > 0 ? Math.max(0, Math.min(100, ((ts - viewStart) / totalSpan) * 100)) : 0;
   const nowX     = toX(nowSec);
-  const nowColor = "#3b82f6";
+  const nowColor = "#1CB8B8";
 
   const labelCount = 5;
   const timeLabels = Array.from({ length: labelCount }, (_, i) => {
@@ -2183,7 +2183,7 @@ function MonthlyCashFlow({
           </p>
           {/* Show partial USD total when not all tokens have prices */}
           {!hasPrice && totalUSD > 0 && (
-            <p className="text-[11px] font-semibold tabular-nums" style={{ color: "#60a5fa" }}>
+            <p className="text-[11px] font-semibold tabular-nums" style={{ color: "#1CB8B8" }}>
               {fmtUSD(totalUSD)} est. value
             </p>
           )}
@@ -2210,7 +2210,7 @@ function MonthlyCashFlow({
               <div key={d.month} className="flex-1 flex flex-col items-center justify-end overflow-hidden gap-px">
                 {primary && (
                   <span className="tabular-nums font-bold leading-none select-none truncate text-center"
-                    style={{ fontSize: 9, color: isCur ? "#60a5fa" : "var(--preview-text-2)" }}>
+                    style={{ fontSize: 9, color: isCur ? "#1CB8B8" : "var(--preview-text-2)" }}>
                     {primary}
                   </span>
                 )}
@@ -2311,7 +2311,7 @@ function MonthlyCashFlow({
                 {show && (
                   <span className="text-[9px] leading-none"
                     style={{
-                      color:      i === 0 ? "#60a5fa" : "var(--preview-text-3)",
+                      color:      i === 0 ? "#1CB8B8" : "var(--preview-text-3)",
                       fontWeight: i === 0 ? 700 : 400,
                     }}>
                     {d.month}
@@ -2425,7 +2425,7 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
               className="text-[10px] font-medium px-2 py-0.5 rounded-md transition-all"
               style={{
                 background:   showNoPriceTokens ? "rgba(99,102,241,0.12)" : "var(--preview-muted-2)",
-                color:        showNoPriceTokens ? "#818cf8" : "var(--preview-text-3)",
+                color:        showNoPriceTokens ? "#1CB8B8" : "var(--preview-text-3)",
                 border:       showNoPriceTokens ? "1px solid rgba(99,102,241,0.3)" : "1px solid var(--preview-border-2)",
               }}>
               {showNoPriceTokens ? `Hide ${noPriceCount} unlisted` : `+${noPriceCount} unlisted`}
@@ -2446,7 +2446,7 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
       ) : visibleMarket.length === 0 ? (
         <div className="px-6 py-6 text-center text-[12px]" style={{ color: "var(--preview-text-3)" }}>
           No price data available.{noPriceCount > 0 && (
-            <button onClick={() => setShowNoPriceTokens(true)} className="ml-1 underline" style={{ color: "#818cf8" }}>
+            <button onClick={() => setShowNoPriceTokens(true)} className="ml-1 underline" style={{ color: "#1CB8B8" }}>
               Show {noPriceCount} unlisted token{noPriceCount > 1 ? "s" : ""}.
             </button>
           )}
@@ -2612,9 +2612,9 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
                     {m.dexToolsUrl && (
                       <a href={m.dexToolsUrl} target="_blank" rel="noopener noreferrer"
                         className="flex-1 text-center text-[10px] font-semibold py-1 rounded-lg transition-all"
-                        style={{ background: "rgba(59,130,246,0.1)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}
+                        style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.2)" }}
                         onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.18)")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.1)")}>
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(28,184,184,0.1)")}>
                         DexTools ↗
                       </a>
                     )}
@@ -3404,7 +3404,7 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
       {tier !== "free" && (
         <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
           Not sure which platform holds your vesting?{" "}
-          <a href="/dashboard/discover" className="underline" style={{ color: "#60a5fa" }}>
+          <a href="/dashboard/discover" className="underline" style={{ color: "#1CB8B8" }}>
             Search all platforms →
           </a>
         </p>
@@ -3613,7 +3613,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               onClick={() => router.push(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
-                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)" }
+                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(59,130,246,0.15)" }
                 : { color: isDiscoverLocked ? "var(--preview-text-3)" : "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
               onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
@@ -3622,7 +3622,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               {item.label}
               {isDiscoverLocked && (
                 <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                  style={{ background: "rgba(28,184,184,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)" }}>
+                  style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.2)" }}>
                   Pro
                 </span>
               )}
@@ -3719,7 +3719,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Free Plan</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>FREE</span>
+                style={{ background: "rgba(59,130,246,0.15)", color: "#1CB8B8" }}>FREE</span>
             </div>
             {/* Wallet usage bar */}
             <div className="w-full h-1 rounded-full mb-1.5" style={{ background: "var(--preview-border)" }}>

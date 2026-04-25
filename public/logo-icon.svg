@@ -1,31 +1,13 @@
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1CB8B8"/>
-      <stop offset="1" stop-color="#0F8A8A"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Background -->
-  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-
-  <!-- Right-arm trajectory guide (ghost line) -->
-  <line x1="50" y1="67" x2="82" y2="26"
-    stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.18"/>
-
-  <!-- Left arm — solid (vested / the past) -->
-  <line x1="18" y1="26" x2="50" y2="67"
-    stroke="white" stroke-width="9" stroke-linecap="round"/>
-
-  <!-- Glow halo around valley dot -->
-  <circle cx="50" cy="67" r="11" fill="white" fill-opacity="0.12"/>
-
-  <!-- Valley dot — the "now" moment -->
-  <circle cx="50" cy="67" r="5.5" fill="white"/>
-
-  <!-- Future dots — fading stream of upcoming unlocks -->
-  <circle cx="58"  cy="57"   r="4.5" fill="white" fill-opacity="0.78"/>
-  <circle cx="66"  cy="46.5" r="3.5" fill="white" fill-opacity="0.52"/>
-  <circle cx="74"  cy="36"   r="2.5" fill="white" fill-opacity="0.30"/>
-  <circle cx="82"  cy="26"   r="1.8" fill="white" fill-opacity="0.15"/>
+  <title>Vestream icon</title>
+  <!--
+    Three cascading slabs — each one wider than the one above. Reads as
+    "vested value accumulating over time": the bottom slab is solid teal
+    (the present, what's already vested) and the upper slabs fade into
+    the past. The right edge of each slab steps forward on the diagonal,
+    giving the mark momentum.
+  -->
+  <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="#1A1D20" opacity="0.35"/>
+  <path d="M22 46 L70 46 L78 54 L22 54 Z" fill="#1A1D20" opacity="0.65"/>
+  <path d="M22 62 L78 62 L86 70 L22 70 Z" fill="#1CB8B8"/>
 </svg>

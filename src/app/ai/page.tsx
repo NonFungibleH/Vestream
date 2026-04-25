@@ -44,7 +44,7 @@ function ToolCard({
         <div className="flex items-center gap-2 mb-2">
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-md"
-            style={{ background: "rgba(28,184,184,0.15)", color: "#60a5fa" }}
+            style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}
           >
             tool
           </span>
@@ -106,9 +106,7 @@ export default function AiPage() {
           >
             The vesting data layer<br />
             <span style={{
-              background: "linear-gradient(135deg, #0F8A8A 0%, #1CB8B8 60%, #6366f1 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: "#1CB8B8",
             }}>
               for AI agents
             </span>
@@ -248,7 +246,7 @@ export default function AiPage() {
           <div className="p-6 flex flex-col gap-5" style={{ background: "#0d0f14" }}>
             {/* User message */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(28,184,184,0.2)", color: "#60a5fa" }}>U</div>
+              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>U</div>
               <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm" style={{ background: "#1e2330", color: "white", maxWidth: "80%" }}>
                 Check wallet 0x3f5CE96...8b2e for any token unlocks in the next 14 days. Summarise the total USD value and which protocols are involved.
               </div>
@@ -420,7 +418,7 @@ export default function AiPage() {
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-              color: "#8b5cf6", bg: "rgba(139,92,246,0.1)", border: "rgba(139,92,246,0.2)",
+              color: "#C47A1A", bg: "rgba(196,122,26,0.1)", border: "rgba(196,122,26,0.2)",
               title: "Wallet app integrations",
               body: "Embed Vestream vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
             },
@@ -487,7 +485,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-24 max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #1a1040 0%, #0f1525 100%)", border: "1px solid rgba(15,138,138,0.2)" }}
+          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(15,138,138,0.2)" }}
         >
           <div className="absolute inset-0 pointer-events-none" style={{
             background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(15,138,138,0.15) 0%, transparent 70%)",

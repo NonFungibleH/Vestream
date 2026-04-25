@@ -1,54 +1,22 @@
 <svg viewBox="0 0 380 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <!-- Icon background gradient -->
-    <linearGradient id="iconBg" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1CB8B8"/>
-      <stop offset="1" stop-color="#0F8A8A"/>
-    </linearGradient>
+  <!--
+    Horizontal lockup (light backgrounds). The icon sits in the left
+    80×80 region scaled from a 100×100 source, with the wordmark to its
+    right. Single-fill wordmark — no split, no gradient — so the eye
+    reads "Vestream" as one word.
+  -->
+  <g transform="scale(0.8)">
+    <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="#1A1D20" opacity="0.35"/>
+    <path d="M22 46 L70 46 L78 54 L22 54 Z" fill="#1A1D20" opacity="0.65"/>
+    <path d="M22 62 L78 62 L86 70 L22 70 Z" fill="#1CB8B8"/>
+  </g>
 
-    <!-- Wordmark gradient — matches the mark so the eye reads the
-         logo as one unit. "ream" stays in dark ink to anchor the wordmark. -->
-    <linearGradient id="tGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1CB8B8"/>
-      <stop offset="1" stop-color="#0F8A8A"/>
-    </linearGradient>
-  </defs>
-
-  <!-- ── Icon mark (80×80) ──────────────────────────────────
-       Preserves the existing vesting symbol (solid past-arm →
-       present dot → fading future-unlock dots) because the
-       underlying product didn't change — only the brand name. -->
-  <rect width="80" height="80" rx="18" fill="url(#iconBg)"/>
-
-  <!-- Ghost right-arm trajectory -->
-  <line x1="40" y1="53.5" x2="65.5" y2="20.5"
-    stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.18"/>
-
-  <!-- Left arm (solid) -->
-  <line x1="14.5" y1="20.5" x2="40" y2="53.5"
-    stroke="white" stroke-width="7.2" stroke-linecap="round"/>
-
-  <!-- Valley glow -->
-  <circle cx="40" cy="53.5" r="9" fill="white" fill-opacity="0.12"/>
-  <!-- Valley dot -->
-  <circle cx="40" cy="53.5" r="4.4" fill="white"/>
-
-  <!-- Future dots -->
-  <circle cx="46.4" cy="45.2"  r="3.6" fill="white" fill-opacity="0.78"/>
-  <circle cx="52.8" cy="37"    r="2.8" fill="white" fill-opacity="0.52"/>
-  <circle cx="59.2" cy="28.7"  r="2.0" fill="white" fill-opacity="0.30"/>
-  <circle cx="65.5" cy="20.5"  r="1.4" fill="white" fill-opacity="0.15"/>
-
-  <!-- ── Wordmark ───────────────────────────────────────────
-       "Vest" receives the brand gradient (matches the mark);
-       "ream" stays in dark ink so the composite reads cleanly. -->
   <text
-    x="97" y="52"
+    x="84" y="54"
     font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
     font-size="40"
     font-weight="800"
     letter-spacing="-0.03em"
-  >
-    <tspan fill="url(#tGrad)">Vest</tspan><tspan fill="#1A1D20" font-weight="700">ream</tspan>
-  </text>
+    fill="#1A1D20"
+  >Vestream</text>
 </svg>

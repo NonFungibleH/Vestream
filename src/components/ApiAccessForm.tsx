@@ -103,7 +103,7 @@ export function ApiAccessForm() {
                 style={{
                   background: active ? "rgba(28,184,184,0.15)" : "rgba(255,255,255,0.05)",
                   border: active ? "1px solid rgba(28,184,184,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                  color: active ? "#60a5fa" : "rgba(255,255,255,0.45)",
+                  color: active ? "#1CB8B8" : "rgba(255,255,255,0.45)",
                 }}>
                 {p}
               </button>

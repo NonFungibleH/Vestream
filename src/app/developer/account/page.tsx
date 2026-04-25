@@ -57,7 +57,7 @@ export default async function DeveloperAccount() {
         <div className="flex items-center gap-6">
           <Link href="/api-docs"
             className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-            style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.25)", color: "#60a5fa" }}>
+            style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.25)", color: "#1CB8B8" }}>
             API Docs →
           </Link>
           <form action="/api/developer/logout" method="POST">
@@ -151,7 +151,7 @@ export default async function DeveloperAccount() {
             {!isPro && (
               <Link href="/contact?subject=pro-api"
                 className="block text-xs mt-3 font-semibold transition-colors hover:opacity-80"
-                style={{ color: "#60a5fa" }}>
+                style={{ color: "#1CB8B8" }}>
                 Upgrade to Pro →
               </Link>
             )}
@@ -167,7 +167,7 @@ export default async function DeveloperAccount() {
           </p>
           <div className="flex items-center gap-3 mb-4">
             <code className="text-sm font-mono px-3 py-2 rounded-lg flex-1"
-              style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)", color: "#60a5fa" }}>
+              style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.07)", color: "#1CB8B8" }}>
               {key.keyPrefix}••••••••••••••••••••••••••••••••••••••••••••••••••••••••
             </code>
           </div>
@@ -268,9 +268,9 @@ export default async function DeveloperAccount() {
           </div>
           <p className="text-xs mb-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
             Your API key also works with the Vestream MCP server — three
-            agent-native tools (<code style={{ color: "#60a5fa" }}>get_wallet_vestings</code>,{" "}
-            <code style={{ color: "#60a5fa" }}>get_upcoming_unlocks</code>,{" "}
-            <code style={{ color: "#60a5fa" }}>get_stream</code>) over the
+            agent-native tools (<code style={{ color: "#1CB8B8" }}>get_wallet_vestings</code>,{" "}
+            <code style={{ color: "#1CB8B8" }}>get_upcoming_unlocks</code>,{" "}
+            <code style={{ color: "#1CB8B8" }}>get_stream</code>) over the
             same REST backend.
           </p>
 

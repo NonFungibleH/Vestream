@@ -139,7 +139,7 @@ function StyledInput({ placeholder, value, onChange, type = "text", fontMono = f
         border: "1px solid var(--preview-border)",
         color: "var(--preview-text)",
       }}
-      onFocus={(e) => (e.currentTarget.style.borderColor = "#3b82f6")}
+      onFocus={(e) => (e.currentTarget.style.borderColor = "#1CB8B8")}
       onBlur={(e) => (e.currentTarget.style.borderColor = "var(--preview-border)")}
     />
   );
@@ -175,8 +175,8 @@ function TogglePill({ label, active, onClick, saving }: {
       className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-100 flex-shrink-0 disabled:opacity-60"
       style={{
         background: active ? "rgba(28,184,184,0.12)" : "var(--preview-muted-2)",
-        color:      active ? "#3b82f6"               : "var(--preview-text-3)",
-        border:     active ? "1px solid rgba(59,130,246,0.3)" : "1px solid var(--preview-border-2)",
+        color:      active ? "#1CB8B8"               : "var(--preview-text-3)",
+        border:     active ? "1px solid rgba(28,184,184,0.3)" : "1px solid var(--preview-border-2)",
       }}
     >
       {label}
@@ -329,7 +329,7 @@ function WalletCard({
                 onKeyDown={(e) => { if (e.key === "Enter") saveLabel(); if (e.key === "Escape") setEditingLabel(false); }}
                 placeholder="Label (e.g. Portfolio Co A)"
                 className="flex-1 text-xs rounded-lg px-2.5 py-1.5 outline-none"
-                style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
+                style={{ background: "var(--preview-card)", border: "1px solid #1CB8B8", color: "var(--preview-text)" }}
               />
               <button onClick={saveLabel} disabled={savingLabel}
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white disabled:opacity-60"
@@ -419,12 +419,12 @@ function WalletCard({
 
         {/* ── Discover link ── */}
         <div className="flex items-center gap-2.5 pt-1" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.625rem" }}>
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
             Not sure which platforms this wallet uses?{" "}
-            <a href="/dashboard/discover" className="font-semibold underline" style={{ color: "#60a5fa" }}>
+            <a href="/dashboard/discover" className="font-semibold underline" style={{ color: "#1CB8B8" }}>
               Scan all platforms in Discover →
             </a>
           </p>
@@ -452,7 +452,7 @@ function WalletCard({
                 onChange={(e) => setTokenAddrValue(e.target.value)}
                 placeholder="Token contract address (0x… or Solana mint)"
                 className="flex-1 text-xs font-mono rounded-lg px-2.5 py-1.5 outline-none"
-                style={{ background: "var(--preview-card)", border: "1px solid #3b82f6", color: "var(--preview-text)" }}
+                style={{ background: "var(--preview-card)", border: "1px solid #1CB8B8", color: "var(--preview-text)" }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") saveTokenAddr();
                   if (e.key === "Escape") { setEditingTokenAddr(false); setTokenAddrValue(wallet.tokenAddress ?? ""); }
@@ -473,7 +473,7 @@ function WalletCard({
                 <>
                   <p className="text-[10px] font-mono flex-1 truncate" style={{ color: "var(--preview-text-2)" }}>{wallet.tokenAddress}</p>
                   <button onClick={() => { setEditingTokenAddr(true); setTokenAddrValue(wallet.tokenAddress ?? ""); }}
-                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>Edit</button>
+                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#1CB8B8" }}>Edit</button>
                   <button onClick={() => saveTokenAddrRaw(null)} disabled={savingTokenAddr}
                     className="text-[10px] flex-shrink-0 underline disabled:opacity-60" style={{ color: "#f87171" }}>Clear</button>
                 </>
@@ -483,7 +483,7 @@ function WalletCard({
                     None — scanning all tokens
                   </p>
                   <button onClick={() => setEditingTokenAddr(true)}
-                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#60a5fa" }}>
+                    className="text-[10px] flex-shrink-0 underline" style={{ color: "#1CB8B8" }}>
                     Set filter
                   </button>
                 </>
@@ -683,7 +683,7 @@ export default function Settings() {
             <Link key={item.label} href={item.href}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
-                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.15)", display: "flex" }
+                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)", display: "flex" }
                 : { color: "var(--preview-text-2)", border: "1px solid transparent", display: "flex" }}
               onMouseEnter={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
               onMouseLeave={(e) => { if (!item.active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -706,7 +706,7 @@ export default function Settings() {
               onClick={() => setActiveSection(sec.id)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-left"
               style={activeSection === sec.id
-                ? { background: "rgba(28,184,184,0.08)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.12)" }
+                ? { background: "rgba(28,184,184,0.08)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.12)" }
                 : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "var(--preview-muted)"; }}
               onMouseLeave={(e) => { if (activeSection !== sec.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -873,7 +873,7 @@ export default function Settings() {
 
                 <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
                   Not sure?{" "}
-                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#60a5fa" }}>
+                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#1CB8B8" }}>
                     Scan all platforms in Discover →
                   </a>
                 </p>
@@ -946,7 +946,7 @@ export default function Settings() {
                             style={{
                               background: isActive ? "#1CB8B818" : "var(--preview-muted-2)",
                               borderColor: isActive ? "#1CB8B855" : "var(--preview-border-2)",
-                              color: isActive ? "#3b82f6" : "var(--preview-text-3)",
+                              color: isActive ? "#1CB8B8" : "var(--preview-text-3)",
                             }}>
                             {h < 24 ? `${h}h` : `${h / 24}d`} before
                           </button>
@@ -1002,8 +1002,8 @@ export default function Settings() {
             {/* ── Mobile push notifications ── */}
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl"
-                style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.14)" }}>
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                style={{ background: "rgba(28,184,184,0.04)", border: "1px solid rgba(28,184,184,0.14)" }}>
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
                   <line x1="12" y1="18" x2="12.01" y2="18"/>
                 </svg>
@@ -1020,8 +1020,8 @@ export default function Settings() {
                   {pushAlertsLimit !== null ? (
                     <div className="mb-3 px-3 py-2 rounded-lg"
                       style={{
-                        background: pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.08)" : "rgba(59,130,246,0.06)",
-                        border: `1px solid ${pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.25)" : "rgba(59,130,246,0.18)"}`,
+                        background: pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.08)" : "rgba(28,184,184,0.06)",
+                        border: `1px solid ${pushAlertsSent >= pushAlertsLimit ? "rgba(245,158,11,0.25)" : "rgba(28,184,184,0.18)"}`,
                       }}>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-[11px] font-semibold" style={{ color: pushAlertsSent >= pushAlertsLimit ? "#C47A1A" : "#1CB8B8" }}>
