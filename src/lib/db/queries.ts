@@ -7,6 +7,7 @@ import {
   notificationsSent,
   betaFeedback,
 } from "./schema";
+import { normaliseAddress } from "@/lib/address-validation";
 
 export async function getUserByAddress(address: string) {
   const result = await db
@@ -78,10 +79,13 @@ export async function updateWalletConfig(
 }
 
 export async function deleteWallet(userId: string, address: string) {
+  // Use ecosystem-aware normalisation: EVM addresses get lowercased (matches
+  // storage), Solana base58 pubkeys are passed through case-sensitive (a
+  // raw `.toLowerCase()` would corrupt them and silently no-op the delete).
   return db
     .delete(wallets)
     .where(
-      and(eq(wallets.userId, userId), eq(wallets.address, address.toLowerCase()))
+      and(eq(wallets.userId, userId), eq(wallets.address, normaliseAddress(address)))
     );
 }
 

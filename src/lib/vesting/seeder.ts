@@ -827,7 +827,7 @@ async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number
     }
 
     // topic[2] = beneficiary (indexed address, left-padded to 32 bytes).
-    // Stripe the 12-byte pad → 20-byte address, lowercase via dedupeAddresses.
+    // Strip the 12-byte pad → 20-byte address, lowercase via dedupeAddresses.
     const beneficiaries: string[] = [];
     for (const log of rawLogs) {
       const t2 = log.topics[2];

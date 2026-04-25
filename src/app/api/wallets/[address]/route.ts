@@ -16,18 +16,31 @@ export async function DELETE(
 
   const { address } = await params;
 
+  // Validate format BEFORE any DB work — cheap rejection for junk input,
+  // and avoids running an existence check against a malformed string.
+  if (!isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
+  }
+  const normalised = normaliseAddress(address);
+
   const user = await getUserByAddress(session.address);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   const existing = await getWalletsForUser(user.id);
-  const found = existing.find((w) => w.address === normaliseAddress(address));
+  const found = existing.find((w) => w.address === normalised);
   if (!found) {
     return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
   }
 
-  await deleteWallet(user.id, address);
+  // Pass the normalised form to the query layer so the WHERE clause matches
+  // exactly the row we just confirmed exists. `deleteWallet` lowercases
+  // again internally, which is a no-op for already-lowercased EVM
+  // addresses and the right thing for Solana (we pass the unchanged
+  // case-sensitive base58, and the duplicate `.toLowerCase()` would
+  // otherwise turn it into a string that never matches the row).
+  await deleteWallet(user.id, normalised);
   return new NextResponse(null, { status: 204 });
 }
 

@@ -127,24 +127,11 @@ const raw = {
     description: "shared secret RevenueCat sends in Authorization header",
   }, problems),
 
-  STRIPE_SECRET_KEY: readEnv("STRIPE_SECRET_KEY", {
-    presence: "optional",
-    description: "Stripe secret key — only needed if Stripe checkout is enabled",
-  }, problems),
-
-  STRIPE_WEBHOOK_SECRET: readEnv("STRIPE_WEBHOOK_SECRET", {
-    presence: "optional",
-    description: "Stripe webhook signing secret",
-  }, problems),
-
-  STRIPE_PRO_PRICE_ID: readEnv("STRIPE_PRO_PRICE_ID", {
-    presence: "optional",
-    description: "Stripe price ID for the Pro monthly plan",
-  }, problems),
-
-  STRIPE_FUND_PRICE_ID: readEnv("STRIPE_FUND_PRICE_ID", {
-    presence: "optional",
-    description: "Stripe price ID for the Fund plan",
+  // Admin auth — split from CRON_SECRET so a leaked cron token can't be used
+  // to mint API keys via /api/v1/admin/keys.
+  ADMIN_API_SECRET: readEnv("ADMIN_API_SECRET", {
+    presence: "requiredInProd",
+    description: "bearer token for /api/v1/admin/* routes (key minting, listing). MUST be different from CRON_SECRET.",
   }, problems),
 
   // Observability (no-ops without it)
@@ -209,12 +196,7 @@ export const env = {
   UPSTASH_REDIS_REST_TOKEN: raw.UPSTASH_REDIS_REST_TOKEN,
   GRAPH_API_KEY: raw.GRAPH_API_KEY,
   REVENUECAT_WEBHOOK_SECRET: raw.REVENUECAT_WEBHOOK_SECRET,
-
-  // Optional integrations
-  STRIPE_SECRET_KEY: raw.STRIPE_SECRET_KEY,
-  STRIPE_WEBHOOK_SECRET: raw.STRIPE_WEBHOOK_SECRET,
-  STRIPE_PRO_PRICE_ID: raw.STRIPE_PRO_PRICE_ID,
-  STRIPE_FUND_PRICE_ID: raw.STRIPE_FUND_PRICE_ID,
+  ADMIN_API_SECRET: raw.ADMIN_API_SECRET,
 
   // Observability
   SENTRY_DSN: raw.SENTRY_DSN,

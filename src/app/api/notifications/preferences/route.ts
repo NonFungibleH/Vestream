@@ -6,6 +6,13 @@ import {
   upsertNotificationPreferences,
 } from "@/lib/db/queries";
 
+// Minimal RFC-shape email regex. Not a full RFC 5322 parser — that's neither
+// possible nor desirable in a regex — but rejects whitespace, missing @, and
+// missing TLD, which catches the realistic broken-input cases. Length cap is
+// 254 chars per RFC 5321 (the practical SMTP limit).
+const EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX = 254;
+
 export async function GET() {
   const session = await getSession();
   if (!session.address) {
@@ -37,6 +44,15 @@ export async function PUT(req: NextRequest) {
   const validHours = [1, 6, 12, 24, 48, 72];
   if (hoursBeforeUnlock !== undefined && !validHours.includes(hoursBeforeUnlock)) {
     return NextResponse.json({ error: "Invalid hoursBeforeUnlock" }, { status: 400 });
+  }
+
+  // Validate email format — without this the route stored arbitrary user
+  // input (newlines, header injection vectors, junk strings) directly into
+  // a column the cron mailer later passes to Resend.
+  if (email !== undefined && email !== null && email !== "") {
+    if (typeof email !== "string" || email.length > EMAIL_MAX || !EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
   }
 
   const update: Parameters<typeof upsertNotificationPreferences>[1] = {};

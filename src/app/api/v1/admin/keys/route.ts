@@ -1,8 +1,12 @@
 /**
  * POST /api/v1/admin/keys
  *
- * Issues a new API key. Protected by CRON_SECRET (admin-only).
+ * Issues a new API key. Protected by ADMIN_API_SECRET (admin-only).
  * The plaintext key is returned ONCE — it is never stored.
+ *
+ * Auth note: this used to share CRON_SECRET. We split them so a leaked
+ * cron token (e.g. via Vercel cron-misconfig) can't be turned into a key
+ * minting / listing privilege escalation.
  *
  * Body: {
  *   email:        string   (required)
@@ -14,25 +18,46 @@
  *
  * Example curl:
  *   curl -X POST https://vestream.io/api/v1/admin/keys \
- *     -H "Authorization: Bearer <CRON_SECRET>" \
+ *     -H "Authorization: Bearer <ADMIN_API_SECRET>" \
  *     -H "Content-Type: application/json" \
  *     -d '{"email":"partner@example.com","name":"Example Co","tier":"pro"}'
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { generateApiKey, hashApiKey } from "@/lib/api-key-auth";
+import { env } from "@/lib/env";
 
 const DEFAULT_LIMITS: Record<string, number> = {
   free: 1_000,
   pro:  100_000,
 };
 
+/**
+ * Constant-time bearer-token check. Rejects early on length mismatch so
+ * the underlying timingSafeEqual never sees buffers of differing lengths
+ * (which would throw). The token length itself is not secret.
+ */
+function isAuthorized(authHeader: string | null): boolean {
+  const expected = env.ADMIN_API_SECRET;
+  if (!expected) {
+    // Fail closed — admin routes should never serve traffic without an
+    // explicit secret configured.
+    console.error("[admin/keys] ADMIN_API_SECRET not set — rejecting all requests");
+    return false;
+  }
+  if (!authHeader) return false;
+
+  const expectedHeader = `Bearer ${expected}`;
+  if (authHeader.length !== expectedHeader.length) return false;
+  return timingSafeEqual(Buffer.from(authHeader), Buffer.from(expectedHeader));
+}
+
 export async function POST(req: NextRequest) {
-  // Admin auth — reuse CRON_SECRET so no extra env var needed
-  const auth = req.headers.get("authorization");
-  if (!auth || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Admin auth — separate secret from CRON_SECRET (see file header).
+  if (!isAuthorized(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -79,8 +104,7 @@ export async function POST(req: NextRequest) {
  * GET /api/v1/admin/keys  — list all keys (admin only, no plaintext)
  */
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (!auth || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorized(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -59,7 +59,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Pricing() {
-  const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
+  // Web checkout removed — subscriptions are App Store IAP via RevenueCat only.
+  // Pricing is shown for transparency; the CTA routes paying users to the
+  // mobile app rather than to a web checkout.
   return (
     <div className="min-h-screen" style={{ background: "#f8fafc", color: "#0f172a" }}>
 
@@ -170,7 +172,6 @@ export default function Pricing() {
             </div>
 
             <PricingCta
-              priceId={proPriceId}
               href="/early-access"
               label="Start 14-day free trial →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
@@ -384,7 +385,6 @@ export default function Pricing() {
               Start for free →
             </Link>
             <PricingCta
-              priceId={proPriceId}
               href="/early-access"
               label="Upgrade to Pro →"
               className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"

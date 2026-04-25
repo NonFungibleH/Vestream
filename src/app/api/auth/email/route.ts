@@ -1,11 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomInt, timingSafeEqual } from "node:crypto";
 import { getSession } from "@/lib/auth/session";
 import { upsertUser } from "@/lib/db/queries";
 import { Resend } from "resend";
 import { checkRateLimit } from "@/lib/ratelimit";
 
+/**
+ * Cryptographically-secure 6-digit OTP. `randomInt(min, max)` matches
+ * `Math.floor(min + Math.random() * (max-min))` numerically but uses the
+ * OS CSPRNG instead of the predictable Mersenne Twister behind Math.random.
+ */
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
+}
+
+/**
+ * Constant-time comparison of two strings. Returns false immediately on
+ * length mismatch (timingSafeEqual throws if buffers differ in length, and
+ * the length itself is not a secret here — both operands are 6-digit OTPs).
+ */
+function safeEqualStr(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
 function otpEmailHtml(otp: string): string {
@@ -162,7 +179,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Code expired. Please request a new one." }, { status: 422 });
     }
     const devOtp = process.env.NODE_ENV !== "production" ? process.env.DEV_OTP : undefined;
-    const codeMatches = session.otp === code || (devOtp && code === devOtp);
+    // Timing-safe comparison: a `===` on a 6-digit string can leak which
+    // characters matched via per-byte short-circuit timing differences. The
+    // search space (10^6) is small enough for that to matter.
+    const codeMatches =
+      safeEqualStr(session.otp, code) ||
+      (devOtp ? safeEqualStr(code, devOtp) : false);
     if (!codeMatches) {
       return NextResponse.json({ error: "Incorrect code. Please try again." }, { status: 422 });
     }

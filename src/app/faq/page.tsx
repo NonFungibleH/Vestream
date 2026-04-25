@@ -211,11 +211,11 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What personal data do you store?",
-        a: "Only: the email you signed up with, the wallet addresses you choose to track, your notification preferences, and (if you're a paid subscriber) your Stripe/RevenueCat customer ID for billing. We don't store KYC data, phone numbers, names, or any fields we don't have a concrete product reason to hold.",
+        a: "Only: the email you signed up with, the wallet addresses you choose to track, your notification preferences, and (if you're a paid subscriber) your RevenueCat customer ID for billing. We don't store KYC data, phone numbers, names, or any fields we don't have a concrete product reason to hold.",
       },
       {
         q: "Where is my data stored?",
-        a: "In a Postgres database hosted on Supabase (EU region by default). API secrets live in Vercel environment variables. Email delivery goes through Resend. Push delivery goes through Expo (for the mobile app) and Web Push (for PWAs). Payment data never touches our servers — Stripe and RevenueCat handle card details directly.",
+        a: "In a Postgres database hosted on Supabase (EU region by default). API secrets live in Vercel environment variables. Email delivery goes through Resend. Push delivery goes through Expo (for the mobile app) and Web Push (for PWAs). Payment data never touches our servers — Apple, Google, and RevenueCat handle card details directly.",
       },
       {
         q: "Is the site open source?",
@@ -292,7 +292,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What payment methods do you accept?",
-        a: "Web: any credit or debit card supported by Stripe (Visa, Mastercard, Amex, Discover, JCB, UnionPay). Apple Pay and Google Pay for in-app purchases on iOS and Android respectively. No crypto payments currently — adding USDC checkout is on the roadmap but not committed.",
+        a: "Subscriptions go through Apple App Store (iOS) or Google Play (Android) at this stage — pay with whatever payment method you have on file with the platform store, including Apple Pay and Google Pay. No crypto payments currently — adding USDC checkout is on the roadmap but not committed.",
       },
       {
         q: "Do you offer refunds?",

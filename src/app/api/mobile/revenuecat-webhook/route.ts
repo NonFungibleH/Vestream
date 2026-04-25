@@ -14,10 +14,23 @@
 //   CANCELLATION, EXPIRATION, BILLING_ISSUE     → downgrade to free
 
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/lib/env";
+
+/**
+ * Constant-time string equality. The Authorization header is a shared secret
+ * — a `!==` comparison short-circuits on the first mismatched byte and leaks
+ * a (small) amount of information about the secret to an attacker measuring
+ * response timing. Reject early on length mismatch since the secret length
+ * is not in itself confidential here.
+ */
+function authHeaderEquals(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 // Events that mean a subscription is now active
 const ACTIVE_EVENTS = new Set(["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE"]);
@@ -55,7 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
   const authHeader = req.headers.get("Authorization");
-  if (authHeader !== secret) {
+  if (!authHeader || !authHeaderEquals(authHeader, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

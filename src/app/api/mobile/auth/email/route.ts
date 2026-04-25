@@ -2,6 +2,7 @@
 // POST { action: "send", email }     → sends OTP via Resend
 // POST { action: "verify", email, code } → returns { token, user }
 import { NextRequest, NextResponse } from "next/server";
+import { randomInt } from "node:crypto";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
 import { mobileOtps } from "@/lib/db/schema";
@@ -10,8 +11,14 @@ import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
 import { checkRateLimit } from "@/lib/ratelimit";
 
+/**
+ * Cryptographically-secure 6-digit OTP. The verify path compares against a
+ * SHA-256 hash via `eq(otpHash, hashValue(code))` — fixed-length and
+ * inherently constant-time at the DB layer, so no timing-safe wrapper is
+ * needed on the comparison.
+ */
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 function otpEmailHtml(otp: string): string {
