@@ -1,6 +1,6 @@
 // packages/shared/src/vesting.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// The authoritative source of truth for TokenVest's vesting data model.
+// The authoritative source of truth for Vestream's vesting data model.
 //
 // Every adapter, every API response, every mobile screen, every MCP tool
 // eventually normalises to the `VestingStream` interface below. By keeping

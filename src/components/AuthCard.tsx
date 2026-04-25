@@ -66,8 +66,8 @@ export function AuthCard() {
       {/* Header */}
       <div className="px-7 pt-7 pb-5" style={{ borderBottom: "1px solid #f1f5f9" }}>
         <div className="flex items-center gap-3 mb-1">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-8 h-8 flex-shrink-0" />
-          <span className="font-bold text-gray-900" style={{ fontSize: 16, letterSpacing: "-0.02em" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-8 h-8 flex-shrink-0" />
+          <span className="font-bold text-gray-900" style={{ fontSize: 16, letterSpacing: "-0.02em" }}>Vestream</span>
         </div>
         <p className="text-sm text-gray-500 mt-3">
           {step === "email"

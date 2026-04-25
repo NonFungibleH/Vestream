@@ -44,8 +44,8 @@ export default function DeveloperPortal() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10 justify-center">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-8 h-8" />
-          <span className="font-bold text-lg tracking-tight text-white">TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-8 h-8" />
+          <span className="font-bold text-lg tracking-tight text-white">Vestream</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md ml-1"
             style={{ background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.25)" }}>
             Developer
@@ -58,7 +58,7 @@ export default function DeveloperPortal() {
 
           <h1 className="font-bold text-xl mb-1 text-white">Developer sign in</h1>
           <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Enter your TokenVest API key to access your account and documentation.
+            Enter your Vestream API key to access your account and documentation.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

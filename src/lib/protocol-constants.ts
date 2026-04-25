@@ -78,7 +78,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Sablier",
     tagline: "Real-time streaming token vesting",
     description:
-      "Sablier is the most widely-used non-custodial streaming payments protocol in crypto. DAOs, token teams and investors use it to vest tokens per-second with linear and tranched schedules. TokenVest tracks every Sablier stream across Ethereum, Base, BSC and Polygon and alerts the recipient the moment a cliff or tranche unlocks.",
+      "Sablier is the most widely-used non-custodial streaming payments protocol in crypto. DAOs, token teams and investors use it to vest tokens per-second with linear and tranched schedules. Vestream tracks every Sablier stream across Ethereum, Base, BSC and Polygon and alerts the recipient the moment a cliff or tranche unlocks.",
     color: "#f97316",
     bg:    "rgba(249,115,22,0.08)",
     border:"rgba(249,115,22,0.22)",
@@ -92,9 +92,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "sablier unlock notification",
     ],
     useCases: [
-      { title: "Founder equity streams",    body: "Most protocol teams on Sablier vest founder and core-team tokens over 3–4 years with a 1-year cliff. TokenVest pings you the moment each per-second drip crosses a meaningful claim threshold." },
-      { title: "Investor cliff tranches",   body: "Seed and Series A investors typically receive LockupTranched streams. TokenVest surfaces every tranche date with its exact token amount — so no cliff ever sneaks past you." },
-      { title: "DAO contributor grants",    body: "DAOs that pay contributors via Sablier can point recipients at TokenVest to track their own stream with push alerts. No more opening Etherscan every week." },
+      { title: "Founder equity streams",    body: "Most protocol teams on Sablier vest founder and core-team tokens over 3–4 years with a 1-year cliff. Vestream pings you the moment each per-second drip crosses a meaningful claim threshold." },
+      { title: "Investor cliff tranches",   body: "Seed and Series A investors typically receive LockupTranched streams. Vestream surfaces every tranche date with its exact token amount — so no cliff ever sneaks past you." },
+      { title: "DAO contributor grants",    body: "DAOs that pay contributors via Sablier can point recipients at Vestream to track their own stream with push alerts. No more opening Etherscan every week." },
     ],
     relatedSlugs: ["superfluid", "hedgey", "uncx"],
     testimonials: [],
@@ -107,7 +107,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Hedgey",
     tagline: "NFT-based team vesting plans",
     description:
-      "Hedgey represents every vesting plan as an NFT — portable, on-chain, and fully visible in any wallet. It's the default for team token distribution at dozens of mid-cap projects. TokenVest indexes every Hedgey plan across Ethereum, Base, BSC and Polygon and reminds the beneficiary before each unlock.",
+      "Hedgey represents every vesting plan as an NFT — portable, on-chain, and fully visible in any wallet. It's the default for team token distribution at dozens of mid-cap projects. Vestream indexes every Hedgey plan across Ethereum, Base, BSC and Polygon and reminds the beneficiary before each unlock.",
     color: "#7c3aed",
     bg:    "rgba(124,58,237,0.08)",
     border:"rgba(124,58,237,0.22)",
@@ -121,9 +121,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "hedgey nft vesting",
     ],
     useCases: [
-      { title: "Team plan distribution",     body: "Issuers allocate hundreds of Hedgey plan NFTs to their team at TGE — TokenVest gives every recipient a single dashboard for their plan, no CSV needed." },
+      { title: "Team plan distribution",     body: "Issuers allocate hundreds of Hedgey plan NFTs to their team at TGE — Vestream gives every recipient a single dashboard for their plan, no CSV needed." },
       { title: "Private round investors",    body: "Investors holding Hedgey plan NFTs see the exact unlock schedule, next cliff, and claimable amount — not a vague 'check the contract' page." },
-      { title: "Transferable vesting",       body: "Because Hedgey plans are NFTs, you can transfer or sell them. TokenVest keeps tracking a plan even after it changes wallets — unlock alerts follow the current owner." },
+      { title: "Transferable vesting",       body: "Because Hedgey plans are NFTs, you can transfer or sell them. Vestream keeps tracking a plan even after it changes wallets — unlock alerts follow the current owner." },
     ],
     relatedSlugs: ["sablier", "team-finance", "uncx"],
     testimonials: [],
@@ -136,7 +136,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Team Finance",
     tagline: "Team token vesting and lock proof",
     description:
-      "Team Finance lets token issuers lock team and treasury tokens with transparent on-chain proof and scheduled release — the standard tool many launchpad-era projects rely on. TokenVest indexes every Team Finance vesting contract across four chains so holders and the team can see the next unlock at a glance.",
+      "Team Finance lets token issuers lock team and treasury tokens with transparent on-chain proof and scheduled release — the standard tool many launchpad-era projects rely on. Vestream indexes every Team Finance vesting contract across four chains so holders and the team can see the next unlock at a glance.",
     color: "#10b981",
     bg:    "rgba(16,185,129,0.08)",
     border:"rgba(16,185,129,0.22)",
@@ -150,9 +150,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "team token unlock alerts",
     ],
     useCases: [
-      { title: "Team token locks",           body: "Most Team Finance schedules lock founder allocations for 12–36 months. TokenVest notifies the beneficiary before each instalment releases — no manual calendar needed." },
-      { title: "Investor proof-of-lock",     body: "Buyers checking whether a project's team is still time-locked can cross-reference TokenVest's index against the claim URL to verify what's actually on-chain." },
-      { title: "Multi-chain coverage",       body: "Teams often lock on the cheapest chain — Base or BSC — even when their token lives on Ethereum. TokenVest follows the lock regardless." },
+      { title: "Team token locks",           body: "Most Team Finance schedules lock founder allocations for 12–36 months. Vestream notifies the beneficiary before each instalment releases — no manual calendar needed." },
+      { title: "Investor proof-of-lock",     body: "Buyers checking whether a project's team is still time-locked can cross-reference Vestream's index against the claim URL to verify what's actually on-chain." },
+      { title: "Multi-chain coverage",       body: "Teams often lock on the cheapest chain — Base or BSC — even when their token lives on Ethereum. Vestream follows the lock regardless." },
     ],
     relatedSlugs: ["uncx", "hedgey", "pinksale"],
     testimonials: [],
@@ -168,7 +168,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "UNCX",
     tagline: "Token vesting and locker suite",
     description:
-      "UNCX Network (formerly UniCrypt) runs one of crypto's longest-standing token-locker and vesting suites. Projects use it to lock LP tokens and team allocations with customisable cliff-plus-cycle schedules. TokenVest tracks both the classic TokenVesting and newer VestingManager contracts across four chains.",
+      "UNCX Network (formerly UniCrypt) runs one of crypto's longest-standing token-locker and vesting suites. Projects use it to lock LP tokens and team allocations with customisable cliff-plus-cycle schedules. Vestream tracks both the classic TokenVesting and newer VestingManager contracts across four chains.",
     color: "#2563eb",
     bg:    "rgba(37,99,235,0.08)",
     border:"rgba(37,99,235,0.22)",
@@ -182,8 +182,8 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "uncx token vesting",
     ],
     useCases: [
-      { title: "Launchpad-era team locks",   body: "Many projects that listed through UNCX still use its TokenVesting contract for their team allocation. TokenVest tells the team when each cliff is due." },
-      { title: "Cycle-based drips",          body: "UNCX supports complex cliff-plus-cycle release — e.g. 10% at TGE then 5% monthly for 18 months. TokenVest flattens that into a clean next-unlock timestamp." },
+      { title: "Launchpad-era team locks",   body: "Many projects that listed through UNCX still use its TokenVesting contract for their team allocation. Vestream tells the team when each cliff is due." },
+      { title: "Cycle-based drips",          body: "UNCX supports complex cliff-plus-cycle release — e.g. 10% at TGE then 5% monthly for 18 months. Vestream flattens that into a clean next-unlock timestamp." },
       { title: "Side-by-side variants",      body: "We merge the classic TokenVesting and newer VestingManager contracts into one unified view so you don't need to know which variant you're on." },
     ],
     relatedSlugs: ["team-finance", "pinksale", "unvest"],
@@ -201,7 +201,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Unvest",
     tagline: "Step and milestone vesting",
     description:
-      "Unvest gives token issuers fine-grained control over release schedules — step-by-step milestones, custom cliffs, and per-beneficiary plans. Common for token sales that need deliberate, event-driven release. TokenVest indexes every Unvest V3 contract across Ethereum, Base, BSC and Polygon.",
+      "Unvest gives token issuers fine-grained control over release schedules — step-by-step milestones, custom cliffs, and per-beneficiary plans. Common for token sales that need deliberate, event-driven release. Vestream indexes every Unvest V3 contract across Ethereum, Base, BSC and Polygon.",
     color: "#0891b2",
     bg:    "rgba(8,145,178,0.08)",
     border:"rgba(8,145,178,0.22)",
@@ -215,9 +215,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "unvest milestone unlock",
     ],
     useCases: [
-      { title: "Event-driven unlocks",       body: "Some Unvest schedules release on milestone events rather than linear time. TokenVest tracks the step timestamps and surfaces the next scheduled release." },
-      { title: "Per-beneficiary plans",      body: "Each recipient on an Unvest contract can have a different schedule — TokenVest reads them individually so your view is exactly your allocation." },
-      { title: "TGE + post-TGE drip",        body: "A classic split is 25% at TGE and the rest in six monthly tranches. TokenVest sorts tranches chronologically and tells you when each is due." },
+      { title: "Event-driven unlocks",       body: "Some Unvest schedules release on milestone events rather than linear time. Vestream tracks the step timestamps and surfaces the next scheduled release." },
+      { title: "Per-beneficiary plans",      body: "Each recipient on an Unvest contract can have a different schedule — Vestream reads them individually so your view is exactly your allocation." },
+      { title: "TGE + post-TGE drip",        body: "A classic split is 25% at TGE and the rest in six monthly tranches. Vestream sorts tranches chronologically and tells you when each is due." },
     ],
     relatedSlugs: ["sablier", "uncx", "hedgey"],
     testimonials: [],
@@ -229,7 +229,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Superfluid",
     tagline: "Continuous per-second streaming",
     description:
-      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. TokenVest indexes Superfluid's vesting scheduler across Ethereum, Base, BSC and Polygon.",
+      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. Vestream indexes Superfluid's vesting scheduler across Ethereum, Base, BSC and Polygon.",
     color: "#1db954",
     bg:    "rgba(29,185,84,0.08)",
     border:"rgba(29,185,84,0.22)",
@@ -243,9 +243,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "superfluid scheduler alerts",
     ],
     useCases: [
-      { title: "DAO payroll streams",        body: "DAOs that pay contributors via continuous streams need a simple way for each contributor to see their own flow — TokenVest is that view." },
-      { title: "Cliff-then-linear vests",    body: "Superfluid's VestingScheduler is the only major protocol that combines an upfront cliff with a truly continuous per-second drip. TokenVest displays both phases clearly." },
-      { title: "Real-time value tracking",   body: "Because Superfluid pays per second, every page refresh shows a slightly higher claimable amount. TokenVest's countdown matches the chain exactly." },
+      { title: "DAO payroll streams",        body: "DAOs that pay contributors via continuous streams need a simple way for each contributor to see their own flow — Vestream is that view." },
+      { title: "Cliff-then-linear vests",    body: "Superfluid's VestingScheduler is the only major protocol that combines an upfront cliff with a truly continuous per-second drip. Vestream displays both phases clearly." },
+      { title: "Real-time value tracking",   body: "Because Superfluid pays per second, every page refresh shows a slightly higher claimable amount. Vestream's countdown matches the chain exactly." },
     ],
     relatedSlugs: ["sablier", "hedgey", "unvest"],
     testimonials: [],
@@ -261,7 +261,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "PinkSale",
     tagline: "PinkLock V2 token locker",
     description:
-      "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock V2 is its on-chain token locker for team allocations and LP proofs. TokenVest reads every PinkLock V2 contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
+      "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock V2 is its on-chain token locker for team allocations and LP proofs. Vestream reads every PinkLock V2 contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
     color: "#ec4899",
     bg:    "rgba(236,72,153,0.08)",
     border:"rgba(236,72,153,0.22)",
@@ -275,9 +275,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "pinklock v2 tracker",
     ],
     useCases: [
-      { title: "Post-launch team locks",     body: "Most PinkSale launches end with the team allocation moved into PinkLock for a 6–12 month lock. TokenVest tells the team when each cycle unlocks." },
-      { title: "LP-lock transparency",       body: "PinkLock is commonly used for LP-token locks. Buyers verifying a project's liquidity schedule can pull live status from TokenVest rather than spelunking the contract." },
-      { title: "Cycle-based schedules",      body: "PinkLock V2 supports TGE% + regular cycle unlocks. TokenVest flattens that into a simple 'next unlock in Xd Yh' countdown for every recipient." },
+      { title: "Post-launch team locks",     body: "Most PinkSale launches end with the team allocation moved into PinkLock for a 6–12 month lock. Vestream tells the team when each cycle unlocks." },
+      { title: "LP-lock transparency",       body: "PinkLock is commonly used for LP-token locks. Buyers verifying a project's liquidity schedule can pull live status from Vestream rather than spelunking the contract." },
+      { title: "Cycle-based schedules",      body: "PinkLock V2 supports TGE% + regular cycle unlocks. Vestream flattens that into a simple 'next unlock in Xd Yh' countdown for every recipient." },
     ],
     relatedSlugs: ["uncx", "team-finance", "hedgey"],
     testimonials: [],
@@ -294,7 +294,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Streamflow",
     tagline: "Solana's #1 vesting protocol",
     description:
-      "Streamflow is the dominant token-vesting protocol on Solana — the go-to rail for SPL token launches, team vesting and investor unlocks. TokenVest indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
+      "Streamflow is the dominant token-vesting protocol on Solana — the go-to rail for SPL token launches, team vesting and investor unlocks. Vestream indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
     color: "#14f195",         // Solana green
     bg:    "rgba(20,241,149,0.08)",
     border:"rgba(20,241,149,0.24)",
@@ -309,8 +309,8 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "streamflow tracker",
     ],
     useCases: [
-      { title: "Solana token launches",     body: "Streamflow is the default vesting rail for new Solana projects. Team, investor and advisor allocations almost always pass through it — and TokenVest surfaces every unlock date the moment the stream is created." },
-      { title: "Cross-ecosystem holders",   body: "Many active traders hold both EVM and Solana positions. TokenVest is the first tracker that puts Streamflow unlocks next to Sablier and Hedgey in one view — no per-chain app switching." },
+      { title: "Solana token launches",     body: "Streamflow is the default vesting rail for new Solana projects. Team, investor and advisor allocations almost always pass through it — and Vestream surfaces every unlock date the moment the stream is created." },
+      { title: "Cross-ecosystem holders",   body: "Many active traders hold both EVM and Solana positions. Vestream is the first tracker that puts Streamflow unlocks next to Sablier and Hedgey in one view — no per-chain app switching." },
       { title: "SPL payroll + grants",      body: "Solana-native teams using Streamflow for recurring SPL token payments get the same unlock calendar, push alerts and claim reminders as their EVM-paid counterparts." },
     ],
     relatedSlugs: ["sablier", "hedgey", "superfluid"],
@@ -329,7 +329,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Jupiter Lock",
     tagline: "Solana's default token locker",
     description:
-      "Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem — used by JUP's own team-and-investor allocations and the majority of Solana launchpad deals since late 2024. TokenVest reads every active VestingEscrow directly from the program so recipients see their cliff, periodic drip, and claimable amount in one view — no need to open the Jupiter UI.",
+      "Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem — used by JUP's own team-and-investor allocations and the majority of Solana launchpad deals since late 2024. Vestream reads every active VestingEscrow directly from the program so recipients see their cliff, periodic drip, and claimable amount in one view — no need to open the Jupiter UI.",
     color: "#fbbf24",        // Jupiter orange-gold
     bg:    "rgba(251,191,36,0.08)",
     border:"rgba(251,191,36,0.26)",
@@ -343,9 +343,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "solana vesting escrow",
     ],
     useCases: [
-      { title: "Solana token launches",     body: "Almost every new Solana project vests team and investor tokens via Jupiter Lock since late 2024. TokenVest surfaces every unlock date the moment the escrow is created on-chain." },
-      { title: "Cliff + periodic drip",     body: "Jupiter Lock uses a clean cliff-then-periodic-release model: cliff_unlock_amount at cliff_time, then amount_per_period every frequency seconds. TokenVest flattens that into a per-step timeline with live countdown." },
-      { title: "Second Solana protocol",    body: "TokenVest now indexes two Solana rails — Streamflow and Jupiter Lock — so holders get full coverage whether they received tokens via streaming vesting or traditional lock escrows." },
+      { title: "Solana token launches",     body: "Almost every new Solana project vests team and investor tokens via Jupiter Lock since late 2024. Vestream surfaces every unlock date the moment the escrow is created on-chain." },
+      { title: "Cliff + periodic drip",     body: "Jupiter Lock uses a clean cliff-then-periodic-release model: cliff_unlock_amount at cliff_time, then amount_per_period every frequency seconds. Vestream flattens that into a per-step timeline with live countdown." },
+      { title: "Second Solana protocol",    body: "Vestream now indexes two Solana rails — Streamflow and Jupiter Lock — so holders get full coverage whether they received tokens via streaming vesting or traditional lock escrows." },
     ],
     relatedSlugs: ["streamflow", "sablier", "hedgey"],
     testimonials: [],

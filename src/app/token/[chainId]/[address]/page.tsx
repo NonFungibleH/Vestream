@@ -120,7 +120,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { chainId, address } = await params;
   const cid  = Number(chainId);
-  if (!CHAIN_NAMES[cid]) return { title: "Token not found — TokenVest" };
+  if (!CHAIN_NAMES[cid]) return { title: "Token not found — Vestream" };
 
   const [overview, market] = await Promise.all([
     getTokenOverview(cid, address),
@@ -130,7 +130,7 @@ export async function generateMetadata(
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(address);
   const chain   = CHAIN_NAMES[cid];
   const locked  = overview ? fmtTokens(overview.lockedTokensWhole) : "0";
-  const title   = `${symbol} unlocks on ${chain} — TokenVest`;
+  const title   = `${symbol} unlocks on ${chain} — Vestream`;
   const desc    = overview
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
     : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
@@ -142,7 +142,7 @@ export async function generateMetadata(
     openGraph: {
       title, description: desc,
       url: `https://vestream.io/token/${cid}/${address.toLowerCase()}`,
-      siteName: "TokenVest",
+      siteName: "Vestream",
       type: "website",
     },
   };
@@ -343,7 +343,7 @@ export default async function TokenPage(
 
       {/* ──────────────────────────────────────────────────────────────────
           Page ordering rationale — vesting-first, market-data later.
-          TokenVest is a vesting platform first; price/liquidity are
+          Vestream is a vesting platform first; price/liquidity are
           supporting context. Visitors who came here via a search for an
           unlock date should get the vesting answer before scrolling.
 
@@ -420,7 +420,7 @@ export default async function TokenPage(
               We haven&apos;t seen any active vesting streams for this token yet.
               It may not use any of the 9 protocols we track, or no streams have
               reached our cache. If you have a wallet with {symbol} vesting,
-              searching it on TokenVest will add it here.
+              searching it on Vestream will add it here.
             </p>
             <Link
               href="/find-vestings"
@@ -470,7 +470,7 @@ export default async function TokenPage(
 
       {/* ── Market stats + external links (price/liquidity/volume/FDV +
           explorer/website/X/TokenSniffer). Positioned LOWER than the
-          vesting block because TokenVest's value prop is vesting-first —
+          vesting block because Vestream's value prop is vesting-first —
           price data is supporting context, not the headline. */}
       {overview && (
         <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
@@ -489,7 +489,7 @@ export default async function TokenPage(
           $TOKEN worth fully diluted today" still have valid answers, and
           the FAQPage JSON-LD is the main SEO win regardless of whether a
           vesting schedule exists. For a not-yet-indexed token the answers
-          gracefully degrade to "TokenVest has not indexed vesting yet". */}
+          gracefully degrade to "Vestream has not indexed vesting yet". */}
       <TokenFAQ
         symbol={symbol}
         items={buildTokenFAQ({

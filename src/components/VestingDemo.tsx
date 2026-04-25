@@ -60,7 +60,7 @@ const DEFAULT_CONFIG: DemoConfig = {
   durationSec: 15 * 60,
 };
 
-// VEST leads the list because it's the most on-brand demo symbol for TokenVest;
+// VEST leads the list because it's the most on-brand demo symbol for Vestream;
 // the others (NOVA/FLUX/KLAR) are carried over from the homepage mockups so
 // users see a consistent cast of example tokens across the site.
 const TOKEN_PRESETS = ["VEST", "NOVA", "FLUX", "KLAR"] as const;
@@ -602,7 +602,7 @@ function DemoConfigForm({
               Watch your {symTrimmed || "VEST"} vesting go live on your phone
             </p>
             <p className="text-xs" style={{ color: "#64748b", lineHeight: 1.55 }}>
-              Download the TokenVest app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
+              Download the Vestream app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
             </p>
           </div>
           <AppStoreBadges comingSoon />
@@ -824,7 +824,7 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
             One-tap opt-in — no account, no email. You&rsquo;ll feel the pings land at 25%, 50%, 75% and 100%.
             {isIOSSafariWebkit() && (
               <span className="block mt-1" style={{ color: "#d97706" }}>
-                iPhone: add TokenVest to your Home Screen first (Share → Add to Home Screen) for push.
+                iPhone: add Vestream to your Home Screen first (Share → Add to Home Screen) for push.
               </span>
             )}
           </div>

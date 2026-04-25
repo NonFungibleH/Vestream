@@ -51,7 +51,7 @@ export function MobileAppBanner() {
 
       {/* Text */}
       <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
-        Get push notifications for every unlock — download the TokenVest app
+        Get push notifications for every unlock — download the Vestream app
       </span>
 
       {/* Link */}

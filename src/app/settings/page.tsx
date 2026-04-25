@@ -666,9 +666,9 @@ export default function Settings() {
         {/* Logo */}
         <Link href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
           style={{ borderBottom: "1px solid var(--preview-border)" }}>
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7 flex-shrink-0" />
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
           <div>
-            <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>TokenVest</span>
+            <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
             <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
           </div>
         </Link>
@@ -776,7 +776,7 @@ export default function Settings() {
           {/* ── Tracked Wallets ──────────────────────────────────────────── */}
           {activeSection === "wallets" && <Section
             title="Tracked Wallets"
-            description="Choose which chains and platforms to scan for each wallet — TokenVest only loads what you need, keeping the dashboard fast."
+            description="Choose which chains and platforms to scan for each wallet — Vestream only loads what you need, keeping the dashboard fast."
           >
             {/* Wallet list */}
             {wallets.length === 0 ? (
@@ -1010,7 +1010,7 @@ export default function Settings() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Mobile push notifications</p>
                   <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
-                    Get instant push notifications the moment a token unlocks — straight to your phone. Available in the TokenVest app.
+                    Get instant push notifications the moment a token unlocks — straight to your phone. Available in the Vestream app.
                   </p>
 
                   {/* Push-credit counter — Free is 3 lifetime, paid is

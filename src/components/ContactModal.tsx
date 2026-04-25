@@ -143,7 +143,7 @@ export default function ContactModal({
           <>
             {/* Header */}
             <div className="px-8 pt-8 pb-5" style={{ borderBottom: "1px solid #f1f5f9" }}>
-              <img src="/logo-icon.svg" alt="TokenVest" className="w-10 h-10 mb-4" />
+              <img src="/logo-icon.svg" alt="Vestream" className="w-10 h-10 mb-4" />
               <h2 id="contact-modal-title" className="text-xl font-bold mb-1" style={{ color: "#0f172a" }}>
                 Get in touch
               </h2>

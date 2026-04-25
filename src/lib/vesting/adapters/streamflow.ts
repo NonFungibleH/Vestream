@@ -1,6 +1,6 @@
 // src/lib/vesting/adapters/streamflow.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Streamflow adapter — first non-EVM protocol in TokenVest.
+// Streamflow adapter — first non-EVM protocol in Vestream.
 //
 // Streamflow is Solana's dominant vesting protocol (~$2.5B peak TVL,
 // 1.3M users, 25k+ token launches). Their TypeScript SDK (@streamflow/stream)

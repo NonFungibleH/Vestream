@@ -4,11 +4,11 @@ import { getAllArticles } from "@/lib/articles";
 import { SiteNav } from "@/components/SiteNav";
 
 export const metadata: Metadata = {
-  title: "Resources – Token Vesting Guides & Insights | TokenVest",
+  title: "Resources – Token Vesting Guides & Insights | Vestream",
   description:
     "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics. Written for investors, project teams, and Web3 professionals.",
   openGraph: {
-    title: "Resources – Token Vesting Guides & Insights | TokenVest",
+    title: "Resources – Token Vesting Guides & Insights | Vestream",
     description:
       "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics.",
     url: "https://vestream.io/resources",
@@ -239,7 +239,7 @@ export default function ResourcesPage() {
             Track your token vestings in one place
           </h2>
           <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#64748b" }}>
-            TokenVest connects to all major vesting protocols across every supported chain — so you never miss an unlock.
+            Vestream connects to all major vesting protocols across every supported chain — so you never miss an unlock.
           </p>
           <Link
             href="/early-access"
@@ -254,8 +254,8 @@ export default function ResourcesPage() {
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="border-t py-8 px-4 md:px-6 text-center" style={{ borderColor: "rgba(0,0,0,0.07)" }}>
         <div className="flex items-center justify-center gap-1.5 mb-3">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-5 h-5" />
-          <span className="font-bold text-sm" style={{ color: "#0f172a" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-5 h-5" />
+          <span className="font-bold text-sm" style={{ color: "#0f172a" }}>Vestream</span>
         </div>
         <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#94a3b8" }}>
           <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy</Link>

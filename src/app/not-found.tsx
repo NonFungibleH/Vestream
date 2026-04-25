@@ -13,7 +13,7 @@ export default function NotFound() {
 
       <div className="relative">
         {/* Icon */}
-        <img src="/logo-icon.svg" alt="TokenVest" className="w-16 h-16 mx-auto mb-6" />
+        <img src="/logo-icon.svg" alt="Vestream" className="w-16 h-16 mx-auto mb-6" />
 
         {/* 404 */}
         <p className="text-8xl font-bold mb-2 tabular-nums"

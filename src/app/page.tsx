@@ -288,7 +288,7 @@ export default async function Home() {
                 <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
                   <span className="text-white text-[9px] font-bold">T</span>
                 </div>
-                <span className="text-xs font-bold text-white">TokenVest</span>
+                <span className="text-xs font-bold text-white">Vestream</span>
               </div>
               <div className="px-2 py-3 space-y-0.5">
                 {[
@@ -588,7 +588,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#0369a1", bg: "rgba(3,105,161,0.07)", border: "rgba(3,105,161,0.13)",
               title: "P&L tracker",
-              body: "Log your purchase price and individual sales. TokenVest splits your P&L into realized and unrealized — all stored locally.",
+              body: "Log your purchase price and individual sales. Vestream splits your P&L into realized and unrealized — all stored locally.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
@@ -623,7 +623,7 @@ export default async function Home() {
               Find every vesting in one search
             </h2>
             <p className="text-base leading-relaxed mb-7" style={{ color: "#64748b" }}>
-              Enter any wallet address and TokenVest simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
+              Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
             {/* Protocol pill grid — explicit list of every platform we scan, each
@@ -788,7 +788,7 @@ export default async function Home() {
               Your vestings, in your pocket
             </h2>
             <p className="text-base leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
-              The TokenVest mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
+              The Vestream mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
             </p>
             <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
               Sign up for early access to the web dashboard — the mobile app is included with your account.
@@ -847,7 +847,7 @@ export default async function Home() {
               <circle cx="32" cy="57" r="1" fill="white" fillOpacity="0.45"/>
               <circle cx="34" cy="54.5" r="0.7" fill="white" fillOpacity="0.22"/>
               {/* App title */}
-              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">TokenVest</text>
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
               {/* Bell icon background */}
@@ -889,7 +889,7 @@ export default async function Home() {
         <div className="text-center mb-14">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#94a3b8" }}>Built for</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
-            Who uses TokenVest?
+            Who uses Vestream?
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "#64748b" }}>
             Token vesting spans multiple protocols, chains, and wallets. We make it simple for anyone with tokens on a schedule.
@@ -979,7 +979,7 @@ export default async function Home() {
               {
                 step: "03", color: "#059669", bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.18)",
                 title: "Never miss an unlock",
-                body: "Your full vesting timeline appears instantly. Enable email alerts and TokenVest will notify you before every token unlock event.",
+                body: "Your full vesting timeline appears instantly. Enable email alerts and Vestream will notify you before every token unlock event.",
                 icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
               },
             ].map((s) => (
@@ -1012,24 +1012,24 @@ export default async function Home() {
         <div className="space-y-3">
           {[
             {
-              q: "Do I need to connect a wallet to use TokenVest?",
+              q: "Do I need to connect a wallet to use Vestream?",
               a: "No — you can explore the full dashboard with mock data right now, no wallet required. To track your real vesting positions you'll sign in with your Ethereum wallet using SIWE (Sign-In with Ethereum). It's a single cryptographic signature, not a transaction.",
             },
             {
-              q: "Can TokenVest access or move my funds?",
-              a: "Never. TokenVest is strictly read-only. We only read publicly available on-chain data — we never request your private key, can't initiate transactions, and have no ability to move tokens. Your wallet is used solely to prove identity.",
+              q: "Can Vestream access or move my funds?",
+              a: "Never. Vestream is strictly read-only. We only read publicly available on-chain data — we never request your private key, can't initiate transactions, and have no ability to move tokens. Your wallet is used solely to prove identity.",
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "TokenVest supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
-              a: "Enable email alerts in Settings and enter your email. TokenVest checks hourly for upcoming unlocks across all your tracked wallets, and emails you a configurable window before each event (1 hour to 3 days). You can unsubscribe at any time.",
+              a: "Enable email alerts in Settings and enter your email. Vestream checks hourly for upcoming unlocks across all your tracked wallets, and emails you a configurable window before each event (1 hour to 3 days). You can unsubscribe at any time.",
             },
             {
               q: "What is the P&L Tracker?",
-              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales — date, token amount, and sell price or total USD received. TokenVest automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). All data is stored locally in your browser — nothing is sent to any server.",
+              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales — date, token amount, and sell price or total USD received. Vestream automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). All data is stored locally in your browser — nothing is sent to any server.",
             },
             {
               q: "Can I export my data?",
@@ -1044,12 +1044,12 @@ export default async function Home() {
               a: "Yes. You can add any Ethereum address to your dashboard — useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. You authenticate once with your own wallet, then track as many addresses as you need.",
             },
             {
-              q: "Is TokenVest free to use?",
+              q: "Is Vestream free to use?",
               a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, unlimited email alerts, and 3 free push alerts so you can try mobile notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets, unlimited push alerts, the Token Vesting Explorer (Discover), and CSV/PDF export — or contact us for Enterprise if you're a fund, team, or building on our data.",
             },
             {
               q: "Do you have an API for developers and AI agents?",
-              a: "Yes. The TokenVest REST API and our @vestream/mcp MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
+              a: "Yes. The Vestream REST API and our @vestream/mcp MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
             },
           ].map((item, i) => (
             <FAQItem key={i} q={item.q} a={item.a} />
@@ -1155,7 +1155,7 @@ export default async function Home() {
 
         {/* B2B / developer nudge */}
         <p className="text-center text-sm mt-4 mb-8" style={{ color: "#64748b" }}>
-          Building on TokenVest data?{" "}
+          Building on Vestream data?{" "}
           <Link href="/developer" className="font-semibold" style={{ color: "#2563eb" }}>
             See the Developer API →
           </Link>
@@ -1221,7 +1221,7 @@ export default async function Home() {
             style={{ background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Be the first in.</h2>
           <p className="relative text-base mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-            TokenVest is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
+            Vestream is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
           </p>
           <div className="relative flex justify-center w-full">
             <WaitlistForm dark />

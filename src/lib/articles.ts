@@ -207,7 +207,7 @@ const articles: Article[] = [
           "<strong>Read your investment agreement:</strong> For private round participants, your SAFT (Simple Agreement for Future Tokens) or token purchase agreement specifies your exact vesting terms.",
           "<strong>Use a block explorer:</strong> If you know the vesting contract address, you can inspect it on Etherscan, BscScan, or Basescan to see your locked balance and schedule.",
           "<strong>Use a protocol-native dashboard:</strong> Platforms like Sablier, Team Finance, and Hedgey all provide dashboards where you can connect your wallet and view active positions.",
-          "<strong>Use a dedicated vesting tracker:</strong> Tools like TokenVest aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
+          "<strong>Use a dedicated vesting tracker:</strong> Tools like Vestream aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
         ],
       },
 
@@ -250,7 +250,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I know if my wallet has vested tokens waiting to be claimed?",
-            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (Sablier app, Team Finance, etc.), or you can use a cross-protocol tracker like TokenVest to see all your vested-but-unclaimed balances across every supported platform in one view.",
+            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (Sablier app, Team Finance, etc.), or you can use a cross-protocol tracker like Vestream to see all your vested-but-unclaimed balances across every supported platform in one view.",
           },
           {
             q: "Can I sell my unvested tokens?",
@@ -649,10 +649,10 @@ const articles: Article[] = [
         ],
       },
 
-      { type: "h2", text: "How to Track Your Vestings with TokenVest" },
+      { type: "h2", text: "How to Track Your Vestings with Vestream" },
       {
         type: "p",
-        html: "TokenVest is a dedicated token vesting tracker that covers all five major vesting protocols (Sablier, UNCX, Team Finance, Hedgey, and Unvest) across Ethereum, BNB Chain, Base, and Sepolia. Here is a step-by-step guide to getting set up:",
+        html: "Vestream is a dedicated token vesting tracker that covers all five major vesting protocols (Sablier, UNCX, Team Finance, Hedgey, and Unvest) across Ethereum, BNB Chain, Base, and Sepolia. Here is a step-by-step guide to getting set up:",
       },
       {
         type: "ol",
@@ -674,7 +674,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Using the Discover feature on TokenVest, you can scan any public wallet address and immediately see all active vesting positions — including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
+        html: "Using the Discover feature on Vestream, you can scan any public wallet address and immediately see all active vesting positions — including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
       },
       {
         type: "callout",
@@ -698,7 +698,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "In TokenVest, email alerts are configured in Settings → Notifications. You can set alert thresholds and choose how far in advance to be notified of upcoming unlocks.",
+        html: "In Vestream, email alerts are configured in Settings → Notifications. You can set alert thresholds and choose how far in advance to be notified of upcoming unlocks.",
       },
 
       { type: "h2", text: "Exporting Vesting Data for Tax and Accounting" },
@@ -721,7 +721,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVest's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values — or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
+        html: "Vestream's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values — or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
       },
 
       { type: "h2", text: "Best Practices for Token Vesting Management" },
@@ -743,15 +743,15 @@ const articles: Article[] = [
         items: [
           {
             q: "How do I check my token vesting balance?",
-            a: "You can check your vesting balance in several ways: connect your wallet to the protocol-native dashboard (e.g., app.sablier.com for Sablier), query the vesting contract directly on a block explorer using the 'Read Contract' function, or use a cross-protocol tracker like TokenVest to see all your vesting positions across all protocols and chains in one dashboard.",
+            a: "You can check your vesting balance in several ways: connect your wallet to the protocol-native dashboard (e.g., app.sablier.com for Sablier), query the vesting contract directly on a block explorer using the 'Read Contract' function, or use a cross-protocol tracker like Vestream to see all your vesting positions across all protocols and chains in one dashboard.",
           },
           {
             q: "What is the best tool for tracking token vesting?",
-            a: "A dedicated multi-protocol vesting tracker like TokenVest provides the most comprehensive view, covering Sablier, UNCX, Team Finance, Hedgey, and Unvest across Ethereum, BNB Chain, Base, and Sepolia in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
+            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view, covering Sablier, UNCX, Team Finance, Hedgey, and Unvest across Ethereum, BNB Chain, Base, and Sepolia in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
           },
           {
             q: "Can I track someone else's token vesting?",
-            a: "Yes. All on-chain vesting data is publicly readable. You can enter any wallet address into a vesting tracker like TokenVest's Discover feature to see all active vesting positions associated with that address across all supported protocols and chains.",
+            a: "Yes. All on-chain vesting data is publicly readable. You can enter any wallet address into a vesting tracker like Vestream's Discover feature to see all active vesting positions associated with that address across all supported protocols and chains.",
           },
           {
             q: "How often should I check my vesting dashboard?",
@@ -771,7 +771,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I track vestings across multiple blockchains?",
-            a: "Use a multi-chain vesting tracker. TokenVest supports Ethereum, BNB Chain, Base, and Sepolia simultaneously — the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
+            a: "Use a multi-chain vesting tracker. Vestream supports Ethereum, BNB Chain, Base, and Sepolia simultaneously — the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
           },
         ],
       },
@@ -864,7 +864,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Whale wallets — particularly those associated with VC firms or early investors — are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and TokenVest's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
+        html: "Whale wallets — particularly those associated with VC firms or early investors — are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and Vestream's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
       },
       {
         type: "p",
@@ -947,7 +947,7 @@ const articles: Article[] = [
           "<strong>Source the tokenomics document:</strong> Every legitimate project publishes detailed tokenomics. Map all allocation categories with their vesting terms into a spreadsheet.",
           "<strong>Convert to absolute quantities:</strong> Percentages are meaningless without the context of total supply. Calculate the token count for every monthly unlock.",
           "<strong>Identify the peak pressure months:</strong> Sum all monthly unlocks across categories. Flag any month where new supply exceeds 2% of reported circulating supply as a high-risk window.",
-          "<strong>Track known wallet addresses:</strong> For projects where team or investor wallets are known (often from DAO governance or audit reports), monitor them on-chain using tools like Arkham, Nansen, or TokenVest's Discover feature.",
+          "<strong>Track known wallet addresses:</strong> For projects where team or investor wallets are known (often from DAO governance or audit reports), monitor them on-chain using tools like Arkham, Nansen, or Vestream's Discover feature.",
           "<strong>Set calendar alerts:</strong> Mark cliff dates and major monthly tranches. Revisit your position sizing in the weeks approaching high-risk unlock windows.",
           "<strong>Cross-reference with market structure:</strong> Unlock pressure combined with bearish chart structure and declining volume is a significantly more reliable signal than either factor alone.",
         ],
@@ -989,7 +989,7 @@ const articles: Article[] = [
           },
           {
             q: "How can I track vesting calendars for tokens I hold?",
-            a: "The most reliable approach combines: (1) sourcing the tokenomics document and building a monthly unlock model in a spreadsheet, (2) tracking known team/investor wallets on-chain using tools like TokenVest's Discover feature, and (3) setting calendar alerts for major cliff dates and monthly tranches.",
+            a: "The most reliable approach combines: (1) sourcing the tokenomics document and building a monthly unlock model in a spreadsheet, (2) tracking known team/investor wallets on-chain using tools like Vestream's Discover feature, and (3) setting calendar alerts for major cliff dates and monthly tranches.",
           },
           {
             q: "What is a vesting pressure curve?",
@@ -1178,7 +1178,7 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Identify the vesting contracts:</strong> Use a protocol's documentation, deployment records, or a tool like TokenVest's Discover feature to locate active vesting positions for the token",
+          "<strong>Identify the vesting contracts:</strong> Use a protocol's documentation, deployment records, or a tool like Vestream's Discover feature to locate active vesting positions for the token",
           "<strong>Query claimed vs deposited amounts:</strong> Most vesting contracts expose a function to query total deposited and total withdrawn for each position — the delta is unclaimed vested supply",
           "<strong>Cross-reference against wallet activity:</strong> For the wallets holding unclaimed positions, check their last transaction date on a block explorer. Wallets inactive for 12+ months are strong zombie supply candidates",
           "<strong>Segment by allocation category:</strong> Airdrop and community allocation positions will typically show higher unclaim rates than team and investor positions",
@@ -1608,7 +1608,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I find upcoming unlock events for a token I hold?",
-            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like TokenVest aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
+            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like Vestream aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
           },
         ],
       },
@@ -1739,7 +1739,7 @@ const articles: Article[] = [
         items: [
           "<strong>Find the vesting contract address.</strong> The project's documentation, tokenomics page, or initial token deployment transaction should reference the vesting contract. Many projects post this on their website or GitHub.",
           "<strong>Read the contract storage.</strong> Using a block explorer (Etherscan, BscScan, etc.), navigate to the contract and call the read functions. Look for <code>cliffTime</code>, <code>cliffDate</code>, <code>vestingStart</code>, or equivalent variables.",
-          "<strong>Use a vesting aggregator.</strong> Tools like TokenVest index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
+          "<strong>Use a vesting aggregator.</strong> Tools like Vestream index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
           "<strong>Verify against tokenomics documentation.</strong> On-chain data is ground truth, but project documentation often explains the intent behind the schedule. Discrepancies between documented schedules and on-chain data are a significant red flag.",
         ],
       },
@@ -1942,7 +1942,7 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Find the total insider %.</strong> Any insider allocation above 40% of supply warrants close inspection. Above 50% is a red flag.",
-          "<strong>Map every unlock date.</strong> Use token unlock trackers (or a tool like TokenVest's explorer) to identify every date when a significant tranche of supply enters circulation. Mark these as potential selling windows.",
+          "<strong>Map every unlock date.</strong> Use token unlock trackers (or a tool like Vestream's explorer) to identify every date when a significant tranche of supply enters circulation. Mark these as potential selling windows.",
           "<strong>Check if the release is linear or tranche-based.</strong> A continuous linear release after the cliff is structurally superior to a large single unlock. Both can appear in whitepapers as '4-year vesting' — the difference is in the specifics.",
           "<strong>Compare investor and team vesting.</strong> If investors vest faster than the team, the incentive alignment is asymmetric. The team should have at least as long a lock as the capital.",
           "<strong>Check on-chain enforcement.</strong> Vesting enforced by a smart contract is independently auditable. A legal agreement with a custodian is not the same thing.",
@@ -1979,7 +1979,7 @@ const articles: Article[] = [
           },
           {
             q: "How can I find out when a token's unlock events are scheduled?",
-            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. TokenVest's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, Hedgey, and Team Finance protocols.",
+            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, Hedgey, and Team Finance protocols.",
           },
           {
             q: "What should a project team do if they already have a poorly structured vesting schedule?",
@@ -2201,7 +2201,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I find a project's token allocation?",
-            a: "Check the project's whitepaper, tokenomics page, or official documentation. On-chain vesting contracts can be verified directly via block explorers. Token unlock tracking tools like TokenVest aggregate this data across multiple vesting protocols in one view.",
+            a: "Check the project's whitepaper, tokenomics page, or official documentation. On-chain vesting contracts can be verified directly via block explorers. Token unlock tracking tools like Vestream aggregate this data across multiple vesting protocols in one view.",
           },
           {
             q: "Is a high FDV/market cap ratio always bad?",
@@ -2298,7 +2298,7 @@ const articles: Article[] = [
         items: [
           "<strong>When can the largest single group of insiders first sell?</strong> Identify the earliest unlock event that involves a significant percentage of total supply (more than 5%). This is the first moment of meaningful sell pressure.",
           "<strong>What percentage of total supply unlocks in the first six months?</strong> Add up TGE unlocks plus any cliff-free linear vesting in the first six months. If this number exceeds 15–20% of total supply, the token faces structural selling pressure during its most vulnerable price discovery phase.",
-          "<strong>Is the vesting on-chain or contractual?</strong> Check block explorers or use a tool like TokenVest to verify whether vesting contracts are actually deployed. If you cannot find on-chain contracts, the schedule is an unenforceable promise.",
+          "<strong>Is the vesting on-chain or contractual?</strong> Check block explorers or use a tool like Vestream to verify whether vesting contracts are actually deployed. If you cannot find on-chain contracts, the schedule is an unenforceable promise.",
         ],
       },
       {
@@ -2329,7 +2329,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This is the problem TokenVest was built to solve. Connect your wallet and TokenVest surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
+        html: "This is the problem Vestream was built to solve. Connect your wallet and Vestream surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
       },
 
       {
@@ -2345,7 +2345,7 @@ const articles: Article[] = [
           },
           {
             q: "Can I see another wallet's vesting schedule?",
-            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like TokenVest make this easier by normalising data across multiple protocols into a readable format.",
+            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like Vestream make this easier by normalising data across multiple protocols into a readable format.",
           },
           {
             q: "What happens to unvested tokens if a project fails?",
@@ -2446,7 +2446,7 @@ const articles: Article[] = [
         items: [
           "<strong>The project's official tokenomics documentation.</strong> Most projects publish a vesting schedule in their whitepaper or tokenomics page. This tells you the intended schedule — but does not confirm it is actually enforced on-chain.",
           "<strong>Block explorers.</strong> For any token with on-chain vesting, the vesting contract is publicly visible. Search the token's contract address on Etherscan, BscScan, or Polygonscan to find associated vesting contracts. This requires understanding how to read smart contract state, which is not beginner-friendly.",
-          "<strong>Vesting aggregator tools.</strong> Platforms like TokenVest read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
+          "<strong>Vesting aggregator tools.</strong> Platforms like Vestream read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
         ],
       },
       {
@@ -2488,7 +2488,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "If your token's vesting is managed by any of these protocols, the schedule is verifiable on-chain and trackable via aggregators like TokenVest. If your project uses a custom vesting contract, you will need to find and read that specific contract on the relevant block explorer.",
+        html: "If your token's vesting is managed by any of these protocols, the schedule is verifiable on-chain and trackable via aggregators like Vestream. If your project uses a custom vesting contract, you will need to find and read that specific contract on the relevant block explorer.",
       },
 
       {
@@ -2646,7 +2646,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #2563eb; text-decoration: underline;\">TokenVest</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #2563eb; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
       },
 
       { type: "h2", text: "What to Know Before You Hold Any Token" },

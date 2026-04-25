@@ -38,7 +38,7 @@ function otpEmailHtml(otp: string): string {
                 <td style="width:28px;height:28px;background:#3b82f6;border-radius:7px;text-align:center;vertical-align:middle;">
                   <span style="font-size:15px;font-weight:900;color:white;line-height:28px;">T</span>
                 </td>
-                <td style="padding-left:10px;font-size:17px;font-weight:800;color:white;letter-spacing:-0.4px;">TokenVest</td>
+                <td style="padding-left:10px;font-size:17px;font-weight:800;color:white;letter-spacing:-0.4px;">Vestream</td>
               </tr>
             </table>
             <p style="margin:16px 0 20px;font-size:13px;color:rgba(255,255,255,0.45);font-weight:500;">Token vesting tracker</p>
@@ -50,7 +50,7 @@ function otpEmailHtml(otp: string): string {
           <td style="padding:32px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:white;letter-spacing:-0.4px;">Your sign-in code</p>
             <p style="margin:0 0 28px;font-size:15px;color:rgba(255,255,255,0.55);line-height:1.5;">
-              Use this code to sign in to TokenVest. It expires in 10 minutes.
+              Use this code to sign in to Vestream. It expires in 10 minutes.
             </p>
 
             <!-- OTP -->
@@ -68,7 +68,7 @@ function otpEmailHtml(otp: string): string {
         <tr>
           <td style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);">
             <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.25);text-align:center;">
-              TokenVest · Track every unlock · <a href="https://www.vestream.io" style="color:rgba(255,255,255,0.35);text-decoration:none;">vestream.io</a>
+              Vestream · Track every unlock · <a href="https://www.vestream.io" style="color:rgba(255,255,255,0.35);text-decoration:none;">vestream.io</a>
             </p>
           </td>
         </tr>
@@ -125,9 +125,9 @@ export async function POST(req: NextRequest) {
     const { error: sendError } = await resend.emails.send({
       from:    fromAddress,
       to:      email,
-      subject: `${otp} is your TokenVest code`,
+      subject: `${otp} is your Vestream code`,
       html:    otpEmailHtml(otp),
-      text:    `Your TokenVest sign-in code: ${otp}\n\nExpires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+      text:    `Your Vestream sign-in code: ${otp}\n\nExpires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
     });
 
     if (sendError) {

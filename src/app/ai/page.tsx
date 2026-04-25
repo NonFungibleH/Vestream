@@ -3,7 +3,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "AI Agents — TokenVest",
+  title: "AI Agents — Vestream",
   description:
     "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
 };
@@ -182,7 +182,7 @@ export default function AiPage() {
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>MCP Tools</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Three tools. Everything you need.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Install the MCP server and your agent immediately has access to all of TokenVest&apos;s vesting data.
+            Install the MCP server and your agent immediately has access to all of Vestream&apos;s vesting data.
           </p>
         </div>
 
@@ -242,7 +242,7 @@ export default function AiPage() {
             <div className="w-3 h-3 rounded-full" style={{ background: "#ef4444" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#f59e0b" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#10b981" }} />
-            <span className="ml-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Claude · TokenVest MCP connected</span>
+            <span className="ml-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Claude · Vestream MCP connected</span>
           </div>
 
           <div className="p-6 flex flex-col gap-5" style={{ background: "#0d0f14" }}>
@@ -383,7 +383,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Use cases</p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with TokenVest</h2>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with Vestream</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -422,7 +422,7 @@ export default function AiPage() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#8b5cf6", bg: "rgba(139,92,246,0.1)", border: "rgba(139,92,246,0.2)",
               title: "Wallet app integrations",
-              body: "Embed TokenVest vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
+              body: "Embed Vestream vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
             },
           ].map((c) => (
             <div key={c.title} className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.06)" }}>

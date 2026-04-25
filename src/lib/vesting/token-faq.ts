@@ -117,7 +117,7 @@ function distinctProtocolsByLock(
 function ansVestingSchedule(input: BuildFAQInput): string {
   const { symbol, overview, calendar } = input;
   if (!overview || overview.streamCount === 0) {
-    return `TokenVest has not indexed any vesting contracts for ${symbol} yet. Check back after the next seed-cache run or submit a wallet to help us index activity.`;
+    return `Vestream has not indexed any vesting contracts for ${symbol} yet. Check back after the next seed-cache run or submit a wallet to help us index activity.`;
   }
   const nonZero = calendar.filter((b) => b.totalTokensWhole > 0);
   if (nonZero.length === 0) {
@@ -132,7 +132,7 @@ function ansVestingSchedule(input: BuildFAQInput): string {
 function ansNextUnlock(input: BuildFAQInput): string {
   const { symbol, upcoming } = input;
   if (upcoming.length === 0) {
-    return `No upcoming ${symbol} unlocks are currently indexed by TokenVest.`;
+    return `No upcoming ${symbol} unlocks are currently indexed by Vestream.`;
   }
   const next = upcoming[0];
   return `The next scheduled ${symbol} unlock is on ${fmtDate(next.timestamp)}, releasing approximately ${fmtTokens(next.tokensWhole)} ${symbol} via ${protocolLabel(next.protocol)}.`;
@@ -141,7 +141,7 @@ function ansNextUnlock(input: BuildFAQInput): string {
 function ansLockedSupply(input: BuildFAQInput): string {
   const { symbol, overview, market } = input;
   if (!overview || overview.lockedTokensWhole <= 0) {
-    return `TokenVest is not tracking any currently-locked ${symbol} in indexed vesting contracts.`;
+    return `Vestream is not tracking any currently-locked ${symbol} in indexed vesting contracts.`;
   }
   const tokens = fmtTokens(overview.lockedTokensWhole);
   const usd    = market.priceUsd ? fmtUsd(overview.lockedTokensWhole * market.priceUsd) : "";
@@ -149,7 +149,7 @@ function ansLockedSupply(input: BuildFAQInput): string {
     ? ((overview.lockedTokensWhole * market.priceUsd) / market.fdv) * 100
     : null;
   const parts = [
-    `TokenVest indexes ${tokens} ${symbol} currently locked across ${overview.activeStreamCount.toLocaleString()} active vesting stream${overview.activeStreamCount === 1 ? "" : "s"}`,
+    `Vestream indexes ${tokens} ${symbol} currently locked across ${overview.activeStreamCount.toLocaleString()} active vesting stream${overview.activeStreamCount === 1 ? "" : "s"}`,
     usd ? `worth about ${usd} at the current price` : "",
   ].filter(Boolean);
   let out = parts.join(", ") + ".";
@@ -162,7 +162,7 @@ function ansLockedSupply(input: BuildFAQInput): string {
 function ansProtocolAllocation(input: BuildFAQInput): string {
   const { symbol, overview } = input;
   if (!overview || overview.protocolMix.length === 0) {
-    return `TokenVest has no indexed vesting protocols holding ${symbol} yet.`;
+    return `Vestream has no indexed vesting protocols holding ${symbol} yet.`;
   }
   const distinct = distinctProtocolsByLock(overview.protocolMix);
   if (distinct.length === 1) {
@@ -178,7 +178,7 @@ function ansProtocolAllocation(input: BuildFAQInput): string {
 function ansNext30Days(input: BuildFAQInput): string {
   const { symbol, overview, market } = input;
   if (!overview || overview.upcoming30dTokens <= 0) {
-    return `No significant ${symbol} unlocks are scheduled in the next 30 days according to TokenVest's indexed data.`;
+    return `No significant ${symbol} unlocks are scheduled in the next 30 days according to Vestream's indexed data.`;
   }
   const tokens = fmtTokens(overview.upcoming30dTokens);
   const usd    = market.priceUsd ? fmtUsd(overview.upcoming30dTokens * market.priceUsd) : "";
@@ -195,7 +195,7 @@ function ansNext30Days(input: BuildFAQInput): string {
 function ansTopRecipients(input: BuildFAQInput): string {
   const { symbol, overview, recipients } = input;
   if (recipients.length === 0) {
-    return `TokenVest has not indexed any vested ${symbol} recipients yet.`;
+    return `Vestream has not indexed any vested ${symbol} recipients yet.`;
   }
   const totalLocked = overview?.lockedTokensWhole ?? 0;
   const top = recipients.slice(0, 3);
@@ -238,14 +238,14 @@ function ansTrack(input: BuildFAQInput): string {
   const { symbol, overview } = input;
   const protocols = overview ? distinctProtocolsByLock(overview.protocolMix).map((p) => p.name) : [];
   const coverageSentence = protocols.length > 0
-    ? `TokenVest already indexes ${symbol} activity on ${protocols.slice(0, 4).join(", ")}${protocols.length > 4 ? ", and others" : ""}.`
-    : `TokenVest indexes Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale.`;
-  return `Add ${symbol} — or any wallet holding ${symbol} — to your TokenVest watchlist to receive push and email notifications ahead of every scheduled unlock. ${coverageSentence}`;
+    ? `Vestream already indexes ${symbol} activity on ${protocols.slice(0, 4).join(", ")}${protocols.length > 4 ? ", and others" : ""}.`
+    : `Vestream indexes Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale.`;
+  return `Add ${symbol} — or any wallet holding ${symbol} — to your Vestream watchlist to receive push and email notifications ahead of every scheduled unlock. ${coverageSentence}`;
 }
 
 function ansCirculatingVsTotal(input: BuildFAQInput): string {
   const { symbol } = input;
-  return `Circulating supply is the amount of ${symbol} that is freely tradable on the open market. Total supply includes every token ever minted — including amounts still locked in vesting contracts, team allocations, treasury reserves, and other non-circulating pools. Vesting unlocks move tokens from the "locked" bucket into circulating supply on a predetermined schedule, which is what TokenVest tracks.`;
+  return `Circulating supply is the amount of ${symbol} that is freely tradable on the open market. Total supply includes every token ever minted — including amounts still locked in vesting contracts, team allocations, treasury reserves, and other non-circulating pools. Vesting unlocks move tokens from the "locked" bucket into circulating supply on a predetermined schedule, which is what Vestream tracks.`;
 }
 
 // ─── Public entry point ─────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ function ansCirculatingVsTotal(input: BuildFAQInput): string {
 /**
  * Produce an ordered list of FAQ entries for a token page.
  *
- * Questions are deliberately phrased in conversational TokenVest voice
+ * Questions are deliberately phrased in conversational Vestream voice
  * rather than the stock "What is the X token vesting schedule?" template
  * that several competitors use — both to read less like a page clone and
  * because the rephrasings match real long-tail search phrasing better
@@ -300,7 +300,7 @@ export function buildTokenFAQ(input: BuildFAQInput): FAQItem[] {
       answer:   ansTrack(input),
     },
     {
-      question: `Why does ${symbol} circulating supply differ from the locked amount TokenVest shows?`,
+      question: `Why does ${symbol} circulating supply differ from the locked amount Vestream shows?`,
       answer:   ansCirculatingVsTotal(input),
     },
   ];

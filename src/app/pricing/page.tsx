@@ -239,7 +239,7 @@ export default function Pricing() {
 
         {/* API nudge */}
         <p className="text-center text-sm mt-8" style={{ color: "#94a3b8" }}>
-          Building on TokenVest data?{" "}
+          Building on Vestream data?{" "}
           <Link href="/developer" className="font-semibold underline" style={{ color: "#2563eb" }}>
             See the Developer API →
           </Link>
@@ -354,7 +354,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="Do you have an API?"
-              a="Yes — the TokenVest REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
+              a="Yes — the Vestream REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
             />
             <FAQItem
               q="I run a fund / team / build an app — what do I do?"
@@ -376,7 +376,7 @@ export default function Pricing() {
             Never miss an unlock again.
           </h2>
           <p className="text-sm mb-8 leading-relaxed" style={{ color: "#94a3b8" }}>
-            Join investors and funds that use TokenVest to stay on top of every vesting schedule.
+            Join investors and funds that use Vestream to stay on top of every vesting schedule.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/early-access"

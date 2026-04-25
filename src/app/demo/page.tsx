@@ -14,7 +14,7 @@
 //
 //   C. Deploy-your-own on Sepolia via thirdweb (~10 min, real on-chain)
 //      Three deep-links to the Google Cloud Sepolia faucet, a thirdweb
-//      ERC-20 token deploy, and a thirdweb vesting contract. TokenVest
+//      ERC-20 token deploy, and a thirdweb vesting contract. Vestream
 //      auto-indexes VestingWallet contracts on Sepolia, so once deployed
 //      the user can verify the full indexing loop end-to-end.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ import { InteractiveDemo } from "@/components/InteractiveDemo";
 import { VestingDemo } from "@/components/VestingDemo";
 
 export const metadata: Metadata = {
-  title: "Interactive + live vesting demo · TokenVest",
+  title: "Interactive + live vesting demo · Vestream",
   description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy with thirdweb.",
   alternates: { canonical: "https://vestream.io/demo" },
 };
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 // same thing a real team would do in production — not a faucet-and-Sablier
 // workaround. Team Finance is one of our indexed protocols on Sepolia (see
 // supportedChainIds in adapters/team-finance.ts), so the tokens AND the
-// vesting both land in TokenVest automatically, closing the loop end-to-end.
+// vesting both land in Vestream automatically, closing the loop end-to-end.
 //
 //   SEPOLIA_ETH_FAUCET    → free Sepolia ETH for gas (Google Cloud faucet)
 //   TEAM_FINANCE_MINT     → Token Mint — deploy a real ERC-20 on Sepolia
@@ -92,7 +92,7 @@ export default function DemoPage() {
           letter="A"
           eyebrow="Demo A · 90 seconds"
           title="Interactive walkthrough"
-          copy="A guided, 3-step tour of how TokenVest finds vestings, pushes alerts to your phone, and takes you to claim. Everything is mocked so you can click through without signing anything."
+          copy="A guided, 3-step tour of how Vestream finds vestings, pushes alerts to your phone, and takes you to claim. Everything is mocked so you can click through without signing anything."
         />
         <InteractiveDemo />
 
@@ -114,7 +114,7 @@ export default function DemoPage() {
           letter="B"
           eyebrow="Demo B · Design your vesting · See it live on the app"
           title="Spin up a sample vesting schedule"
-          copy="Pick the token name, amount, and duration below. Then download the TokenVest app to watch that vesting tick down in real time on your phone &mdash; including native push notifications the moment tokens unlock. No Sepolia ETH, no wallet signature, nothing to sign up for."
+          copy="Pick the token name, amount, and duration below. Then download the Vestream app to watch that vesting tick down in real time on your phone &mdash; including native push notifications the moment tokens unlock. No Sepolia ETH, no wallet signature, nothing to sign up for."
         />
 
         <VestingDemo />
@@ -129,7 +129,7 @@ export default function DemoPage() {
           <GuideCard
             n="2"
             title="Download the app"
-            body="Install TokenVest from the App Store or Google Play. Sign in with your email and your designed vesting is ready to watch from the dashboard."
+            body="Install Vestream from the App Store or Google Play. Sign in with your email and your designed vesting is ready to watch from the dashboard."
           />
           <GuideCard
             n="3"
@@ -172,8 +172,8 @@ export default function DemoPage() {
         <DemoIntro
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
-          title="Create a real Sepolia vesting TokenVest will index"
-          copy="If you want to see TokenVest track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, mint a test token with Team Finance, then create a vesting schedule for it &mdash; all on Team Finance&rsquo;s Sepolia app, which TokenVest indexes automatically."
+          title="Create a real Sepolia vesting Vestream will index"
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, mint a test token with Team Finance, then create a vesting schedule for it &mdash; all on Team Finance&rsquo;s Sepolia app, which Vestream indexes automatically."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -202,7 +202,7 @@ export default function DemoPage() {
           <DeployStep
             n="3"
             title="Create a vesting schedule"
-            body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute TokenVest auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
+            body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute Vestream auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
             href={TEAM_FINANCE_VESTING}
             cta="Open Team Finance Vesting"
             accent="#10b981"
@@ -217,7 +217,7 @@ export default function DemoPage() {
             mint → fund vesting → configure) that stalls pre-launch demo
             users. Team Finance's Sepolia app handles mint + vesting in the
             same UI, and because we already index Team Finance on Sepolia the
-            tokens AND the vesting appear in TokenVest automatically — no
+            tokens AND the vesting appear in Vestream automatically — no
             separate block-explorer step. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
@@ -229,7 +229,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch TokenVest index it.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#2563eb" }}>Find vestings</Link> to watch Vestream index it.
           </p>
         </div>
       </section>
@@ -241,7 +241,7 @@ export default function DemoPage() {
             What you just saw, in real life
           </h2>
           <p className="text-sm md:text-base max-w-2xl mx-auto" style={{ color: "#64748b" }}>
-            The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using TokenVest day-to-day.
+            The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using Vestream day-to-day.
           </p>
         </div>
 
@@ -254,7 +254,7 @@ export default function DemoPage() {
               </svg>
             }
             title="Scan any wallet, across every protocol"
-            body="One address, every integrated protocol, four mainnets. TokenVest pings every supported vesting platform in parallel so you never have to check them one by one."
+            body="One address, every integrated protocol, four mainnets. Vestream pings every supported vesting platform in parallel so you never have to check them one by one."
           />
           <Step
             n="2"
@@ -275,7 +275,7 @@ export default function DemoPage() {
               </svg>
             }
             title="Claim on the source protocol"
-            body="TokenVest never touches your tokens. We deep-link straight to Sablier, Hedgey, or wherever the stream lives &mdash; you claim on their audited contract."
+            body="Vestream never touches your tokens. We deep-link straight to Sablier, Hedgey, or wherever the stream lives &mdash; you claim on their audited contract."
           />
         </div>
       </section>

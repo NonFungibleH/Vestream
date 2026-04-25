@@ -9,8 +9,8 @@ export default function Privacy() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <span className="font-bold text-base tracking-tight" style={{ color: "#0f172a" }}>Vestream</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#64748b" }}>
           ← Back to home
@@ -29,7 +29,7 @@ export default function Privacy() {
           style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
 
           <Section title="1. Overview">
-            TokenVest (&quot;we&quot;, &quot;our&quot;, or &quot;the service&quot;) is a read-only token vesting dashboard. We are committed to protecting your privacy. This policy explains what information we collect, how we use it, and your rights in relation to it.
+            Vestream (&quot;we&quot;, &quot;our&quot;, or &quot;the service&quot;) is a read-only token vesting dashboard. We are committed to protecting your privacy. This policy explains what information we collect, how we use it, and your rights in relation to it.
           </Section>
 
           <Section title="2. Information We Collect">
@@ -52,7 +52,7 @@ export default function Privacy() {
           </Section>
 
           <Section title="4. On-Chain Data">
-            All vesting data displayed in TokenVest is sourced from public blockchain networks (Ethereum, Base, BSC) and protocol subgraphs. This data is inherently public. We do not store or cache vesting stream data on our servers beyond your session.
+            All vesting data displayed in Vestream is sourced from public blockchain networks (Ethereum, Base, BSC) and protocol subgraphs. This data is inherently public. We do not store or cache vesting stream data on our servers beyond your session.
           </Section>
 
           <Section title="5. Cookies & Sessions">
@@ -60,7 +60,7 @@ export default function Privacy() {
           </Section>
 
           <Section title="6. Third-Party Services">
-            <p>TokenVest uses the following third-party infrastructure:</p>
+            <p>Vestream uses the following third-party infrastructure:</p>
             <ul>
               <li><strong>Alchemy</strong> — for Ethereum, Base, and BSC RPC access. Alchemy&apos;s privacy policy applies to RPC requests.</li>
               <li><strong>The Graph</strong> — for querying Sablier, Hedgey, Team Finance, and UNCX protocol data via subgraphs.</li>
@@ -84,7 +84,7 @@ export default function Privacy() {
           </Section>
 
           <Section title="9. Security">
-            Session cookies are encrypted using industry-standard algorithms. We do not have access to your private keys or the ability to initiate transactions on your behalf. TokenVest is strictly read-only.
+            Session cookies are encrypted using industry-standard algorithms. We do not have access to your private keys or the ability to initiate transactions on your behalf. Vestream is strictly read-only.
           </Section>
 
           <Section title="10. Changes to This Policy">

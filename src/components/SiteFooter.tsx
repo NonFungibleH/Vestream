@@ -180,9 +180,9 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
           {/* Brand stack */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity w-fit">
-              <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
+              <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
               <span className="font-semibold text-base" style={{ color: palette.brandName }}>
-                TokenVest
+                Vestream
               </span>
             </Link>
             <p className="text-xs max-w-[18rem] leading-relaxed" style={{ color: palette.copyright }}>
@@ -201,7 +201,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
                 without needing its own row. */}
             <div className="flex items-center gap-2 mt-2">
               <p className="text-xs" style={{ color: palette.copyright }}>
-                © {year} TokenVest. All rights reserved.
+                © {year} Vestream. All rights reserved.
               </p>
               <Link
                 href="/admin"

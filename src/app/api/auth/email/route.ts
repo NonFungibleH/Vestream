@@ -41,7 +41,7 @@ function otpEmailHtml(otp: string): string {
                 <td style="width:30px;height:30px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:8px;text-align:center;vertical-align:middle;">
                   <span style="font-size:14px;font-weight:900;color:white;line-height:30px;">T</span>
                 </td>
-                <td style="padding-left:10px;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;">TokenVest</td>
+                <td style="padding-left:10px;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;">Vestream</td>
               </tr>
             </table>
           </td>
@@ -51,7 +51,7 @@ function otpEmailHtml(otp: string): string {
           <td style="padding:32px;">
             <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.4px;">Your sign-in code</p>
             <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.5;">
-              Use this code to sign in to TokenVest. It expires in 10 minutes.
+              Use this code to sign in to Vestream. It expires in 10 minutes.
             </p>
 
             <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:24px;text-align:center;margin-bottom:28px;">
@@ -67,7 +67,7 @@ function otpEmailHtml(otp: string): string {
         <tr>
           <td style="padding:16px 32px 20px;border-top:1px solid #f1f5f9;">
             <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;">
-              TokenVest · Track every unlock · <a href="https://www.vestream.io" style="color:#94a3b8;text-decoration:none;">vestream.io</a>
+              Vestream · Track every unlock · <a href="https://www.vestream.io" style="color:#94a3b8;text-decoration:none;">vestream.io</a>
             </p>
           </td>
         </tr>
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
     // In development, log a hint — never log the actual OTP value in any environment
     if (process.env.NODE_ENV !== "production") {
-      console.log(`[TokenVest OTP] code sent to ${email} (check email or use DEV_OTP)`);
+      console.log(`[Vestream OTP] code sent to ${email} (check email or use DEV_OTP)`);
     }
 
     if (process.env.RESEND_API_KEY) {
@@ -132,9 +132,9 @@ export async function POST(req: NextRequest) {
         await resend.emails.send({
           from:    fromAddress,
           to:      email,
-          subject: `${otp} is your TokenVest code`,
+          subject: `${otp} is your Vestream code`,
           html:    otpEmailHtml(otp),
-          text:    `Your TokenVest sign-in code is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+          text:    `Your Vestream sign-in code is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can ignore this email.`,
         });
       } catch (err) {
         console.error("Failed to send OTP email:", err);

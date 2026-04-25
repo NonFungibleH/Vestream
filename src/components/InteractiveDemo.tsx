@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // src/components/InteractiveDemo.tsx
 //
-// Three-step interactive walkthrough that mimics the full TokenVest product flow:
+// Three-step interactive walkthrough that mimics the full Vestream product flow:
 //   1. Find   — animated scan across 7 protocols, finds hits on 3 of them
 //   2. Alert  — mock phone frame with dashboard + push notification
 //   3. Claim  — mock Sablier-style protocol UI, claim button, tx success
@@ -565,7 +565,7 @@ function AlertStep({
           Get alerted the moment your tokens unlock
         </h3>
         <p className="text-sm mb-5" style={{ color: "#64748b", lineHeight: 1.55 }}>
-          TokenVest watches every stream 24/7. When tokens vest, you get an instant push alert &mdash; before your wallet app even knows.
+          Vestream watches every stream 24/7. When tokens vest, you get an instant push alert &mdash; before your wallet app even knows.
         </p>
 
         <ul className="space-y-2.5 text-sm mb-5" style={{ color: "#475569" }}>
@@ -753,7 +753,7 @@ function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredU
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline justify-between gap-1">
-              <span className="text-[11px] font-semibold" style={{ color: "#0f172a" }}>TokenVest</span>
+              <span className="text-[11px] font-semibold" style={{ color: "#0f172a" }}>Vestream</span>
               <span className="text-[9px]" style={{ color: "#94a3b8" }}>now</span>
             </div>
             <div className="text-[10.5px] font-semibold mb-0.5" style={{ color: "#0f172a" }}>
@@ -817,7 +817,7 @@ function ClaimStep({
           Worth {fmtUsdExact(featuredUsd)}
         </div>
         <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: "#64748b" }}>
-          Transaction confirmed on Ethereum. In the real product, TokenVest tracks the claim and updates your portfolio instantly.
+          Transaction confirmed on Ethereum. In the real product, Vestream tracks the claim and updates your portfolio instantly.
         </p>
 
         <div
@@ -840,7 +840,7 @@ function ClaimStep({
               boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
             }}
           >
-            Get TokenVest →
+            Get Vestream →
           </Link>
           <button
             onClick={onReset}
@@ -868,7 +868,7 @@ function ClaimStep({
           One tap to claim on the source protocol
         </h3>
         <p className="text-sm mb-4" style={{ color: "#64748b", lineHeight: 1.55 }}>
-          TokenVest never touches your tokens &mdash; claims happen on the protocol&rsquo;s own contract. We just surface the stream and open the claim flow for you.
+          Vestream never touches your tokens &mdash; claims happen on the protocol&rsquo;s own contract. We just surface the stream and open the claim flow for you.
         </p>
         <p className="text-xs" style={{ color: "#94a3b8" }}>
           {phase === "idle"    && "Try it →"}

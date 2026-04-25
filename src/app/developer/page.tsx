@@ -8,16 +8,16 @@ import { SiteFooter } from "@/components/SiteFooter";
 // has it, /developer slipped through). Adds LinkedIn/Twitter/Slack unfurl
 // consistency with the rest of the site.
 export const metadata: Metadata = {
-  title: "Developer API — TokenVest",
+  title: "Developer API — Vestream",
   description:
     "REST API + MCP server for token vesting data across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://vestream.io/developer" },
   openGraph: {
-    title: "Developer API — TokenVest",
+    title: "Developer API — Vestream",
     description:
       "REST + MCP for 9 vesting protocols across 5 chains — EVM and Solana. Normalised JSON, agent-native.",
     url: "https://vestream.io/developer",
-    siteName: "TokenVest",
+    siteName: "Vestream",
     type: "website",
   },
 };
@@ -158,7 +158,7 @@ export default function DeveloperPage() {
       <section className="px-4 md:px-8 py-16 md:py-20" style={{ background: "#122040", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why TokenVest API</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Why Vestream API</p>
             <h2 className="font-bold text-2xl md:text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
               Built for the next generation of financial infrastructure
             </h2>
@@ -340,7 +340,7 @@ export default function DeveloperPage() {
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#94a3b8" }}>Use cases</p>
             <h2 className="font-bold text-3xl tracking-tight" style={{ color: "white", letterSpacing: "-0.02em" }}>
-              Who builds with TokenVest API
+              Who builds with Vestream API
             </h2>
           </div>
 
@@ -422,7 +422,7 @@ export default function DeveloperPage() {
                   Works natively with Claude and any MCP-compatible agent
                 </h2>
                 <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  Add TokenVest to any AI agent in seconds. Our MCP server exposes three tools —
+                  Add Vestream to any AI agent in seconds. Our MCP server exposes three tools —
                   get vestings, upcoming unlocks, and stream details — that agents call natively
                   without any custom glue code.
                 </p>
@@ -519,7 +519,7 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Higher limits, priority support, and custom shapes for teams
-                shipping production apps or agents on TokenVest data.
+                shipping production apps or agents on Vestream data.
               </p>
               <ul className="flex flex-col gap-3 mb-8">
                 {[

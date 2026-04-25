@@ -51,8 +51,8 @@ export default async function DeveloperAccount() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(13,15,20,0.95)" }}>
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight text-white">TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <span className="font-bold text-base tracking-tight text-white">Vestream</span>
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/api-docs"
@@ -267,7 +267,7 @@ export default async function DeveloperAccount() {
             </span>
           </div>
           <p className="text-xs mb-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Your API key also works with the TokenVest MCP server — three
+            Your API key also works with the Vestream MCP server — three
             agent-native tools (<code style={{ color: "#60a5fa" }}>get_wallet_vestings</code>,{" "}
             <code style={{ color: "#60a5fa" }}>get_upcoming_unlocks</code>,{" "}
             <code style={{ color: "#60a5fa" }}>get_stream</code>) over the

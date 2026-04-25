@@ -32,7 +32,7 @@ import {
 // server, which keeps prerender stable for pages that don't actually use
 // wallet state.
 export const wagmiConfig = getDefaultConfig({
-  appName: "TokenVest",
+  appName: "Vestream",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "vestr-dev",
   wallets: [
     {

@@ -1,16 +1,16 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TokenVest Vesting Data API",
+    "title": "Vestream Vesting Data API",
     "version": "1.2.0",
-    "description": "Normalised, chain-indexed token vesting data — the same dataset that powers the TokenVest dashboard and the @vestream/mcp MCP server, exposed as a plain REST API for agents, integrations, and back-office tooling.\n\n## What this API is for\nEvery vesting protocol exposes its own subgraph, contract layout, and data shape. Integrating even one of them takes weeks; integrating eight across two ecosystems takes a team. This API hides that complexity behind a single cross-protocol, cross-chain, cross-ecosystem normalised schema — so an agent or app can answer questions like \"what unlocks for this wallet in the next 14 days\" or \"what is this stream's claimable balance right now\" in a single call, regardless of whether the wallet is an EVM 0x… address or a Solana base58 pubkey.\n\n## Coverage\n- **Protocols:** Sablier, Hedgey, UNCX (TokenVesting + VestingManager), Unvest, Team Finance, Superfluid, PinkSale (PinkLock V2), Streamflow (Solana)\n- **EVM chains:** Ethereum (1), BNB Chain (56), Polygon (137), Base (8453)\n- **Non-EVM chains:** Solana (101)\n- **Address formats:** EVM 0x-prefixed hex OR Solana base58 pubkeys — the API auto-detects the ecosystem from the input\n- **Data shape:** one `VestingStream` schema for every protocol on every chain — same fields, same units, same ID format\n\n## Authentication\nAll endpoints require an API key passed as a bearer token:\n```\nAuthorization: Bearer vstr_live_...\n```\nKeys are issued per account from `/developer/account` after access is approved. Free-tier keys are capped at 30 req/min burst and 150 req/day; paid-tier keys are scoped per contract.\n\n## Data freshness\nResponses are served from TokenVest's persistent index — not live on-chain queries. The `last_indexed` field on responses tells you how fresh the data is; it typically trails chain tip by under a minute. No endpoint makes direct RPC or subgraph calls at request time.\n\n## Rate limits\nEvery response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. A 429 means you've hit the monthly cap or the burst/daily window for your tier. Back off and retry — or contact us about a higher tier.\n\nRequest a key: [tokenvest.io/developer](https://tokenvest.io/developer)",
+    "description": "Normalised, chain-indexed token vesting data — the same dataset that powers the Vestream dashboard and the @vestream/mcp MCP server, exposed as a plain REST API for agents, integrations, and back-office tooling.\n\n## What this API is for\nEvery vesting protocol exposes its own subgraph, contract layout, and data shape. Integrating even one of them takes weeks; integrating eight across two ecosystems takes a team. This API hides that complexity behind a single cross-protocol, cross-chain, cross-ecosystem normalised schema — so an agent or app can answer questions like \"what unlocks for this wallet in the next 14 days\" or \"what is this stream's claimable balance right now\" in a single call, regardless of whether the wallet is an EVM 0x… address or a Solana base58 pubkey.\n\n## Coverage\n- **Protocols:** Sablier, Hedgey, UNCX (TokenVesting + VestingManager), Unvest, Team Finance, Superfluid, PinkSale (PinkLock V2), Streamflow (Solana)\n- **EVM chains:** Ethereum (1), BNB Chain (56), Polygon (137), Base (8453)\n- **Non-EVM chains:** Solana (101)\n- **Address formats:** EVM 0x-prefixed hex OR Solana base58 pubkeys — the API auto-detects the ecosystem from the input\n- **Data shape:** one `VestingStream` schema for every protocol on every chain — same fields, same units, same ID format\n\n## Authentication\nAll endpoints require an API key passed as a bearer token:\n```\nAuthorization: Bearer vstr_live_...\n```\nKeys are issued per account from `/developer/account` after access is approved. Free-tier keys are capped at 30 req/min burst and 150 req/day; paid-tier keys are scoped per contract.\n\n## Data freshness\nResponses are served from Vestream's persistent index — not live on-chain queries. The `last_indexed` field on responses tells you how fresh the data is; it typically trails chain tip by under a minute. No endpoint makes direct RPC or subgraph calls at request time.\n\n## Rate limits\nEvery response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. A 429 means you've hit the monthly cap or the burst/daily window for your tier. Back off and retry — or contact us about a higher tier.\n\nRequest a key: [vestream.io/developer](https://vestream.io/developer)",
     "contact": {
-      "name": "TokenVest",
-      "url": "https://tokenvest.io"
+      "name": "Vestream",
+      "url": "https://vestream.io"
     }
   },
   "servers": [
-    { "url": "https://tokenvest.io/api/v1", "description": "Production" }
+    { "url": "https://vestream.io/api/v1", "description": "Production" }
   ],
   "security": [
     { "BearerAuth": [] }
@@ -21,7 +21,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "vstr_live_...",
-        "description": "API key issued by TokenVest. Format: `vstr_live_` followed by 64 hex characters. Generate keys from /developer/account once access is approved."
+        "description": "API key issued by Vestream. Format: `vstr_live_` followed by 64 hex characters. Generate keys from /developer/account once access is approved."
       }
     },
     "schemas": {
@@ -79,7 +79,7 @@
         "description": "Standard error envelope returned for any non-2xx response.",
         "properties": {
           "error": { "type": "string", "description": "Short machine-readable error slug suitable for branching in client code." },
-          "docs":  { "type": "string", "example": "https://tokenvest.io/api-docs", "description": "Link to the relevant section of these docs." }
+          "docs":  { "type": "string", "example": "https://vestream.io/api-docs", "description": "Link to the relevant section of these docs." }
         }
       }
     },
@@ -94,7 +94,7 @@
       "get": {
         "operationId": "getWalletVestings",
         "summary": "List all vesting streams for a wallet",
-        "description": "Returns every indexed vesting stream where the given wallet is the recipient — across all 7 supported protocols and all 4 chains in a single call. Use this to build portfolio views, power wallet-level dashboards, or answer questions like \"how much of token X is this wallet vesting across Sablier and Hedgey combined?\"\n\nResponses include linear and step-shaped streams, claimed and unclaimed balances, cliff times, and the full `unlockSteps` array for stepped schedules — everything a client needs to render a timeline or compute a forecast without a second call.\n\nCache hint: data is served from TokenVest's index, not from live on-chain queries. The `last_indexed` timestamp tells you how fresh it is; this call does not trigger a fresh subgraph fetch.",
+        "description": "Returns every indexed vesting stream where the given wallet is the recipient — across all 7 supported protocols and all 4 chains in a single call. Use this to build portfolio views, power wallet-level dashboards, or answer questions like \"how much of token X is this wallet vesting across Sablier and Hedgey combined?\"\n\nResponses include linear and step-shaped streams, claimed and unclaimed balances, cliff times, and the full `unlockSteps` array for stepped schedules — everything a client needs to render a timeline or compute a forecast without a second call.\n\nCache hint: data is served from Vestream's index, not from live on-chain queries. The `last_indexed` timestamp tells you how fresh it is; this call does not trigger a fresh subgraph fetch.",
         "tags": ["Wallet"],
         "parameters": [
           {
@@ -251,7 +251,7 @@
             }
           },
           "401": { "description": "Missing, malformed, or revoked API key." },
-          "404": { "description": "Stream ID not found in the TokenVest index. Possible causes: the ID is malformed, the protocol isn't indexed, or the stream was created after the last subgraph sync (rare — usually resolves within a minute)." }
+          "404": { "description": "Stream ID not found in the Vestream index. Possible causes: the ID is malformed, the protocol isn't indexed, or the stream was created after the last subgraph sync (rare — usually resolves within a minute)." }
         }
       }
     }
