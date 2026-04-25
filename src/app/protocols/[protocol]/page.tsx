@@ -230,13 +230,7 @@ export default async function ProtocolLandingPage(
             style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#1A1D20" }}
           >
             {meta.name} unlock<br />
-            <span style={{
-              background: `linear-gradient(135deg, ${meta.color} 0%, #0F8A8A 70%, #1CB8B8 100%)`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
-              tracker & alerts
-            </span>
+            <span style={{ color: "#1CB8B8" }}>tracker & alerts</span>
           </h1>
 
           <p className="text-base md:text-lg mb-3" style={{ color: "#334155" }}>

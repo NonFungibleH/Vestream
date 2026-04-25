@@ -69,14 +69,10 @@ export default function DemoPage() {
 
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5"
-            style={{
-              letterSpacing: "-0.03em",
-              background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}
           >
-            See the claim flow,<br className="hidden md:block" /> then try it live
+            See the claim flow,<br className="hidden md:block" />{" "}
+            <span style={{ color: "#1CB8B8" }}>then try it live</span>
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
             <strong style={{ color: "#1A1D20" }}>A.</strong> A 90-second interactive walkthrough.{" "}

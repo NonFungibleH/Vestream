@@ -1126,29 +1126,31 @@ export default async function Home() {
             </ul>
           </div>
 
-          {/* Enterprise (replaces Fund self-serve). Forest-green accent rather
-              than indigo/violet — pairs with the teal Pro tier without fighting
-              it, and the green already keys the check icons in this card. */}
-          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(45,138,74,0.3)", boxShadow: "0 4px 40px rgba(45,138,74,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
+          {/* Enterprise (replaces Fund self-serve). Stripe-style "premium dark"
+              treatment: dark card already differentiates the tier from the
+              white Pro card, so the accent stays in the brand teal family with
+              a striking white-on-dark CTA. Avoids the colour-on-colour clash
+              of bright green on dark next to bright teal on white. */}
+          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 64px rgba(0,0,0,0.32)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "#2D8A4A", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
+              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap"
+                style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 12px rgba(28,184,184,0.35)" }}>
                 Teams &amp; builders
               </span>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2D8A4A" }}>Enterprise</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Enterprise</p>
             <p className="text-3xl font-bold mb-1 text-white" style={{ letterSpacing: "-0.02em" }}>Custom</p>
-            <p className="text-sm mb-6" style={{ color: "#9ca3af" }}>Built around your team — pricing on request.</p>
+            <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>Built around your team — pricing on request.</p>
             <ContactTrigger
               label="Contact us →"
-              className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
-              style={{ background: "#2D8A4A", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", border: "none", cursor: "pointer" }}
+              className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 mb-6"
+              style={{ background: "white", color: "#1A1D20", border: "none", cursor: "pointer" }}
             />
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {["Unlimited wallet addresses", "REST API + MCP server access", "Team workspace", "SSO & custom SLA", "Slack, Telegram & WhatsApp alerts", "Dedicated support channel"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#e5e7eb" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2D8A4A" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#2D8A4A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
@@ -1177,7 +1179,7 @@ export default async function Home() {
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2D8A4A" }}>Enterprise</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1A1D20" }}>Enterprise</span>
           </div>
           {([
             ["Wallet addresses",           "1",              "3 wallets",    "Unlimited"],
@@ -1201,10 +1203,10 @@ export default async function Home() {
                 <div key={j} className="flex justify-center">
                   {typeof val === "boolean" ? (
                     val
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill={j === 2 ? "#2D8A4A" : "#1CB8B8"} fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke={j === 2 ? "#2D8A4A" : "#1CB8B8"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#1CB8B8" : "#2D8A4A" }}>{val}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
                   )}
                 </div>
               ))}

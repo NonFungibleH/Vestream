@@ -421,11 +421,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
             <span
               key={activeIdx}
               className="inline-block transition-opacity duration-200"
-              style={{
-                background: "#1CB8B8",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
+              style={{ color: "#1CB8B8" }}
             >
               {SCAN_PROTOCOLS[activeIdx]}
             </span>

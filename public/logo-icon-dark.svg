@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Vestream icon (dark backgrounds)</title>
+  <!--
+    Inversion of logo-icon.svg for use on dark page backgrounds. Top two
+    slabs swap from warm-ink-on-light to white-on-dark; bottom slab
+    keeps its teal because teal pops on both light and dark.
+  -->
+  <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="white" opacity="0.35"/>
+  <path d="M22 46 L70 46 L78 54 L22 54 Z" fill="white" opacity="0.65"/>
+  <path d="M22 62 L78 62 L86 70 L22 70 Z" fill="#1CB8B8"/>
+</svg>

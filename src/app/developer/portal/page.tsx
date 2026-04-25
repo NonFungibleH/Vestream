@@ -44,7 +44,7 @@ export default function DeveloperPortal() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10 justify-center">
-          <img src="/logo-icon.svg" alt="Vestream" className="w-8 h-8" />
+          <img src="/logo-icon-dark.svg" alt="Vestream" className="w-8 h-8" />
           <span className="font-bold text-lg tracking-tight text-white">Vestream</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-md ml-1"
             style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }}>

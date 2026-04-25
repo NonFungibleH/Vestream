@@ -17,12 +17,7 @@ export default function NotFound() {
 
         {/* 404 */}
         <p className="text-8xl font-bold mb-2 tabular-nums"
-          style={{
-            background: "#1CB8B8",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            letterSpacing: "-0.04em",
-          }}>
+          style={{ color: "#1CB8B8", letterSpacing: "-0.04em" }}>
           404
         </p>
 

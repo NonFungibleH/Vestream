@@ -28,7 +28,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0f14" }}>
       <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: "#141720", border: "1px solid #1e2330" }}>
-        <img src="/logo-icon.svg" alt="Vestream" className="w-10 h-10 mb-6" />
+        <img src="/logo-icon-dark.svg" alt="Vestream" className="w-10 h-10 mb-6" />
         <h1 className="font-bold text-lg mb-1" style={{ color: "white" }}>Admin access</h1>
         <p className="text-sm mb-6" style={{ color: "#4b5563" }}>Vestream internal dashboard</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

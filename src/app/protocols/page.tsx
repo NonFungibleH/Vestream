@@ -300,13 +300,7 @@ export default async function UnlocksIndexPage() {
             }}
           >
             Every major token unlock,<br />
-            <span
-              style={{
-                background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 60%, #ec4899 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
+            <span style={{ color: "#1CB8B8" }}>
               in one live index
             </span>
           </h1>

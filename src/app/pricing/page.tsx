@@ -6,7 +6,7 @@ import PricingCta from "@/components/PricingCta";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function Check({ color = "#2D8A4A" }: { color?: string }) {
+function Check({ color = "#1CB8B8" }: { color?: string }) {
   return (
     <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
       <circle cx="8" cy="8" r="8" fill={color} fillOpacity={0.12} />
@@ -192,19 +192,19 @@ export default function Pricing() {
           <div className="relative rounded-2xl p-7"
             style={{
               background: "#0d0f14",
-              border: "1px solid rgba(45,138,74,0.3)",
-              boxShadow: "0 4px 40px rgba(45,138,74,0.18), 0 24px 64px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.06)",
             }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "#2D8A4A", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.35)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
                 Funds &amp; teams
               </span>
             </div>
 
             <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#2D8A4A" }}>Enterprise</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Enterprise</p>
               <div className="flex items-end gap-1 mb-0.5">
                 <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
               </div>
@@ -216,19 +216,19 @@ export default function Pricing() {
             <ContactTrigger
               label="Contact us →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "#2D8A4A", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", textDecoration: "none" }}
+              style={{ background: "white", color: "#1A1D20", textDecoration: "none" }}
             />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Full REST API + MCP server access" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Team workspace &amp; shared portfolios" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Telegram &amp; WhatsApp alerts" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="SSO &amp; custom SLA" color="#e5e7eb" checkColor="#2D8A4A" />
-              <FeatureItem text="Dedicated support channel" color="#e5e7eb" checkColor="#2D8A4A" />
+              <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Full REST API + MCP server access" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Team workspace &amp; shared portfolios" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Telegram &amp; WhatsApp alerts" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="SSO &amp; custom SLA" color="#e5e7eb" checkColor="#1CB8B8" />
+              <FeatureItem text="Dedicated support channel" color="#e5e7eb" checkColor="#1CB8B8" />
             </ul>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function Pricing() {
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#2D8A4A" }}>Enterprise</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1A1D20" }}>Enterprise</span>
             </div>
 
             {([
@@ -307,10 +307,10 @@ export default function Pricing() {
                 <div className="flex justify-center">
                   {typeof fund === "boolean" ? (
                     fund
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2D8A4A" fillOpacity={0.12}/><path d="M5 8l2 2 4-4" stroke="#2D8A4A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.12}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: "#2D8A4A" }}>{fund}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: "#1CB8B8" }}>{fund}</span>
                   )}
                 </div>
               </div>

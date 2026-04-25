@@ -167,7 +167,7 @@ export default async function AdminPage() {
       <header className="px-8 py-5 flex items-center justify-between"
         style={{ borderBottom: "1px solid #1e2330" }}>
         <div className="flex items-center gap-3">
-          <img src="/logo-icon.svg" alt="Vestream" className="w-8 h-8" />
+          <img src="/logo-icon-dark.svg" alt="Vestream" className="w-8 h-8" />
           <div>
             <span className="font-bold text-base">Vestream</span>
             <span className="text-xs ml-2 px-2 py-0.5 rounded-md font-semibold"

@@ -180,7 +180,14 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
           {/* Brand stack */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity w-fit">
-              <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+              {/* Dark themes need the white-fading slab variant so the upper
+                  slabs (warm-ink in the light variant) don't disappear into
+                  the dark background. */}
+              <img
+                src={theme === "light" ? "/logo-icon.svg" : "/logo-icon-dark.svg"}
+                alt="Vestream"
+                className="w-7 h-7"
+              />
               <span className="font-semibold text-base" style={{ color: palette.brandName }}>
                 Vestream
               </span>

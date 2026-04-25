@@ -61,11 +61,9 @@ export default function ResourcesPage() {
           >
             Resources
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 max-w-2xl mx-auto leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 max-w-2xl mx-auto leading-tight" style={{ color: "#1A1D20" }}>
             Everything you need to know about{" "}
-            <span style={{ background: "#1CB8B8", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              token vesting
-            </span>
+            <span style={{ color: "#1CB8B8" }}>token vesting</span>
           </h1>
           <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "#8B8E92" }}>
             In-depth guides for investors, project teams, and Web3 professionals — covering vesting schedules, unlock tracking, tokenomics, and more.

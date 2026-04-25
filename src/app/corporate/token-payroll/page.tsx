@@ -153,14 +153,10 @@ export default function TokenPayrollPage() {
 
           <h1
             className="text-4xl md:text-6xl font-bold mb-6"
-            style={{
-              letterSpacing: "-0.03em",
-              background: `linear-gradient(135deg, ${THEME.heroGradFrom} 0%, ${THEME.heroGradVia} 50%, ${THEME.heroGradTo} 100%)`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}
           >
-            Your team&rsquo;s salary,<br className="hidden md:block" /> live to the second
+            Your team&rsquo;s salary,<br className="hidden md:block" />{" "}
+            <span style={{ color: "#1CB8B8" }}>live to the second</span>
           </h1>
 
           <p
