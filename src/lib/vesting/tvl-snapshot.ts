@@ -185,6 +185,17 @@ export async function runWalkerSnapshot(
   // Run every chain's walker in parallel — they hit different subgraphs / RPCs
   // so there's no contention. Price each chain's aggregates separately so a
   // DexScreener outage on one chain doesn't nuke all of them.
+  //
+  // CRITICAL — write each chain's snapshot as soon as IT completes, not after
+  // Promise.all settles. If we wait for all chains, a single slow/hanging
+  // chain will block ALL writes — and when Vercel kills the function at the
+  // 300s maxDuration, we lose every successful chain's result. Confirmed in
+  // production: UNCX-VM ETH (20s) + BSC (>300s with retries) caused ETH's
+  // good result to never reach the database.
+  //
+  // Pattern below: each chain mapper does walker → price → upsert inline,
+  // then returns its summary contribution. Promise.allSettled (not Promise.all)
+  // ensures one chain throwing doesn't reject the whole batch.
   interface CreditedToken {
     chainId:      number;
     tokenAddress: string;
@@ -195,7 +206,7 @@ export async function runWalkerSnapshot(
     source:       "dexscreener" | "coingecko";
   }
 
-  const chainResults = await Promise.all(
+  const chainSettled = await Promise.allSettled(
     chainIds.map(async (chainId): Promise<{
       chainId:           SupportedChainId;
       walker:            WalkerResult | null;
@@ -204,6 +215,7 @@ export async function runWalkerSnapshot(
       perChain:          { tvl: number; high: number; medium: number; low: number };
       creditedByToken:   CreditedToken[];
       error:             string | null;
+      committed:         boolean;
     }> => {
       const walker = await runWalker(protocol, chainId);
       if (!walker) {
@@ -215,6 +227,7 @@ export async function runWalkerSnapshot(
           perChain: { tvl: 0, high: 0, medium: 0, low: 0 },
           creditedByToken: [],
           error: `no walker for ${protocol}`,
+          committed: false,
         };
       }
 
@@ -334,6 +347,49 @@ export async function runWalkerSnapshot(
         });
       }
 
+      // Top-5 contributors by USD CREDITED (post-cap) — matches what actually
+      // fed the headline. The pre-cap raw value is kept in topContributors
+      // alongside the credited amount for forensic audit, but the sort is on
+      // the credited contribution so the row reflects real impact.
+      const topContributors = creditedByToken
+        .slice()
+        .sort((a, b) => b.usdCredited - a.usdCredited)
+        .slice(0, 5)
+        .map((p) => ({
+          tokenSymbol:  p.tokenSymbol ?? undefined,
+          tokenAddress: p.tokenAddress,
+          usd:          p.usdCredited,         // post-cap, matches headline
+          usdRaw:       p.usdRaw,              // pre-cap, for audit
+          confidence:   p.confidence,
+          source:       p.source,
+        }));
+
+      // Commit IMMEDIATELY so this chain's result survives even if a sibling
+      // chain hangs and Vercel kills the function. See note above the
+      // Promise.allSettled call.
+      let committed = false;
+      try {
+        await upsertSnapshot({
+          protocol,
+          chainId,
+          tvlUsd:          perChain.tvl,
+          tvlHigh:         perChain.high,
+          tvlMedium:       perChain.medium,
+          tvlLow:          perChain.low,
+          streamCount:     walker.streamCount,
+          tokensPriced:    priced.length,
+          tokensTotal:     walker.tokens.length,
+          methodology:     walkerMethodology(protocol),
+          topContributors,
+          notes:           walker.error
+            ? `partial walk (${walker.elapsedMs}ms): ${walker.error}`
+            : `full walk ${walker.elapsedMs}ms`,
+        });
+        committed = true;
+      } catch (dbErr) {
+        console.error(`[snapshot] upsert failed for ${protocol}/${chainId}:`, dbErr);
+      }
+
       return {
         chainId,
         walker,
@@ -342,55 +398,27 @@ export async function runWalkerSnapshot(
         perChain,
         creditedByToken,
         error: walker.error,
+        committed,
       };
     }),
   );
 
-  // Write one row per chain. Partial-walk errors still get persisted so the
-  // UI can show the best-available number; the `notes` field records the
-  // walker's error string for audit.
-  for (const r of chainResults) {
+  // Aggregate the summary from settled results — Promise.allSettled means
+  // one chain rejecting (e.g. timeout) doesn't poison the others. Each
+  // fulfilled result has already had its row committed inline above.
+  for (const settled of chainSettled) {
+    if (settled.status === "rejected") {
+      const reason = settled.reason instanceof Error ? settled.reason.message : String(settled.reason);
+      summary.errors.push(`chain rejected: ${reason}`);
+      continue;
+    }
+    const r = settled.value;
     if (!r.walker) {
       if (r.error) summary.errors.push(`chain ${r.chainId}: ${r.error}`);
       continue;
     }
-
-    // Top-5 contributors by USD CREDITED (post-cap) — matches what actually
-    // fed the headline. The pre-cap raw value is kept in topContributors.usd
-    // alongside the credited amount for forensic audit, but the sort is on
-    // the credited contribution so the row reflects real impact.
-    const topContributors = r.creditedByToken
-      .slice()
-      .sort((a, b) => b.usdCredited - a.usdCredited)
-      .slice(0, 5)
-      .map((p) => ({
-        tokenSymbol:  p.tokenSymbol ?? undefined,
-        tokenAddress: p.tokenAddress,
-        usd:          p.usdCredited,         // post-cap, matches headline
-        usdRaw:       p.usdRaw,              // pre-cap, for audit
-        confidence:   p.confidence,
-        source:       p.source,
-      }));
-
-    await upsertSnapshot({
-      protocol,
-      chainId:         r.chainId,
-      tvlUsd:          r.perChain.tvl,
-      tvlHigh:         r.perChain.high,
-      tvlMedium:       r.perChain.medium,
-      tvlLow:          r.perChain.low,
-      streamCount:     r.walker.streamCount,
-      tokensPriced:    r.priced.length,
-      tokensTotal:     r.walker.tokens.length,
-      methodology:     walkerMethodology(protocol),
-      topContributors,
-      notes:           r.walker.error
-        ? `partial walk (${r.walker.elapsedMs}ms): ${r.walker.error}`
-        : `full walk ${r.walker.elapsedMs}ms`,
-    });
-
-    summary.chainsOk++;
-    summary.totalUsd   += r.perChain.tvl;
+    if (r.committed) summary.chainsOk++;
+    summary.totalUsd    += r.perChain.tvl;
     summary.streamCount += r.walker.streamCount;
     if (r.walker.error) summary.errors.push(`chain ${r.chainId}: ${r.walker.error}`);
   }
