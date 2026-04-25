@@ -41,7 +41,7 @@ export default function AdminLogin() {
           {error && <p className="text-xs" style={{ color: "#B3322E" }}>{error}</p>}
           <button type="submit" disabled={loading}
             className="py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}>
+            style={{ background: "#1CB8B8", color: "white" }}>
             {loading ? "Signing in..." : "Sign in →"}
           </button>
         </form>

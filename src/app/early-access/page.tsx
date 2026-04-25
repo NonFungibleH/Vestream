@@ -113,7 +113,7 @@ export default function EarlyAccessPage() {
               All 100 beta spots have been claimed. Join the waitlist and we&apos;ll reach out when more spots open.
             </p>
             <Link href="/" className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+              style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
               Join the waitlist →
             </Link>
           </>
@@ -125,7 +125,7 @@ export default function EarlyAccessPage() {
                 <div key={s} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
                     style={{
-                      background: s === step ? "linear-gradient(135deg,#1CB8B8,#0F8A8A)" : step > s ? "rgba(28,184,184,0.15)" : "rgba(0,0,0,0.06)",
+                      background: s === step ? "#1CB8B8" : step > s ? "rgba(28,184,184,0.15)" : "rgba(0,0,0,0.06)",
                       color: s === step ? "white" : step > s ? "#1CB8B8" : "#B8BABD",
                     }}>
                     {stepLabels[s]}
@@ -156,7 +156,7 @@ export default function EarlyAccessPage() {
                 {error && <p className="text-xs font-medium" style={{ color: "#B3322E" }}>{error}</p>}
                 <button type="submit" disabled={!code}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+                  style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                   Continue →
                 </button>
               </form>
@@ -172,7 +172,7 @@ export default function EarlyAccessPage() {
                 {error && <p className="text-xs font-medium" style={{ color: "#B3322E" }}>{error}</p>}
                 <button type="submit" disabled={loading || !email}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+                  style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                   {loading ? "Sending…" : "Send sign-in code →"}
                 </button>
                 <button type="button" onClick={() => { setStep("code"); setError(""); }}
@@ -191,7 +191,7 @@ export default function EarlyAccessPage() {
                 {error && <p className="text-xs font-medium" style={{ color: "#B3322E" }}>{error}</p>}
                 <button type="submit" disabled={loading || otp.length < 6}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+                  style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                   {loading ? "Verifying…" : "Access Vestream →"}
                 </button>
                 <button type="button" onClick={() => { setStep("email"); setOtp(""); setError(""); }}

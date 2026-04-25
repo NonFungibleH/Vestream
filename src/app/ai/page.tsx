@@ -58,7 +58,7 @@ function ToolCard({
         <div className="flex flex-col gap-1.5">
           {params.map((p) => (
             <div key={p.name} className="flex items-start gap-2 text-xs">
-              <code style={{ color: "#a78bfa", flexShrink: 0 }}>{p.name}</code>
+              <code style={{ color: "#1CB8B8", flexShrink: 0 }}>{p.name}</code>
               <span style={{ color: "#4b5563", flexShrink: 0 }}>{p.type}</span>
               {!p.required && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: "#6b7280", flexShrink: 0 }}>optional</span>}
               <span style={{ color: "rgba(255,255,255,0.35)" }}>{p.desc}</span>
@@ -94,9 +94,9 @@ export default function AiPage() {
         <div className="relative max-w-4xl mx-auto">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
-            style={{ background: "rgba(15,138,138,0.08)", borderColor: "rgba(15,138,138,0.25)", color: "#a78bfa" }}
+            style={{ background: "rgba(15,138,138,0.08)", borderColor: "rgba(15,138,138,0.25)", color: "#1CB8B8" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#a78bfa" }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#1CB8B8" }} />
             MCP · REST · AI-native
           </div>
 
@@ -121,14 +121,14 @@ export default function AiPage() {
             <Link
               href="/developer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)", color: "white", boxShadow: "0 4px 20px rgba(15,138,138,0.3)" }}
+              style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 20px rgba(15,138,138,0.3)" }}
             >
               Get an API key →
             </Link>
             <Link
               href="/api-docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.3)", color: "#a78bfa" }}
+              style={{ background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.3)", color: "#1CB8B8" }}
             >
               View API docs →
             </Link>
@@ -159,16 +159,16 @@ export default function AiPage() {
           style={{ background: "#141720", border: "1px solid rgba(15,138,138,0.15)" }}
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
+            style={{ background: "rgba(15,138,138,0.15)", color: "#1CB8B8" }}>
             <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
           <div>
-            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#a78bfa" }}>What is MCP?</p>
+            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#1CB8B8" }}>What is MCP?</p>
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
               The <strong style={{ color: "white" }}>Model Context Protocol</strong> (MCP) is an open standard by Anthropic that lets AI agents call external tools natively — without writing API glue code.
-              Install <code style={{ color: "#a78bfa" }}>@vestream/mcp</code> and your agent can query vesting data the same way it reasons about anything else: in natural language.
+              Install <code style={{ color: "#1CB8B8" }}>@vestream/mcp</code> and your agent can query vesting data the same way it reasons about anything else: in natural language.
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function AiPage() {
             {/* Tool call */}
             <div className="ml-10">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
+                <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(15,138,138,0.15)", color: "#1CB8B8" }}>
                   → calling tool
                 </span>
                 <code className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>get_upcoming_unlocks</code>
@@ -299,7 +299,7 @@ export default function AiPage() {
 
             {/* Agent reply */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)" }}>
+              <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
@@ -329,7 +329,7 @@ export default function AiPage() {
           {/* Claude Desktop */}
           <div className="rounded-2xl p-6" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)" }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
@@ -372,7 +372,7 @@ export default function AiPage() {
         </div>
 
         <p className="text-center text-sm mt-5" style={{ color: "rgba(255,255,255,0.3)" }}>
-          Replace <code style={{ color: "#a78bfa" }}>vstr_live_...</code> with your API key from{" "}
+          Replace <code style={{ color: "#1CB8B8" }}>vstr_live_...</code> with your API key from{" "}
           <Link href="/developer" className="underline" style={{ color: "rgba(255,255,255,0.5)" }}>the developer portal</Link>.
         </p>
       </section>
@@ -499,7 +499,7 @@ export default function AiPage() {
               <Link
                 href="/developer"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)", color: "white", boxShadow: "0 4px 24px rgba(15,138,138,0.35)" }}
+                style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 24px rgba(15,138,138,0.35)" }}
               >
                 Get an API key →
               </Link>

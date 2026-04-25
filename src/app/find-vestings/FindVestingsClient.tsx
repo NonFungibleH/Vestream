@@ -149,23 +149,23 @@ export default function FindVestingsClient() {
           style={{
             background: "white",
             border: "1px solid rgba(0,0,0,0.07)",
-            boxShadow: "0 10px 40px rgba(37,99,235,0.05)",
+            boxShadow: "0 10px 40px rgba(28,184,184,0.05)",
           }}
         >
           <div
             className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.1), rgba(124,58,237,0.1))" }}
+            style={{ background: "rgba(28,184,184,0.1)" }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth="2" strokeLinecap="round">
               <rect x="2" y="7" width="20" height="13" rx="2" />
               <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
             </svg>
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             Connect to see your vestings
           </h2>
-          <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#64748b" }}>
+          <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
             We&rsquo;ll scan your wallet across 9 protocols and 5 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
@@ -180,9 +180,9 @@ export default function FindVestingsClient() {
                   disabled={!mounted}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
                   style={{
-                    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                    background: "#1CB8B8",
                     color: "white",
-                    boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+                    boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
                   }}
                 >
                   Connect wallet
@@ -195,7 +195,7 @@ export default function FindVestingsClient() {
             <button
               onClick={() => setManualMode(true)}
               className="text-xs font-medium hover:underline"
-              style={{ color: "#64748b" }}
+              style={{ color: "#8B8E92" }}
             >
               Or scan a different address instead →
             </button>
@@ -208,7 +208,7 @@ export default function FindVestingsClient() {
         <form
           onSubmit={onManualSubmit}
           className="rounded-2xl p-5 md:p-6"
-          style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 4px 20px rgba(37,99,235,0.04)" }}
+          style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 4px 20px rgba(28,184,184,0.04)" }}
         >
           <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
             <input
@@ -218,16 +218,16 @@ export default function FindVestingsClient() {
               placeholder="Paste any wallet — 0x… or Solana pubkey"
               disabled={loading}
               className="flex-1 px-4 py-3 text-sm font-mono rounded-xl outline-none focus:ring-2"
-              style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a", minWidth: 240 }}
+              style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)", color: "#1A1D20", minWidth: 240 }}
             />
             <button
               type="submit"
               disabled={loading || !manualAddress.trim()}
               className="w-full md:w-auto px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                background: "#1CB8B8",
                 color: "white",
-                boxShadow: "0 4px 20px rgba(37,99,235,0.25)",
+                boxShadow: "0 4px 20px rgba(28,184,184,0.25)",
               }}
             >
               {loading ? "Scanning…" : "Scan"}
@@ -237,7 +237,7 @@ export default function FindVestingsClient() {
             type="button"
             onClick={() => { setManualMode(false); setManualAddress(""); }}
             className="text-xs font-medium mt-3 hover:underline"
-            style={{ color: "#64748b" }}
+            style={{ color: "#8B8E92" }}
           >
             ← Connect wallet instead
           </button>
@@ -262,7 +262,7 @@ export default function FindVestingsClient() {
               <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#10b981" }}>
                 Connected
               </div>
-              <div className="font-mono text-sm" style={{ color: "#0f172a" }}>
+              <div className="font-mono text-sm" style={{ color: "#1A1D20" }}>
                 {truncateAddr(connectedAddress!)}
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function FindVestingsClient() {
           <button
             onClick={() => disconnect()}
             className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-            style={{ color: "#64748b", background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+            style={{ color: "#8B8E92", background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
           >
             Disconnect
           </button>
@@ -356,8 +356,8 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
         className="rounded-2xl p-6 md:p-8 text-center relative overflow-hidden"
         style={{
           background: "white",
-          border: "1px solid rgba(37,99,235,0.15)",
-          boxShadow: "0 10px 40px rgba(37,99,235,0.08)",
+          border: "1px solid rgba(28,184,184,0.15)",
+          boxShadow: "0 10px 40px rgba(28,184,184,0.08)",
         }}
       >
         {/* Animated background glow that drifts across the card */}
@@ -365,7 +365,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 60% 80% at var(--scan-x, 50%) 50%, rgba(37,99,235,0.08), transparent 60%)",
+              "radial-gradient(ellipse 60% 80% at var(--scan-x, 50%) 50%, rgba(28,184,184,0.08), transparent 60%)",
             animation: "scan-glow 3s ease-in-out infinite",
           }}
         />
@@ -385,22 +385,22 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
           <span
             className="absolute inset-0 rounded-full opacity-75"
             style={{
-              background: "radial-gradient(circle, rgba(37,99,235,0.25), transparent 60%)",
+              background: "radial-gradient(circle, rgba(28,184,184,0.25), transparent 60%)",
               animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
             }}
           />
           <span
             className="absolute inset-2 rounded-full opacity-90"
             style={{
-              background: "radial-gradient(circle, rgba(124,58,237,0.3), transparent 65%)",
+              background: "radial-gradient(circle, rgba(15,138,138,0.3), transparent 65%)",
               animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite 0.4s",
             }}
           />
           <div
             className="absolute inset-4 rounded-full flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              boxShadow: "0 4px 16px rgba(37,99,235,0.35)",
+              background: "#1CB8B8",
+              boxShadow: "0 4px 16px rgba(28,184,184,0.35)",
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
@@ -410,26 +410,26 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
           </div>
         </div>
 
-        <div className="text-xs uppercase tracking-wider font-semibold mb-1.5" style={{ color: "#2563eb" }}>
+        <div className="text-xs uppercase tracking-wider font-semibold mb-1.5" style={{ color: "#1CB8B8" }}>
           Scanning {scanningLabel || "wallet"}
         </div>
         {/* Active-protocol carousel — single line, swaps every 900ms.
             Fixed height keeps the layout from jumping. */}
-        <div className="h-7 flex items-center justify-center" style={{ color: "#0f172a" }}>
+        <div className="h-7 flex items-center justify-center" style={{ color: "#1A1D20" }}>
           <span className="text-base md:text-lg font-bold tabular-nums" style={{ letterSpacing: "-0.02em" }}>
-            <span style={{ color: "#64748b", fontWeight: 500 }}>checking </span>
+            <span style={{ color: "#8B8E92", fontWeight: 500 }}>checking </span>
             <span
               key={activeIdx}
               className="inline-block transition-opacity duration-200"
               style={{
-                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                background: "#1CB8B8",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
             >
               {SCAN_PROTOCOLS[activeIdx]}
             </span>
-            <span style={{ color: "#94a3b8" }}>…</span>
+            <span style={{ color: "#B8BABD" }}>…</span>
           </span>
         </div>
 
@@ -438,18 +438,18 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
             constant motion signals the job is alive. */}
         <div
           className="mt-5 h-1 rounded-full overflow-hidden mx-auto"
-          style={{ background: "rgba(37,99,235,0.08)", maxWidth: 280 }}
+          style={{ background: "rgba(28,184,184,0.08)", maxWidth: 280 }}
         >
           <div
             className="h-full w-1/4 rounded-full"
             style={{
-              background: "linear-gradient(90deg, transparent, #2563eb, #7c3aed, transparent)",
+              background: "linear-gradient(90deg, transparent, #1CB8B8, transparent)",
               animation: "scan-bar 1.8s ease-in-out infinite",
             }}
           />
         </div>
 
-        <p className="text-xs mt-4" style={{ color: "#94a3b8" }}>
+        <p className="text-xs mt-4" style={{ color: "#B8BABD" }}>
           Cross-checking 9 vesting protocols across Ethereum, BNB, Polygon, Base and Solana — usually 10–30 seconds.
         </p>
       </div>
@@ -484,8 +484,8 @@ function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
     <div
       className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
-        boxShadow: "0 10px 30px rgba(37,99,235,0.25)",
+        background: "#1CB8B8",
+        boxShadow: "0 10px 30px rgba(28,184,184,0.25)",
       }}
     >
       {/* Subtle decorative glow */}
@@ -522,7 +522,7 @@ function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 whitespace-nowrap"
             style={{
               background: "white",
-              color: "#2563eb",
+              color: "#1CB8B8",
               boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
             }}
           >
@@ -546,30 +546,30 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
     <div
       className="rounded-2xl p-5 md:p-6"
       style={{
-        background: "linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))",
-        border: "1px solid rgba(37,99,235,0.15)",
+        background: "rgba(28,184,184,0.05)",
+        border: "1px solid rgba(28,184,184,0.15)",
       }}
     >
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider font-semibold mb-1" style={{ color: "#2563eb" }}>
+          <div className="text-xs uppercase tracking-wider font-semibold mb-1" style={{ color: "#1CB8B8" }}>
             Scan complete
           </div>
-          <h2 className="text-xl md:text-2xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <h2 className="text-xl md:text-2xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             {result.totalStreams} vesting{result.totalStreams === 1 ? "" : "s"} found
           </h2>
-          <p className="text-sm mt-1 font-mono break-all" style={{ color: "#64748b" }}>
+          <p className="text-sm mt-1 font-mono break-all" style={{ color: "#8B8E92" }}>
             {truncateAddr(result.address)}
           </p>
         </div>
         <div className="flex gap-5 text-sm">
           <div>
-            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>Protocols</div>
-            <div className="font-mono font-bold text-lg" style={{ color: "#0f172a" }}>{uniqueProtocols}</div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>Protocols</div>
+            <div className="font-mono font-bold text-lg" style={{ color: "#1A1D20" }}>{uniqueProtocols}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>Chains</div>
-            <div className="font-mono font-bold text-lg" style={{ color: "#0f172a" }}>{uniqueChains}</div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>Chains</div>
+            <div className="font-mono font-bold text-lg" style={{ color: "#1A1D20" }}>{uniqueChains}</div>
           </div>
         </div>
       </div>
@@ -578,7 +578,7 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
 }
 
 function GroupCard({ group }: { group: Group }) {
-  const colour = PROTOCOL_COLOURS[group.protocolId] ?? "#64748b";
+  const colour = PROTOCOL_COLOURS[group.protocolId] ?? "#8B8E92";
 
   return (
     <div
@@ -589,10 +589,10 @@ function GroupCard({ group }: { group: Group }) {
         <div className="flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: colour }} />
           <div>
-            <div className="text-base font-bold" style={{ color: "#0f172a" }}>
+            <div className="text-base font-bold" style={{ color: "#1A1D20" }}>
               {group.protocolName}
             </div>
-            <div className="text-xs" style={{ color: "#64748b" }}>
+            <div className="text-xs" style={{ color: "#8B8E92" }}>
               {group.chainName} · {group.streamCount} stream{group.streamCount === 1 ? "" : "s"}
             </div>
           </div>
@@ -607,20 +607,20 @@ function GroupCard({ group }: { group: Group }) {
             style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-sm" style={{ color: "#0f172a" }}>
+              <span className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
                 {tok.symbol || "—"}
               </span>
-              <span className="text-[11px]" style={{ color: "#94a3b8" }}>
+              <span className="text-[11px]" style={{ color: "#B8BABD" }}>
                 {tok.streamCount} stream{tok.streamCount === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#94a3b8" }}>
+            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
               Total
             </div>
             {/* Allow token total to wrap rather than truncate — the number
                 is the key data on this card and hiding it behind ellipsis
                 on mobile hurts more than a two-line wrap. */}
-            <div className="font-mono text-sm font-semibold break-all" style={{ color: "#0f172a" }}>
+            <div className="font-mono text-sm font-semibold break-all" style={{ color: "#1A1D20" }}>
               {fmtAmount(tok.totalAmountRaw, tok.decimals)}
             </div>
             {BigInt(tok.claimableNowRaw) > 0n && (
@@ -633,7 +633,7 @@ function GroupCard({ group }: { group: Group }) {
       </div>
 
       {group.tokens.length > 4 && (
-        <p className="text-xs mt-3" style={{ color: "#94a3b8" }}>
+        <p className="text-xs mt-3" style={{ color: "#B8BABD" }}>
           + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the Vestream app
         </p>
       )}
@@ -649,20 +649,20 @@ function NoResults({ address }: { address: string }) {
     >
       <div
         className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-        style={{ background: "rgba(37,99,235,0.05)" }}
+        style={{ background: "rgba(28,184,184,0.05)" }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B8E92" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
         </svg>
       </div>
-      <h3 className="text-lg font-bold mb-2" style={{ color: "#0f172a" }}>
+      <h3 className="text-lg font-bold mb-2" style={{ color: "#1A1D20" }}>
         No vestings found
       </h3>
-      <p className="text-sm mb-1 font-mono" style={{ color: "#64748b" }}>
+      <p className="text-sm mb-1 font-mono" style={{ color: "#8B8E92" }}>
         {truncateAddr(address)}
       </p>
-      <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#64748b" }}>
+      <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#8B8E92" }}>
         We scanned 9 vesting protocols across Ethereum, BNB Chain, Polygon, Base and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
       </p>
     </div>
@@ -678,14 +678,14 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
     <div
       className="rounded-3xl p-6 md:p-10 text-center overflow-hidden relative"
       style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        background: "linear-gradient(135deg, #1A1D20 0%, #1e293b 100%)",
         boxShadow: "0 20px 50px rgba(15,23,42,0.2)",
       }}
     >
       <div
         className="absolute inset-0 opacity-30 pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(circle at 20% 30%, rgba(37,99,235,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(124,58,237,0.4), transparent 40%)",
+          backgroundImage: "radial-gradient(circle at 20% 30%, rgba(28,184,184,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(15,138,138,0.4), transparent 40%)",
         }}
       />
       <div className="relative">

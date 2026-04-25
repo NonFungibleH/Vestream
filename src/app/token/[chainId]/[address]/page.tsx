@@ -426,7 +426,7 @@ export default async function TokenPage(
               href="/find-vestings"
               className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl font-semibold text-sm"
               style={{
-                background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                background: "#1CB8B8",
                 color: "white",
                 boxShadow: "0 4px 16px rgba(28,184,184,0.3)",
               }}
@@ -543,7 +543,7 @@ export default async function TokenPage(
                 href="/early-access"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #0F8A8A, #1CB8B8)",
+                  background: "#1CB8B8",
                   color: "white",
                   boxShadow: "0 4px 24px rgba(15,138,138,0.4)",
                 }}

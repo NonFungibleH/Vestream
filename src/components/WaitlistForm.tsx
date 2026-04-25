@@ -82,7 +82,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
           type="submit"
           disabled={status === "loading"}
           className="flex-shrink-0 px-5 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:opacity-90 disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
+          style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
         >
           {status === "loading" ? "..." : "Notify me →"}
         </button>

@@ -474,7 +474,7 @@ export default function FaqPage() {
             href="/contact"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
             style={{
-              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+              background: "#1CB8B8",
               color: "white",
               boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
             }}

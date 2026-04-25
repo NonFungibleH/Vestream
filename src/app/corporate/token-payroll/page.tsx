@@ -122,14 +122,14 @@ export default function TokenPayrollPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(79,70,229,0.12) 0%, transparent 65%)",
+              "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(45,138,74,0.12) 0%, transparent 65%)",
           }}
           aria-hidden
         />
         <div
           className="absolute top-0 left-0 right-0 h-px"
           style={{
-            background: "linear-gradient(90deg, transparent, rgba(79,70,229,0.35), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(45,138,74,0.35), transparent)",
           }}
           aria-hidden
         />
@@ -181,7 +181,7 @@ export default function TokenPayrollPage() {
               style={{
                 background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
                 color: "white",
-                boxShadow: "0 4px 24px rgba(79,70,229,0.3)",
+                boxShadow: "0 4px 24px rgba(45,138,74,0.3)",
               }}
             >
               Register your interest →
@@ -404,7 +404,7 @@ export default function TokenPayrollPage() {
           <div
             className="absolute -top-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle, rgba(79,70,229,0.25) 0%, transparent 65%)",
+              background: "radial-gradient(circle, rgba(45,138,74,0.25) 0%, transparent 65%)",
             }}
             aria-hidden
           />
@@ -414,7 +414,7 @@ export default function TokenPayrollPage() {
               <div
                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-5"
                 style={{
-                  background: "rgba(79,70,229,0.2)",
+                  background: "rgba(45,138,74,0.2)",
                   color: "white",
                   border: "1px solid rgba(255,255,255,0.12)",
                   letterSpacing: "0.12em",
@@ -694,7 +694,7 @@ export default function TokenPayrollPage() {
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(79,70,229,0.08) 0%, transparent 70%)",
+                "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(45,138,74,0.08) 0%, transparent 70%)",
             }}
             aria-hidden
           />
@@ -734,7 +734,7 @@ export default function TokenPayrollPage() {
                 style={{
                   background: `linear-gradient(135deg, ${THEME.accentIndigo}, #0F8A8A)`,
                   color: "white",
-                  boxShadow: "0 4px 24px rgba(79,70,229,0.3)",
+                  boxShadow: "0 4px 24px rgba(45,138,74,0.3)",
                 }}
               >
                 Register your interest →

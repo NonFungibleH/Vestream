@@ -812,7 +812,7 @@ export default function Settings() {
                 </div>
                 <a href="/pricing"
                   className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-white"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+                  style={{ background: "#1CB8B8" }}>
                   Upgrade →
                 </a>
               </div>
@@ -882,7 +882,7 @@ export default function Settings() {
                 <button type="submit"
                   disabled={adding || !newAddress}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 2px 8px rgba(28,184,184,0.3)" }}>
+                  style={{ background: "#1CB8B8", boxShadow: "0 2px 8px rgba(28,184,184,0.3)" }}>
                   <IconPlus /> {adding ? "Adding…" : "Track wallet"}
                 </button>
               </form>
@@ -993,7 +993,7 @@ export default function Settings() {
               <div className="flex items-center gap-3 pt-1">
                 <button type="submit" disabled={saving}
                   className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 2px 8px rgba(28,184,184,0.25)" }}>
+                  style={{ background: "#1CB8B8", boxShadow: "0 2px 8px rgba(28,184,184,0.25)" }}>
                   {saving ? "Saving…" : "Save preferences"}
                 </button>
               </div>

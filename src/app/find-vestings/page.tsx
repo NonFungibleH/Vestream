@@ -40,7 +40,7 @@ const PROTOCOLS_ROW_2 = [
 ] as const;
 
 const CHAINS = [
-  { name: "Ethereum",  color: "#6366f1", bg: "rgba(99,102,241,0.07)",   border: "rgba(99,102,241,0.16)"   },
+  { name: "Ethereum",  color: "#6366f1", bg: "rgba(28,184,184,0.07)",   border: "rgba(28,184,184,0.16)"   },
   { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
   { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
   { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
@@ -69,7 +69,7 @@ export default function FindVestingsPage() {
           className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5"
           style={{
             letterSpacing: "-0.03em",
-            background: "linear-gradient(135deg, #1A1D20 0%, #1CB8B8 50%, #0F8A8A 100%)",
+            background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}

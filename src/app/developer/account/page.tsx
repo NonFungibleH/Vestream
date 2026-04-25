@@ -110,7 +110,7 @@ export default async function DeveloperAccount() {
                 width: `${usagePct}%`,
                 background: isNearLimit
                   ? "linear-gradient(90deg, #f97316, #B3322E)"
-                  : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
+                  : "#1CB8B8",
               }} />
             </div>
             <p className="text-xs mb-2" style={{ color: isNearLimit ? "#f97316" : "rgba(255,255,255,0.3)" }}>
@@ -140,7 +140,7 @@ export default async function DeveloperAccount() {
             <span className="inline-block text-sm font-bold px-3 py-1 rounded-lg mb-3"
               style={{
                 background: isPro ? "rgba(15,138,138,0.15)" : "rgba(52,211,153,0.1)",
-                color:      isPro ? "#a78bfa"               : "#34d399",
+                color:      isPro ? "#1CB8B8"               : "#34d399",
                 border:     `1px solid ${isPro ? "rgba(15,138,138,0.25)" : "rgba(52,211,153,0.2)"}`,
               }}>
               {isPro ? "Pro" : "Free"}
@@ -262,7 +262,7 @@ export default async function DeveloperAccount() {
               MCP server setup
             </p>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded"
-              style={{ background: "rgba(15,138,138,0.1)", color: "#a78bfa", border: "1px solid rgba(15,138,138,0.2)" }}>
+              style={{ background: "rgba(15,138,138,0.1)", color: "#1CB8B8", border: "1px solid rgba(15,138,138,0.2)" }}>
               @vestream/mcp
             </span>
           </div>

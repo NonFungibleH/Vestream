@@ -154,7 +154,7 @@ export default async function Home() {
             href="/early-access"
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
             style={{
-              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+              background: "#1CB8B8",
               color: "white",
               boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
             }}
@@ -240,7 +240,7 @@ export default async function Home() {
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#cbd5e1" }}>on</p>
             {[
-              { name: "Ethereum",  color: "#6366f1", bg: "rgba(99,102,241,0.07)",   border: "rgba(99,102,241,0.16)"   },
+              { name: "Ethereum",  color: "#6366f1", bg: "rgba(28,184,184,0.07)",   border: "rgba(28,184,184,0.16)"   },
               { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
               { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
               { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
@@ -285,7 +285,7 @@ export default async function Home() {
             {/* Sidebar — hidden on mobile */}
             <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#141720", borderRight: "1px solid #1e2330" }}>
               <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid #1e2330" }}>
-                <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg,#1CB8B8,#0F8A8A)" }}>
+                <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                   <span className="text-white text-[9px] font-bold">T</span>
                 </div>
                 <span className="text-xs font-bold text-white">Vestream</span>
@@ -369,7 +369,7 @@ export default async function Home() {
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}>4 streams</span>
                   </div>
                   {[
-                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#a78bfa", prog: 15 },
+                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#1CB8B8", prog: 15 },
                     { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
                     { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#fb923c", prog: 5  },
                   ].map((row, i) => (
@@ -436,7 +436,7 @@ export default async function Home() {
                   <div key={r.m} className="flex items-center gap-2">
                     <span style={{ color: "#4b5563", fontSize: "9px", width: "52px", flexShrink: 0 }}>{r.m}</span>
                     <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: "3px", height: "14px", overflow: "hidden" }}>
-                      <div style={{ width: `${r.w}%`, height: "100%", background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
+                      <div style={{ width: `${r.w}%`, height: "100%", background: "#1CB8B8", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
                         <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "8px", fontWeight: 700 }}>${(r.v/1000).toFixed(0)}k</span>
                       </div>
                     </div>
@@ -537,8 +537,8 @@ export default async function Home() {
                   <span style={{ color: "#1CB8B8", fontSize: "9px", fontWeight: 700 }}>CSV / Excel</span>
                 </div>
                 <div style={{ flex: 1, background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  <span style={{ color: "#a78bfa", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
+                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <span style={{ color: "#1CB8B8", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
                 </div>
               </div>
             </div>
@@ -770,7 +770,7 @@ export default async function Home() {
       {/* ── Mobile app ──────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
-          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 55%, #1CB8B8 100%)", border: "1px solid rgba(28,184,184,0.25)" }}>
+          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(28,184,184,0.25)" }}>
 
           {/* Gradient glow — teal halo on the right where the phone sits, so the
               device shadow reads against the warm-ink-to-teal field. */}
@@ -821,12 +821,12 @@ export default async function Home() {
                 </linearGradient>
               </defs>
               {/* Phone body */}
-              <rect x="4" y="4" width="142" height="302" rx="26" fill="#1a1625" stroke="rgba(167,139,250,0.45)" strokeWidth="1.5"/>
+              <rect x="4" y="4" width="142" height="302" rx="26" fill="#1a1625" stroke="rgba(28,184,184,0.45)" strokeWidth="1.5"/>
               {/* Side button (right) */}
-              <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(28,184,184,0.3)"/>
               {/* Volume buttons (left) */}
-              <rect x="1" y="84" width="3" height="22" rx="1.5" fill="rgba(167,139,250,0.3)"/>
-              <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(167,139,250,0.3)"/>
+              <rect x="1" y="84" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.3)"/>
+              <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.3)"/>
               {/* Screen */}
               <rect x="10" y="10" width="130" height="290" rx="20" fill="#0d0f14"/>
               {/* Dynamic Island */}
@@ -850,7 +850,7 @@ export default async function Home() {
               {/* App title */}
               <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
-              <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
+              <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(28,184,184,0.28)" strokeWidth="1"/>
               {/* Bell icon background */}
               <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(15,138,138,0.45)"/>
               {/* Bell SVG path */}
@@ -1098,7 +1098,7 @@ export default async function Home() {
           <div className="relative rounded-2xl p-7" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
                 Most popular
               </span>
             </div>
@@ -1112,7 +1112,7 @@ export default async function Home() {
             </div>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>For active holders who want every unlock on their radar.</p>
             <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
+              style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
               Get Pro →
             </Link>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
@@ -1132,7 +1132,7 @@ export default async function Home() {
           <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(45,138,74,0.3)", boxShadow: "0 4px 40px rgba(45,138,74,0.18), 0 24px 64px rgba(0,0,0,0.16)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
+                style={{ background: "#2D8A4A", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
                 Teams &amp; builders
               </span>
             </div>
@@ -1142,7 +1142,7 @@ export default async function Home() {
             <ContactTrigger
               label="Contact us →"
               className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
-              style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", border: "none", cursor: "pointer" }}
+              style={{ background: "#2D8A4A", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", border: "none", cursor: "pointer" }}
             />
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
@@ -1217,11 +1217,11 @@ export default async function Home() {
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-20 md:pb-32 flex flex-col items-center text-center">
         <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-6 md:px-10 py-12 md:py-16"
-          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 55%, #1CB8B8 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
           <div className="absolute -left-8 bottom-0 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Be the first in.</h2>
           <p className="relative text-base mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
             Vestream is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.

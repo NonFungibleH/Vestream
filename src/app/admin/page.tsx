@@ -184,7 +184,7 @@ export default async function AdminPage() {
           <div className="flex items-center gap-3 mb-6">
             <h2 className="font-bold text-xl">Beta Analytics</h2>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(15,138,138,0.2)", color: "#a78bfa" }}>
+              style={{ background: "rgba(15,138,138,0.2)", color: "#1CB8B8" }}>
               {totalUsers} / {BETA_MAX} spots
             </span>
           </div>
@@ -213,7 +213,7 @@ export default async function AdminPage() {
                 <div className="h-3 rounded-full transition-all"
                   style={{
                     width: `${Math.min(100, (totalUsers / BETA_MAX) * 100)}%`,
-                    background: totalUsers >= BETA_MAX ? "#B3322E" : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
+                    background: totalUsers >= BETA_MAX ? "#B3322E" : "#1CB8B8",
                   }} />
               </div>
               <div className="flex gap-3 flex-wrap">
@@ -443,7 +443,7 @@ export default async function AdminPage() {
                         <div className="flex gap-2 flex-wrap">
                           {r.protocols.map(p => (
                             <span key={p} className="text-xs px-2 py-0.5 rounded-md"
-                              style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>
+                              style={{ background: "rgba(15,138,138,0.15)", color: "#1CB8B8" }}>
                               {p}
                             </span>
                           ))}
@@ -492,7 +492,7 @@ export default async function AdminPage() {
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
                             background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(16,185,129,0.1)",
-                            color:      k.tier === "pro" ? "#a78bfa"               : "#34d399",
+                            color:      k.tier === "pro" ? "#1CB8B8"               : "#34d399",
                           }}>
                           {k.tier}
                         </span>
@@ -553,7 +553,7 @@ export default async function AdminPage() {
                       <div className="flex flex-wrap gap-1">
                         {(r.protocols ?? []).map(p => (
                           <span key={p} className="text-xs px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(15,138,138,0.12)", color: "#a78bfa" }}>{p}</span>
+                            style={{ background: "rgba(15,138,138,0.12)", color: "#1CB8B8" }}>{p}</span>
                         ))}
                       </div>
                     </td>

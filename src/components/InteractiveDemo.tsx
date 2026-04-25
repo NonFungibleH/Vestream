@@ -278,7 +278,7 @@ function StepIndicator({ step }: { step: Step }) {
                 className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all"
                 style={{
                   background: isActive
-                    ? "linear-gradient(135deg, #1CB8B8, #0F8A8A)"
+                    ? "#1CB8B8"
                     : isComplete
                     ? "#2D8A4A"
                     : "rgba(148,163,184,0.15)",
@@ -321,7 +321,7 @@ function PulseAdvanceButton({
       onClick={onClick}
       className={`${txt} font-semibold ${pad} rounded-xl transition-all duration-150 hover:opacity-90 whitespace-nowrap`}
       style={{
-        background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+        background: "#1CB8B8",
         color: "white",
         animation: "demoPulse 2s ease-in-out infinite",
       }}
@@ -360,7 +360,7 @@ function ScanStep({
       <div className="flex items-center gap-3 mb-5 p-3 rounded-xl" style={{ background: "#F5F5F3", border: "1px solid rgba(0,0,0,0.05)" }}>
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+          style={{ background: "#1CB8B8" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
             <rect x="2" y="6" width="20" height="14" rx="2"/>
@@ -618,7 +618,7 @@ function AlertStep({
                   $8,412.50
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-full" style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }} />
+              <div className="w-8 h-8 rounded-full" style={{ background: "#1CB8B8" }} />
             </div>
           </div>
 
@@ -653,7 +653,7 @@ function AlertStep({
               <div className="h-1.5 rounded-full mb-1.5" style={{ background: "rgba(0,0,0,0.06)" }}>
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${FEATURED.percent}%`, background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)" }}
+                  style={{ width: `${FEATURED.percent}%`, background: "#1CB8B8" }}
                 />
               </div>
               <div className="flex justify-between text-[10px]">
@@ -744,7 +744,7 @@ function PushNotification({ onTap, featuredUsd }: { onTap: () => void; featuredU
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+            style={{ background: "#1CB8B8" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -835,7 +835,7 @@ function ClaimStep({
             href="/early-access"
             className="text-sm font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-90"
             style={{
-              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+              background: "#1CB8B8",
               color: "white",
               boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
             }}
@@ -1054,7 +1054,7 @@ function WalletPopup({ onConfirm }: { onConfirm: () => void }) {
         <button
           onClick={onConfirm}
           className="py-2 text-xs font-semibold rounded-lg transition-opacity hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
+          style={{ background: "#1CB8B8", color: "white" }}
         >
           Confirm
         </button>

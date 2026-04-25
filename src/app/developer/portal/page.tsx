@@ -96,7 +96,7 @@ export default function DeveloperPortal() {
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 disabled:opacity-50"
               style={{
-                background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                background: "#1CB8B8",
                 boxShadow: "0 4px 20px rgba(28,184,184,0.3)",
               }}
             >

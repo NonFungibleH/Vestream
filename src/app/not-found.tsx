@@ -18,7 +18,7 @@ export default function NotFound() {
         {/* 404 */}
         <p className="text-8xl font-bold mb-2 tabular-nums"
           style={{
-            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            background: "#1CB8B8",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             letterSpacing: "-0.04em",
@@ -38,7 +38,7 @@ export default function NotFound() {
             href="/dashboard"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
             style={{
-              background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+              background: "#1CB8B8",
               boxShadow: "0 4px 16px rgba(28,184,184,0.3)",
             }}
           >

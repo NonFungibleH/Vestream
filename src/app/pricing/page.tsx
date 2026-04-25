@@ -141,7 +141,7 @@ export default function Pricing() {
             {/* Badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
                 Most popular
               </span>
@@ -171,7 +171,7 @@ export default function Pricing() {
               href="/early-access"
               label="Start 14-day free trial →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
+              style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
             />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
@@ -197,7 +197,7 @@ export default function Pricing() {
             }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
+                style={{ background: "#2D8A4A", boxShadow: "0 4px 12px rgba(45,138,74,0.4)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
                 Funds &amp; teams
               </span>
@@ -216,7 +216,7 @@ export default function Pricing() {
             <ContactTrigger
               label="Contact us →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "linear-gradient(135deg, #2D8A4A, #1A6B36)", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", textDecoration: "none" }}
+              style={{ background: "#2D8A4A", boxShadow: "0 4px 16px rgba(45,138,74,0.35)", textDecoration: "none" }}
             />
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
@@ -384,7 +384,7 @@ export default function Pricing() {
               href="/early-access"
               label="Upgrade to Pro →"
               className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 20px rgba(28,184,184,0.4)" }}
+              style={{ background: "#1CB8B8", boxShadow: "0 4px 20px rgba(28,184,184,0.4)" }}
             />
           </div>
         </div>

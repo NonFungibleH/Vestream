@@ -4,7 +4,7 @@
 const TIERS = {
   pro: {
     label:    "Pro",
-    gradient: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+    gradient: "#1CB8B8",
     accent:   "#1CB8B8",
     features: [
       "Up to 3 wallet addresses",
@@ -16,7 +16,7 @@ const TIERS = {
   },
   fund: {
     label:    "Fund",
-    gradient: "linear-gradient(135deg, #2D8A4A, #1A6B36)",
+    gradient: "#2D8A4A",
     accent:   "#2D8A4A",
     features: [
       "Everything in Pro",
@@ -115,7 +115,7 @@ export function UpsellModal({
           <a
             href="/pricing"
             className="w-full text-center py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 hover:shadow-lg"
-            style={{ background: tier.gradient, boxShadow: "0 4px 16px rgba(99,102,241,0.3)" }}>
+            style={{ background: tier.gradient, boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
             Upgrade to {tier.label} →
           </a>
           <button

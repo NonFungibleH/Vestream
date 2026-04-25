@@ -287,7 +287,7 @@ export function VestingDemo() {
                 className="h-full rounded-full transition-all duration-300 ease-linear"
                 style={{
                   width: `${Math.max(1, state.progress * 100)}%`,
-                  background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
+                  background: "#1CB8B8",
                 }}
               />
             </div>
@@ -335,7 +335,7 @@ export function VestingDemo() {
               style={{
                 background: claimable === 0n
                   ? "rgba(0,0,0,0.05)"
-                  : "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                  : "#1CB8B8",
                 color: claimable === 0n ? "#B8BABD" : "white",
                 boxShadow: claimable === 0n ? "none" : "0 4px 20px rgba(28,184,184,0.3)",
               }}
@@ -839,7 +839,7 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
         disabled={busy || !sessionId}
         className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
         style={{
-          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+          background: "#1CB8B8",
           color: "white",
           boxShadow: "0 4px 14px rgba(28,184,184,0.25)",
         }}

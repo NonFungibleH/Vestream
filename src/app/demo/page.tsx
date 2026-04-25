@@ -71,7 +71,7 @@ export default function DemoPage() {
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5"
             style={{
               letterSpacing: "-0.03em",
-              background: "linear-gradient(135deg, #1A1D20 0%, #1CB8B8 50%, #0F8A8A 100%)",
+              background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -317,7 +317,7 @@ export default function DemoPage() {
                 href="/early-access"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                  background: "#1CB8B8",
                   color: "white",
                   boxShadow: "0 4px 20px rgba(28,184,184,0.4)",
                 }}
@@ -357,7 +357,7 @@ function DemoIntro({
       <div
         className="flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg md:text-xl font-extrabold"
         style={{
-          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+          background: "#1CB8B8",
           color: "white",
           boxShadow: "0 4px 20px rgba(28,184,184,0.25)",
         }}
@@ -388,7 +388,7 @@ function GuideCard({ n, title, body }: { n: string; title: string; body: string 
       <div className="flex items-center gap-2 mb-2">
         <div
           className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+          style={{ background: "#1CB8B8" }}
         >
           {n}
         </div>

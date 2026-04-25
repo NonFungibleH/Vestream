@@ -69,7 +69,7 @@ export default function CookieBanner() {
           onClick={() => accept("all")}
           className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all duration-150"
           style={{
-            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            background: "#1CB8B8",
             boxShadow: "0 2px 8px rgba(28,184,184,0.35)",
           }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.9")}

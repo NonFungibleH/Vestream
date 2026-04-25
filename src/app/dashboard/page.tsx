@@ -933,7 +933,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
 
   const gradientStyle = dark
     ? { background: "linear-gradient(135deg, #0d0f14 0%, #0f1f4a 50%, #1a1035 100%)" }
-    : { background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 55%, #1CB8B8 100%)" };
+    : { background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)" };
 
   return (
     <div className="rounded-2xl overflow-hidden mb-5 relative" style={gradientStyle}>
@@ -941,7 +941,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
       <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
       <div className="absolute right-32 bottom-0 w-32 h-32 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%)" }} />
+        style={{ background: "radial-gradient(circle, rgba(28,184,184,0.1) 0%, transparent 70%)" }} />
 
       <div className="relative px-7 py-6">
         <div className="flex items-start justify-between gap-6">
@@ -1091,7 +1091,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
             <div className="rounded-xl px-4 py-3 min-w-[108px]"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2"
-                style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
+                style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>
                 <IconGrid />
               </div>
               <p className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>Streams</p>
@@ -1437,7 +1437,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                       <div>
                         <div className="flex items-center gap-1 mb-0.5">
                           <span className="text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded"
-                            style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa" }}>Steps</span>
+                            style={{ background: "rgba(28,184,184,0.12)", color: "#1CB8B8" }}>Steps</span>
                           <span className="text-[10px] tabular-nums" style={{ color: "var(--preview-text-3)" }}>
                             {s.unlockSteps.length} tranches
                           </span>
@@ -2424,9 +2424,9 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
               onClick={() => setShowNoPriceTokens((v) => !v)}
               className="text-[10px] font-medium px-2 py-0.5 rounded-md transition-all"
               style={{
-                background:   showNoPriceTokens ? "rgba(99,102,241,0.12)" : "var(--preview-muted-2)",
+                background:   showNoPriceTokens ? "rgba(28,184,184,0.12)" : "var(--preview-muted-2)",
                 color:        showNoPriceTokens ? "#1CB8B8" : "var(--preview-text-3)",
-                border:       showNoPriceTokens ? "1px solid rgba(99,102,241,0.3)" : "1px solid var(--preview-border-2)",
+                border:       showNoPriceTokens ? "1px solid rgba(28,184,184,0.3)" : "1px solid var(--preview-border-2)",
               }}>
               {showNoPriceTokens ? `Hide ${noPriceCount} unlisted` : `+${noPriceCount} unlisted`}
             </button>
@@ -3522,7 +3522,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
             <p className="text-xs" style={{ color: "#8B8E92" }}>We read every response and use it to make Vestream better.</p>
             <button onClick={onClose}
               className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+              style={{ background: "#1CB8B8" }}>
               Close
             </button>
           </div>
@@ -3565,7 +3565,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               <button type="submit"
                 disabled={!message.trim() || submitting}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+                style={{ background: "#1CB8B8" }}>
                 {submitting ? "Sending…" : "Send feedback"}
               </button>
             </form>
@@ -3676,10 +3676,10 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             pricing page). */}
         {tier === "fund" && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.10))", border: "1px solid rgba(99,102,241,0.25)" }}>
+            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(28,184,184,0.10))", border: "1px solid rgba(28,184,184,0.25)" }}>
             <span className="text-[10px]">✦</span>
             <div>
-              <p className="text-[10px] font-bold" style={{ color: "#a78bfa" }}>Enterprise</p>
+              <p className="text-[10px] font-bold" style={{ color: "#1CB8B8" }}>Enterprise</p>
               <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited wallets · all features</p>
             </div>
           </div>
@@ -3693,7 +3693,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(15,138,138,0.15)", color: "#a78bfa" }}>PRO</span>
+                style={{ background: "rgba(15,138,138,0.15)", color: "#1CB8B8" }}>PRO</span>
             </div>
             <p className="text-[9px] mb-2.5" style={{ color: "var(--preview-text-3)" }}>
               3 wallets · all chains · unlimited alerts
@@ -3701,7 +3701,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             <button
               onClick={onFeedback}
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+              style={{ background: "#1CB8B8" }}>
               Share feedback →
             </button>
           </div>
@@ -3726,7 +3726,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
               <div className="h-1 rounded-full transition-all"
                 style={{
                   width: `${Math.min(100, wallets.length * 100)}%`,
-                  background: wallets.length >= 1 ? "#C47A1A" : "linear-gradient(90deg, #1CB8B8, #0F8A8A)",
+                  background: wallets.length >= 1 ? "#C47A1A" : "#1CB8B8",
                 }} />
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
@@ -3734,7 +3734,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+              style={{ background: "#1CB8B8" }}>
               Upgrade to Pro →
             </a>
           </div>
@@ -4352,7 +4352,7 @@ export default function Dashboard() {
               </div>
               <button onClick={() => setShowAddWallet(true)}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
                 <IconPlus /> Add your first wallet
               </button>
             </div>

@@ -131,7 +131,7 @@ export default function ContactModal({
             <button
               onClick={onClose}
               className="text-sm font-semibold px-5 py-2 rounded-xl transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
+              style={{ background: "#1CB8B8", color: "white" }}
             >
               Done
             </button>
@@ -255,7 +255,7 @@ export default function ContactModal({
                 type="submit"
                 disabled={state === "submitting"}
                 className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-60 mt-2"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}
               >
                 {state === "submitting" ? (
                   <span className="flex items-center justify-center gap-2">

@@ -84,7 +84,7 @@ export function ContactFormCard() {
           }}
           className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90"
           style={{
-            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            background: "#1CB8B8",
             color: "white",
             boxShadow: "0 4px 16px rgba(28,184,184,0.25)",
           }}
@@ -201,7 +201,7 @@ export function ContactFormCard() {
           disabled={state === "submitting"}
           className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-60 mt-2"
           style={{
-            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            background: "#1CB8B8",
             boxShadow: "0 4px 16px rgba(28,184,184,0.25)",
           }}
         >

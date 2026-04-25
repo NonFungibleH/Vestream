@@ -62,7 +62,7 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
       <a href="/login"
         className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all duration-150"
         style={{
-          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+          background: "#1CB8B8",
           color: "white",
           boxShadow: "0 2px 12px rgba(28,184,184,0.35)",
         }}
@@ -105,7 +105,7 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
           disabled={loading || !email}
           className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-all duration-150 disabled:opacity-60 hover:scale-[1.02]"
           style={{
-            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            background: "#1CB8B8",
             boxShadow: "0 4px 24px rgba(28,184,184,0.4)",
           }}
         >
@@ -144,7 +144,7 @@ export function ConnectWallet({ compact = false }: ConnectWalletProps) {
         disabled={loading || code.length < 6}
         className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-all duration-150 disabled:opacity-60 hover:scale-[1.02]"
         style={{
-          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+          background: "#1CB8B8",
           boxShadow: "0 4px 24px rgba(28,184,184,0.4)",
         }}
       >

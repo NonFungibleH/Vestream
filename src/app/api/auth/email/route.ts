@@ -38,7 +38,7 @@ function otpEmailHtml(otp: string): string {
           <td style="padding:28px 32px 20px;border-bottom:1px solid #f1f5f9;">
             <table cellpadding="0" cellspacing="0">
               <tr>
-                <td style="width:30px;height:30px;background:linear-gradient(135deg,#1CB8B8,#0F8A8A);border-radius:8px;text-align:center;vertical-align:middle;">
+                <td style="width:30px;height:30px;background:#1CB8B8;border-radius:8px;text-align:center;vertical-align:middle;">
                   <span style="font-size:14px;font-weight:900;color:white;line-height:30px;">T</span>
                 </td>
                 <td style="padding-left:10px;font-size:16px;font-weight:800;color:#1A1D20;letter-spacing:-0.4px;">Vestream</td>

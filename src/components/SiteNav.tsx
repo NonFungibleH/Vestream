@@ -112,7 +112,7 @@ export function SiteNav({ theme = "light" }: Props) {
           <a
             href={ctaHref}
             className="text-sm font-semibold px-4 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
+            style={{ background: "#1CB8B8", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
           >
             {ctaLabel}
           </a>
@@ -124,7 +124,7 @@ export function SiteNav({ theme = "light" }: Props) {
           <a
             href={ctaHref}
             className="text-xs font-semibold px-3 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}
+            style={{ background: "#1CB8B8", color: "white" }}
           >
             {ctaLabelShort}
           </a>

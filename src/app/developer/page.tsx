@@ -75,7 +75,7 @@ export default function DeveloperPage() {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <a href="#request-access"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}>
+              style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}>
               Request API Access
               <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -444,13 +444,13 @@ export default function DeveloperPage() {
               </div>
               <div className="flex-shrink-0 hidden xl:block">
                 <div className="w-32 h-32 rounded-3xl flex items-center justify-center"
-                  style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                  style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.2)" }}>
                   <svg width={52} height={52} viewBox="0 0 52 52" fill="none">
                     <path d="M26 6L44 16.5V35.5L26 46L8 35.5V16.5L26 6Z"
-                      stroke="rgba(165,180,252,0.5)" strokeWidth="1.5" strokeLinejoin="round" />
+                      stroke="rgba(28,184,184,0.5)" strokeWidth="1.5" strokeLinejoin="round" />
                     <path d="M26 14L38 20.5V33.5L26 40L14 33.5V20.5L26 14Z"
-                      fill="rgba(99,102,241,0.15)" stroke="rgba(165,180,252,0.4)" strokeWidth="1.5" strokeLinejoin="round" />
-                    <circle cx="26" cy="27" r="5" fill="rgba(165,180,252,0.6)" />
+                      fill="rgba(28,184,184,0.15)" stroke="rgba(28,184,184,0.4)" strokeWidth="1.5" strokeLinejoin="round" />
+                    <circle cx="26" cy="27" r="5" fill="rgba(28,184,184,0.6)" />
                   </svg>
                 </div>
               </div>
@@ -506,7 +506,7 @@ export default function DeveloperPage() {
               style={{ background: "#0a1628", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.25)" }}>
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white" }}>
+                  style={{ background: "#1CB8B8", color: "white" }}>
                   For production
                 </span>
               </div>
@@ -536,7 +536,7 @@ export default function DeveloperPage() {
               </ul>
               <Link href="/contact?subject=pro-api"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+                style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                 Contact sales
               </Link>
             </div>

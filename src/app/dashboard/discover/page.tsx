@@ -214,7 +214,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+              style={{ background: "#1CB8B8" }}>
               Upgrade to Pro →
             </a>
           </div>
@@ -229,10 +229,10 @@ function DiscoverSidebar({ tier }: { tier: string }) {
         )}
         {tier === "fund" && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.10))", border: "1px solid rgba(99,102,241,0.25)" }}>
+            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(28,184,184,0.10))", border: "1px solid rgba(28,184,184,0.25)" }}>
             <span className="text-[10px]">✦</span>
             <div>
-              <p className="text-[10px] font-bold" style={{ color: "#a78bfa" }}>Fund Plan</p>
+              <p className="text-[10px] font-bold" style={{ color: "#1CB8B8" }}>Fund Plan</p>
               <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited wallets · all features</p>
             </div>
           </div>
@@ -656,7 +656,7 @@ export default function DiscoverPage() {
               </div>
               <a href="/pricing"
                 className="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl text-white transition-all hover:brightness-110"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}>
+                style={{ background: "#1CB8B8" }}>
                 Upgrade →
               </a>
             </div>
@@ -725,7 +725,7 @@ export default function DiscoverPage() {
                 onClick={handleScan}
                 disabled={scanning || !address || tier === "free"}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all flex-shrink-0"
-                style={{ background: scanning ? "var(--preview-muted-2)" : "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+                style={{ background: scanning ? "var(--preview-muted-2)" : "#1CB8B8" }}
               >
                 {scanning ? (
                   <>
@@ -761,7 +761,7 @@ export default function DiscoverPage() {
                       style={{
                         background: i < (3 - scansRemaining)
                           ? "var(--preview-border)"
-                          : "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                          : "#1CB8B8",
                       }}
                     />
                   ))}

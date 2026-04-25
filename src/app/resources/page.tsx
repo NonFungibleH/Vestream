@@ -63,7 +63,7 @@ export default function ResourcesPage() {
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 max-w-2xl mx-auto leading-tight">
             Everything you need to know about{" "}
-            <span style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "#1CB8B8", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               token vesting
             </span>
           </h1>
@@ -137,7 +137,7 @@ export default function ResourcesPage() {
               <Link
                 href="/early-access"
                 className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+                style={{ background: "#1CB8B8" }}
               >
                 Early Access →
               </Link>
@@ -176,7 +176,7 @@ export default function ResourcesPage() {
                       style={{ width: "300px", background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
                     >
                       {/* Card accent */}
-                      <div className="h-1.5" style={{ background: "linear-gradient(90deg, #1CB8B8, #0F8A8A)" }} />
+                      <div className="h-1.5" style={{ background: "#1CB8B8" }} />
 
                       <div className="p-6">
                         {/* Reading time */}
@@ -244,7 +244,7 @@ export default function ResourcesPage() {
           <Link
             href="/early-access"
             className="inline-block text-sm font-bold px-6 py-3 rounded-xl text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}
+            style={{ background: "#1CB8B8", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}
           >
             Early Access →
           </Link>

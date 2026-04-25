@@ -71,7 +71,7 @@ function RenderBlock({ block }: { block: Block }) {
           {block.items.map((item, i) => (
             <li key={i} className="flex gap-3 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", marginTop: "9px" }} />
+                style={{ background: "#1CB8B8", marginTop: "9px" }} />
               <span dangerouslySetInnerHTML={{ __html: item }} />
             </li>
           ))}
@@ -85,7 +85,7 @@ function RenderBlock({ block }: { block: Block }) {
             <li key={i} className="flex gap-4 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span
                 className="flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white mt-0.5"
-                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", minWidth: "24px" }}>
+                style={{ background: "#1CB8B8", minWidth: "24px" }}>
                 {i + 1}
               </span>
               <span dangerouslySetInnerHTML={{ __html: item }} />
@@ -267,7 +267,7 @@ function ArticleSidebar({
           <Link
             href="/login"
             className="inline-block text-xs font-bold px-3 py-1.5 rounded-lg text-white w-full text-center transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
+            style={{ background: "#1CB8B8" }}
           >
             Launch App →
           </Link>
@@ -368,7 +368,7 @@ export default async function ArticlePage(
             <Link
               href="/login"
               className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
+              style={{ background: "#1CB8B8", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
             >
               Launch App →
             </Link>
@@ -459,7 +459,7 @@ export default async function ArticlePage(
                 <Link
                   href="/login"
                   className="text-sm font-bold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}
+                  style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}
                 >
                   Launch Dashboard →
                 </Link>

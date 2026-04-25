@@ -120,7 +120,7 @@ export function ApiAccessForm() {
 
       <button type="submit" disabled={status === "loading"}
         className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90 disabled:opacity-60 mt-1"
-        style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.35)" }}>
+        style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.35)" }}>
         {status === "loading" ? "Submitting..." : "Request API Access →"}
       </button>
 
