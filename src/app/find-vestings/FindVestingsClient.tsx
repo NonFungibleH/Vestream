@@ -307,23 +307,7 @@ export default function FindVestingsClient() {
       )}
 
       {/* ── LOADING ────────────────────────────────────────────────────── */}
-      {loading && (
-        <div className="grid grid-cols-1 gap-3">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="rounded-2xl p-5 animate-pulse"
-              style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", opacity: 1 - i * 0.2 }}
-            >
-              <div className="h-4 w-40 rounded mb-3" style={{ background: "rgba(0,0,0,0.08)" }} />
-              <div className="h-3 w-64 rounded" style={{ background: "rgba(0,0,0,0.05)" }} />
-            </div>
-          ))}
-          <p className="text-xs text-center mt-2" style={{ color: "#94a3b8" }}>
-            Scanning {scanningLabel} across 9 protocols and 5 chains — takes 10–30 seconds for complex wallets.
-          </p>
-        </div>
-      )}
+      {loading && <ScanningIndicator scanningLabel={scanningLabel} />}
 
       {/* ── RESULTS ────────────────────────────────────────────────────── */}
       {result && !loading && (
@@ -333,6 +317,12 @@ export default function FindVestingsClient() {
           ) : (
             <>
               <ResultsSummary result={result} />
+              {/* Strong inline CTA — placed RIGHT after the summary so users
+                  see the call to install the app at the moment they realise
+                  they have real vestings to track. The full app-store CTA
+                  block at the bottom of the page stays as a deeper second
+                  touchpoint, but this inline strip catches eyeballs first. */}
+              <ResultsActionStrip totalStreams={result.totalStreams} />
               <div className="grid grid-cols-1 gap-3">
                 {result.groups.map((g) => (
                   <GroupCard key={`${g.protocolId}-${g.chainId}`} group={g} />
@@ -344,6 +334,221 @@ export default function FindVestingsClient() {
           <MobileAppCta hasResults={result.totalStreams > 0} />
         </>
       )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Scanning indicator — animated progress signal during the 10-30s scan
+// ─────────────────────────────────────────────────────────────────────────
+
+const SCAN_PROTOCOLS = [
+  "Sablier",
+  "Hedgey",
+  "UNCX",
+  "Unvest",
+  "Team Finance",
+  "Superfluid",
+  "PinkSale",
+  "Streamflow",
+  "Jupiter Lock",
+];
+
+function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
+  // Cycle through protocol names every ~1s so the user can see progress
+  // happening even if the API is still pending. Visual lie? A bit — the
+  // adapters mostly run in parallel so we don't actually finish protocol N
+  // at second N. But the cycling indicator vastly improves perceived
+  // responsiveness; without it a 20s scan feels like the app froze.
+  const [activeIdx, setActiveIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIdx((i) => (i + 1) % SCAN_PROTOCOLS.length);
+    }, 900);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      {/* Hero scanning card — pulsing radar + active protocol name */}
+      <div
+        className="rounded-2xl p-6 md:p-8 text-center relative overflow-hidden"
+        style={{
+          background: "white",
+          border: "1px solid rgba(37,99,235,0.15)",
+          boxShadow: "0 10px 40px rgba(37,99,235,0.08)",
+        }}
+      >
+        {/* Animated background glow that drifts across the card */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 80% at var(--scan-x, 50%) 50%, rgba(37,99,235,0.08), transparent 60%)",
+            animation: "scan-glow 3s ease-in-out infinite",
+          }}
+        />
+        <style>{`
+          @keyframes scan-glow {
+            0%, 100% { --scan-x: 20%; }
+            50%      { --scan-x: 80%; }
+          }
+          @keyframes scan-bar {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+          }
+        `}</style>
+
+        {/* Radar / pulse ring */}
+        <div className="relative w-16 h-16 mx-auto mb-4">
+          <span
+            className="absolute inset-0 rounded-full opacity-75"
+            style={{
+              background: "radial-gradient(circle, rgba(37,99,235,0.25), transparent 60%)",
+              animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
+            }}
+          />
+          <span
+            className="absolute inset-2 rounded-full opacity-90"
+            style={{
+              background: "radial-gradient(circle, rgba(124,58,237,0.3), transparent 65%)",
+              animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite 0.4s",
+            }}
+          />
+          <div
+            className="absolute inset-4 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              boxShadow: "0 4px 16px rgba(37,99,235,0.35)",
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.5-4.5" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="text-xs uppercase tracking-wider font-semibold mb-1.5" style={{ color: "#2563eb" }}>
+          Scanning {scanningLabel || "wallet"}
+        </div>
+        {/* Active-protocol carousel — single line, swaps every 900ms.
+            Fixed height keeps the layout from jumping. */}
+        <div className="h-7 flex items-center justify-center" style={{ color: "#0f172a" }}>
+          <span className="text-base md:text-lg font-bold tabular-nums" style={{ letterSpacing: "-0.02em" }}>
+            <span style={{ color: "#64748b", fontWeight: 500 }}>checking </span>
+            <span
+              key={activeIdx}
+              className="inline-block transition-opacity duration-200"
+              style={{
+                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              {SCAN_PROTOCOLS[activeIdx]}
+            </span>
+            <span style={{ color: "#94a3b8" }}>…</span>
+          </span>
+        </div>
+
+        {/* Progress bar — pure CSS sweeping animation. NOT tied to actual
+            scan progress (the API doesn't expose granular state) but the
+            constant motion signals the job is alive. */}
+        <div
+          className="mt-5 h-1 rounded-full overflow-hidden mx-auto"
+          style={{ background: "rgba(37,99,235,0.08)", maxWidth: 280 }}
+        >
+          <div
+            className="h-full w-1/4 rounded-full"
+            style={{
+              background: "linear-gradient(90deg, transparent, #2563eb, #7c3aed, transparent)",
+              animation: "scan-bar 1.8s ease-in-out infinite",
+            }}
+          />
+        </div>
+
+        <p className="text-xs mt-4" style={{ color: "#94a3b8" }}>
+          Cross-checking 9 vesting protocols across Ethereum, BNB, Polygon, Base and Solana — usually 10–30 seconds.
+        </p>
+      </div>
+
+      {/* Skeleton result cards — subtle preview of where data will land. */}
+      <div className="grid grid-cols-1 gap-3">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl p-5 animate-pulse"
+            style={{
+              background: "white",
+              border: "1px solid rgba(0,0,0,0.05)",
+              opacity: 0.7 - i * 0.2,
+            }}
+          >
+            <div className="h-4 w-40 rounded mb-3" style={{ background: "rgba(0,0,0,0.06)" }} />
+            <div className="h-3 w-64 rounded" style={{ background: "rgba(0,0,0,0.04)" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Results action strip — inline CTA shown right after ResultsSummary
+// ─────────────────────────────────────────────────────────────────────────
+
+function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
+  return (
+    <div
+      className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+        boxShadow: "0 10px 30px rgba(37,99,235,0.25)",
+      }}
+    >
+      {/* Subtle decorative glow */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 85% 50%, rgba(255,255,255,0.18), transparent 50%)",
+        }}
+      />
+      <div className="relative flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <rect x="5" y="2" width="14" height="20" rx="3" />
+              <line x1="12" y1="18" x2="12.01" y2="18" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <div className="text-base md:text-lg font-bold leading-snug" style={{ color: "white", letterSpacing: "-0.01em" }}>
+              Track {totalStreams === 1 ? "this" : "all " + totalStreams} live in TokenVest
+            </div>
+            <div className="text-xs md:text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }}>
+              Push alerts the moment anything unlocks · one-tap claim links · no spreadsheets
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href="/early-access"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 whitespace-nowrap"
+            style={{
+              background: "white",
+              color: "#2563eb",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+            }}
+          >
+            Open in app →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
