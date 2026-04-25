@@ -10,6 +10,22 @@
 // the full 296-byte account body (no dataSlice) so we can decode token_mint +
 // amount fields.
 //
+// ─── RPC provider note ──────────────────────────────────────────────────────
+// Solana RPC providers impose strict compute-unit (CU) limits on
+// `getProgramAccounts`, which is one of the most expensive primitives the RPC
+// exposes (it forces the node to scan every account owned by the program).
+// Alchemy's free tier is especially aggressive here and will return HTTP 429
+// "exceeded its compute units per second capacity" on a single call to a
+// program with non-trivial account count — Jupiter Lock easily trips this.
+//
+// The retry-with-exponential-backoff wrapper below is a band-aid that lets the
+// daily TVL cron survive transient rate-limiting on shared infra. For
+// production the right path is either:
+//   (a) upgrade to a paid Solana RPC plan (Alchemy Growth+, Triton, etc.), or
+//   (b) move the Solana endpoint to Helius — their free tier is significantly
+//       more generous on `getProgramAccounts` specifically.
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // Program: `LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn`
 // Account layout (offsets include the 8-byte Anchor discriminator prefix):
 //   40   token_mint          (Pubkey,  32 bytes)
@@ -28,7 +44,13 @@
 // finer-grained timing math belongs in the wallet-scoped adapter.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  type AccountInfo,
+  type GetProgramAccountsConfig,
+  type GetProgramAccountsResponse,
+} from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 
@@ -112,6 +134,34 @@ function decodeEscrow(data: Uint8Array): DecodedEscrow | null {
   };
 }
 
+// ─── RPC retry wrapper ──────────────────────────────────────────────────────
+
+async function getProgramAccountsWithRetry(
+  connection: Connection,
+  programId: PublicKey,
+  config: GetProgramAccountsConfig,
+  maxRetries = 4,
+): Promise<GetProgramAccountsResponse | Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await connection.getProgramAccounts(programId, config);
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      // Only retry on 429 / rate-limit errors. Other errors (network, malformed
+      // response) bubble up immediately so we don't waste cycles.
+      const isRateLimit = msg.includes("429") || msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("too many requests") || msg.toLowerCase().includes("compute units");
+      if (!isRateLimit || attempt === maxRetries - 1) throw err;
+      // Exponential backoff: 5s, 10s, 20s, 40s. Solana program scans are
+      // expensive on shared free-tier infra; aggressive backoff is correct.
+      const delayMs = 5_000 * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 // ─── Walker ─────────────────────────────────────────────────────────────────
 
 export async function walkJupiterLock(chainId: SupportedChainId): Promise<WalkerResult> {
@@ -156,10 +206,12 @@ export async function walkJupiterLock(chainId: SupportedChainId): Promise<Walker
 
   // 1. One getProgramAccounts call with discriminator filter — no dataSlice
   //    because we need token_mint + amount fields from the full body.
+  //    Wrapped in retry-with-exponential-backoff to ride out 429 rate limits
+  //    from shared/free-tier RPC infra (see provider note at top of file).
   let accounts: Awaited<ReturnType<typeof connection.getProgramAccounts>>;
   try {
     const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
-    accounts = await connection.getProgramAccounts(programId, {
+    accounts = await getProgramAccountsWithRetry(connection, programId, {
       commitment: "confirmed",
       filters: [
         { dataSize: ACCOUNT_SIZE },

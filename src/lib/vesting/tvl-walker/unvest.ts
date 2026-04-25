@@ -13,10 +13,15 @@
 // skipped entirely (not in scope for TVL).
 //
 // Schema (HolderBalance — Unvest V3.1+):
-//   holderBalances(where: { isRecipient: true }, first, skip) {
+//   holderBalances(where: { isRecipient: true, id_gt: $lastId }, first, orderBy: id) {
 //     id, user, allocation, claimed, claimable, locked,
 //     vestingToken { id, underlyingToken { id, symbol, decimals } }
 //   }
+//
+// Pagination: cursor-based on `id` (id_gt). The Graph rejects skip > 5000, so
+// for chains with >5k recipient balances (e.g. ETH) we'd otherwise be cut off
+// mid-walk. id_gt + orderBy: id, asc is The Graph's standard exhaustive-walk
+// pattern.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CHAIN_IDS, type SupportedChainId } from "../types";
@@ -35,13 +40,12 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
 const PAGE_SIZE = 1000;   // The Graph's hard cap
 const MAX_PAGES = 200;    // 200 × 1000 = 200k holder balances — plenty of headroom
 const HOLDERS_QUERY = `
-  query WalkHolderBalances($skip: Int!, $first: Int!) {
+  query WalkHolderBalances($lastId: String!, $first: Int!) {
     holderBalances(
-      where: { isRecipient: true }
+      where: { isRecipient: true, id_gt: $lastId }
       orderBy: id
       orderDirection: asc
       first: $first
-      skip: $skip
     ) {
       id
       user
@@ -87,9 +91,9 @@ export async function walkUnvest(chainId: SupportedChainId): Promise<WalkerResul
 
   const byToken     = new Map<string, TokenAggregate>();
   let   totalHolders = 0;
+  let   lastId      = "";   // empty string is less-than every real ID
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const skip = page * PAGE_SIZE;
     let json: { data?: { holderBalances?: RawHolderBalance[] }; errors?: unknown };
 
     try {
@@ -100,7 +104,7 @@ export async function walkUnvest(chainId: SupportedChainId): Promise<WalkerResul
           "Accept":       "application/json",
           "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
         },
-        body:    JSON.stringify({ query: HOLDERS_QUERY, variables: { skip, first: PAGE_SIZE } }),
+        body:    JSON.stringify({ query: HOLDERS_QUERY, variables: { lastId, first: PAGE_SIZE } }),
         cache:   "no-store",
       });
       if (!res.ok) {
@@ -165,6 +169,9 @@ export async function walkUnvest(chainId: SupportedChainId): Promise<WalkerResul
 
     totalHolders += batch.length;
     if (batch.length < PAGE_SIZE) break;  // last page
+
+    // Advance cursor to the LAST id in this page (rows arrive in id-asc order).
+    lastId = batch[batch.length - 1].id;
   }
 
   return {

@@ -501,11 +501,31 @@ curl -X POST "https://vestream.io/api/cron/tvl-snapshot?protocol=uncx-vm&backgro
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
+### Headline-confidence rules (defends against dust pricing)
+
+The `tvlUsd` column in `protocolTvlSnapshots` is the **headline** TVL the
+/protocols page surfaces. Two rules tighten what counts:
+
+1. **THIN band excluded from headline.** Tokens with $100–$1k DEX liquidity
+   (the `low` confidence band) are tracked in the `tvlLow` column for
+   transparency but never feed `tvlUsd`. That band is dust — you can't sell
+   meaningful size at that depth.
+2. **Per-token ceiling: $200M.** A single token contributing > $200M must
+   have HIGH-confidence pricing (≥$10k DEX liquidity) to count toward the
+   headline. Medium-confidence single-token contributions over the ceiling
+   get reclassified down to `tvlLow`. This defends against the failure mode
+   where a thin-pair memecoin locked in trillion-unit quantities multiplies
+   to a fake $5B+ headline (this exact pattern bit Team Finance pre-fix).
+
+Both rules are implemented in `src/lib/vesting/tvl-snapshot.ts` →
+`runWalkerSnapshot`. DefiLlama-passthrough rows are unaffected (they don't
+go through token-level pricing — DefiLlama already curates).
+
 ### Pitfalls / things to audit before changing
 
 - **Never drop the `chainTvls.vesting` check** in `src/lib/defillama.ts` — if DefiLlama stops exposing a vesting slice, we fall back to their `tvl` which WILL include non-vesting categories for Sablier/Hedgey/Streamflow. A silent accuracy regression. Alerting opportunity.
 - **Walker correctness = CORE product integrity.** Every walker's locked-amount math must match the protocol's on-chain vesting semantics. Unit tests per walker are the single most valuable thing we can add.
-- **Confidence bands** (`LIQUIDITY_HIGH=10_000`, `LIQUIDITY_MEDIUM=1_000`, `LIQUIDITY_FLOOR_USD=100`) live in `src/lib/vesting/tvl.ts`. If these change, the change applies to both the live `/protocols` render and the snapshot cron — by design (single source of truth for pricing).
+- **Confidence bands** (`LIQUIDITY_HIGH=10_000`, `LIQUIDITY_MEDIUM=1_000`, `LIQUIDITY_FLOOR_USD=100`) live in `src/lib/vesting/tvl.ts`. The `SINGLE_TOKEN_HIGH_CONF_CEILING=200_000_000` ceiling lives in `src/lib/vesting/tvl-snapshot.ts`. If these change, the change applies to both the live `/protocols` render and the snapshot cron — by design (single source of truth for pricing).
 - **snapshot table `methodology` column** — any new methodology gets a versioned tag (`-v2`, `-v3`) so we can migrate without nuking old rows.
 
 ---

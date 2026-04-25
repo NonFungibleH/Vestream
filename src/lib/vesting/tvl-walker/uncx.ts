@@ -40,13 +40,15 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap
 const MAX_PAGES = 200;    // 200 × 1000 = 200k locks — plenty of headroom
+// Cursor-based pagination: The Graph rejects skip > 5000, so we walk by id_gt
+// instead. Empty string is less-than every real id, so it correctly seeds page 0.
 const LOCKS_QUERY = `
-  query WalkLocks($skip: Int!, $first: Int!) {
+  query WalkLocks($lastId: String!, $first: Int!) {
     locks(
       orderBy: id
       orderDirection: asc
       first: $first
-      skip: $skip
+      where: { id_gt: $lastId }
     ) {
       id
       lockID
@@ -117,9 +119,9 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
   const nowSec    = Math.floor(Date.now() / 1000);
   const byToken   = new Map<string, TokenAggregate>();
   let   totalLocks = 0;
+  let   lastId    = "";
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const skip = page * PAGE_SIZE;
     let json: { data?: { locks?: RawLock[] }; errors?: unknown };
 
     try {
@@ -130,7 +132,7 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
           "Accept":       "application/json",
           "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
         },
-        body:    JSON.stringify({ query: LOCKS_QUERY, variables: { skip, first: PAGE_SIZE } }),
+        body:    JSON.stringify({ query: LOCKS_QUERY, variables: { lastId, first: PAGE_SIZE } }),
         cache:   "no-store",
       });
       if (!res.ok) {
@@ -192,6 +194,7 @@ export async function walkUncx(chainId: SupportedChainId): Promise<WalkerResult>
 
     totalLocks += batch.length;
     if (batch.length < PAGE_SIZE) break;  // last page
+    lastId = batch[batch.length - 1].id;  // advance cursor for next page
   }
 
   return {

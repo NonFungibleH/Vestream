@@ -135,9 +135,11 @@ export function TvlComparisonBar({
               <span className="font-semibold" style={{ color: "#7c3aed" }}>via DefiLlama</span> — for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
               {" "}<span className="font-mono text-[10px]">chainTvls.vesting</span> aggregate, which they already report as a vesting-only slice.
               <br /><br />
-              <span className="font-semibold" style={{ color: "#2563eb" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s
-              data source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts,
-              and price each token via DexScreener (≥$10k liquidity = high confidence, $1k–$10k = medium, $100–$1k = thin) with CoinGecko as fallback.
+              <span className="font-semibold" style={{ color: "#2563eb" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s data
+              source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts, and price each
+              token via DexScreener with CoinGecko as fallback. Tokens with ≥$10k DEX liquidity are <span className="font-semibold" style={{ color: "#0f172a" }}>high</span> confidence,
+              {" "}$1k–$10k <span className="font-semibold" style={{ color: "#0f172a" }}>medium</span>; the headline excludes anything thinner. Single-token
+              contributions over $200M must be high-confidence to count.
               {snapshotAgeHours !== null && snapshotAgeHours !== undefined && (
                 <>
                   <br /><br />

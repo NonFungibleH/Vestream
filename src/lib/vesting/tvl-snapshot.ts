@@ -213,12 +213,32 @@ export async function runWalkerSnapshot(
 
       const { priced, tokensSkipped } = await priceAggregates(pricingInput);
 
+      // ── Headline-confidence rules ─────────────────────────────────────────
+      //
+      // 1. Drop the THIN band ($100-$1k DEX liquidity) from headline TVL.
+      //    That band is dust — you can't sell anything meaningful at that
+      //    depth without slipping the price >50%. Tracked separately for
+      //    transparency in the breakdown UI.
+      //
+      // 2. Per-token sanity ceiling. A single token contribution > $200M
+      //    must be HIGH-confidence to count toward the headline. This
+      //    defends against the Team Finance-shaped failure: a memecoin
+      //    locked in trillion-unit quantities with a thin DEX pair quoting
+      //    a fractional cent → multiplies to a fake $5B+ headline. Such
+      //    contributions are bumped to the THIN column instead so the
+      //    breakdown still surfaces them but they don't pollute the lede.
+      const SINGLE_TOKEN_HIGH_CONF_CEILING = 200_000_000;
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
-        perChain.tvl += p.usd;
-        if      (p.confidence === "high")   perChain.high   += p.usd;
-        else if (p.confidence === "medium") perChain.medium += p.usd;
-        else                                perChain.low    += p.usd;
+        const isOversizedNonHigh = p.usd > SINGLE_TOKEN_HIGH_CONF_CEILING && p.confidence !== "high";
+        if (isOversizedNonHigh) {
+          // Reclassify down to thin — surfaces in breakdown, excluded from headline.
+          perChain.low += p.usd;
+          continue;
+        }
+        if      (p.confidence === "high")   { perChain.high   += p.usd; perChain.tvl += p.usd; }
+        else if (p.confidence === "medium") { perChain.medium += p.usd; perChain.tvl += p.usd; }
+        else                                  perChain.low    += p.usd;   // tracked, NOT in headline
       }
 
       return {

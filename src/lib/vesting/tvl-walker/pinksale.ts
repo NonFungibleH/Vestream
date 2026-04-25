@@ -31,8 +31,18 @@ const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
 const PINKSALE_LOCK_ADDED_TOPIC =
   "0x694af1cc8727cdd0afbdd53d9b87b69248bd490224e9dd090e788546506e076f" as Hex;
 
-const PINKSALE_CHUNK        = 49_999n;   // PublicNode caps eth_getLogs at 50k blocks
-const PINKSALE_WINDOW       = 2_000_000n;
+// Per-chain RPC limits. Public RPCs vary wildly in both `eth_getLogs` block-range
+// caps and how far back they retain logs (pruning), so chunk size and scan window
+// must be tuned per chain. Trade-off: BSC's 500k-block window only sees the last
+// ~17 days of locks (publicnode prunes older) — acceptable for PinkLock since it's
+// dominated by new launches with recent activity.
+const CHAIN_LIMITS: Partial<Record<SupportedChainId, { chunkSize: bigint; windowBlocks: bigint }>> = {
+  [CHAIN_IDS.ETHEREUM]: { chunkSize: 49_999n, windowBlocks: 2_000_000n }, // ~10 months
+  [CHAIN_IDS.BSC]:      { chunkSize:  4_999n, windowBlocks:   500_000n }, // ~17 days; publicnode prunes older
+  [CHAIN_IDS.POLYGON]:  { chunkSize:  9_999n, windowBlocks: 1_000_000n }, // ~26 days; 10k cap on getLogs
+  [CHAIN_IDS.BASE]:     { chunkSize: 49_999n, windowBlocks: 2_000_000n }, // ~46 days
+};
+
 const DISCOVERY_BATCH_SIZE  = 10;        // parallel chunks per tick (mirrors seeder)
 const MAX_OWNERS            = 10_000;    // safety cap per chain
 const LOCKS_MULTICALL_BATCH = 100;       // normalLocksForUser calls per multicall
@@ -112,6 +122,8 @@ interface PinkLockRaw {
 async function discoverOwners(
   chainId:  SupportedChainId,
   contract: `0x${string}`,
+  chunkSize:    bigint,
+  windowBlocks: bigint,
   errors:   string[],
 ): Promise<string[]> {
   const client = createPublicClient({
@@ -119,11 +131,11 @@ async function discoverOwners(
     transport: http(getRpcUrl(chainId)),
   });
   const latestBlock = await client.getBlockNumber();
-  const fromBlock   = latestBlock > PINKSALE_WINDOW ? latestBlock - PINKSALE_WINDOW : 0n;
+  const fromBlock   = latestBlock > windowBlocks ? latestBlock - windowBlocks : 0n;
 
   const chunks: Array<{ from: bigint; to: bigint }> = [];
-  for (let from = fromBlock; from <= latestBlock; from += PINKSALE_CHUNK + 1n) {
-    const to = from + PINKSALE_CHUNK > latestBlock ? latestBlock : from + PINKSALE_CHUNK;
+  for (let from = fromBlock; from <= latestBlock; from += chunkSize + 1n) {
+    const to = from + chunkSize > latestBlock ? latestBlock : from + chunkSize;
     chunks.push({ from, to });
   }
 
@@ -268,12 +280,24 @@ export async function walkPinkSale(chainId: SupportedChainId): Promise<WalkerRes
     };
   }
 
+  const limits = CHAIN_LIMITS[chainId];
+  if (!limits) {
+    return {
+      protocol:    "pinksale",
+      chainId,
+      tokens:      [],
+      streamCount: 0,
+      error:       null,
+      elapsedMs:   Date.now() - started,
+    };
+  }
+
   const errors: string[] = [];
 
   // 1. Discover owners from event scan
   let owners: string[];
   try {
-    owners = await discoverOwners(chainId, contract, errors);
+    owners = await discoverOwners(chainId, contract, limits.chunkSize, limits.windowBlocks, errors);
   } catch (err) {
     return {
       protocol:    "pinksale",

@@ -43,14 +43,37 @@ type Summary = WalkerSnapshotSummary | DefiLlamaSnapshotSummary;
 /**
  * Snapshot one protocol — dispatches to the right mode based on its
  * `externalTvl` metadata.
+ *
+ * For walker-mode protocols with multiple adapter IDs (e.g. UNCX displays
+ * `["uncx", "uncx-vm"]` as one card), we run the walker for each adapter
+ * separately. Each walker writes its own row in `protocolTvlSnapshots`
+ * keyed by adapter ID; the /protocols page already aggregates rows whose
+ * `protocol` column appears in the meta's `adapterIds` array.
  */
 async function snapshotProtocol(p: ProtocolMeta): Promise<{ slug: string; kind: "defillama" | "walker"; summary: Summary }> {
   if (p.externalTvl) {
     const summary = await runDefiLlamaSnapshot(p.slug, p.externalTvl.slug, p.externalTvl.category);
     return { slug: p.slug, kind: "defillama", summary };
   }
-  const summary = await runWalkerSnapshot(p.slug, p.chainIds);
-  return { slug: p.slug, kind: "walker", summary };
+
+  // Walker mode — fan out across every adapter ID, collect results.
+  const perAdapter = await Promise.all(
+    p.adapterIds.map((adapterId) => runWalkerSnapshot(adapterId, p.chainIds)),
+  );
+
+  // Combine into a single summary that surfaces aggregate health for the
+  // protocol-level UI display.
+  const combined: WalkerSnapshotSummary = {
+    protocol:    p.slug,
+    chainsRun:   perAdapter.reduce((s, x) => s + x.chainsRun,  0),
+    chainsOk:    perAdapter.reduce((s, x) => s + x.chainsOk,   0),
+    totalUsd:    perAdapter.reduce((s, x) => s + x.totalUsd,   0),
+    streamCount: perAdapter.reduce((s, x) => s + x.streamCount, 0),
+    durationMs:  perAdapter.reduce((s, x) => s + x.durationMs, 0),
+    errors:      perAdapter.flatMap((x) => x.errors.map((e) => `${x.protocol}: ${e}`)),
+  };
+
+  return { slug: p.slug, kind: "walker", summary: combined };
 }
 
 async function runAll(protocolFilter: string | null): Promise<{
