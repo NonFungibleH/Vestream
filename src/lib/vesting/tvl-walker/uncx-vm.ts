@@ -52,7 +52,7 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
 // is fine if a paid Alchemy/QuickNode URL is set in env (their block-range
 // caps are much higher), but the default fallback enforces the lower limit.
 const CHUNK_SIZE       = 9_999n;
-const CHUNK_BATCH      = 10;           // concurrent getLogs calls in flight
+const CHUNK_BATCH      = 3;            // concurrent getLogs calls — tuned low for free-tier RPC rate limits
 const MULTICALL_BATCH  = 500;          // schedules per multicall call
 const MAX_LOG_WINDOW   = 2_000_000n;   // same safety cap used in pinksale-style walkers
 
@@ -155,6 +155,31 @@ async function fetchTokenMeta(
   return result;
 }
 
+// ─── Retry helper for transient dRPC / free-tier RPC errors ─────────────────
+// Same pattern as tvl-walker/pinksale.ts withRetry — see that file for the
+// full rationale. Free-tier RPCs return "Temporary internal error" and
+// "Too many request, try again later" intermittently; short backoff fixes it.
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isTransient =
+        msg.includes("Temporary internal error") ||
+        msg.toLowerCase().includes("too many request") ||
+        msg.toLowerCase().includes("rate limit") ||
+        msg.includes("503") ||
+        msg.includes("502");
+      if (!isTransient || attempt === maxAttempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, 1_000 * Math.pow(2, attempt)));
+    }
+  }
+  throw lastErr;
+}
+
 // ─── Walker ────────────────────────────────────────────────────────────────────
 
 function empty(chainId: SupportedChainId, started: number, error: string | null = null): WalkerResult {
@@ -177,7 +202,7 @@ export async function walkUncxVm(chainId: SupportedChainId): Promise<WalkerResul
   const chunkErrors: string[] = [];
   let latestBlock: bigint;
   try {
-    latestBlock = await client.getBlockNumber();
+    latestBlock = await withRetry(() => client.getBlockNumber());
   } catch (err) {
     return empty(chainId, started, `getBlockNumber: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -199,15 +224,21 @@ export async function walkUncxVm(chainId: SupportedChainId): Promise<WalkerResul
     const batch = chunks.slice(i, i + CHUNK_BATCH);
     const results = await Promise.allSettled(
       batch.map(({ from, to }) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (client.getLogs as any)({
-          address:   config.contractAddress,
-          topics:    [VESTING_CREATED_TOPIC],
-          fromBlock: from,
-          toBlock:   to,
-        })
+        withRetry(() =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (client.getLogs as any)({
+            address:   config.contractAddress,
+            topics:    [VESTING_CREATED_TOPIC],
+            fromBlock: from,
+            toBlock:   to,
+          })
+        )
       )
     );
+    // Small breather between batches to keep free-tier RPCs happy.
+    if (i + CHUNK_BATCH < chunks.length) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
     for (let j = 0; j < results.length; j++) {
       const r = results[j];
       if (r.status === "fulfilled") {

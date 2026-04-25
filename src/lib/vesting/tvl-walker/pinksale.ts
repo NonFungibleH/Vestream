@@ -48,11 +48,11 @@ const PINKSALE_LOCK_ADDED_TOPIC =
 const CHAIN_LIMITS: Partial<Record<SupportedChainId, { chunkSize: bigint; windowBlocks: bigint }>> = {
   [CHAIN_IDS.ETHEREUM]: { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~5 months
   [CHAIN_IDS.BSC]:      { chunkSize: 4_999n, windowBlocks:   500_000n }, // ~17 days; many providers prune older
-  [CHAIN_IDS.POLYGON]:  { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~26 days
+  [CHAIN_IDS.POLYGON]:  { chunkSize: 4_999n, windowBlocks:   500_000n }, // ~13 days; dRPC freetier rejects "ranges over 10000" even at 9999
   [CHAIN_IDS.BASE]:     { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~23 days
 };
 
-const DISCOVERY_BATCH_SIZE  = 10;        // parallel chunks per tick (mirrors seeder)
+const DISCOVERY_BATCH_SIZE  = 3;         // parallel chunks per tick — tuned low for free-tier RPC rate limits
 const MAX_OWNERS            = 10_000;    // safety cap per chain
 const LOCKS_MULTICALL_BATCH = 100;       // normalLocksForUser calls per multicall
 
@@ -144,6 +144,35 @@ interface PinkLockRaw {
   description:    string;
 }
 
+// ─── Retry helper for transient dRPC / free-tier RPC errors ─────────────────
+//
+// Free-tier RPC endpoints are flaky: dRPC frequently returns "Temporary
+// internal error" or "Too many request, try again later" mid-request. These
+// are transient — a short wait + retry usually succeeds. Wraps any RPC call
+// with up to 3 attempts and 1s/2s/4s exponential backoff.
+async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isTransient =
+        msg.includes("Temporary internal error") ||
+        msg.toLowerCase().includes("too many request") ||
+        msg.toLowerCase().includes("rate limit") ||
+        msg.includes("503") ||
+        msg.includes("502");
+      if (!isTransient || attempt === maxAttempts - 1) throw err;
+      const delayMs = 1_000 * Math.pow(2, attempt);  // 1s, 2s, 4s
+      void label;  // intentionally unused — retained for future telemetry
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 // ─── Owner discovery via event scan (mirrors seeder.discoverPinksaleRecipients) ─
 
 async function discoverOwners(
@@ -157,7 +186,7 @@ async function discoverOwners(
     chain:     getViemChain(chainId),
     transport: http(getRpcUrl(chainId)),
   });
-  const latestBlock = await client.getBlockNumber();
+  const latestBlock = await withRetry("getBlockNumber", () => client.getBlockNumber());
   const fromBlock   = latestBlock > windowBlocks ? latestBlock - windowBlocks : 0n;
 
   const chunks: Array<{ from: bigint; to: bigint }> = [];
@@ -172,15 +201,22 @@ async function discoverOwners(
     const batch   = chunks.slice(i, i + DISCOVERY_BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(({ from, to }) =>
-        client.getLogs({
-          address:   contract,
-          fromBlock: from,
-          toBlock:   to,
-        }).then((logs) =>
+        withRetry(`getLogs ${from}-${to}`, () =>
+          client.getLogs({
+            address:   contract,
+            fromBlock: from,
+            toBlock:   to,
+          }),
+        ).then((logs) =>
           logs.filter((l) => l.topics[0] === PINKSALE_LOCK_ADDED_TOPIC),
         ),
       ),
     );
+    // Small breather between batches to keep free-tier RPCs happy. Trivial
+    // impact on total runtime; substantial impact on rate-limit error rate.
+    if (i + DISCOVERY_BATCH_SIZE < chunks.length) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
     for (const r of results) {
       if (r.status === "fulfilled") {
         for (const log of r.value) {
