@@ -17,7 +17,7 @@
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/articles";
 import { listProtocols } from "@/lib/protocol-constants";
-import { getProtocolStats } from "@/lib/vesting/protocol-stats";
+import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 
 const SITE = "https://vestream.io";
 
@@ -36,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     protocols.map(async (p) => {
       try {
         const stats = await getProtocolStats(p.adapterIds);
-        return stats.lastIndexedAt ?? now;
+        return toDateSafe(stats.lastIndexedAt) ?? now;
       } catch {
         return now;
       }

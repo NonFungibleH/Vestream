@@ -34,6 +34,7 @@ import {
   relativeFreshness,
   relativeTimeSince,
   relativeTimeUntil,
+  toDateSafe,
   truncateAddress,
   type ProtocolStats,
   type UnlockSummary,
@@ -158,7 +159,7 @@ export default async function ProtocolLandingPage(
         description: meta.description,
         url: `https://vestream.io/protocols/${meta.slug}`,
         isPartOf: { "@id": "https://vestream.io/#website" },
-        dateModified: stats?.lastIndexedAt?.toISOString() ?? new Date().toISOString(),
+        dateModified: (toDateSafe(stats?.lastIndexedAt ?? null) ?? new Date()).toISOString(),
       },
       {
         "@type": "BreadcrumbList",

@@ -26,8 +26,13 @@ export interface ProtocolStats {
   chainIds: number[];
   /** Distinct ERC-20 token contract addresses seen for this protocol. */
   tokensTracked: number;
-  /** Most recent cache-refresh timestamp across all streams for this protocol. */
-  lastIndexedAt: Date | null;
+  /** Most recent cache-refresh timestamp across all streams for this protocol.
+   *  Typed as `Date | string | null` because Next.js's `unstable_cache` JSON-
+   *  roundtrips Date instances into ISO strings on rehydration — every
+   *  consumer of this field MUST be defensive. The relativeFreshness /
+   *  relativeTimeSince helpers in this file already handle both shapes via
+   *  `toDateSafe`. */
+  lastIndexedAt: Date | string | null;
 }
 
 export interface UnlockSummary {
@@ -342,10 +347,28 @@ export function chainLabel(chainId: number): string {
   }
 }
 
+/**
+ * Coerce a Date | ISO string | null into a Date | null. Defensive against
+ * Next.js's `unstable_cache` JSON-roundtripping a Date into a string — when
+ * a cached return value is rehydrated, what was a Date in code becomes the
+ * `.toISOString()` string. Calling `.getTime()` on the result throws.
+ *
+ * Used by every date formatter below; pass through here first. Exported so
+ * consumers of `ProtocolStats.lastIndexedAt` (which is `Date | string | null`
+ * for the same reason) can normalize before doing Date arithmetic.
+ */
+export function toDateSafe(input: Date | string | null | undefined): Date | null {
+  if (!input) return null;
+  if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
+  const parsed = new Date(input);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 /** Relative time since a past Date — "14 min ago", "3 d ago". */
-export function relativeTimeSince(date: Date | null, nowMs = Date.now()): string {
-  if (!date) return "never";
-  const diffSec = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
+export function relativeTimeSince(date: Date | string | null, nowMs = Date.now()): string {
+  const d = toDateSafe(date);
+  if (!d) return "never";
+  const diffSec = Math.max(0, Math.floor((nowMs - d.getTime()) / 1000));
   if (diffSec < 60)      return `${diffSec}s ago`;
   if (diffSec < 3600)    return `${Math.floor(diffSec / 60)} min ago`;
   if (diffSec < 86400)   return `${Math.floor(diffSec / 3600)} h ago`;
@@ -370,9 +393,10 @@ export function relativeTimeSince(date: Date | null, nowMs = Date.now()): string
  *   < 48 h    → "yesterday"
  *   else      → "N days ago"
  */
-export function relativeFreshness(date: Date | null, nowMs = Date.now()): string {
-  if (!date) return "never";
-  const diffSec = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
+export function relativeFreshness(date: Date | string | null, nowMs = Date.now()): string {
+  const d = toDateSafe(date);
+  if (!d) return "never";
+  const diffSec = Math.max(0, Math.floor((nowMs - d.getTime()) / 1000));
   if (diffSec < 60)    return "just now";
   if (diffSec < 3600)  return `${Math.floor(diffSec / 60)} min ago`;
   if (diffSec < 86400) return "today";

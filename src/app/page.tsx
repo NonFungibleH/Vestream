@@ -8,6 +8,7 @@ import { listProtocols } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
   relativeFreshness,
+  toDateSafe,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 
@@ -31,9 +32,13 @@ async function getHomepageLiveStats() {
     );
     const valid = results.filter((s): s is ProtocolStats => !!s);
     const totalStreams = valid.reduce((sum, s) => sum + s.totalStreams, 0);
+    // Defensive coercion: lastIndexedAt is typed Date | string | null because
+    // some upstream code paths run inside unstable_cache which serializes
+    // Dates to ISO strings. toDateSafe normalizes to Date | null.
     const lastIndexedAt = valid.reduce<Date | null>((latest, s) => {
-      if (!s.lastIndexedAt) return latest;
-      if (!latest || s.lastIndexedAt > latest) return s.lastIndexedAt;
+      const d = toDateSafe(s.lastIndexedAt);
+      if (!d) return latest;
+      if (!latest || d > latest) return d;
       return latest;
     }, null);
     return {
