@@ -16,6 +16,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
@@ -39,7 +40,6 @@ import {
   type ProtocolStats,
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
-import { getGlobalStats } from "@/lib/vesting/global-stats";
 
 // Render on-demand instead of pre-rendering all 7 protocol pages at build
 // time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
@@ -57,6 +57,44 @@ import { getGlobalStats } from "@/lib/vesting/global-stats";
 // just like ISR did. Net: same user experience, builds that actually succeed.
 export const dynamic = "force-dynamic";
 export const dynamicParams = false;
+
+// Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
+// /protocols index. Without this, EVERY visit triggered live subgraph
+// round-trips via getGlobalStats(aid) per adapter (UNCX = 2 adapters,
+// each ~5-10s on cold lambdas). User-facing symptom: clicking a protocol
+// card on /protocols felt like the browser hung — page just sat there
+// for 10-20s before rendering.
+//
+// getGlobalStats has been DROPPED entirely (same as the /protocols index
+// rewrite) — the cache count from getProtocolStats is the canonical
+// source. Subgraph live counts were redundant + slow.
+const CACHE_TTL_SECONDS = 300;
+
+interface ProtocolPageData {
+  stats:        ProtocolStats | null;
+  latest:       UnlockSummary | null;
+  upcoming:     UnlockSummary | null;
+  upcomingList: UnlockSummary[];
+}
+
+const loadProtocolData = unstable_cache(
+  async (adapterIds: readonly string[]): Promise<ProtocolPageData> => {
+    try {
+      const [stats, latest, upcoming, upcomingList] = await Promise.all([
+        getProtocolStats(adapterIds),
+        getLatestUnlock(adapterIds),
+        getNextUpcomingUnlock(adapterIds),
+        getUpcomingUnlocksForProtocol(adapterIds, 6),
+      ]);
+      return { stats, latest, upcoming, upcomingList };
+    } catch (err) {
+      console.error(`[protocol-page] data fetch failed for ${adapterIds.join(",")}:`, err);
+      return { stats: null, latest: null, upcoming: null, upcomingList: [] };
+    }
+  },
+  ["protocol-page-data-v1"],
+  { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
+);
 
 export async function generateStaticParams() {
   return PROTOCOL_SLUGS.map((slug) => ({ protocol: slug }));
@@ -105,41 +143,13 @@ export default async function ProtocolLandingPage(
   const meta = getProtocol(protocol);
   if (!meta) notFound();
 
-  // Best-effort DB reads; if the DB is unreachable we still render the static
-  // copy and just hide the live widgets.
-  let stats: ProtocolStats | null = null;
-  let latest: UnlockSummary | null = null;
-  let upcoming: UnlockSummary | null = null;
-  let upcomingList: UnlockSummary[] = [];
-  let globalTotal  = 0;
-  let globalActive = 0;
-  try {
-    [stats, latest, upcoming, upcomingList] = await Promise.all([
-      getProtocolStats(meta.adapterIds),
-      getLatestUnlock(meta.adapterIds),
-      getNextUpcomingUnlock(meta.adapterIds),
-      getUpcomingUnlocksForProtocol(meta.adapterIds, 6),
-    ]);
+  // Single-cached fetch for the page's data — see CACHE_TTL_SECONDS comment.
+  const { stats, latest, upcoming, upcomingList } = await loadProtocolData(meta.adapterIds);
 
-    // Direct subgraph counts — beats local cache on day one. Use the highest
-    // total across the protocol's adapter IDs (uncx has two).
-    for (const aid of meta.adapterIds) {
-      try {
-        const g = await getGlobalStats(aid);
-        if (g.totalStreams  > globalTotal)  globalTotal  = g.totalStreams;
-        if (g.activeStreams > globalActive) globalActive = g.activeStreams;
-      } catch (err) {
-        console.error(`[unlocks/${meta.slug}] global stats ${aid} failed:`, err);
-      }
-    }
-  } catch (err) {
-    console.error(`[unlocks/${meta.slug}] stats fetch failed:`, err);
-  }
-
-  // Show the larger of local (cache) vs global (subgraph) — accounts for the
-  // cache being empty before the first seeder run.
-  const effectiveTotal  = Math.max(stats?.totalStreams  ?? 0, globalTotal);
-  const effectiveActive = Math.max(stats?.activeStreams ?? 0, globalActive);
+  // Stream counts now come from cache only (getGlobalStats was dropped —
+  // see the loadProtocolData comment for the why).
+  const effectiveTotal  = stats?.totalStreams  ?? 0;
+  const effectiveActive = stats?.activeStreams ?? 0;
   const hasData = effectiveTotal > 0;
   const related = meta.relatedSlugs
     .map((s) => getProtocol(s))
