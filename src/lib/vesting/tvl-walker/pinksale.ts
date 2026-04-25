@@ -1,19 +1,28 @@
 // src/lib/vesting/tvl-walker/pinksale.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Exhaustive PinkSale (PinkLock V2) walker — PinkLock has no subgraph, so:
-//   1. Scan `LockAdded` events for the last 2M blocks to discover every unique
-//      owner address (mirrors the seeder's discoverPinksaleRecipients).
-//   2. Multicall `normalLocksForUser(owner)` in batches of 100.
-//   3. locked = amount - unlockedAmount per lock (unlockedAmount is the
-//      running already-claimed total; remainder is currently-locked).
-//   4. Multicall ERC-20 symbol + decimals for distinct tokens, one call/chain.
-//   5. Aggregate by (chainId, token).
+// Exhaustive PinkSale (PinkLock V2) walker — direct contract enumeration.
 //
-// LockAdded(uint256 indexed id, address token, address indexed owner, uint256 amount, uint256 unlockDate)
-//   topic[0] = signature hash; topic[2] = owner (the indexed address).
+// PinkLock V2 exposes built-in enumeration helpers, so we don't need
+// eth_getLogs at all. That's what makes this work on free-tier RPCs (Alchemy
+// free caps eth_getLogs at 10 blocks; publicnode prunes logs; dRPC has range
+// caps). Contract reads via Multicall3 are just regular eth_call requests
+// every RPC supports.
+//
+// Strategy (per chain):
+//   1. allNormalTokenLockedCount() → distinct-token count.
+//   2. getCumulativeNormalTokenLockInfo(start, end), Multicall3.tryAggregate paged.
+//   3. Per-token: getLocksForToken(token, start, end), batched the same way.
+//   4. Active locks: unlockedAmount < amount, locked = amount - unlockedAmount.
+//   5. Multicall ERC20 symbol + decimals for distinct tokens.
+//   6. Aggregate by tokenAddress → TokenAggregate[].
+//
+// LP locks are skipped (separate product, not vesting — same reason we exclude
+// them from DefiLlama in the audit methodology).
+//
+// Source: https://bscscan.com/address/0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe#code
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http, type Hex } from "viem";
+import { createPublicClient, http } from "viem";
 import { mainnet, bsc, polygon, base } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
@@ -27,60 +36,57 @@ const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
 };
 
-// keccak256("LockAdded(uint256,address,address,uint256,uint256)")
-const PINKSALE_LOCK_ADDED_TOPIC =
-  "0x694af1cc8727cdd0afbdd53d9b87b69248bd490224e9dd090e788546506e076f" as Hex;
+// Multicall3 — same address on all 4 supported chains.
+const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
 
-// Per-chain RPC limits. Public RPCs vary wildly in both `eth_getLogs` block-range
-// caps and how far back they retain logs (pruning), so chunk size and scan window
-// must be tuned per chain. Trade-off: BSC's 500k-block window only sees the last
-// ~17 days of locks (publicnode prunes older) — acceptable for PinkLock since it's
-// dominated by new launches with recent activity.
-// Per-chain getLogs limits. Chunks set conservatively for dRPC's free public
-// endpoints which cap at ~10k blocks per request. Window sizes tuned to give
-// reasonable historical coverage without blowing up per-chain runtime.
-//
-// IMPORTANT: free-tier Alchemy caps eth_getLogs at 10 BLOCKS per request,
-// which makes any practical event scan impossible. If env vars override the
-// fallback with a free-tier Alchemy URL, the walker will fail. Either use
-// dRPC (default fallback), upgrade to paid Alchemy/QuickNode, or use a
-// provider with a higher block-range cap.
-const CHAIN_LIMITS: Partial<Record<SupportedChainId, { chunkSize: bigint; windowBlocks: bigint }>> = {
-  [CHAIN_IDS.ETHEREUM]: { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~5 months
-  [CHAIN_IDS.BSC]:      { chunkSize: 4_999n, windowBlocks:   500_000n }, // ~17 days; many providers prune older
-  [CHAIN_IDS.POLYGON]:  { chunkSize: 4_999n, windowBlocks:   500_000n }, // ~13 days; dRPC freetier rejects "ranges over 10000" even at 9999
-  [CHAIN_IDS.BASE]:     { chunkSize: 9_999n, windowBlocks: 1_000_000n }, // ~23 days
-};
-
-const DISCOVERY_BATCH_SIZE  = 3;         // parallel chunks per tick — tuned low for free-tier RPC rate limits
-const MAX_OWNERS            = 10_000;    // safety cap per chain
-const LOCKS_MULTICALL_BATCH = 100;       // normalLocksForUser calls per multicall
+// Inclusive-exclusive ranges. Free-tier RPC response-size caps drove the 100
+// page size; lower if "response too large" errors appear.
+const PAGE_SIZE = 100;
+// Realistic chain max: ~3-4k for BSC, much less elsewhere. Hitting this logs.
+const MAX_TOKENS = 5000;
 
 // ─── ABIs ──────────────────────────────────────────────────────────────────────
 
+const VIEW = "view" as const;
+const FN   = "function" as const;
+
+const CUMULATIVE_LOCK_INFO_TUPLE = {
+  type: "tuple[]",
+  components: [
+    { name: "token",   type: "address" },
+    { name: "factory", type: "address" },
+    { name: "amount",  type: "uint256" },
+  ],
+} as const;
+
+const LOCK_TUPLE = {
+  type: "tuple[]",
+  components: [
+    { name: "id",             type: "uint256" },
+    { name: "token",          type: "address" },
+    { name: "owner",          type: "address" },
+    { name: "amount",         type: "uint256" },
+    { name: "lockDate",       type: "uint256" },
+    { name: "tgeDate",        type: "uint256" },
+    { name: "tgeBps",         type: "uint256" },
+    { name: "cycle",          type: "uint256" },
+    { name: "cycleBps",       type: "uint256" },
+    { name: "unlockedAmount", type: "uint256" },
+    { name: "description",    type: "string"  },
+  ],
+} as const;
+
 const PINKSALE_ABI = [
-  {
-    name: "normalLocksForUser",
-    type: "function" as const,
-    inputs:  [{ name: "user", type: "address" }],
-    outputs: [{
-      type: "tuple[]",
-      components: [
-        { name: "id",             type: "uint256" },
-        { name: "token",          type: "address" },
-        { name: "owner",          type: "address" },
-        { name: "amount",         type: "uint256" },
-        { name: "lockDate",       type: "uint256" },
-        { name: "tgeDate",        type: "uint256" },
-        { name: "tgeBps",         type: "uint256" },
-        { name: "cycle",          type: "uint256" },
-        { name: "cycleBps",       type: "uint256" },
-        { name: "unlockedAmount", type: "uint256" },
-        { name: "description",    type: "string"  },
-      ],
-    }],
-    stateMutability: "view" as const,
-  },
+  { name: "allNormalTokenLockedCount", type: FN, inputs: [], outputs: [{ type: "uint256" }], stateMutability: VIEW },
+  { name: "getCumulativeNormalTokenLockInfo", type: FN, stateMutability: VIEW,
+    inputs:  [{ name: "start", type: "uint256" }, { name: "end", type: "uint256" }],
+    outputs: [CUMULATIVE_LOCK_INFO_TUPLE] },
+  { name: "totalLockCountForToken", type: FN, stateMutability: VIEW,
+    inputs:  [{ name: "token", type: "address" }],
+    outputs: [{ type: "uint256" }] },
+  { name: "getLocksForToken", type: FN, stateMutability: VIEW,
+    inputs:  [{ name: "token", type: "address" }, { name: "start", type: "uint256" }, { name: "end", type: "uint256" }],
+    outputs: [LOCK_TUPLE] },
 ] as const;
 
 const ERC20_ABI = [
@@ -90,24 +96,8 @@ const ERC20_ABI = [
 
 // ─── viem helpers ──────────────────────────────────────────────────────────────
 
-// IMPORTANT: PinkSale uses an event scan (eth_getLogs) to discover lock owners
-// across the last several hundred thousand blocks. RPC choice matters a LOT
-// because providers have widely-different `eth_getLogs` block-range caps:
-//
-//   - publicnode: PRUNES historical logs aggressively (BSC ~17d, Polygon ~10d)
-//   - Ankr free public (no key): returns "Unauthorized" — requires signup
-//   - llamarpc: works for some chains, intermittent fetch failures observed
-//   - Alchemy FREE TIER: caps eth_getLogs at 10 BLOCK RANGE — unusable for
-//     scanning hundreds of thousands of blocks. Confirmed in production:
-//     "Under the Free tier plan, you can make eth_getLogs requests with up
-//     to a 10 block range."
-//   - dRPC public endpoints: unauthenticated, ~10k block range supported,
-//     no aggressive pruning — confirmed working for our event scans.
-//
-// Default fallback: dRPC. If a PAID Alchemy/QuickNode URL is set in env,
-// use that instead — but DON'T put a free-tier Alchemy URL in env, it'll
-// reject our 10k-block ranges. Better to use the dRPC fallback than a
-// crippled paid-key URL.
+// Default fallback: dRPC. Even with dRPC's flakiness, contract reads are way
+// more forgiving than eth_getLogs.
 function getRpcUrl(chainId: SupportedChainId): string {
   switch (chainId) {
     case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.drpc.org";
@@ -128,28 +118,16 @@ function getViemChain(chainId: SupportedChainId) {
   }
 }
 
-// ─── Raw lock shape (matches ABI tuple) ────────────────────────────────────────
-
-interface PinkLockRaw {
-  id:             bigint;
-  token:          string;
-  owner:          string;
-  amount:         bigint;
-  lockDate:       bigint;
-  tgeDate:        bigint;
-  tgeBps:         bigint;
-  cycle:          bigint;
-  cycleBps:       bigint;
-  unlockedAmount: bigint;
-  description:    string;
+function makeClient(chainId: SupportedChainId) {
+  return createPublicClient({
+    chain:     getViemChain(chainId),
+    transport: http(getRpcUrl(chainId), { batch: true }),
+  });
 }
 
-// ─── Retry helper for transient dRPC / free-tier RPC errors ─────────────────
-//
-// Free-tier RPC endpoints are flaky: dRPC frequently returns "Temporary
-// internal error" or "Too many request, try again later" mid-request. These
-// are transient — a short wait + retry usually succeeds. Wraps any RPC call
-// with up to 3 attempts and 1s/2s/4s exponential backoff.
+// ─── Retry helper ──────────────────────────────────────────────────────────────
+// dRPC and other free tiers frequently return transient errors; 1s/2s/4s
+// exponential backoff over 3 attempts handles them.
 async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -165,165 +143,165 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3
         msg.includes("503") ||
         msg.includes("502");
       if (!isTransient || attempt === maxAttempts - 1) throw err;
-      const delayMs = 1_000 * Math.pow(2, attempt);  // 1s, 2s, 4s
       void label;  // intentionally unused — retained for future telemetry
-      await new Promise((r) => setTimeout(r, delayMs));
+      await new Promise((r) => setTimeout(r, 1_000 * Math.pow(2, attempt)));
     }
   }
   throw lastErr;
 }
 
-// ─── Owner discovery via event scan (mirrors seeder.discoverPinksaleRecipients) ─
+// ─── Raw shapes (match ABI tuples) ────────────────────────────────────────────
 
-async function discoverOwners(
-  chainId:  SupportedChainId,
-  contract: `0x${string}`,
-  chunkSize:    bigint,
-  windowBlocks: bigint,
-  errors:   string[],
-): Promise<string[]> {
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
-  const latestBlock = await withRetry("getBlockNumber", () => client.getBlockNumber());
-  const fromBlock   = latestBlock > windowBlocks ? latestBlock - windowBlocks : 0n;
-
-  const chunks: Array<{ from: bigint; to: bigint }> = [];
-  for (let from = fromBlock; from <= latestBlock; from += chunkSize + 1n) {
-    const to = from + chunkSize > latestBlock ? latestBlock : from + chunkSize;
-    chunks.push({ from, to });
-  }
-
-  const owners = new Set<string>();
-
-  for (let i = 0; i < chunks.length; i += DISCOVERY_BATCH_SIZE) {
-    const batch   = chunks.slice(i, i + DISCOVERY_BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map(({ from, to }) =>
-        withRetry(`getLogs ${from}-${to}`, () =>
-          client.getLogs({
-            address:   contract,
-            fromBlock: from,
-            toBlock:   to,
-          }),
-        ).then((logs) =>
-          logs.filter((l) => l.topics[0] === PINKSALE_LOCK_ADDED_TOPIC),
-        ),
-      ),
-    );
-    // Small breather between batches to keep free-tier RPCs happy. Trivial
-    // impact on total runtime; substantial impact on rate-limit error rate.
-    if (i + DISCOVERY_BATCH_SIZE < chunks.length) {
-      await new Promise((r) => setTimeout(r, 500));
-    }
-    for (const r of results) {
-      if (r.status === "fulfilled") {
-        for (const log of r.value) {
-          const t2 = log.topics[2];
-          if (typeof t2 === "string" && t2.length === 66) {
-            owners.add(`0x${t2.slice(26).toLowerCase()}`);
-          }
-        }
-      } else {
-        errors.push(`log chunk error: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
-      }
-    }
-  }
-
-  return Array.from(owners);
+interface CumulativeLockInfoRaw { token: string; factory: string; amount: bigint }
+interface PinkLockRaw {
+  id: bigint; token: string; owner: string; amount: bigint;
+  lockDate: bigint; tgeDate: bigint; tgeBps: bigint;
+  cycle: bigint; cycleBps: bigint; unlockedAmount: bigint;
+  description: string;
 }
 
-// ─── Fetch locks for a batch of owners via multicall ──────────────────────────
-
-async function fetchLocksForOwners(
-  chainId:  SupportedChainId,
-  contract: `0x${string}`,
-  owners:   string[],
-  errors:   string[],
-): Promise<PinkLockRaw[]> {
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
-  const locks: PinkLockRaw[] = [];
-
-  for (let i = 0; i < owners.length; i += LOCKS_MULTICALL_BATCH) {
-    const batch = owners.slice(i, i + LOCKS_MULTICALL_BATCH);
-    const contracts = batch.map((owner) => ({
-      address:      contract,
-      abi:          PINKSALE_ABI,
-      functionName: "normalLocksForUser" as const,
-      args:         [owner as `0x${string}`],
-    }));
-
+// ─── Multicall helper ──────────────────────────────────────────────────────────
+//
+// Run `calls` via Multicall3.tryAggregate in fixed-size chunks. Per-call
+// results align with input order; failed calls become null + push a labelled
+// error. Top-level chunk failures push an error and skip that chunk only.
+type Call = { address: `0x${string}`; abi: readonly unknown[]; functionName: string; args?: readonly unknown[] };
+async function chunkedMulticall<T>(
+  client: ReturnType<typeof makeClient>,
+  calls:  Call[],
+  chunkSize: number,
+  label:  string,
+  errors: string[],
+): Promise<(T | null)[]> {
+  const out: (T | null)[] = new Array(calls.length).fill(null);
+  for (let i = 0; i < calls.length; i += chunkSize) {
+    const slice = calls.slice(i, i + chunkSize);
     try {
-      const results = await client.multicall({ contracts, allowFailure: true });
-      for (const r of results) {
-        if (r.status !== "success") continue;
-        const rows = r.result as readonly PinkLockRaw[] | undefined;
-        if (!rows) continue;
-        for (const lock of rows) {
-          locks.push({
-            id:             lock.id,
-            token:          lock.token,
-            owner:          lock.owner,
-            amount:         lock.amount,
-            lockDate:       lock.lockDate,
-            tgeDate:        lock.tgeDate,
-            tgeBps:         lock.tgeBps,
-            cycle:          lock.cycle,
-            cycleBps:       lock.cycleBps,
-            unlockedAmount: lock.unlockedAmount,
-            description:    lock.description,
-          });
-        }
+      const results = await withRetry(`${label} ${i}`, () =>
+        // viem's overloaded multicall types don't narrow well across our generic Call alias.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        client.multicall({ contracts: slice as any, multicallAddress: MULTICALL3, allowFailure: true }),
+      );
+      for (let j = 0; j < results.length; j++) {
+        const r = results[j];
+        if (r.status === "success") out[i + j] = r.result as T;
+        else errors.push(`${label} #${i + j}: ${r.error instanceof Error ? r.error.message : String(r.error ?? "unknown")}`);
       }
     } catch (err) {
-      errors.push(`multicall batch ${i}..${i + batch.length} failed: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`${label} chunk ${i}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  return out;
+}
+
+// ─── Page through cumulative token info ────────────────────────────────────────
+
+async function fetchAllLockedTokens(
+  chainId: SupportedChainId, contract: `0x${string}`, total: bigint, errors: string[],
+): Promise<string[]> {
+  const totalNum = Number(total);
+  const cap = Math.min(totalNum, MAX_TOKENS);
+  if (totalNum > MAX_TOKENS) {
+    console.error(`[tvl-walker:pinksale/${chainId}] token cap hit: total=${totalNum}, capping to ${MAX_TOKENS}`);
+  }
+
+  const calls: Call[] = [];
+  for (let start = 0; start < cap; start += PAGE_SIZE) {
+    calls.push({
+      address: contract, abi: PINKSALE_ABI,
+      functionName: "getCumulativeNormalTokenLockInfo",
+      args: [BigInt(start), BigInt(Math.min(start + PAGE_SIZE, cap))],
+    });
+  }
+
+  const results = await chunkedMulticall<readonly CumulativeLockInfoRaw[]>(
+    makeClient(chainId), calls, /* chunkSize */ calls.length || 1, "cumulativeTokenInfo", errors,
+  );
+
+  const tokens = new Set<string>();
+  for (const rows of results) {
+    if (!rows) continue;
+    for (const row of rows) {
+      if (!row.token || row.token === "0x0000000000000000000000000000000000000000") continue;
+      tokens.add(row.token.toLowerCase());
+    }
+  }
+  return Array.from(tokens);
+}
+
+// ─── Per-token lock counts ────────────────────────────────────────────────────
+
+async function fetchLockCounts(
+  chainId: SupportedChainId, contract: `0x${string}`, tokens: string[], errors: string[],
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (tokens.length === 0) return result;
+
+  const calls: Call[] = tokens.map((token) => ({
+    address: contract, abi: PINKSALE_ABI,
+    functionName: "totalLockCountForToken",
+    args: [token as `0x${string}`],
+  }));
+  const results = await chunkedMulticall<bigint>(makeClient(chainId), calls, 200, "lockCount", errors);
+  for (let i = 0; i < tokens.length; i++) {
+    if (results[i] != null) result.set(tokens[i], Number(results[i] as bigint));
+  }
+  return result;
+}
+
+// ─── Fetch every lock for every token ─────────────────────────────────────────
+
+async function fetchAllLocks(
+  chainId: SupportedChainId, contract: `0x${string}`,
+  lockCounts: Map<string, number>, errors: string[],
+): Promise<PinkLockRaw[]> {
+  // Flatten (token, start, end) page descriptors so multicall batches are
+  // fixed size regardless of how lopsided per-token lock counts are.
+  const calls: Call[] = [];
+  for (const [token, count] of lockCounts) {
+    if (count <= 0) continue;
+    for (let start = 0; start < count; start += PAGE_SIZE) {
+      calls.push({
+        address: contract, abi: PINKSALE_ABI,
+        functionName: "getLocksForToken",
+        args: [token as `0x${string}`, BigInt(start), BigInt(Math.min(start + PAGE_SIZE, count))],
+      });
     }
   }
 
+  // 50 page-calls × 100 structs = up to 5000 Lock structs per response —
+  // below typical RPC caps even with description strings.
+  const results = await chunkedMulticall<readonly PinkLockRaw[]>(
+    makeClient(chainId), calls, 50, "locksForToken", errors,
+  );
+
+  const locks: PinkLockRaw[] = [];
+  for (const rows of results) if (rows) for (const lock of rows) locks.push(lock);
   return locks;
 }
 
-// ─── Token metadata (one multicall per chain) ──────────────────────────────────
+// ─── Token metadata (chunked multicall) ───────────────────────────────────────
 
 async function fetchTokenMeta(
-  chainId:        SupportedChainId,
-  tokenAddresses: string[],
-  errors:         string[],
+  chainId: SupportedChainId, tokenAddresses: string[], errors: string[],
 ): Promise<Map<string, { symbol: string; decimals: number }>> {
   const result = new Map<string, { symbol: string; decimals: number }>();
   if (tokenAddresses.length === 0) return result;
 
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
-
-  const contracts = tokenAddresses.flatMap((addr) => [
-    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   as const },
-    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "decimals" as const },
+  const calls: Call[] = tokenAddresses.flatMap((addr) => [
+    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   },
+    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "decimals" },
   ]);
-
-  try {
-    const results = await client.multicall({ contracts, allowFailure: true });
-    for (let i = 0; i < tokenAddresses.length; i++) {
-      const symResult = results[i * 2];
-      const decResult = results[i * 2 + 1];
-      result.set(tokenAddresses[i].toLowerCase(), {
-        symbol:   symResult.status === "success" ? String(symResult.result) : "???",
-        decimals: decResult.status === "success" ? Number(decResult.result) : 18,
-      });
-    }
-  } catch (err) {
-    errors.push(`token metadata multicall failed: ${err instanceof Error ? err.message : String(err)}`);
-    for (const addr of tokenAddresses) {
-      result.set(addr.toLowerCase(), { symbol: "???", decimals: 18 });
-    }
+  // 250 tokens × 2 calls each = 500 returns/response
+  const results = await chunkedMulticall<unknown>(makeClient(chainId), calls, 500, "tokenMeta", errors);
+  for (let i = 0; i < tokenAddresses.length; i++) {
+    const sym = results[i * 2];
+    const dec = results[i * 2 + 1];
+    result.set(tokenAddresses[i].toLowerCase(), {
+      symbol:   sym != null ? String(sym) : "???",
+      decimals: dec != null ? Number(dec) : 18,
+    });
   }
-
   return result;
 }
 
@@ -333,79 +311,64 @@ export async function walkPinkSale(chainId: SupportedChainId): Promise<WalkerRes
   const started  = Date.now();
   const contract = PINKSALE_CONTRACTS[chainId];
   if (!contract) {
-    return {
-      protocol:    "pinksale",
-      chainId,
-      tokens:      [],
-      streamCount: 0,
-      error:       "no contract deployed on this chain",
-      elapsedMs:   Date.now() - started,
-    };
-  }
-
-  const limits = CHAIN_LIMITS[chainId];
-  if (!limits) {
-    return {
-      protocol:    "pinksale",
-      chainId,
-      tokens:      [],
-      streamCount: 0,
-      error:       null,
-      elapsedMs:   Date.now() - started,
-    };
+    return { protocol: "pinksale", chainId, tokens: [], streamCount: 0,
+      error: "no contract deployed on this chain", elapsedMs: Date.now() - started };
   }
 
   const errors: string[] = [];
+  const client = makeClient(chainId);
 
-  // 1. Discover owners from event scan
-  let owners: string[];
+  // 1. Total normal-token-locked count.
+  let totalTokens: bigint;
   try {
-    owners = await discoverOwners(chainId, contract, limits.chunkSize, limits.windowBlocks, errors);
+    totalTokens = await withRetry("allNormalTokenLockedCount", () =>
+      client.readContract({
+        address:      contract,
+        abi:          PINKSALE_ABI,
+        functionName: "allNormalTokenLockedCount",
+      }),
+    ) as bigint;
   } catch (err) {
-    return {
-      protocol:    "pinksale",
-      chainId,
-      tokens:      [],
-      streamCount: 0,
-      error:       `owner discovery failed: ${err instanceof Error ? err.message : String(err)}`,
-      elapsedMs:   Date.now() - started,
-    };
+    return { protocol: "pinksale", chainId, tokens: [], streamCount: 0,
+      error: `allNormalTokenLockedCount failed: ${err instanceof Error ? err.message : String(err)}`,
+      elapsedMs: Date.now() - started };
   }
 
-  if (owners.length > MAX_OWNERS) {
-    console.error(`[tvl-walker:pinksale/${chainId}] owner cap hit: discovered ${owners.length}, capping to ${MAX_OWNERS}`);
-    owners = owners.slice(0, MAX_OWNERS);
+  if (totalTokens === 0n) {
+    return { protocol: "pinksale", chainId, tokens: [], streamCount: 0,
+      error: null, elapsedMs: Date.now() - started };
   }
 
-  if (owners.length === 0) {
-    return {
-      protocol:    "pinksale",
-      chainId,
-      tokens:      [],
-      streamCount: 0,
-      error:       errors.length > 0 ? errors.join("; ").slice(0, 500) : null,
-      elapsedMs:   Date.now() - started,
-    };
+  // 2. Distinct token addresses.
+  const tokens = await fetchAllLockedTokens(chainId, contract, totalTokens, errors);
+  if (tokens.length === 0) {
+    return { protocol: "pinksale", chainId, tokens: [], streamCount: 0,
+      error: errors.length > 0 ? errors.join("; ").slice(0, 500) : null,
+      elapsedMs: Date.now() - started };
   }
 
-  // 2. Fetch locks for every owner via multicall
-  const locks = await fetchLocksForOwners(chainId, contract, owners, errors);
+  // 3. Per-token lock counts.
+  const lockCounts = await fetchLockCounts(chainId, contract, tokens, errors);
 
-  // 3. Collect distinct tokens + compute per-lock locked amount
+  // 4. Every individual lock for every token.
+  const locks = await fetchAllLocks(chainId, contract, lockCounts, errors);
+
+  // 5. Filter active locks + per-lock locked = amount - unlockedAmount.
   const lockedPerLock: { token: string; locked: bigint }[] = [];
-  const tokenSet = new Set<string>();
+  const distinctTokens = new Set<string>();
   for (const lock of locks) {
-    const locked = lock.amount > lock.unlockedAmount ? lock.amount - lock.unlockedAmount : 0n;
+    if (lock.unlockedAmount >= lock.amount) continue;
+    const locked = lock.amount - lock.unlockedAmount;
     if (locked <= 0n) continue;
     const tokenKey = lock.token.toLowerCase();
-    tokenSet.add(tokenKey);
+    distinctTokens.add(tokenKey);
     lockedPerLock.push({ token: tokenKey, locked });
   }
 
-  // 4. Multicall token metadata for distinct tokens
-  const tokenMeta = await fetchTokenMeta(chainId, Array.from(tokenSet), errors);
+  // 6. Token metadata.
+  const tokenMeta = await fetchTokenMeta(chainId, Array.from(distinctTokens), errors);
 
-  // 5. Aggregate by token
+  // 7. Aggregate.
   const byToken = new Map<string, TokenAggregate>();
   for (const { token, locked } of lockedPerLock) {
     const existing = byToken.get(token);

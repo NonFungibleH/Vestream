@@ -282,12 +282,19 @@ export function TvlComparisonBar({
                         Indexing
                       </span>
                     ) : (
+                      // Self-indexed walker rows: keep coverage info accessible
+                      // via tooltip (for ops + curious users) but DON'T splash
+                      // a "11% priced" label that reads as "broken" to the
+                      // average user. The 89% are usually pre-launch dust with
+                      // no DEX listing — that's expected, not missing data.
+                      // Show "self-indexed" instead, mirroring the "via
+                      // DefiLlama" pattern as a methodology attribution.
                       <span
-                        className="text-[10px] font-semibold tabular-nums whitespace-nowrap"
-                        style={{ color: "#94a3b8", minWidth: 66, textAlign: "right" }}
-                        title={`${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced`}
+                        className="text-[10px] font-semibold whitespace-nowrap"
+                        style={{ color: "#64748b", minWidth: 66, textAlign: "right" }}
+                        title={`Self-indexed · ${tvl?.tokensPriced ?? 0}/${tvl?.totalTokens ?? 0} tokens priced (${coveragePct}%)`}
                       >
-                        {coveragePct}% priced
+                        self-indexed
                       </span>
                     )}
                   </div>

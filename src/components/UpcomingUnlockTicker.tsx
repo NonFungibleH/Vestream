@@ -3,8 +3,31 @@
 // src/components/UpcomingUnlockTicker.tsx
 //
 // Forward-looking sibling to <LiveActivityTicker/>. Polls /api/unlocks/upcoming
-// and shows the next N scheduled unlocks across all protocols — with a live
-// countdown that decrements every second on the client.
+// and shows the next N scheduled unlock GROUPS across all protocols — with a
+// live countdown that decrements every second on the client.
+//
+// ─── What's a "group" and why are we showing groups? ────────────────────────
+//
+// The API endpoint groups raw stream rows by
+//   `(protocol, chainId, tokenAddress, ROUND(endTime, 3600))`
+// (1-hour bucket) before returning. A team distribution that pays 50 wallets
+// at the same hour collapses to one row — "50 wallets · 500K USDC · in 8h 41m"
+// — instead of producing 50 visually-identical rows. The 1-hour bucket
+// absorbs scheduling jitter (block-time variance, slightly staggered
+// schedules) without merging genuinely different events.
+//
+// When `walletCount === 1` the group is a single stream and we render the
+// legacy "for 0xabcd…1234" wallet-targeted format. When `walletCount > 1`
+// we switch to "N wallets" and drop the recipient line — the deep-link
+// already points at the token-explorer page, which lists every recipient.
+//
+// ─── Coverage caveat ────────────────────────────────────────────────────────
+//
+// This widget reads from `vestingStreamsCache`, which is per-user-seeded.
+// TVL is solved exhaustively at the token level, but the upcoming-unlocks
+// query doesn't yet have walker-backed coverage. Grouping helps even with
+// partial data; full coverage is a separate workstream — see the file
+// header on `src/app/api/unlocks/upcoming/route.ts`.
 //
 // Design goals:
 //   - Visual contrast with the "recent activity" ticker (different hue, orange
@@ -16,6 +39,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+/**
+ * Wire shape returned by `/api/unlocks/upcoming`. Each entry is a group of
+ * streams sharing protocol/chain/token and unlocking in the same 1-hour
+ * window. `walletCount === 1` means a single-stream group (legacy single-
+ * wallet phrasing); `walletCount > 1` triggers the "N wallets" rollup.
+ *
+ * `streamId` and `recipient` carry the *first* (earliest) member of the
+ * group — kept so single-stream groups behave like before, and so groups
+ * still have a deterministic React key. New consumers should prefer
+ * `groupKey` for keying.
+ */
 type UpcomingRow = {
   streamId:      string;
   protocol:      string;
@@ -23,9 +57,12 @@ type UpcomingRow = {
   tokenSymbol:   string | null;
   tokenAddress:  string;
   tokenDecimals: number;   // needed to scale `amount` — defaults upstream to 18
-  recipient:     string;
-  amount:        string | null;
-  endTime:       number | null;
+  recipient:     string;   // earliest-in-group member; only shown when walletCount === 1
+  amount:        string | null;  // sum of lockedAmount across the group, stringified bigint
+  endTime:       number | null;  // earliest endTime in the group (drives the countdown)
+  walletCount:   number;          // ≥ 1 — distinct recipients folded into this group
+  streamCount:   number;          // ≥ walletCount — total streams folded in
+  groupKey:      string;          // stable id for React `key=`
 };
 
 type UpcomingResponse = {
@@ -256,7 +293,7 @@ export function UpcomingUnlockTicker() {
         )}
 
         {rows.map((row) => (
-          <UpcomingRow key={row.streamId} row={row} nowMs={nowMs} />
+          <UpcomingRow key={row.groupKey ?? row.streamId} row={row} nowMs={nowMs} />
         ))}
       </div>
     </div>
@@ -269,6 +306,10 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h
   const canLink  = !!row.tokenAddress && /^0x[0-9a-f]{40}$/i.test(row.tokenAddress);
+  // walletCount may be undefined on legacy clients hitting an old API build —
+  // default to 1 so the row still renders the single-wallet format. (Once the
+  // API and client are deployed together, this is always set.)
+  const isGroup  = (row.walletCount ?? 1) > 1;
 
   const inner = (
     <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
@@ -296,7 +337,19 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
           </span>
         </div>
         <div className="text-[10.5px] font-mono truncate" style={{ color: "#94a3b8" }}>
-          for {truncAddr(row.recipient)}
+          {isGroup
+            // Group rollup — "50 wallets unlock together". The deep-link
+            // points at the token-explorer page, which already lists every
+            // recipient, so we don't need to enumerate addresses here.
+            ? <>
+                <span className="font-sans font-semibold" style={{ color: "#475569" }}>
+                  {row.walletCount}
+                </span>
+                {" "}wallets unlock together
+              </>
+            // Single-stream group — keep the legacy wallet-targeted phrasing.
+            : <>for {truncAddr(row.recipient)}</>
+          }
         </div>
       </div>
 

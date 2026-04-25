@@ -54,6 +54,35 @@ export interface UnlockSummary {
   recipient:   string;
 }
 
+/**
+ * Group of upcoming unlocks that share `(protocol, chainId, tokenAddress, hourBucket)`.
+ *
+ * Used by the cross-protocol upcoming-unlocks widget on `/protocols`. A single
+ * mass distribution (e.g. "Sablier ETH, 10K USDC each, T+8h, 50 recipients")
+ * collapses to one row instead of 50 — see `getUpcomingUnlockGroupsAcross`
+ * for the grouping rules.
+ *
+ * Wire-compatible superset of `UnlockSummary` for older consumers: every field
+ * on `UnlockSummary` is here too, so a renderer that only knew about single
+ * unlocks still works on a group of size 1. The new fields are:
+ *   - `walletCount`  — distinct recipients folded into this group
+ *   - `streamCount`  — total streams folded in (≥ walletCount; one wallet
+ *                      can have multiple streams in the same hour bucket)
+ *   - `groupKey`     — stable identifier suitable for React `key=`
+ *
+ * `recipient` and `streamId` carry the *first* (earliest) member of the group
+ * — preserved so single-stream groups still deep-link the same way and
+ * groups of size > 1 still have a deterministic React key.
+ */
+export interface UnlockGroupSummary extends UnlockSummary {
+  /** Number of distinct recipient wallets folded into this group. ≥ 1. */
+  walletCount: number;
+  /** Number of streams folded into this group. ≥ walletCount. */
+  streamCount: number;
+  /** Stable id: `${protocol}-${chainId}-${tokenAddress}-${hourBucket}`. */
+  groupKey: string;
+}
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function adapterFilter(adapterIds: readonly string[]) {
@@ -197,42 +226,65 @@ export async function getNextUpcomingUnlock(
 }
 
 /**
- * Top N upcoming unlocks across ALL indexed protocols, strictly ordered by
- * soonest trigger time. Used by the "Upcoming Unlocks" panel on /protocols.
+ * Top N upcoming-unlock GROUPS across ALL indexed protocols, ordered by
+ * soonest trigger time. Powers the "Upcoming unlocks" widget on /protocols.
  *
- * Rules layered on top of endTime-ascending sort:
+ * ─── Why grouping is necessary ────────────────────────────────────────────
+ *
+ * Real-world distributions are rarely "one wallet, one timestamp". The
+ * canonical shape is "team distribution: 50 wallets, all unlocking the
+ * same 10K USDC at the same hour". Without grouping, that single event
+ * eats 50 widget rows, the widget looks identical for every recipient,
+ * and we lose information ("how big was this unlock event in aggregate?").
+ *
+ * Grouping key: `(protocol, chainId, tokenAddress, hourBucket)` where
+ * `hourBucket = floor(endTime / 3600)`. The 1-hour window absorbs
+ * minor scheduling jitter (block-time variance, slightly staggered
+ * schedules) while still keeping genuinely different events apart.
+ * `protocol` keeps Sablier and Hedgey events separate even when they
+ * happen in the same hour with the same token; `chainId` and
+ * `tokenAddress` complete the natural identity of an unlock event.
+ *
+ * ─── Coverage caveat (read this before changing anything) ─────────────────
+ *
+ * This query reads only from `vestingStreamsCache`, which is per-user
+ * seeded — i.e. a stream lands in the cache when SOMEONE searches the
+ * recipient wallet. We aggregate exhaustively at the *token* level via
+ * the walkers in `src/lib/vesting/tvl-walker/` for TVL display, but
+ * those walkers don't write individual streams back to the cache. Until
+ * they do, this widget shows "what users have already searched for",
+ * not "everything indexed-on-chain". Acceptable for now — the immediate
+ * UX issue is one-wallet-per-row, and grouping fixes that even with
+ * partial cache coverage.
+ *
+ * The proper fix (walker → cache backfill) is a separate workstream;
+ * see `src/lib/vesting/tvl-walker/` and the on-this-day-TODO at the
+ * top of `dbcache.ts`. Path A in the original ticket.
+ *
+ * ─── Layered rules on top of grouping ─────────────────────────────────────
  *
  *   1. Include both stepped and linear schedules. Earlier versions filtered
  *      on shape === "steps" to avoid "0.0000 USDC" amounts on continuous
- *      streams, but that excluded Team Finance, Superfluid, Hedgey, UNCX
- *      and Sablier linear — i.e. most of our integrated protocols —
- *      leaving the widget dominated by whichever protocol happened to
- *      use stepped schedules (Unvest milestones, PinkSale).
- *      We now render every active stream whose endTime is in the future
- *      and use `lockedAmount` (what's still to vest) as the displayed
- *      amount — accurate for both shapes and no longer zero for linear.
+ *      streams, but that excluded most of our integrated protocols. Now
+ *      every active stream whose endTime is in the future contributes;
+ *      `lockedAmount` (what's still to vest) is summed across the group.
  *
- *   2. Round-robin by protocol so the list shows breadth. Previously the
- *      widget was dominated by a single prolific protocol (9 Unvest + 1
- *      Sablier in one audit) even though 6+ protocols had imminent
- *      unlocks. We still sort the candidate pool by endTime asc, but
- *      then build the output by taking the earliest-unlocking stream
- *      from each protocol in turn before going back for seconds.
- *      Pulls evenly across protocols without losing chronological
- *      ordering within each protocol's contributions.
+ *   2. Per-protocol cap so one prolific protocol can't fill the list.
+ *      uncx + uncx-vm are merged for the cap (shared display name).
  *
- *   3. Dedupe by recipient. A wallet with 4 tranches at T+12h / T+13h /
- *      T+14h / T+15h shouldn't fill the widget with one address.
- *
- * Pool: fetch more than we display so dedupe + round-robin has room to
- * trim same-wallet rows without yielding fewer than `limit` distinct
- * entries.
+ *   3. Pool size: fetch up to 100 raw rows so grouping + the per-protocol
+ *      cap have plenty of material. Hour-bucketing of a 50-wallet event
+ *      collapses to one group, so the raw multiplier needs to be larger
+ *      than the old 15× to keep enough material around after collapse.
  */
-export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummary[]> {
+export async function getUpcomingUnlockGroupsAcross(
+  limit = 10,
+): Promise<UnlockGroupSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch 15× the display count so the round-robin has plenty to pull
-  // from each protocol without running out on the prolific ones.
-  const POOL_MULTIPLIER = 15;
+  // Fetch up to 100 raw rows. A single mass distribution can collapse 50
+  // rows → 1 group, so we deliberately fetch more than the old 15×limit
+  // pool. Bounded so the query stays cheap on a growing cache.
+  const POOL_SIZE = Math.max(100, limit * 20);
 
   const rows = await db
     .select({
@@ -253,43 +305,116 @@ export async function getUpcomingUnlocksAcross(limit = 10): Promise<UnlockSummar
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
-    .limit(limit * POOL_MULTIPLIER);
+    .limit(POOL_SIZE);
 
-  // Pass 1 — strict time order with two fairness guards:
-  //   - dedupe by recipient (one wallet can't fill the list)
-  //   - cap at PER_PROTOCOL_MAX entries per protocol (one prolific protocol
-  //     can't hog the top of the list either)
-  // Both guards operate while iterating the already-endTime-asc pool, so the
-  // final order stays strictly chronological across whatever passes through.
-  const PER_PROTOCOL_MAX = 3;
-  const seenRecipients   = new Set<string>();
-  const countPerProto    = new Map<string, number>();
-  const selected: typeof rows = [];
-  for (const row of rows) {
-    if (seenRecipients.has(row.recipient)) continue;
-    // Merge uncx-vm → uncx for display purposes (shared card).
-    const proto = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
-    if ((countPerProto.get(proto) ?? 0) >= PER_PROTOCOL_MAX) continue;
-    seenRecipients.add(row.recipient);
-    countPerProto.set(proto, (countPerProto.get(proto) ?? 0) + 1);
-    selected.push(row);
-    if (selected.length >= limit) break;
+  // ── Group by (protocolCanonical, chainId, tokenAddress, hourBucket) ─────
+  //
+  // protocolCanonical merges uncx-vm → uncx so the two UNCX adapter variants
+  // collapse together (the front-end already shows them as one card).
+  //
+  // hourBucket = floor(endTime / 3600) — a 1-hour window. We pick the
+  // earliest endTime within the bucket as the representative time so the
+  // countdown stays meaningful ("in 8h 41m" — the soonest in-group unlock).
+  interface Group {
+    representative: typeof rows[number];
+    protoCanonical: string;
+    hourBucket:     number;
+    recipients:     Set<string>;
+    streamCount:    number;
+    /** Sum of lockedAmount (preferred) or totalAmount (legacy fallback) across the group. */
+    amountSum:      bigint;
+    /** True if at least one member contributed an amount — needed to distinguish
+     *  "sum is genuinely zero" from "no members had a parseable amount". */
+    hasAmount:      boolean;
+    earliestEnd:    number;
   }
 
-  // Pass 2 — if the per-protocol cap starved us of `limit` rows (some
-  // protocols just don't have enough imminent unlocks), fill the remainder
-  // with the next earliest unlocks from anywhere, ignoring the cap but
-  // still deduping by recipient.
+  const groups = new Map<string, Group>();
+  for (const row of rows) {
+    const protoCanonical = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
+    const tokenKey       = (row.tokenAddress ?? "").toLowerCase();
+    const end            = row.endTime ?? 0;
+    const hourBucket     = Math.floor(end / 3600);
+    const key            = `${protoCanonical}-${row.chainId}-${tokenKey}-${hourBucket}`;
+
+    let g = groups.get(key);
+    if (!g) {
+      g = {
+        representative: row,
+        protoCanonical,
+        hourBucket,
+        recipients:     new Set(),
+        streamCount:    0,
+        amountSum:      0n,
+        hasAmount:      false,
+        earliestEnd:    end,
+      };
+      groups.set(key, g);
+    } else if (end > 0 && end < g.earliestEnd) {
+      // Keep the earliest endTime row as representative so the displayed
+      // countdown reflects the soonest unlock in the group.
+      g.representative = row;
+      g.earliestEnd    = end;
+    }
+
+    g.recipients.add(row.recipient);
+    g.streamCount += 1;
+
+    const sd = row.streamData as Partial<VestingStream>;
+    const rawAmount = sd.lockedAmount ?? sd.totalAmount ?? null;
+    if (rawAmount) {
+      try {
+        g.amountSum += BigInt(rawAmount);
+        g.hasAmount  = true;
+      } catch {
+        // Ignore unparseable amount; group still counts the wallet/stream.
+      }
+    }
+  }
+
+  // ── Order groups chronologically + apply per-protocol cap ───────────────
+  //
+  // We can't rely on `rows` being sorted-equivalent to the group order
+  // because grouping mixes rows from different time-buckets. Sort the
+  // collected groups by their representative endTime ascending.
+  const ordered = Array.from(groups.values()).sort(
+    (a, b) => (a.earliestEnd || Number.MAX_SAFE_INTEGER) - (b.earliestEnd || Number.MAX_SAFE_INTEGER),
+  );
+
+  const PER_PROTOCOL_MAX = 3;
+  const countPerProto    = new Map<string, number>();
+  const selected: Group[] = [];
+  for (const g of ordered) {
+    if ((countPerProto.get(g.protoCanonical) ?? 0) >= PER_PROTOCOL_MAX) continue;
+    countPerProto.set(g.protoCanonical, (countPerProto.get(g.protoCanonical) ?? 0) + 1);
+    selected.push(g);
+    if (selected.length >= limit) break;
+  }
+  // Pass 2 — fill remainder if the cap starved us of `limit` rows.
   if (selected.length < limit) {
-    for (const row of rows) {
-      if (seenRecipients.has(row.recipient)) continue;
-      seenRecipients.add(row.recipient);
-      selected.push(row);
+    const already = new Set(selected);
+    for (const g of ordered) {
+      if (already.has(g)) continue;
+      selected.push(g);
       if (selected.length >= limit) break;
     }
   }
 
-  return selected.map(rowToUnlock);
+  // ── Project Group → UnlockGroupSummary ──────────────────────────────────
+  return selected.map((g) => {
+    const base = rowToUnlock(g.representative);
+    return {
+      ...base,
+      // Sum-of-locked-amounts as a stringified bigint to keep the wire
+      // format identical to single-stream rows. If no member contributed
+      // a parseable amount we propagate null rather than "0" so the
+      // formatter can render "—" instead of misleading "0 USDC".
+      amount:      g.hasAmount ? g.amountSum.toString() : null,
+      walletCount: g.recipients.size,
+      streamCount: g.streamCount,
+      groupKey:    `${g.protoCanonical}-${base.chainId}-${base.tokenAddress}-${g.hourBucket}`,
+    };
+  });
 }
 
 /**
