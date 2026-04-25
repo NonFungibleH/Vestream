@@ -12,10 +12,12 @@ interface Props {
   theme?: "light" | "navy" | "dark";
 }
 
+// "Find Vestings" lives in the CTA slot below — it's the primary funnel
+// entry point so it gets the loud gradient button rather than a regular
+// nav link. Keeping it out of NAV_LINKS prevents it appearing twice.
 const NAV_LINKS = [
   { label: "Protocols",     href: "/protocols"     },
   { label: "Demo",          href: "/demo"          },
-  { label: "Find Vestings", href: "/find-vestings" },
 ] as const;
 
 const THEME = {
@@ -57,8 +59,13 @@ export function SiteNav({ theme = "light" }: Props) {
 
   const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileActiveBg, logo } = THEME[theme];
 
-  const ctaHref  = "/early-access";
-  const ctaLabel = "Early Access →";
+  // Primary funnel CTA — drives users to paste a wallet, see their vestings,
+  // then convert via the in-results "Open in app" CTA. App is publicly live
+  // (no longer early-access gated) so /find-vestings is the right top-of-
+  // funnel target, not /early-access.
+  const ctaHref       = "/find-vestings";
+  const ctaLabel      = "Find My Vestings →";
+  const ctaLabelShort = "Find Vestings";   // mobile — narrower button
 
   return (
     <>
@@ -119,7 +126,7 @@ export function SiteNav({ theme = "light" }: Props) {
             className="text-xs font-semibold px-3 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}
           >
-            Early Access
+            {ctaLabelShort}
           </a>
           <button
             onClick={() => setOpen((v) => !v)}
