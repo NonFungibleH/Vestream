@@ -63,93 +63,119 @@ const CACHE_TTL_SECONDS = 300;  // 5 min — marketing-page data, slow-changing
 /**
  * All DB work the /protocols page needs, wrapped in Vercel Data Cache. Pure
  * DB reads — no external API calls on the render path.
+ *
+ * Hardened: the entire body runs inside a try/catch so a DB outage,
+ * snapshot-table-missing, or any other downstream failure can NEVER crash
+ * the page render. Worst case the user sees the marketing layout with
+ * placeholder values for stream counts and TVL — which is strictly better
+ * than a Server Components hard error.
  */
 const loadProtocolsData = unstable_cache(
-  async () => {
+  async (): Promise<{
+    statsEntries:   Array<readonly [string, ProtocolStats | null]>;
+    tvlMap:         Record<string, ProtocolTvl>;
+    methodologyMap: Record<string, string>;
+    computedAtMap:  Record<string, string>;
+  }> => {
     const protocols = listProtocols();
 
-    const [statsEntries, snapshotRows] = await Promise.all([
-      Promise.all(
-        protocols.map(async (p) => {
-          try {
-            return [p.slug, await getProtocolStats(p.adapterIds)] as const;
-          } catch (err) {
-            console.error(`[unlocks] stats failed for ${p.slug}:`, err);
-            return [p.slug, null as ProtocolStats | null] as const;
-          }
+    // Empty-shape default — returned on any failure so the render path
+    // always receives a valid object. The page handles missing tvl rows
+    // gracefully via `tvlMap[slug] ?? null` everywhere.
+    const empty = {
+      statsEntries:   protocols.map((p) => [p.slug, null as ProtocolStats | null] as const),
+      tvlMap:         {} as Record<string, ProtocolTvl>,
+      methodologyMap: {} as Record<string, string>,
+      computedAtMap:  {} as Record<string, string>,
+    };
+
+    try {
+      const [statsEntries, snapshotRows] = await Promise.all([
+        Promise.all(
+          protocols.map(async (p) => {
+            try {
+              return [p.slug, await getProtocolStats(p.adapterIds)] as const;
+            } catch (err) {
+              console.error(`[unlocks] stats failed for ${p.slug}:`, err);
+              return [p.slug, null as ProtocolStats | null] as const;
+            }
+          }),
+        ),
+        readAllSnapshots().catch((err) => {
+          console.error("[unlocks] snapshot read failed:", err);
+          return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
         }),
-      ),
-      readAllSnapshots().catch((err) => {
-        console.error("[unlocks] snapshot read failed:", err);
-        return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
-      }),
-    ]);
+      ]);
 
-    // Aggregate snapshot rows by protocol — sum across chains.
-    const tvlMap: Record<string, ProtocolTvl> = {};
-    const methodologyMap: Record<string, string> = {};
-    const computedAtMap: Record<string, string> = {};
+      // Aggregate snapshot rows by protocol — sum across chains.
+      const tvlMap: Record<string, ProtocolTvl> = {};
+      const methodologyMap: Record<string, string> = {};
+      const computedAtMap: Record<string, string> = {};
 
-    for (const p of protocols) {
-      const rows = snapshotRows.filter((r) => {
-        // Protocol may be aggregated from multiple adapter IDs (e.g. UNCX
-        // displays uncx + uncx-vm). Match any of them.
-        return p.adapterIds.includes(r.protocol);
-      });
-      if (rows.length === 0) continue;
+      for (const p of protocols) {
+        const rows = snapshotRows.filter((r) => {
+          // Protocol may be aggregated from multiple adapter IDs (e.g. UNCX
+          // displays uncx + uncx-vm). Match any of them.
+          return p.adapterIds.includes(r.protocol);
+        });
+        if (rows.length === 0) continue;
 
-      let tvlUsd = 0;
-      let tvlHigh = 0;
-      let tvlMedium = 0;
-      let tvlLow = 0;
-      let tokensPriced = 0;
-      let tokensTotal  = 0;
-      const perChainMap = new Map<number, number>();
-      let latestComputedAt: Date | null = null;
-      // Methodology: if ANY row is defillama-vesting, mark the protocol as
-      // externally sourced for the UI tag. Walker rows win for display of
-      // methodology if there's a mix (unlikely but possible).
-      let methodology = rows[0].methodology;
-      for (const r of rows) {
-        tvlUsd    += r.tvlUsd;
-        tvlHigh   += r.tvlHigh;
-        tvlMedium += r.tvlMedium;
-        tvlLow    += r.tvlLow;
-        tokensPriced += r.tokensPriced;
-        tokensTotal  += r.tokensTotal;
-        perChainMap.set(r.chainId, (perChainMap.get(r.chainId) ?? 0) + r.tvlUsd);
-        if (!latestComputedAt || r.computedAt > latestComputedAt) {
-          latestComputedAt = r.computedAt;
+        let tvlUsd = 0;
+        let tvlHigh = 0;
+        let tvlMedium = 0;
+        let tvlLow = 0;
+        let tokensPriced = 0;
+        let tokensTotal  = 0;
+        const perChainMap = new Map<number, number>();
+        let latestComputedAt: Date | null = null;
+        // Methodology: if ANY row is defillama-vesting, mark the protocol as
+        // externally sourced for the UI tag. Walker rows win for display of
+        // methodology if there's a mix (unlikely but possible).
+        let methodology = rows[0].methodology;
+        for (const r of rows) {
+          tvlUsd    += r.tvlUsd;
+          tvlHigh   += r.tvlHigh;
+          tvlMedium += r.tvlMedium;
+          tvlLow    += r.tvlLow;
+          tokensPriced += r.tokensPriced;
+          tokensTotal  += r.tokensTotal;
+          perChainMap.set(r.chainId, (perChainMap.get(r.chainId) ?? 0) + r.tvlUsd);
+          if (!latestComputedAt || r.computedAt > latestComputedAt) {
+            latestComputedAt = r.computedAt;
+          }
+          // Prefer the less-precise methodology tag for display — if we have
+          // both defillama and walker rows for the same protocol, the walker
+          // methodology is the more "accurate" label to show.
+          if (r.methodology !== "defillama-vesting") methodology = r.methodology;
         }
-        // Prefer the less-precise methodology tag for display — if we have
-        // both defillama and walker rows for the same protocol, the walker
-        // methodology is the more "accurate" label to show.
-        if (r.methodology !== "defillama-vesting") methodology = r.methodology;
+
+        methodologyMap[p.slug] = methodology;
+        computedAtMap[p.slug] = (latestComputedAt ?? new Date()).toISOString();
+
+        tvlMap[p.slug] = {
+          adapterIds:      p.adapterIds,
+          tvlUsd,
+          tvlByBand:       { high: tvlHigh, medium: tvlMedium, low: tvlLow },
+          pricingSources:  { dexscreener: 0, coingecko: 0 }, // aggregate-level — per-token not stored
+          perChain:        Array.from(perChainMap.entries())
+            .map(([chainId, usd]) => ({ chainId, tvlUsd: usd }))
+            .sort((a, b) => b.tvlUsd - a.tvlUsd),
+          tokensPriced,
+          tokensSkipped:   Math.max(0, tokensTotal - tokensPriced),
+          totalTokens:     tokensTotal,
+          coverage:        tokensTotal > 0 ? tokensPriced / tokensTotal : (tvlUsd > 0 ? 1 : 0),
+          topContributors: [],   // available in snapshot row.topContributors if needed
+          computedAt:      (latestComputedAt ?? new Date()).toISOString(),
+        };
       }
 
-      methodologyMap[p.slug] = methodology;
-      computedAtMap[p.slug] = (latestComputedAt ?? new Date()).toISOString();
-
-      tvlMap[p.slug] = {
-        adapterIds:      p.adapterIds,
-        tvlUsd,
-        tvlByBand:       { high: tvlHigh, medium: tvlMedium, low: tvlLow },
-        pricingSources:  { dexscreener: 0, coingecko: 0 }, // aggregate-level — per-token not stored
-        perChain:        Array.from(perChainMap.entries())
-          .map(([chainId, usd]) => ({ chainId, tvlUsd: usd }))
-          .sort((a, b) => b.tvlUsd - a.tvlUsd),
-        tokensPriced,
-        tokensSkipped:   Math.max(0, tokensTotal - tokensPriced),
-        totalTokens:     tokensTotal,
-        coverage:        tokensTotal > 0 ? tokensPriced / tokensTotal : (tvlUsd > 0 ? 1 : 0),
-        topContributors: [],   // available in snapshot row.topContributors if needed
-        computedAt:      (latestComputedAt ?? new Date()).toISOString(),
-      };
+      return { statsEntries, tvlMap, methodologyMap, computedAtMap };
+    } catch (err) {
+      console.error("[unlocks] loadProtocolsData fatal:", err);
+      return empty;
     }
-
-    return { statsEntries, tvlMap, methodologyMap, computedAtMap };
   },
-  ["protocols-page-data-v3"],
+  ["protocols-page-data-v4"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
