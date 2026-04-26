@@ -2696,6 +2696,228 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 14: Sablier vs Hedgey vs UNCX comparison ────────────────────────
+  {
+    slug:        "sablier-vs-hedgey-vs-uncx-comparison",
+    title:       "Sablier vs Hedgey vs UNCX: Token Vesting Protocol Comparison (2026)",
+    excerpt:     "Three protocols dominate token vesting on EVM chains. They look similar from the outside but differ in mechanics, cost, and feature scope. This guide breaks down when to use each — for projects designing vesting, and for recipients trying to understand what they were granted.",
+    publishedAt: "2026-04-26",
+    updatedAt:   "2026-04-26",
+    readingTime: "11 min read",
+    category:    "Guides",
+    tags:        ["sablier", "hedgey", "uncx", "token vesting", "comparison", "tokenomics", "DeFi infrastructure"],
+    content: [
+      {
+        type: "p",
+        html: "If your project is about to launch a token, or you've just been granted one with a vesting schedule, you'll quickly run into three names: <strong>Sablier</strong>, <strong>Hedgey</strong>, and <strong>UNCX</strong>. Together they account for the majority of on-chain vesting positions across Ethereum, Base, BNB Chain, and Polygon. They all do roughly the same thing — lock tokens in a contract, release them on a schedule — but the mechanics differ in ways that matter when you're choosing one (or trying to claim from one).",
+      },
+      {
+        type: "p",
+        html: "This guide compares all three on the dimensions that actually drive a decision: vesting model, cliff support, claim UX, gas cost, multi-chain coverage, NFT representation, and ecosystem fit. We're protocol-neutral — Vestream tracks vestings across all three (and six others) so we have no horse in the race. The recommendations below are what we'd tell a friend asking which one to use.",
+      },
+
+      { type: "h2", text: "TL;DR — Quick verdict" },
+      {
+        type: "table",
+        headers: ["Use case", "Best protocol", "Why"],
+        rows: [
+          ["Founder/team vesting on Ethereum", "Sablier", "Most battle-tested. Per-second streaming. Strong DAO adoption."],
+          ["Investor allocations with NFT receipts", "Hedgey", "NFT-based plans are transferable and inheritable."],
+          ["Token launch lockers (LP + team)", "UNCX", "Combined locker + vesting. Designed for token launches."],
+          ["Lots of recipients, low cost per claim", "Sablier", "Streaming model means one contract serves many recipients."],
+          ["Step/tranche unlocks (e.g. 25% every 6 months)", "Hedgey or UNCX", "Both support stepped schedules natively."],
+          ["Multi-chain consistency", "Sablier or Hedgey", "Both have polished cross-chain UX. UNCX coverage is more chain-by-chain."],
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "ℹ️",
+        title: "What to remember",
+        body:  "There is no single 'best' protocol. The right choice depends on whether you're optimising for streaming UX (Sablier), transferability (Hedgey), or launch-bundled lockers (UNCX). All three are production-ready and audited — security is not the differentiator.",
+      },
+
+      { type: "h2", text: "Sablier" },
+      {
+        type: "p",
+        html: "Sablier is the oldest and most widely-used streaming token vesting protocol in DeFi. Originally launched in 2020, the V2 contracts (LockupLinear and LockupTranched) are now the canonical reference for what 'crypto-native vesting' looks like. If you've heard of any vesting protocol, it's probably this one.",
+      },
+      { type: "h3", text: "How Sablier works" },
+      {
+        type: "p",
+        html: "Sablier's flagship feature is <strong>per-second streaming</strong>. Instead of releasing tokens in chunks (e.g. monthly), the contract continuously increases the recipient's claimable balance, second by second. From the recipient's perspective, the math looks like: at any moment, claimable = (totalAmount × elapsedSeconds) / vestingDurationSeconds. The contract uses pure on-chain time arithmetic — no off-chain oracle, no scheduled tasks, no manual triggers.",
+      },
+      {
+        type: "p",
+        html: "Sablier supports two main shapes: <strong>LockupLinear</strong> (single linear stream, optionally with a cliff) and <strong>LockupTranched</strong> (multiple tranches with custom amounts and unlock times — good for milestone-based grants). A single Sablier contract on each chain serves all streams, which means recipients claim through the same dashboard regardless of which project granted them the tokens.",
+      },
+      { type: "h3", text: "Sablier strengths" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Battle-tested</strong> — over $500M in cumulative vested value across all chains. Used by major DAOs (MakerDAO, Aave, Lido, etc.) for treasury vesting.",
+          "<strong>Per-second streaming</strong> — recipients can claim any time without waiting for a calendar tick. Useful for cash-flow-sensitive recipients (advisors, contractors).",
+          "<strong>Cancelable streams</strong> — projects can configure vests as cancelable (returning unvested tokens to the grantor) or non-cancelable. Both are common.",
+          "<strong>Polished recipient UX</strong> — Sablier's own claim dashboard is the cleanest in the category, with clear schedules, claim history, and ENS integration.",
+          "<strong>The Graph subgraphs</strong> — every chain has a public subgraph that aggregators (like Vestream) can read efficiently.",
+        ],
+      },
+      { type: "h3", text: "Sablier weaknesses" },
+      {
+        type: "ul",
+        items: [
+          "<strong>No NFT receipts in V2</strong> (V1 had them, V2 dropped them) — vested positions are bound to the recipient address. If you lose access to that wallet, the tokens are stranded.",
+          "<strong>No native LP locker</strong> — Sablier is purely vesting. If you also need to lock your token's liquidity pool, you'll be combining Sablier with another tool (often UNCX).",
+          "<strong>Tranched math can confuse</strong> — for non-developers, the LockupTranched model is harder to reason about than a simple monthly schedule.",
+        ],
+      },
+
+      { type: "h2", text: "Hedgey" },
+      {
+        type: "p",
+        html: "Hedgey's distinctive design choice is that <strong>every vesting plan is an NFT</strong>. When a project grants you tokens through Hedgey, you don't just get a stream — you get an ERC-721 token in your wallet that represents the right to claim. This sounds like a small detail but it changes the economics meaningfully.",
+      },
+      { type: "h3", text: "How Hedgey works" },
+      {
+        type: "p",
+        html: "Hedgey calls a vesting plan a <strong>TokenVestingPlan</strong>, and each one is minted as an NFT to the recipient. The NFT carries the schedule (start time, cliff, end time, total amount) and the right to claim accumulated tokens at any time. Crucially, NFTs are <strong>transferable</strong> — you can sell, gift, or move your unvested allocation to another wallet without breaking the schedule. This is impossible on Sablier where vests are bound to the original recipient.",
+      },
+      {
+        type: "p",
+        html: "Hedgey's plans support both linear and milestone (stepped) schedules, with optional cliffs. Like Sablier, claims are pull-based — the recipient calls <code>redeemPlans()</code> on the contract to claim the currently-vested portion.",
+      },
+      { type: "h3", text: "Hedgey strengths" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Transferable plans</strong> — NFT representation means vesting positions can be transferred (e.g. to a multi-sig, to a new wallet for security, or sold OTC). Unique in this category.",
+          "<strong>Inheritance-friendly</strong> — because the NFT is portable, estate planning is significantly easier than with bound-to-address vests.",
+          "<strong>Strong investor allocation use case</strong> — VCs prefer Hedgey because they can transfer SAFT positions between fund vehicles without re-negotiating with the project.",
+          "<strong>Comprehensive schedule shapes</strong> — supports linear with cliff, stepped, milestone-based, and combinations.",
+          "<strong>Clean web app for project deployment</strong> — Hedgey's create-a-plan flow is the most polished if you're a project setting up vesting for the first time.",
+        ],
+      },
+      { type: "h3", text: "Hedgey weaknesses" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Higher gas at claim time</strong> — NFT contract overhead means each claim costs noticeably more than a Sablier claim. Adds up if you have many small vests.",
+          "<strong>Smaller TVL than Sablier</strong> — meaningful but not dominant. Around $140M cumulative as of early 2026.",
+          "<strong>NFT discoverability tradeoff</strong> — recipients sometimes don't realise they have a Hedgey NFT in their wallet. We've seen multiple cases of users missing claims because they didn't check NFT holdings.",
+        ],
+      },
+
+      { type: "h2", text: "UNCX" },
+      {
+        type: "p",
+        html: "UNCX (formerly Unicrypt) is positioned slightly differently from Sablier and Hedgey. It started as a <strong>liquidity locker</strong> for token projects — a way to lock your Uniswap LP tokens so investors trust that the founder won't rug-pull liquidity — and grew vesting features alongside that. As a result, UNCX is the natural choice for projects that need both LP locks AND team/investor vesting in one place.",
+      },
+      { type: "h3", text: "How UNCX works" },
+      {
+        type: "p",
+        html: "UNCX has two distinct vesting products: <strong>TokenVesting</strong> (V3, the modern locker) and <strong>VestingManager</strong> (the legacy variant used in earlier launches). Both lock ERC-20 tokens with a schedule but the contract architecture differs. From a recipient's perspective they look similar — you go to the UNCX dashboard, connect your wallet, and claim.",
+      },
+      {
+        type: "p",
+        html: "UNCX's vesting model is cliff-plus-stepped: a cliff period during which nothing unlocks, then either linear release or fixed step amounts at fixed intervals. There's no per-second streaming like Sablier — UNCX vesting is checkpoint-based.",
+      },
+      { type: "h3", text: "UNCX strengths" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Bundled LP locker + token vesting</strong> — the only one of the three that natively lets a project lock both LP and team tokens through the same UI/contract suite.",
+          "<strong>Token-launch fit</strong> — projects launching on Uniswap/PancakeSwap who need to demonstrate rug-pull protection use UNCX because that's what audit firms and exchanges expect to see.",
+          "<strong>Wide chain coverage</strong> — Ethereum, BNB Chain, Polygon, Base, plus more chain-specific deployments than Sablier or Hedgey.",
+          "<strong>Reasonable claim costs</strong> — the contract is simpler than Hedgey's NFT path, so gas at claim time is competitive with Sablier.",
+        ],
+      },
+      { type: "h3", text: "UNCX weaknesses" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Less polished recipient UX</strong> — the dashboard works but feels older than Sablier's. Discovering whether you have a vest with UNCX often requires the project's pointer rather than self-discovery.",
+          "<strong>Two contract variants is confusing</strong> — TokenVesting vs VestingManager means recipients sometimes claim from the wrong UI and miss positions. (Vestream merges both behind a single 'UNCX' tracker for exactly this reason.)",
+          "<strong>Not associated with crypto-native DAOs</strong> — Sablier has the DAO/protocol audience; UNCX has the token-launch audience. Cultural fit matters when picking.",
+        ],
+      },
+
+      { type: "h2", text: "Decision framework — which one to use?" },
+      {
+        type: "p",
+        html: "Strip away the marketing and the choice usually comes down to three questions:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Do you need transferability?</strong> If yes (typically institutional investors who want to move SAFT positions between funds), use <strong>Hedgey</strong>. Sablier and UNCX bind vests to the original recipient address.",
+          "<strong>Do you also need an LP locker?</strong> If yes (token launches, rug-protection signalling), use <strong>UNCX</strong>. Sablier and Hedgey are vesting-only.",
+          "<strong>Otherwise, default to Sablier</strong> — most battle-tested, lowest gas, polished UX, dominant DAO adoption.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Many real projects use <strong>combinations</strong>. A typical token launch might use Sablier for team vesting (because the team trusts the protocol), Hedgey for institutional investor allocations (because investors want NFT transferability), and UNCX for LP locks (because exchanges audit for that specifically). This is fine — the only downside is recipients then need to check three dashboards. Or one aggregator (like ours).",
+      },
+
+      { type: "h2", text: "What's identical across all three" },
+      {
+        type: "p",
+        html: "It's worth being explicit about what these protocols do <strong>not</strong> differ on, because it cuts down decision fatigue:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Security model</strong> — all three are audited by major firms. None has had a critical exploit affecting deposited funds.",
+          "<strong>Pull-based claims</strong> — recipients always have to call a transaction to claim. None of them auto-distributes tokens to wallets.",
+          "<strong>On-chain enforcement</strong> — schedules cannot be changed after deployment (with rare exceptions for cancelable streams). The smart contract is the source of truth.",
+          "<strong>ERC-20 only</strong> — none of them currently support vesting NFTs or other token standards. If you need to vest a Bored Ape, you'll need a different solution.",
+        ],
+      },
+
+      { type: "h2", text: "How Vestream tracks all three" },
+      {
+        type: "p",
+        html: "We built Vestream specifically because crypto users frequently have vestings across multiple protocols and don't want to check three or four dashboards every month. Paste any wallet address and Vestream queries Sablier's subgraph, Hedgey's subgraph, both UNCX variants, and six other protocols in parallel — returning every active vesting in under three seconds.",
+      },
+      {
+        type: "p",
+        html: "On the protocol pages we maintain — <a href=\"/protocols/sablier\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/sablier</a>, <a href=\"/protocols/hedgey\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/hedgey</a>, <a href=\"/protocols/uncx\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/uncx</a> — you can see live TVL, stream counts, and the upcoming unlock calendar. We don't favour one over another; the goal is to make it boring to track all of them.",
+      },
+      {
+        type: "callout",
+        emoji: "🔗",
+        title: "Try it",
+        body:  "Paste any wallet at vestream.io/find-vestings to see what's vested for that address across all three protocols (and six more). No signup, no email — just the data.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          {
+            q: "Can a project switch vesting protocols mid-schedule?",
+            a: "Effectively no. Vesting positions are smart-contract escrows on a specific protocol. Switching would mean cancelling existing vests (where cancellation is permitted), withdrawing the locked tokens, redeploying them to a new protocol, and getting recipients to migrate. We've seen it done once or twice during major protocol upgrades, but it's a coordination nightmare. Pick carefully up-front.",
+          },
+          {
+            q: "Which protocol is cheapest for projects to deploy vesting on?",
+            a: "Sablier and UNCX are roughly tied — both have a one-time deployment cost per stream/lock that scales linearly with the number of recipients. Hedgey is slightly more expensive due to the NFT mint per recipient. For a project granting tokens to 500 recipients, the difference is meaningful (low five figures vs low six figures of gas). Sablier on Layer 2 (Base, Optimism) is by far the cheapest path.",
+          },
+          {
+            q: "Does any of them support cliff + linear unlock combinations?",
+            a: "All three do. Sablier's LockupLinear takes an optional cliff parameter. Hedgey's TokenVestingPlan supports cliff durations explicitly. UNCX's TokenVesting allows a cliff timestamp before linear or stepped release begins. Pretty much every real-world vesting schedule is cliff-plus-something.",
+          },
+          {
+            q: "What happens if the protocol's frontend goes offline?",
+            a: "Your tokens are still claimable — the contracts run on-chain regardless of whether the project's website is up. You'd interact with the contract directly via Etherscan's 'Write Contract' tab, or use an aggregator. This is a real consideration: smaller protocols have shut down their frontends, and recipients still successfully claimed by going contract-direct. Sablier, Hedgey, and UNCX are all well-funded enough that frontend availability isn't a near-term concern.",
+          },
+          {
+            q: "Can I tell from a token address which vesting protocol holds my tokens?",
+            a: "Not directly from the token contract, no. The token doesn't 'know' it's locked — it just knows the vesting protocol's contract holds the balance. To find out which protocol, either ask the project or use an aggregator like Vestream that scans all of them automatically.",
+          },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {
