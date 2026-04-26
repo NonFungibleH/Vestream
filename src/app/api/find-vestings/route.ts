@@ -60,9 +60,20 @@ function getIp(req: NextRequest): string {
 export async function GET(req: NextRequest) {
   const ip = getIp(req);
 
-  // Two-tier rate limit: 5/hour burst + 20/day sustained
+  // Two-tier rate limit: 5/hour burst + 20/day sustained.
+  // `reason: "rate-limit-misconfigured"` means Upstash env vars aren't set in
+  // production — checkRateLimit fails closed (intentional, protects OTP
+  // brute-force gates). Surface as 503 + a generic "service temporarily
+  // unavailable" message rather than the misleading "5 scans per hour" copy
+  // that would otherwise tell the user they've hit a limit they haven't.
   const burst = await checkRateLimit("find-vestings-burst", ip, 5, "1 h");
   if (!burst.allowed) {
+    if (burst.reason === "rate-limit-misconfigured") {
+      return NextResponse.json(
+        { error: "Wallet scanning is temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: "Rate limit: 5 scans per hour. Try again in a few minutes." },
       { status: 429, headers: { "Retry-After": String(Math.ceil((burst.reset - Date.now()) / 1000)) } }
@@ -70,6 +81,12 @@ export async function GET(req: NextRequest) {
   }
   const daily = await checkRateLimit("find-vestings-daily", ip, 20, "1 d");
   if (!daily.allowed) {
+    if (daily.reason === "rate-limit-misconfigured") {
+      return NextResponse.json(
+        { error: "Wallet scanning is temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: "Rate limit: 20 scans per day. Sign up for the app to remove the limit." },
       { status: 429, headers: { "Retry-After": String(Math.ceil((daily.reset - Date.now()) / 1000)) } }
