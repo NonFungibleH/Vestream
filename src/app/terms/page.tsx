@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
+
+export const metadata: Metadata = {
+  title:       "Terms of Service | Vestream",
+  description: "The terms governing your use of Vestream. By using the service you agree to these terms.",
+  alternates:  { canonical: "https://vestream.io/terms" },
+};
 
 export default function Terms() {
   return (

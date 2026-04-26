@@ -1,8 +1,27 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import ContactTrigger from "@/components/ContactTrigger";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import PricingCta from "@/components/PricingCta";
+
+export const metadata: Metadata = {
+  title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
+  description: "Vestream is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, and the Discover page. Enterprise on request.",
+  alternates:  { canonical: "https://vestream.io/pricing" },
+  openGraph: {
+    title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
+    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts and 3 wallets. Enterprise on request.",
+    url:         "https://vestream.io/pricing",
+    siteName:    "Vestream",
+    type:        "website",
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
+    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts and 3 wallets. Enterprise on request.",
+  },
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

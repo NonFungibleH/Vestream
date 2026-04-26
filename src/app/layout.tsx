@@ -17,13 +17,21 @@ const geistMono = Geist_Mono({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestream.io";
 
+// Single source of truth for the headline copy used across <title>, <meta
+// description>, OG and Twitter cards. Keeping these as constants makes it
+// obvious when one card drifts from another (the sin we just paid for —
+// Twitter and OG had subtly different descriptions before this commit).
+const SITE_TITLE       = "Vestream — Free Token Vesting Tracker for 9 Protocols";
+const SITE_DESCRIPTION =
+  "Track every token unlock across 9 protocols (Sablier, Hedgey, UNCX, Streamflow + more) on Ethereum, Base, BNB, Polygon and Solana. Free, no signup.";
+
 export const metadata: Metadata = {
-  title: "Vestream – Token Vesting Tracker",
-  description:
-    "One dashboard for all your vesting positions — across Sablier, Hedgey, UNCX, and Unvest on Ethereum, Base, and BSC. Real-time data, email alerts, and a beautiful interface.",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   metadataBase: new URL(APP_URL),
   manifest: "/manifest.json",
   applicationName: "Vestream",
+  alternates: { canonical: APP_URL },
   appleWebApp: {
     capable:     true,
     title:       "Vestream",
@@ -37,9 +45,8 @@ export const metadata: Metadata = {
     apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
   openGraph: {
-    title: "Vestream – Token Vesting Tracker",
-    description:
-      "One dashboard for all your vesting positions — across Sablier, Hedgey, UNCX, and Unvest on Ethereum, Base, and BSC. Real-time data, email alerts, and a beautiful interface.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: APP_URL,
     siteName: "Vestream",
     locale: "en_US",
@@ -47,9 +54,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vestream – Token Vesting Tracker",
-    description:
-      "One dashboard for all your vesting positions. Real-time data, email alerts, and a beautiful interface.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    site: "@vestream_io",
+    creator: "@vestream_io",
   },
 };
 

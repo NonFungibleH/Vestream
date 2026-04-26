@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
+
+export const metadata: Metadata = {
+  title:       "Privacy & Cookie Policy | Vestream",
+  description: "How Vestream handles your data, what cookies we use (essential + optional Google Analytics), and your rights as a user.",
+  alternates:  { canonical: "https://vestream.io/privacy" },
+};
 
 export default function Privacy() {
   return (
