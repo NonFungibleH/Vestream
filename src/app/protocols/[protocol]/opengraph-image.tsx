@@ -13,11 +13,15 @@ import { ImageResponse } from "next/og";
 import { getProtocol } from "@/lib/protocol-constants";
 import { getProtocolStats } from "@/lib/vesting/protocol-stats";
 
-// Edge runtime is recommended by Next.js for OG generation — fast cold start,
-// global CDN distribution. The DB read still works (Drizzle/Supabase support
-// edge) but with a slight latency cost vs node runtime; in our case the
-// snapshot table read is sub-50ms which is well within OG-generation budget.
-export const runtime  = "edge";
+// Runtime: nodejs (NOT edge) — required because the parent page exports
+// generateStaticParams to pre-render every protocol slug at build time, and
+// Next.js inherits that contract for the opengraph-image route under the same
+// dynamic segment. Edge runtime + generateStaticParams is incompatible (the
+// build fails with "Edge runtime is not supported with `generateStaticParams`").
+// Node runtime here is fine: Drizzle/Supabase reads work natively, social
+// platforms cache OG images aggressively so per-request latency rarely matters,
+// and the image is regenerated only when the protocol slug changes.
+export const runtime  = "nodejs";
 export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
