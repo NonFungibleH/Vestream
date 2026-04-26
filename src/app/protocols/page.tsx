@@ -326,6 +326,47 @@ export default async function UnlocksIndexPage() {
         <UpcomingUnlockTicker />
       </section>
 
+      {/* ── Cross-link to full unlock calendar ──────────────────────────── */}
+      {/* The ticker above shows the next handful; the calendar pages drill
+          into "today / this week / 30 days / etc." with the complete list per
+          window. This is the user's bridge from "snapshot" to "deep dive". */}
+      <section className="px-4 md:px-8 pb-12 md:pb-16 max-w-5xl mx-auto">
+        <Link
+          href="/unlocks"
+          className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5"
+          style={{
+            background: "white",
+            border:     "1px solid rgba(28,184,184,0.22)",
+            boxShadow:  "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(28,184,184,0.06)",
+          }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)" }}
+            >
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold" style={{ color: "#1A1D20" }}>
+                See the full unlock calendar
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
+                Browse upcoming unlocks by window — today, this week, this month, or rolling 30/60/90 days.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold whitespace-nowrap hidden sm:inline" style={{ color: "#0F8A8A" }}>
+            Open calendar →
+          </span>
+        </Link>
+      </section>
+
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-20 md:pb-28 max-w-5xl mx-auto">
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">

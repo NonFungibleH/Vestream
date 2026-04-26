@@ -56,12 +56,13 @@ const LINK_GROUPS = [
   {
     heading: "Platform",
     links: [
-      { label: "Protocols", href: "/protocols" },
-      { label: "Demo",      href: "/demo"      },
-      { label: "Pricing",   href: "/pricing"   },
-      { label: "Resources", href: "/resources" },
-      { label: "FAQ",       href: "/faq"       },
-      { label: "Contact",   href: "/contact"   },
+      { label: "Protocols",       href: "/protocols" },
+      { label: "Unlock calendar", href: "/unlocks"   },
+      { label: "Demo",            href: "/demo"      },
+      { label: "Pricing",         href: "/pricing"   },
+      { label: "Resources",       href: "/resources" },
+      { label: "FAQ",             href: "/faq"       },
+      { label: "Contact",         href: "/contact"   },
     ],
   },
   {

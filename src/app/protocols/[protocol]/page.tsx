@@ -192,33 +192,41 @@ export default async function ProtocolLandingPage(
 
       {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
       {/* Pairs with the BreadcrumbList JSON-LD above — Google rewards sites
-          that surface the breadcrumb structurally AND visually. Subtle
-          styling so it doesn't compete with the hero below. */}
-      <nav
-        aria-label="Breadcrumb"
-        className="px-4 md:px-8 pt-20 md:pt-24 max-w-5xl mx-auto w-full"
+          that surface the breadcrumb structurally AND visually. The bar has
+          its own subtle ground (rgba ink wash + thin top border) so it reads
+          as a continuation of the nav rather than a floating fragment above
+          the hero. Padding-top is the SiteNav clearance; padding-bottom is
+          tight so it tucks right into the hero. */}
+      <div
+        className="w-full pt-16 md:pt-20"
+        style={{ borderBottom: "1px solid rgba(21,23,26,0.06)" }}
       >
-        <ol className="flex items-center gap-2 text-xs" style={{ color: "#8B8E92" }}>
-          <li>
-            <Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>
-              Home
-            </Link>
-          </li>
-          <li aria-hidden style={{ color: "#B8BABD" }}>/</li>
-          <li>
-            <Link href="/protocols" className="hover:underline" style={{ color: "#8B8E92" }}>
-              Protocols
-            </Link>
-          </li>
-          <li aria-hidden style={{ color: "#B8BABD" }}>/</li>
-          <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>
-            {meta.name}
-          </li>
-        </ol>
-      </nav>
+        <nav
+          aria-label="Breadcrumb"
+          className="px-4 md:px-8 py-3 max-w-5xl mx-auto w-full"
+        >
+          <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
+            <li>
+              <Link href="/" className="hover:underline transition-colors" style={{ color: "#8B8E92" }}>
+                Home
+              </Link>
+            </li>
+            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+            <li>
+              <Link href="/protocols" className="hover:underline transition-colors" style={{ color: "#8B8E92" }}>
+                Protocols
+              </Link>
+            </li>
+            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>
+              {meta.name}
+            </li>
+          </ol>
+        </nav>
+      </div>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-6 pb-14 md:pt-10 md:pb-20 px-4 md:px-8 text-center">
+      <section className="relative overflow-hidden pt-8 pb-14 md:pt-12 md:pb-20 px-4 md:px-8 text-center">
         {/* Protocol-coloured wash behind the hero */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${accentHalo} 0%, transparent 70%)`,

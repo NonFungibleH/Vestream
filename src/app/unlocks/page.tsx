@@ -80,16 +80,21 @@ export default async function UnlocksIndex() {
       <SiteNav theme="light" />
 
       {/* ── Breadcrumb ────────────────────────────────────────────────── */}
-      <nav aria-label="Breadcrumb" className="px-4 md:px-8 pt-20 md:pt-24 max-w-5xl mx-auto w-full">
-        <ol className="flex items-center gap-2 text-xs" style={{ color: "#8B8E92" }}>
-          <li><Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>Home</Link></li>
-          <li aria-hidden style={{ color: "#B8BABD" }}>/</li>
-          <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>Unlocks</li>
-        </ol>
-      </nav>
+      <div
+        className="w-full pt-16 md:pt-20"
+        style={{ borderBottom: "1px solid rgba(21,23,26,0.06)" }}
+      >
+        <nav aria-label="Breadcrumb" className="px-4 md:px-8 py-3 max-w-5xl mx-auto w-full">
+          <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
+            <li><Link href="/" className="hover:underline transition-colors" style={{ color: "#8B8E92" }}>Home</Link></li>
+            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>Unlocks</li>
+          </ol>
+        </nav>
+      </div>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pt-6 md:pt-10 pb-12 md:pb-16 max-w-5xl mx-auto w-full">
+      <section className="px-4 md:px-8 pt-8 md:pt-12 pb-12 md:pb-16 max-w-5xl mx-auto w-full">
         <div className="text-center mb-6">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
             Live Unlock Calendar
