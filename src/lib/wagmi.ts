@@ -10,7 +10,6 @@ import { http } from "wagmi";
 import { base, baseSepolia, bsc, mainnet, polygon, sepolia } from "wagmi/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import {
-  metaMaskWallet,
   rainbowWallet,
   coinbaseWallet,
   walletConnectWallet,
@@ -28,6 +27,15 @@ import {
 // Node static prerender. The list below covers every wallet a typical
 // token-vesting recipient is likely to be using.
 //
+// MetaMask is *not* listed explicitly — it's surfaced automatically through
+// EIP-6963 when the extension is installed (RainbowKit dedups + branded
+// rendering). The explicit RainbowKit `metaMaskWallet` connector routes
+// through MetaMask SDK which hangs on the wagmi 3.x / RainbowKit 2.x combo
+// in our stack when the extension is also EIP-6963-announcing — the modal
+// shows "Opening MetaMask..." but the popup never fires. Falling back to
+// EIP-6963 + `injectedWallet` (which calls `window.ethereum.request()`
+// directly) restores the simple injection path that worked pre-RainbowKit.
+//
 // `ssr: true` tells wagmi to use cookieStorage and skip auto-connect on the
 // server, which keeps prerender stable for pages that don't actually use
 // wallet state.
@@ -38,7 +46,7 @@ export const wagmiConfig = getDefaultConfig({
     {
       groupName: "Popular",
       wallets: [
-        metaMaskWallet,
+        injectedWallet,
         rainbowWallet,
         coinbaseWallet,
         walletConnectWallet,
@@ -48,7 +56,7 @@ export const wagmiConfig = getDefaultConfig({
     },
     {
       groupName: "Other",
-      wallets: [ledgerWallet, safeWallet, injectedWallet],
+      wallets: [ledgerWallet, safeWallet],
     },
   ],
   // Mainnets we index across the platform (matches CHAIN_IDS in
