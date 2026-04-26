@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { WaitlistForm } from "@/components/WaitlistForm";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -1228,12 +1227,22 @@ export default async function Home() {
             style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
           <div className="absolute -left-8 bottom-0 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
-          <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>Be the first in.</h2>
-          <p className="relative text-base mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Vestream is launching soon. Register your interest and we&apos;ll reach out as soon as early access opens.
+          <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>See every token you&rsquo;re owed.</h2>
+          <p className="relative text-base mb-8 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+            Paste any wallet and Vestream returns every active vesting across 9 protocols in seconds. No sign-up. No KYC.
           </p>
           <div className="relative flex justify-center w-full">
-            <WaitlistForm dark />
+            <Link
+              href="/find-vestings"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+              style={{
+                background: "white",
+                color: "#0F8A8A",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+              }}
+            >
+              Find my vestings →
+            </Link>
           </div>
         </div>
       </section>
