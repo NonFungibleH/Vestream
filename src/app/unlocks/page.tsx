@@ -31,7 +31,9 @@ export const metadata: Metadata = {
 async function getWindowCounts() {
   // Run all window queries in parallel. Each is bounded by its own date
   // range so the DB load stays manageable; `getUnlocksInWindow` itself
-  // caps the SQL pool at 500 rows per window.
+  // caps the SQL pool at 500 rows per window. Fail-soft per-window: at
+  // build time CI has no DB access, all queries return -1 → page renders
+  // with "—" everywhere; ISR fills real numbers on first runtime hit.
   const counts = await Promise.all(
     ALL_WINDOW_SLUGS.map(async (slug) => {
       const def   = WINDOWS[slug];
@@ -45,7 +47,6 @@ async function getWindowCounts() {
           chainCount:  result.stats.chainCount,
         };
       } catch {
-        // Never let a DB hiccup break the index page — degrade to "—"
         return { slug, unlockCount: -1, tokenCount: -1, chainCount: -1 };
       }
     }),

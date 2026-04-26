@@ -126,8 +126,16 @@ export default async function ProtocolUnlocksPage({ params }: PageParams) {
   // 365-day forward window — broad enough to surface most schedules,
   // bounded enough to keep the page readable. The 500-row pool cap in
   // getUnlocksInWindow keeps the SQL cheap even on heavy-vest protocols.
+  // Fail-soft: at build time CI has no DB access, so a query failure
+  // renders an empty state and ISR refreshes on first runtime request.
   const now = Math.floor(Date.now() / 1000);
-  const result = await getUnlocksInWindow(now, now + 365 * 86400, 500, meta.adapterIds);
+  let result;
+  try {
+    result = await getUnlocksInWindow(now, now + 365 * 86400, 500, meta.adapterIds);
+  } catch (err) {
+    console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
+    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+  }
 
   // ItemList JSON-LD — unlock events scoped to this protocol.
   const itemListJsonLd = {

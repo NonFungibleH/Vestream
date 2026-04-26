@@ -52,7 +52,13 @@ function fmtTokenAmount(amount: string, decimals: number): string {
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { symbol } = await params;
-  const matches = await getChainSummariesForSymbol(symbol);
+  let matches: Awaited<ReturnType<typeof getChainSummariesForSymbol>> = [];
+  try {
+    matches = await getChainSummariesForSymbol(symbol);
+  } catch {
+    // Build-time DB outage — return a neutral title; ISR will re-render
+    // proper metadata on first runtime request.
+  }
   if (matches.length === 0) return { title: "Token not found — Vestream" };
 
   const display = matches[0]?.symbol ?? symbol.toUpperCase();
@@ -90,7 +96,15 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
 export default async function TokenSymbolPage({ params }: PageParams) {
   const { symbol } = await params;
-  const matches = await getChainSummariesForSymbol(symbol);
+  // Fail-soft: at build time CI has no DB access, getChainSummariesForSymbol
+  // throws. Treat that as "no matches" so the build doesn't fail; ISR
+  // re-renders with real data on the first runtime request.
+  let matches: Awaited<ReturnType<typeof getChainSummariesForSymbol>> = [];
+  try {
+    matches = await getChainSummariesForSymbol(symbol);
+  } catch (err) {
+    console.warn(`[token-symbol] DB unavailable for ${symbol}; treating as not-found:`, err);
+  }
 
   if (matches.length === 0) notFound();
 

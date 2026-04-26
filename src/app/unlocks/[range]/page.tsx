@@ -172,7 +172,15 @@ export default async function WindowPage({ params }: PageParams) {
 
   const def    = WINDOWS[range];
   const ranges = def.range();
-  const result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
+  // Fail-soft: at build time CI has no DB access — render empty state and
+  // let ISR refresh on first runtime request.
+  let result;
+  try {
+    result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
+  } catch (err) {
+    console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
+    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+  }
 
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
