@@ -283,15 +283,15 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Mock dashboard — dark theme */}
-          <div className="flex" style={{ background: "#0d0f14", minHeight: 280 }}>
+          {/* Mock dashboard — light theme to match the actual app */}
+          <div className="flex" style={{ background: "white", minHeight: 280 }}>
             {/* Sidebar — hidden on mobile */}
-            <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#141720", borderRight: "1px solid #1e2330" }}>
-              <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid #1e2330" }}>
+            <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#FAFAFA", borderRight: "1px solid rgba(21,23,26,0.07)" }}>
+              <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
                 <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                   <span className="text-white text-[9px] font-bold">T</span>
                 </div>
-                <span className="text-xs font-bold text-white">Vestream</span>
+                <span className="text-xs font-bold" style={{ color: "#1A1D20" }}>Vestream</span>
               </div>
               <div className="px-2 py-3 space-y-0.5">
                 {[
@@ -301,15 +301,15 @@ export default async function Home() {
                   { label: "Settings",  active: false, icon: "⚙" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
-                    style={item.active ? { background: "rgba(28,184,184,0.15)", color: "#1CB8B8" } : { color: "rgba(255,255,255,0.35)" }}>
+                    style={item.active ? { background: "rgba(28,184,184,0.12)", color: "#0F8A8A" } : { color: "#8B8E92" }}>
                     <span className="text-[10px]">{item.icon}</span>{item.label}
                   </div>
                 ))}
               </div>
-              <div className="px-2 mt-1" style={{ borderTop: "1px solid #1e2330", paddingTop: "0.75rem" }}>
-                <p className="px-2.5 text-[8px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.2)" }}>Wallets</p>
+              <div className="px-2 mt-1" style={{ borderTop: "1px solid rgba(21,23,26,0.07)", paddingTop: "0.75rem" }}>
+                <p className="px-2.5 text-[8px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#B8BABD" }}>Wallets</p>
                 {["My Wallet", "Team Vesting"].map((w) => (
-                  <div key={w} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  <div key={w} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px]" style={{ color: "#8B8E92" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />{w}
                   </div>
                 ))}
@@ -318,20 +318,20 @@ export default async function Home() {
 
             {/* Main content */}
             <div className="flex-1 p-4 space-y-3 overflow-hidden">
-              {/* PortfolioHero gradient card */}
+              {/* PortfolioHero gradient card — kept as the brand-defining element */}
               <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#0F8A8A 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Total Portfolio Value</p>
+                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Total Portfolio Value</p>
                 <p className="text-2xl font-bold text-white tabular-nums">$206,500</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "rgba(52,211,153,0.9)" }}>● $5,650 claimable now · 2 wallets tracked</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $5,650 claimable now · 2 wallets tracked</p>
                 <div className="flex gap-2 mt-3">
                   {[
-                    { l: "Claimable", v: "$5,650",  c: "rgba(52,211,153,0.15)"  },
-                    { l: "Locked",    v: "$200,850", c: "rgba(147,197,253,0.15)" },
-                    { l: "Streams",   v: "4 active", c: "rgba(240,184,61,0.12)"  },
-                    { l: "Next",      v: "14d 6h",   c: "rgba(240,184,61,0.15)"  },
+                    { l: "Claimable", v: "$5,650",  c: "rgba(52,211,153,0.18)"  },
+                    { l: "Locked",    v: "$200,850", c: "rgba(255,255,255,0.10)" },
+                    { l: "Streams",   v: "4 active", c: "rgba(240,184,61,0.18)"  },
+                    { l: "Next",      v: "14d 6h",   c: "rgba(240,184,61,0.18)"  },
                   ].map((s) => (
-                    <div key={s.l} className="rounded-lg px-2.5 py-1.5 flex-1" style={{ background: s.c, border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <p className="text-[7px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.l}</p>
+                    <div key={s.l} className="rounded-lg px-2.5 py-1.5 flex-1" style={{ background: s.c, border: "1px solid rgba(255,255,255,0.10)" }}>
+                      <p className="text-[7px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.55)" }}>{s.l}</p>
                       <p className="text-[11px] font-bold text-white tabular-nums">{s.v}</p>
                     </div>
                   ))}
@@ -341,8 +341,8 @@ export default async function Home() {
               {/* Two-col: snapshot + table */}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 {/* Token snapshot */}
-                <div className="md:col-span-2 rounded-xl p-3" style={{ background: "#141720", border: "1px solid #1e2330" }}>
-                  <p className="text-[9px] font-semibold text-white mb-2.5">Token Snapshot</p>
+                <div className="md:col-span-2 rounded-xl p-3" style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
+                  <p className="text-[9px] font-semibold mb-2.5" style={{ color: "#1A1D20" }}>Token Snapshot</p>
                   <div className="space-y-2">
                     {[
                       { s: "USDC", clPct: 12, lkPct: 88, color: "#1CB8B8", total: "$137,500" },
@@ -351,12 +351,12 @@ export default async function Home() {
                     ].map((t) => (
                       <div key={t.s}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
-                          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "9px", fontWeight: 600 }}>{t.s}</span>
-                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "9px" }}>{t.total}</span>
+                          <span style={{ color: "#475569", fontSize: "9px", fontWeight: 600 }}>{t.s}</span>
+                          <span style={{ color: "#8B8E92", fontSize: "9px" }}>{t.total}</span>
                         </div>
-                        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: "4px", height: "5px", overflow: "hidden" }}>
+                        <div style={{ background: "rgba(21,23,26,0.06)", borderRadius: "4px", height: "5px", overflow: "hidden" }}>
                           <div style={{ display: "flex", height: "100%" }}>
-                            <div style={{ width: `${t.clPct}%`, background: "#2DB36A" }} />
+                            <div style={{ width: `${t.clPct}%`, background: "#0F8A4A" }} />
                             <div style={{ width: `${t.lkPct}%`, background: t.color + "60" }} />
                           </div>
                         </div>
@@ -366,34 +366,34 @@ export default async function Home() {
                 </div>
 
                 {/* Vesting table */}
-                <div className="md:col-span-3 rounded-xl overflow-hidden" style={{ background: "#141720", border: "1px solid #1e2330" }}>
-                  <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid #1e2330" }}>
-                    <p className="text-[9px] font-semibold text-white">Vesting Schedules</p>
-                    <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}>4 streams</span>
+                <div className="md:col-span-3 rounded-xl overflow-hidden" style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
+                  <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+                    <p className="text-[9px] font-semibold" style={{ color: "#1A1D20" }}>Vesting Schedules</p>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(15,138,74,0.12)", color: "#0F8A4A" }}>4 streams</span>
                   </div>
                   {[
                     { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#1CB8B8", prog: 15 },
-                    { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#34d399", prog: 35 },
-                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#fb923c", prog: 5  },
+                    { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#0F8A4A", prog: 35 },
+                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#D97706", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
-                      style={{ borderTop: i > 0 ? "1px solid #1e2330" : undefined }}>
+                      style={{ borderTop: i > 0 ? "1px solid rgba(21,23,26,0.06)" : undefined }}>
                       <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
-                        style={{ background: row.color + "20", border: `1px solid ${row.color}30` }}>
+                        style={{ background: row.color + "1A", border: `1px solid ${row.color}30` }}>
                         <span className="text-[7px] font-bold" style={{ color: row.color }}>{row.token.slice(0,2)}</span>
                       </div>
-                      <span className="text-[9px] font-semibold text-white w-10 flex-shrink-0">{row.token}</span>
+                      <span className="text-[9px] font-semibold w-10 flex-shrink-0" style={{ color: "#1A1D20" }}>{row.token}</span>
                       <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: row.proto + "15", color: row.proto }}>{row.protocol}</span>
                       {/* Progress bar */}
                       <div className="flex-1 mx-1">
-                        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: "3px", height: "3px" }}>
+                        <div style={{ background: "rgba(21,23,26,0.06)", borderRadius: "3px", height: "3px" }}>
                           <div style={{ width: `${row.prog}%`, height: "3px", borderRadius: "3px", background: row.color }} />
                         </div>
                       </div>
-                      <span className="text-[9px] tabular-nums w-12 text-right flex-shrink-0" style={{ color: row.claimable === "—" ? "rgba(255,255,255,0.2)" : "#34d399" }}>{row.claimable}</span>
+                      <span className="text-[9px] tabular-nums w-12 text-right flex-shrink-0" style={{ color: row.claimable === "—" ? "#B8BABD" : "#0F8A4A" }}>{row.claimable}</span>
                       <div className="w-9 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{ background: row.claimable !== "—" ? `linear-gradient(135deg,${row.color},${row.color}aa)` : "rgba(255,255,255,0.06)" }}>
-                        <span className="text-[7px] font-bold" style={{ color: row.claimable !== "—" ? "white" : "rgba(255,255,255,0.3)" }}>
+                        style={{ background: row.claimable !== "—" ? `linear-gradient(135deg,${row.color},${row.color}aa)` : "rgba(21,23,26,0.06)" }}>
+                        <span className="text-[7px] font-bold" style={{ color: row.claimable !== "—" ? "white" : "#B8BABD" }}>
                           {row.claimable !== "—" ? "Claim" : "View"}
                         </span>
                       </div>
@@ -421,10 +421,10 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Panel 1: Monthly Forecast */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
             <div className="px-4 pt-4 pb-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#4b5563" }}>Monthly Forecast</p>
-              <p className="text-xs font-semibold text-white">Unlock cashflow by month</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Monthly Forecast</p>
+              <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Unlock cashflow by month</p>
             </div>
             <div className="px-4 pb-4">
               <div className="space-y-1.5 mt-2">
@@ -437,41 +437,41 @@ export default async function Home() {
                   { m: "Aug 2025", v: 12000, w: 23 },
                 ].map((r) => (
                   <div key={r.m} className="flex items-center gap-2">
-                    <span style={{ color: "#4b5563", fontSize: "9px", width: "52px", flexShrink: 0 }}>{r.m}</span>
-                    <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: "3px", height: "14px", overflow: "hidden" }}>
+                    <span style={{ color: "#8B8E92", fontSize: "9px", width: "52px", flexShrink: 0 }}>{r.m}</span>
+                    <div style={{ flex: 1, background: "rgba(21,23,26,0.04)", borderRadius: "3px", height: "14px", overflow: "hidden" }}>
                       <div style={{ width: `${r.w}%`, height: "100%", background: "#1CB8B8", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
-                        <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "8px", fontWeight: 700 }}>${(r.v/1000).toFixed(0)}k</span>
+                        <span style={{ color: "rgba(255,255,255,0.95)", fontSize: "8px", fontWeight: 700 }}>${(r.v/1000).toFixed(0)}k</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <p style={{ color: "#4b5563", fontSize: "9px", marginTop: "10px" }}>USD value at current prices</p>
+              <p style={{ color: "#B8BABD", fontSize: "9px", marginTop: "10px" }}>USD value at current prices</p>
             </div>
           </div>
 
           {/* Panel 2: P&L Tracker */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
             <div className="px-4 pt-4 pb-2 flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#4b5563" }}>P&L Tracker</p>
-                <p className="text-xs font-semibold text-white">Log sales · track realized P&L</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>P&L Tracker</p>
+                <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Log sales · track realized P&L</p>
               </div>
-              <div style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: "8px", padding: "4px 8px", textAlign: "right" }}>
-                <p style={{ color: "#4b5563", fontSize: "8px" }}>Total</p>
-                <p style={{ color: "#34d399", fontSize: "12px", fontWeight: 800, lineHeight: 1 }}>+$4,275</p>
+              <div style={{ background: "rgba(15,138,74,0.10)", border: "1px solid rgba(15,138,74,0.22)", borderRadius: "8px", padding: "4px 8px", textAlign: "right" }}>
+                <p style={{ color: "#8B8E92", fontSize: "8px" }}>Total</p>
+                <p style={{ color: "#0F8A4A", fontSize: "12px", fontWeight: 800, lineHeight: 1 }}>+$4,275</p>
               </div>
             </div>
             <div className="px-4 pb-4">
               {/* Token row */}
-              <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "10px", marginBottom: "8px" }}>
+              <div style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "10px", padding: "10px", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <div style={{ width: "22px", height: "22px", borderRadius: "7px", background: "rgba(28,184,184,0.2)", border: "1px solid rgba(28,184,184,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "#1CB8B8", fontSize: "8px", fontWeight: 800 }}>PRI</span>
+                  <div style={{ width: "22px", height: "22px", borderRadius: "7px", background: "rgba(28,184,184,0.18)", border: "1px solid rgba(28,184,184,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#0F8A8A", fontSize: "8px", fontWeight: 800 }}>PRI</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: "white", fontSize: "10px", fontWeight: 700 }}>PRISM</p>
-                    <p style={{ color: "#4b5563", fontSize: "9px" }}>Entry $0.50 · Now $0.95</p>
+                    <p style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700 }}>PRISM</p>
+                    <p style={{ color: "#8B8E92", fontSize: "9px" }}>Entry $0.50 · Now $0.95</p>
                   </div>
                 </div>
                 {/* Transactions */}
@@ -479,37 +479,37 @@ export default async function Home() {
                   { date: "15 Jan", amt: "1,000", px: "$0.60", pnl: "+$100" },
                   { date: "20 Feb", amt: "500",   px: "$0.80", pnl: "+$150" },
                 ].map((tx) => (
-                  <div key={tx.date} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span style={{ color: "#4b5563", fontSize: "8px", width: "32px" }}>{tx.date}</span>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "8px", flex: 1 }}>{tx.amt} @ {tx.px}</span>
-                    <span style={{ color: "#34d399", fontSize: "9px", fontWeight: 700 }}>{tx.pnl}</span>
+                  <div key={tx.date} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 0", borderTop: "1px solid rgba(21,23,26,0.05)" }}>
+                    <span style={{ color: "#8B8E92", fontSize: "8px", width: "32px" }}>{tx.date}</span>
+                    <span style={{ color: "#475569", fontSize: "8px", flex: 1 }}>{tx.amt} @ {tx.px}</span>
+                    <span style={{ color: "#0F8A4A", fontSize: "9px", fontWeight: 700 }}>{tx.pnl}</span>
                   </div>
                 ))}
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "6px", paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <span style={{ color: "#4b5563", fontSize: "8px" }}>Unrealized</span>
-                  <span style={{ color: "#34d399", fontSize: "9px", fontWeight: 700 }}>+$4,025</span>
-                  <span style={{ color: "#4b5563", fontSize: "8px" }}>· Total</span>
-                  <span style={{ color: "#34d399", fontSize: "10px", fontWeight: 800 }}>+$4,275</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "6px", paddingTop: "6px", borderTop: "1px solid rgba(21,23,26,0.05)" }}>
+                  <span style={{ color: "#8B8E92", fontSize: "8px" }}>Unrealized</span>
+                  <span style={{ color: "#0F8A4A", fontSize: "9px", fontWeight: 700 }}>+$4,025</span>
+                  <span style={{ color: "#8B8E92", fontSize: "8px" }}>· Total</span>
+                  <span style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: 800 }}>+$4,275</span>
                 </div>
               </div>
               <div style={{ display: "flex", gap: "6px" }}>
-                <div style={{ flex: 1, background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.2)", borderRadius: "7px", padding: "5px 8px" }}>
-                  <p style={{ color: "#4b5563", fontSize: "8px" }}>Realized</p>
-                  <p style={{ color: "#1CB8B8", fontSize: "10px", fontWeight: 800 }}>+$250</p>
+                <div style={{ flex: 1, background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.22)", borderRadius: "7px", padding: "5px 8px" }}>
+                  <p style={{ color: "#8B8E92", fontSize: "8px" }}>Realized</p>
+                  <p style={{ color: "#0F8A8A", fontSize: "10px", fontWeight: 800 }}>+$250</p>
                 </div>
-                <div style={{ flex: 1, background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: "7px", padding: "5px 8px" }}>
-                  <p style={{ color: "#4b5563", fontSize: "8px" }}>Unrealized</p>
-                  <p style={{ color: "#34d399", fontSize: "10px", fontWeight: 800 }}>+$4,025</p>
+                <div style={{ flex: 1, background: "rgba(15,138,74,0.08)", border: "1px solid rgba(15,138,74,0.22)", borderRadius: "7px", padding: "5px 8px" }}>
+                  <p style={{ color: "#8B8E92", fontSize: "8px" }}>Unrealized</p>
+                  <p style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: 800 }}>+$4,025</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Panel 3: Export + Token Market */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
             <div className="px-4 pt-4 pb-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#4b5563" }}>Token Market Data</p>
-              <p className="text-xs font-semibold text-white">Live prices &amp; export</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Token Market Data</p>
+              <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Live prices &amp; export</p>
             </div>
             <div className="px-4 pb-4 space-y-2">
               {[
@@ -517,31 +517,31 @@ export default async function Home() {
                 { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#F0992E" },
                 { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#0F8A8A" },
               ].map((t) => (
-                <div key={t.sym} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "9px", padding: "8px 10px" }}>
+                <div key={t.sym} style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                      <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: t.color + "25", border: `1px solid ${t.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: t.color + "1F", border: `1px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <span style={{ color: t.color, fontSize: "6px", fontWeight: 800 }}>{t.sym.slice(0,2)}</span>
                       </div>
-                      <span style={{ color: "white", fontSize: "10px", fontWeight: 700 }}>{t.sym}</span>
+                      <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700 }}>{t.sym}</span>
                     </div>
-                    <span style={{ color: "white", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{t.price}</span>
+                    <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{t.price}</span>
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#4b5563", fontSize: "8px" }}>MCap {t.mc}</span>
-                    <span style={{ color: "#4b5563", fontSize: "8px" }}>Liq {t.liq}</span>
+                    <span style={{ color: "#8B8E92", fontSize: "8px" }}>MCap {t.mc}</span>
+                    <span style={{ color: "#8B8E92", fontSize: "8px" }}>Liq {t.liq}</span>
                   </div>
                 </div>
               ))}
               {/* Export buttons */}
               <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-                <div style={{ flex: 1, background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  <span style={{ color: "#1CB8B8", fontSize: "9px", fontWeight: 700 }}>CSV / Excel</span>
+                <div style={{ flex: 1, background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span style={{ color: "#0F8A8A", fontSize: "9px", fontWeight: 700 }}>CSV / Excel</span>
                 </div>
-                <div style={{ flex: 1, background: "rgba(15,138,138,0.1)", border: "1px solid rgba(15,138,138,0.2)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  <span style={{ color: "#1CB8B8", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
+                <div style={{ flex: 1, background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.22)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <span style={{ color: "#0F8A8A", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
                 </div>
               </div>
             </div>
@@ -679,12 +679,12 @@ export default async function Home() {
             </ul>
           </div>
           {/* Mockup */}
-          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
             {/* Search bar */}
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: "#141720", border: "1px solid #2a3040" }}>
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <span style={{ color: "#6b7280", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(28,184,184,0.18)", color: "#1CB8B8" }}>Scan all</span>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.10)" }}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#8B8E92" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span style={{ color: "#475569", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(28,184,184,0.14)", color: "#0F8A8A" }}>Scan all</span>
             </div>
             {/* Result rows — one per supported protocol so a visitor sees all 7
                 integrations represented, not just a convenient subset. */}
@@ -698,19 +698,19 @@ export default async function Home() {
               { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#E063A0" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
-                style={{ background: "#141720", border: "1px solid #1e2330" }}>
+                style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold"
                   style={{ background: r.color, fontSize: 10 }}>{r.protocol[0]}</div>
                 <div className="flex-1 min-w-0">
-                  <p style={{ color: "white", fontSize: 12, fontWeight: 600 }}>{r.protocol}</p>
-                  <p style={{ color: "#6b7280", fontSize: 11 }}>{r.chain}</p>
+                  <p style={{ color: "#1A1D20", fontSize: 12, fontWeight: 600 }}>{r.protocol}</p>
+                  <p style={{ color: "#8B8E92", fontSize: 11 }}>{r.chain}</p>
                 </div>
                 <div className="text-right">
-                  <p style={{ color: "#34d399", fontSize: 12, fontWeight: 600 }}>{r.amount} {r.token}</p>
+                  <p style={{ color: "#0F8A4A", fontSize: 12, fontWeight: 600 }}>{r.amount} {r.token}</p>
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#4b5563", fontSize: 11 }}>7 vestings found across 7 protocols</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>7 vestings found across 7 protocols</p>
           </div>
         </div>
       </section>
@@ -732,14 +732,14 @@ export default async function Home() {
             </p>
           </div>
           {/* Mockup */}
-          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "#0d0f14", border: "1px solid #1e2330", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p style={{ color: "white", fontSize: 13, fontWeight: 700 }}>NOVA — All Vestings</p>
-                <p style={{ color: "#6b7280", fontSize: 11 }}>Global unlock schedule</p>
+                <p style={{ color: "#1A1D20", fontSize: 13, fontWeight: 700 }}>NOVA — All Vestings</p>
+                <p style={{ color: "#8B8E92", fontSize: 11 }}>Global unlock schedule</p>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "rgba(179,50,46,0.10)", color: "#B3322E" }}>
                 47.2M NOVA in 14d
               </span>
             </div>
@@ -753,15 +753,15 @@ export default async function Home() {
               <div key={w.wallet} className="mb-2.5">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span style={{ color: "#9ca3af", fontSize: 11, fontFamily: "monospace" }}>{w.wallet}</span>
-                    <span style={{ color: "#4b5563", fontSize: 10, background: "#1e2330", padding: "1px 6px", borderRadius: 4 }}>{w.protocol}</span>
+                    <span style={{ color: "#475569", fontSize: 11, fontFamily: "monospace" }}>{w.wallet}</span>
+                    <span style={{ color: "#8B8E92", fontSize: 10, background: "rgba(21,23,26,0.05)", padding: "1px 6px", borderRadius: 4 }}>{w.protocol}</span>
                   </div>
                   <div className="text-right">
-                    <span style={{ color: "#e2e8f0", fontSize: 11, fontWeight: 600 }}>{w.amount}</span>
-                    <span style={{ color: "#6b7280", fontSize: 10, marginLeft: 6 }}>{w.unlock}</span>
+                    <span style={{ color: "#1A1D20", fontSize: 11, fontWeight: 600 }}>{w.amount}</span>
+                    <span style={{ color: "#8B8E92", fontSize: 10, marginLeft: 6 }}>{w.unlock}</span>
                   </div>
                 </div>
-                <div className="h-1 rounded-full" style={{ background: "#1e2330" }}>
+                <div className="h-1 rounded-full" style={{ background: "rgba(21,23,26,0.06)" }}>
                   <div className="h-1 rounded-full" style={{ width: `${w.pct}%`, background: "linear-gradient(90deg, #0BA0CB, #1CB8B8)" }} />
                 </div>
               </div>
