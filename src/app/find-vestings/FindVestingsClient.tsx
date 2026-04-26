@@ -163,7 +163,7 @@ export default function FindVestingsClient() {
           </div>
 
           <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
-            Connect to see your vestings
+            Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
             We&rsquo;ll scan your wallet across 9 protocols and 5 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.

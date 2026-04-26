@@ -52,7 +52,7 @@ const securityHeaders = [
       // initialise and wallet connectors (incl. MetaMask) never get a chance to
       // open — which presents as "MetaMask popup never fires". GA: googletagmanager
       // serves gtag.js; google-analytics.com is the collection endpoint.
-      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://www.google-analytics.com https://www.googletagmanager.com",
+      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://*.google-analytics.com https://*.googletagmanager.com",
       // Web3Modal occasionally embeds verify.walletconnect.org in an iframe for
       // origin verification on certain wallet flows.
       "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
