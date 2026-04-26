@@ -219,8 +219,13 @@ export async function getUnlocksInWindow(
    *  unlocks"). Empty array → no filter. */
   chainIds?: readonly number[],
 ): Promise<WindowResult> {
-  // Build-time short-circuit (CI runs `next build` without DATABASE_URL).
-  if (!process.env.DATABASE_URL) {
+  // Build-time short-circuit. CI runs `next build` with a dummy
+  // `postgres://ci:ci@localhost:5432/ci` URL so module imports resolve;
+  // the real connection isn't reachable, and postgres burns 30-60s per
+  // page in connect-retry, timing the build out. Treat unset OR
+  // localhost-pointing URLs as unreachable.
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl || /(\/\/|@)(localhost|127\.0\.0\.1)/.test(dbUrl)) {
     return EMPTY_WINDOW_RESULT;
   }
 
