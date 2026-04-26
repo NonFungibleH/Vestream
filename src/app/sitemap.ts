@@ -18,6 +18,7 @@ import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/articles";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
+import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 
 const SITE = "https://vestream.io";
 
@@ -46,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE}/`,              lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
     { url: `${SITE}/protocols`,     lastModified: now, changeFrequency: "daily",   priority: 0.95 },
+    { url: `${SITE}/unlocks`,       lastModified: now, changeFrequency: "daily",   priority: 0.9 },
     { url: `${SITE}/demo`,          lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE}/find-vestings`, lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
     { url: `${SITE}/developer`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -71,5 +73,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.6,
   }));
 
-  return [...staticEntries, ...protocolEntries, ...articleEntries];
+  // Per-window unlock pages — each is a date-stamped landing page that
+  // changes daily, so we mark them changeFrequency=daily with high priority.
+  // Crawlers will pick up the freshness signal on every recrawl.
+  const unlockWindowEntries: MetadataRoute.Sitemap = ALL_WINDOW_SLUGS.map((slug) => ({
+    url:             `${SITE}/unlocks/${slug}`,
+    lastModified:    now,
+    changeFrequency: "daily",
+    priority:        0.85,
+  }));
+
+  return [...staticEntries, ...protocolEntries, ...articleEntries, ...unlockWindowEntries];
 }

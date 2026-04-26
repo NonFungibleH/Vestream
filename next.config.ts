@@ -73,16 +73,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // 301 redirects for the /unlocks → /protocols URL rename. Any external
-  // backlink / search-engine result for /unlocks or /unlocks/:slug keeps
-  // working forever; search engines consolidate the link equity onto the
-  // new URL. Add NEW redirects here rather than rewiring the old paths.
-  async redirects() {
-    return [
-      { source: "/unlocks",       destination: "/protocols",       permanent: true },
-      { source: "/unlocks/:slug", destination: "/protocols/:slug", permanent: true },
-    ];
-  },
+  // /unlocks is now the canonical home of the date-windowed unlock calendar
+  // (today, this-week, 30-days, etc.) — a higher-value SEO surface than the
+  // legacy /unlocks → /protocols redirect could provide. Old backlinks like
+  // /unlocks/sablier are now rare enough that the redesigned 404 page (which
+  // surfaces /unlocks, /protocols, and /resources cards) is a better
+  // recovery path than a misleading auto-redirect would be.
 };
 
 export default nextConfig;
