@@ -92,7 +92,7 @@ const loadProtocolData = unstable_cache(
       return { stats: null, latest: null, upcoming: null, upcomingList: [] };
     }
   },
-  ["protocol-page-data-v1"],
+  ["protocol-page-data-v2"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -279,12 +279,12 @@ export default async function ProtocolLandingPage(
           />
           <Stat
             label="Recipients"
-            value={hasData ? stats!.recipientCount.toLocaleString() : "—"}
+            value={hasData ? (stats!.recipientCount ?? 0).toLocaleString() : "—"}
             color={meta.color}
           />
           <Stat
             label="Tokens tracked"
-            value={hasData ? stats!.tokensTracked.toLocaleString() : "—"}
+            value={hasData ? (stats!.tokensTracked ?? 0).toLocaleString() : "—"}
             color={meta.color}
           />
           <Stat
