@@ -75,6 +75,64 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+// JSON-LD Product/Offer for SERP rich pricing snippets. Google can show the
+// price + tier name directly in search results when a "Vestream pricing" /
+// "Vestream cost" query lands here. Three Offers (Free, Pro Monthly, Pro
+// Annual) cover the self-serve tiers; Enterprise is intentionally excluded
+// because it has no public price.
+const pricingJsonLd = {
+  "@context":   "https://schema.org",
+  "@type":      "Product",
+  name:         "Vestream",
+  description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 5 chains.",
+  brand:        { "@type": "Brand", name: "Vestream" },
+  url:          "https://vestream.io/pricing",
+  image:        "https://vestream.io/logo.svg",
+  offers: [
+    {
+      "@type":       "Offer",
+      name:          "Free",
+      price:         "0",
+      priceCurrency: "USD",
+      url:           "https://vestream.io/pricing",
+      availability:  "https://schema.org/InStock",
+      description:   "1 wallet, auto-scan across all chains and protocols, 3 lifetime push alerts.",
+    },
+    {
+      "@type":       "Offer",
+      name:          "Pro Monthly",
+      price:         "14.99",
+      priceCurrency: "USD",
+      url:           "https://vestream.io/pricing",
+      availability:  "https://schema.org/InStock",
+      description:   "3 wallets, unlimited push + email alerts, Discover page, 14-day free trial.",
+      priceSpecification: {
+        "@type":            "UnitPriceSpecification",
+        price:              "14.99",
+        priceCurrency:      "USD",
+        billingIncrement:   1,
+        unitCode:           "MON",
+      },
+    },
+    {
+      "@type":       "Offer",
+      name:          "Pro Annual",
+      price:         "119.99",
+      priceCurrency: "USD",
+      url:           "https://vestream.io/pricing",
+      availability:  "https://schema.org/InStock",
+      description:   "Pro features billed annually — saves ~33% vs monthly.",
+      priceSpecification: {
+        "@type":            "UnitPriceSpecification",
+        price:              "119.99",
+        priceCurrency:      "USD",
+        billingIncrement:   1,
+        unitCode:           "ANN",
+      },
+    },
+  ],
+};
+
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Pricing() {
@@ -83,6 +141,11 @@ export default function Pricing() {
   // mobile app rather than to a web checkout.
   return (
     <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }}
+      />
 
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <SiteNav />

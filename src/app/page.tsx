@@ -50,11 +50,72 @@ async function getHomepageLiveStats() {
   }
 }
 
+// JSON-LD entity graph for the homepage. Three sub-schemas linked via @id:
+//   - Organization      → entity recognition + sitelinks logo
+//   - WebSite           → enables Google sitelinks search box (the search
+//                         action targets /find-vestings, our actual scan flow)
+//   - WebApplication    → describes the dashboard product itself; powers app
+//                         cards in SERPs and feeds Google's app-graph
+// Mobile app gets its own SoftwareApplication once the App Store IDs are
+// known (this is intentionally web-only until then — pointing schema at a
+// non-existent app id silently 404s).
+const homepageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type":   "Organization",
+      "@id":     "https://vestream.io/#organization",
+      name:      "Vestream",
+      url:       "https://vestream.io",
+      logo:      "https://vestream.io/logo.svg",
+      sameAs:    ["https://twitter.com/vestream_io"],
+    },
+    {
+      "@type":   "WebSite",
+      "@id":     "https://vestream.io/#website",
+      name:      "Vestream",
+      url:       "https://vestream.io",
+      publisher: { "@id": "https://vestream.io/#organization" },
+      potentialAction: {
+        "@type":       "SearchAction",
+        target:        "https://vestream.io/find-vestings?address={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type":              "WebApplication",
+      "@id":                "https://vestream.io/#app",
+      name:                 "Vestream",
+      url:                  "https://vestream.io",
+      applicationCategory:  "FinanceApplication",
+      operatingSystem:      "Web",
+      browserRequirements:  "Requires JavaScript and modern browser",
+      offers: {
+        "@type":       "Offer",
+        price:         "0",
+        priceCurrency: "USD",
+      },
+      featureList: [
+        "Track token vestings across 9 protocols",
+        "Real-time unlock alerts via push and email",
+        "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Solana",
+        "P&L tracking and CSV export",
+        "Protocol-by-protocol TVL transparency",
+      ],
+    },
+  ],
+};
+
 export default async function Home() {
   const liveStats = await getHomepageLiveStats();
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageJsonLd) }}
+      />
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNav />
