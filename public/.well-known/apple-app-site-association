@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "REPLACE_WITH_TEAMID.io.vestream.app",
+        "paths": [
+          "/find-vestings",
+          "/find-vestings/*",
+          "/protocols/*",
+          "/stream/*",
+          "/claim/*",
+          "/token/*",
+          "NOT /api/*",
+          "NOT /admin/*",
+          "NOT /dashboard/*",
+          "NOT /developer/*"
+        ]
+      }
+    ]
+  }
+}
