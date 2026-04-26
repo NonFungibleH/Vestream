@@ -41,12 +41,21 @@ const securityHeaders = [
     key:   "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self' data:",
-      // API calls: own origin + The Graph gateway + RPC nodes + WalletConnect
-      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.supabase.co https://vestream.io",
+      // API calls: own origin + The Graph gateway + RPC nodes + WalletConnect.
+      // Both .com and .org WalletConnect/Web3Modal hosts are needed: RainbowKit's
+      // bundled Web3Modal calls api.web3modal.org (project limits) and
+      // pulse.walletconnect.org (telemetry). Without these, the modal fails to
+      // initialise and wallet connectors (incl. MetaMask) never get a chance to
+      // open — which presents as "MetaMask popup never fires". GA: googletagmanager
+      // serves gtag.js; google-analytics.com is the collection endpoint.
+      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://www.google-analytics.com https://www.googletagmanager.com",
+      // Web3Modal occasionally embeds verify.walletconnect.org in an iframe for
+      // origin verification on certain wallet flows.
+      "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",
