@@ -71,9 +71,9 @@ export default async function Home() {
         {/* Floating left card — portfolio value */}
         <div className="absolute hidden xl:block pointer-events-none"
           style={{ left: "24px", top: "50%", transform: "translateY(-50%) rotate(-6deg)", zIndex: 0 }}>
-          <div style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(0,0,0,0.45)", width: "210px", padding: "16px" }}>
-            <p style={{ color: "#4b5563", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Total Portfolio Value</p>
-            <p style={{ color: "white", fontSize: "22px", fontWeight: "800", lineHeight: 1.1, marginBottom: "2px" }}>$206,500</p>
+          <div style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(15,23,42,0.12)", width: "210px", padding: "16px" }}>
+            <p style={{ color: "#B8BABD", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Total Portfolio Value</p>
+            <p style={{ color: "#1A1D20", fontSize: "22px", fontWeight: "800", lineHeight: 1.1, marginBottom: "2px" }}>$206,500</p>
             <p style={{ color: "#2DB36A", fontSize: "11px", fontWeight: "600", marginBottom: "14px" }}>$5,650 claimable now</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {([
@@ -83,10 +83,10 @@ export default async function Home() {
               ] as const).map((t) => (
                 <div key={t.symbol}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
-                    <span style={{ color: "#9ca3af", fontSize: "10px" }}>{t.symbol}</span>
-                    <span style={{ color: "#9ca3af", fontSize: "10px" }}>{t.pct}%</span>
+                    <span style={{ color: "#8B8E92", fontSize: "10px" }}>{t.symbol}</span>
+                    <span style={{ color: "#8B8E92", fontSize: "10px" }}>{t.pct}%</span>
                   </div>
-                  <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: "4px", height: "4px" }}>
+                  <div style={{ background: "rgba(21,23,26,0.06)", borderRadius: "4px", height: "4px" }}>
                     <div style={{ width: `${t.pct}%`, height: "4px", borderRadius: "4px", background: t.color }} />
                   </div>
                 </div>
@@ -94,7 +94,7 @@ export default async function Home() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "12px" }}>
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2DB36A", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#4b5563", fontSize: "9px" }}>Live · Updated just now</span>
+              <span style={{ color: "#B8BABD", fontSize: "9px" }}>Live · Updated just now</span>
             </div>
           </div>
         </div>
@@ -102,24 +102,24 @@ export default async function Home() {
         {/* Floating right card — token unlock status */}
         <div className="absolute hidden xl:block pointer-events-none"
           style={{ right: "24px", top: "50%", transform: "translateY(-50%) rotate(6deg)", zIndex: 0 }}>
-          <div style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(0,0,0,0.45)", width: "210px", padding: "16px" }}>
-            <p style={{ color: "#4b5563", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "10px" }}>Token Unlock Status</p>
+          <div style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(15,23,42,0.12)", width: "210px", padding: "16px" }}>
+            <p style={{ color: "#B8BABD", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "10px" }}>Token Unlock Status</p>
             {/* Streaming now */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(45,179,106,0.08)", border: "1px solid rgba(45,179,106,0.2)", marginBottom: "7px" }}>
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2DB36A", flexShrink: 0 }} />
               <div>
-                <p style={{ color: "#2DB36A", fontSize: "10px", fontWeight: "700" }}>USDC · Streaming now</p>
-                <p style={{ color: "#4b5563", fontSize: "9px", marginTop: "1px" }}>Continuous · claim any time</p>
+                <p style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: "700" }}>USDC · Streaming now</p>
+                <p style={{ color: "#8B8E92", fontSize: "9px", marginTop: "1px" }}>Continuous · claim any time</p>
               </div>
             </div>
             {/* Countdown */}
             <div style={{ padding: "8px 10px", borderRadius: "10px", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.2)" }}>
-              <p style={{ color: "#1CB8B8", fontSize: "10px", fontWeight: "700", marginBottom: "6px" }}>NOVA · Next unlock</p>
+              <p style={{ color: "#0F8A8A", fontSize: "10px", fontWeight: "700", marginBottom: "6px" }}>NOVA · Next unlock</p>
               <div style={{ display: "flex", gap: "5px" }}>
                 {([["14", "days"], ["6", "hrs"], ["22", "min"]] as const).map(([v, l]) => (
-                  <div key={l} style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: "7px", padding: "6px 4px", textAlign: "center" }}>
-                    <p style={{ color: "white", fontSize: "16px", fontWeight: "800", lineHeight: 1 }}>{v}</p>
-                    <p style={{ color: "#4b5563", fontSize: "8px", marginTop: "2px" }}>{l}</p>
+                  <div key={l} style={{ flex: 1, background: "rgba(21,23,26,0.04)", borderRadius: "7px", padding: "6px 4px", textAlign: "center" }}>
+                    <p style={{ color: "#1A1D20", fontSize: "16px", fontWeight: "800", lineHeight: 1 }}>{v}</p>
+                    <p style={{ color: "#B8BABD", fontSize: "8px", marginTop: "2px" }}>{l}</p>
                   </div>
                 ))}
               </div>
@@ -823,20 +823,21 @@ export default async function Home() {
                   <stop offset="1" stopColor="#0F8A8A"/>
                 </linearGradient>
               </defs>
-              {/* Phone body */}
-              <rect x="4" y="4" width="142" height="302" rx="26" fill="#1a1625" stroke="rgba(28,184,184,0.45)" strokeWidth="1.5"/>
+              {/* Phone body — light frame to match the actual mobile app */}
+              <rect x="4" y="4" width="142" height="302" rx="26" fill="#F5F5F3" stroke="rgba(28,184,184,0.55)" strokeWidth="1.5"/>
               {/* Side button (right) */}
-              <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(28,184,184,0.3)"/>
+              <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(28,184,184,0.45)"/>
               {/* Volume buttons (left) */}
-              <rect x="1" y="84" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.3)"/>
-              <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.3)"/>
+              <rect x="1" y="84" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.45)"/>
+              <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.45)"/>
               {/* Screen */}
-              <rect x="10" y="10" width="130" height="290" rx="20" fill="#0d0f14"/>
-              {/* Dynamic Island */}
-              <rect x="51" y="17" width="48" height="12" rx="6" fill="#1a1625"/>
+              <rect x="10" y="10" width="130" height="290" rx="20" fill="#FAFAFA"/>
+              {/* Dynamic Island — stays dark, it's a hardware element */}
+              <rect x="51" y="17" width="48" height="12" rx="6" fill="#1A1D20"/>
               {/* App bar */}
-              <rect x="10" y="40" width="130" height="34" fill="#141720"/>
-              {/* App icon — V-path mark */}
+              <rect x="10" y="40" width="130" height="34" fill="white"/>
+              <line x1="10" y1="74" x2="140" y2="74" stroke="rgba(21,23,26,0.06)" strokeWidth="1"/>
+              {/* App icon — V-path mark (teal gradient stays) */}
               <rect x="18" y="47" width="20" height="20" rx="5" fill="url(#iconGrad)"/>
               {/* Left arm (solid) */}
               <line x1="22" y1="52" x2="28" y2="62" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
@@ -851,22 +852,22 @@ export default async function Home() {
               <circle cx="32" cy="57" r="1" fill="white" fillOpacity="0.45"/>
               <circle cx="34" cy="54.5" r="0.7" fill="white" fillOpacity="0.22"/>
               {/* App title */}
-              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="white" fontFamily="system-ui">Vestream</text>
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
-              <rect x="14" y="82" width="122" height="46" rx="10" fill="#201c40" stroke="rgba(28,184,184,0.28)" strokeWidth="1"/>
+              <rect x="14" y="82" width="122" height="46" rx="10" fill="white" stroke="rgba(28,184,184,0.32)" strokeWidth="1"/>
               {/* Bell icon background */}
-              <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(15,138,138,0.45)"/>
+              <rect x="21" y="89" width="22" height="22" rx="7" fill="rgba(28,184,184,0.18)"/>
               {/* Bell SVG path */}
-              <path d="M32 92.5c-2.2 0-4 1.8-4 4v.8c-.8.4-1 1-1 1.7h10c0-.7-.2-1.3-1-1.7v-.8c0-2.2-1.8-4-4-4z" fill="white" fillOpacity="0.9"/>
-              <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="white" fillOpacity="0.9"/>
+              <path d="M32 92.5c-2.2 0-4 1.8-4 4v.8c-.8.4-1 1-1 1.7h10c0-.7-.2-1.3-1-1.7v-.8c0-2.2-1.8-4-4-4z" fill="#0F8A8A"/>
+              <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="#0F8A8A"/>
               {/* Notification text */}
-              <text x="49" y="98" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">Token Unlock</text>
-              <text x="49" y="109" fontSize="7" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
-              <text x="128" y="98" fontSize="6.5" fill="#c4b5fd" textAnchor="end" fontFamily="system-ui">now</text>
+              <text x="49" y="98" fontSize="8" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Token Unlock</text>
+              <text x="49" y="109" fontSize="7" fill="#8B8E92" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
+              <text x="128" y="98" fontSize="6.5" fill="#0F8A8A" textAnchor="end" fontFamily="system-ui">now</text>
               {/* Divider */}
-              <line x1="14" y1="142" x2="136" y2="142" stroke="#1e2330" strokeWidth="1"/>
+              <line x1="14" y1="142" x2="136" y2="142" stroke="rgba(21,23,26,0.06)" strokeWidth="1"/>
               {/* Section label */}
-              <text x="14" y="157" fontSize="7.5" fontWeight="600" fill="rgba(255,255,255,0.3)" fontFamily="system-ui" letterSpacing="1">PORTFOLIO</text>
+              <text x="14" y="157" fontSize="7.5" fontWeight="600" fill="#B8BABD" fontFamily="system-ui" letterSpacing="1">PORTFOLIO</text>
               {/* Portfolio rows */}
               {[
                 { y: 178, label: "NOVA", val: "$4,218", color: "#F0992E" },
@@ -874,15 +875,15 @@ export default async function Home() {
                 { y: 234, label: "VEST", val: "$920",   color: "#2DB36A" },
               ].map(r => (
                 <g key={r.label}>
-                  <rect x="14" y={r.y - 14} width="122" height="22" rx="8" fill="#141720"/>
+                  <rect x="14" y={r.y - 14} width="122" height="22" rx="8" fill="white" stroke="rgba(21,23,26,0.06)" strokeWidth="0.75"/>
                   <circle cx="28" cy={r.y - 3} r="6.5" fill={r.color + "28"}/>
                   <text x="28" y={r.y} fontSize="7" fontWeight="700" fill={r.color} textAnchor="middle">{r.label[0]}</text>
-                  <text x="41" y={r.y} fontSize="8" fontWeight="600" fill="white" fontFamily="system-ui">{r.label}</text>
-                  <text x="128" y={r.y} fontSize="8" fontWeight="700" fill="#34d399" textAnchor="end" fontFamily="system-ui">{r.val}</text>
+                  <text x="41" y={r.y} fontSize="8" fontWeight="600" fill="#1A1D20" fontFamily="system-ui">{r.label}</text>
+                  <text x="128" y={r.y} fontSize="8" fontWeight="700" fill="#0F8A4A" textAnchor="end" fontFamily="system-ui">{r.val}</text>
                 </g>
               ))}
               {/* Home indicator */}
-              <rect x="55" y="295" width="40" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+              <rect x="55" y="295" width="40" height="4" rx="2" fill="rgba(21,23,26,0.18)"/>
             </svg>
           </div>
         </div>
