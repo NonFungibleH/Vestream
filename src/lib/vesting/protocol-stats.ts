@@ -12,10 +12,18 @@
 // zeroed stats / null unlocks — the page renders an empty-state.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
+
+// Sepolia + Base Sepolia. Public landing-page surfaces (per-protocol stats,
+// /protocols upcoming-unlocks widget, "latest" / "next" unlock cards) hide
+// these so visitors see only mainnet activity — testnet streams are noise
+// from internal smoke-tests, not user-relevant unlocks. Authenticated dashboard
+// + REST API still see every chain so devs / power users can opt in.
+const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
+const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
 
 export interface ProtocolStats {
   /** Total streams of this protocol currently indexed, active + fully vested. */
@@ -192,7 +200,7 @@ export async function getLatestUnlock(
       streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
-    .where(and(adapterFilter(adapterIds), eq(vestingStreamsCache.isFullyVested, true)))
+    .where(and(adapterFilter(adapterIds), eq(vestingStreamsCache.isFullyVested, true), excludeTestnets))
     .orderBy(desc(vestingStreamsCache.endTime))
     .limit(1);
 
@@ -224,6 +232,7 @@ export async function getNextUpcomingUnlock(
         adapterFilter(adapterIds),
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
+        excludeTestnets,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
@@ -309,6 +318,7 @@ export async function getUpcomingUnlockGroupsAcross(
       and(
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
+        excludeTestnets,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
@@ -450,6 +460,7 @@ export async function getUpcomingUnlocksForProtocol(
         adapterFilter(adapterIds),
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
+        excludeTestnets,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
