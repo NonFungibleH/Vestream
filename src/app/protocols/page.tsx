@@ -235,9 +235,6 @@ export default async function UnlocksIndexPage() {
   function effectiveTotal(slug: string): number {
     return statsMap.get(slug)?.totalStreams ?? 0;
   }
-  function effectiveActive(slug: string): number {
-    return statsMap.get(slug)?.activeStreams ?? 0;
-  }
 
   const grandTotal = protocols.reduce((sum, p) => sum + effectiveTotal(p.slug), 0);
 
@@ -350,9 +347,8 @@ export default async function UnlocksIndexPage() {
               key={p.slug}
               protocol={p}
               stats={statsMap.get(p.slug) ?? null}
-              effectiveTotal={effectiveTotal(p.slug)}
-              effectiveActive={effectiveActive(p.slug)}
-              externalTvlUsd={externallySourced.has(p.slug) ? tvlMap[p.slug]?.tvlUsd : undefined}
+              tvlUsd={tvlMap[p.slug]?.tvlUsd}
+              isExternalSource={externallySourced.has(p.slug)}
             />
           ))}
         </div>
@@ -421,29 +417,31 @@ function compactUsd(n: number): string {
 function ProtocolCard({
   protocol,
   stats,
-  effectiveTotal,
-  effectiveActive,
-  externalTvlUsd,
+  tvlUsd,
+  isExternalSource,
 }: {
-  protocol:        ProtocolMeta;
-  stats:           ProtocolStats | null;
-  effectiveTotal:  number;
-  effectiveActive: number;
-  /** When set (DefiLlama-backed protocols like Streamflow), the card swaps
-   *  the stream-count stats for a TVL headline — otherwise those protocols
-   *  show "— streams · — active" until user traffic populates the cache,
-   *  which undersells the live TVL we already have. */
-  externalTvlUsd?: number;
+  protocol:         ProtocolMeta;
+  stats:            ProtocolStats | null;
+  /** Aggregated TVL for this protocol (sum across chains) from the daily
+   *  snapshot table — populated for DefiLlama-sourced AND walker-sourced
+   *  protocols. Undefined / 0 when the protocol has no snapshot yet. */
+  tvlUsd?:          number;
+  /** True for DefiLlama-passthrough protocols (Sablier, Hedgey, Streamflow);
+   *  drives the "via DefiLlama" attribution label only — not the layout. */
+  isExternalSource: boolean;
 }) {
-  // Streamflow-style (external TVL) badge has different semantics than the
-  // "indexed today" freshness badge — it signals "DefiLlama is our live TVL
-  // source" rather than "we just ran a seeder".
-  const liveLabel = externalTvlUsd && externalTvlUsd > 0
+  // All cards use the SAME bottom-row layout: TVL · chains · "Live" — the
+  // top-right uppercase badge handles source/freshness nuance instead.
+  // Stream counts intentionally omitted: DefiLlama-sourced protocols don't
+  // populate vestingStreamsCache (per-user-query cache, not a global index),
+  // so "— streams" alongside real TVL would undersell those protocols. TVL
+  // is the universally-comparable metric.
+  const hasTvl = typeof tvlUsd === "number" && tvlUsd > 0;
+  const liveLabel = isExternalSource
     ? "via DefiLlama"
     : stats?.lastIndexedAt
       ? `Indexed ${relativeFreshness(stats.lastIndexedAt)}`
-      : `${protocol.chainIds.length} chains`;
-  const showTvl = externalTvlUsd !== undefined && externalTvlUsd > 0;
+      : `${protocol.chainIds.length} chain${protocol.chainIds.length === 1 ? "" : "s"}`;
 
   // Protocol-colour hover accent — we intensify the tint on hover by upgrading
   // the rgba 0.08 base into a 0.14 halo, purely via CSS.
@@ -496,49 +494,24 @@ function ProtocolCard({
           className="flex items-center gap-4 text-xs pt-3"
           style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}
         >
-          {showTvl ? (
-            <>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {compactUsd(externalTvlUsd!)}
-                </div>
-                <div style={{ color: "#B8BABD" }}>TVL</div>
-              </div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {protocol.chainIds.length}
-                </div>
-                <div style={{ color: "#B8BABD" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
-              </div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  Live
-                </div>
-                <div style={{ color: "#B8BABD" }}>indexing</div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {effectiveTotal > 0 ? effectiveTotal.toLocaleString() : "—"}
-                </div>
-                <div style={{ color: "#B8BABD" }}>streams</div>
-              </div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {effectiveActive > 0 ? effectiveActive.toLocaleString() : "—"}
-                </div>
-                <div style={{ color: "#B8BABD" }}>active</div>
-              </div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {protocol.chainIds.length}
-                </div>
-                <div style={{ color: "#B8BABD" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
-              </div>
-            </>
-          )}
+          <div>
+            <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
+              {hasTvl ? compactUsd(tvlUsd!) : "—"}
+            </div>
+            <div style={{ color: "#B8BABD" }}>TVL</div>
+          </div>
+          <div>
+            <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
+              {protocol.chainIds.length}
+            </div>
+            <div style={{ color: "#B8BABD" }}>chain{protocol.chainIds.length === 1 ? "" : "s"}</div>
+          </div>
+          <div>
+            <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
+              Live
+            </div>
+            <div style={{ color: "#B8BABD" }}>indexing</div>
+          </div>
         </div>
       </div>
     </Link>
