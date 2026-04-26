@@ -10,7 +10,7 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, eq, inArray, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
@@ -197,9 +197,13 @@ export interface WindowResult {
  * active streams (capped at poolLimit), compute eventTime per row in JS
  * (= streamData.nextUnlockTime ?? endTime), and filter by that.
  *
- * `poolLimit` defaults to 5000 — large enough that a multi-protocol query
- * captures essentially every active stream we have indexed, while staying
- * under a few-MB transfer budget.
+ * `poolLimit` defaults to 2000. Combined with the SQL `endTime > startSec`
+ * pre-filter and `ORDER BY endTime ASC`, this surfaces the soonest-ending
+ * 2000 streams — which is exactly the candidate set we want for an
+ * upcoming-unlocks calendar. Higher than 2000 risks Vercel gateway timeouts
+ * because the streamData JSON blob is ~5 KB per row (5000 × 5 KB = 25 MB
+ * transfer), and Sablier-scale protocols routinely hit the cap on per-
+ * protocol queries.
  */
 const EMPTY_WINDOW_RESULT: WindowResult = {
   groups: [],
@@ -209,7 +213,7 @@ const EMPTY_WINDOW_RESULT: WindowResult = {
 export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
-  poolLimit = 5000,
+  poolLimit = 2000,
   /** Optional — if set, restrict to streams with one of these adapter IDs.
    *  Used by the per-protocol /protocols/[slug]/unlocks pages. Empty array
    *  is treated as "no filter" (same as undefined). */
@@ -236,8 +240,17 @@ export async function getUnlocksInWindow(
     ? inArray(vestingStreamsCache.chainId, [...chainIds])
     : undefined;
 
-  // Pull every ACTIVE stream (isFullyVested = false) for the protocol(s).
-  // No endTime filter at SQL level — eventTime filtering happens in JS.
+  // Pull ACTIVE streams (isFullyVested = false) for the protocol(s),
+  // ordered by endTime ASC so the soonest-ending streams come first.
+  // Critical for Sablier-scale protocols: without ORDER BY + the
+  // `endTime > startSec` SQL pre-filter, postgres returned random
+  // rows and the streamData JSON transfer (5000 × ~5KB = ~25MB)
+  // blew past Vercel's gateway timeout. We still JS-filter by
+  // eventTime afterward (eventTime = nextUnlockTime ?? endTime),
+  // which can only be ≤ endTime — so a SQL-level `endTime > startSec`
+  // is safe (it never excludes a row that the JS filter would have
+  // accepted; eventTime ≤ endTime, so endTime ≤ startSec implies
+  // eventTime ≤ startSec, which JS would have dropped anyway).
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -253,11 +266,13 @@ export async function getUnlocksInWindow(
     .where(
       and(
         eq(vestingStreamsCache.isFullyVested, false),
+        gt(vestingStreamsCache.endTime, startSec),
         excludeTestnets,
         ...(protocolFilter ? [protocolFilter] : []),
         ...(chainFilter ? [chainFilter] : []),
       ),
     )
+    .orderBy(asc(vestingStreamsCache.endTime))
     .limit(poolLimit);
 
   // ── Compute per-row eventTime + filter by window ───────────────────────

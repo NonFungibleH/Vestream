@@ -443,6 +443,14 @@ export async function getUpcomingUnlocksForProtocol(
   limit = 6,
 ): Promise<UnlockSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
+  // 60-second buffer past now: rows whose endTime is within 60s of `now`
+  // routinely render as "in 0s" by the time the HTML reaches the browser
+  // (SQL → render → edge → user adds enough latency to push them past).
+  // Filtering at +60s keeps the queue clean of those near-zero stragglers
+  // without any meaningful loss — anyone who lands on the page exactly
+  // when one of those is genuinely about to trigger has already seen
+  // it via the homepage live ticker.
+  const cutoffSec = nowSec + 60;
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -459,7 +467,7 @@ export async function getUpcomingUnlocksForProtocol(
       and(
         adapterFilter(adapterIds),
         eq(vestingStreamsCache.isFullyVested, false),
-        gt(vestingStreamsCache.endTime, nowSec),
+        gt(vestingStreamsCache.endTime, cutoffSec),
         excludeTestnets,
       ),
     )

@@ -116,7 +116,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   let countLine = "";
   try {
     const now = Math.floor(Date.now() / 1000);
-    const result = await getUnlocksInWindow(now, now + 5 * 365 * 86400, 5000, meta.adapterIds);
+    const result = await getUnlocksInWindow(now, now + 5 * 365 * 86400, 2000, meta.adapterIds);
     if (result.stats.unlockCount > 0) {
       countLine = `${result.stats.unlockCount} upcoming unlocks across ${result.stats.tokenCount} tokens. `;
     }
@@ -151,15 +151,17 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
   // 5-year forward window — broad enough to capture multi-year team vests
   // (Team Finance's typical 2-4 year linear schedules don't have discrete
   // "events" before completion, so a 365-day window misses 90%+ of active
-  // positions). Pool of 5000 is well above the per-protocol stream count
-  // we'd ever realistically have.
+  // positions). Pool of 2000 is sized to stay under Vercel's gateway
+  // timeout for Sablier-scale protocols; the SQL endTime pre-filter and
+  // ORDER BY in `getUnlocksInWindow` ensure those 2000 are the soonest-
+  // ending streams, which is exactly the calendar slice users want.
   // Fail-soft: at build time CI has no DB access, so a query failure
   // renders an empty state and ISR refreshes on first runtime request.
   const now = Math.floor(Date.now() / 1000);
   const FIVE_YEARS_SEC = 5 * 365 * 86400;
   let result;
   try {
-    result = await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 5000, meta.adapterIds, chainFilter);
+    result = await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 2000, meta.adapterIds, chainFilter);
   } catch (err) {
     console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
     result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };

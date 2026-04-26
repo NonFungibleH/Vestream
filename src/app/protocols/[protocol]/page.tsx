@@ -31,6 +31,7 @@ import {
   getLatestUnlock,
   getNextUpcomingUnlock,
   getProtocolStats,
+  getUpcomingUnlocksForProtocol,
   relativeFreshness,
   relativeTimeSince,
   relativeTimeUntil,
@@ -39,8 +40,6 @@ import {
   type ProtocolStats,
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
-import { getUnlocksInWindow } from "@/lib/vesting/unlock-windows";
-import type { SupportedChainId } from "@/lib/vesting/types";
 
 // Render on-demand instead of pre-rendering all 7 protocol pages at build
 // time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
@@ -81,45 +80,19 @@ interface ProtocolPageData {
 const loadProtocolData = unstable_cache(
   async (adapterIds: readonly string[]): Promise<ProtocolPageData> => {
     try {
-      const nowSec = Math.floor(Date.now() / 1000);
-      const FIVE_YEARS_SEC = 5 * 365 * 86400;
-      // Switched from getUpcomingUnlocksForProtocol to getUnlocksInWindow:
-      //   1. eventTime semantics (nextUnlockTime ?? endTime) — matches the
-      //      dedicated /protocols/[slug]/unlocks page, so visitors see the
-      //      same data regardless of which page they're on.
-      //   2. Filters in JS by `eventTime >= now`, eliminating stale rows
-      //      where endTime is ~1s past now (those used to render as
-      //      "in 0s" entries that crowded out real upcoming events).
-      //   3. 5-year window captures multi-year vests (Team Finance etc.)
-      //      that the old 365-day endTime SQL filter missed.
-      const [stats, latest, upcoming, windowResult] = await Promise.all([
+      const [stats, latest, upcoming, upcomingList] = await Promise.all([
         getProtocolStats(adapterIds),
         getLatestUnlock(adapterIds),
         getNextUpcomingUnlock(adapterIds),
-        getUnlocksInWindow(nowSec, nowSec + FIVE_YEARS_SEC, 5000, adapterIds),
+        getUpcomingUnlocksForProtocol(adapterIds, 6),
       ]);
-      // Map WindowUnlockGroup[] → UnlockSummary[] so the existing
-      // UpcomingRow renderer continues to work without changes. The
-      // `endTime` field carries eventTime here, which is exactly what
-      // we want displayed.
-      const upcomingList: UnlockSummary[] = windowResult.groups.slice(0, 6).map((g) => ({
-        streamId:     g.streamId,
-        protocol:     g.protocol,
-        chainId:      g.chainId as SupportedChainId,
-        tokenSymbol:  g.tokenSymbol,
-        tokenAddress: g.tokenAddress,
-        tokenDecimals: g.tokenDecimals,
-        endTime:      g.eventTime,
-        amount:       g.amount,
-        recipient:    g.recipient,
-      }));
       return { stats, latest, upcoming, upcomingList };
     } catch (err) {
       console.error(`[protocol-page] data fetch failed for ${adapterIds.join(",")}:`, err);
       return { stats: null, latest: null, upcoming: null, upcomingList: [] };
     }
   },
-  ["protocol-page-data-v2"],
+  ["protocol-page-data-v3"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
