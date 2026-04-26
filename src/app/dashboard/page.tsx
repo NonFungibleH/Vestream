@@ -39,12 +39,15 @@ const TOKEN_COLORS_PRESET: Record<string, string> = {
   WBNB: "#f3ba2f",
 };
 
-// 20-slot palette of visually distinct hues for unknown tokens
+// 20-slot palette of visually distinct hues for unknown tokens.
+// Purples were swapped out (off-brand under the new ink/teal palette);
+// replacements are visually distinct from existing slots and from
+// the brand teal — slate, lime, amber stand in for the three purples.
 const HASH_PALETTE = [
   "#e74c3c", "#e67e22", "#2ecc71", "#1abc9c", "#3498db",
-  "#9b59b6", "#ff6b6b", "#feca57", "#48dbfb", "#ff9ff3",
-  "#54a0ff", "#5f27cd", "#c44569", "#f8b739", "#05c46b",
-  "#0fbcf9", "#ef5777", "#4bcffa", "#fd9644", "#a29bfe",
+  "#475569", "#ff6b6b", "#feca57", "#48dbfb", "#ff9ff3",
+  "#54a0ff", "#0891b2", "#c44569", "#f8b739", "#05c46b",
+  "#0fbcf9", "#ef5777", "#4bcffa", "#fd9644", "#84cc16",
 ];
 
 function getTokenColor(symbol: string): string {
@@ -932,7 +935,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
   const numProtocols = protocols.size;
 
   const gradientStyle = dark
-    ? { background: "linear-gradient(135deg, #0d0f14 0%, #0f1f4a 50%, #1a1035 100%)" }
+    ? { background: "linear-gradient(135deg, #0d0f14 0%, #0F8A8A 100%)" }
     : { background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)" };
 
   return (
@@ -3464,7 +3467,7 @@ function WalletRow({
             const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
             return (
               <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(15,138,138,0.10)", color: "#c4b5fd" }}>
+                style={{ background: "rgba(15,138,138,0.10)", color: "#0F8A8A" }}>
                 {pr?.label ?? p}
               </span>
             );
