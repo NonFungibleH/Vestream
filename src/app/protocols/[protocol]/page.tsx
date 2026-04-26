@@ -190,8 +190,35 @@ export default async function ProtocolLandingPage(
       />
       <SiteNav theme="light" />
 
+      {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
+      {/* Pairs with the BreadcrumbList JSON-LD above — Google rewards sites
+          that surface the breadcrumb structurally AND visually. Subtle
+          styling so it doesn't compete with the hero below. */}
+      <nav
+        aria-label="Breadcrumb"
+        className="px-4 md:px-8 pt-20 md:pt-24 max-w-5xl mx-auto w-full"
+      >
+        <ol className="flex items-center gap-2 text-xs" style={{ color: "#8B8E92" }}>
+          <li>
+            <Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>
+              Home
+            </Link>
+          </li>
+          <li aria-hidden style={{ color: "#B8BABD" }}>/</li>
+          <li>
+            <Link href="/protocols" className="hover:underline" style={{ color: "#8B8E92" }}>
+              Protocols
+            </Link>
+          </li>
+          <li aria-hidden style={{ color: "#B8BABD" }}>/</li>
+          <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>
+            {meta.name}
+          </li>
+        </ol>
+      </nav>
+
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-24 pb-14 md:pt-36 md:pb-20 px-4 md:px-8 text-center">
+      <section className="relative overflow-hidden pt-6 pb-14 md:pt-10 md:pb-20 px-4 md:px-8 text-center">
         {/* Protocol-coloured wash behind the hero */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${accentHalo} 0%, transparent 70%)`,
