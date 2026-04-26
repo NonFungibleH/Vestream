@@ -10,11 +10,40 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, gte, inArray, lte, notInArray } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
-import type { UnlockGroupSummary } from "./protocol-stats";
+
+/**
+ * Per-group output for window queries. Distinct from UnlockGroupSummary in
+ * protocol-stats.ts because the field semantics differ:
+ *
+ *   - UnlockGroupSummary.endTime  = the stream's full completion time
+ *   - WindowUnlockGroup.eventTime = the next *discrete* unlock event
+ *                                   (nextUnlockTime if available, else endTime)
+ *
+ * This matters because most real-world vests are multi-year schedules with
+ * monthly drips. Filtering by stream-end-time misses every intermediate
+ * unlock event — exactly what calendar pages need to surface.
+ */
+export interface WindowUnlockGroup {
+  streamId:      string;
+  protocol:      string;
+  chainId:       number;
+  tokenSymbol:   string | null;
+  tokenAddress:  string;
+  tokenDecimals: number;
+  /** Unix seconds — time of the next discrete unlock event for this group. */
+  eventTime:     number;
+  /** Stringified bigint — sum of locked amount across the group, or null
+   *  if no member contributed a parseable amount. */
+  amount:        string | null;
+  recipient:     string;
+  walletCount:   number;
+  streamCount:   number;
+  groupKey:      string;
+}
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
@@ -152,21 +181,26 @@ export interface WindowAggregateStats {
 // ── Window query — returns groups + aggregate stats ─────────────────────────
 
 export interface WindowResult {
-  groups: UnlockGroupSummary[];
+  groups: WindowUnlockGroup[];
   stats:  WindowAggregateStats;
 }
 
 /**
- * Fetch all unlock groups in [startSec, endSec], grouped by (proto, chain,
- * token, hour-bucket). Same collapse logic as getUpcomingUnlockGroupsAcross
- * but bounded by date window instead of count, and without the
- * per-protocol cap that would distort SEO listings.
+ * Fetch all unlock groups in [startSec, endSec], grouped by
+ * (proto, chain, token, eventTime hour-bucket).
  *
- * Pool size is capped at 500 — beyond that we'd be surfacing too many rows
- * for a useful page anyway, and the DB query stays cheap.
+ * **Filtering happens in app code, not SQL.** Background: most real-world
+ * vests are multi-year schedules with periodic unlocks (monthly drips,
+ * cliff steps). The stream's `endTime` (when vesting fully completes) is
+ * years out — but the *next discrete unlock event* is much closer. SQL-
+ * filtering by endTime misses every intermediate event. So we pull all
+ * active streams (capped at poolLimit), compute eventTime per row in JS
+ * (= streamData.nextUnlockTime ?? endTime), and filter by that.
+ *
+ * `poolLimit` defaults to 5000 — large enough that a multi-protocol query
+ * captures essentially every active stream we have indexed, while staying
+ * under a few-MB transfer budget.
  */
-// Empty result helper — used both for build-time CI short-circuit AND for
-// query failures so callers always get a well-typed object.
 const EMPTY_WINDOW_RESULT: WindowResult = {
   groups: [],
   stats:  { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] },
@@ -175,17 +209,17 @@ const EMPTY_WINDOW_RESULT: WindowResult = {
 export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
-  poolLimit = 500,
+  poolLimit = 5000,
   /** Optional — if set, restrict to streams with one of these adapter IDs.
    *  Used by the per-protocol /protocols/[slug]/unlocks pages. Empty array
    *  is treated as "no filter" (same as undefined). */
   adapterIds?: readonly string[],
+  /** Optional — if set, restrict to streams on one of these chain IDs.
+   *  Used when a chain-filter UI is active (e.g. "Show only Ethereum
+   *  unlocks"). Empty array → no filter. */
+  chainIds?: readonly number[],
 ): Promise<WindowResult> {
-  // Build-time short-circuit. CI runs `next build` without DATABASE_URL,
-  // and the postgres driver burns 30-60s per query in connect-retry before
-  // failing — multiplied across 200+ prerendered pages, the build times
-  // out. A try/catch around the slow failure isn't enough; we need to skip
-  // the query entirely when there's no DB to talk to.
+  // Build-time short-circuit (CI runs `next build` without DATABASE_URL).
   if (!process.env.DATABASE_URL) {
     return EMPTY_WINDOW_RESULT;
   }
@@ -193,7 +227,12 @@ export async function getUnlocksInWindow(
   const protocolFilter = adapterIds && adapterIds.length > 0
     ? inArray(vestingStreamsCache.protocol, [...adapterIds])
     : undefined;
+  const chainFilter = chainIds && chainIds.length > 0
+    ? inArray(vestingStreamsCache.chainId, [...chainIds])
+    : undefined;
 
+  // Pull every ACTIVE stream (isFullyVested = false) for the protocol(s).
+  // No endTime filter at SQL level — eventTime filtering happens in JS.
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -209,37 +248,51 @@ export async function getUnlocksInWindow(
     .where(
       and(
         eq(vestingStreamsCache.isFullyVested, false),
-        gte(vestingStreamsCache.endTime, startSec),
-        lte(vestingStreamsCache.endTime, endSec),
-        gt(vestingStreamsCache.endTime, 0),
         excludeTestnets,
         ...(protocolFilter ? [protocolFilter] : []),
+        ...(chainFilter ? [chainFilter] : []),
       ),
     )
-    .orderBy(asc(vestingStreamsCache.endTime))
     .limit(poolLimit);
 
+  // ── Compute per-row eventTime + filter by window ───────────────────────
+  // eventTime = nextUnlockTime if positive, else endTime. Streams without
+  // either get a 0 eventTime and are dropped by the window filter.
+  type EnrichedRow = typeof rows[number] & { eventTime: number };
+  const enriched: EnrichedRow[] = rows.map((row) => {
+    const sd = row.streamData as Partial<VestingStream>;
+    const next = typeof sd.nextUnlockTime === "number" && sd.nextUnlockTime > 0
+      ? sd.nextUnlockTime
+      : 0;
+    const end = row.endTime ?? 0;
+    const eventTime = next > 0 ? next : end;
+    return { ...row, eventTime };
+  }).filter((r) => r.eventTime >= startSec && r.eventTime <= endSec);
+
   // ── Group by (protocolCanonical, chainId, tokenAddress, hourBucket) ─────
+  // Hour-bucket is derived from eventTime (the next discrete unlock time)
+  // rather than endTime, so mass distributions to many wallets at the same
+  // event time collapse correctly.
   interface Group {
-    representative: typeof rows[number];
+    representative: EnrichedRow;
     protoCanonical: string;
     hourBucket:     number;
     recipients:     Set<string>;
     streamCount:    number;
     amountSum:      bigint;
     hasAmount:      boolean;
-    earliestEnd:    number;
+    earliestEvent:  number;
   }
 
   const groups = new Map<string, Group>();
   const allRecipients = new Set<string>();
   const tokenAmountMap = new Map<string, { symbol: string | null; address: string; amount: bigint }>();
 
-  for (const row of rows) {
+  for (const row of enriched) {
     const protoCanonical = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
     const tokenKey       = (row.tokenAddress ?? "").toLowerCase();
-    const end            = row.endTime ?? 0;
-    const hourBucket     = Math.floor(end / SECONDS_PER_HOUR);
+    const eventTime      = row.eventTime;
+    const hourBucket     = Math.floor(eventTime / SECONDS_PER_HOUR);
     const key            = `${protoCanonical}-${row.chainId}-${tokenKey}-${hourBucket}`;
 
     let g = groups.get(key);
@@ -252,12 +305,12 @@ export async function getUnlocksInWindow(
         streamCount:    0,
         amountSum:      0n,
         hasAmount:      false,
-        earliestEnd:    end,
+        earliestEvent:  eventTime,
       };
       groups.set(key, g);
-    } else if (end > 0 && end < g.earliestEnd) {
+    } else if (eventTime > 0 && eventTime < g.earliestEvent) {
       g.representative = row;
-      g.earliestEnd    = end;
+      g.earliestEvent  = eventTime;
     }
 
     g.recipients.add(row.recipient);
@@ -271,7 +324,6 @@ export async function getUnlocksInWindow(
         const amt = BigInt(rawAmount);
         g.amountSum += amt;
         g.hasAmount  = true;
-        // Per-token aggregate (across the entire window)
         const existing = tokenAmountMap.get(tokenKey);
         if (existing) {
           existing.amount += amt;
@@ -289,20 +341,20 @@ export async function getUnlocksInWindow(
   }
 
   const ordered = Array.from(groups.values()).sort(
-    (a, b) => (a.earliestEnd || Number.MAX_SAFE_INTEGER) - (b.earliestEnd || Number.MAX_SAFE_INTEGER),
+    (a, b) => (a.earliestEvent || Number.MAX_SAFE_INTEGER) - (b.earliestEvent || Number.MAX_SAFE_INTEGER),
   );
 
-  const groupSummaries: UnlockGroupSummary[] = ordered.map((g) => {
+  const groupSummaries: WindowUnlockGroup[] = ordered.map((g) => {
     const sd = g.representative.streamData as Partial<VestingStream>;
     return {
-      streamId:     g.representative.streamId,
-      protocol:     g.protoCanonical,
-      chainId:      g.representative.chainId,
-      tokenSymbol:  g.representative.tokenSymbol ?? null,
-      tokenAddress: (g.representative.tokenAddress ?? "").toLowerCase(),
+      streamId:      g.representative.streamId,
+      protocol:      g.protoCanonical,
+      chainId:       g.representative.chainId,
+      tokenSymbol:   g.representative.tokenSymbol ?? null,
+      tokenAddress:  (g.representative.tokenAddress ?? "").toLowerCase(),
       tokenDecimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
-      endTime:      g.representative.endTime ?? null,
-      amount:       g.hasAmount ? g.amountSum.toString() : null,
+      eventTime:     g.earliestEvent,
+      amount:        g.hasAmount ? g.amountSum.toString() : null,
       recipient:    g.representative.recipient,
       walletCount:  g.recipients.size,
       streamCount:  g.streamCount,

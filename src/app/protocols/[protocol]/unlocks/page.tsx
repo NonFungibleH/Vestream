@@ -27,7 +27,26 @@ export function generateStaticParams() {
 }
 
 interface PageParams {
-  params: Promise<{ protocol: string }>;
+  params:       Promise<{ protocol: string }>;
+  searchParams: Promise<{ chain?: string }>;
+}
+
+// Parse a chain query param. Accepts numeric chain id ("1", "137") or a
+// short slug ("ethereum", "bsc", "polygon", "base"). Returns null when the
+// param is missing or unrecognised — calling code treats null as "all chains".
+const CHAIN_SLUG_TO_ID: Record<string, number> = {
+  ethereum: 1,    eth: 1,    mainnet: 1,
+  bsc:      56,   bnb: 56,   "bnb-chain": 56,
+  polygon:  137,  matic: 137,
+  base:     8453,
+};
+function parseChainParam(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const trimmed = raw.trim().toLowerCase();
+  if (!trimmed) return null;
+  const numeric = Number(trimmed);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  return CHAIN_SLUG_TO_ID[trimmed] ?? null;
 }
 
 // ── Helpers (mirror /unlocks/[range] — kept colocated for now; extract to
@@ -93,10 +112,11 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const url = `https://vestream.io/protocols/${meta.slug}/unlocks`;
 
   // Live count for the description so SERPs show fresh numbers.
+  // 5y window matches the page-render query — see comment there.
   let countLine = "";
   try {
     const now = Math.floor(Date.now() / 1000);
-    const result = await getUnlocksInWindow(now, now + 365 * 86400, 500, meta.adapterIds);
+    const result = await getUnlocksInWindow(now, now + 5 * 365 * 86400, 5000, meta.adapterIds);
     if (result.stats.unlockCount > 0) {
       countLine = `${result.stats.unlockCount} upcoming unlocks across ${result.stats.tokenCount} tokens. `;
     }
@@ -118,20 +138,28 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
-export default async function ProtocolUnlocksPage({ params }: PageParams) {
+export default async function ProtocolUnlocksPage({ params, searchParams }: PageParams) {
   const { protocol } = await params;
+  const sp = await searchParams;
   const meta = getProtocol(protocol);
   if (!meta) notFound();
 
-  // 365-day forward window — broad enough to surface most schedules,
-  // bounded enough to keep the page readable. The 500-row pool cap in
-  // getUnlocksInWindow keeps the SQL cheap even on heavy-vest protocols.
+  // Chain filter from ?chain=... query param. Null = no filter (show all chains).
+  const filterChainId = parseChainParam(sp.chain);
+  const chainFilter   = filterChainId ? [filterChainId] : undefined;
+
+  // 5-year forward window — broad enough to capture multi-year team vests
+  // (Team Finance's typical 2-4 year linear schedules don't have discrete
+  // "events" before completion, so a 365-day window misses 90%+ of active
+  // positions). Pool of 5000 is well above the per-protocol stream count
+  // we'd ever realistically have.
   // Fail-soft: at build time CI has no DB access, so a query failure
   // renders an empty state and ISR refreshes on first runtime request.
   const now = Math.floor(Date.now() / 1000);
+  const FIVE_YEARS_SEC = 5 * 365 * 86400;
   let result;
   try {
-    result = await getUnlocksInWindow(now, now + 365 * 86400, 500, meta.adapterIds);
+    result = await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 5000, meta.adapterIds, chainFilter);
   } catch (err) {
     console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
     result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
@@ -150,7 +178,7 @@ export default async function ProtocolUnlocksPage({ params }: PageParams) {
       item: {
         "@type":   "Event",
         name:      `${tokenLabel(g.tokenSymbol, g.tokenAddress)} unlock`,
-        startDate: g.endTime ? new Date(g.endTime * 1000).toISOString() : undefined,
+        startDate: g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
         location:  { "@type": "VirtualLocation", url: `https://vestream.io/token/${g.chainId}/${g.tokenAddress}` },
         organizer: { "@type": "Organization", name: meta.name },
       },
@@ -204,7 +232,7 @@ export default async function ProtocolUnlocksPage({ params }: PageParams) {
           {meta.name} upcoming unlocks
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-6" style={{ color: "#475569" }}>
-          Every scheduled unlock on {meta.name} for the next 12 months — sorted by time. Mass distributions to many wallets are collapsed into a single row. Click any token for the full per-token schedule.
+          Every active vesting schedule on {meta.name} — sorted by next unlock event. Mass distributions to many wallets are collapsed into a single row. Click any token for the full per-token schedule.
         </p>
 
         {/* Stat strip */}
@@ -215,6 +243,35 @@ export default async function ProtocolUnlocksPage({ params }: PageParams) {
           <Stat label="Chains" value={result.stats.chainCount.toLocaleString()} />
           <Stat label="Wallets" value={result.stats.walletCount.toLocaleString()} />
         </div>
+
+        {/* ── Chain filter pills ─────────────────────────────────────────
+            Server-rendered Links so each filtered view is a fully-formed
+            URL — shareable, bookmarkable, indexable by Google. The active
+            pill picks up the protocol's brand colour so the filter feels
+            like part of the page, not a generic chrome. */}
+        {meta.chainIds.length > 1 && (
+          <div className="mt-5 flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold tracking-widest uppercase mr-1" style={{ color: "#B8BABD" }}>
+              Filter
+            </span>
+            <ChainPill href={`/protocols/${meta.slug}/unlocks`} active={!filterChainId} accent={meta.color}>
+              All chains
+            </ChainPill>
+            {meta.chainIds.map((cid) => {
+              const chainName = CHAIN_NAMES[cid as keyof typeof CHAIN_NAMES] ?? `chain ${cid}`;
+              return (
+                <ChainPill
+                  key={cid}
+                  href={`/protocols/${meta.slug}/unlocks?chain=${cid}`}
+                  active={filterChainId === cid}
+                  accent={meta.color}
+                >
+                  {chainName}
+                </ChainPill>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ── Unlock list ───────────────────────────────────────────────── */}
@@ -257,12 +314,12 @@ export default async function ProtocolUnlocksPage({ params }: PageParams) {
                   </div>
                   <div className="text-right hidden md:block">
                     <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-                      {g.endTime ? fmtDateUtc(g.endTime) : "—"}
+                      {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold tabular-nums" style={{ color: meta.color }}>
-                      {relativeTimeUntil(g.endTime)}
+                      {relativeTimeUntil(g.eventTime)}
                     </p>
                   </div>
                 </Link>
@@ -303,5 +360,32 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: "#1A1D20" }}>{value}</div>
       <div className="text-xs uppercase tracking-widest" style={{ color: "#8B8E92" }}>{label}</div>
     </div>
+  );
+}
+
+// Chain filter pill. Active pill picks up the protocol's brand colour;
+// inactive pills render in a neutral white-on-grey treatment.
+function ChainPill({
+  href, active, accent, children,
+}: {
+  href:     string;
+  active:   boolean;
+  accent:   string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+      style={
+        active
+          ? { background: `${accent}15`, color: accent, border: `1px solid ${accent}40` }
+          : { background: "white", color: "#475569", border: "1px solid rgba(21,23,26,0.10)" }
+      }
+      aria-current={active ? "page" : undefined}
+    >
+      {children}
+    </Link>
   );
 }

@@ -197,7 +197,7 @@ export default async function WindowPage({ params }: PageParams) {
       item: {
         "@type":      "Event",
         name:         `${g.tokenSymbol ?? "Unknown"} unlock — ${fmtTokenAmount(g.amount, g.tokenDecimals)} ${g.tokenSymbol ?? ""}`,
-        startDate:    g.endTime ? new Date(g.endTime * 1000).toISOString() : undefined,
+        startDate:    g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
         location: {
           "@type": "VirtualLocation",
           url:     `https://vestream.io/token/${g.chainId}/${g.tokenAddress}`,
@@ -361,12 +361,12 @@ export default async function WindowPage({ params }: PageParams) {
                   </div>
                   <div className="text-right hidden md:block">
                     <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-                      {g.endTime ? fmtDateUtc(g.endTime) : "—"}
+                      {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
-                      {relativeTimeUntil(g.endTime)}
+                      {relativeTimeUntil(g.eventTime)}
                     </p>
                   </div>
                 </Link>

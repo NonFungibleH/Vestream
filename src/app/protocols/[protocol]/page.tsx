@@ -703,9 +703,21 @@ function UnlockCard({
         <p className="text-2xl font-bold mb-1" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
           {amountDisplay}
         </p>
-        <p className="text-xs" style={{ color: "#8B8E92" }}>
+        <p className="text-xs mb-4" style={{ color: "#8B8E92" }}>
           for <code style={{ fontFamily: "monospace", color: "#334155" }}>{truncateAddress(unlock.recipient)}</code> · {relative}
         </p>
+        {/* View token CTA — these unlock cards are featured prominently but
+            had no way to drill into the per-token page. Adding a link makes
+            them as actionable as every other token row across the site. */}
+        {unlock.tokenAddress && (
+          <Link
+            href={`/token/${unlock.chainId}/${unlock.tokenAddress.toLowerCase()}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:underline"
+            style={{ color: accent }}
+          >
+            View token →
+          </Link>
+        )}
       </div>
     </div>
   );
