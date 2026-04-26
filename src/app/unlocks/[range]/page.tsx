@@ -58,6 +58,38 @@ function fmtTokenAmount(amount: string | null, decimals: number): string {
   }
 }
 
+// When a token has no symbol (or has the cache's literal "UNKNOWN"
+// placeholder, which adapters write when the ERC-20 metadata call
+// fails or the token doesn't implement IERC20Metadata), fall back to
+// a truncated contract address. Keeps the row useful for visitors
+// who recognise the address from Etherscan / DexScreener — and an
+// address truncation is more honest than "Unknown" for tokens that
+// genuinely exist on-chain.
+function isMissingSymbol(s: string | null | undefined): boolean {
+  if (!s) return true;
+  const t = s.trim();
+  return t === "" || t.toLowerCase() === "unknown";
+}
+
+function tokenLabel(symbol: string | null, address: string): string {
+  if (!isMissingSymbol(symbol)) return symbol!;
+  if (address && address.length >= 10) {
+    return `${address.slice(0, 6)}…${address.slice(-4)}`;
+  }
+  return address || "Unknown";
+}
+
+function tokenInitial(symbol: string | null, address: string): string {
+  if (!isMissingSymbol(symbol)) return symbol!.slice(0, 2).toUpperCase();
+  // Use chars 2-3 of address (skip the 0x prefix on EVM, or the first
+  // two real chars on Solana base58).
+  if (address && address.length >= 4) {
+    const start = address.startsWith("0x") ? 2 : 0;
+    return address.slice(start, start + 2).toUpperCase();
+  }
+  return "?";
+}
+
 function relativeTimeUntil(endTimeSec: number | null): string {
   if (!endTimeSec) return "—";
   const diff = endTimeSec - Math.floor(Date.now() / 1000);
@@ -256,10 +288,10 @@ export default async function WindowPage({ params }: PageParams) {
                 >
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                     style={{ background: `linear-gradient(135deg, #1CB8B8, #0F8A8A)` }}>
-                    {(t.symbol ?? "?").slice(0, 2)}
+                    {tokenInitial(t.symbol, t.address)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm" style={{ color: "#1A1D20" }}>{t.symbol ?? "Unknown token"}</p>
+                    <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>{tokenLabel(t.symbol, t.address)}</p>
                     {chainId && (
                       <p className="text-xs" style={{ color: "#8B8E92" }}>{CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] ?? `chain ${chainId}`}</p>
                     )}
@@ -268,7 +300,7 @@ export default async function WindowPage({ params }: PageParams) {
                     <p className="font-bold text-base tabular-nums" style={{ color: "#0F8A8A" }}>
                       {fmtTokenAmount(t.amount.toString(), decimals)}
                     </p>
-                    <p className="text-[10px]" style={{ color: "#B8BABD" }}>{t.symbol ?? "tokens"}</p>
+                    <p className="text-[10px]" style={{ color: "#B8BABD" }}>{isMissingSymbol(t.symbol) ? "tokens" : t.symbol}</p>
                   </div>
                 </Link>
               );
@@ -301,11 +333,11 @@ export default async function WindowPage({ params }: PageParams) {
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
                     style={{ background: proto.color }}>
-                    {(g.tokenSymbol ?? "?").slice(0, 2)}
+                    {tokenInitial(g.tokenSymbol, g.tokenAddress)}
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>
-                      {fmtTokenAmount(g.amount, g.tokenDecimals)} {g.tokenSymbol ?? "tokens"}
+                      {fmtTokenAmount(g.amount, g.tokenDecimals)} {tokenLabel(g.tokenSymbol, g.tokenAddress)}
                     </p>
                     <p className="text-xs truncate" style={{ color: "#8B8E92" }}>
                       <span style={{ color: proto.color }}>{proto.name}</span>

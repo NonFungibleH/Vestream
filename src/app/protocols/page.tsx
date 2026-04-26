@@ -326,11 +326,41 @@ export default async function UnlocksIndexPage() {
         <UpcomingUnlockTicker />
       </section>
 
-      {/* ── Cross-link to full unlock calendar ──────────────────────────── */}
-      {/* The ticker above shows the next handful; the calendar pages drill
-          into "today / this week / 30 days / etc." with the complete list per
-          window. This is the user's bridge from "snapshot" to "deep dive". */}
+      {/* ── Protocol grid ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-12 md:pb-16 max-w-5xl mx-auto">
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2
+              className="text-xl md:text-2xl font-bold"
+              style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
+            >
+              Browse by protocol
+            </h2>
+            <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
+              {protocols.length} protocols indexed · dive into any one for the full feed.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {protocols.map((p) => (
+            <ProtocolCard
+              key={p.slug}
+              protocol={p}
+              stats={statsMap.get(p.slug) ?? null}
+              tvlUsd={tvlMap[p.slug]?.tvlUsd}
+              isExternalSource={externallySourced.has(p.slug)}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Cross-link to full unlock calendar ──────────────────────────── */}
+      {/* Sits BELOW the protocol grid intentionally — by the time a visitor
+          has scrolled past every protocol, they're in deep-dive mode and a
+          link to "every upcoming unlock by window" is the natural next
+          surface. Above-the-fold placement competed with the TVL bar and
+          ticker for attention. */}
+      <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
         <Link
           href="/unlocks"
           className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5"
@@ -365,34 +395,6 @@ export default async function UnlocksIndexPage() {
             Open calendar →
           </span>
         </Link>
-      </section>
-
-      {/* ── Protocol grid ────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-20 md:pb-28 max-w-5xl mx-auto">
-        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h2
-              className="text-xl md:text-2xl font-bold"
-              style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
-            >
-              Browse by protocol
-            </h2>
-            <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
-              {protocols.length} protocols indexed · dive into any one for the full feed.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {protocols.map((p) => (
-            <ProtocolCard
-              key={p.slug}
-              protocol={p}
-              stats={statsMap.get(p.slug) ?? null}
-              tvlUsd={tvlMap[p.slug]?.tvlUsd}
-              isExternalSource={externallySourced.has(p.slug)}
-            />
-          ))}
-        </div>
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
