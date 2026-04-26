@@ -190,20 +190,26 @@ export default async function ProtocolLandingPage(
       />
       <SiteNav theme="light" />
 
-      {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
-      {/* Pairs with the BreadcrumbList JSON-LD above — Google rewards sites
-          that surface the breadcrumb structurally AND visually. The bar has
-          its own subtle ground (rgba ink wash + thin top border) so it reads
-          as a continuation of the nav rather than a floating fragment above
-          the hero. Padding-top is the SiteNav clearance; padding-bottom is
-          tight so it tucks right into the hero. */}
-      <div
-        className="w-full pt-16 md:pt-20"
-        style={{ borderBottom: "1px solid rgba(21,23,26,0.06)" }}
-      >
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* Breadcrumb is INSIDE the hero (left-aligned, above the centered
+          headline) so the protocol-coloured halo wraps both. Avoids the
+          segmented look of a separate breadcrumb bar between SiteNav and
+          the branded hero treatment. */}
+      <section className="relative overflow-hidden pt-20 pb-14 md:pt-24 md:pb-20 px-4 md:px-8 text-center">
+        {/* Protocol-coloured wash behind the hero */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${accentHalo} 0%, transparent 70%)`,
+        }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{
+          background: `linear-gradient(90deg, transparent, ${meta.color}80, transparent)`,
+        }} />
+
+        {/* Breadcrumb — left-aligned, sits inside the protocol's halo so it
+            shares the branded ground with the headline below. Pairs with
+            the BreadcrumbList JSON-LD for SEO. */}
         <nav
           aria-label="Breadcrumb"
-          className="px-4 md:px-8 py-3 max-w-5xl mx-auto w-full"
+          className="relative max-w-4xl mx-auto mb-8 text-left"
         >
           <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
             <li>
@@ -223,17 +229,6 @@ export default async function ProtocolLandingPage(
             </li>
           </ol>
         </nav>
-      </div>
-
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-8 pb-14 md:pt-12 md:pb-20 px-4 md:px-8 text-center">
-        {/* Protocol-coloured wash behind the hero */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${accentHalo} 0%, transparent 70%)`,
-        }} />
-        <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: `linear-gradient(90deg, transparent, ${meta.color}80, transparent)`,
-        }} />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Live indicator in the protocol's colour */}
@@ -286,11 +281,18 @@ export default async function ProtocolLandingPage(
               Track your {meta.name} wallet →
             </Link>
             <Link
-              href="/protocols"
+              href={`/protocols/${meta.slug}/unlocks`}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
               style={{ background: "white", border: `1px solid ${meta.border}`, color: "#1A1D20" }}
             >
-              See all trackers →
+              View unlock calendar →
+            </Link>
+            <Link
+              href="/protocols"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
+              style={{ background: "transparent", color: "#475569" }}
+            >
+              All trackers
             </Link>
           </div>
         </div>

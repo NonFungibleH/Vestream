@@ -10,7 +10,7 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, gte, lte, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, lte, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
@@ -169,7 +169,15 @@ export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
   poolLimit = 500,
+  /** Optional — if set, restrict to streams with one of these adapter IDs.
+   *  Used by the per-protocol /protocols/[slug]/unlocks pages. Empty array
+   *  is treated as "no filter" (same as undefined). */
+  adapterIds?: readonly string[],
 ): Promise<WindowResult> {
+  const protocolFilter = adapterIds && adapterIds.length > 0
+    ? inArray(vestingStreamsCache.protocol, [...adapterIds])
+    : undefined;
+
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -189,6 +197,7 @@ export async function getUnlocksInWindow(
         lte(vestingStreamsCache.endTime, endSec),
         gt(vestingStreamsCache.endTime, 0),
         excludeTestnets,
+        ...(protocolFilter ? [protocolFilter] : []),
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))

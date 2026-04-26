@@ -19,6 +19,7 @@ import { getAllArticles } from "@/lib/articles";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
+import { getTopSymbols } from "@/lib/vesting/token-symbols";
 
 const SITE = "https://vestream.io";
 
@@ -66,6 +67,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.9,
   }));
 
+  // Per-protocol unlock calendar pages — one per protocol slug.
+  const protocolUnlockEntries: MetadataRoute.Sitemap = protocols.map((p, i) => ({
+    url:             `${SITE}/protocols/${p.slug}/unlocks`,
+    lastModified:    protocolLastModified[i],
+    changeFrequency: "daily",
+    priority:        0.85,
+  }));
+
+  // Top-N symbol-routed token pages. Long-tail symbols fall through to
+  // on-demand ISR; we only sitemap the heavy hitters so crawlers focus
+  // budget on high-quality pages.
+  let topSymbols: string[] = [];
+  try {
+    topSymbols = await getTopSymbols(150);
+  } catch {
+    /* fall through with empty list */
+  }
+  const symbolEntries: MetadataRoute.Sitemap = topSymbols.map((s) => ({
+    url:             `${SITE}/tokens/${s}`,
+    lastModified:    now,
+    changeFrequency: "weekly",
+    priority:        0.7,
+  }));
+
   const articleEntries: MetadataRoute.Sitemap = articles.map((a) => ({
     url:             `${SITE}/resources/${a.slug}`,
     lastModified:    new Date(a.updatedAt || a.publishedAt),
@@ -83,5 +108,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.85,
   }));
 
-  return [...staticEntries, ...protocolEntries, ...articleEntries, ...unlockWindowEntries];
+  return [
+    ...staticEntries,
+    ...protocolEntries,
+    ...protocolUnlockEntries,
+    ...articleEntries,
+    ...unlockWindowEntries,
+    ...symbolEntries,
+  ];
 }
