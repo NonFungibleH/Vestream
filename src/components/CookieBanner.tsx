@@ -22,6 +22,7 @@ export default function CookieBanner() {
   function accept(choice: "all" | "essential") {
     try { localStorage.setItem(STORAGE_KEY, choice); } catch { /* ignore */ }
     setConsent(choice);
+    try { window.dispatchEvent(new Event("vestream:consent-changed")); } catch { /* ignore */ }
   }
 
   // Don't render until we know the stored preference (avoids flash)
@@ -40,8 +41,9 @@ export default function CookieBanner() {
     >
       {/* Text */}
       <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
-        We use essential cookies to keep you signed in and remember your preferences.
-        We do not use advertising or tracking cookies.{" "}
+        We use essential cookies to keep you signed in. With your permission,
+        we also use Google Analytics to understand how the site is used.
+        We don&rsquo;t use advertising cookies.{" "}
         <Link
           href="/privacy"
           className="underline text-slate-400 hover:text-white transition-colors"
