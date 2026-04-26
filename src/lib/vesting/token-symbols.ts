@@ -45,6 +45,10 @@ export interface SymbolMatch {
 export async function getTokensBySymbol(symbol: string): Promise<SymbolMatch[]> {
   const trimmed = symbol.trim();
   if (!trimmed) return [];
+  // Build-time short-circuit (CI has no DATABASE_URL; postgres burns 30-60s
+  // per query in connect-retry which times the build out). See same guard
+  // in unlock-windows.ts for context.
+  if (!process.env.DATABASE_URL) return [];
 
   const rows = await db
     .select({
@@ -85,6 +89,8 @@ export async function getTokensBySymbol(symbol: string): Promise<SymbolMatch[]> 
  * placeholder symbols that wouldn't make useful landing pages.
  */
 export async function getTopSymbols(limit = 200): Promise<string[]> {
+  if (!process.env.DATABASE_URL) return [];
+
   const rows = await db
     .select({
       symbol: vestingStreamsCache.tokenSymbol,
@@ -126,6 +132,7 @@ export interface ChainSummary {
 export async function getChainSummariesForSymbol(symbol: string): Promise<ChainSummary[]> {
   const trimmed = symbol.trim();
   if (!trimmed) return [];
+  if (!process.env.DATABASE_URL) return [];
 
   // First lookup the (chain, address) pairs, then per-pair compute totals.
   const matches = await getTokensBySymbol(trimmed);

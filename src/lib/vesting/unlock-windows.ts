@@ -165,6 +165,13 @@ export interface WindowResult {
  * Pool size is capped at 500 — beyond that we'd be surfacing too many rows
  * for a useful page anyway, and the DB query stays cheap.
  */
+// Empty result helper — used both for build-time CI short-circuit AND for
+// query failures so callers always get a well-typed object.
+const EMPTY_WINDOW_RESULT: WindowResult = {
+  groups: [],
+  stats:  { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] },
+};
+
 export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
@@ -174,6 +181,15 @@ export async function getUnlocksInWindow(
    *  is treated as "no filter" (same as undefined). */
   adapterIds?: readonly string[],
 ): Promise<WindowResult> {
+  // Build-time short-circuit. CI runs `next build` without DATABASE_URL,
+  // and the postgres driver burns 30-60s per query in connect-retry before
+  // failing — multiplied across 200+ prerendered pages, the build times
+  // out. A try/catch around the slow failure isn't enough; we need to skip
+  // the query entirely when there's no DB to talk to.
+  if (!process.env.DATABASE_URL) {
+    return EMPTY_WINDOW_RESULT;
+  }
+
   const protocolFilter = adapterIds && adapterIds.length > 0
     ? inArray(vestingStreamsCache.protocol, [...adapterIds])
     : undefined;
