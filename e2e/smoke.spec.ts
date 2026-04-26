@@ -93,9 +93,14 @@ test.describe("authentication gates", () => {
 
 test.describe("security", () => {
   test("/api/admin/login rate-limits after 5 wrong-password attempts", async ({ request }) => {
-    // Fire 6 POSTs back-to-back with a bad password. The 6th should be 429.
-    // Upstash may no-op without env vars in CI — in that case this test
-    // skips rather than falsely failing.
+    // Fire 6 POSTs back-to-back with a bad password.
+    // Three valid outcomes:
+    //   - 401 throughout if Upstash is unconfigured AND we're in dev (lenient mode)
+    //   - 429 on the 6th attempt if Upstash is configured (real rate limit)
+    //   - 503 throughout if Upstash is unconfigured AND NODE_ENV=production
+    //     (fail-closed mode — what CI sees, since `npm run start` is prod)
+    // The point of the test is "no 200 leaks through on a wrong password
+    // and no 500s" — all three of the above pass that bar.
     const results: number[] = [];
     for (let i = 0; i < 6; i++) {
       const r = await request.post("/api/admin/login", {
@@ -106,11 +111,8 @@ test.describe("security", () => {
 
     const last = results[results.length - 1];
     const first = results[0];
-    // Either Upstash is configured (last is 429) or not (all 401). Both are
-    // valid passing outcomes for a smoke run. Definitely fail if we got any
-    // 500s or if 200 slipped through a bad-password request.
-    expect([401, 429]).toContain(last);
-    expect([401, 429]).toContain(first);
+    expect([401, 429, 503]).toContain(last);
+    expect([401, 429, 503]).toContain(first);
   });
 
   test("security headers present on every response", async ({ request }) => {
