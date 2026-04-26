@@ -36,6 +36,11 @@ export async function GET(req: NextRequest) {
   const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   const rl = await checkRateLimit("prices", ip, 60, "1 m");
   if (!rl.allowed) {
+    if (rl.reason === "rate-limit-misconfigured") {
+      // Rate limiter unavailable — return FALLBACK data with 503 so callers
+      // can distinguish "degraded service" from a real rate-limit hit.
+      return NextResponse.json(FALLBACK, { status: 503 });
+    }
     return NextResponse.json(FALLBACK, {
       status: 429,
       headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) },

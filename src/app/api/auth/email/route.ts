@@ -3,7 +3,7 @@ import { randomInt, timingSafeEqual } from "node:crypto";
 import { getSession } from "@/lib/auth/session";
 import { upsertUser } from "@/lib/db/queries";
 import { Resend } from "resend";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 /**
  * Cryptographically-secure 6-digit OTP. `randomInt(min, max)` matches
@@ -99,9 +99,8 @@ export async function POST(req: NextRequest) {
     // Rate limit: 5 OTP send attempts per email per hour
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = await checkRateLimit("auth:otp:send", `${ip}:${email}`, 5, "1 h");
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "Too many attempts. Try again in an hour." }, { status: 429 });
-    }
+    const blocked = rateLimitResponse(rl, "Too many attempts. Try again in an hour.");
+    if (blocked) return blocked;
 
     const otp = generateOtp();
     let session;
@@ -154,12 +153,8 @@ export async function POST(req: NextRequest) {
     // single IP is trivial without any rate limit on the verify path.
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = await checkRateLimit("auth:otp:verify", `${ip}:${email}`, 10, "15 m");
-    if (!rl.allowed) {
-      return NextResponse.json(
-        { error: "Too many verification attempts. Try again in 15 minutes." },
-        { status: 429 }
-      );
-    }
+    const blocked = rateLimitResponse(rl, "Too many verification attempts. Try again in 15 minutes.");
+    if (blocked) return blocked;
 
     let session;
     try {

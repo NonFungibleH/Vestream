@@ -9,7 +9,7 @@ import { mobileOtps } from "@/lib/db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 /**
  * Cryptographically-secure 6-digit OTP. The verify path compares against a
@@ -94,9 +94,8 @@ export async function POST(req: NextRequest) {
     // Rate limit: 5 OTP requests per email per hour
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = await checkRateLimit("mobile:otp:send", `${ip}:${email}`, 5, "1 h");
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "Too many attempts. Try again in an hour." }, { status: 429 });
-    }
+    const blocked = rateLimitResponse(rl, "Too many attempts. Try again in an hour.");
+    if (blocked) return blocked;
 
     const otp       = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
@@ -150,12 +149,8 @@ export async function POST(req: NextRequest) {
     // brute-force the code space in seconds.
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 10, "15 m");
-    if (!rlVerify.allowed) {
-      return NextResponse.json(
-        { error: "Too many verification attempts. Try again in 15 minutes." },
-        { status: 429 }
-      );
-    }
+    const blocked = rateLimitResponse(rlVerify, "Too many verification attempts. Try again in 15 minutes.");
+    if (blocked) return blocked;
 
     const [row] = await db
       .select()

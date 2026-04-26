@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { readFromCache, writeToCache } from "@/lib/vesting/dbcache";
 
 // ─── Hot in-memory cache (L1) ─────────────────────────────────────────────────
@@ -40,12 +40,8 @@ export async function GET(req: NextRequest) {
 
   // Rate limit: 30 vesting lookups per user per minute (subgraph calls are expensive)
   const rl = await checkRateLimit("vesting", session.address, 30, "1 m");
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
-    );
-  }
+  const blocked = rateLimitResponse(rl, "Too many requests. Please wait a moment.");
+  if (blocked) return blocked;
 
   const { searchParams } = new URL(req.url);
   const walletsParam      = searchParams.get("wallets");

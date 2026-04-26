@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { env } from "@/lib/env";
 
 export async function POST(req: NextRequest) {
   // Brute-force protection: 5 attempts per IP per 15 minutes
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const rl = await checkRateLimit("admin:login", ip, 5, "15 m");
-  if (!rl.allowed) {
-    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
-  }
+  const blocked = rateLimitResponse(rl, "Too many attempts. Try again later.");
+  if (blocked) return blocked;
 
   const { password } = await req.json().catch(() => ({}));
   const expected = env.ADMIN_PASSWORD;

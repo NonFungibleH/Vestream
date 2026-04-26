@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { startDemo, type StartDemoConfig } from "@/lib/demo";
 import { getDemoSession } from "@/lib/demo/session";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 // Token amount bounds, in whole tokens (converted to base units with 18 dp).
 const MIN_TOKENS = 1n;
@@ -83,12 +83,8 @@ function parseConfig(raw: unknown): { config: StartDemoConfig } | { error: strin
 
 export async function POST(req: NextRequest) {
   const rl = await checkRateLimit("demo-start", getIp(req), 10, "1 h");
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many demo starts. Please wait a few minutes." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
-    );
-  }
+  const blocked = rateLimitResponse(rl, "Too many demo starts. Please wait a few minutes.");
+  if (blocked) return blocked;
 
   // Body is optional — GET-style callers still get the default demo.
   let rawBody: unknown = {};

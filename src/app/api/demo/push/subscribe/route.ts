@@ -18,7 +18,7 @@ import { db } from "@/lib/db";
 import { demoPushSubscriptions } from "@/lib/db/schema";
 import { getDemoSession } from "@/lib/demo/session";
 import { DEMO_CONFIG } from "@/lib/demo/config";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 function getIp(req: NextRequest): string {
   return (
@@ -46,9 +46,8 @@ function isValidSub(s: unknown): s is SubscribeBody["subscription"] {
 
 export async function POST(req: NextRequest) {
   const rl = await checkRateLimit("demo-push-sub", getIp(req), 5, "10 m");
-  if (!rl.allowed) {
-    return NextResponse.json({ error: "Too many subscribe attempts." }, { status: 429 });
-  }
+  const blocked = rateLimitResponse(rl, "Too many subscribe attempts.");
+  if (blocked) return blocked;
 
   let body: SubscribeBody;
   try {

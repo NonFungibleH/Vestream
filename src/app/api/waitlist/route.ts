@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
   const ip = getIp(req);
   const rl = await checkRateLimit("waitlist", ip, 5, "1 h");
   if (!rl.allowed) {
+    if (rl.reason === "rate-limit-misconfigured") {
+      return NextResponse.json(
+        { error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
       {

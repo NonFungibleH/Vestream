@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { claimDemo } from "@/lib/demo";
 import { getDemoSession } from "@/lib/demo/session";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 function getIp(req: NextRequest): string {
   return (
@@ -22,12 +22,8 @@ function getIp(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   const rl = await checkRateLimit("demo-claim", getIp(req), 30, "1 h");
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many claims. Please wait a few minutes." },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
-    );
-  }
+  const blocked = rateLimitResponse(rl, "Too many claims. Please wait a few minutes.");
+  if (blocked) return blocked;
 
   try {
     const session = await getDemoSession();

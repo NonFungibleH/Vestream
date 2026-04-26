@@ -20,6 +20,7 @@
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { NextResponse } from "next/server";
 
 type RatelimitResult = {
   allowed:   boolean;
@@ -107,4 +108,40 @@ export async function checkRateLimit(
     reset:     result.reset,
     reason:    result.success ? undefined : "rate-limit-exceeded",
   };
+}
+
+/**
+ * Convert a `checkRateLimit()` result into an HTTP response, or return null
+ * if the request is allowed.
+ *
+ * Distinguishes a real rate-limit hit (429 + the supplied user-facing
+ * message) from a misconfigured limiter in production (503 + a generic
+ * "service temporarily unavailable" message). Without this distinction,
+ * users see "you've hit the rate limit" copy when the underlying cause is
+ * actually that Upstash env vars aren't set — which is the exact false
+ * report this helper exists to prevent.
+ *
+ * Usage:
+ *   const rl = await checkRateLimit("waitlist", ip, 5, "1 h");
+ *   const blocked = rateLimitResponse(rl, "Too many signups. Try again in an hour.");
+ *   if (blocked) return blocked;
+ */
+export function rateLimitResponse(
+  result:           RatelimitResult,
+  rateLimitMessage: string,
+): NextResponse | null {
+  if (result.allowed) return null;
+  if (result.reason === "rate-limit-misconfigured") {
+    return NextResponse.json(
+      { error: "Service temporarily unavailable. Please try again later." },
+      { status: 503 }
+    );
+  }
+  return NextResponse.json(
+    { error: rateLimitMessage },
+    {
+      status:  429,
+      headers: { "Retry-After": String(Math.ceil((result.reset - Date.now()) / 1000)) },
+    }
+  );
 }
