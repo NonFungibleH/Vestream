@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   title: "Resources – Token Vesting Guides & Insights | Vestream",
   description:
     "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics. Written for investors, project teams, and Web3 professionals.",
+  alternates: {
+    canonical: "https://vestream.io/resources",
+    types: {
+      // RSS feed auto-discovery — feed readers (Inoreader, Feedly), the
+      // many crypto-Twitter feed-to-tweet bots, and Slack/Discord webhooks
+      // pick this up from the <head> link tag.
+      "application/rss+xml": "https://vestream.io/resources/rss.xml",
+    },
+  },
   openGraph: {
     title: "Resources – Token Vesting Guides & Insights | Vestream",
     description:
