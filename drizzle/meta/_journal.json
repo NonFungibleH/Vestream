@@ -36,6 +36,13 @@
       "when": 1777062932765,
       "tag": "0004_damp_zaran",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777300000000,
+      "tag": "0005_saved_searches",
+      "breakpoints": true
     }
   ]
 }

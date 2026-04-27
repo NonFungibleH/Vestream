@@ -43,6 +43,7 @@ import { listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
 import { ExplorerSidebar } from "./Sidebar";
+import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
 
 export const dynamic = "force-dynamic";
@@ -247,26 +248,31 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           dateSlug={dateSlug}
         />
 
-        {/* Active mode tabs */}
-        <div className="mt-5 flex items-center gap-1 border-b" style={{ borderColor: "var(--preview-border)" }}>
-          {(["calendar", "stream", "wallet"] as const).map((m) => {
-            const active = mode === m;
-            const href = buildUrl({ ...sp, mode: m });
-            return (
-              <Link
-                key={m}
-                href={href}
-                className="px-4 py-2 text-sm font-semibold"
-                style={{
-                  color: active ? "#0F8A8A" : "var(--preview-text-2)",
-                  borderBottom: active ? "2px solid #0F8A8A" : "2px solid transparent",
-                  marginBottom: -1,
-                }}
-              >
-                {m === "calendar" ? "Calendar" : m === "stream" ? "Streams" : "Wallets"}
-              </Link>
-            );
-          })}
+        {/* Active mode tabs + save-search action */}
+        <div className="mt-5 flex items-center justify-between gap-3 border-b" style={{ borderColor: "var(--preview-border)" }}>
+          <div className="flex items-center gap-1">
+            {(["calendar", "stream", "wallet"] as const).map((m) => {
+              const active = mode === m;
+              const href = buildUrl({ ...sp, mode: m });
+              return (
+                <Link
+                  key={m}
+                  href={href}
+                  className="px-4 py-2 text-sm font-semibold"
+                  style={{
+                    color: active ? "#0F8A8A" : "var(--preview-text-2)",
+                    borderBottom: active ? "2px solid #0F8A8A" : "2px solid transparent",
+                    marginBottom: -1,
+                  }}
+                >
+                  {m === "calendar" ? "Calendar" : m === "stream" ? "Streams" : "Wallets"}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="pb-2">
+            <SaveSearchButton isPaid={!isFree} />
+          </div>
         </div>
 
         <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>

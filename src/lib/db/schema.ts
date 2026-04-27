@@ -70,6 +70,39 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+/**
+ * Saved searches from the dashboard explorer. Pro / Fund only.
+ *
+ * Each row stores the URL params of an explorer query the user wants
+ * to keep watching. A daily cron re-runs each saved search; if new
+ * matching unlock events have appeared since `lastNotifiedAt`, a
+ * notification fires (email + push) and the timestamp updates.
+ *
+ * `paramsJson` is the raw `?q=...&mode=...&chain=...` payload — kept
+ * as JSON instead of split columns so adding new filter dimensions
+ * later doesn't require a migration. Read by buildExplorerUrl() to
+ * regenerate the canonical URL when rendering the saved-search row.
+ */
+export const savedSearches = pgTable("saved_searches", {
+  id:             uuid("id").primaryKey().defaultRandom(),
+  userId:         uuid("user_id")
+                    .notNull()
+                    .references(() => users.id, { onDelete: "cascade" }),
+  /** User-set name. Required — defaults to a generated description on create. */
+  name:           text("name").notNull(),
+  /** JSON object of explorer URL params (mode, q, chain, protocol, …). */
+  paramsJson:     text("params_json").notNull(),
+  /** When alerts on this search are enabled. Off by default. */
+  alertsEnabled:  boolean("alerts_enabled").default(false).notNull(),
+  /** Last time the cron ran this search and notified. Drives dedup. */
+  lastNotifiedAt: timestamp("last_notified_at"),
+  /** Last time the user manually opened this search (for sort order). */
+  lastViewedAt:   timestamp("last_viewed_at"),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("saved_searches_user_idx").on(t.userId),
+]);
+
 export const notificationsSent = pgTable("notifications_sent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
