@@ -1,40 +1,47 @@
-// Visual paywall used on the deep-calendar surfaces
-// (/protocols/[slug]/unlocks, /unlocks/[range]). Renders the gated rows
-// blurred-out behind a centred upgrade card so visitors see the *shape* of
-// the data they're missing — strictly more compelling than a hard cut-off
-// + "Show more →" button.
+// Visual signup teaser used on the deep-calendar surfaces
+// (/protocols/[slug]/unlocks, /unlocks/[range]). Renders the rest of the
+// rows blurred behind a centred "Sign up free to see all N" card so
+// visitors see the *shape* of what's hidden — much more compelling than a
+// "Show more →" button.
 //
 // Design constraints:
 //   - The blurred children stay in the DOM (server-rendered HTML), which
-//     keeps the JSON-LD ItemList useful for crawlers and avoids the
-//     "thin-content paywall" SEO penalty.
+//     keeps the JSON-LD ItemList useful for crawlers and avoids any
+//     "thin-content" SEO penalty.
 //   - The blur is CSS-only (filter: blur, pointer-events: none, aria-hidden)
 //     so screen readers skip it and keyboard users can't tab into the
 //     hidden anchors.
-//   - No JavaScript required to enforce the gate — paywall is server-
-//     rendered, no client-side hydration cost.
+//   - No JavaScript required — server-rendered, zero client-side cost.
+//   - The CTA goes to the FREE signup flow, not the paid upgrade flow.
+//     Marketing-page funnel logic: a free signup is much easier to get
+//     than a paid upgrade, and the upgrade moment lives inside the
+//     authenticated dashboard product where users already see value.
 
 import Link from "next/link";
 
 interface PaywallTeaserProps {
-  /** The gated rows. Rendered blurred + non-interactive. */
+  /** The hidden rows. Rendered blurred + non-interactive. */
   children:    React.ReactNode;
   /** "32 more upcoming unlocks", "all 47 events", etc. */
   hiddenLabel: string;
-  /** Where the upgrade button points. Defaults to /pricing. */
-  upgradeHref?: string;
-  /** Caller can override the headline. */
+  /** Where the CTA button points. Defaults to the free-signup funnel
+   *  entry (/find-vestings) — see the file-level note for why. */
+  ctaHref?:    string;
+  /** Caller can override the headline. Defaults to a generic "see all" copy. */
   headline?:   string;
-  /** Caller can override the sub-line. */
+  /** Caller can override the sub-line under the headline. */
   subline?:    string;
+  /** CTA button text. Defaults to "Sign up free to see all →". */
+  ctaLabel?:   string;
 }
 
 export function PaywallTeaser({
   children,
   hiddenLabel,
-  upgradeHref = "/pricing",
-  headline    = "Upgrade to Pro to unlock the full calendar",
-  subline     = "$14.99/mo · 14-day free trial · cancel anytime",
+  ctaHref     = "/find-vestings",
+  headline    = "See every upcoming unlock",
+  subline     = "Free · no credit card · access the full calendar in your dashboard",
+  ctaLabel    = "Sign up free →",
 }: PaywallTeaserProps) {
   return (
     <div className="relative">
@@ -67,13 +74,13 @@ export function PaywallTeaser({
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-4"
             style={{
-              background:   "rgba(13,148,136,0.08)",
-              border:       "1px solid rgba(13,148,136,0.25)",
-              color:        "#0d9488",
+              background:   "rgba(28,184,184,0.08)",
+              border:       "1px solid rgba(28,184,184,0.25)",
+              color:        "#0F8A8A",
               letterSpacing:"0.05em",
             }}
           >
-            PRO
+            FREE ACCOUNT
           </div>
           <h3
             className="text-lg sm:text-xl font-semibold mb-2"
@@ -82,21 +89,21 @@ export function PaywallTeaser({
             {headline}
           </h3>
           <p className="text-sm mb-1" style={{ color: "#64748b" }}>
-            {hiddenLabel} hidden behind upgrade.
+            {hiddenLabel} below.
           </p>
           <p className="text-xs mb-5" style={{ color: "#94a3b8" }}>
             {subline}
           </p>
           <Link
-            href={upgradeHref}
+            href={ctaHref}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm"
             style={{
-              background: "linear-gradient(135deg, #0d9488, #0891b2)",
+              background: "#1CB8B8",
               color:      "white",
-              boxShadow:  "0 4px 16px rgba(13,148,136,0.3)",
+              boxShadow:  "0 4px 16px rgba(28,184,184,0.3)",
             }}
           >
-            View pricing →
+            {ctaLabel}
           </Link>
         </div>
       </div>

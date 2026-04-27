@@ -25,12 +25,13 @@ import {
 } from "@/lib/vesting/unlock-windows";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { listProtocols } from "@/lib/protocol-constants";
-import { getCurrentUserTier, isPaidTier } from "@/lib/auth/tier";
 
-// Paywall threshold — same shape as /protocols/[slug]/unlocks. First N rows
-// are visible; the rest sit blurred behind an upgrade card. Full data stays
-// in the JSON-LD ItemList so search crawlers index every event.
-const FREE_VISIBLE_ROWS = 10;
+// Marketing-page tease: top N rows visible to all visitors, the rest
+// blurred behind a "Sign up free" CTA. Full calendar lives inside the
+// authenticated dashboard product. Same shape as
+// /protocols/[slug]/unlocks — keeps the JSON-LD ItemList intact so SEO
+// crawlers still index every event.
+const TEASER_VISIBLE_ROWS = 10;
 
 // ISR — re-render every hour. Long enough to keep DB load down, short enough
 // that "next 24h" stays accurate to the hour.
@@ -180,19 +181,14 @@ export default async function WindowPage({ params }: PageParams) {
   const def    = WINDOWS[range];
   const ranges = def.range();
   // Fail-soft: at build time CI has no DB access — render empty state and
-  // let ISR refresh on first runtime request. Tier lookup runs in parallel.
-  const [result, currentTier] = await Promise.all([
-    (async () => {
-      try {
-        return await getUnlocksInWindow(ranges.startSec, ranges.endSec);
-      } catch (err) {
-        console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
-        return { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
-      }
-    })(),
-    getCurrentUserTier(),
-  ]);
-  const isPaid = isPaidTier(currentTier);
+  // let ISR refresh on first runtime request.
+  let result;
+  try {
+    result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
+  } catch (err) {
+    console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
+    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+  }
 
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
@@ -340,8 +336,8 @@ export default async function WindowPage({ params }: PageParams) {
             : `${result.groups.length} group${result.groups.length === 1 ? "" : "s"}, sorted by time. Mass distributions to many wallets are collapsed into a single row.`}
         </p>
         {result.groups.length > 0 && (() => {
-          const visibleRows = isPaid ? result.groups : result.groups.slice(0, FREE_VISIBLE_ROWS);
-          const gatedRows   = isPaid ? [] : result.groups.slice(FREE_VISIBLE_ROWS);
+          const visibleRows = result.groups.slice(0, TEASER_VISIBLE_ROWS);
+          const gatedRows   = result.groups.slice(TEASER_VISIBLE_ROWS);
 
           const renderRow = (g: typeof result.groups[number], i: number, withTopBorder: boolean) => {
             const proto = protocolDisplay(g.protocol);
@@ -394,6 +390,7 @@ export default async function WindowPage({ params }: PageParams) {
                 <PaywallTeaser
                   hiddenLabel={`${gatedRows.length} more unlock${gatedRows.length === 1 ? "" : "s"} in this window`}
                   headline={`See every ${def.label.toLowerCase()} unlock`}
+                  subline="Free account · full calendar in your dashboard · alerts on the events you care about"
                 >
                   {gatedRows.map((g, i) => renderRow(g, i, i === 0))}
                 </PaywallTeaser>

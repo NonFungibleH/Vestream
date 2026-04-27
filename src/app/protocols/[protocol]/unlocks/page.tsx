@@ -18,13 +18,14 @@ import { PaywallTeaser } from "@/components/PaywallTeaser";
 import { getProtocol, listProtocols } from "@/lib/protocol-constants";
 import { getUnlocksInWindow, type WindowUnlockGroup } from "@/lib/vesting/unlock-windows";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
-import { getCurrentUserTier, isPaidTier } from "@/lib/auth/tier";
-
-// Number of rows visible to anonymous + free-tier visitors before the
-// paywall kicks in. Chosen to give Google enough indexable content (the
-// JSON-LD ItemList carries the full set anyway) while creating a clear
-// upgrade moment when a serious watcher hits the wall.
-const FREE_VISIBLE_ROWS = 10;
+// Marketing-page tease: every visitor (anon, free, paid) sees the same
+// top-N rows on this page and a "Sign up free → see all in dashboard"
+// teaser below. Full calendar lives inside the authenticated dashboard,
+// not here. The split is deliberate — vestream.io is purely marketing,
+// dashboard is the product. Keeps the marketing page simple and SEO-
+// friendly, and gives the upgrade moment somewhere to live (inside the
+// dashboard product, not on a marketing page).
+const TEASER_VISIBLE_ROWS = 10;
 
 // ISR: 1h refresh — unlocks are time-sensitive but not by-the-second.
 export const revalidate = 3600;
@@ -167,26 +168,18 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
   // renders an empty state and ISR refreshes on first runtime request.
   const now = Math.floor(Date.now() / 1000);
   const FIVE_YEARS_SEC = 5 * 365 * 86400;
-  // Run the data fetch and the tier lookup in parallel — both are
-  // independent, both are needed before render. Tier null = anonymous.
-  const [resultRaw, currentTier] = await Promise.all([
-    (async () => {
-      try {
-        return await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 2000, meta.adapterIds, chainFilter);
-      } catch (err) {
-        console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
-        return { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
-      }
-    })(),
-    getCurrentUserTier(),
-  ]);
-  const result = resultRaw;
-  const isPaid = isPaidTier(currentTier);
-  // Pre-compute paywall slices outside the JSX. Turbopack mishandles
-  // IIFE-scoped references to outer-function `const` bindings inside
-  // RSC-compiled JSX, so we hoist these here.
-  const visibleRows = isPaid ? result.groups : result.groups.slice(0, FREE_VISIBLE_ROWS);
-  const gatedRows   = isPaid ? [] : result.groups.slice(FREE_VISIBLE_ROWS);
+  let result;
+  try {
+    result = await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 2000, meta.adapterIds, chainFilter);
+  } catch (err) {
+    console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
+    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+  }
+  // Top N visible to everyone, rest blurred behind the signup CTA.
+  // Pre-computed here (not inside JSX) — Turbopack mishandles IIFE-scoped
+  // references to outer-function `const` bindings inside RSC-compiled JSX.
+  const visibleRows = result.groups.slice(0, TEASER_VISIBLE_ROWS);
+  const gatedRows   = result.groups.slice(TEASER_VISIBLE_ROWS);
 
   // ItemList JSON-LD — unlock events scoped to this protocol.
   const itemListJsonLd = {
@@ -319,7 +312,8 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
             {gatedRows.length > 0 && (
               <PaywallTeaser
                 hiddenLabel={`${gatedRows.length} more ${meta.name} unlock${gatedRows.length === 1 ? "" : "s"}`}
-                headline={`See every upcoming ${meta.name} unlock`}
+                headline={`See all ${meta.name} unlocks`}
+                subline="Free account · full calendar in your dashboard · alerts on the events you care about"
               >
                 {gatedRows.map((g, i) => (
                   <ProtocolUnlockRow
