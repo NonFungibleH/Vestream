@@ -4,6 +4,7 @@ import { apiKeys } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { KeyManagement } from "./KeyManagement";
 
 export const dynamic = "force-dynamic";
 
@@ -177,8 +178,14 @@ export default async function DeveloperAccount() {
           </div>
           <p className="text-xs mt-3 px-3 py-2 rounded-lg"
             style={{ background: "rgba(245,158,11,0.06)", color: "rgba(240,184,61,0.7)", border: "1px solid rgba(245,158,11,0.12)" }}>
-            Your full API key was shown once when issued. If you&apos;ve lost it, contact us and we&apos;ll revoke and reissue.
+            Your full API key was shown once when issued. Lost it or worried it leaked? Use the
+            management panel below — rotation is instant and self-serve.
           </p>
+        </div>
+
+        {/* ── Key management (rotate / revoke) ── */}
+        <div className="mb-8">
+          <KeyManagement />
         </div>
 
         {/* ── Quick links ── */}

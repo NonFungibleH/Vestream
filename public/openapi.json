@@ -124,6 +124,20 @@
             "in": "query",
             "schema": { "type": "boolean" },
             "description": "When true, excludes streams where `isFullyVested === true`. Useful for building live dashboards where you only care about streams still releasing tokens. Default: false (returns all streams including historical/finished ones)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 100 },
+            "description": "Maximum number of streams to return per page. Bounded 1–500; default 100. Use the `pagination.next_offset` field from the response to fetch subsequent pages.",
+            "example": 100
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 0, "default": 0 },
+            "description": "Zero-indexed page offset. Combine with `limit` for pagination — e.g. `?limit=100&offset=200` returns rows 201-300. The response always includes `pagination.total` so you know how many pages remain.",
+            "example": 0
           }
         ],
         "responses": {
@@ -140,9 +154,19 @@
                   "type": "object",
                   "properties": {
                     "wallet":       { "type": "string", "description": "The wallet address that was queried, lowercased." },
-                    "count":        { "type": "integer", "description": "Number of streams in the response." },
+                    "count":        { "type": "integer", "description": "Number of streams returned in this page." },
                     "last_indexed": { "type": "string", "format": "date-time", "nullable": true, "description": "When the backing index was last refreshed for this wallet's protocols. Typically under one minute old." },
-                    "streams":      { "type": "array", "items": { "$ref": "#/components/schemas/VestingStream" }, "description": "Ordered newest-first by `startTime`." }
+                    "pagination": {
+                      "type": "object",
+                      "description": "Cursor metadata for paging through large result sets.",
+                      "properties": {
+                        "total":       { "type": "integer", "description": "Total streams matching the filter, across all pages." },
+                        "limit":       { "type": "integer", "description": "Page size in effect for this response (1–500)." },
+                        "offset":      { "type": "integer", "description": "Offset of the first row in this response." },
+                        "next_offset": { "type": "integer", "nullable": true, "description": "Offset to pass on the next request. `null` when this is the last page." }
+                      }
+                    },
+                    "streams":      { "type": "array", "items": { "$ref": "#/components/schemas/VestingStream" }, "description": "Ordered ascending by `endTime` (soonest-completing first)." }
                   }
                 }
               }

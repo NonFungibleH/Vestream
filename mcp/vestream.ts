@@ -106,13 +106,23 @@ server.tool(
     active_only: z.boolean().optional().describe(
       "If true, only return streams that are not yet fully vested (default: false)"
     ),
+    limit: z.number().int().min(1).max(500).optional().describe(
+      "Page size, 1–500. Default 100. Use with `offset` to page through wallets " +
+      "with hundreds of streams without overflowing your context window."
+    ),
+    offset: z.number().int().min(0).optional().describe(
+      "Zero-indexed page offset. Use the `pagination.next_offset` field from a " +
+      "prior response to fetch the next page."
+    ),
   },
-  async ({ address, protocol, chain, active_only }) => {
+  async ({ address, protocol, chain, active_only, limit, offset }) => {
     const qs = new URLSearchParams();
     const cleanedProtocol = sanitiseProtocolFilter(protocol);
     if (cleanedProtocol) qs.set("protocol", cleanedProtocol);
     if (chain)           qs.set("chain",    chain);
     if (active_only)     qs.set("active_only", "true");
+    if (typeof limit  === "number") qs.set("limit",  String(limit));
+    if (typeof offset === "number") qs.set("offset", String(offset));
     const query = qs.toString() ? `?${qs}` : "";
 
     const data = await vstreamFetch(`/wallet/${address}/vestings${query}`);
