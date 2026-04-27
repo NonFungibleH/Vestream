@@ -54,8 +54,11 @@ export default function DeveloperPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
             style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1CB8B8" }} />
-            Developer API · Invite-only Beta
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
+            </span>
+            Developer API · Free tier · Pro available
           </div>
 
           <h1 className="font-bold tracking-tight mb-6"
@@ -76,15 +79,15 @@ export default function DeveloperPage() {
             <a href="#request-access"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
               style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.3)" }}>
-              Request API Access
+              Get my free API key
               <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </a>
-            <Link href="/api-docs"
+            <Link href="/developer/quickstart"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
               style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#1CB8B8" }}>
-              View API Docs →
+              Quickstart →
             </Link>
           </div>
 
@@ -506,7 +509,7 @@ export default function DeveloperPage() {
               <a href="#request-access"
                 className="block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
                 style={{ background: "rgba(28,184,184,0.12)", border: "1px solid rgba(28,184,184,0.3)", color: "#1CB8B8" }}>
-                Request Access
+                Get my free key →
               </a>
             </div>
 
@@ -561,11 +564,12 @@ export default function DeveloperPage() {
           <div className="text-center mb-10">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Get started</p>
             <h2 className="font-bold text-3xl tracking-tight mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
-              Request API access
+              Get a free API key
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Tell us what you&apos;re building and we&apos;ll send your API key within 1–2 business days.
-              Every application is reviewed — we&apos;re keeping early access intentional.
+              No approval queue. Tell us a bit about what you&apos;re building and we&apos;ll
+              issue your key on submit. Free tier gives you 150 requests/day across all 9
+              protocols — plenty for prototyping. Upgrade to Pro when you&apos;re ready.
             </p>
           </div>
 

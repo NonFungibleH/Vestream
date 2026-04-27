@@ -1,12 +1,41 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { CopyableCode } from "@/components/CopyableCode";
 
 export const metadata = {
   title: "AI Agents — Vestream",
   description:
     "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
 };
+
+// ── Showcase card: a single "user → agent" conversation snippet ─────────────
+function ShowcaseCard({ user, agent }: { user: string; agent: string }) {
+  return (
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-3"
+      style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}
+    >
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+          You
+        </p>
+        <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.85)" }}>
+          {user}
+        </p>
+      </div>
+      <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#1CB8B8" }}>
+          Claude · via Vestream MCP
+        </p>
+        <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
+          {agent}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 // ── Reusable styled code block ────────────────────────────────────────────────
 function Code({ children }: { children: string }) {
@@ -337,7 +366,8 @@ export default function AiPage() {
               <span className="text-sm font-semibold">Claude Desktop</span>
               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>claude_desktop_config.json</span>
             </div>
-            <Code>{`{
+            <CopyableCode
+              code={`{
   "mcpServers": {
     "vestream": {
       "command": "npx",
@@ -347,7 +377,8 @@ export default function AiPage() {
       }
     }
   }
-}`}</Code>
+}`}
+            />
           </div>
 
           {/* Cursor / other */}
@@ -357,7 +388,8 @@ export default function AiPage() {
               <span className="text-sm font-semibold">Cursor / Windsurf</span>
               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>.cursor/mcp.json</span>
             </div>
-            <Code>{`{
+            <CopyableCode
+              code={`{
   "mcpServers": {
     "vestream": {
       "command": "npx",
@@ -367,13 +399,59 @@ export default function AiPage() {
       }
     }
   }
-}`}</Code>
+}`}
+            />
           </div>
         </div>
 
-        <p className="text-center text-sm mt-5" style={{ color: "rgba(255,255,255,0.3)" }}>
-          Replace <code style={{ color: "#1CB8B8" }}>vstr_live_...</code> with your API key from{" "}
-          <Link href="/developer" className="underline" style={{ color: "rgba(255,255,255,0.5)" }}>the developer portal</Link>.
+        {/* Get-key CTA + quickstart link — replaces the previous "from the
+            developer portal" tail copy. The portal is for returning users;
+            new visitors want a key, fast. */}
+        <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
+          <Link
+            href="/developer#request-access"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
+            style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}
+          >
+            Get a free API key →
+          </Link>
+          <Link
+            href="/developer/quickstart"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.7)" }}
+          >
+            Full quickstart guide
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Real conversations / showcase reel ─────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
+            What it looks like in practice
+          </p>
+          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>
+            Real conversations
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ShowcaseCard
+            user='Show me everything vesting for vitalik.eth.'
+            agent='Found 3 active streams across 2 protocols on Ethereum. The largest is a Sablier linear vesting of 8,500 USDC running until Sept 2026 (≈ 14% vested). Next unlock event: a Hedgey tranche on May 14 unlocking ~12,000 OP. Want the full schedule?'
+          />
+          <ShowcaseCard
+            user='When should I claim my APE before the next cliff?'
+            agent='Your Sablier APE stream has a cliff completing in 6 days, releasing ~4,200 APE. Gas is currently 23 gwei; predicted to drop to ~14 gwei overnight. Recommend claiming after midnight UTC — you save roughly $18 in gas at current prices.'
+          />
+          <ShowcaseCard
+            user="What's unlocking across my 3 wallets in the next 30 days?"
+            agent='12 unlock events across 3 wallets — total locked value coming online: $63,418. Biggest single event: a UNCX cliff on May 9 (28% of the total). Want me to draft a calendar export or set up a watch on the day before each?'
+          />
+        </div>
+        <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.35)" }}>
+          Sample exchanges, lightly edited. Set up your own in a Claude Desktop chat in 60 seconds.
         </p>
       </section>
 
