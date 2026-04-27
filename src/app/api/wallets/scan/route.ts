@@ -1,9 +1,15 @@
 /**
  * GET /api/wallets/scan?address=0x...
  *
- * Pro+ feature: Scans ALL chains × ALL protocols for a wallet address.
- * Returns vestings grouped by protocol+chain, with per-token breakdowns
- * so the user can pick individual token vestings to watch.
+ * Scans ALL chains × ALL protocols for a wallet address. Returns vestings
+ * grouped by protocol+chain, with per-token breakdowns so the user can
+ * pick individual token vestings to watch.
+ *
+ * Tier-aware quota:
+ *   - Free: 3 lifetime scans (taste, then upgrade)
+ *   - Pro:  3 scans per rolling 24h
+ * Quota state is per-user, enforced by checkAndIncrementScanCount() in
+ * src/lib/db/queries.ts.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
@@ -41,21 +47,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Pro+ gate
+    // Auth → user lookup. Free users now ALSO get scan access (was 402),
+    // capped at 3 lifetime scans. Pro retains the rolling-24h budget.
     const user = await getUserByAddress(session.address);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    if (user.tier === "free") {
-      return NextResponse.json(
-        { error: "Pro plan required", code: "UPGRADE_REQUIRED" },
-        { status: 402 }
-      );
-    }
 
-    // Rate limit: 3 scans per 24-hour rolling window
-    const { allowed, remaining, resetAt } = await checkAndIncrementScanCount(user.id);
+    const tier = user.tier ?? "free";
+    const { allowed, remaining, resetAt } = await checkAndIncrementScanCount(user.id, tier);
     if (!allowed) {
+      // Free user out of lifetime budget → upgrade prompt.
+      if (tier === "free") {
+        return NextResponse.json(
+          {
+            error: "You've used your 3 free Discover scans. Upgrade to Pro for 3 scans per day.",
+            code:  "UPGRADE_REQUIRED",
+            tier:  "free",
+          },
+          { status: 402 },
+        );
+      }
+      // Pro user inside the 24h window → rate-limit prompt.
       const msLeft    = resetAt.getTime() - Date.now();
       const hoursLeft = Math.ceil(msLeft / (60 * 60 * 1000));
       return NextResponse.json(
@@ -64,7 +77,7 @@ export async function GET(req: NextRequest) {
           code:    "RATE_LIMITED",
           resetAt: resetAt.toISOString(),
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 

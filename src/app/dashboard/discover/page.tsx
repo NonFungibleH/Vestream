@@ -211,7 +211,7 @@ function DiscoverSidebar({ tier }: { tier: string }) {
                 style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>FREE</span>
             </div>
             <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              Upgrade to Pro to use Discover
+              3 free scans included · Pro for daily resets
             </p>
             <a href="/pricing"
               className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
@@ -448,7 +448,11 @@ export default function DiscoverPage() {
       ].filter(Boolean).join("&");
       const res = await fetch(`/api/wallets/scan?address=${address}${filterQs ? "&" + filterQs : ""}`);
       if (res.status === 402) {
-        setScanError("Pro plan required to use Discover. Upgrade to unlock full scanning.");
+        const j = await res.json().catch(() => ({}));
+        setScanError(j.error ?? "You've used your free scans — upgrade to Pro for daily resets.");
+        // 402 from a free user means lifetime cap hit. Surface 0 remaining
+        // so the UI stays honest about what's available.
+        setScansRemaining(0);
         return;
       }
       if (res.status === 429) {
@@ -761,10 +765,14 @@ export default function DiscoverPage() {
               </button>
             </div>
             {tier === "free" && (
-              <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>Upgrade to Pro to run a scan.</p>
+              <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>
+                3 free scans included on every account · upgrade to Pro for daily resets.
+              </p>
             )}
 
-            {/* Quota indicator — appears after first scan attempt */}
+            {/* Quota indicator — appears after first scan attempt. Copy
+                changes between tiers because free is a lifetime budget
+                (never resets) and Pro is a 24-hour rolling window. */}
             {scansRemaining !== null && (
               <div className="mt-3 flex items-center gap-2.5">
                 {/* 3 usage dots */}
@@ -783,10 +791,14 @@ export default function DiscoverPage() {
                 </div>
                 <span className="text-[11px]" style={{ color: scansRemaining > 0 ? "var(--preview-text-3)" : "#F0992E" }}>
                   {scansRemaining > 0
-                    ? `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
-                    : scanResetAt
-                      ? `No scans left — resets in ${Math.max(1, Math.ceil((new Date(scanResetAt).getTime() - Date.now()) / 3_600_000))}h`
-                      : "No scans remaining today"
+                    ? tier === "free"
+                      ? `${scansRemaining} free scan${scansRemaining !== 1 ? "s" : ""} remaining`
+                      : `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
+                    : tier === "free"
+                      ? "Free scans used — upgrade to Pro for daily resets"
+                      : scanResetAt
+                        ? `No scans left — resets in ${Math.max(1, Math.ceil((new Date(scanResetAt).getTime() - Date.now()) / 3_600_000))}h`
+                        : "No scans remaining today"
                   }
                 </span>
               </div>
@@ -800,7 +812,7 @@ export default function DiscoverPage() {
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <span className="text-xs flex-1" style={{ color: "#B3322E" }}>{scanError}</span>
-                {scanError.includes("Pro plan") && (
+                {(scanError.includes("Upgrade to Pro") || scanError.includes("free scans") || scanError.includes("Pro plan")) && (
                   <a href="/pricing" className="text-[11px] font-semibold underline flex-shrink-0" style={{ color: "#1CB8B8" }}>
                     Upgrade →
                   </a>

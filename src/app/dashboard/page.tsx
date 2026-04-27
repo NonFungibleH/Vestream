@@ -333,6 +333,15 @@ function IconSearch() {
   );
 }
 
+function IconCompass() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+    </svg>
+  );
+}
+
 // ─── DonutChart ───────────────────────────────────────────────────────────────
 
 function DonutChart({ tokens }: { tokens: TokenSummary[] }) {
@@ -3420,6 +3429,7 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
 
 const NAV_ITEMS = [
   { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: true  },
+  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer", active: false },
   { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
   { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: false },
 ];
@@ -3607,26 +3617,33 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         </div>
       </a>
 
-      {/* Nav */}
+      {/* Nav.
+          Discover is no longer Pro-locked — free users get 3 lifetime
+          scans, then upgrade. Explorer (block-explorer search) is open
+          to all tiers but free is capped at 50 results / single filter
+          so the surface still drives Pro conversion. We badge both with
+          a small "free 3" / "Pro caps" hint for free visitors so the
+          model is obvious before they click. */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
-          const isDiscoverLocked = item.href === "/dashboard/discover" && tier === "free";
+          const isFree         = tier === "free";
+          const showFreeBadge  = isFree && (item.href === "/dashboard/discover");
           return (
             <button key={item.label}
               onClick={() => router.push(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={item.active
                 ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(59,130,246,0.15)" }
-                : { color: isDiscoverLocked ? "var(--preview-text-3)" : "var(--preview-text-2)", border: "1px solid transparent" }}
+                : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
               onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
               onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
             >
               <span className="opacity-80 flex-shrink-0">{item.icon}</span>
               {item.label}
-              {isDiscoverLocked && (
+              {showFreeBadge && (
                 <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold"
                   style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.2)" }}>
-                  Pro
+                  3 free
                 </span>
               )}
             </button>

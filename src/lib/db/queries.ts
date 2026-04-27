@@ -197,37 +197,71 @@ export async function recordNotificationSent(
 
 /**
  * Check whether a user has scan quota remaining, and if so, increment their count.
- * Quota: 3 scans per rolling 24-hour window.
- * Returns { allowed, remaining, resetAt } — caller must check `allowed` before proceeding.
+ * Tier-aware quota:
+ *   - Free tier  → 3 lifetime scans (no window reset). Once exhausted,
+ *     the only path forward is upgrading to Pro. This gives every signed-
+ *     up user a real taste of Discover without us underwriting unlimited
+ *     scans for accounts that may never convert.
+ *   - Pro / Fund → 3 scans per rolling 24-hour window. Familiar daily-
+ *     budget shape, plenty for most workflows.
+ *
+ * Returns { allowed, remaining, resetAt, tier } — `resetAt` is meaningless
+ * for the free-lifetime path (no reset ever happens) but we still return a
+ * date so the caller's TypeScript signature stays uniform; the UI uses
+ * `tier === "free"` to decide whether to show the reset clock.
  */
 export async function checkAndIncrementScanCount(
-  userId: string
-): Promise<{ allowed: boolean; remaining: number; resetAt: Date }> {
+  userId: string,
+  tier:   string,
+): Promise<{ allowed: boolean; remaining: number; resetAt: Date; tier: string }> {
   const row = await db
     .select({ scanCount: users.scanCount, scanWindowStart: users.scanWindowStart })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  if (!row[0]) return { allowed: false, remaining: 0, resetAt: new Date() };
+  if (!row[0]) return { allowed: false, remaining: 0, resetAt: new Date(), tier };
 
-  const LIMIT  = 3;
-  const WINDOW = 24 * 60 * 60 * 1000; // 24 hours in ms
-  const now    = new Date();
+  const LIMIT       = 3;
+  const WINDOW_MS   = 24 * 60 * 60 * 1000;
+  const now         = new Date();
   const { scanCount, scanWindowStart } = row[0];
+  const isFree      = tier === "free";
 
+  // ── Free tier: lifetime cap, no window reset ─────────────────────────
+  if (isFree) {
+    if (scanCount >= LIMIT) {
+      return { allowed: false, remaining: 0, resetAt: new Date(0), tier };
+    }
+    await db.update(users)
+      .set({
+        scanCount:        scanCount + 1,
+        // Stamp scanWindowStart on first-ever scan so the UI can show
+        // "first used: <date>" if we ever want it. Not used for reset
+        // logic on free.
+        scanWindowStart:  scanWindowStart ?? now,
+      })
+      .where(eq(users.id, userId));
+    return {
+      allowed:   true,
+      remaining: LIMIT - 1 - scanCount,
+      resetAt:   new Date(0),
+      tier,
+    };
+  }
+
+  // ── Pro / Fund: 3 per rolling 24h ────────────────────────────────────
   const windowExpired =
-    !scanWindowStart || now.getTime() - scanWindowStart.getTime() >= WINDOW;
+    !scanWindowStart || now.getTime() - scanWindowStart.getTime() >= WINDOW_MS;
 
   if (windowExpired) {
-    // Start a fresh 24-hour window
     await db.update(users)
       .set({ scanCount: 1, scanWindowStart: now })
       .where(eq(users.id, userId));
-    return { allowed: true, remaining: LIMIT - 1, resetAt: new Date(now.getTime() + WINDOW) };
+    return { allowed: true, remaining: LIMIT - 1, resetAt: new Date(now.getTime() + WINDOW_MS), tier };
   }
 
   if (scanCount >= LIMIT) {
-    return { allowed: false, remaining: 0, resetAt: new Date(scanWindowStart!.getTime() + WINDOW) };
+    return { allowed: false, remaining: 0, resetAt: new Date(scanWindowStart!.getTime() + WINDOW_MS), tier };
   }
 
   await db.update(users)
@@ -236,7 +270,8 @@ export async function checkAndIncrementScanCount(
   return {
     allowed:   true,
     remaining: LIMIT - 1 - scanCount,
-    resetAt:   new Date(scanWindowStart!.getTime() + WINDOW),
+    resetAt:   new Date(scanWindowStart!.getTime() + WINDOW_MS),
+    tier,
   };
 }
 
