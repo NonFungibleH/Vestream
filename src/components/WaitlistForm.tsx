@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 export function WaitlistForm({ dark = false }: { dark?: boolean }) {
   const [email, setEmail]   = useState("");
@@ -20,6 +21,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
         body: JSON.stringify({ email: email.trim() }),
       });
       if (res.ok) {
+        track("early_access_requested", { surface: dark ? "dark_hero" : "light_hero" });
         setStatus("success");
       } else {
         const data = await res.json().catch(() => ({}));

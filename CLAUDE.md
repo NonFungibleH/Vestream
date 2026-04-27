@@ -605,9 +605,70 @@ NEXT_PUBLIC_WALLETCONNECT_ID  WalletConnect project ID
 ADMIN_PASSWORD                Admin panel password (plaintext, compared with timing-safe equal)
 DEV_OTP                       (dev only) Fixed OTP code bypassing real email send (e.g. "123456")
 REVENUECAT_WEBHOOK_SECRET     Secret to validate RevenueCat webhook Authorization header
+NEXT_PUBLIC_GA_ID             Google Analytics 4 Measurement ID (G-XXXXXXXXXX). Cookie-gated.
+NEXT_PUBLIC_CLARITY_ID        Microsoft Clarity Project ID (10 chars). Cookie-gated.
+GA_MEASUREMENT_ID             (optional) Same as NEXT_PUBLIC_GA_ID for server-side events
+GA_API_SECRET                 GA4 Measurement Protocol API secret — server-only, used for
+                              ad-blocker-proof events (subscription_started, etc).
+                              Create in GA4 → Admin → Data Streams → Web → Measurement
+                              Protocol API secrets.
 ```
 
 > **Admin cookie note**: The `vestr_admin` cookie value is no longer `"1"` — it's a token derived from `ADMIN_PASSWORD`. Always log in via `/admin/login` to get a valid cookie.
+
+---
+
+## Analytics
+
+Four-layer stack, each covering a different need:
+
+| Layer | Purpose | Cookie consent | Quota |
+|---|---|---|---|
+| **Google Analytics 4** | Traffic sources, demographics, custom events | Yes (gated by `vestream-cookie-consent=all`) | Unlimited free |
+| **Microsoft Clarity** | Heatmaps, session replay, rage clicks, dead clicks | Yes (same gate) | Unlimited free |
+| **Vercel Analytics** | Server-side pageviews (ad-blocker-proof), Web Vitals | No (anonymised at edge) | 2,500/day on Hobby |
+| **Server-side GA4 (Measurement Protocol)** | Subscription events from Stripe webhook, fired even if client has ad blocker | N/A (server-side) | Unlimited free |
+
+### Event taxonomy
+
+All client events go through `track()` in `src/lib/analytics.ts`. Server events go through `trackServerEvent()` in `src/lib/server-analytics.ts`. Mobile mirrors the same taxonomy in `mobile/lib/analytics.ts` with `surface: "mobile"` auto-tagged.
+
+Naming rules:
+- Event names are `snake_case`, semantic, past-tense (`wallet_added`, not `add_wallet`)
+- Param keys are `snake_case`
+- Never include PII — no email, no wallet address. Use `address_type: "evm" | "solana" | "ens" | "symbol" | "freeform"` instead
+- Prefer enums over free-text params so dashboards group cleanly
+
+### Activation checklist (when you have GA4 + Clarity accounts)
+
+1. Create GA4 property at https://analytics.google.com → Web data stream for vestream.io → copy `G-XXXXXXXXXX`
+2. Create Clarity project at https://clarity.microsoft.com → copy 10-char Project ID
+3. Set both env vars in Vercel (Production environment): `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_CLARITY_ID`
+4. (Optional, for server-side events): GA4 → Admin → Data Streams → Web → Measurement Protocol API secrets → Create. Set `GA_API_SECRET` in Vercel.
+5. Redeploy. Both scripts auto-load on next page view if cookie consent is granted.
+
+### Where events fire
+
+| Event | Source |
+|---|---|
+| `page_view` | Auto via GA `gtag('config')` on every route change |
+| `search_performed` | dashboard/explorer SearchInput |
+| `wallet_scan_started` / `_completed` | dashboard/discover, find-vestings |
+| `wallet_added` / `_removed` | settings, dashboard, WalletInput |
+| `signup_started` / `signup_completed` / `login_completed` | AuthCard |
+| `early_access_requested` | WaitlistForm |
+| `notification_prefs_saved` | settings page |
+| `upgrade_clicked` | UpsellModal + every Pro CTA |
+| `subscription_started` / `_canceled` | Stripe webhook (server-side) |
+| `api_access_requested` | ApiAccessForm |
+| `cta_clicked` | Generic catch-all |
+
+### Privacy posture
+
+- All client-side analytics are gated behind the cookie banner. Until the user clicks "Accept all" the `track()` helper is a silent no-op.
+- Vercel Analytics doesn't drop a cookie and aggregates at the edge — it runs without consent because there's nothing to consent to.
+- Server-side events use a hashed user id (sha256 of `userId + GA_API_SECRET`) so the raw user id never leaves our infrastructure.
+- Clarity auto-redacts every form field. Mark any sensitive non-form element with `data-clarity-mask="true"` to opt it out of session replay.
 
 ---
 

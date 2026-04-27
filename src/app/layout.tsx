@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import MicrosoftClarity from "@/components/MicrosoftClarity";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,7 +80,17 @@ export default function RootLayout({
       >
         <Providers>{children}</Providers>
         <CookieBanner />
+        {/* Analytics stack — each layer covers a different need:
+              GoogleAnalytics    → traffic sources, demographics, custom events (cookie-gated)
+              MicrosoftClarity   → heatmaps + session replay (cookie-gated, free, no quota)
+              VercelAnalytics    → server-side pageviews, ad-blocker-proof, Web Vitals — no cookies
+              SpeedInsights      → Core Web Vitals breakdown for performance budgets — no cookies
+            Vercel layers don't gate on consent because they're aggregated /
+            anonymised at the edge and don't drop a cookie. */}
         <GoogleAnalytics />
+        <MicrosoftClarity />
+        <VercelAnalytics />
+        <SpeedInsights />
       </body>
     </html>
   );

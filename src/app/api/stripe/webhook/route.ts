@@ -23,6 +23,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { getStripe, statusToTier, STRIPE_TIER_LIMITS } from "@/lib/stripe";
+import { trackServerEvent } from "@/lib/server-analytics";
 
 export const runtime = "nodejs";
 
@@ -104,6 +105,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         stripeSubscriptionId: session.subscription,
       })
       .where(eq(apiKeys.id, apiKeyId));
+
+    // Server-side GA4 fire — captures the subscription even if the client
+    // had an ad blocker on or never accepted analytics cookies. The Stripe
+    // dashboard remains the source of truth for $; this just lights up
+    // GA's funnel reports so we can see where subscribers came from.
+    trackServerEvent("subscription_started", {
+      userId: apiKeyId,
+      tier: "pro",
+      currency: session.currency ?? "usd",
+      // amount in major units (e.g. dollars, not cents) so GA reports read naturally
+      amount: typeof session.amount_total === "number" ? session.amount_total / 100 : undefined,
+      mode: session.mode ?? "subscription",
+    });
   }
 }
 
@@ -147,6 +161,12 @@ async function handleSubscriptionCancelled(sub: Stripe.Subscription) {
       stripeSubscriptionId: null,
     })
     .where(eq(apiKeys.id, apiKeyId));
+
+  trackServerEvent("subscription_canceled", {
+    userId: apiKeyId,
+    cancel_reason: sub.cancellation_details?.reason ?? "unknown",
+    cancel_feedback: sub.cancellation_details?.feedback ?? null,
+  });
 }
 
 async function resolveApiKeyIdFromCustomer(customerId: string | null): Promise<string | null> {

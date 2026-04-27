@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { UpsellModal } from "@/components/UpsellModal";
+import { track } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -610,6 +611,13 @@ export default function Settings() {
     setRemovingId(wallet.id);
     try {
       await fetch(`/api/wallets/${wallet.address}`, { method: "DELETE" });
+      track("wallet_removed", {
+        surface: "settings",
+        had_label: !!wallet.label,
+        narrowed_chain: !!wallet.chains?.length,
+        narrowed_protocol: !!wallet.protocols?.length,
+        narrowed_token: !!wallet.tokenAddress,
+      });
       await loadWallets();
     } finally { setRemovingId(null); }
   }
@@ -630,6 +638,13 @@ export default function Settings() {
         }),
       });
       if (!res.ok) { const j = await res.json(); setSaveError(j.error ?? "Failed to save"); return; }
+      track("notification_prefs_saved", {
+        surface: "settings",
+        email_enabled: prefs.emailEnabled,
+        hours_before: prefs.hoursBeforeUnlock,
+        notify_cliff: prefs.notifyCliff,
+        notify_stream_end: prefs.notifyStreamEnd,
+      });
       setSaveOk(true);
       setTimeout(() => setSaveOk(false), 3000);
     } catch { setSaveError("Network error"); }

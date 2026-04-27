@@ -13,17 +13,25 @@
 //      Posthog, Plausible, or a server-side proxy by editing one file.
 //
 // Event taxonomy (kept short, semantically meaningful, snake_case):
-//   page_view              — fired automatically by GoogleAnalytics.tsx
-//   search_performed       — explorer + dashboard search bar submits
-//   wallet_scan_started    — find-vestings or dashboard discover scan kickoff
-//   wallet_scan_completed  — same flow, with `result_count` param
-//   wallet_added           — successful POST /api/wallets
-//   signup_started         — email entered, OTP sent
-//   signup_completed       — OTP verified, session created
-//   login_completed        — same as signup_completed for returning users
-//   upgrade_clicked        — any CTA pointing at /pricing or Stripe checkout
-//   api_access_requested   — developer access form submitted
-//   cta_clicked            — generic catch-all, takes a `cta_id` param
+//   page_view                  — fired automatically by GoogleAnalytics.tsx
+//   search_performed           — explorer + dashboard search bar submits
+//   wallet_scan_started        — find-vestings or dashboard discover scan kickoff
+//   wallet_scan_completed      — same flow, with `result_count` param
+//   wallet_added               — successful POST /api/wallets
+//   wallet_removed             — successful DELETE /api/wallets/[address]
+//   stream_detail_viewed       — stream/[id] page or modal opened
+//   notification_prefs_saved   — user toggled or saved alert prefs
+//   signup_started             — email entered, OTP sent
+//   signup_completed           — OTP verified, session created
+//   login_completed            — same as signup_completed for returning users
+//   early_access_requested     — homepage waitlist form submitted
+//   onboarding_step_completed  — step name passed via `step` param
+//   upgrade_clicked            — any CTA pointing at /pricing or Stripe checkout
+//   subscription_started       — Stripe checkout success (server-side fired
+//                                via Measurement Protocol — see /api/analytics/event)
+//   subscription_canceled      — Stripe webhook cancel event (server-side)
+//   api_access_requested       — developer access form submitted
+//   cta_clicked                — generic catch-all, takes a `cta_id` param
 //
 // Param-naming rules:
 //   - all keys in snake_case
@@ -49,10 +57,17 @@ export type AnalyticsEvent =
   | "wallet_scan_started"
   | "wallet_scan_completed"
   | "wallet_added"
+  | "wallet_removed"
+  | "stream_detail_viewed"
+  | "notification_prefs_saved"
   | "signup_started"
   | "signup_completed"
   | "login_completed"
+  | "early_access_requested"
+  | "onboarding_step_completed"
   | "upgrade_clicked"
+  | "subscription_started"
+  | "subscription_canceled"
   | "api_access_requested"
   | "cta_clicked";
 

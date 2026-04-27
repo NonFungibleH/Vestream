@@ -10,6 +10,7 @@ import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
+import { track } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4038,6 +4039,7 @@ export default function Dashboard() {
 
   async function handleRemoveWallet(address: string) {
     await fetch(`/api/wallets/${address}`, { method: "DELETE" });
+    track("wallet_removed", { surface: "dashboard" });
     await loadWallets();
   }
 
