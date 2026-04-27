@@ -2918,6 +2918,1162 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 17 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "sablier-token-streaming-vesting-explained",
+    title:       "Sablier: Token Streaming Vesting Explained",
+    excerpt:     "Sablier pioneered real-time, per-second token streaming on Ethereum. Here is how it works, where it runs, and how to track Sablier streams on Vestream.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "9 min read",
+    category:    "Guides",
+    tags:        ["sablier", "token streaming", "vesting", "ethereum", "defi"],
+    content: [
+      {
+        type: "p",
+        html: "Sablier is the protocol that introduced the idea of <strong>real-time token streaming</strong> to Ethereum. Instead of releasing locked tokens in monthly tranches, Sablier releases them <em>per second</em> — turning a vesting schedule into a continuous flow of value from the contract to the recipient's claimable balance.",
+      },
+      {
+        type: "p",
+        html: "If you have received tokens from a project that uses Sablier, your unlock isn't a step function. It's a smooth line. Every time you load the contract, more tokens are claimable than the moment before. This article explains how Sablier works under the hood, the chains it supports, the most common use cases, and how to monitor your Sablier positions inside Vestream.",
+      },
+
+      { type: "h2", text: "What Sablier Actually Does" },
+      {
+        type: "p",
+        html: "At its core, Sablier is a set of smart contracts that hold tokens on behalf of a sender and release them to a recipient over a specified duration. The release formula is linear in time: at any block timestamp, the contract calculates the proportion of the duration that has elapsed and treats that fraction of the total amount as withdrawable.",
+      },
+      {
+        type: "callout",
+        emoji: "💧",
+        title: "Streaming, in one sentence",
+        body:  "Locked total ÷ duration = release rate. Multiply by elapsed seconds and you have your claimable balance — updated every block.",
+      },
+      {
+        type: "p",
+        html: "Sablier currently ships two primary contract families. <strong>LockupLinear</strong> handles the classic continuous-stream case, optionally with a cliff. <strong>LockupTranched</strong> handles step-based unlocks (e.g. monthly tranches) for projects that prefer discrete events. Both produce on-chain positions that any wallet, indexer, or aggregator can read.",
+      },
+
+      { type: "h2", text: "Per-Second Release: Why It Matters" },
+      {
+        type: "p",
+        html: "Most legacy vesting contracts release tokens in lump sums — you wait 30 days, then claim a chunk. Streaming dissolves that waiting. The benefits compound across several dimensions:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Smoother selling pressure:</strong> recipients can claim continuously rather than dumping a monthly tranche the moment it lands.",
+          "<strong>No cliff-day chaos:</strong> there is no single timestamp where every team member rushes to withdraw, gas spikes, and prices wobble.",
+          "<strong>Granular cash flow:</strong> contributors can claim only what they need today, leaving the rest to keep accruing.",
+          "<strong>Composability:</strong> downstream protocols can treat the recipient's claimable balance as a real-time stream of income, not a periodic event.",
+        ],
+      },
+      {
+        type: "p",
+        html: "For projects designing tokenomics, the trade-off is that streaming makes your unlock schedule slightly harder to communicate to a community used to thinking in monthly bars. That is one reason Sablier's <em>tranched</em> variant exists — sometimes you want the social clarity of a discrete monthly cliff.",
+      },
+
+      { type: "h2", text: "Supported Chains" },
+      {
+        type: "p",
+        html: "Sablier is multi-chain and continues to add networks. The current production deployments most relevant to vesting use cases are:",
+      },
+      {
+        type: "table",
+        headers: ["Chain", "Chain ID", "Use case"],
+        rows: [
+          ["Ethereum", "1", "Mainnet vesting for institutional / treasury allocations"],
+          ["Base", "8453", "Lower-fee streaming for high-frequency claim patterns"],
+          ["BNB Chain", "56", "BSC-native projects and BEP-20 token vesting"],
+          ["Polygon", "137", "Cheap continuous streaming for grants and payroll"],
+          ["Sepolia", "11155111", "Ethereum testnet for development and audits"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Vestream's Sablier adapter covers all five of these networks, normalising every stream into the same <strong>VestingStream</strong> shape so you can view a Polygon stream and a Base stream side by side without translating fields.",
+      },
+
+      { type: "h2", text: "Common Sablier Use Cases" },
+      {
+        type: "p",
+        html: "Sablier's flexibility makes it the de facto standard for several vesting-adjacent workflows. The four most common are:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Founder and team vesting:</strong> 4-year stream with a 1-year cliff is the canonical configuration. Tokens flow continuously after the cliff, eliminating the temptation of a single-day dump.",
+          "<strong>Investor allocations:</strong> seed and private rounds frequently use linear streams over 18–36 months, sometimes with a TGE unlock implemented as a separate stream.",
+          "<strong>Grants programs:</strong> DAOs use Sablier to disburse grants over the life of a project, with the option to cancel the stream if milestones aren't met.",
+          "<strong>Onchain payroll:</strong> contractors paid in tokens prefer streams to monthly invoices — claimable balance grows in real time.",
+        ],
+      },
+      {
+        type: "p",
+        html: "If you are evaluating a project's tokenomics, finding their team allocation in a Sablier <em>LockupLinear</em> contract is a strong commitment signal. The contract is non-revocable by default in many configurations, and the schedule is verifiable on-chain by anyone.",
+      },
+
+      { type: "h2", text: "Reading a Sablier Stream On-Chain" },
+      {
+        type: "p",
+        html: "Every Sablier stream is identifiable by an <em>(chainId, contract, streamId)</em> tuple. The relevant fields you need to interpret the schedule are the same across the contract families:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>startTime</strong> — when the stream began accruing.",
+          "<strong>endTime</strong> — when the final token unlocks.",
+          "<strong>cliffTime</strong> — the timestamp before which zero tokens are claimable (optional).",
+          "<strong>depositedAmount</strong> — total tokens placed into the stream.",
+          "<strong>withdrawnAmount</strong> — total tokens already pulled by the recipient.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Subtract <em>withdrawnAmount</em> from the time-prorated unlocked amount and you have the recipient's <strong>claimable balance</strong>. Sablier's frontend, block explorers, and aggregators all calculate this from the same on-chain primitives. For a wider primer on the underlying terms, see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>.",
+      },
+
+      { type: "h2", text: "Tracking Sablier Streams on Vestream" },
+      {
+        type: "p",
+        html: "Vestream indexes Sablier across all five supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
+      },
+      {
+        type: "p",
+        html: "You can also view all Sablier streams for a single token by using the <a href=\"/explore\">explore</a> page. This is especially useful for due diligence — confirming, for example, that a project's team allocation is indeed locked in a 4-year LockupLinear stream rather than sitting in a multisig.",
+      },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track Sablier vesting on Vestream",
+        body:  "Add any Ethereum, Base, BNB, Polygon or Sepolia address and Vestream will surface every Sablier stream it owns or receives — with claimable balance updated in real time. Sign in at <a href=\"/login\">Vestream</a> to get started.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Is Sablier audited?", a: "Yes — multiple independent audits across LockupLinear and LockupTranched are public. As with any contract, audits reduce but do not eliminate risk. Always confirm the deployed contract address matches Sablier's documented deployments before sending funds." },
+          { q: "Can a Sablier stream be cancelled?", a: "Only if the sender enabled cancelability at creation. Many vesting deployments deliberately set cancelability to false so the recipient cannot have their stream pulled. Check the stream's metadata before assuming either way." },
+          { q: "What happens if I never claim?", a: "Nothing bad. The tokens remain in the contract and continue to accrue against your claimable balance. There is no expiry — you can claim the full amount at any point after the stream ends." },
+          { q: "Does Sablier support tokens with transfer fees?", a: "Some token types (rebasing, transfer-tax) interact poorly with streaming math. Sablier's docs flag the unsupported types — most vanilla ERC-20s work without issue." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 18 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "hedgey-nft-vesting-plans-explained",
+    title:       "Hedgey: NFT-Based Vesting Plans Explained",
+    excerpt:     "Hedgey turns each vesting plan into a transferable NFT. Here is how that design choice changes the on-chain mechanics, the user experience, and the tax considerations.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "8 min read",
+    category:    "Guides",
+    tags:        ["hedgey", "nft vesting", "vesting", "tokenomics"],
+    content: [
+      {
+        type: "p",
+        html: "Most vesting protocols treat a recipient's allocation as a row in a contract — a numeric position keyed to an address. <strong>Hedgey</strong> takes a different approach: each vesting plan is an <strong>NFT</strong>, owned by the recipient's wallet, with the underlying tokens locked behind it. Transfer the NFT and you transfer the entire vesting position.",
+      },
+      {
+        type: "p",
+        html: "That single design decision changes everything downstream — composability, transferability, accounting, and the user experience for revoking grants. This guide unpacks how Hedgey works, why projects choose it, and how Vestream surfaces Hedgey plans alongside streams from other protocols.",
+      },
+
+      { type: "h2", text: "The NFT-as-Vesting-Plan Model" },
+      {
+        type: "p",
+        html: "A Hedgey vesting plan is an ERC-721 token. The NFT's tokenId points to a struct on the vesting contract that contains the schedule: total amount, start, cliff, period, end, and the underlying ERC-20 token. Whoever holds the NFT is entitled to claim against that schedule.",
+      },
+      {
+        type: "callout",
+        emoji: "🧾",
+        title: "One plan, one NFT",
+        body:  "If a project grants you tokens via Hedgey, you receive an NFT in your wallet. The NFT <em>is</em> your vesting position — it is not a receipt or a representation, it is the bearer instrument.",
+      },
+      {
+        type: "p",
+        html: "Hedgey ships several plan variants: <strong>TokenVestingPlan</strong> (revocable team-style vesting with cliff and linear release), <strong>TokenLockupPlan</strong> (non-revocable investor-style locks), and <strong>VotingTokenVestingPlan</strong> (vesting with delegated governance rights to retain voting power on locked tokens). Each is its own ERC-721 collection.",
+      },
+
+      { type: "h2", text: "Why Make Vesting Transferable?" },
+      {
+        type: "p",
+        html: "Transferable vesting positions sound risky — they enable secondary markets in unvested tokens, which is precisely what some projects want to prevent. But transferability solves real problems too:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Wallet hygiene:</strong> recipients can move their vesting position to a fresh wallet without redeploying contracts.",
+          "<strong>Estate planning:</strong> NFT-based positions can be willed or transferred to a custodian without coordination from the granting project.",
+          "<strong>Liquidity for unvested tokens:</strong> third-party markets (e.g. OTC desks) can custody and price unvested positions if the project allows.",
+          "<strong>Treasury management:</strong> a DAO holding granted tokens can move plans between subaccounts as the org structure evolves.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Projects that want to prevent transfer can do so by deploying a non-transferable variant. The default for team grants is usually transferable; for public sale or community allocations it is often locked.",
+      },
+
+      { type: "h2", text: "Supported Chains" },
+      {
+        type: "table",
+        headers: ["Chain", "Chain ID", "Notes"],
+        rows: [
+          ["Ethereum", "1", "Largest deployment by TVL"],
+          ["Base", "8453", "Frequently chosen for new launches"],
+          ["BNB Chain", "56", "Hedgey adoption on BSC has grown post-2024"],
+          ["Polygon", "137", "Cheap mints make NFT-per-recipient affordable at scale"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Hedgey's per-recipient NFT mint cost is non-trivial on Ethereum mainnet, which is why projects with hundreds of grantees tend to deploy on L2s. Vestream indexes Hedgey on all four production chains via The Graph subgraph.",
+      },
+
+      { type: "h2", text: "Reading a Hedgey Plan" },
+      {
+        type: "p",
+        html: "When you open a Hedgey position, the on-chain fields you'll encounter are nearly identical to the cross-protocol vocabulary used by every other vesting tool — see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a> for a primer. Hedgey's twist is the <strong>period</strong> field, which controls the granularity of unlocks. A period of 1 means linear streaming (per-second). A period of 2,592,000 (30 days in seconds) means monthly tranches.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>amount</strong> — total locked tokens",
+          "<strong>start</strong> — schedule start (unix seconds)",
+          "<strong>cliff</strong> — timestamp before which zero is claimable",
+          "<strong>rate</strong> — tokens released per period",
+          "<strong>period</strong> — release granularity in seconds",
+          "<strong>token</strong> — underlying ERC-20",
+          "<strong>vestingAdmin</strong> — the address authorised to revoke (TokenVestingPlan only)",
+        ],
+      },
+
+      { type: "h2", text: "Revocation Mechanics" },
+      {
+        type: "p",
+        html: "Hedgey's <em>TokenVestingPlan</em> supports revocation by the granting project. If a team member leaves before fully vesting, the project can call <strong>revokePlan</strong>, which returns the unvested portion to the project treasury and leaves the already-vested portion claimable by the recipient. The recipient's NFT is burned in the same transaction.",
+      },
+      {
+        type: "callout",
+        emoji: "⚠️",
+        title: "Revocation is asymmetric",
+        body:  "If you receive a TokenVestingPlan, the granting project retains the unilateral ability to revoke unvested tokens at any time. Lockup plans (TokenLockupPlan) cannot be revoked once funded.",
+      },
+
+      { type: "h2", text: "Voting Rights on Vesting Tokens" },
+      {
+        type: "p",
+        html: "Hedgey's voting variants delegate the locked tokens' governance power to the recipient even before the tokens vest. This is important for projects whose token is also a governance token — without delegation, locked allocations are effectively disenfranchised, and a small number of unlocked holders dominate votes. Hedgey's voting plan calls <strong>delegate()</strong> on the underlying token in the same transaction that creates the plan.",
+      },
+
+      { type: "h2", text: "Tracking Hedgey on Vestream" },
+      {
+        type: "p",
+        html: "Add any wallet to your Vestream dashboard and the Hedgey adapter scans Ethereum, Base, BNB, and Polygon for both granted and held vesting NFTs. Each plan is normalised into a unified stream card showing claimable, withdrawn, and locked amounts, plus the next unlock event.",
+      },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track Hedgey vesting on Vestream",
+        body:  "Vestream surfaces every Hedgey vesting NFT in a watched wallet — across Ethereum, Base, BNB, and Polygon. Sign in at <a href=\"/login\">Vestream</a> to monitor your plans alongside streams from Sablier, UNCX, and the rest.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Can I sell my Hedgey vesting NFT?", a: "Only if it is a transferable variant. Most team grants are transferable; most lockup plans are not. Check the contract's transfer restrictions before listing." },
+          { q: "What happens to my vesting if I lose the NFT?", a: "Whoever holds the NFT controls the position. Lost NFTs mean lost vesting, with no recovery — the granting project cannot reissue without revoking and redeploying." },
+          { q: "Why does Hedgey cost more gas than Sablier?", a: "Hedgey mints an ERC-721 per recipient, which is more expensive than Sablier's storage-only stream creation. The trade-off is the transferability and composability that NFT semantics provide." },
+          { q: "Does Hedgey support cliff plus linear?", a: "Yes — every plan variant supports an explicit cliff timestamp before the linear (or stepped) release begins." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 19 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "uncx-token-lockers-and-vesting",
+    title:       "UNCX: Token Lockers and Vesting Explained",
+    excerpt:     "UNCX is best known for LP locks but also runs two vesting products: TokenVesting v3 and the newer VestingManager. Here is how to tell them apart and read a UNCX vest.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "10 min read",
+    category:    "Guides",
+    tags:        ["uncx", "token locker", "vesting", "liquidity", "guides"],
+    content: [
+      {
+        type: "p",
+        html: "If you have spent any time around new token launches you have seen the UNCX badge — the green lock icon on a token's listing page that confirms the project's liquidity is locked. <strong>UNCX</strong> is the most widely-used token locker in the EVM ecosystem, and over time it expanded from LP locks into team-token vesting too.",
+      },
+      {
+        type: "p",
+        html: "That expansion creates ambiguity: when someone says <em>'this token is locked on UNCX'</em>, they could mean the project's liquidity is locked, or they could mean an individual recipient's tokens are vesting. These are different products with different contracts. This article clears up the distinction and walks through both.",
+      },
+
+      { type: "h2", text: "Token Lockers vs Vesting on UNCX" },
+      {
+        type: "p",
+        html: "UNCX runs two distinct product families on each chain it deploys to. The vocabulary overlaps, but the use cases don't.",
+      },
+      {
+        type: "table",
+        headers: ["Product", "What it locks", "Who uses it", "Release pattern"],
+        rows: [
+          ["LP Locker", "LP tokens (Uniswap V2/V3, PancakeSwap, etc.)", "Project teams locking pool liquidity", "Typically single unlock at end date"],
+          ["TokenVesting v3", "Bare ERC-20 tokens", "Project teams vesting team/investor allocations", "Cliff + linear, multi-tranche"],
+          ["VestingManager", "Bare ERC-20 tokens (per-recipient)", "Project teams running larger grant programs", "Cliff + linear, sub-position per recipient"],
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔓",
+        title: "Quick rule of thumb",
+        body:  "If the underlying asset is an LP token, it's a <em>liquidity lock</em>. If it is a regular ERC-20 going to specific recipient addresses, it's a <em>vesting</em> contract. UNCX runs both and they live in separate contracts.",
+      },
+
+      { type: "h2", text: "TokenVesting v3" },
+      {
+        type: "p",
+        html: "TokenVesting v3 is UNCX's mature, widely-deployed vesting contract. A single vesting deployment can hold many separate vests, each with their own owner, schedule, and underlying token. The key concepts are:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Lock owner:</strong> the address that can claim from the vest. Usually the recipient.",
+          "<strong>Token:</strong> the underlying ERC-20.",
+          "<strong>Amount:</strong> total locked tokens for this vest.",
+          "<strong>StartEmission:</strong> the timestamp at which linear vesting begins. Before this, only the cliff portion (if any) is claimable.",
+          "<strong>EndEmission:</strong> the timestamp at which 100% has vested.",
+        ],
+      },
+      {
+        type: "p",
+        html: "TokenVesting v3 supports cliff + linear schedules natively. The cliff is implemented as a TGE unlock plus a delay before <em>startEmission</em> — making it slightly less ergonomic than Sablier's explicit cliff parameter, but functionally equivalent.",
+      },
+
+      { type: "h2", text: "VestingManager: The Newer Architecture" },
+      {
+        type: "p",
+        html: "VestingManager is UNCX's newer vesting contract. The architectural improvement is that one VestingManager deployment can manage many independent vesting plans for a single project, with cleaner per-recipient sub-positions and less administrative overhead than redeploying TokenVesting v3 for each grant.",
+      },
+      {
+        type: "p",
+        html: "From a recipient's perspective, the experience is similar — you see a vesting position keyed to your address, with a claimable balance that grows over time. From a project's perspective, VestingManager is the more convenient choice for distributing tokens to dozens or hundreds of contributors at once.",
+      },
+      {
+        type: "callout",
+        emoji: "📦",
+        title: "Vestream merges them",
+        body:  "Inside the Vestream UI, TokenVesting v3 and VestingManager positions are surfaced as a single <em>UNCX</em> protocol card. The underlying contract is recorded as metadata, but you don't have to think about which one your project deployed.",
+      },
+
+      { type: "h2", text: "Supported Chains" },
+      {
+        type: "p",
+        html: "UNCX deploys to most major EVM networks. The chains Vestream indexes are:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Ethereum</strong> (chainId 1) — TokenVesting v3 and VestingManager",
+          "<strong>BNB Chain</strong> (56) — both products, very high usage volume",
+          "<strong>Polygon</strong> (137) — both products",
+          "<strong>Base</strong> (8453) — both products",
+          "<strong>Sepolia</strong> (11155111) — TokenVesting v3, for testnet flows",
+        ],
+      },
+
+      { type: "h2", text: "Interpreting an UNCX Vest" },
+      {
+        type: "p",
+        html: "Suppose you receive tokens from a project that vested them via UNCX. To verify the schedule yourself:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Find the UNCX vesting contract address on the project's docs or block explorer.",
+          "Call the public read function to fetch your vest by lock owner address.",
+          "Inspect the four key fields: <em>amount</em>, <em>startEmission</em>, <em>endEmission</em>, and <em>amountWithdrawn</em>.",
+          "Compute claimable: pro-rata fraction of (now − startEmission) ÷ (endEmission − startEmission), capped at 100%, multiplied by amount, minus amountWithdrawn.",
+          "Cross-check against the project's published vesting terms.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Or just paste your address into Vestream and skip the contract math entirely. For a deeper primer on these fields, see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>.",
+      },
+
+      { type: "h2", text: "Why Projects Choose UNCX for Vesting" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Brand trust:</strong> the UNCX badge is recognised by retail buyers and listing aggregators alike.",
+          "<strong>Multi-product platform:</strong> teams that already use UNCX for LP locks tend to add team vesting on the same dashboard rather than onboarding to a second protocol.",
+          "<strong>Battle-tested contracts:</strong> TokenVesting v3 has years of production usage with no major exploits.",
+          "<strong>Cross-chain consistency:</strong> the same product semantics apply on every chain UNCX deploys to.",
+        ],
+      },
+
+      { type: "h2", text: "Tracking UNCX on Vestream" },
+      {
+        type: "p",
+        html: "Vestream queries both TokenVesting v3 and VestingManager subgraphs in parallel for every supported chain. Vests are merged, deduplicated, and presented as unified UNCX cards. You can compare an UNCX position to a Sablier or Hedgey position without translating between contract field names.",
+      },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track UNCX vesting on Vestream",
+        body:  "Add any wallet on Ethereum, BNB, Polygon, Base, or Sepolia to <a href=\"/login\">Vestream</a> and the UNCX adapter will surface every TokenVesting v3 and VestingManager position it holds.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Is the UNCX badge on a token listing the same as token vesting?", a: "Not necessarily. The most common UNCX badge refers to liquidity-pool token locks, not team vesting. Read the project's docs to confirm what is locked." },
+          { q: "Can a UNCX vest be cancelled by the project?", a: "TokenVesting v3 vests are not unilaterally cancellable by the project once funded. Always verify on a per-deployment basis though — admin keys can vary." },
+          { q: "What is the difference between UNCX TokenVesting v3 and VestingManager?", a: "TokenVesting v3 is the older, single-contract-per-deployment model. VestingManager is the newer architecture that handles many recipients more efficiently. Functionally they behave the same from a recipient's perspective." },
+          { q: "Does UNCX support per-second streaming?", a: "No — UNCX vests use linear release between startEmission and endEmission, calculated on each claim. Effectively similar to streaming but you only realise the unlock when you withdraw." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 20 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "team-finance-vesting-guide",
+    title:       "Team Finance Vesting: A Project Founder's Guide",
+    excerpt:     "Team Finance is the locker most associated with the green 'team tokens locked' badge. Here is how its vesting product works and why projects choose it.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "8 min read",
+    category:    "Guides",
+    tags:        ["team finance", "vesting", "tokenomics", "founders", "guides"],
+    content: [
+      {
+        type: "p",
+        html: "<strong>Team Finance</strong> is one of the longest-running token lockers in the EVM ecosystem. If you have looked at a token's marketing site and seen a 'Team Tokens Locked — Team Finance' badge, that's their vesting product in action. This guide is aimed at founders evaluating where to lock their team allocation, but it doubles as a reference for any token holder receiving tokens through a Team Finance vest.",
+      },
+
+      { type: "h2", text: "What Team Finance Offers" },
+      {
+        type: "p",
+        html: "Team Finance runs three principal products that overlap with vesting: liquidity locking (LP tokens), team token locking (single-recipient bare ERC-20 lock), and vesting (multi-tranche scheduled release to one or many recipients). The vesting product is what we focus on here.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Single-recipient locks:</strong> deposit tokens, name a recipient, set an unlock date. The contract releases everything at that timestamp.",
+          "<strong>Vesting schedules:</strong> deposit tokens, configure a series of unlock tranches over time. The recipient claims each tranche as it matures.",
+          "<strong>Multi-recipient batches:</strong> upload a list of recipients with individual amounts and schedules — useful for distributing investor allocations.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔐",
+        title: "Why founders pick Team Finance",
+        body:  "Brand recognition with retail. The Team Finance badge is a strong trust signal for token buyers, especially on BSC and the BSC-derivative ecosystem.",
+      },
+
+      { type: "h2", text: "Why Vest on Team Finance Specifically?" },
+      {
+        type: "p",
+        html: "Compared to streaming-first protocols like Sablier or NFT-based platforms like Hedgey, Team Finance's appeal is institutional: the badge, the long track record, the explicit transparency reports. For a project whose primary audience is retail token buyers — particularly on BSC — that recognition translates directly to investor confidence at listing.",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Retail trust:</strong> the badge is widely recognised on listing aggregators and audit reports.",
+          "<strong>Operational simplicity:</strong> Team Finance's UI hides almost all the contract complexity from the project. Founders configure a vest in minutes.",
+          "<strong>Cross-chain support:</strong> same product on Ethereum, BNB Chain, Polygon, Base, and several smaller EVMs.",
+          "<strong>Transparency:</strong> every vest has a public URL on teamfinance.io that anyone can audit without needing the contract address.",
+        ],
+      },
+
+      { type: "h2", text: "How a Team Finance Vest Works On-Chain" },
+      {
+        type: "p",
+        html: "Team Finance's vesting contracts hold the locked tokens in escrow and reference each individual vest by an integer ID. The vesting metadata stored on-chain is straightforward:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>token</strong> — the ERC-20 being vested",
+          "<strong>amount</strong> — total locked",
+          "<strong>recipient</strong> — the wallet entitled to claim",
+          "<strong>unlocks</strong> — an array of (timestamp, amount) tranches",
+          "<strong>withdrawn</strong> — total claimed so far",
+        ],
+      },
+      {
+        type: "p",
+        html: "Tranche-based release means Team Finance is closer to <em>cliff vesting</em> than to streaming — you get a chunk on each scheduled date, not per-second flow. For deeper background on the difference, see <a href=\"/resources/cliff-vesting-vs-linear-vesting\">Cliff Vesting vs Linear Vesting</a>.",
+      },
+
+      { type: "h2", text: "Transparency Benefits for Recipients" },
+      {
+        type: "p",
+        html: "From a recipient's standpoint, Team Finance has two big advantages over a hand-rolled multisig-based vesting setup:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>You can verify the schedule yourself:</strong> every vest is on-chain. The project can't change the unlock dates after creation.",
+          "<strong>You can verify the contract is funded:</strong> if your project says they locked 10M tokens for the team but the on-chain balance only shows 1M, that's a discrepancy you can detect immediately.",
+          "<strong>You can verify your specific allocation:</strong> Vestream and Team Finance's own UI show your individual position, not just the aggregate lock.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔎",
+        title: "Trust but verify",
+        body:  "A vest deployed but unfunded is the most common edge case. Always check the on-chain token balance of the vesting contract matches the announced amount before treating an allocation as 'locked'.",
+      },
+
+      { type: "h2", text: "Comparing Team Finance to Other Vesting Protocols" },
+      {
+        type: "table",
+        headers: ["Feature", "Team Finance", "Sablier", "Hedgey", "UNCX"],
+        rows: [
+          ["Release pattern", "Tranched", "Streaming or tranched", "Streaming, tranched, or both", "Linear between two timestamps"],
+          ["Position type", "Vest record", "Stream record", "NFT", "Vest record"],
+          ["Best-known for", "Team token locks", "Founder/team streams", "Investor + governance", "LP locks (vesting added later)"],
+          ["Brand recognition", "High (BSC retail)", "High (institutional / DAO)", "High (DAOs / treasury)", "Highest LP locker brand"],
+          ["Multi-recipient flow", "Yes (CSV upload)", "Yes", "Yes (per-NFT)", "Yes (VestingManager)"],
+        ],
+      },
+
+      { type: "h2", text: "When Team Finance Is the Right Choice" },
+      {
+        type: "p",
+        html: "Team Finance is a strong fit when:",
+      },
+      {
+        type: "ul",
+        items: [
+          "Your audience is primarily retail and the trust signal is the marketing point.",
+          "Your unlock schedule is naturally tranched (e.g. quarterly cliffs) rather than continuous.",
+          "You are also locking liquidity on Team Finance and want both products on the same dashboard.",
+          "You value operational simplicity over deep customisation.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Conversely, if you want per-second streaming, transferable governance-aware vesting NFTs, or per-recipient revocability, you'll likely look at <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier</a> or <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey</a> first.",
+      },
+
+      { type: "h2", text: "Tracking Team Finance Vests on Vestream" },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track Team Finance vesting on Vestream",
+        body:  "Vestream's Team Finance adapter covers Ethereum, BNB Chain, Polygon, Base, and Sepolia. Add your wallet at <a href=\"/login\">Vestream</a> and every vest you receive or grant will appear alongside positions from Sablier, Hedgey, UNCX, and the rest.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Can a Team Finance vest be cancelled by the project?", a: "Generally no, once funded — but there can be exceptions when admin keys are configured. Always read the deployment's parameters before treating any lock as truly immutable." },
+          { q: "Does Team Finance support per-second streaming?", a: "No. Team Finance's vests release in scheduled tranches. If you need streaming, Sablier or Superfluid are better fits." },
+          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs. Vestream indexes the five primary networks." },
+          { q: "Can I transfer my Team Finance vest to another wallet?", a: "Vests are tied to a recipient address. There is no NFT to transfer — moving the position requires the project to redeploy. This is one reason some teams prefer Hedgey." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 21 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "streamflow-solana-vesting",
+    title:       "Streamflow on Solana: Token Vesting in the SVM Ecosystem",
+    excerpt:     "Streamflow is the dominant vesting protocol on Solana. Here is how it differs from EVM equivalents and how Vestream tracks SPL-token vesting.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "9 min read",
+    category:    "Guides",
+    tags:        ["streamflow", "solana", "spl tokens", "vesting", "guides"],
+    content: [
+      {
+        type: "p",
+        html: "Solana's account model and SPL token standard make on-chain vesting feel different from the EVM equivalent — and that difference shows up clearly in <strong>Streamflow</strong>, the most-used vesting protocol on Solana. If you are coming from Sablier or Hedgey, the mental model needs a small adjustment.",
+      },
+      {
+        type: "p",
+        html: "This article walks through what Streamflow is, why it works the way it does, and how Vestream surfaces Streamflow positions next to your EVM streams in a single dashboard.",
+      },
+
+      { type: "h2", text: "What Streamflow Does" },
+      {
+        type: "p",
+        html: "Streamflow provides token streaming and vesting for SPL tokens on Solana. It supports the same broad family of patterns familiar from EVM protocols: cliff + linear release, tranche-based release, payroll-style continuous streams, and revocable team grants. What is different is the underlying account architecture.",
+      },
+      {
+        type: "callout",
+        emoji: "🌊",
+        title: "Account-based, not contract-based",
+        body:  "On Solana, every stream is its own program-derived account holding state. There is no shared mapping of 'all streams' inside one contract — each stream is its own data account.",
+      },
+
+      { type: "h2", text: "How SPL Token Mechanics Differ from ERC-20" },
+      {
+        type: "p",
+        html: "If you are EVM-native, the most surprising parts of SPL token vesting are:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Associated Token Accounts (ATAs):</strong> a wallet does not directly hold SPL tokens. It holds a token account per mint. Streamflow's escrow is a token account owned by a program-derived address (PDA).",
+          "<strong>Rent-exempt accounts:</strong> creating a stream requires depositing a small SOL amount as rent for the new accounts. This is recoverable when the stream closes.",
+          "<strong>Discriminators:</strong> Solana programs identify account types via an 8-byte discriminator at the start of the account data. To enumerate all Streamflow streams, you query <em>getProgramAccounts</em> with the right discriminator filter.",
+          "<strong>No 'msg.sender' notion of revocation:</strong> Solana relies on signers being passed explicitly. Revocation is implemented as a separate instruction signed by the original sender.",
+        ],
+      },
+      {
+        type: "p",
+        html: "These differences are infrastructural, not philosophical. The end result for a recipient is identical: tokens that unlock over time, with a claimable balance you can withdraw to your wallet.",
+      },
+
+      { type: "h2", text: "Streamflow Stream Variants" },
+      {
+        type: "p",
+        html: "Streamflow exposes a few stream archetypes through its program. The main ones relevant to vesting:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Vesting Contract:</strong> the canonical schedule with start, end, optional cliff, and unlock granularity.",
+          "<strong>Token Vesting (multi-recipient):</strong> bulk-create grants for a list of contributors in a single transaction.",
+          "<strong>Payment streams:</strong> open-ended streams used for payroll and grants programs.",
+          "<strong>AlignedContract:</strong> a specialised variant Vestream's adapter currently skips in favour of the standard vesting contract surface.",
+        ],
+      },
+
+      { type: "h2", text: "Reading a Streamflow Stream" },
+      {
+        type: "p",
+        html: "The fields you'll see on a Streamflow stream map cleanly to the cross-protocol vocabulary covered in <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>:",
+      },
+      {
+        type: "table",
+        headers: ["Streamflow field", "Maps to", "Meaning"],
+        rows: [
+          ["start", "startTime", "When the stream began accruing"],
+          ["end", "endTime", "When the final SPL token unlocks"],
+          ["cliff", "cliffTime", "Timestamp before which zero is claimable"],
+          ["depositedAmount", "totalAmount", "Total SPL tokens placed into the stream"],
+          ["withdrawnAmount", "withdrawnAmount", "Tokens already pulled by the recipient"],
+          ["recipient", "recipient", "The wallet entitled to claim"],
+          ["mint", "tokenAddress", "SPL token mint address (base58)"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Streamflow uses base58 addresses (e.g. <em>So11111111111111111111111111111111111111112</em> for wrapped SOL), unlike EVM's 0x-prefixed hex. Vestream handles the address-format normalisation for you, but it's worth knowing if you're reading on-chain data directly.",
+      },
+
+      { type: "h2", text: "Why Solana for Vesting at All?" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cost:</strong> creating a stream on Solana costs a fraction of what mainnet Ethereum charges. For projects vesting to hundreds of contributors, the savings are significant.",
+          "<strong>Speed:</strong> Solana's sub-second finality makes the per-block accrual feel genuinely real-time.",
+          "<strong>Ecosystem fit:</strong> any project whose token is an SPL token is going to vest there natively rather than bridging.",
+          "<strong>SDK quality:</strong> the @streamflow/stream JS SDK is well-maintained and integrates cleanly with Solana wallet adapters.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "⚡",
+        title: "TVL category caveat",
+        body:  "Streamflow runs both vesting and payments products. When evaluating Streamflow's vesting-specific TVL, always isolate the vesting category — combined headline numbers can include open payment streams that are not strictly vesting.",
+      },
+
+      { type: "h2", text: "How Vestream Indexes Streamflow" },
+      {
+        type: "p",
+        html: "Vestream's Streamflow adapter uses the official @streamflow/stream SDK against an Alchemy Solana RPC endpoint. For every wallet you track, the adapter calls Streamflow's per-recipient query and normalises every returned stream into the same VestingStream shape used for EVM protocols. This is what lets you view a Solana SPL vest and an Ethereum Sablier stream in the same dashboard view.",
+      },
+      {
+        type: "p",
+        html: "The Solana ecosystem in Vestream is feature-flagged — for environments without Solana RPC configured, the adapter is a no-op. Production users on Vestream get Streamflow coverage by default.",
+      },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track Streamflow vesting on Vestream",
+        body:  "Add any Solana wallet (base58 address) to <a href=\"/login\">Vestream</a> and every Streamflow vesting stream it holds will appear next to your EVM positions, with claimable balance updated in real time.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Does Streamflow support cliff schedules?", a: "Yes — every Streamflow vesting contract accepts a cliff parameter. It behaves the same as EVM cliffs: zero claimable until the cliff timestamp, then the cliff portion unlocks in one go." },
+          { q: "Can a Streamflow stream be cancelled?", a: "Yes, if the stream was configured as cancelable at creation. The sender can call cancel and reclaim unvested tokens. Many vesting deployments deliberately set cancelable to false." },
+          { q: "What's the difference between Streamflow's vesting and payments products?", a: "Vesting is finite, with a defined total amount and end date. Payments streams are open-ended, designed for payroll-style ongoing flows. Vestream surfaces the vesting category." },
+          { q: "Why isn't Streamflow on EVM?", a: "Streamflow is a Solana-native protocol that takes advantage of Solana's account model and low fees. The EVM equivalent for similar UX is Sablier or Superfluid." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 22 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "superfluid-cliff-and-streaming-vesting",
+    title:       "Superfluid: Cliff and Streaming Vesting Explained",
+    excerpt:     "Superfluid's vesting scheduler combines a one-time cliff unlock with a continuous flow afterwards. Here is how it differs from Sablier.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "8 min read",
+    category:    "Guides",
+    tags:        ["superfluid", "streaming", "vesting", "cliff", "guides"],
+    content: [
+      {
+        type: "p",
+        html: "<strong>Superfluid</strong> is best known for streaming payments — its 'money streams' have powered DAO payroll and continuous subscriptions for years. The same primitive underlies a more recent product: the <strong>Vesting Scheduler</strong>, which combines a one-time cliff payment with a continuous Superfluid flow for the remainder of the schedule.",
+      },
+      {
+        type: "p",
+        html: "If you have used Sablier you'll find Superfluid's mental model adjacent but not identical. This guide walks through the differences and where Superfluid excels.",
+      },
+
+      { type: "h2", text: "How the Vesting Scheduler Works" },
+      {
+        type: "p",
+        html: "Superfluid's vesting scheduler decomposes a vesting position into two parts:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Cliff payment:</strong> at the cliff timestamp, a one-time token transfer fires to the recipient. This represents the portion of the allocation that vests at the cliff.",
+          "<strong>Continuous flow:</strong> immediately after the cliff transfer, a Superfluid flow opens, streaming the remaining tokens to the recipient at a constant flow rate until the end timestamp.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🚰",
+        title: "Cliff plus stream",
+        body:  "Think of it as: 'lump-sum at cliff, then drip the rest continuously.' The cliff is a discrete transfer; the post-cliff portion uses the same Superfluid flow primitive that powers DAO payroll.",
+      },
+
+      { type: "h2", text: "How Superfluid Flows Differ From Sablier Streams" },
+      {
+        type: "p",
+        html: "Both protocols release tokens continuously, but the underlying mechanics are meaningfully different:",
+      },
+      {
+        type: "table",
+        headers: ["Aspect", "Sablier", "Superfluid"],
+        rows: [
+          ["Token wrap", "Native ERC-20", "Wrapped 'Super Token' (1:1 wrapper)"],
+          ["Accounting", "Per-stream balance", "Per-account net flow rate"],
+          ["Cliff", "Inline parameter", "Separate cliff transfer + flow"],
+          ["Cancelability", "Optional, at creation", "Flows always cancellable by sender"],
+          ["Best fit", "Discrete vesting positions", "Mix of vesting + ongoing payroll"],
+        ],
+      },
+      {
+        type: "p",
+        html: "The Super Token wrapper is the most important thing to understand. To use Superfluid, the underlying ERC-20 must be wrapped into a Super Token (e.g. USDC → USDCx). The wrapper is 1:1 and reversible, but recipients see Super Tokens in their wallet, not the underlying.",
+      },
+
+      { type: "h2", text: "Supported Chains" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Ethereum</strong> — full vesting scheduler deployment",
+          "<strong>Base</strong> — heavy Superfluid usage given low L2 fees",
+          "<strong>BNB Chain</strong> — fewer projects, but supported",
+          "<strong>Polygon</strong> — historical major deployment",
+        ],
+      },
+      {
+        type: "p",
+        html: "Vestream queries Superfluid's hosted subgraphs for each chain — these don't require a Graph API key, so the adapter is unusually lightweight to operate.",
+      },
+
+      { type: "h2", text: "When to Choose Superfluid" },
+      {
+        type: "p",
+        html: "Superfluid is the right fit when:",
+      },
+      {
+        type: "ul",
+        items: [
+          "Your project is already running streaming payroll or subscriptions on Superfluid — you keep one financial primitive.",
+          "You want a single cliff plus a smooth continuous flow, and you're comfortable with the Super Token wrapper.",
+          "You value the option to ramp flow rate up or down later (Superfluid flows are dynamic).",
+          "You're vesting on Base or Polygon where the gas savings make per-second flow economically natural.",
+        ],
+      },
+      {
+        type: "p",
+        html: "If you don't already use Superfluid for payments, the wrapper friction may not be worth it for vesting alone. In that case, see <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier</a> for a streaming-native alternative without the wrap step.",
+      },
+
+      { type: "h2", text: "Reading a Superfluid Vesting Position" },
+      {
+        type: "p",
+        html: "On-chain, a Superfluid vesting schedule is recorded with these fields:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>cliffDate</strong> — when the cliff payment fires",
+          "<strong>cliffAmount</strong> — size of the one-time cliff transfer",
+          "<strong>endDate</strong> — when the post-cliff flow ends",
+          "<strong>flowRate</strong> — tokens per second after the cliff",
+          "<strong>superToken</strong> — the wrapped ERC-20",
+        ],
+      },
+      {
+        type: "p",
+        html: "Multiply <em>flowRate</em> by <em>(endDate − cliffDate)</em> and you get the total post-cliff allocation. Add <em>cliffAmount</em> for the grand total. Vestream surfaces all five fields plus the computed claimable balance in a single card.",
+      },
+
+      { type: "h2", text: "Cancellability and Edge Cases" },
+      {
+        type: "callout",
+        emoji: "⚠️",
+        title: "Flows can be ended",
+        body:  "Unlike a hard-locked Sablier stream, the sender of a Superfluid flow can always close it. Vesting deployments rely on the sender (typically the project) honouring the schedule rather than on cryptographic enforcement of immutability.",
+      },
+      {
+        type: "p",
+        html: "This isn't a bug — it's a deliberate design choice that mirrors traditional employment vesting (where a company controls the eventual payout). For vesting that <em>must</em> be cryptographically immutable, Sablier or Hedgey lockup plans are stronger guarantees.",
+      },
+
+      { type: "h2", text: "Tracking Superfluid Vesting on Vestream" },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Track Superfluid vesting on Vestream",
+        body:  "Add any wallet on Ethereum, Base, BNB, or Polygon and Vestream surfaces every Superfluid vesting schedule it owns or receives. Sign in at <a href=\"/login\">Vestream</a> to view it alongside Sablier, Hedgey, UNCX, and Streamflow streams.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Do I have to wrap my tokens to use Superfluid?", a: "Yes — Superfluid operates on Super Tokens, which are 1:1 wrappers around an underlying ERC-20. Wrap and unwrap are permissionless and instant." },
+          { q: "Can a Superfluid vesting flow be cancelled?", a: "The sender can close any Superfluid flow they originated. This is by design but can surprise recipients used to immutable streams." },
+          { q: "How is Superfluid different from Sablier?", a: "Sablier holds tokens in a per-stream contract and computes claimable balance on read. Superfluid uses a per-account net-flow accounting model with a wrapper token. Sablier is more 'vesting-native'; Superfluid is more 'payments-native'." },
+          { q: "Does Superfluid support tranched vesting?", a: "Not natively — Superfluid is flow-first. For tranched schedules, Sablier's LockupTranched or Team Finance are better fits." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 23 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "cliff-vesting-vs-linear-vesting",
+    title:       "Cliff Vesting vs Linear Vesting: Which Is Right for Your Project?",
+    excerpt:     "Cliff and linear vesting solve different incentive problems. Here is a clear comparison, a decision matrix, and which vesting protocols support each pattern.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "9 min read",
+    category:    "Fundamentals",
+    tags:        ["cliff vesting", "linear vesting", "tokenomics", "fundamentals"],
+    content: [
+      {
+        type: "p",
+        html: "Almost every vesting schedule you'll encounter combines two primitives: a <strong>cliff</strong> (a fixed period during which nothing unlocks, followed by a lump-sum release) and a <strong>linear release</strong> (continuous or stepped unlocks over time). Used alone or together, they encode different incentive structures.",
+      },
+      {
+        type: "p",
+        html: "If you're designing tokenomics, the choice is consequential. If you're a token recipient, understanding which pattern your allocation uses changes how you plan around it. This guide compares the two patterns directly and helps you pick the right one for any given grant.",
+      },
+
+      { type: "h2", text: "The Two Patterns" },
+      {
+        type: "p",
+        html: "First, plain definitions:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Cliff vesting:</strong> for a fixed period, zero tokens unlock. At the cliff date, a chunk unlocks at once. After that, either the full remainder unlocks or a separate linear schedule begins.",
+          "<strong>Linear vesting:</strong> tokens unlock continuously (per-second) or in regular small tranches (e.g. monthly) from start to end, with no jump events.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "📐",
+        title: "The combined pattern",
+        body:  "Most real-world vesting is 'cliff + linear': a 1-year cliff followed by 3 years of monthly or per-second linear release. This gets the retention benefit of the cliff and the smoothing benefit of linear unlocks.",
+      },
+
+      { type: "h2", text: "Cliff Vesting: When and Why" },
+      {
+        type: "p",
+        html: "Cliffs solve one specific problem: making sure a recipient stays long enough to be worth granting tokens to in the first place. The classic case is the four-year team vesting with a one-year cliff inherited from Silicon Valley equity practice.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Retention test:</strong> if you leave before the cliff, you walk away with zero tokens. This filters out short-tenure grants.",
+          "<strong>Commitment signal:</strong> a project agreeing to a long cliff for its team signals to investors that the team is in for the long haul.",
+          "<strong>Operational simplicity:</strong> 'no tokens for 12 months' is easier to communicate than continuous accrual math.",
+        ],
+      },
+      {
+        type: "p",
+        html: "Cliffs alone (without a subsequent linear phase) are less common — they create cliff-day chaos when the entire allocation lands in one transaction.",
+      },
+
+      { type: "h2", text: "Linear Vesting: When and Why" },
+      {
+        type: "p",
+        html: "Linear vesting smooths the unlock pressure on token markets and gives recipients steady cash flow. It is the right answer when you want the recipient to plan around continuous accrual rather than discrete events.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Smooth selling pressure:</strong> recipients claim continuously rather than dumping a monthly tranche the day it lands.",
+          "<strong>Cash-flow predictability:</strong> contractors and team members can model their token income as a steady drip.",
+          "<strong>No cliff-day shock:</strong> there is no single timestamp where the entire community refreshes their order books.",
+          "<strong>Composability:</strong> downstream protocols can treat the recipient's claimable balance as a real-time stream.",
+        ],
+      },
+
+      { type: "h2", text: "Decision Matrix" },
+      {
+        type: "p",
+        html: "Use this matrix to pick the right shape for any given grant:",
+      },
+      {
+        type: "table",
+        headers: ["Recipient type", "Recommended shape", "Typical config", "Why"],
+        rows: [
+          ["Founders / executives", "Cliff + linear", "12mo cliff, 36mo linear", "Retention test plus smoothed sale"],
+          ["Engineers / team", "Cliff + linear", "6-12mo cliff, 24-36mo linear", "Same logic, slightly shorter"],
+          ["Seed investors", "Cliff + linear", "6-12mo cliff, 18-24mo linear", "Locks early-low-cost positions through key milestones"],
+          ["Public sale buyers", "Linear only or none", "0-6mo linear or full at TGE", "Community pressure limits long lockups"],
+          ["Advisors", "Cliff + linear", "3-6mo cliff, 12-18mo linear", "Reflects shorter advisory engagement"],
+          ["Grants programs", "Linear", "12-24mo linear", "Continuous flow matches deliverable cadence"],
+          ["DAO contributors", "Linear", "12mo linear, no cliff", "Reward ongoing work, not tenure proof"],
+          ["Ecosystem incentives", "Cliff or no vest", "0-6mo cliff or vested airdrop", "Short cliff prevents instant dumping"],
+        ],
+      },
+
+      { type: "h2", text: "Protocol Support" },
+      {
+        type: "p",
+        html: "Not every vesting protocol supports both patterns equally. Here is the rough lay of the land:",
+      },
+      {
+        type: "table",
+        headers: ["Protocol", "Cliff supported", "Linear supported", "Tranched alternative"],
+        rows: [
+          ["Sablier (LockupLinear)", "Yes (inline param)", "Yes (per-second)", "LockupTranched"],
+          ["Hedgey", "Yes", "Yes", "Yes (period-based)"],
+          ["UNCX (TokenVesting v3)", "Yes (via emission delay)", "Yes (linear between two timestamps)", "No"],
+          ["Team Finance", "Yes (as first tranche)", "No (tranched only)", "Yes (custom tranches)"],
+          ["Superfluid", "Yes (separate cliff transfer)", "Yes (post-cliff flow)", "No"],
+          ["Streamflow", "Yes", "Yes", "Yes"],
+          ["PinkSale (PinkLock V2)", "Yes (TGE percent)", "Cycle-based", "Yes"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Every modern vesting protocol supports cliff plus linear in one form or another. The meaningful differences are about the underlying contract architecture and how unlocks are surfaced to the user, not whether the pattern is supported at all.",
+      },
+
+      { type: "h2", text: "Communicating Vesting to Your Community" },
+      {
+        type: "p",
+        html: "Whatever shape you pick, the most common reason a vesting schedule generates community backlash is poor communication, not the schedule itself. A few tactics that help:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Publish the schedule as both a chart and a table — different audiences read different formats.",
+          "List unlock dates explicitly. 'Q3 2026' is fine; '92 days from TGE' is better.",
+          "Disclose the underlying protocol and contract address. <a href=\"/resources/how-to-read-a-vesting-schedule\">Anyone should be able to verify your schedule on-chain</a>.",
+          "If you change anything mid-flight (e.g. extend a cliff voluntarily), publish the new schedule the same way.",
+        ],
+      },
+
+      { type: "h2", text: "Tracking Vesting Across Protocols" },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "View any cliff or linear schedule on Vestream",
+        body:  "Vestream normalises cliff dates, linear release rates, and tranche events into one dashboard across Sablier, Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and more. Sign in at <a href=\"/login\">Vestream</a> to compare schedules side by side.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Is cliff vesting always better than linear?", a: "No. Cliffs are a retention test — they only make sense when continued contribution from the recipient matters. For investors, smaller cliffs plus longer linear is often a better fit." },
+          { q: "Can I have multiple cliffs in one schedule?", a: "Most protocols support only a single cliff. If you need multiple cliffs, you typically chain multiple separate vesting positions or use a tranched product like Sablier's LockupTranched." },
+          { q: "What's the standard cliff length?", a: "12 months for founders and team, 6 months for advisors, 6-12 months for seed investors. Shorter cliffs (3 months) are common for community contributors." },
+          { q: "Do cliffs reduce sell pressure?", a: "They concentrate it. Without subsequent linear release, a cliff produces a single 'cliff day' of intense selling. Pair every meaningful cliff with a long linear tail to smooth this out." },
+        ],
+      },
+    ],
+  },
+
+  // ── Article 24 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "how-to-read-a-vesting-schedule",
+    title:       "How to Read a Vesting Schedule: A Beginner's Guide",
+    excerpt:     "Cliff date, vesting end, claimable now, total amount — the same five fields appear on every vesting protocol. Here is how to read them.",
+    publishedAt: "2026-04-27",
+    updatedAt:   "2026-04-27",
+    readingTime: "8 min read",
+    category:    "Fundamentals",
+    tags:        ["vesting schedule", "fundamentals", "beginners", "guides"],
+    content: [
+      {
+        type: "p",
+        html: "If you have just received tokens from a project and someone has handed you a 'vesting schedule', the document might look intimidating — dates, percentages, tranches, claim functions. It isn't. Every vesting schedule, on every protocol, ultimately answers the same five questions.",
+      },
+      {
+        type: "p",
+        html: "This guide walks through the universal vocabulary, shows how to find the answers in a real vesting position, and points out the same fields on each major protocol. By the end you'll be able to read a Sablier stream, a Hedgey NFT, an UNCX vest, and a Streamflow contract using the same mental model.",
+      },
+
+      { type: "h2", text: "The Five Questions Every Vesting Schedule Answers" },
+      {
+        type: "ol",
+        items: [
+          "<strong>How much?</strong> — the total amount of tokens locked in this vest.",
+          "<strong>When did it start?</strong> — the timestamp from which unlocks are calculated.",
+          "<strong>When does it end?</strong> — the timestamp at which 100% has unlocked.",
+          "<strong>What about the cliff?</strong> — the timestamp before which zero is claimable.",
+          "<strong>How much can I claim right now?</strong> — the unlocked-but-not-yet-withdrawn balance.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🧭",
+        title: "Five fields, every protocol",
+        body:  "Total amount, start time, end time, cliff time, claimable now. Once you can answer those five, you understand the schedule — regardless of which protocol or chain hosts it.",
+      },
+
+      { type: "h2", text: "Term-by-Term Breakdown" },
+      {
+        type: "p",
+        html: "Here is the canonical vocabulary you'll see across documentation, contract code, and dashboards:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>Total amount (a.k.a. depositedAmount):</strong> the full size of the locked allocation. This is fixed at creation and does not change.",
+          "<strong>Vesting start (a.k.a. startTime, start, startEmission):</strong> the unix timestamp from which time-based release begins.",
+          "<strong>Vesting end (a.k.a. endTime, end, endEmission):</strong> the unix timestamp at which the schedule completes — 100% unlocked.",
+          "<strong>Cliff date (a.k.a. cliffTime, cliff):</strong> if non-zero, the timestamp before which zero tokens are claimable. At the cliff, the pro-rata portion for the cliff period unlocks at once.",
+          "<strong>Claimable now (a.k.a. withdrawable, claimable):</strong> the dollar-or-token amount available to withdraw as of right now.",
+          "<strong>Withdrawn amount (a.k.a. withdrawnAmount):</strong> the cumulative amount the recipient has already pulled.",
+          "<strong>Locked amount:</strong> total amount minus withdrawn amount minus claimable now — the future portion still under lock.",
+          "<strong>Claim cadence:</strong> how often you can call the claim function. Most protocols are continuous (call any time); some are tranched (only at unlock events).",
+        ],
+      },
+
+      { type: "h2", text: "Worked Example" },
+      {
+        type: "p",
+        html: "Suppose a project tells you: <em>'You receive 1,200,000 tokens, vesting over 24 months with a 6-month cliff, starting 1 January 2026.'</em> Translated into the canonical fields:",
+      },
+      {
+        type: "table",
+        headers: ["Field", "Value"],
+        rows: [
+          ["Total amount", "1,200,000 tokens"],
+          ["Vesting start", "2026-01-01 00:00:00 UTC"],
+          ["Vesting end", "2028-01-01 00:00:00 UTC (24 months later)"],
+          ["Cliff date", "2026-07-01 00:00:00 UTC (6 months after start)"],
+          ["Cliff unlock amount", "300,000 tokens (6/24 of total)"],
+          ["Post-cliff release rate", "37,500 tokens per month, or roughly 0.0144 tokens/second"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Now imagine you check the contract on 1 October 2026 (9 months in). Pro-rata unlocked = 9/24 × 1,200,000 = 450,000. If you have already withdrawn 200,000, your <strong>claimable now</strong> is 250,000 and your <strong>locked</strong> remaining is 750,000.",
+      },
+
+      { type: "h2", text: "The Same Fields Across Protocols" },
+      {
+        type: "p",
+        html: "Different vesting protocols use slightly different field names for the same concepts. Here is a translation table:",
+      },
+      {
+        type: "table",
+        headers: ["Canonical name", "Sablier", "Hedgey", "UNCX", "Streamflow"],
+        rows: [
+          ["Total amount", "depositedAmount", "amount", "amount", "depositedAmount"],
+          ["Start time", "startTime", "start", "startEmission*", "start"],
+          ["End time", "endTime", "end", "endEmission", "end"],
+          ["Cliff time", "cliffTime", "cliff", "(via emission delay)", "cliff"],
+          ["Withdrawn", "withdrawnAmount", "amountClaimed", "amountWithdrawn", "withdrawnAmount"],
+        ],
+      },
+      {
+        type: "p",
+        html: "* UNCX models cliff differently — see <a href=\"/resources/uncx-token-lockers-and-vesting\">our UNCX guide</a> for the specifics. The end result is the same: zero claimable until the cliff, then the catch-up amount unlocks.",
+      },
+
+      { type: "h2", text: "How to Verify a Schedule On-Chain" },
+      {
+        type: "p",
+        html: "Don't trust a schedule from a project deck or PDF. Verify it on-chain. The general procedure is:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Get the vesting contract address (from the project's docs, audit report, or block explorer).",
+          "Open the contract on the relevant block explorer (Etherscan, BscScan, Solscan, etc.).",
+          "Use the 'Read Contract' interface to query your specific vest by ID or recipient address.",
+          "Confirm the total amount, start, end, and cliff match what you were told.",
+          "Confirm the contract's actual token balance is sufficient to cover the schedule.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔬",
+        title: "Or just use Vestream",
+        body:  "Vestream queries every supported protocol on every supported chain and surfaces the canonical five fields on a single card per stream. No block explorer detective work required.",
+      },
+
+      { type: "h2", text: "Common Sources of Confusion" },
+      {
+        type: "ul",
+        items: [
+          "<strong>TGE unlock vs cliff:</strong> a TGE unlock releases tokens immediately at token launch. A cliff prevents any unlocks until a later date. Many schedules combine both: 'X% at TGE, then Y-month cliff before the rest starts vesting.'",
+          "<strong>Cliff date vs cliff length:</strong> cliff length is the duration; cliff date is the timestamp at which the cliff unlocks. Confirm which one a doc is referring to.",
+          "<strong>Linear release rate units:</strong> some protocols quote 'tokens per second', others 'tokens per month', others as a fraction. Always reconcile against total amount and duration.",
+          "<strong>Time zones:</strong> vesting timestamps are unix seconds (UTC). Make sure any calendar dates you compute account for the time zone.",
+        ],
+      },
+
+      { type: "h2", text: "Tracking Schedules on Vestream" },
+      {
+        type: "callout",
+        emoji: "📡",
+        title: "Read every schedule the same way",
+        body:  "Whatever protocol holds your tokens, <a href=\"/login\">Vestream</a> presents the same five canonical fields plus claimable now, next unlock, and full schedule chart. Sign in to view your positions.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Why does my claimable balance never seem to update on the protocol's own page?", a: "Most UIs cache for performance. The on-chain truth always updates per block — try refreshing or query the contract directly. Vestream re-fetches per-stream when you open the card." },
+          { q: "What does 'fully vested' mean?", a: "All tokens have unlocked — i.e. the current time is past the end timestamp. Fully vested doesn't mean fully claimed; you may still need to call the withdraw function to move them to your wallet." },
+          { q: "What if my schedule was changed after the fact?", a: "On most protocols this is impossible — the schedule is immutable once created. If a project claims to have changed your schedule, ask them to point at the new on-chain position. There should be a fresh contract or a fresh sub-position." },
+          { q: "Do I need to claim before vesting ends?", a: "No. Once vested, tokens remain claimable indefinitely. You can wait until the schedule completes and withdraw the full amount in one transaction if gas costs matter to you." },
+        ],
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {
