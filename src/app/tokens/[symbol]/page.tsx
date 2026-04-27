@@ -147,24 +147,17 @@ export default async function TokenSymbolPage({ params }: PageParams) {
 
       <SiteNav theme="light" />
 
-      {/* ── Breadcrumb ────────────────────────────────────────────────── */}
-      <div
-        className="w-full pt-16 md:pt-20"
-        style={{ borderBottom: "1px solid rgba(21,23,26,0.06)" }}
-      >
-        <nav aria-label="Breadcrumb" className="px-4 md:px-8 py-3 max-w-5xl mx-auto w-full">
+      {/* ── Hero (breadcrumb integrated, no separate bordered bar) ─────── */}
+      <section className="px-4 md:px-8 pt-20 md:pt-24 pb-10 md:pb-14 max-w-5xl mx-auto w-full">
+        <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
-            <li><Link href="/" className="hover:underline transition-colors" style={{ color: "#8B8E92" }}>Home</Link></li>
+            <li><Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>Home</Link></li>
             <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
-            <li><Link href="/protocols" className="hover:underline transition-colors" style={{ color: "#8B8E92" }}>Protocols</Link></li>
+            <li><Link href="/protocols" className="hover:underline" style={{ color: "#8B8E92" }}>Protocols</Link></li>
             <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
             <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{display}</li>
           </ol>
         </nav>
-      </div>
-
-      {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pt-8 md:pt-12 pb-10 md:pb-14 max-w-5xl mx-auto w-full">
         <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
           Multi-chain token
         </p>
