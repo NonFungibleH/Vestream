@@ -435,22 +435,35 @@ export async function getUpcomingUnlockGroupsAcross(
 }
 
 /**
- * Top N upcoming unlocks for a SINGLE protocol group. Powers the per-protocol
- * upcoming strip on /protocols/[slug].
+ * Top N upcoming unlocks for a SINGLE protocol, with same-token-same-hour
+ * mass distributions COLLAPSED into a single grouped row. Powers the
+ * Upcoming queue on /protocols/[slug].
+ *
+ * Same grouping rules as `getUpcomingUnlockGroupsAcross` (cross-protocol
+ * widget): bucket by (chainId, tokenAddress, hourBucket) so e.g. Hedgey's
+ * 6 simultaneous CHEEL drips to 6 wallets render as ONE row with a
+ * "6 wallets unlock together" subtitle, not six near-identical "in 4d 5h"
+ * lines that crowd out genuinely-different upcoming events.
+ *
+ * Returns `UnlockGroupSummary[]` (a wire-compatible superset of
+ * `UnlockSummary` — single-stream groups have walletCount=1/streamCount=1
+ * and look identical to the old single-stream renderer).
  */
 export async function getUpcomingUnlocksForProtocol(
   adapterIds: readonly string[],
   limit = 6,
-): Promise<UnlockSummary[]> {
+): Promise<UnlockGroupSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
   // 60-second buffer past now: rows whose endTime is within 60s of `now`
-  // routinely render as "in 0s" by the time the HTML reaches the browser
-  // (SQL → render → edge → user adds enough latency to push them past).
-  // Filtering at +60s keeps the queue clean of those near-zero stragglers
-  // without any meaningful loss — anyone who lands on the page exactly
-  // when one of those is genuinely about to trigger has already seen
-  // it via the homepage live ticker.
+  // routinely render as "in 0s" by the time the HTML reaches the browser.
+  // See earlier comment on the protocol page Upcoming queue for context.
   const cutoffSec = nowSec + 60;
+
+  // Pool size: a single mass distribution can collapse 100s of rows → 1
+  // group, so we pull more than `limit` raw rows before grouping. Same
+  // 20× multiplier as the cross-protocol query.
+  const POOL_SIZE = Math.max(120, limit * 20);
+
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -472,9 +485,74 @@ export async function getUpcomingUnlocksForProtocol(
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
-    .limit(limit);
+    .limit(POOL_SIZE);
 
-  return rows.map(rowToUnlock);
+  interface Group {
+    representative: typeof rows[number];
+    protoCanonical: string;
+    hourBucket:     number;
+    recipients:     Set<string>;
+    streamCount:    number;
+    amountSum:      bigint;
+    hasAmount:      boolean;
+    earliestEnd:    number;
+  }
+
+  const groups = new Map<string, Group>();
+  for (const row of rows) {
+    const protoCanonical = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
+    const tokenKey       = (row.tokenAddress ?? "").toLowerCase();
+    const end            = row.endTime ?? 0;
+    const hourBucket     = Math.floor(end / 3600);
+    const key            = `${protoCanonical}-${row.chainId}-${tokenKey}-${hourBucket}`;
+
+    let g = groups.get(key);
+    if (!g) {
+      g = {
+        representative: row,
+        protoCanonical,
+        hourBucket,
+        recipients:     new Set(),
+        streamCount:    0,
+        amountSum:      0n,
+        hasAmount:      false,
+        earliestEnd:    end,
+      };
+      groups.set(key, g);
+    } else if (end > 0 && end < g.earliestEnd) {
+      g.representative = row;
+      g.earliestEnd    = end;
+    }
+
+    g.recipients.add(row.recipient);
+    g.streamCount += 1;
+
+    const sd = row.streamData as Partial<VestingStream>;
+    const rawAmount = sd.lockedAmount ?? sd.totalAmount ?? null;
+    if (rawAmount) {
+      try {
+        g.amountSum += BigInt(rawAmount);
+        g.hasAmount  = true;
+      } catch {
+        // Ignore unparseable amount.
+      }
+    }
+  }
+
+  const ordered = Array.from(groups.values())
+    .sort((a, b) => (a.earliestEnd || Number.MAX_SAFE_INTEGER) - (b.earliestEnd || Number.MAX_SAFE_INTEGER))
+    .slice(0, limit);
+
+  return ordered.map((g) => {
+    const base = rowToUnlock(g.representative);
+    return {
+      ...base,
+      amount:      g.hasAmount ? g.amountSum.toString() : null,
+      walletCount: g.recipients.size,
+      streamCount: g.streamCount,
+      groupKey:    `${g.protoCanonical}-${base.chainId}-${base.tokenAddress}-${g.hourBucket}`,
+    };
+  });
 }
 
 // ─── formatting helpers (pure — safe to import from Server Components) ───────

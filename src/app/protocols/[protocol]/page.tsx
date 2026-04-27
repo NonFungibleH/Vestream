@@ -38,6 +38,7 @@ import {
   toDateSafe,
   truncateAddress,
   type ProtocolStats,
+  type UnlockGroupSummary,
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
 
@@ -74,7 +75,7 @@ interface ProtocolPageData {
   stats:        ProtocolStats | null;
   latest:       UnlockSummary | null;
   upcoming:     UnlockSummary | null;
-  upcomingList: UnlockSummary[];
+  upcomingList: UnlockGroupSummary[];
 }
 
 const loadProtocolData = unstable_cache(
@@ -387,7 +388,7 @@ export default async function ProtocolLandingPage(
             >
               <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
                 {upcomingList.map((u) => (
-                  <UpcomingRow key={u.streamId} u={u} accent={meta.color} />
+                  <UpcomingRow key={u.groupKey} u={u} accent={meta.color} />
                 ))}
               </div>
             </div>
@@ -591,11 +592,16 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   );
 }
 
-function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
+function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   const amount = formatAmountCompact(u.amount, u.tokenSymbol, u.tokenDecimals);
   const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
   // Only link when we know a chain+address — otherwise fall back to a plain row.
   const canLink = !!u.tokenAddress && /^0x[0-9a-f]{40}$/i.test(u.tokenAddress);
+  // Group rollup line — same shape as the cross-protocol widget on /protocols.
+  // Single-stream groups (walletCount=1) keep the legacy "for 0xabcd…" line;
+  // multi-wallet groups switch to "N wallets unlock together" so a Hedgey
+  // mass distribution doesn't crowd out genuinely distinct events.
+  const isGroup = u.walletCount > 1;
   const inner = (
     <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
       <div className="flex-1 min-w-0">
@@ -616,7 +622,15 @@ function UpcomingRow({ u, accent }: { u: UnlockSummary; accent: string }) {
           )}
         </div>
         <div className="text-[10.5px] font-mono truncate" style={{ color: "#B8BABD" }}>
-          for {truncateAddress(u.recipient)}
+          {isGroup
+            ? <>
+                <span className="font-sans font-semibold" style={{ color: "#475569" }}>
+                  {u.walletCount}
+                </span>
+                {" "}wallets unlock together
+              </>
+            : <>for {truncateAddress(u.recipient)}</>
+          }
         </div>
       </div>
       <div className="flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
