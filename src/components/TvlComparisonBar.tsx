@@ -92,17 +92,18 @@ export function TvlComparisonBar({
             Vesting TVL by protocol
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: "#8B8E92" }}>
+        <div className="relative flex items-center gap-1.5 text-xs" style={{ color: "#8B8E92" }}>
           <span className="font-mono font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
             {compactUsd(totalAll)}
           </span>
           <span>across {sorted.length} protocols</span>
-          {/* Methodology info tooltip. Uses a containing element with a wider
-              bounding box + left-positioned tooltip (anchored to the RIGHT
-              side of the card instead of the icon) so the tooltip never
-              extends past the left edge on a narrow card. */}
+          {/* Methodology info tooltip — `peer` on the icon + `relative`
+              one level up means the tooltip can anchor to the WIDER
+              right-of-strip flex group rather than the 16px icon itself.
+              That's the difference between the tooltip overflowing the
+              viewport on mobile and staying neatly inside it. */}
           <span
-            className="group relative inline-flex items-center justify-center w-4 h-4 rounded-full cursor-help flex-shrink-0"
+            className="peer inline-flex items-center justify-center w-4 h-4 rounded-full cursor-help flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
             tabIndex={0}
             aria-label="Pricing methodology"
@@ -112,24 +113,26 @@ export function TvlComparisonBar({
               <line x1="12" y1="16" x2="12" y2="12"/>
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            {/* Tooltip — appears on hover (desktop) or focus (keyboard).
-                Width caps at 18rem but shrinks on narrow viewports so it
-                never exceeds the screen width. Positioned BELOW + slight
-                LEFT of the icon; arrow → icon. Mobile tap triggers focus
-                via tabIndex=0, so the tooltip is still reachable without
-                hover. */}
-            <span
-              className="pointer-events-none absolute top-full mt-2 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity z-20 shadow-lg"
-              style={{
-                width:      "min(20rem, calc(100vw - 2rem))",
-                right:      "-4px",
-                background: "white",
-                border:     "1px solid rgba(21,23,26,0.10)",
-                color:      "#475569",
-                boxShadow:  "0 8px 24px rgba(15,23,42,0.12)",
-              }}
-              role="tooltip"
-            >
+          </span>
+          {/* Tooltip — sibling of the icon (peer-hover/peer-focus driven)
+              and anchored to the parent strip-right group's right edge.
+              Width clamps to viewport-2rem so on a 375 phone the tooltip
+              is at most 343px wide; with right:0 anchored to the right of
+              the strip group (which sits inside the card's px-4 padding),
+              the tooltip's left edge can never extend past 1rem from the
+              viewport's left. */}
+          <span
+            className="pointer-events-none absolute top-full mt-2 p-3 rounded-lg text-[10.5px] leading-relaxed opacity-0 peer-hover:opacity-100 peer-focus:opacity-100 transition-opacity z-20 shadow-lg"
+            style={{
+              width:      "min(20rem, calc(100vw - 2rem))",
+              right:      "0",
+              background: "white",
+              border:     "1px solid rgba(21,23,26,0.10)",
+              color:      "#475569",
+              boxShadow:  "0 8px 24px rgba(15,23,42,0.12)",
+            }}
+            role="tooltip"
+          >
               Every number here is <span className="font-semibold" style={{ color: "#1A1D20" }}>vesting-specific TVL</span>
               {" "}— no LP locks, no launchpad escrows, no staking. Two methodologies, depending on the protocol:
               <br /><br />
@@ -151,7 +154,6 @@ export function TvlComparisonBar({
                 </>
               )}
             </span>
-          </span>
         </div>
       </div>
 

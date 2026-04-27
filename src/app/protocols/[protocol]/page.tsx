@@ -42,7 +42,7 @@ import {
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
 
-// Render on-demand instead of pre-rendering all 7 protocol pages at build
+// Render on-demand instead of pre-rendering all 9 protocol pages at build
 // time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
 // forced `next build` to query Postgres for every protocol during the
 // static-export phase. That worked on Vercel with a warm cache, but broke
@@ -281,13 +281,10 @@ export default async function ProtocolLandingPage(
             >
               Track your {meta.name} wallet →
             </Link>
-            <Link
-              href={`/protocols/${meta.slug}/unlocks`}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ background: "white", border: `1px solid ${meta.border}`, color: "#1A1D20" }}
-            >
-              View unlock calendar →
-            </Link>
+            {/* Calendar CTA moved out of the hero — too many side-by-side
+                buttons made the hero feel cluttered. It now sits as a
+                full-width banner directly below the Upcoming queue, where
+                visitors are already in calendar-discovery mode. */}
             <Link
               href="/protocols"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
@@ -394,6 +391,49 @@ export default async function ProtocolLandingPage(
             </div>
           </div>
         )}
+
+        {/* ── Calendar banner — same shape as the cross-protocol /protocols
+            listing's banner so the calendar CTA reads consistently across
+            surfaces. Sits HERE (below the Upcoming queue) intentionally:
+            visitors who've scrolled past the hero into the queue are in
+            "tell me more about timing" mode, exactly the moment a deeper
+            calendar link converts. ────────────────────────────────────── */}
+        <div className="mt-8">
+          <Link
+            href={`/protocols/${meta.slug}/unlocks`}
+            className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5"
+            style={{
+              background: "white",
+              border:     `1px solid ${meta.border}`,
+              boxShadow:  `0 1px 3px rgba(0,0,0,0.04), 0 4px 12px ${meta.color}10`,
+            }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: meta.bg, border: `1px solid ${meta.border}` }}
+              >
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={meta.color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold" style={{ color: "#1A1D20" }}>
+                  See the full {meta.name} unlock calendar
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
+                  Every upcoming {meta.name} unlock — sorted, filterable by chain, deep-link to each token.
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold whitespace-nowrap hidden sm:inline" style={{ color: meta.color }}>
+              Open calendar →
+            </span>
+          </Link>
+        </div>
       </section>
 
       {/* ── Use cases ────────────────────────────────────────────────────── */}

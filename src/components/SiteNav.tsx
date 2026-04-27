@@ -26,9 +26,14 @@ const THEME = {
     navBorder:      "rgba(21,23,26,0.10)",
     linkBase:       "#8B8E92",
     linkActive:     "#1A1D20",
-    mobileMenuBg:   "#F5F5F3",
+    // White for the dropdown so it sits *on top of* the warm-paper page bg
+    // rather than blending into it. The shadow + bottom-rounded corners
+    // do the rest of the lifting.
+    mobileMenuBg:   "white",
+    mobileMenuShadow: "0 12px 32px rgba(21,23,26,0.10), 0 2px 8px rgba(21,23,26,0.05)",
+    mobileBackdropBg: "rgba(15,23,42,0.18)",
     activeDot:      "#1CB8B8",
-    mobileActiveBg: "rgba(28,184,184,0.05)",
+    mobileActiveBg: "rgba(28,184,184,0.08)",
     logo:           "/logo.svg",
   },
   navy: {
@@ -36,9 +41,12 @@ const THEME = {
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
     linkActive:     "white",
-    mobileMenuBg:   "#0d1b35",
+    // Slight lift over the page bg so the panel reads as a card.
+    mobileMenuBg:   "#122040",
+    mobileMenuShadow: "0 12px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.25)",
+    mobileBackdropBg: "rgba(0,0,0,0.45)",
     activeDot:      "white",
-    mobileActiveBg: "rgba(255,255,255,0.05)",
+    mobileActiveBg: "rgba(28,184,184,0.12)",
     logo:           "/logo-dark.svg",
   },
   dark: {
@@ -46,9 +54,11 @@ const THEME = {
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
     linkActive:     "white",
-    mobileMenuBg:   "#0d0f14",
+    mobileMenuBg:   "#141720",
+    mobileMenuShadow: "0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.35)",
+    mobileBackdropBg: "rgba(0,0,0,0.55)",
     activeDot:      "white",
-    mobileActiveBg: "rgba(255,255,255,0.05)",
+    mobileActiveBg: "rgba(28,184,184,0.12)",
     logo:           "/logo-dark.svg",
   },
 } as const;
@@ -57,7 +67,7 @@ export function SiteNav({ theme = "light" }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileActiveBg, logo } = THEME[theme];
+  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileMenuShadow, mobileBackdropBg, mobileActiveBg, logo } = THEME[theme];
 
   // Primary funnel CTA — drives users to paste a wallet, see their vestings,
   // then convert via the in-results "Open in app" CTA. App is publicly live
@@ -155,11 +165,20 @@ export function SiteNav({ theme = "light" }: Props) {
         </div>
       </nav>
 
-      {/* Mobile dropdown menu */}
+      {/* Mobile dropdown menu — sits as a floating panel below the nav,
+          inset from the edges with rounded corners and a soft shadow so
+          it reads as a layer on top of the page rather than a tonally
+          identical strip that "gets lost". */}
       {open && (
         <div
-          className="fixed top-14 left-0 right-0 z-40 md:hidden px-4 pt-4 pb-6 space-y-1"
-          style={{ background: mobileMenuBg, borderBottom: `1px solid ${navBorder}`, backdropFilter: "blur(12px)" }}
+          className="fixed left-3 right-3 z-40 md:hidden p-2 space-y-1"
+          style={{
+            top:        "calc(56px + 8px)", // h-14 nav + small gap
+            background: mobileMenuBg,
+            border:     `1px solid ${navBorder}`,
+            borderRadius: "16px",
+            boxShadow:  mobileMenuShadow,
+          }}
         >
           {NAV_LINKS.map(({ label, href }) => {
             const isActive = pathname === href || pathname.startsWith(href + "/");
@@ -168,24 +187,32 @@ export function SiteNav({ theme = "light" }: Props) {
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-colors"
                 style={{
                   color: isActive ? linkActive : linkBase,
                   background: isActive ? mobileActiveBg : "transparent",
-                  fontWeight: isActive ? 600 : 400,
+                  fontWeight: isActive ? 600 : 500,
                 }}
               >
-                {label}
+                <span>{label}</span>
+                {isActive && (
+                  <span
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: "#1CB8B8" }}
+                  />
+                )}
               </Link>
             );
           })}
         </div>
       )}
 
-      {/* Backdrop */}
+      {/* Backdrop — dims the page so the panel reads as elevated and
+          gives the user an obvious tap-target to dismiss the menu. */}
       {open && (
         <div
-          className="fixed inset-0 z-30 md:hidden"
+          className="fixed inset-0 z-30 md:hidden transition-opacity"
+          style={{ background: mobileBackdropBg, backdropFilter: "blur(2px)" }}
           onClick={() => setOpen(false)}
         />
       )}

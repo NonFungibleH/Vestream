@@ -609,7 +609,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Discover Vestings</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 8 platforms × 5 chains to find every active vesting for a wallet
+              Scan 9 protocols × 5 chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -828,7 +828,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 8 platforms × 5 chains. This may take 10–20 seconds.
+                Checking 9 protocols × 5 chains. This may take 10–20 seconds.
               </p>
             </div>
           )}

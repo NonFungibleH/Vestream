@@ -283,7 +283,15 @@ export default async function UnlocksIndexPage() {
               color: "#1CB8B8",
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#1CB8B8" }} />
+            {/* Radar-style pulsing dot — same pattern as TvlComparisonBar
+                + UpcomingUnlockTicker so the "live" signal looks consistent
+                across every surface. The expanding ring makes the live-ness
+                obvious; a static `animate-pulse` opacity fade reads as
+                background animation noise instead of "this is live data". */}
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
+            </span>
             Live · {protocols.length} protocols · {grandTotal.toLocaleString()} streams indexed
           </div>
 

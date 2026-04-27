@@ -3,7 +3,7 @@
 // src/components/InteractiveDemo.tsx
 //
 // Three-step interactive walkthrough that mimics the full Vestream product flow:
-//   1. Find   — animated scan across 7 protocols, finds hits on 3 of them
+//   1. Find   — animated scan across 9 protocols, finds hits on 3 of them
 //   2. Alert  — mock phone frame with dashboard + push notification
 //   3. Claim  — mock Sablier-style protocol UI, claim button, tx success
 //
@@ -74,7 +74,7 @@ const STREAMS: DemoStream[] = [
 // Featured stream (the one surfaced on alert + claim steps — the biggest USD value)
 const FEATURED = STREAMS[0];
 
-// 7 protocols scanned in parallel; 3 hit in our fake result set
+// 9 protocols scanned in parallel; 3 hit in our fake result set
 const PROTOCOLS = [
   { id: "sablier",      name: "Sablier",       hit: true,  count: 1 },
   { id: "hedgey",       name: "Hedgey",        hit: true,  count: 1 },
@@ -83,6 +83,8 @@ const PROTOCOLS = [
   { id: "team-finance", name: "Team Finance",  hit: true,  count: 1 },
   { id: "superfluid",   name: "Superfluid",    hit: false, count: 0 },
   { id: "pinksale",     name: "PinkSale",      hit: false, count: 0 },
+  { id: "streamflow",   name: "Streamflow",    hit: false, count: 0 },
+  { id: "jupiter-lock", name: "Jupiter Lock",  hit: false, count: 0 },
 ] as const;
 
 // ── Formatting helpers ───────────────────────────────────────────────────────

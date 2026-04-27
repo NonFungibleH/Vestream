@@ -3711,7 +3711,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         )}
 
         {/* Free plan badge — previously claimed "1 chain · no alerts"
-            which is wrong on both counts (Free auto-scans all 4 chains
+            which is wrong on both counts (Free auto-scans all 5 chains
             AND gets 3 lifetime push alerts per /pricing). Progress bar
             also used red (read-as-error) at cap; switched to amber
             ("you're at plan limit") to stop the Free UI feeling broken

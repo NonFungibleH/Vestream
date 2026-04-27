@@ -223,10 +223,24 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
             </div>
           </div>
 
-          {/* Link columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
-            {LINK_GROUPS.map((group) => (
-              <div key={group.heading} className="flex flex-col gap-3 min-w-[6.5rem]">
+          {/* Link columns.
+              Mobile: 2 columns. Platform (7 links, tall) takes the left
+              column alone; Developers, Corporate, and Legal stack tightly
+              into the right column underneath each other so there's no
+              whitespace gap waiting for Platform to finish.
+              md+: classic 4-column row.
+              `row-span-3 md:row-span-1` is the trick — on mobile, Platform
+              eats all three implicit rows of column 1, forcing the other
+              three groups to fill column 2 row-by-row. */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
+            {LINK_GROUPS.map((group, i) => (
+              <div
+                key={group.heading}
+                className={
+                  "flex flex-col gap-3 min-w-[6.5rem] " +
+                  (i === 0 ? "row-span-3 md:row-span-1" : "")
+                }
+              >
                 <h3
                   className="text-[11px] font-semibold uppercase tracking-widest"
                   style={{ color: palette.heading, letterSpacing: "0.12em" }}

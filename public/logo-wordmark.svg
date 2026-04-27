@@ -1,7 +1,8 @@
 <svg viewBox="0 0 300 60" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!--
-    Wordmark-only variant — no icon. Single-fill warm ink, weight 800,
-    same letter-spacing as the lockup so the type proportions match.
+    Wordmark-only variant — no icon. V picks up the teal accent so the
+    mark still feels distinctly Vestream-branded even without the slab
+    icon to its left.
   -->
   <text
     x="0" y="46"
@@ -9,6 +10,7 @@
     font-size="50"
     font-weight="800"
     letter-spacing="-0.03em"
-    fill="#1A1D20"
-  >Vestream</text>
+  >
+    <tspan fill="#1CB8B8">V</tspan><tspan fill="#1A1D20">estream</tspan>
+  </text>
 </svg>

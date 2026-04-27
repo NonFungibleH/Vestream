@@ -16,7 +16,7 @@ import {
 export const revalidate = 60;
 
 async function getHomepageLiveStats() {
-  // Aggregate across all 7 protocols. Any single-protocol failure must not
+  // Aggregate across all 9 protocols. Any single-protocol failure must not
   // sink the homepage render — silently fall back to nulls.
   try {
     const protocols = listProtocols();
@@ -234,7 +234,7 @@ export default async function Home() {
         </div>
 
         {/* Live freshness strip — aggregate stream count + last-indexed timestamp
-            across all 7 protocols, refreshed every 60s via ISR. Signals to search
+            across all 9 protocols, refreshed every 60s via ISR. Signals to search
             engines and visitors alike that this index is active, not stale. */}
         <div className="relative mt-10 flex justify-center">
           <Link
@@ -770,7 +770,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>7 vestings found across 7 protocols</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>7 vestings found across 9 protocols</p>
           </div>
         </div>
       </section>
@@ -897,22 +897,16 @@ export default async function Home() {
               {/* App bar */}
               <rect x="10" y="40" width="130" height="34" fill="white"/>
               <line x1="10" y1="74" x2="140" y2="74" stroke="rgba(21,23,26,0.06)" strokeWidth="1"/>
-              {/* App icon — V-path mark (teal gradient stays) */}
-              <rect x="18" y="47" width="20" height="20" rx="5" fill="url(#iconGrad)"/>
-              {/* Left arm (solid) */}
-              <line x1="22" y1="52" x2="28" y2="62" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-              {/* Ghost right arm */}
-              <line x1="28" y1="62" x2="34" y2="52" stroke="white" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.2"/>
-              {/* Valley glow */}
-              <circle cx="28" cy="62" r="3.5" fill="white" fillOpacity="0.12"/>
-              {/* Valley dot */}
-              <circle cx="28" cy="62" r="1.7" fill="white"/>
-              {/* Future dots */}
-              <circle cx="30" cy="59.5" r="1.3" fill="white" fillOpacity="0.75"/>
-              <circle cx="32" cy="57" r="1" fill="white" fillOpacity="0.45"/>
-              <circle cx="34" cy="54.5" r="0.7" fill="white" fillOpacity="0.22"/>
-              {/* App title */}
-              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Vestream</text>
+              {/* App icon — slab mark on a white tile to match current
+                  brand. Three stacked parallelograms; bottom one teal. */}
+              <rect x="18" y="47" width="20" height="20" rx="5" fill="white" stroke="rgba(21,23,26,0.10)" strokeWidth="0.75"/>
+              <path d="M22 53 L31 53 L33 55 L22 55 Z" fill="#1A1D20" fillOpacity="0.35"/>
+              <path d="M22 57.5 L33 57.5 L35 59.5 L22 59.5 Z" fill="#1A1D20" fillOpacity="0.65"/>
+              <path d="M22 62 L35 62 L37 64 L22 64 Z" fill="#1CB8B8"/>
+              {/* App title — V picks up the teal accent */}
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fontFamily="system-ui">
+                <tspan fill="#1CB8B8">V</tspan><tspan fill="#1A1D20">estream</tspan>
+              </text>
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="white" stroke="rgba(28,184,184,0.32)" strokeWidth="1"/>
               {/* Bell icon background */}

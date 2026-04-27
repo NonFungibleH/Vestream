@@ -2,8 +2,9 @@
   <!--
     Dark-background variant. The two upper slabs invert to white-on-dark
     so the mark stays legible; the bottom teal slab carries unchanged
-    because teal pops on both light and dark backgrounds. Wordmark is
-    pure white, single fill.
+    because teal pops on both light and dark backgrounds. Wordmark
+    splits: V picks up the teal accent (matching the bottom slab),
+    "estream" is white so the brand name still reads in one beat.
   -->
   <g transform="scale(0.8)">
     <path d="M22 30 L62 30 L70 38 L22 38 Z" fill="white" opacity="0.35"/>
@@ -17,6 +18,7 @@
     font-size="40"
     font-weight="800"
     letter-spacing="-0.03em"
-    fill="white"
-  >Vestream</text>
+  >
+    <tspan fill="#1CB8B8">V</tspan><tspan fill="white">estream</tspan>
+  </text>
 </svg>

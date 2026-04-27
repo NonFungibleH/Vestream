@@ -11,7 +11,7 @@
 //     changed, a "live monitoring" dot pulses and a "seconds ago" clock
 //     increments every second on the client.
 //   - Degrade gracefully — zero results → "No activity indexed in the last
-//     hour — but we're watching 7 protocols across 4 chains" state, not
+//     hour — but we're watching 9 protocols across 5 chains" state, not
 //     a blank box.
 //   - Keep it cheap — 10s poll interval, edge-cached, <1kB of payload.
 // ─────────────────────────────────────────────────────────────────────────────
