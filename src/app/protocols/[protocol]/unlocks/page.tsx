@@ -14,9 +14,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { PaywallTeaser } from "@/components/PaywallTeaser";
 import { getProtocol, listProtocols } from "@/lib/protocol-constants";
-import { getUnlocksInWindow } from "@/lib/vesting/unlock-windows";
+import { getUnlocksInWindow, type WindowUnlockGroup } from "@/lib/vesting/unlock-windows";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
+import { getCurrentUserTier, isPaidTier } from "@/lib/auth/tier";
+
+// Number of rows visible to anonymous + free-tier visitors before the
+// paywall kicks in. Chosen to give Google enough indexable content (the
+// JSON-LD ItemList carries the full set anyway) while creating a clear
+// upgrade moment when a serious watcher hits the wall.
+const FREE_VISIBLE_ROWS = 10;
 
 // ISR: 1h refresh — unlocks are time-sensitive but not by-the-second.
 export const revalidate = 3600;
@@ -159,13 +167,26 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
   // renders an empty state and ISR refreshes on first runtime request.
   const now = Math.floor(Date.now() / 1000);
   const FIVE_YEARS_SEC = 5 * 365 * 86400;
-  let result;
-  try {
-    result = await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 2000, meta.adapterIds, chainFilter);
-  } catch (err) {
-    console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
-    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
-  }
+  // Run the data fetch and the tier lookup in parallel — both are
+  // independent, both are needed before render. Tier null = anonymous.
+  const [resultRaw, currentTier] = await Promise.all([
+    (async () => {
+      try {
+        return await getUnlocksInWindow(now, now + FIVE_YEARS_SEC, 2000, meta.adapterIds, chainFilter);
+      } catch (err) {
+        console.warn(`[protocol-unlocks] DB unavailable for ${meta.slug}; rendering empty state:`, err);
+        return { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+      }
+    })(),
+    getCurrentUserTier(),
+  ]);
+  const result = resultRaw;
+  const isPaid = isPaidTier(currentTier);
+  // Pre-compute paywall slices outside the JSX. Turbopack mishandles
+  // IIFE-scoped references to outer-function `const` bindings inside
+  // RSC-compiled JSX, so we hoist these here.
+  const visibleRows = isPaid ? result.groups : result.groups.slice(0, FREE_VISIBLE_ROWS);
+  const gatedRows   = isPaid ? [] : result.groups.slice(FREE_VISIBLE_ROWS);
 
   // ItemList JSON-LD — unlock events scoped to this protocol.
   const itemListJsonLd = {
@@ -287,46 +308,29 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
           </div>
         ) : (
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
-            {result.groups.map((g, i) => {
-              const chainName = CHAIN_NAMES[g.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${g.chainId}`;
-              return (
-                <Link
-                  key={g.groupKey}
-                  href={`/token/${g.chainId}/${g.tokenAddress}`}
-                  className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
-                  style={{ borderTop: i > 0 ? "1px solid rgba(0,0,0,0.05)" : undefined }}
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-                    style={{ background: meta.color }}>
-                    {tokenInitial(g.tokenSymbol, g.tokenAddress)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>
-                      {fmtTokenAmount(g.amount, g.tokenDecimals)} {tokenLabel(g.tokenSymbol, g.tokenAddress)}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: "#8B8E92" }}>
-                      {chainName}
-                      {g.walletCount > 1 && (
-                        <>
-                          <span style={{ color: "#B8BABD" }}> · </span>
-                          {g.walletCount} wallets
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-                      {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold tabular-nums" style={{ color: meta.color }}>
-                      {relativeTimeUntil(g.eventTime)}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
+            {visibleRows.map((g, i) => (
+              <ProtocolUnlockRow
+                key={g.groupKey}
+                group={g}
+                accent={meta.color}
+                showTopBorder={i > 0}
+              />
+            ))}
+            {gatedRows.length > 0 && (
+              <PaywallTeaser
+                hiddenLabel={`${gatedRows.length} more ${meta.name} unlock${gatedRows.length === 1 ? "" : "s"}`}
+                headline={`See every upcoming ${meta.name} unlock`}
+              >
+                {gatedRows.map((g, i) => (
+                  <ProtocolUnlockRow
+                    key={g.groupKey}
+                    group={g}
+                    accent={meta.color}
+                    showTopBorder={true}
+                  />
+                ))}
+              </PaywallTeaser>
+            )}
           </div>
         )}
       </section>
@@ -353,6 +357,52 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
 
       <SiteFooter theme="light" />
     </div>
+  );
+}
+
+function ProtocolUnlockRow({
+  group, accent, showTopBorder,
+}: {
+  group:         WindowUnlockGroup;
+  accent:        string;
+  showTopBorder: boolean;
+}) {
+  const chainName = CHAIN_NAMES[group.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${group.chainId}`;
+  return (
+    <Link
+      href={`/token/${group.chainId}/${group.tokenAddress}`}
+      className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
+      style={{ borderTop: showTopBorder ? "1px solid rgba(0,0,0,0.05)" : undefined }}
+    >
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+        style={{ background: accent }}>
+        {tokenInitial(group.tokenSymbol, group.tokenAddress)}
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>
+          {fmtTokenAmount(group.amount, group.tokenDecimals)} {tokenLabel(group.tokenSymbol, group.tokenAddress)}
+        </p>
+        <p className="text-xs truncate" style={{ color: "#8B8E92" }}>
+          {chainName}
+          {group.walletCount > 1 && (
+            <>
+              <span style={{ color: "#B8BABD" }}> · </span>
+              {group.walletCount} wallets
+            </>
+          )}
+        </p>
+      </div>
+      <div className="text-right hidden md:block">
+        <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
+          {group.eventTime ? fmtDateUtc(group.eventTime) : "—"}
+        </p>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-semibold tabular-nums" style={{ color: accent }}>
+          {relativeTimeUntil(group.eventTime)}
+        </p>
+      </div>
+    </Link>
   );
 }
 

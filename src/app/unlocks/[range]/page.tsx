@@ -16,6 +16,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { PaywallTeaser } from "@/components/PaywallTeaser";
 import {
   ALL_WINDOW_SLUGS,
   WINDOWS,
@@ -24,6 +25,12 @@ import {
 } from "@/lib/vesting/unlock-windows";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { listProtocols } from "@/lib/protocol-constants";
+import { getCurrentUserTier, isPaidTier } from "@/lib/auth/tier";
+
+// Paywall threshold — same shape as /protocols/[slug]/unlocks. First N rows
+// are visible; the rest sit blurred behind an upgrade card. Full data stays
+// in the JSON-LD ItemList so search crawlers index every event.
+const FREE_VISIBLE_ROWS = 10;
 
 // ISR — re-render every hour. Long enough to keep DB load down, short enough
 // that "next 24h" stays accurate to the hour.
@@ -173,14 +180,19 @@ export default async function WindowPage({ params }: PageParams) {
   const def    = WINDOWS[range];
   const ranges = def.range();
   // Fail-soft: at build time CI has no DB access — render empty state and
-  // let ISR refresh on first runtime request.
-  let result;
-  try {
-    result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
-  } catch (err) {
-    console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
-    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
-  }
+  // let ISR refresh on first runtime request. Tier lookup runs in parallel.
+  const [result, currentTier] = await Promise.all([
+    (async () => {
+      try {
+        return await getUnlocksInWindow(ranges.startSec, ranges.endSec);
+      } catch (err) {
+        console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
+        return { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+      }
+    })(),
+    getCurrentUserTier(),
+  ]);
+  const isPaid = isPaidTier(currentTier);
 
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
@@ -327,53 +339,68 @@ export default async function WindowPage({ params }: PageParams) {
             ? "No unlocks scheduled in this window. Try a longer one above."
             : `${result.groups.length} group${result.groups.length === 1 ? "" : "s"}, sorted by time. Mass distributions to many wallets are collapsed into a single row.`}
         </p>
-        {result.groups.length > 0 && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
-            {result.groups.map((g, i) => {
-              const proto = protocolDisplay(g.protocol);
-              const chainName = CHAIN_NAMES[g.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${g.chainId}`;
-              return (
-                <Link
-                  key={g.groupKey}
-                  href={`/token/${g.chainId}/${g.tokenAddress}`}
-                  className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
-                  style={{ borderTop: i > 0 ? "1px solid rgba(0,0,0,0.05)" : undefined }}
+        {result.groups.length > 0 && (() => {
+          const visibleRows = isPaid ? result.groups : result.groups.slice(0, FREE_VISIBLE_ROWS);
+          const gatedRows   = isPaid ? [] : result.groups.slice(FREE_VISIBLE_ROWS);
+
+          const renderRow = (g: typeof result.groups[number], i: number, withTopBorder: boolean) => {
+            const proto = protocolDisplay(g.protocol);
+            const chainName = CHAIN_NAMES[g.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${g.chainId}`;
+            return (
+              <Link
+                key={g.groupKey}
+                href={`/token/${g.chainId}/${g.tokenAddress}`}
+                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
+                style={{ borderTop: withTopBorder || i > 0 ? "1px solid rgba(0,0,0,0.05)" : undefined }}
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+                  style={{ background: proto.color }}>
+                  {tokenInitial(g.tokenSymbol, g.tokenAddress)}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>
+                    {fmtTokenAmount(g.amount, g.tokenDecimals)} {tokenLabel(g.tokenSymbol, g.tokenAddress)}
+                  </p>
+                  <p className="text-xs truncate" style={{ color: "#8B8E92" }}>
+                    <span style={{ color: proto.color }}>{proto.name}</span>
+                    <span style={{ color: "#B8BABD" }}> · </span>
+                    {chainName}
+                    {g.walletCount > 1 && (
+                      <>
+                        <span style={{ color: "#B8BABD" }}> · </span>
+                        {g.walletCount} wallets
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="text-right hidden md:block">
+                  <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
+                    {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+                    {relativeTimeUntil(g.eventTime)}
+                  </p>
+                </div>
+              </Link>
+            );
+          };
+
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
+              {visibleRows.map((g, i) => renderRow(g, i, false))}
+              {gatedRows.length > 0 && (
+                <PaywallTeaser
+                  hiddenLabel={`${gatedRows.length} more unlock${gatedRows.length === 1 ? "" : "s"} in this window`}
+                  headline={`See every ${def.label.toLowerCase()} unlock`}
                 >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-                    style={{ background: proto.color }}>
-                    {tokenInitial(g.tokenSymbol, g.tokenAddress)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>
-                      {fmtTokenAmount(g.amount, g.tokenDecimals)} {tokenLabel(g.tokenSymbol, g.tokenAddress)}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: "#8B8E92" }}>
-                      <span style={{ color: proto.color }}>{proto.name}</span>
-                      <span style={{ color: "#B8BABD" }}> · </span>
-                      {chainName}
-                      {g.walletCount > 1 && (
-                        <>
-                          <span style={{ color: "#B8BABD" }}> · </span>
-                          {g.walletCount} wallets
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-                      {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
-                      {relativeTimeUntil(g.eventTime)}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+                  {gatedRows.map((g, i) => renderRow(g, i, i === 0))}
+                </PaywallTeaser>
+              )}
+            </div>
+          );
+        })()}
       </section>
 
       {/* ── Other windows ─────────────────────────────────────────────── */}
