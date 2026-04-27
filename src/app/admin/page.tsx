@@ -161,7 +161,7 @@ export default async function AdminPage() {
   const maxTrend = Math.max(...trendData.map(d => d.cnt), 1);
 
   return (
-    <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* Header */}
       <header className="px-8 py-5 flex items-center justify-between"

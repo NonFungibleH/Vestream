@@ -347,7 +347,7 @@ export default async function ArticlePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+      <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
         {/* ── Nav ─────────────────────────────────────────────────────────── */}
         <nav

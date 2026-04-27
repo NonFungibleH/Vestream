@@ -220,7 +220,7 @@ export default async function TokenPage(
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
       {/* BreadcrumbList JSON-LD — rendered first so crawlers see the

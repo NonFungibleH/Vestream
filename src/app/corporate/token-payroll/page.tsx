@@ -113,7 +113,7 @@ function IconCheck({ size = 16, color }: { size?: number; color: string }) {
 
 export default function TokenPayrollPage() {
   return (
-    <main className="min-h-screen" style={{ background: THEME.pageBg, color: THEME.navyDeep }}>
+    <main className="min-h-screen flex flex-col" style={{ background: THEME.pageBg, color: THEME.navyDeep }}>
       <SiteNav theme="light" />
 
       {/* ── Hero — "live salary feed" is the wow factor ───────────────────── */}

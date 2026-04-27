@@ -116,6 +116,18 @@ export function SiteNav({ theme = "light" }: Props) {
             })}
           </div>
 
+          {/* "Log in" sits to the LEFT of the gradient CTA — same nav slot
+              that's been free since SIWE was demoted. Returning users get a
+              clear way back to /dashboard without competing with the
+              acquisition CTA visually. */}
+          <Link
+            href="/login"
+            className="text-sm font-medium px-3 rounded-xl transition-colors hover:opacity-80 inline-flex items-center min-h-[40px]"
+            style={{ color: linkBase }}
+          >
+            Log in
+          </Link>
+
           {/* CTA — min-h-[40px] ensures a WCAG-compliant tap target (44px
               target counting natural padding). Previously `py-1.5` alone
               gave ~32px, below the 44px accessibility floor. */}
@@ -204,6 +216,25 @@ export function SiteNav({ theme = "light" }: Props) {
               </Link>
             );
           })}
+
+          {/* Returning-user login — visually separated from the navigation
+              links above with a hairline, so it reads as account action
+              rather than another product page. */}
+          <div className="pt-2 mt-2" style={{ borderTop: `1px solid ${navBorder}` }}>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-colors"
+              style={{ color: linkBase }}
+            >
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              Log in
+            </Link>
+          </div>
         </div>
       )}
 

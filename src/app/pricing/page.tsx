@@ -140,7 +140,7 @@ export default function Pricing() {
   // Pricing is shown for transparency; the CTA routes paying users to the
   // mobile app rather than to a web checkout.
   return (
-    <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       <script
         type="application/ld+json"

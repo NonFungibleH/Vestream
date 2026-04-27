@@ -110,7 +110,7 @@ export default async function Home() {
   const liveStats = await getHomepageLiveStats();
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       <script
         type="application/ld+json"
@@ -903,10 +903,8 @@ export default async function Home() {
               <path d="M22 53 L31 53 L33 55 L22 55 Z" fill="#1A1D20" fillOpacity="0.35"/>
               <path d="M22 57.5 L33 57.5 L35 59.5 L22 59.5 Z" fill="#1A1D20" fillOpacity="0.65"/>
               <path d="M22 62 L35 62 L37 64 L22 64 Z" fill="#1CB8B8"/>
-              {/* App title — V picks up the teal accent */}
-              <text x="42" y="60" fontSize="10.5" fontWeight="700" fontFamily="system-ui">
-                <tspan fill="#1CB8B8">V</tspan><tspan fill="#1A1D20">estream</tspan>
-              </text>
+              {/* App title — single-fill ink to match the lockup */}
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="white" stroke="rgba(28,184,184,0.32)" strokeWidth="1"/>
               {/* Bell icon background */}

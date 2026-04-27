@@ -184,7 +184,7 @@ export default async function ProtocolLandingPage(
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -642,26 +642,37 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   // multi-wallet groups switch to "N wallets unlock together" so a Hedgey
   // mass distribution doesn't crowd out genuinely distinct events.
   const isGroup = u.walletCount > 1;
+  // Row layout pinned to a consistent two-line shape (amount + chain on top,
+  // recipient/group caption below). Previously the top line could wrap on
+  // mobile because of `flex-wrap` + the optional "view token" hint, which
+  // gave each row a different height — fine on desktop, looked ragged on a
+  // 375px phone. `flex-nowrap` + `min-w-0 truncate` on the amount keeps the
+  // top line at exactly one line; "view token" → a chevron arrow on mobile
+  // (saves ~70px of horizontal space) and full text only on sm+.
   const inner = (
-    <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
+    <div className="px-4 md:px-5 py-3 flex items-center gap-3 min-h-[60px] transition-colors hover:bg-slate-50/60">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold truncate min-w-0" style={{ color: "#1A1D20" }}>
             {amount}
           </span>
           <span
-            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider"
+            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
           >
             {chainLabel(u.chainId)}
           </span>
           {canLink && (
-            <span className="text-[10px] font-semibold" style={{ color: accent, opacity: 0.7 }}>
+            <span
+              className="text-[10px] font-semibold flex-shrink-0 hidden sm:inline"
+              style={{ color: accent, opacity: 0.7 }}
+              aria-hidden="true"
+            >
               view token →
             </span>
           )}
         </div>
-        <div className="text-[10.5px] font-mono truncate" style={{ color: "#B8BABD" }}>
+        <div className="text-[10.5px] font-mono truncate mt-0.5" style={{ color: "#B8BABD" }}>
           {isGroup
             ? <>
                 <span className="font-sans font-semibold" style={{ color: "#475569" }}>
@@ -673,8 +684,10 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
           }
         </div>
       </div>
-      <div className="flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
-        style={{ background: `${accent}15`, color: accent }}>
+      <div
+        className="flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums whitespace-nowrap"
+        style={{ background: `${accent}15`, color: accent }}
+      >
         {ttl}
       </div>
     </div>

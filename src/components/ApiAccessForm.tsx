@@ -1,17 +1,10 @@
 "use client";
 import { useState } from "react";
 
-const PROTOCOLS = ["Sablier", "UNCX", "Hedgey", "Unvest", "Team Finance"];
-
 export function ApiAccessForm() {
   const [form, setForm] = useState({ name: "", email: "", company: "", useCase: "" });
-  const [protocols, setProtocols] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
-
-  function toggleProtocol(p: string) {
-    setProtocols(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +14,10 @@ export function ApiAccessForm() {
       const res = await fetch("/api/api-access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, protocols }),
+        // Protocol multi-select removed — every API key gets access to all
+        // 9 protocols by default, so picking a subset on the request form
+        // was confusing visitors into thinking it was a per-protocol gate.
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       if (!res.ok) { setErrorMsg(data.error ?? "Something went wrong"); setStatus("error"); return; }
@@ -90,26 +86,6 @@ export function ApiAccessForm() {
           className="text-sm px-4 py-3 rounded-xl outline-none transition-all resize-none"
           style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white", lineHeight: 1.6 }}
         />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Protocols you need (optional)</label>
-        <div className="flex flex-wrap gap-2">
-          {PROTOCOLS.map(p => {
-            const active = protocols.includes(p);
-            return (
-              <button key={p} type="button" onClick={() => toggleProtocol(p)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-                style={{
-                  background: active ? "rgba(28,184,184,0.15)" : "rgba(255,255,255,0.05)",
-                  border: active ? "1px solid rgba(28,184,184,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                  color: active ? "#1CB8B8" : "rgba(255,255,255,0.45)",
-                }}>
-                {p}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {status === "error" && (

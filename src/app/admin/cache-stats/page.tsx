@@ -111,7 +111,7 @@ export default async function CacheStatsPage() {
   }
 
   return (
-    <main className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <main className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-14">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">

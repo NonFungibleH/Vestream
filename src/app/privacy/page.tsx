@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 h-16"

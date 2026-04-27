@@ -166,7 +166,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
 
   return (
     <footer
-      className="px-4 md:px-8 pt-12 pb-8"
+      className="px-4 md:px-8 pt-12 pb-8 mt-auto"
       style={{
         borderTop: `1px solid ${palette.border}`,
         background: recessed ? palette.mutedBg : palette.bg,

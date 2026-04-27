@@ -79,7 +79,7 @@ function ToolCard({
 
 export default function AiPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d0f14", color: "white" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#0d0f14", color: "white" }}>
       <SiteNav theme="dark" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -138,7 +138,7 @@ export default function AiPage() {
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
               { value: "9",      label: "Protocols indexed" },
-              { value: "5",      label: "Chains (EVM+SVM)"  },
+              { value: "5",      label: "Chains (EVM + Solana)"  },
               { value: "3",      label: "MCP tools"         },
               { value: "MCP",    label: "Native support"    },
               { value: "REST",   label: "API available"     },
@@ -187,11 +187,11 @@ export default function AiPage() {
         <div className="flex flex-col gap-5">
           <ToolCard
             name="get_wallet_vestings"
-            description="Get all token vesting streams for an EVM wallet across all supported protocols and chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
+            description="Get all token vesting streams for a wallet (EVM or Solana) across all 9 supported protocols and 5 chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
-              { name: "address", type: "string", required: true,  desc: "EVM wallet in 0x format" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, uncx, hedgey, team-finance, unvest, superfluid, pinksale" },
-              { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base)" },
+              { name: "address", type: "string", required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
+              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow, jupiter-lock" },
+              { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)" },
               { name: "active_only", type: "boolean", required: false, desc: "Only return streams not yet fully vested" },
             ]}
             example={`get_wallet_vestings({
@@ -204,9 +204,9 @@ export default function AiPage() {
             name="get_upcoming_unlocks"
             description="Forecast all token unlock events for a wallet within a future time window. Returns cliff completions, tranche unlocks, and linear stream endings sorted by date — ideal for scheduling claims or building alerts."
             params={[
-              { name: "address", type: "string",  required: true,  desc: "EVM wallet in 0x format" },
+              { name: "address", type: "string",  required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
               { name: "days",    type: "number",  required: false, desc: "Lookahead window in days (default: 30, max: 365)" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol" },
+              { name: "protocol", type: "string", required: false, desc: "Filter by protocol (any of the 9 protocols above)" },
             ]}
             example={`get_upcoming_unlocks({
   address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",

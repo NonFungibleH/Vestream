@@ -354,7 +354,7 @@ export default function FaqPage() {
   const totalQuestions = FAQ_DATA.reduce((n, c) => n + c.items.length, 0);
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: buildFaqJsonLd(FAQ_DATA) }}

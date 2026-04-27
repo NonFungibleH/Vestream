@@ -51,7 +51,7 @@ const TEAM_FINANCE_VESTING  = "https://www.team.finance/vesting";
 
 export default function DemoPage() {
   return (
-    <main className="min-h-screen" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+    <main className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -65,7 +65,7 @@ export default function DemoPage() {
               border: "1px solid rgba(28,184,184,0.2)",
             }}
           >
-            Three demos · No signup for A + B · ~90s → ~10min
+            3 ways to try Vestream · pick any one
           </div>
 
           <h1

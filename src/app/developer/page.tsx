@@ -37,7 +37,7 @@ function Check() {
 
 export default function DeveloperPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0d1b35", color: "white" }}>
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#0d1b35", color: "white" }}>
 
       {/* ── Nav ── */}
       <SiteNav theme="navy" />
@@ -141,7 +141,7 @@ export default function DeveloperPage() {
           {/* Shared chain coverage — applies to all protocols above */}
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Available on</span>
-            {["Ethereum", "BNB Chain", "Base", "Polygon"].map((chain) => (
+            {["Ethereum", "BNB Chain", "Base", "Polygon", "Solana"].map((chain) => (
               <span key={chain} className="text-xs px-2.5 py-1 rounded-full font-medium"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
                 {chain}
@@ -344,37 +344,43 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
-                icon: "🤖",
+                // CPU/chip with antenna — AI agent surface.
+                icon: <UseCaseIcon><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></UseCaseIcon>,
                 title: "AI Portfolio Agents",
                 description: "Give your agent real-time vesting intelligence. Ask \"when does my next unlock happen?\" or \"how much have I claimed this year?\" — answered instantly from structured data.",
                 tags: ["MCP-native", "OpenAPI spec", "Unlock forecasting"],
               },
               {
-                icon: "👛",
+                // Wallet — flap + card slot.
+                icon: <UseCaseIcon><path d="M3 6a2 2 0 0 1 2-2h12l4 4v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z"/><path d="M16 14h2"/><path d="M3 10h18"/></UseCaseIcon>,
                 title: "Wallet Applications",
                 description: "Show users their complete vesting picture without building protocol-specific integrations for each chain. One API call replaces five.",
                 tags: ["Multi-protocol", "Multi-chain", "Normalised schema"],
               },
               {
-                icon: "📊",
+                // Bar chart — analytics surface.
+                icon: <UseCaseIcon><line x1="3" y1="20" x2="21" y2="20"/><rect x="6" y="11" width="3" height="9"/><rect x="11" y="6" width="3" height="14"/><rect x="16" y="14" width="3" height="6"/></UseCaseIcon>,
                 title: "Analytics Platforms",
                 description: "Enrich your on-chain analytics with structured vesting data. Track team and investor unlock schedules, historical claims, and token release patterns.",
                 tags: ["Historical data", "Claim events", "Protocol breakdown"],
               },
               {
-                icon: "🏛️",
+                // Shield with check — compliance / regulator-friendly surface.
+                icon: <UseCaseIcon><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></UseCaseIcon>,
                 title: "Compliance & Fund Tools",
                 description: "Monitor vesting obligations across a portfolio. Flag upcoming unlocks, track claimed amounts, and generate structured reports for investors or regulators.",
                 tags: ["Compliance flags", "Audit trail", "Structured export"],
               },
               {
-                icon: "⚙️",
+                // Gear / cog — DeFi protocol integration.
+                icon: <UseCaseIcon><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></UseCaseIcon>,
                 title: "DeFi Protocol Integrations",
                 description: "Build vesting-aware features into your protocol — show users their locked/claimable balances without reinventing the indexing layer.",
                 tags: ["REST API", "Bearer auth", "Rate limit headers"],
               },
               {
-                icon: "🪙",
+                // Coin / token — issuer & DAO surface.
+                icon: <UseCaseIcon><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M9.5 9h3a2 2 0 0 1 0 4h-3v4"/></UseCaseIcon>,
                 title: "Token Issuers & DAOs",
                 description: "Give your team and investors a transparent view of the vesting schedule. No custom dashboard needed — your data is already indexed.",
                 tags: ["Team vesting", "Investor tracking", "Unlock calendar"],
@@ -382,7 +388,12 @@ export default function DeveloperPage() {
             ].map(u => (
               <div key={u.title} className="rounded-2xl p-6"
                 style={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="text-2xl mb-4">{u.icon}</div>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.25)" }}
+                >
+                  {u.icon}
+                </div>
                 <h3 className="font-bold text-base mb-2" style={{ color: "white" }}>{u.title}</h3>
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>{u.description}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -574,5 +585,29 @@ export default function DeveloperPage() {
 
       <SiteFooter theme="navy" recessed />
     </div>
+  );
+}
+
+// ─── Inline icon helper ────────────────────────────────────────────────────
+// Use-case cards previously rendered emojis ("🤖 👛 📊 …") which read as
+// AI-generated / Notion-template aesthetic. Replaced with stroke-based SVG
+// icons that pick up the page's teal accent — same visual weight as the
+// rest of the site's iconography (cf. SiteNav and footer) so the page
+// reads as a single design rather than emojis pasted in.
+function UseCaseIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#1CB8B8"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
   );
 }

@@ -45,7 +45,7 @@ export default async function DeveloperAccount() {
   const isPro = key.tier === "pro";
 
   return (
-    <div className="min-h-screen" style={{ background: "#0d0f14", color: "white" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* ── Nav ── */}
       <nav className="flex items-center justify-between px-8 h-16"
