@@ -47,11 +47,39 @@ async function vstreamFetch(path: string): Promise<unknown> {
   return res.json();
 }
 
+// ─── Shared Zod primitives ───────────────────────────────────────────────────
+//
+// The previous tool definitions accepted any string for `protocol` and any
+// number for `days`, so a misbehaving agent could send `days=999999` or
+// `protocol=invalid` and only see a backend rejection — opaque to the LLM.
+// Constrain at the MCP layer so the model gets a tight schema and the
+// backend never sees out-of-range values.
+
+const PROTOCOL_VALUES = [
+  "sablier", "hedgey", "uncx", "unvest", "team-finance",
+  "superfluid", "pinksale", "streamflow", "jupiter-lock",
+] as const;
+
+// Accept comma-separated lists of the canonical slugs above. We don't try
+// to enum-validate the comma-separated string at parse time (Zod can't
+// elegantly express that); instead we lower-case + filter at the call
+// site so unknown slugs are silently dropped.
+const protocolFilter = z.string().optional().describe(
+  "Comma-separated protocol filter. Valid values: " + PROTOCOL_VALUES.join(", "),
+);
+
+function sanitiseProtocolFilter(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const allow = new Set<string>(PROTOCOL_VALUES);
+  const kept = raw.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allow.has(s));
+  return kept.length > 0 ? kept.join(",") : undefined;
+}
+
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 
 const server = new McpServer({
   name:    "vestream",
-  version: "1.0.0",
+  version: "1.0.1",
 });
 
 // ── Tool: get_wallet_vestings ─────────────────────────────────────────────────
@@ -70,10 +98,7 @@ server.tool(
       "Wallet address. EVM: 0x-prefixed hex (e.g. '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'). " +
       "Solana: base58-encoded pubkey (e.g. '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')"
     ),
-    protocol: z.string().optional().describe(
-      "Comma-separated protocol filter, e.g. 'sablier,streamflow'. " +
-      "Valid values: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow, jupiter-lock"
-    ),
+    protocol: protocolFilter,
     chain: z.string().optional().describe(
       "Comma-separated chain ID filter, e.g. '1,101,8453'. " +
       "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)"
@@ -84,9 +109,10 @@ server.tool(
   },
   async ({ address, protocol, chain, active_only }) => {
     const qs = new URLSearchParams();
-    if (protocol)    qs.set("protocol",    protocol);
-    if (chain)       qs.set("chain",       chain);
-    if (active_only) qs.set("active_only", "true");
+    const cleanedProtocol = sanitiseProtocolFilter(protocol);
+    if (cleanedProtocol) qs.set("protocol", cleanedProtocol);
+    if (chain)           qs.set("chain",    chain);
+    if (active_only)     qs.set("active_only", "true");
     const query = qs.toString() ? `?${qs}` : "";
 
     const data = await vstreamFetch(`/wallet/${address}/vestings${query}`);
@@ -109,17 +135,16 @@ server.tool(
     address: z.string().describe(
       "Wallet address — EVM 0x hex or Solana base58 pubkey"
     ),
-    days: z.number().optional().describe(
-      "Lookahead window in days (default: 30, max: 365)"
+    days: z.number().int().min(1).max(365).optional().describe(
+      "Lookahead window in days. Default 30, minimum 1, maximum 365."
     ),
-    protocol: z.string().optional().describe(
-      "Comma-separated protocol filter, e.g. 'sablier,streamflow'"
-    ),
+    protocol: protocolFilter,
   },
   async ({ address, days, protocol }) => {
     const qs = new URLSearchParams();
     if (days)     qs.set("days",     String(days));
-    if (protocol) qs.set("protocol", protocol);
+    const cleanedProtocol = sanitiseProtocolFilter(protocol);
+    if (cleanedProtocol) qs.set("protocol", cleanedProtocol);
     const query = qs.toString() ? `?${qs}` : "";
 
     const data = await vstreamFetch(`/wallet/${address}/upcoming-unlocks${query}`);
