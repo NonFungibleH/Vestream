@@ -33,11 +33,17 @@ import {
   type WindowSlug,
   type WindowUnlockGroup,
 } from "@/lib/vesting/unlock-windows";
+import {
+  getStreamsForExplorer,
+  getStreamsByRecipient,
+  type StreamRow,
+} from "@/lib/vesting/explorer-queries";
+import { resolveEnsName } from "@/lib/ens";
 import { listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
 import { ExplorerSidebar } from "./Sidebar";
-import { detectQueryKind, type QueryKind } from "./detect-query";
+import { detectQueryKind } from "./detect-query";
 
 export const dynamic = "force-dynamic";
 
@@ -114,47 +120,83 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
-  // ── Calendar-mode fetch ────────────────────────────────────────────────
-  // For an MVP we ship calendar mode as the default surface — it composes
-  // cleanly with the existing getUnlocksInWindow() helper. Stream and wallet
-  // modes are marked "coming soon" placeholders below.
-  const window = dateSlug === "all"
-    ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 5 * 365 * 86400 }
-    : WINDOWS[dateSlug as WindowSlug].range();
-
   const adapterIds = protocols.length > 0
     ? expandProtocolsToAdapters(protocols)
     : undefined;
 
-  let calendarResult;
-  try {
-    calendarResult = await getUnlocksInWindow(
-      window.startSec,
-      window.endSec,
-      isFree ? FREE_TIER_ROW_CAP * 4 : 2000,  // pull a bit more than the cap so we have headroom for filtering
+  // ── Mode-specific fetch ────────────────────────────────────────────────
+  // Each mode populates `modeResult` with the raw data it needs, plus a
+  // numeric `totalMatches` for the cap UX. Visible/hidden split and the
+  // upgrade banner happen below in render.
+  const window = dateSlug === "all"
+    ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 5 * 365 * 86400 }
+    : WINDOWS[dateSlug as WindowSlug].range();
+
+  let calendarGroups: WindowUnlockGroup[] = [];
+  let streamRows:     StreamRow[]         = [];
+  let walletRows:     StreamRow[]         = [];
+  let walletAddress:  string | null       = null;
+  let walletEnsHint:  string | null       = null;
+
+  if (mode === "calendar") {
+    let calendarResult;
+    try {
+      calendarResult = await getUnlocksInWindow(
+        window.startSec,
+        window.endSec,
+        isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
+        adapterIds,
+        chainIds.length > 0 ? chainIds : undefined,
+      );
+    } catch {
+      calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+    }
+    calendarGroups = calendarResult.groups;
+    if (amountThreshold) {
+      // Heuristic non-empty-amount filter until we surface USD pricing here.
+      calendarGroups = calendarGroups.filter((g) => Number(g.amount ?? 0) > 0);
+    }
+    if (queryKind.kind === "symbol") {
+      const wanted = queryKind.symbol.toLowerCase();
+      calendarGroups = calendarGroups.filter((g) => (g.tokenSymbol ?? "").toLowerCase() === wanted);
+    }
+  } else if (mode === "stream") {
+    streamRows = await getStreamsForExplorer({
+      chainIds:    chainIds.length > 0 ? chainIds : undefined,
       adapterIds,
-      chainIds.length > 0 ? chainIds : undefined,
-    );
-  } catch {
-    calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+      tokenSymbol: queryKind.kind === "symbol" ? queryKind.symbol : undefined,
+      status:      "active",
+      limit:       isFree ? FREE_TIER_ROW_CAP * 4 : 1000,
+    });
+  } else if (mode === "wallet") {
+    // Resolve ENS to address if needed, then query streams keyed on recipient.
+    if (queryKind.kind === "address") {
+      walletAddress = queryKind.address;
+    } else if (queryKind.kind === "ens") {
+      walletEnsHint = queryKind.name;
+      walletAddress = await resolveEnsName(queryKind.name);
+    }
+    if (walletAddress) {
+      walletRows = await getStreamsByRecipient(walletAddress, {
+        chainIds:   chainIds.length > 0 ? chainIds : undefined,
+        adapterIds,
+        status:     "any",
+        limit:      isFree ? FREE_TIER_ROW_CAP * 4 : 1000,
+      });
+    }
   }
 
-  // Apply amount + symbol filter in JS (cheap, post-query).
-  let groups: WindowUnlockGroup[] = calendarResult.groups;
-  if (amountThreshold) {
-    // Token-amount-to-USD requires a price, which we don't have in this query.
-    // Approximate by filtering on raw amount > a heuristic ratio. Real $-filter
-    // ships when the price-cache shape lands on the explorer surface.
-    groups = groups.filter((g) => Number(g.amount ?? 0) > 0);
-  }
-  if (queryKind.kind === "symbol") {
-    const wanted = queryKind.symbol.toLowerCase();
-    groups = groups.filter((g) => (g.tokenSymbol ?? "").toLowerCase() === wanted);
-  }
-
-  const totalMatches = groups.length;
-  const visibleRows  = isFree ? groups.slice(0, FREE_TIER_ROW_CAP) : groups;
-  const hiddenCount  = totalMatches - visibleRows.length;
+  // Compute the cap split per mode using the same shape, so render below
+  // can use one banner component.
+  const totalMatches =
+    mode === "calendar" ? calendarGroups.length :
+    mode === "stream"   ? streamRows.length     :
+    walletRows.length;
+  const visibleCount = isFree ? Math.min(totalMatches, FREE_TIER_ROW_CAP) : totalMatches;
+  const hiddenCount  = totalMatches - visibleCount;
+  const visibleCalendar = isFree ? calendarGroups.slice(0, FREE_TIER_ROW_CAP) : calendarGroups;
+  const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
+  const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;
 
   // Active-filter count for the free-tier multi-filter cap.
   const activeFilters = [
@@ -203,7 +245,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               <Link
                 key={m}
                 href={href}
-                className="px-4 py-2 text-sm font-semibold relative"
+                className="px-4 py-2 text-sm font-semibold"
                 style={{
                   color: active ? "#0F8A8A" : "var(--preview-text-2)",
                   borderBottom: active ? "2px solid #0F8A8A" : "2px solid transparent",
@@ -211,12 +253,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 }}
               >
                 {m === "calendar" ? "Calendar" : m === "stream" ? "Streams" : "Wallets"}
-                {m !== "calendar" && (
-                  <span className="ml-1.5 text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-                    style={{ background: "rgba(0,0,0,0.04)", color: "var(--preview-text-3)" }}>
-                    soon
-                  </span>
-                )}
               </Link>
             );
           })}
@@ -227,7 +263,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           <section>
             {mode === "calendar" && (
               <CalendarResults
-                rows={visibleRows}
+                rows={visibleCalendar}
                 totalMatches={totalMatches}
                 hiddenCount={hiddenCount}
                 isFree={isFree}
@@ -235,19 +271,23 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               />
             )}
             {mode === "stream" && (
-              <ComingSoon
-                title="Streams view"
-                body="Per-stream search ships next — search by symbol, chain, or status to see every individual schedule with full detail."
+              <StreamResults
+                rows={visibleStreams}
+                totalMatches={totalMatches}
+                hiddenCount={hiddenCount}
+                isFree={isFree}
+                overFilterCap={overFilterCap}
               />
             )}
             {mode === "wallet" && (
-              <ComingSoon
-                title="Wallets view"
-                body={
-                  query
-                    ? "Wallet lookup ships next. For now use the main /dashboard with this address tracked."
-                    : "Paste a wallet address (or ENS) above to see every active position for that address."
-                }
+              <WalletResults
+                rows={visibleWallets}
+                totalMatches={totalMatches}
+                hiddenCount={hiddenCount}
+                isFree={isFree}
+                walletAddress={walletAddress}
+                ensHint={walletEnsHint}
+                queryGiven={query.length > 0}
               />
             )}
           </section>
@@ -424,6 +464,184 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
         </p>
       </div>
     </Link>
+  );
+}
+
+// ─── Stream-mode results (per-stream rows) ─────────────────────────────────
+
+function StreamResults({
+  rows, totalMatches, hiddenCount, isFree, overFilterCap,
+}: {
+  rows:          StreamRow[];
+  totalMatches:  number;
+  hiddenCount:   number;
+  isFree:        boolean;
+  overFilterCap: boolean;
+}) {
+  if (overFilterCap) {
+    return (
+      <UpgradeBanner
+        title="Combine multiple filters with Pro"
+        body="Free accounts can filter by one dimension at a time. Pro lets you stack chain + protocol + amount + status for surgical queries."
+      />
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
+          No active streams match your filters.
+        </p>
+        <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
+          Stream mode shows individual vesting schedules. Try clearing a filter or searching by symbol.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
+          {totalMatches} stream{totalMatches === 1 ? "" : "s"}
+        </p>
+      </div>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        {rows.map((s, i) => (
+          <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
+        ))}
+      </div>
+      {isFree && hiddenCount > 0 && (
+        <UpgradeBanner
+          title={`${hiddenCount} more stream${hiddenCount === 1 ? "" : "s"} above your free limit`}
+          body="Pro lifts the per-query cap, adds CSV export, multi-filter compose, and saved-search alerts."
+        />
+      )}
+    </>
+  );
+}
+
+function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: boolean }) {
+  const meta   = getProtocol(row.protocol);
+  const accent = meta?.color ?? "#64748b";
+  const chain  = CHAIN_NAMES[row.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${row.chainId}`;
+  const eventTime = row.nextUnlockTime ?? row.endTime;
+  return (
+    <Link
+      href={`/token/${row.chainId}/${row.tokenAddress}`}
+      className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors"
+      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}
+    >
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+        style={{ background: accent }}>
+        {tokenInitial(row.tokenSymbol, row.tokenAddress)}
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+          {fmtAmount(row.amount, row.tokenDecimals)} {row.tokenSymbol ?? shortAddr(row.tokenAddress)}
+        </p>
+        <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
+          <span style={{ color: accent }}>{meta?.name ?? row.protocol}</span>
+          <span> · </span>
+          {chain}
+          <span> · </span>
+          <span className="font-mono">{shortAddr(row.recipient)}</span>
+        </p>
+      </div>
+      <div className="text-right hidden md:block">
+        <p className="text-[10px] uppercase tracking-wider font-bold"
+          style={{ color: row.status === "active" ? "#0F8A8A" : "var(--preview-text-3)" }}>
+          {row.status}
+        </p>
+      </div>
+      <div className="text-right hidden md:block">
+        <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
+          {fmtDate(row.endTime)}
+        </p>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+          in {relativeUntil(eventTime)}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+// ─── Wallet-mode results (positions for a single recipient) ───────────────
+
+function WalletResults({
+  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven,
+}: {
+  rows:          StreamRow[];
+  totalMatches:  number;
+  hiddenCount:   number;
+  isFree:        boolean;
+  walletAddress: string | null;
+  ensHint:       string | null;
+  queryGiven:    boolean;
+}) {
+  if (!queryGiven) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
+          Paste a wallet address or ENS name above
+        </p>
+        <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
+          Wallet mode shows every indexed vesting position for one recipient — across all 9 protocols.
+        </p>
+      </div>
+    );
+  }
+  if (queryGiven && !walletAddress) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
+          Couldn&rsquo;t resolve {ensHint ? `${ensHint}` : "that input"}
+        </p>
+        <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
+          Try a 0x address, a Solana base58 pubkey, or a registered .eth name.
+        </p>
+      </div>
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
+          No indexed vesting positions for this address yet.
+        </p>
+        <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
+          Track this wallet in your <Link href="/dashboard" className="underline">dashboard</Link> to live-scan all 9 protocols.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
+          {totalMatches} position{totalMatches === 1 ? "" : "s"} for{" "}
+          <span className="font-mono normal-case" style={{ color: "var(--preview-text-2)" }}>
+            {ensHint ?? shortAddr(walletAddress!)}
+          </span>
+        </p>
+      </div>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        {rows.map((s, i) => (
+          <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
+        ))}
+      </div>
+      {isFree && hiddenCount > 0 && (
+        <UpgradeBanner
+          title={`${hiddenCount} more position${hiddenCount === 1 ? "" : "s"} above your free limit`}
+          body="Pro shows the full set + saved-search alerts when this wallet's next unlock is imminent."
+        />
+      )}
+    </>
   );
 }
 
