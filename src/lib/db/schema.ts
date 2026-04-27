@@ -130,6 +130,14 @@ export const apiKeys = pgTable("api_keys", {
   lastUsedAt:       timestamp("last_used_at"),
   revokedAt:        timestamp("revoked_at"),
   notes:            text("notes"),
+  /** Stripe Customer ID — set on first Pro upgrade. Survives subscription
+   *  cancellations so a returning user pays into the same customer record. */
+  stripeCustomerId:     text("stripe_customer_id"),
+  /** Currently active Stripe Subscription ID. NULL = no active subscription
+   *  (free tier). When a subscription is cancelled this gets cleared so a
+   *  later upgrade creates a fresh subscription rather than reactivating
+   *  a stale one. */
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt:        timestamp("created_at").defaultNow().notNull(),
 });
 

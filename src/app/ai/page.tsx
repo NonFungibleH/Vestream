@@ -205,12 +205,37 @@ export default function AiPage() {
 
       {/* ── MCP Tools ─────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>MCP Tools</p>
-          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Three tools. Everything you need.</h2>
+          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Six tools. Everything an agent needs.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Install the MCP server and your agent immediately has access to all of Vestream&apos;s vesting data.
+            Install the MCP server and your agent immediately has read access to every wallet, stream, and
+            upcoming unlock — plus webhook subscription management on Pro.
           </p>
+        </div>
+
+        {/* What's-new ribbon for the v1.2 webhook tools. Sits between the
+            section heading and the tool cards so it reads as a release
+            note, not a separate marketing block. */}
+        <div className="max-w-3xl mx-auto mb-10 rounded-2xl px-5 py-4 flex items-start gap-4"
+          style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(15,138,138,0.04))",
+                   border: "1px solid rgba(28,184,184,0.25)" }}>
+          <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md"
+            style={{ background: "#1CB8B8", color: "white" }}>
+            v1.2
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold mb-1" style={{ color: "white" }}>
+              Webhook subscriptions are now an MCP tool
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Three new tools — <code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>list_webhook_subscriptions</code>,
+              {" "}<code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>create_webhook_subscription</code>,
+              {" "}<code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>delete_webhook_subscription</code>{" "}
+              — let your agent set up server-to-server alerts the moment a matching unlock fires. HMAC-signed,
+              filterable by wallet / protocol / chain. Pro tier. Update with <code className="font-mono">npx -y @vestream/mcp@latest</code>.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col gap-5">
@@ -251,6 +276,42 @@ export default function AiPage() {
             ]}
             example={`get_stream({
   stream_id: "sablier-8453-12345"
+})`}
+          />
+
+          {/* ── v1.2 — webhook tools (Pro tier) ────────────────────────── */}
+          <ToolCard
+            name="list_webhook_subscriptions"
+            description="Pro tier. List the webhook subscriptions registered to the caller's API key. Each subscription describes a URL Vestream POSTs to when a matching upcoming-unlock fires."
+            params={[]}
+            example={`list_webhook_subscriptions({})`}
+          />
+
+          <ToolCard
+            name="create_webhook_subscription"
+            description="Pro tier. Register a new webhook subscription. Returns the signing secret ONCE — store it for HMAC verification. Vestream POSTs to the URL with X-Vestream-Signature on each matching event."
+            params={[
+              { name: "url",             type: "string",  required: true,  desc: "Destination URL (https in production)" },
+              { name: "wallet_filter",   type: "array",   required: false, desc: "Restrict to these wallet addresses" },
+              { name: "protocol_filter", type: "array",   required: false, desc: "Restrict to these protocols (slug list)" },
+              { name: "chain_filter",    type: "array",   required: false, desc: "Restrict to these chain IDs" },
+              { name: "hours_before",    type: "number",  required: false, desc: "Lookahead window in hours (1-168, default 24)" },
+            ]}
+            example={`create_webhook_subscription({
+  url: "https://your.app/webhooks/vestream",
+  protocol_filter: ["sablier", "streamflow"],
+  hours_before: 6
+})`}
+          />
+
+          <ToolCard
+            name="delete_webhook_subscription"
+            description="Pro tier. Permanently delete a webhook subscription by its UUID. Use list_webhook_subscriptions to discover IDs."
+            params={[
+              { name: "subscription_id", type: "string", required: true, desc: "UUID returned by list_webhook_subscriptions" },
+            ]}
+            example={`delete_webhook_subscription({
+  subscription_id: "9c8e..."
 })`}
           />
         </div>

@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { KeyManagement } from "./KeyManagement";
+import { BillingPanel } from "./BillingPanel";
+import { WebhooksPanel } from "./WebhooksPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -181,6 +183,16 @@ export default async function DeveloperAccount() {
             Your full API key was shown once when issued. Lost it or worried it leaked? Use the
             management panel below — rotation is instant and self-serve.
           </p>
+        </div>
+
+        {/* ── Billing — Upgrade CTA for free tier, manage portal for Pro ── */}
+        <div className="mb-8">
+          <BillingPanel tier={key.tier} />
+        </div>
+
+        {/* ── Webhooks (Pro) ── */}
+        <div className="mb-8">
+          <WebhooksPanel tier={key.tier} />
         </div>
 
         {/* ── Key management (rotate / revoke) ── */}

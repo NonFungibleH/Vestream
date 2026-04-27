@@ -50,6 +50,13 @@
       "when": 1777400000000,
       "tag": "0006_webhook_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777500000000,
+      "tag": "0007_stripe_columns",
+      "breakpoints": true
     }
   ]
 }
