@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
+import { track, classifyAddressOrQuery } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -437,6 +438,8 @@ export default function DiscoverPage() {
       setScanError("Enter a valid wallet address (EVM 0x… or Solana pubkey)");
       return;
     }
+    const addressType = classifyAddressOrQuery(address);
+    track("wallet_scan_started", { surface: "discover", address_type: addressType });
     setScanning(true);
     try {
       const filterQs = [
@@ -464,6 +467,12 @@ export default function DiscoverPage() {
       // Merge uncx-vm results into uncx so user sees one unified UNCX entry
       if (data?.results) data.results = mergeUncxResults(data.results);
       setScanData(data);
+      track("wallet_scan_completed", {
+        surface:       "discover",
+        address_type:  addressType,
+        result_count:  Array.isArray(data?.results) ? data.results.length : 0,
+        total_streams: typeof data?.totalStreams === "number" ? data.totalStreams : 0,
+      });
       // Update quota display
       if (typeof data.scansRemaining === "number") setScansRemaining(data.scansRemaining);
       if (data.scanResetAt) setScanResetAt(data.scanResetAt);
@@ -553,6 +562,7 @@ export default function DiscoverPage() {
           const nextPlan = j.tier === "free" ? "Pro" : "Fund";
           setScanError(`Wallet limit reached — upgrade to ${nextPlan} to track more.`);
           setWatchStatus(prev => ({ ...prev, [key]: "error" }));
+          track("upgrade_clicked", { from_surface: "discover_watch", target_tier: nextPlan.toLowerCase(), trigger: "wallet_cap" });
           return;
         }
         if (res.status === 409) {
@@ -579,6 +589,11 @@ export default function DiscoverPage() {
 
       await loadWallets();
       setWatchStatus(prev => ({ ...prev, [key]: "watching" }));
+      track("wallet_added", {
+        surface:        "discover_watch",
+        address_type:   classifyAddressOrQuery(scanData.address),
+        scoped_token:   tokenAddress !== undefined,
+      });
     } catch {
       setWatchStatus(prev => ({ ...prev, [key]: "error" }));
     }

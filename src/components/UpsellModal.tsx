@@ -1,5 +1,7 @@
 "use client";
 
+import { track } from "@/lib/analytics";
+
 // ── Tier definitions ───────────────────────────────────────────────────────────
 const TIERS = {
   pro: {
@@ -114,6 +116,7 @@ export function UpsellModal({
         <div className="px-7 pb-7 flex flex-col gap-2.5">
           <a
             href="/pricing"
+            onClick={() => track("upgrade_clicked", { from_surface: "upsell_modal", target_tier: requiredTier, feature: featureName })}
             className="w-full text-center py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 hover:shadow-lg"
             style={{ background: tier.gradient, boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
             Upgrade to {tier.label} →

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
+import { track, classifyAddressOrQuery } from "@/lib/analytics";
 
 // ── Shape mirrored from /api/find-vestings route ───────────────────────────
 
@@ -92,6 +93,8 @@ export default function FindVestingsClient() {
       setError("That doesn't look like a valid address. Paste an EVM 0x… address or a Solana base58 pubkey.");
       return;
     }
+    const addressType = classifyAddressOrQuery(addr);
+    track("wallet_scan_started", { surface: "find_vestings", address_type: addressType });
     setLoading(true);
     setError(null);
     setResult(null);
@@ -101,6 +104,12 @@ export default function FindVestingsClient() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Scan failed");
       setResult(body);
+      track("wallet_scan_completed", {
+        surface:       "find_vestings",
+        address_type:  addressType,
+        result_count:  Array.isArray(body?.streams) ? body.streams.length : 0,
+        has_results:   Array.isArray(body?.streams) && body.streams.length > 0,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Scan failed");
     } finally {

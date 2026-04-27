@@ -65,6 +65,13 @@ export interface UnlockSummary {
   amount:      string | null;
   /** Recipient address (lowercased, already on-chain public info). */
   recipient:   string;
+  /** USD-equivalent value of `amount` at the most recent DexScreener price.
+   *  Populated server-side via `getQuickUsdPrices()`. `null` when:
+   *   - the chain isn't priced (testnets, anything DexScreener doesn't slug)
+   *   - the token has no DEX pair with ≥$1k liquidity (memecoin dust)
+   *   - amount itself is missing or zero
+   *  Renderers should fall back to the raw amount silently when null. */
+  usdValue?:   number | null;
 }
 
 /**

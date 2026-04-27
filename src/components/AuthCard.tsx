@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/lib/analytics";
 
 type Step = "email" | "code";
 
@@ -25,6 +26,7 @@ export function AuthCard() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to send code. Try again."); return; }
+      track("signup_started", { method: "email_otp", surface: "web" });
       setStep("code");
     } catch {
       setError("Network error. Please try again.");
@@ -45,6 +47,11 @@ export function AuthCard() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Incorrect code. Try again."); return; }
+      // The route returns ok for both first-time signup AND returning login,
+      // and our DB-side upsertUser doesn't currently flag which it was. So we
+      // fire a single `login_completed` event for both — the GA4 unique-user
+      // dimension will distinguish new vs returning automatically.
+      track("login_completed", { method: "email_otp", surface: "web" });
       router.push("/dashboard");
       router.refresh();
     } catch {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isValidWalletAddress } from "@/lib/address-validation";
+import { track, classifyAddressOrQuery } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,11 @@ export function WalletInput({ onAdd }: WalletInputProps) {
         return;
       }
 
+      track("wallet_added", {
+        surface:      "settings",
+        address_type: classifyAddressOrQuery(address),
+        has_label:    Boolean(label?.trim()),
+      });
       setAddress("");
       setLabel("");
       onAdd();

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 export function ApiAccessForm() {
   const [form, setForm] = useState({ name: "", email: "", company: "", useCase: "" });
@@ -21,6 +22,7 @@ export function ApiAccessForm() {
       });
       const data = await res.json();
       if (!res.ok) { setErrorMsg(data.error ?? "Something went wrong"); setStatus("error"); return; }
+      track("api_access_requested", { has_company: Boolean(form.company?.trim()) });
       setStatus("success");
     } catch {
       setErrorMsg("Network error. Please try again.");

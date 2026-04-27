@@ -63,6 +63,9 @@ type UpcomingRow = {
   walletCount:   number;          // ≥ 1 — distinct recipients folded into this group
   streamCount:   number;          // ≥ walletCount — total streams folded in
   groupKey:      string;          // stable id for React `key=`
+  /** Optional USD-equivalent attached server-side. Undefined when the
+   *  token has no liquid DEX pair on its chain. */
+  usdValue?:     number | null;
 };
 
 type UpcomingResponse = {
@@ -121,6 +124,18 @@ function formatAmount(raw: string | null, symbol: string | null, decimals = 18):
   const fixed = whole.toFixed(4);
   if (fixed === "0.0000" && whole > 0) return `< 0.0001${sym}`;
   return `${fixed}${sym}`;
+}
+
+// Same compact USD scheme as the protocol card and the dashboard. Kept
+// inline (rather than imported from quick-prices.ts) because that helper
+// lives server-side and this component is a "use client" island.
+function fmtUsdShort(usd: number): string {
+  if (!Number.isFinite(usd) || usd <= 0) return "";
+  if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)}B`;
+  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+  if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+  if (usd >= 1)   return `$${usd.toFixed(2)}`;
+  return `$${usd.toFixed(4)}`;
 }
 
 function countdown(unlockSec: number | null, nowMs: number): string {
@@ -325,6 +340,11 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
           <span className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
             {amount}
           </span>
+          {row.usdValue != null && (
+            <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#0F8A4A" }}>
+              {fmtUsdShort(row.usdValue)}
+            </span>
+          )}
           <span className="text-xs" style={{ color: "#94a3b8" }}>on</span>
           <span className="text-xs font-semibold" style={{ color: meta.color }}>
             {meta.name}

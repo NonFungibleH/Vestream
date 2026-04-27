@@ -35,6 +35,7 @@ import {
   getUpcomingUnlockGroupsAcross,
   type UnlockGroupSummary,
 } from "@/lib/vesting/protocol-stats";
+import { getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 
 export const dynamic = "force-dynamic";
 
@@ -54,11 +55,26 @@ export async function GET(req: NextRequest) {
 
   try {
     const unlocks = await getUpcomingUnlockGroupsAcross(limit);
+    // Attach USD-equivalent values via DexScreener (≤ 20 tokens, batched
+    // and edge-cached for 60s — cheap). Tokens that lack a sufficiently
+    // liquid DEX pair come back undefined and the renderer falls back to
+    // the raw token amount.
+    const priceMap = await getQuickUsdPrices(
+      unlocks.map((u) => ({ chainId: u.chainId, address: u.tokenAddress })),
+    );
+    const enriched: UnlockGroupSummary[] = unlocks.map((u) => ({
+      ...u,
+      usdValue: toUsdValue(
+        u.amount,
+        u.tokenDecimals,
+        priceMap.get(`${u.chainId}:${u.tokenAddress.toLowerCase()}`),
+      ),
+    }));
     return NextResponse.json(
       {
         ok:    true,
         nowMs: Date.now(),
-        unlocks,
+        unlocks: enriched,
       } satisfies UpcomingUnlocksResponse,
       {
         // Edge-cache lightly so we don't hit the DB on every visitor

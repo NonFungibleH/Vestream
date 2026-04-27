@@ -41,6 +41,7 @@ import {
   type UnlockGroupSummary,
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
+import { getQuickUsdPrices, toUsdValue, formatUsdCompact } from "@/lib/vesting/quick-prices";
 
 // Render on-demand instead of pre-rendering all 9 protocol pages at build
 // time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
@@ -87,13 +88,37 @@ const loadProtocolData = unstable_cache(
         getNextUpcomingUnlock(adapterIds),
         getUpcomingUnlocksForProtocol(adapterIds, 6),
       ]);
-      return { stats, latest, upcoming, upcomingList };
+      // Attach USD values to the cards. We batch-price every distinct
+      // (chain, address) across the latest + next + upcoming list so the
+      // card renderer doesn't need to know about pricing — it just reads
+      // `unlock.usdValue` and shows "—" when null.
+      const tokensToPrice: Array<{ chainId: number; address: string }> = [];
+      const pushToken = (u: UnlockSummary | null) => {
+        if (u && u.tokenAddress) {
+          tokensToPrice.push({ chainId: u.chainId, address: u.tokenAddress });
+        }
+      };
+      pushToken(latest);
+      pushToken(upcoming);
+      for (const u of upcomingList) pushToken(u);
+      const priceMap = await getQuickUsdPrices(tokensToPrice);
+      const enrich = <T extends UnlockSummary>(u: T | null): T | null => {
+        if (!u) return null;
+        const price = priceMap.get(`${u.chainId}:${u.tokenAddress.toLowerCase()}`);
+        return { ...u, usdValue: toUsdValue(u.amount, u.tokenDecimals, price) };
+      };
+      return {
+        stats,
+        latest:   enrich(latest),
+        upcoming: enrich(upcoming),
+        upcomingList: upcomingList.map((g) => enrich(g)!),
+      };
     } catch (err) {
       console.error(`[protocol-page] data fetch failed for ${adapterIds.join(",")}:`, err);
       return { stats: null, latest: null, upcoming: null, upcomingList: [] };
     }
   },
-  ["protocol-page-data-v3"],
+  ["protocol-page-data-v4"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -656,6 +681,11 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
           <span className="text-sm font-semibold truncate min-w-0" style={{ color: "#1A1D20" }}>
             {amount}
           </span>
+          {u.usdValue != null && (
+            <span className="text-[11px] font-semibold flex-shrink-0 tabular-nums" style={{ color: "#0F8A4A" }}>
+              {formatUsdCompact(u.usdValue)}
+            </span>
+          )}
           <span
             className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
@@ -769,6 +799,11 @@ function UnlockCard({
         </div>
         <p className="text-2xl font-bold mb-1" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
           {amountDisplay}
+          {unlock.usdValue != null && (
+            <span className="ml-2 text-base font-semibold" style={{ color: "#0F8A4A" }}>
+              {formatUsdCompact(unlock.usdValue)}
+            </span>
+          )}
         </p>
         <p className="text-xs mb-4" style={{ color: "#8B8E92" }}>
           for <code style={{ fontFamily: "monospace", color: "#334155" }}>{truncateAddress(unlock.recipient)}</code> · {relative}

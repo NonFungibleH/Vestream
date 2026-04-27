@@ -18,6 +18,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { detectQueryKind, destinationForQuery } from "./detect-query";
 import type { WindowSlug } from "@/lib/vesting/unlock-windows";
+import { track } from "@/lib/analytics";
 
 interface Props {
   initialQuery: string;
@@ -48,6 +49,14 @@ export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, d
       startTransition(() => router.push(qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer"));
       return;
     }
+    // Fire a search_performed event with the detected kind so dashboards
+    // can group "what are people searching for" — addresses vs ENS vs
+    // protocol slugs vs token symbols.
+    track("search_performed", {
+      surface:    "explorer",
+      query_type: detected.kind,
+      mode,
+    });
     // For protocol / address / ENS — navigate to the dedicated landing.
     // For symbol / freeform — stay on the explorer with the query as ?q.
     const dest = destinationForQuery(detected);
