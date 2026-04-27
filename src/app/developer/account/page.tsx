@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { KeyManagement } from "./KeyManagement";
 import { BillingPanel } from "./BillingPanel";
 import { WebhooksPanel } from "./WebhooksPanel";
+import { isBillingConfigured } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -185,9 +186,13 @@ export default async function DeveloperAccount() {
           </p>
         </div>
 
-        {/* ── Billing — Upgrade CTA for free tier, manage portal for Pro ── */}
+        {/* ── Billing — Upgrade CTA for free tier, manage portal for Pro.
+            `billingReady` is true only when all four STRIPE_* env vars
+            are set on the host. Until then BillingPanel renders a
+            "coming soon" card with a contact link instead of the live
+            Stripe Checkout button. ── */}
         <div className="mb-8">
-          <BillingPanel tier={key.tier} />
+          <BillingPanel tier={key.tier} billingReady={isBillingConfigured()} />
         </div>
 
         {/* ── Webhooks (Pro) ── */}

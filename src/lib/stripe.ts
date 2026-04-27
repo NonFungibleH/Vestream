@@ -45,6 +45,23 @@ export function getStripe(): Stripe | null {
   });
 }
 
+/**
+ * True when every env var needed for a real upgrade flow is set. Used by
+ * UI components to swap between the live Checkout button and a "coming
+ * soon" placeholder so end users never hit a 503 wall while we finish
+ * Stripe verification.
+ *
+ * Server-only — the underlying env vars are NOT exposed to the client.
+ */
+export function isBillingConfigured(): boolean {
+  return Boolean(
+    process.env.STRIPE_SECRET_KEY &&
+    process.env.STRIPE_WEBHOOK_SECRET &&
+    process.env.STRIPE_PRO_MONTHLY_PRICE_ID &&
+    process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
+  );
+}
+
 export function getProMonthlyPriceId(): string | null {
   return process.env.STRIPE_PRO_MONTHLY_PRICE_ID || null;
 }

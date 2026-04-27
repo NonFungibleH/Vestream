@@ -22,9 +22,14 @@ import { useSearchParams } from "next/navigation";
 
 interface Props {
   tier: string;
+  /** Server-side: are all four Stripe env vars set? When false, we hide
+   *  the live Checkout flow and show a "coming soon" card instead so the
+   *  user gets clear messaging during the period where Stripe account
+   *  verification is still pending. */
+  billingReady: boolean;
 }
 
-export function BillingPanel({ tier }: Props) {
+export function BillingPanel({ tier, billingReady }: Props) {
   const params = useSearchParams();
   const [plan,    setPlan]    = useState<"monthly" | "annual">("monthly");
   const [status,  setStatus]  = useState<"idle" | "loading" | "error">("idle");
@@ -106,7 +111,58 @@ export function BillingPanel({ tier }: Props) {
     );
   }
 
-  // ── Free key: upgrade CTA ─────────────────────────────────────────────
+  // ── Free tier — Stripe still being verified (early-access waitlist) ──
+  // Until all four STRIPE_* env vars land in production, we show a "coming
+  // soon" card with a contact path so users know online card payments
+  // aren't broken — they're just not live yet. Pro tier in the meantime
+  // is granted manually for early-access users (we flip the apiKeys.tier
+  // column directly).
+  if (!billingReady) {
+    return (
+      <div className="rounded-2xl p-6"
+        style={{ background: "linear-gradient(135deg, #122040, #0a1628)",
+                 border:    "1px solid rgba(255,255,255,0.10)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.25)" }}>
+            Coming soon
+          </span>
+        </div>
+        <h3 className="text-lg font-bold mb-1.5" style={{ color: "white" }}>
+          Pro tier · online payments coming soon
+        </h3>
+        <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.65)" }}>
+          We&rsquo;re finishing payment-processor verification with our provider. In the meantime,
+          if you need Pro limits — <strong style={{ color: "white" }}>5,000 requests/day plus webhook
+          subscriptions</strong> — drop us an email and we&rsquo;ll provision it manually for early-access users.
+        </p>
+        <div className="rounded-xl p-4 mb-4"
+          style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.18)" }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>
+            What you get on Pro
+          </p>
+          <ul className="text-xs space-y-1" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <li>• 120 req/min burst (4× the free tier)</li>
+            <li>• 5,000 req/day (33× the free tier)</li>
+            <li>• Webhook subscriptions — push alerts on matching unlocks</li>
+            <li>• Higher monthly quota and priority support</li>
+          </ul>
+        </div>
+        <a
+          href="mailto:hello@vestream.io?subject=Vestream%20Pro%20-%20early%20access"
+          className="block w-full text-center text-sm font-bold py-3 rounded-xl transition-all hover:opacity-90"
+          style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
+        >
+          Reach out for early-access Pro →
+        </a>
+        <p className="text-[10px] text-center mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+          We&rsquo;ll notify you the moment self-serve Stripe checkout goes live.
+        </p>
+      </div>
+    );
+  }
+
+  // ── Free key: live upgrade CTA ────────────────────────────────────────
   return (
     <div className="rounded-2xl p-6"
       style={{ background: "linear-gradient(135deg, #122040, #0a1628)",

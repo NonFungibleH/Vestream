@@ -553,6 +553,10 @@ export default function DeveloperPage() {
                 style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
                 Contact sales
               </Link>
+              <p className="text-[10px] text-center mt-3" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Online card checkout coming soon — reach out and we&rsquo;ll provision early-access Pro keys
+                manually in the meantime.
+              </p>
             </div>
           </div>
         </div>

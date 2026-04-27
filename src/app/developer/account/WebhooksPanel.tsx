@@ -160,18 +160,28 @@ export function WebhooksPanel({ tier }: { tier: string }) {
     return (
       <div className="rounded-2xl p-6"
         style={{ background: "#141720", border: "1px dashed rgba(255,255,255,0.12)" }}>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-          Webhooks
-        </p>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+            Webhooks
+          </p>
+          <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded"
+            style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.25)" }}>
+            Pro · early access
+          </span>
+        </div>
         <h3 className="text-base font-bold mb-2" style={{ color: "white" }}>
-          Pro feature
+          Server-to-server unlock alerts
         </h3>
         <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>
           Register a URL and we&rsquo;ll POST to it whenever a matching unlock fires — no polling required.
           Filter by wallet, protocol, chain, or lookahead window. HMAC-signed for verification.
         </p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Upgrade to Pro above to enable webhook subscriptions.
+        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+          Online checkout for Pro is being set up — until it goes live, email{" "}
+          <a href="mailto:hello@vestream.io?subject=Vestream%20Pro%20-%20webhooks" className="underline" style={{ color: "#1CB8B8" }}>
+            hello@vestream.io
+          </a>{" "}
+          and we&rsquo;ll enable webhooks on your key manually.
         </p>
       </div>
     );
