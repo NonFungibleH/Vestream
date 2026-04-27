@@ -8,13 +8,16 @@ This package is a tiny [Model Context Protocol](https://modelcontextprotocol.io)
 
 ## What you get
 
-Three tools, all schema-validated:
+Six tools, all schema-validated:
 
-| Tool | What it does |
-|---|---|
-| `get_wallet_vestings` | Every active and historical vesting stream for a wallet across all supported protocols + chains. EVM (`0x…`) and Solana (base58 pubkey) addresses both work. |
-| `get_upcoming_unlocks` | Forecast every unlock event in the next N days for a wallet, sorted by date. Cliff completions, tranche unlocks, linear stream completions — all in one feed. |
-| `get_stream` | Full detail for a single stream by its composite ID (`{protocol}-{chainId}-{nativeId}`). Use this after `get_wallet_vestings` to drill in. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `get_wallet_vestings` | Free | Every active and historical vesting stream for a wallet across all supported protocols + chains. EVM (`0x…`) and Solana (base58 pubkey) addresses both work. Paginated 1–500 per call. |
+| `get_upcoming_unlocks` | Free | Forecast every unlock event in the next N days for a wallet, sorted by date. Cliff completions, tranche unlocks, linear stream completions — all in one feed. |
+| `get_stream` | Free | Full detail for a single stream by its composite ID (`{protocol}-{chainId}-{nativeId}`). Use this after `get_wallet_vestings` to drill in. |
+| `list_webhook_subscriptions` | **Pro** | List your webhook subscriptions — URLs Vestream POSTs to when a matching unlock fires. |
+| `create_webhook_subscription` | **Pro** | Register a new webhook with optional filters (wallet, protocol, chain) and a lookahead window. Returns a signing secret once — store it for HMAC verification. |
+| `delete_webhook_subscription` | **Pro** | Remove a subscription by id. |
 
 Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Team Finance · Superfluid · PinkSale · Streamflow · Jupiter Lock.
 

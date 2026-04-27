@@ -146,6 +146,51 @@ export const apiAccessRequests = pgTable("api_access_requests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Webhook subscriptions (Pro tier) ──────────────────────────────────────
+// One row per "tell me when this wallet has a new unlock matching X" rule.
+// Owned by an apiKey (not a user) so server-to-server integrations can
+// manage their own subscriptions without involving a human session.
+//
+// Delivery: the existing notify cron (`/api/cron/notify`) iterates every
+// active subscription, finds matching upcoming unlocks since
+// `lastFiredAt`, and POSTs to the URL with an HMAC signature derived
+// from `secret`. On failure we increment `failureCount`; after 10
+// consecutive failures we set `disabledAt` so we stop pinging dead URLs.
+export const webhookSubscriptions = pgTable("webhook_subscriptions", {
+  id:            uuid("id").primaryKey().defaultRandom(),
+  apiKeyId:      uuid("api_key_id")
+                   .notNull()
+                   .references(() => apiKeys.id, { onDelete: "cascade" }),
+  /** Destination URL to POST events to. Must be https in production. */
+  url:           text("url").notNull(),
+  /** HMAC-SHA256 secret used to sign delivered payloads. Stored as
+   *  plaintext (must be — HMAC needs the same key on both sides). The
+   *  secret is shown once on creation and we identify it in dashboards
+   *  by its first 8 chars only. Receiver verifies the
+   *  X-Vestream-Signature header by recomputing
+   *  hmacSha256(secret, rawBody). */
+  secret:        text("secret").notNull(),
+  /** Optional filters — null = match everything for this key. */
+  walletFilter:  text("wallet_filter").array(),    // lowercased addresses
+  protocolFilter: text("protocol_filter").array(), // canonical slugs
+  chainFilter:   integer("chain_filter").array(),
+  /** `events` is a comma-separated allow-list. v1 supports
+   *  "upcoming_unlock" only; future values: "stream_completed",
+   *  "wallet_added_to_index", etc. */
+  events:        text("events").array().default(["upcoming_unlock"]).notNull(),
+  /** Hours before unlock to fire — same semantics as the email notify
+   *  pipeline. Default 24, range 1–168 (7 days). */
+  hoursBefore:   integer("hours_before").default(24).notNull(),
+  lastFiredAt:   timestamp("last_fired_at"),
+  failureCount:  integer("failure_count").default(0).notNull(),
+  /** Set when we've given up on this URL — receiver must rotate the URL
+   *  or recreate the subscription to re-enable. */
+  disabledAt:    timestamp("disabled_at"),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("webhook_subs_api_key_idx").on(t.apiKeyId),
+]);
+
 export const waitlist = pgTable("waitlist", {
   id:        uuid("id").primaryKey().defaultRandom(),
   email:     text("email").notNull().unique(),

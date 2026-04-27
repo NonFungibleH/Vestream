@@ -31,11 +31,14 @@ if (!API_KEY) {
 
 // ─── API helper ───────────────────────────────────────────────────────────────
 
-async function vstreamFetch(path: string): Promise<unknown> {
+async function vstreamFetch(path: string, init: RequestInit = {}): Promise<unknown> {
   const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
     headers: {
       Authorization: `Bearer ${API_KEY}`,
       Accept:        "application/json",
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(init.headers ?? {}),
     },
   });
 
@@ -184,6 +187,79 @@ server.tool(
       content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
     };
   }
+);
+
+// ── Tool: list_webhook_subscriptions ──────────────────────────────────────
+//
+// Webhook tools wrap the /api/v1/webhooks endpoints — Pro tier only on the
+// backend. Lets agents set up "ping this URL when an unlock matching X
+// happens" rules without leaving the chat. Subscription state lives in
+// Vestream's DB; the MCP host never holds it.
+
+server.tool(
+  "list_webhook_subscriptions",
+  "List the webhook subscriptions registered to the caller's API key. Pro " +
+  "tier only — free-tier keys get a 402 error. Each subscription describes " +
+  "a URL Vestream POSTs to when a matching upcoming-unlock event fires.",
+  {},
+  async () => {
+    const data = await vstreamFetch("/webhooks");
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+// ── Tool: create_webhook_subscription ──────────────────────────────────────
+
+server.tool(
+  "create_webhook_subscription",
+  "Register a new webhook subscription. Vestream will POST to the given URL " +
+  "every time an upcoming-unlock event matches the optional filters " +
+  "(wallet, protocol, chain). Returns the secret ONCE — store it somewhere " +
+  "safe; the receiver verifies each payload via the X-Vestream-Signature " +
+  "header (HMAC-SHA256 of the raw body using this secret). Pro tier only.",
+  {
+    url: z.string().describe(
+      "Destination URL. Must be https in production. Vestream POSTs JSON to this URL on each matching event.",
+    ),
+    wallet_filter: z.array(z.string()).optional().describe(
+      "Optional list of wallet addresses to scope notifications to. Omit to notify on every match.",
+    ),
+    protocol_filter: z.array(z.string()).optional().describe(
+      "Optional list of protocol slugs (e.g. ['sablier', 'streamflow']).",
+    ),
+    chain_filter: z.array(z.number().int()).optional().describe(
+      "Optional list of chain IDs (e.g. [1, 8453]).",
+    ),
+    hours_before: z.number().int().min(1).max(168).optional().describe(
+      "How many hours before unlock to fire the event. Default 24, range 1–168.",
+    ),
+  },
+  async ({ url, wallet_filter, protocol_filter, chain_filter, hours_before }) => {
+    const body = JSON.stringify({
+      url,
+      wallet_filter,
+      protocol_filter,
+      chain_filter,
+      hours_before,
+    });
+    const data = await vstreamFetch("/webhooks", { method: "POST", body });
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+  },
+);
+
+// ── Tool: delete_webhook_subscription ──────────────────────────────────────
+
+server.tool(
+  "delete_webhook_subscription",
+  "Permanently delete a webhook subscription. Use list_webhook_subscriptions " +
+  "first to discover the subscription's id.",
+  {
+    subscription_id: z.string().describe("The subscription's UUID, e.g. as returned by list_webhook_subscriptions."),
+  },
+  async ({ subscription_id }) => {
+    const data = await vstreamFetch(`/webhooks/${subscription_id}`, { method: "DELETE" });
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+  },
 );
 
 // ─── Start ────────────────────────────────────────────────────────────────────
