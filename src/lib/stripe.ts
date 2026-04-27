@@ -39,7 +39,10 @@ export function getStripe(): Stripe | null {
   if (!key) return null;
   return new Stripe(key, {
     // Lock the API version so a Stripe-side upgrade can't break us silently.
-    apiVersion: "2025-04-30.basil",
+    // Tracks the SDK's pinned version — bump in lockstep when we upgrade
+    // the `stripe` package; the SDK's TS types only accept its own pinned
+    // string at compile time.
+    apiVersion: "2026-04-22.dahlia",
     // Identify our integration in Stripe's dashboard logs.
     appInfo: { name: "Vestream", url: "https://vestream.io" },
   });
