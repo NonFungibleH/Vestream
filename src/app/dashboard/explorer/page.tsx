@@ -286,7 +286,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                     marginBottom: -1,
                   }}
                 >
-                  {m === "calendar" ? "Calendar" : m === "stream" ? "Streams" : "Wallets"}
+                  {/* Renamed from Calendar/Streams to Upcoming/Schedules so
+                      the three facets read as distinct lenses rather than
+                      overlapping nouns. URL params (?mode=calendar) kept
+                      unchanged so existing links / SEO / saved searches
+                      don't break. */}
+                  {m === "calendar" ? "Upcoming" : m === "stream" ? "Schedules" : "Wallets"}
                 </Link>
               );
             })}
