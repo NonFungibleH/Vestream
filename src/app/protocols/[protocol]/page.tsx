@@ -43,21 +43,25 @@ import {
 } from "@/lib/vesting/protocol-stats";
 import { getQuickUsdPrices, toUsdValue, formatUsdCompact } from "@/lib/vesting/quick-prices";
 
-// Render on-demand instead of pre-rendering all 9 protocol pages at build
-// time. The previous ISR setup (revalidate = 60 + dynamicParams = false)
-// forced `next build` to query Postgres for every protocol during the
-// static-export phase. That worked on Vercel with a warm cache, but broke
-// on every cold build — Vercel's first build after a cache wipe AND GitHub
-// Actions CI (which has no DB at all). Postgres-js hangs for 60s retrying
-// ECONNREFUSED even with connect_timeout:10 set, and Next's build worker
-// gives up after 3 attempts of 60s each = 3-minute build timeout per page.
+// ISR with 60-second revalidation. Builds pre-render every protocol slug
+// once, runtime requests are served from edge cache (Cache-Control:
+// s-maxage=60), and the page revalidates in the background after expiry
+// so users always get instant page loads.
 //
-// force-dynamic renders each page on request, where the runtime env DOES
-// have DATABASE_URL + subgraph keys. First-request latency lands ~200ms on
-// a warm lambda. Edge cache (Cache-Control: s-maxage=60) still caches the
-// rendered HTML, so subsequent visitors in the same minute pay zero cost
-// just like ISR did. Net: same user experience, builds that actually succeed.
-export const dynamic = "force-dynamic";
+// The original force-dynamic was added because builds without DB access
+// hung for 60s × N retries when the loadProtocolData function tried to
+// reach Postgres. We now short-circuit DB work during the build phase
+// (NEXT_PHASE === "phase-production-build") so builds always finish in
+// seconds — empty pages get baked, ISR fills them on first runtime hit,
+// and Vercel's edge then serves them sub-100ms to every subsequent
+// visitor without ever calling our lambda.
+//
+// This is the right architecture for marketing pages with mostly-static
+// data (protocol stats, TVL, next-unlock) that change on minute scale.
+// The 1-2s cold renders the user reported as "painfully slow" went
+// away because no user ever hits a cold lambda — only the ISR
+// background revalidation does, and that's not on the critical path.
+export const revalidate = 60;
 export const dynamicParams = false;
 
 // Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
@@ -79,8 +83,27 @@ interface ProtocolPageData {
   upcomingList: UnlockGroupSummary[];
 }
 
+// Empty-shape default. Returned during the build phase (no DB access)
+// and on any runtime failure. ISR re-renders on the next request after
+// revalidate=60, so empty pages get filled with real data quickly
+// post-deploy.
+const EMPTY_PROTOCOL_DATA: ProtocolPageData = {
+  stats:        null,
+  latest:       null,
+  upcoming:     null,
+  upcomingList: [],
+};
+
 const loadProtocolData = unstable_cache(
   async (adapterIds: readonly string[]): Promise<ProtocolPageData> => {
+    // Skip DB work during the build phase. Postgres-js hangs for 60s
+    // retrying ECONNREFUSED on missing DATABASE_URL (CI / cold builds),
+    // which used to time out the build per-page. Returning empty here
+    // lets the build complete in seconds; ISR fills the pages with real
+    // data on the first runtime request after deploy.
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      return EMPTY_PROTOCOL_DATA;
+    }
     try {
       const [stats, latest, upcoming, upcomingList] = await Promise.all([
         getProtocolStats(adapterIds),
@@ -115,7 +138,7 @@ const loadProtocolData = unstable_cache(
       };
     } catch (err) {
       console.error(`[protocol-page] data fetch failed for ${adapterIds.join(",")}:`, err);
-      return { stats: null, latest: null, upcoming: null, upcomingList: [] };
+      return EMPTY_PROTOCOL_DATA;
     }
   },
   ["protocol-page-data-v4"],
