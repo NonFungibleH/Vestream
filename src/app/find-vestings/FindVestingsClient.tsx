@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
+import { TrackInAppCTA } from "@/components/TrackInAppCTA";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
 
 // ── Shape mirrored from /api/find-vestings route ───────────────────────────
@@ -312,7 +313,7 @@ export default function FindVestingsClient() {
                   they have real vestings to track. The full app-store CTA
                   block at the bottom of the page stays as a deeper second
                   touchpoint, but this inline strip catches eyeballs first. */}
-              <ResultsActionStrip totalStreams={result.totalStreams} />
+              <ResultsActionStrip totalStreams={result.totalStreams} walletAddress={result.address} />
               <div className="grid grid-cols-1 gap-3">
                 {result.groups.map((g) => (
                   <GroupCard key={`${g.protocolId}-${g.chainId}`} group={g} />
@@ -484,7 +485,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
 // Results action strip — inline CTA shown right after ResultsSummary
 // ─────────────────────────────────────────────────────────────────────────
 
-function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
+function ResultsActionStrip({ totalStreams, walletAddress }: { totalStreams: number; walletAddress: string }) {
   return (
     <div
       className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
@@ -522,9 +523,15 @@ function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link
-            href="/early-access"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 whitespace-nowrap"
+          {/* Deep-link CTA — opens the app pre-filled with the wallet the
+              user just scanned, falls through to App Store if not installed.
+              Replaces the previous /early-access link so the path from
+              "I just saw my vestings on web" to "tracked in my pocket"
+              is one tap, not a sign-up form + install + re-search. */}
+          <TrackInAppCTA
+            walletAddress={walletAddress}
+            surface="find_vestings_results"
+            className="results-action-cta inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 whitespace-nowrap"
             style={{
               background: "white",
               color: "#1CB8B8",
@@ -532,7 +539,7 @@ function ResultsActionStrip({ totalStreams }: { totalStreams: number }) {
             }}
           >
             Open in app →
-          </Link>
+          </TrackInAppCTA>
         </div>
       </div>
     </div>

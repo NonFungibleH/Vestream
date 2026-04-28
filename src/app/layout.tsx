@@ -20,6 +20,12 @@ const geistMono = Geist_Mono({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestream.io";
 
+// iOS App Store ID — populated AFTER first eas submit when Apple assigns
+// the 10-digit ID. Until set, the Smart App Banner meta tag is omitted
+// entirely (rendering with a placeholder ID would surface a broken
+// "Open" button in mobile Safari).
+const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
+
 // Single source of truth for the headline copy used across <title>, <meta
 // description>, OG and Twitter cards. Keeping these as constants makes it
 // obvious when one card drifts from another (the sin we just paid for —
@@ -75,6 +81,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* Smart App Banner — Apple's built-in "Open in app" affordance for
+          mobile Safari. Renders only when NEXT_PUBLIC_IOS_APP_ID is set
+          (i.e. after first eas submit). app-argument carries the current
+          page URL so the deep-link target opens the same content in the
+          native app. */}
+      {IOS_APP_ID && (
+        <head>
+          <meta
+            name="apple-itunes-app"
+            content={`app-id=${IOS_APP_ID}, app-argument=${APP_URL}`}
+          />
+        </head>
+      )}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
