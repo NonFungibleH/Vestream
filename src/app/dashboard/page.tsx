@@ -3517,7 +3517,7 @@ const NAV_ITEMS = [
   { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
   { icon: <IconBookmark />, label: "Watchlist",   href: "/dashboard/watchlist"        },
   { icon: <IconIncomeStatement />, label: "Income", href: "/dashboard/income-statement" },
-  { icon: <IconExport />,   label: "Exports",     href: "/dashboard/exports"          },
+  { icon: <IconExport />,   label: "Tax Reports", href: "/dashboard/exports"          },
   { icon: <IconSettings />, label: "Settings",    href: "/settings"                   },
 ];
 

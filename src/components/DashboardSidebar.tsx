@@ -45,7 +45,7 @@ const NAV_ITEMS: Array<{ icon: React.ReactNode; label: string; href: string }> =
   { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover"         },
   { icon: <IconBookmark />, label: "Watchlist", href: "/dashboard/watchlist"        },
   { icon: <IconBars />,     label: "Income",    href: "/dashboard/income-statement" },
-  { icon: <IconExport />,   label: "Exports",   href: "/dashboard/exports"          },
+  { icon: <IconExport />,   label: "Tax Reports", href: "/dashboard/exports"        },
   { icon: <IconSettings />, label: "Settings",  href: "/settings"                   },
 ];
 

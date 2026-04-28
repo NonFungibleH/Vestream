@@ -252,7 +252,7 @@ export default function IncomeStatementPage() {
             <p className="text-sm mb-2">No claim history indexed yet.</p>
             <p className="text-xs mb-4" style={{ color: "var(--preview-text-3)" }}>
               Head to the Exports tab and hit &quot;Refresh claims&quot; to pull every vesting payout you&apos;ve
-              received from any of the 10 supported protocols.
+              received from any of the 9 supported protocols.
             </p>
             <Link href="/dashboard/exports"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold"

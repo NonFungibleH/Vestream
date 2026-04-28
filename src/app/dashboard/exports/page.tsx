@@ -210,14 +210,14 @@ export default function ExportsPage() {
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Exports</span>
+            <span>Tax Reports</span>
           </div>
           <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
             style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Tax exports
+            Tax Reports
           </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Claim history & tax exports
+            Tax reports & exports
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
             Every vesting claim, with USD value at the moment of claim. Download as CSV for your accountant or import directly into Koinly, CoinTracker, or TurboTax.
@@ -246,7 +246,7 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>all 10 protocols</span> · Sablier, Hedgey, Team Finance, PinkSale, UNCX (V3 + VestingManager), Unvest, Superfluid, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>all 9 protocols</span> · Sablier, Hedgey, Team Finance, PinkSale, UNCX, Unvest, Superfluid, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 Hit refresh below to index your claims. Three caveats: <strong>tax basis</strong> — we

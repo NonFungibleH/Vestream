@@ -671,15 +671,22 @@ export default function Settings() {
     ? (sessionAddress.includes("@") ? sessionAddress.slice(0, 2).toUpperCase() : sessionAddress.slice(2, 4).toUpperCase())
     : "??";
 
+  // Sidebar + flex shell are provided by src/app/settings/layout.tsx (which
+  // mounts the same DashboardChrome the dashboard layout uses). The legacy
+  // inline sidebar that lived here has been removed — kept inert below to
+  // minimise diff churn until the next focused cleanup pass.
   return (
-    <div className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
+    <>
+    {/* Inert legacy sidebar — outer wrapper hidden so it never renders.
+        We don't delete it in this commit because the old <aside> contained
+        a tier badge variant that's been migrated to the shared sidebar
+        but worth keeping the source visible for one release in case we
+        need to copy back any subtlety. */}
+    <div className={`hidden${dark ? " dark" : ""}`}
       style={{ background: "var(--preview-bg)" }}>
-
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
         style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
-        {/* Logo */}
         <Link href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
           style={{ borderBottom: "1px solid var(--preview-border)" }}>
           <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
@@ -741,9 +748,10 @@ export default function Settings() {
           <p className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>Read-only · No funds access</p>
         </div>
       </aside>
+    </div>
 
       {/* ── Main ─────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}>
 
         {/* Header */}
         <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
@@ -1173,7 +1181,7 @@ export default function Settings() {
           onClose={() => setUpsell(null)}
         />
       )}
-    </div>
+    </>
   );
 }
 

@@ -1079,49 +1079,23 @@ export default async function Home() {
               <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
                 Tax season? Sorted.
               </p>
-              <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
-                Every claim, valued in USD at the moment it hit your wallet
+              <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
+                Six hours of January spreadsheets, in 60 seconds.
               </h2>
-              <p className="text-base mb-4 leading-relaxed" style={{ color: "#5C6066" }}>
-                Vestream indexes every on-chain claim across all 10 supported protocols and
-                computes its USD value using historical pricing on the claim date. Your data
-                exports cleanly into Koinly, CoinTracker, or TurboTax — and your accountant
-                applies whichever cost basis your jurisdiction requires.
+              <p className="text-base mb-7 leading-relaxed" style={{ color: "#5C6066" }}>
+                Every vesting claim, valued in USD at the moment it hit your wallet —
+                ready to drop into Koinly, CoinTracker or TurboTax.
               </p>
-              <p className="text-xs mb-5 leading-relaxed" style={{ color: "#94A3B8" }}>
-                Heads-up: tax treatment varies by country. The US taxes vesting income on the
-                claim transaction; the UK and Australia can tax it earlier, when tokens become
-                beneficially owned (often the unlock date). We surface the on-chain truth — your
-                accountant maps it to the right line item.{" "}
-                <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>
-                  Read the full guide →
-                </Link>
-              </p>
-              <ul className="space-y-2.5 mb-6">
-                {[
-                  "CSV exports tuned for Koinly, CoinTracker, TurboTax, and any spreadsheet your accountant uses",
-                  "P&L-style income statement with year × protocol × token breakdowns",
-                  "One-click year-end PDF report — drop it into an email to your accountant",
-                  "Pricing-confidence flags so you know which numbers are exact-day and which need a manual cost basis",
-                ].map((item) => (
-                  <li key={item} className="flex gap-2.5 items-start text-sm" style={{ color: "#3A3D42" }}>
-                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
               <div className="flex flex-wrap gap-3">
-                <Link href="/dashboard/exports"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                <Link href="/login"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white"
                   style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}>
-                  Open Exports tab →
+                  See your year-end report →
                 </Link>
                 <Link href="/resources/token-vesting-tax-guide"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
                   style={{ background: "white", border: "1px solid rgba(28,184,184,0.25)", color: "#0F8A8A" }}>
-                  How to file vesting taxes →
+                  Tax guide →
                 </Link>
               </div>
             </div>
