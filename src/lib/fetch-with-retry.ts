@@ -38,6 +38,22 @@ export interface RetryOpts {
   throwOnFail?: boolean;
   /** Optional tag for logs (e.g. "dexscreener" → "[fetch-retry dexscreener] …"). */
   tag?: string;
+  /**
+   * Per-attempt timeout in ms. Default: 8000 (8s).
+   *
+   * Without this, a slow upstream (DexScreener, subgraph, RPC) hangs the
+   * caller indefinitely. We've had at least one production incident where
+   * /protocols pages stopped rendering because DexScreener was returning
+   * 200s but holding the connection open for 60+ seconds — long enough to
+   * blow the lambda's 60s execution limit.
+   *
+   * 8s is generous for healthy upstreams (typical response < 500ms), short
+   * enough to surface "upstream is sick, fall through to fallback" within
+   * a reasonable page-load budget. Each retry attempt gets its own 8s
+   * window, so the worst case for `retries: 2` is 8 + 8 + 8 = 24s plus
+   * backoff — still finishes inside Vercel's lambda timeout.
+   */
+  timeoutMs?: number;
 }
 
 /**
@@ -69,14 +85,30 @@ export async function fetchWithRetry(
     retryOn,
     throwOnFail = false,
     tag,
+    timeoutMs   = 8_000,
   } = opts;
 
   const logPrefix = tag ? `[fetch-retry ${tag}]` : "[fetch-retry]";
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    // Create a per-attempt AbortSignal. If the caller already passed a
+    // signal in `init`, we combine them: either signal aborting cancels
+    // the request. This way callers can still cancel from the outside
+    // (e.g. on component unmount) AND we get the timeout safety net.
+    const timeoutSignal = AbortSignal.timeout(timeoutMs);
+    const callerSignal  = init?.signal;
+    const signal = callerSignal
+      // AbortSignal.any is the standard way to combine signals (Node 20+
+      // and all modern browsers). Fallback to caller's signal if the
+      // runtime doesn't support `.any` — better than crashing.
+      ? (typeof AbortSignal.any === "function"
+          ? AbortSignal.any([timeoutSignal, callerSignal])
+          : timeoutSignal)
+      : timeoutSignal;
+
     try {
-      const res = await fetch(input, init);
+      const res = await fetch(input, { ...init, signal });
 
       // Happy path: 2xx/3xx and 4xx-except-429. Return to caller.
       if (!isRetryableStatus(res.status, retryOn)) {
@@ -95,11 +127,18 @@ export async function fetchWithRetry(
         return res;
       }
     } catch (err) {
-      // Network-level failure (DNS, TCP reset, fetch timeout). Always retryable.
+      // Network-level failure (DNS, TCP reset, fetch timeout, or our
+      // own AbortSignal.timeout firing). Always retryable.
+      // Distinguish AbortError so logs are actionable: a timeout is a
+      // different problem class from a TCP reset.
+      const isTimeout = err instanceof Error && err.name === "TimeoutError";
       lastError = err;
       if (attempt === retries) {
         if (throwOnFail) throw err;
-        console.warn(`${logPrefix} exhausted retries on network error:`, err);
+        console.warn(
+          `${logPrefix} exhausted retries on ${isTimeout ? `timeout (${timeoutMs}ms)` : "network error"}:`,
+          err,
+        );
         return null;
       }
     }
