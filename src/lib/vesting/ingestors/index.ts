@@ -15,14 +15,14 @@
 // adapters. Each is a self-contained file because the data sources differ
 // substantially:
 //
-//   sablier      — Envio Hasura GraphQL endpoint           ✅ shipped (b6faad4)
-//   hedgey       — eth_getLogs PlanTokensUnlocked events   🚧 Phase 2
+//   sablier      — Envio Hasura GraphQL endpoint           ✅ shipped
+//   hedgey       — eth_getLogs PlanRedeemed events         ✅ shipped
+//   team-finance — Squid endpoint vestingClaims            ✅ shipped (synthetic txHash)
+//   pinksale     — eth_getLogs LockUnlocked + multicall    ✅ shipped
 //   uncx         — The Graph subgraph Withdrawal events    🚧 Phase 2
-//   uncx-vm      — The Graph subgraph Released events      🚧 Phase 2
+//   uncx-vm      — eth_getLogs TokensReleased events       ✅ shipped
 //   unvest       — The Graph subgraph Released events      🚧 Phase 2
-//   team-finance — Squid endpoint VestingClaimed events    🚧 Phase 2
 //   superfluid   — hosted subgraph TokenWithdrawnEvent     🚧 Phase 2
-//   pinksale     — eth_getLogs LockUnlocked + multicall    🚧 Phase 2
 //   streamflow   — Solana program account snapshot diffs   🚧 Phase 3
 //   jupiter-lock — Solana program account snapshot diffs   🚧 Phase 3
 //
@@ -37,6 +37,8 @@ import type { SupportedChainId } from "../types";
 import { ingestSablierClaimsForUser } from "./sablier-claims";
 import { ingestHedgeyClaimsForUser } from "./hedgey-claims";
 import { ingestTeamFinanceClaimsForUser } from "./team-finance-claims";
+import { ingestPinksaleClaimsForUser } from "./pinksale-claims";
+import { ingestUncxVmClaimsForUser } from "./uncx-vm-claims";
 
 export type AdapterId =
   | "sablier"
@@ -60,7 +62,7 @@ export interface IngestResult {
 /** Adapters with shipped ingestors. Update this list as Phase 2 lands
  *  each one. Determines what /api/claims/history reports as `coverage`
  *  vs `pending`. */
-export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey", "team-finance"];
+export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey", "team-finance", "pinksale", "uncx-vm"];
 
 /** Stub for a not-yet-implemented adapter. Returns 0 + a flag the
  *  orchestrator surfaces in the response. */
@@ -93,14 +95,24 @@ export async function ingestAllClaimsForUser(
       .then((inserted) => ({ protocol: "team-finance" as const, inserted }))
       .catch((err) => ({ protocol: "team-finance" as const, inserted: 0, error: String(err?.message ?? err) })),
 
+    ingestPinksaleClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "pinksale" as const, inserted }))
+      .catch((err) => ({ protocol: "pinksale" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestUncxVmClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "uncx-vm" as const, inserted }))
+      .catch((err) => ({ protocol: "uncx-vm" as const, inserted: 0, error: String(err?.message ?? err) })),
+
     // Phase 2 — TODO: replace each with a real ingestor.
-    // Each adapter has its own data source quirks; see the existing
-    // adapters in /lib/vesting/adapters/{slug}.ts for the schema.
+    // The 3 below all use The Graph subgraphs that only expose CURRENT
+    // STATE (sharesWithdrawn, claimed, settledAmount) — not per-event
+    // timestamped withdrawals. Need either: (a) a different subgraph
+    // query for withdrawal-event entities (need to verify each schema)
+    // or (b) eth_getLogs against the contract's Withdraw/Released event.
+    // Path (b) is proven (see hedgey-claims.ts, pinksale-claims.ts,
+    // uncx-vm-claims.ts).
     notYetImplemented("uncx"),
-    notYetImplemented("uncx-vm"),
     notYetImplemented("unvest"),
     notYetImplemented("superfluid"),
-    notYetImplemented("pinksale"),
 
     // Phase 3 — Solana adapters. Different ingestion model entirely
     // (program-account snapshot diffs, no event log model) so they

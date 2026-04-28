@@ -187,12 +187,12 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, Team Finance</span> ·
-                Coming soon: UNCX, Superfluid, Unvest, PinkSale, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, Team Finance, PinkSale, UNCX VestingManager</span> ·
+                Coming soon: UNCX (Token Locker), Superfluid, Unvest, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 We&apos;re rolling out one protocol at a time so each one&apos;s historical pricing is verified.
-                Hit refresh below to index your Sablier claims now; the others will start appearing automatically as we ship.
+                Hit refresh below to index your claims now; the rest will start appearing automatically as we ship.
               </p>
             </div>
           </div>
