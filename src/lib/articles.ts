@@ -4078,43 +4078,85 @@ const articles: Article[] = [
   {
     slug:        "token-vesting-tax-guide",
     title:       "How to File Taxes on Token Vesting Income (And the One Spreadsheet That Saves You Hours)",
-    excerpt:     "Vesting income is taxed at receipt — at the price the token was worth the second you claimed. Here's how to compute it, what tax software needs, and how to stop reconciling claim history by hand.",
+    excerpt:     "Vesting income is taxable — but the rules vary by country. Here's how the major jurisdictions treat it, what tax software needs from you, and how to stop reconciling claim history by hand.",
     publishedAt: "2026-04-28",
     updatedAt:   "2026-04-28",
-    readingTime: "10 min read",
+    readingTime: "12 min read",
     category:    "Taxes",
-    tags:        ["taxes", "vesting income", "Koinly", "CoinTracker", "TurboTax", "year-end", "cost basis"],
+    tags:        ["taxes", "vesting income", "Koinly", "CoinTracker", "TurboTax", "year-end", "cost basis", "HMRC", "IRS"],
     content: [
       {
         type: "p",
-        html: "If you've received tokens through vesting — as a founder, an early investor, an employee, an advisor, or via an airdrop with vesting attached — you have a tax problem most people misunderstand. <strong>Vesting income is taxed at the moment each tranche unlocks, valued in your local currency at that exact moment.</strong> Not at TGE, not when you eventually sell, not at year-end average. Each individual claim is its own tax event.",
+        html: "If you've received tokens through vesting — as a founder, an early investor, an employee, an advisor, or via an airdrop with vesting attached — you have a tax problem most people misunderstand. <strong>Each tranche of vesting tokens is its own tax event.</strong> Not TGE. Not when you eventually sell. Each individual unlock or claim — depending on your jurisdiction — is a separate income-tax moment, valued in your local currency at that exact moment.",
       },
       {
         type: "p",
-        html: "This guide explains how the tax actually works, what software like Koinly, CoinTracker, and TurboTax need from you, and how Vestream collapses what is normally a 6-hour January spreadsheet into a 60-second download.",
+        html: "This guide explains how the tax actually works across major jurisdictions (and where they meaningfully differ), what software like Koinly, CoinTracker, and TurboTax need from you, and how Vestream collapses what is normally a 6-hour January spreadsheet into a 60-second download.",
       },
 
-      { type: "h2", text: "The Core Rule: Income at Receipt, Capital Gains at Sale" },
+      {
+        type: "callout",
+        emoji: "⚠️",
+        title: "This is general information, not tax advice",
+        body:  "Tax rules for vesting tokens vary materially by country and continue to evolve. Use this guide to understand what data you need; verify the specific tax basis (claim-date vs unlock-date) and rates with a local accountant before filing.",
+      },
+
+      { type: "h2", text: "The Core Rule (And the Big Caveat)" },
       {
         type: "p",
-        html: "Across most major jurisdictions (US IRS, UK HMRC, EU member states, Australia ATO, Canada CRA), the tax treatment of vesting tokens follows the same two-step pattern:",
+        html: "The general two-step pattern across most major tax authorities looks like this:",
       },
       {
         type: "ol",
         items: [
-          "<strong>At each claim:</strong> the value of the tokens received counts as ordinary income, taxed at your marginal rate. Value = (number of tokens claimed) × (token's market price in your fiat currency at the moment of the claim).",
-          "<strong>At each sale:</strong> the difference between your sale price and the price at receipt counts as capital gain or loss. The <em>cost basis</em> for the capital-gains calculation is the same value you reported as income at the claim.",
+          "<strong>At the taxable receipt event:</strong> the value of the tokens counts as ordinary income, taxed at your marginal rate. Value = (number of tokens) × (token's market price in your fiat currency at that moment).",
+          "<strong>At each later sale:</strong> the difference between your sale price and the price at the receipt event counts as capital gain or loss. The <em>cost basis</em> for the capital-gains calculation is the same value you reported as income.",
+        ],
+      },
+      {
+        type: "p",
+        html: "<strong>The big caveat is what counts as the 'receipt event'.</strong> This is where jurisdictions diverge:",
+      },
+      {
+        type: "table",
+        headers: ["Jurisdiction", "Receipt event", "Practical consequence"],
+        rows: [
+          ["United States (IRS)",  "When you claim — i.e. tokens move from the vesting contract into your wallet",          "If tokens are unlocked but you haven't claimed, no tax event yet (subject to constructive-receipt arguments)"],
+          ["United Kingdom (HMRC)","When tokens are beneficially owned — typically the unlock date, even if unclaimed",   "You can owe tax on tokens you haven't physically received in your wallet yet (similar to RSU treatment)"],
+          ["Australia (ATO)",      "Generally when you have legal ownership and control — often the unlock date",          "Similar to UK — unlocked-but-unclaimed tokens may be taxable"],
+          ["Canada (CRA)",         "When tokens are received, with employment-context cases nuanced",                       "Closer to US treatment for most cases; talk to an accountant if employment-related"],
+          ["Germany",              "When tokens are received; tax-free after 1-year hold",                                  "Closer to US treatment; the holding-period clock starts at receipt"],
         ],
       },
       {
         type: "callout",
         emoji: "🧾",
         title: "Two transactions, two tax events",
-        body:  "When you claim 10,000 tokens at $5 each: $50,000 of income today. When you sell them later at $8: $30,000 of capital gain. The $5 cost basis comes from the receipt — get it wrong, and your eventual capital-gains calculation is wrong too.",
+        body:  "When you claim 10,000 tokens at $5 each: $50,000 of income (taxed in the year of receipt under your local rules). When you sell them later at $8: $30,000 of capital gain. The $5 cost basis comes from the receipt event — get it wrong, and your eventual capital-gains calculation is wrong too.",
       },
       {
         type: "p",
-        html: "This means the value-at-claim is the <strong>most consequential single number</strong> in your year-end vesting tax position. Get it right and everything else flows. Get it wrong — by using TGE price, year-end price, or 'I'll figure it out later' — and you risk under- or over-paying both income tax now AND capital-gains tax later.",
+        html: "This means the <strong>value-at-receipt</strong> is the most consequential single number in your year-end vesting tax position. Get it right and everything else flows. Get it wrong — by using TGE price, year-end price, or \"I'll figure it out later\" — and you risk under- or over-paying both income tax now AND capital-gains tax later.",
+      },
+
+      { type: "h2", text: "Vestream's Data Model: We Capture Claim Events" },
+      {
+        type: "p",
+        html: "Important to understand what Vestream tracks: <strong>we index every on-chain claim transaction</strong> — the moment tokens leave the vesting contract and arrive in your wallet. For US filers, that's exactly the right tax event. For UK / Australia filers whose receipt event is the unlock date (not the claim), our claim-date data is still useful — but you'll need to map it forward to the unlock dates yourself or with your accountant.",
+      },
+      {
+        type: "ul",
+        items: [
+          "<strong>If you're in the US, Canada, Germany, most EU:</strong> Vestream's claim-date data IS the tax event. Use the CSV exports as-is.",
+          "<strong>If you're in the UK or Australia:</strong> Vestream's claim-date data tells your accountant <em>when you actually received the tokens</em>. Your unlock schedule (also visible per-stream on the dashboard) tells them when those tokens became beneficially owned. They reconcile both for the right tax basis.",
+          "<strong>Either way:</strong> the on-chain claim record is the canonical source of truth for what landed in your wallet, when, and at what price. That's the foundation every tax basis builds on.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🛣️",
+        title: "On the roadmap",
+        body:  "We're scoping unlock-date tax-basis exports for HMRC / ATO users — surfacing both the unlock schedule AND the claim history side-by-side, so the right basis is one click away regardless of jurisdiction. If this matters to you, ping us via the contact form so we know to prioritise it.",
       },
 
       { type: "h2", text: "What Counts as a 'Claim Event'?" },
@@ -4138,7 +4180,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Every protocol's withdraw/claim event is what creates a tax obligation — not the unlock itself. Tokens that have technically vested but have not yet been claimed are not (in most jurisdictions) taxable income. The tax meter starts when tokens move into your wallet.",
+        html: "The on-chain claim transaction is what Vestream indexes. <strong>Whether the claim is also the tax event depends on your jurisdiction</strong> (see the table further up). For US/Canada/Germany filers, the claim is the tax event. For UK/Australia filers, the unlock date can be earlier — your accountant maps Vestream's claim records back against the unlock schedule to assign income to the right tax year.",
       },
 
       { type: "h2", text: "The Five Pieces of Information You Need Per Claim" },
@@ -4230,7 +4272,7 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Continuous streams (Sablier, Superfluid):</strong> when you call <code>withdraw</code>, you receive everything that has accrued since the last withdrawal. That single transaction is one tax event — you don't pro-rate it across the days the tokens were accruing. The block timestamp of the withdraw is the canonical receipt date.",
-          "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event happens when you <em>claim</em> those tokens, not on day 180 itself. If you wait three weeks to claim, your USD-at-claim uses the price on the claim date, not the cliff date.",
+          "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event timing depends on jurisdiction. In the US, the tax event happens when you <em>claim</em> those tokens, valued at the claim-date price. In the UK / Australia, the tax event can be the unlock date itself (day 180) regardless of when you claim. The price you use therefore differs: claim-date price for US, unlock-date price for UK/AU. Vestream surfaces the claim record; your accountant applies the right rule.",
           "<strong>Cancelled vests:</strong> if a stream is cancelled by the sender (cancellable vests), tokens already claimed are still income for the year they were claimed — the cancellation doesn't reverse it.",
           "<strong>Re-vesting / topped-up vests:</strong> some protocols allow the sender to add tokens to an existing vest. New tokens have their own clock; new claims against them are new tax events, valued at the new claim date.",
           "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. Vestream uses a snapshot-diff model — the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
@@ -4263,7 +4305,7 @@ const articles: Article[] = [
         type: "faq",
         items: [
           { q: "Are vested-but-unclaimed tokens taxable?",
-            a: "In most jurisdictions, no — taxation triggers on receipt, which is when the tokens move into your wallet. Tokens still locked in the vesting contract are not yet 'received'. Confirm with a local accountant; some jurisdictions are tightening this."
+            a: "Depends on your country. In the US (and most of the EU + Canada + Germany), the answer is no — taxation triggers on the claim transaction, when tokens move into your wallet. In the UK (HMRC) and Australia (ATO), tokens that have unlocked but not yet been claimed CAN already be taxable — the test is beneficial ownership, not physical receipt. If you're a UK/AU filer with unlocked-but-unclaimed tokens at year-end, talk to a local accountant before assuming there's no liability."
           },
           { q: "What if the token had no liquid market on the claim date?",
             a: "You'll need a manual cost basis. Vestream flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero — talk to your accountant before settling on a method."

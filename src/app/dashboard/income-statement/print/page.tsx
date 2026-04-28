@@ -324,9 +324,10 @@ export default function PrintIncomeStatementPage() {
 
         {/* Notes / disclaimers — accountant-readable */}
         <section style={{ marginTop: 28, fontSize: 11, color: "#64748b", lineHeight: 1.6 }}>
-          <h2 style={{ fontSize: 13 }}>Notes</h2>
+          <h2 style={{ fontSize: 13 }}>Notes for the preparer</h2>
           <ol style={{ paddingLeft: 18 }}>
-            <li>USD values are anchored at the moment of each claim — the canonical tax-event basis. CoinGecko historical pricing is used for valuation.</li>
+            <li><strong>Tax basis used:</strong> claim date. Each row is dated at the on-chain claim transaction (when tokens moved from the vesting contract to the recipient&apos;s wallet) and valued at the CoinGecko historical USD price for that UTC date.</li>
+            <li><strong>Jurisdictional applicability:</strong> the claim-date basis maps directly to the receipt event for US (IRS), Canada (CRA), Germany, and most of the EU. For UK (HMRC) and Australia (ATO), the receipt event can be the <em>unlock date</em> rather than the claim date — re-attribution to unlock dates may be required. Per-stream unlock schedules are visible on the recipient&apos;s Vestream dashboard.</li>
             <li>Gas values are paid in the chain&apos;s native token (ETH, BNB, MATIC, SOL) and converted to USD at the time of the transaction.</li>
             <li>Superfluid claims captured here represent discrete cliff and end-of-vesting payouts. Continuous flow accrual between cliff and end is not yet attributed at the per-event level.</li>
             <li>Solana protocols (Streamflow, Jupiter Lock) use an account-snapshot delta model: pre-Vestream-activation history may appear as a single baseline event per stream, while subsequent claims are tracked individually.</li>

@@ -249,11 +249,17 @@ export default function ExportsPage() {
                 Indexed: <span style={{ color: "#0F8A8A" }}>all 10 protocols</span> · Sablier, Hedgey, Team Finance, PinkSale, UNCX (V3 + VestingManager), Unvest, Superfluid, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Hit refresh below to index your claims. Two caveats: <strong>Superfluid</strong> captures
-                discrete cliff and end events — continuous flow accrual between them is not yet attributed.
-                <strong> Solana protocols</strong> (Streamflow, Jupiter Lock) use snapshot-diff: pre-Vestream
-                history shows as one baseline event per stream; subsequent claims are tracked individually
-                whenever you refresh.
+                Hit refresh below to index your claims. Three caveats: <strong>tax basis</strong> — we
+                index on-chain claim transactions, which is the right receipt event for US/Canada/EU/
+                Germany. UK (HMRC) and Australia (ATO) filers may need to re-attribute to unlock dates
+                with their accountant.{" "}
+                <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>
+                  Tax guide →
+                </Link>
+                {" "}<strong>Superfluid</strong> captures discrete cliff and end events — continuous flow
+                accrual between them is not yet attributed. <strong>Solana protocols</strong> (Streamflow,
+                Jupiter Lock) use snapshot-diff: pre-Vestream history shows as one baseline event per
+                stream; subsequent claims are tracked individually whenever you refresh.
               </p>
             </div>
           </div>

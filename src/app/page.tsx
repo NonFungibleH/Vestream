@@ -1082,11 +1082,20 @@ export default async function Home() {
               <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
                 Every claim, valued in USD at the moment it hit your wallet
               </h2>
-              <p className="text-base mb-5 leading-relaxed" style={{ color: "#5C6066" }}>
-                Vesting income is taxed at receipt — at the price the token was worth the second
-                you claimed. Vestream indexes every claim across all 10 supported protocols,
-                computes USD value at claim time using historical pricing, and gives you a year-end
-                report your accountant can actually read.
+              <p className="text-base mb-4 leading-relaxed" style={{ color: "#5C6066" }}>
+                Vestream indexes every on-chain claim across all 10 supported protocols and
+                computes its USD value using historical pricing on the claim date. Your data
+                exports cleanly into Koinly, CoinTracker, or TurboTax — and your accountant
+                applies whichever cost basis your jurisdiction requires.
+              </p>
+              <p className="text-xs mb-5 leading-relaxed" style={{ color: "#94A3B8" }}>
+                Heads-up: tax treatment varies by country. The US taxes vesting income on the
+                claim transaction; the UK and Australia can tax it earlier, when tokens become
+                beneficially owned (often the unlock date). We surface the on-chain truth — your
+                accountant maps it to the right line item.{" "}
+                <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>
+                  Read the full guide →
+                </Link>
               </p>
               <ul className="space-y-2.5 mb-6">
                 {[

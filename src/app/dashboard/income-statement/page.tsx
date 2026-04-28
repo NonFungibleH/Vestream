@@ -142,12 +142,33 @@ export default function IncomeStatementPage() {
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
             What vesting paid you, broken down by tax year, protocol, and token.
-            All amounts USD-anchored at the moment of each claim
+            All amounts USD-anchored at the moment of each on-chain claim
             {currency !== "USD" && (
               <>, displayed in {currency} at today&apos;s rate</>
             )}
             .
           </p>
+          {/* Jurisdiction caveat — UK / AU users may need to map claim-date data
+              to unlock-date tax events. Surfaced inline so it's not buried at
+              the bottom of the page where the user might miss it. */}
+          <div className="mt-3 rounded-lg p-3 text-[11px] flex gap-2.5 items-start"
+            style={{
+              background: "rgba(245,158,11,0.06)",
+              border: "1px solid rgba(245,158,11,0.20)",
+              color: "var(--preview-text-2)",
+            }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>
+              <strong>Tax basis note:</strong> we capture <em>claim-date</em> events. That&apos;s the
+              correct receipt event for US, Canada, Germany, and most of the EU. UK (HMRC) and
+              Australia (ATO) filers may owe income tax at the <em>unlock</em> date instead — your
+              accountant can map claim records to unlock dates using the per-stream schedules on
+              the <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>main dashboard</Link>.{" "}
+              <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>Read the full guide →</Link>
+            </span>
+          </div>
         </div>
 
         {/* Year filter */}
@@ -428,10 +449,13 @@ export default function IncomeStatementPage() {
         )}
 
         <p className="text-[10px] mt-6 text-center" style={{ color: "var(--preview-text-3)" }}>
-          USD values are anchored at the moment of claim — the canonical tax-event basis.
+          USD values are anchored at the moment of each on-chain claim. This is the canonical
+          tax basis for the US (IRS), Canada (CRA), Germany, and most of the EU. UK (HMRC) and
+          Australia (ATO) filers should verify with an accountant — their tax basis can be the
+          unlock date rather than the claim date.
           {currency !== "USD" && (
-            <> Display in {currency} uses today&apos;s exchange rate, which is for situational
-              awareness only — tax software needs historical-rate settlement.</>
+            <> Display in {currency} uses today&apos;s exchange rate (situational awareness only —
+              tax software needs historical-rate settlement at each event date).</>
           )}
         </p>
       </main>
