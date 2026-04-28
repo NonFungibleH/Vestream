@@ -17,7 +17,39 @@
 // on the unlock card and the headline TVL on /protocols never disagree.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { Redis } from "@upstash/redis";
 import { fetchWithRetry } from "../fetch-with-retry";
+
+// ── Cross-lambda price cache ───────────────────────────────────────────────
+//
+// Next.js's fetch cache is per-deployment, per-region, and Vercel resets it
+// frequently — it can't be relied on to keep cold lambdas from re-querying
+// DexScreener. For surfaces that need consistent sub-second renders for
+// every visitor (not just visitors who land in an SWR window), we layer
+// Upstash Redis underneath: lambdas check Redis first (~10ms), only hit
+// DexScreener on miss, write back so the next cold lambda benefits.
+//
+// TTL: 5 minutes. Aggressive enough to keep prices reasonably fresh on a
+// volatile market, conservative enough that DexScreener rate limits aren't
+// a concern for our ~10-token-per-page workload.
+//
+// Negative caching: when DexScreener has no liquid pair for a token, we
+// store an explicit `null` marker for 60 seconds. Without this, every
+// pageload would re-fetch the same dead token over and over and pay the
+// full latency every time.
+const REDIS_TTL_SECONDS = 300;
+const REDIS_NULL_TTL_SECONDS = 60;
+const REDIS_KEY_PREFIX = "vestream:px:v1";
+
+function getRedis(): Redis | null {
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  return Redis.fromEnv();
+}
+
+const redisKey = (chainId: number, address: string) =>
+  `${REDIS_KEY_PREFIX}:${chainId}:${address.toLowerCase()}`;
 
 // Mirror of the chain-slug map in tvl.ts. Kept local so callers don't need
 // the (heavier) tvl.ts import path.
@@ -64,6 +96,20 @@ const priceKey = (chainId: number, address: string) => `${chainId}:${address.toL
  * don't have a DexScreener slug for are silently skipped. Tokens with
  * insufficient liquidity (<$1k) are excluded — the caller treats their
  * absence from the returned map as "unknown price".
+ *
+ * Caching strategy (top-down):
+ *   1. In-process: callers within the same lambda invocation share results
+ *      naturally (we return a Map; callers call once).
+ *   2. Upstash Redis (5-minute TTL): cross-lambda shared cache so cold
+ *      lambdas don't re-fetch DexScreener for tokens another lambda
+ *      already priced.
+ *   3. Next.js fetch cache: 60-second per-batch revalidation for the
+ *      DexScreener API call itself.
+ *
+ * The Redis layer is the load-bearing one for "every user gets a fast
+ * page" — without it, every cold lambda hits DexScreener live (1-5s).
+ * With it, only the first lambda after each 5-minute window pays the
+ * upstream cost; everyone else gets ~10ms Redis reads.
  */
 export async function getQuickUsdPrices(
   pairs: ReadonlyArray<{ chainId: number; address: string }>,
@@ -85,7 +131,48 @@ export async function getQuickUsdPrices(
   }
   if (uniquePairs.length === 0) return out;
 
-  const addresses = uniquePairs.map((p) => p.address);
+  // ── Redis cache check ─────────────────────────────────────────────────────
+  // Try to satisfy as many pairs as possible from Redis before going to
+  // DexScreener. mget batches the lookups into a single round-trip.
+  const redis = getRedis();
+  const stillNeeded: Array<{ chainId: number; address: string }> = [];
+  if (redis) {
+    try {
+      const keys = uniquePairs.map((p) => redisKey(p.chainId, p.address));
+      // Upstash returns parsed JSON values directly. `null` means cache miss
+      // OR an explicit "no liquid pair" negative-cache entry — we
+      // disambiguate via a sentinel `{ priceUsd: 0 }` for negatives.
+      const cached = await redis.mget<Array<QuickPrice | { _miss: true } | null>>(...keys);
+      for (let i = 0; i < uniquePairs.length; i++) {
+        const entry = cached[i];
+        if (entry == null) {
+          stillNeeded.push(uniquePairs[i]);
+        } else if ("_miss" in entry && entry._miss === true) {
+          // Negative cache hit — token has no liquid pair, skip both Redis
+          // re-fetch AND DexScreener re-fetch for this TTL window.
+          continue;
+        } else if ("priceUsd" in entry && typeof entry.priceUsd === "number") {
+          out.set(priceKey(uniquePairs[i].chainId, uniquePairs[i].address), entry as QuickPrice);
+        } else {
+          // Malformed cache entry — refetch.
+          stillNeeded.push(uniquePairs[i]);
+        }
+      }
+    } catch (err) {
+      console.warn("[quick-prices] redis mget failed; falling through to DexScreener:", err);
+      // Fall through with full uniquePairs list.
+      stillNeeded.push(...uniquePairs);
+    }
+  } else {
+    // No Redis configured — every pair needs a DexScreener hit.
+    stillNeeded.push(...uniquePairs);
+  }
+
+  if (stillNeeded.length === 0) {
+    return out;
+  }
+
+  const addresses = stillNeeded.map((p) => p.address);
   const batches: string[][] = [];
   for (let i = 0; i < addresses.length; i += DS_BATCH_SIZE) {
     batches.push(addresses.slice(i, i + DS_BATCH_SIZE));
@@ -96,7 +183,11 @@ export async function getQuickUsdPrices(
   // tokens). We pin pairs back to the requested chain via the response's
   // chain slug so a USDC-on-Ethereum hit doesn't get mis-applied to a
   // USDC-on-Base unlock card.
-  const wantedSlugs = new Set(uniquePairs.map((p) => DS_CHAIN_SLUG[p.chainId]));
+  const wantedSlugs = new Set(stillNeeded.map((p) => DS_CHAIN_SLUG[p.chainId]));
+
+  // Track which pairs we successfully priced from DexScreener so we can
+  // negative-cache the rest at the end.
+  const dexResolved = new Set<string>();
 
   for (const batch of batches) {
     try {
@@ -132,18 +223,45 @@ export async function getQuickUsdPrices(
         const conf: "high" | "medium" = liqUsd >= LIQUIDITY_HIGH ? "high"
                                        : liqUsd >= LIQUIDITY_MEDIUM ? "medium"
                                        : "medium"; // unreachable due to floor
-        const matchedPair = uniquePairs.find(
+        const matchedPair = stillNeeded.find(
           (p) => DS_CHAIN_SLUG[p.chainId] === pair.chainId
               && p.address === pair.baseToken.address.toLowerCase(),
         );
         if (!matchedPair) continue;
-        out.set(priceKey(matchedPair.chainId, matchedPair.address), {
+        const quickPrice: QuickPrice = {
           priceUsd:   parseFloat(pair.priceUsd!),
           confidence: conf,
-        });
+        };
+        out.set(priceKey(matchedPair.chainId, matchedPair.address), quickPrice);
+        dexResolved.add(priceKey(matchedPair.chainId, matchedPair.address));
       }
     } catch (err) {
       console.warn("[quick-prices] batch failed:", err);
+    }
+  }
+
+  // ── Redis writeback ──────────────────────────────────────────────────────
+  // Cache positive hits AND negative results (token had no liquid pair) so
+  // the next cold lambda doesn't repeat the work. Negative caching is
+  // shorter-TTL than positive (60s vs 5min) — illiquid tokens occasionally
+  // get a new pair listed and we want to discover that within the hour,
+  // not on the 5-minute boundary.
+  if (redis && stillNeeded.length > 0) {
+    try {
+      // Build the pipeline of sets in a single round-trip via pipeline.
+      const pipeline = redis.pipeline();
+      for (const p of stillNeeded) {
+        const k = redisKey(p.chainId, p.address);
+        const lookupKey = priceKey(p.chainId, p.address);
+        if (dexResolved.has(lookupKey)) {
+          pipeline.set(k, out.get(lookupKey), { ex: REDIS_TTL_SECONDS });
+        } else {
+          pipeline.set(k, { _miss: true }, { ex: REDIS_NULL_TTL_SECONDS });
+        }
+      }
+      await pipeline.exec();
+    } catch (err) {
+      console.warn("[quick-prices] redis writeback failed (non-fatal):", err);
     }
   }
 
