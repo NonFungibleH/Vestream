@@ -122,10 +122,10 @@ export default async function UnlocksIndex() {
                 }}
               >
                 <h2 className="text-base font-bold mb-1" style={{ color: "#1A1D20" }}>
-                  {def.label}
+                  {def.dynamicLabel?.() ?? def.label}
                 </h2>
                 <p className="text-xs leading-relaxed mb-4" style={{ color: "#8B8E92" }}>
-                  {def.description}
+                  {def.dynamicDescription?.() ?? def.description}
                 </p>
                 <div className="flex items-baseline gap-3 pt-3" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
                   <div>

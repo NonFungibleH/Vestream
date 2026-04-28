@@ -66,6 +66,14 @@ export interface WindowDef {
   description: string;
   /** Range in seconds (relative to now). Computed at query-time. */
   range: () => { startSec: number; endSec: number };
+  /** Optional render-time enrichment. When set, the index page (and per-
+   *  range pages) prefer this over `label`. Used by the windows whose
+   *  scope shifts with the current date — "This week" is more useful as
+   *  "This week — ends Sun 4 May" once you know what week you're in;
+   *  "This month" reads better as "This month — April 2026". Both forms
+   *  also feed cleaner SEO titles than the generic noun. */
+  dynamicLabel?:       () => string;
+  dynamicDescription?: () => string;
 }
 
 const SECONDS_PER_DAY = 86400;
@@ -77,6 +85,25 @@ function startOfDayUtc(d: Date): number {
 
 function endOfDayUtc(d: Date): number {
   return startOfDayUtc(d) + SECONDS_PER_DAY - 1;
+}
+
+function fmtDayShort(d: Date): string {
+  // "Sun 4 May" — short day name, day-of-month, short month. UTC-anchored
+  // because all our windows are UTC-anchored.
+  return d.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day:     "numeric",
+    month:   "short",
+    timeZone: "UTC",
+  });
+}
+
+function fmtMonthYear(d: Date): string {
+  return d.toLocaleDateString("en-GB", {
+    month: "long",
+    year:  "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export const WINDOWS: Record<WindowSlug, WindowDef> = {
@@ -111,6 +138,22 @@ export const WINDOWS: Record<WindowSlug, WindowDef> = {
       endOfWeek.setUTCDate(now.getUTCDate() + daysToSunday);
       return { startSec: Math.floor(now.getTime() / 1000), endSec: endOfDayUtc(endOfWeek) };
     },
+    dynamicLabel: () => {
+      const now = new Date();
+      const day = now.getUTCDay();
+      const daysToSunday = 7 - day;
+      const endOfWeek = new Date(now);
+      endOfWeek.setUTCDate(now.getUTCDate() + daysToSunday);
+      return `This week — ends ${fmtDayShort(endOfWeek)}`;
+    },
+    dynamicDescription: () => {
+      const now = new Date();
+      const day = now.getUTCDay();
+      const daysToSunday = 7 - day;
+      const endOfWeek = new Date(now);
+      endOfWeek.setUTCDate(now.getUTCDate() + daysToSunday);
+      return `Token unlocks scheduled through ${fmtDayShort(endOfWeek)} (UTC).`;
+    },
   },
   "next-7-days": {
     slug:        "next-7-days",
@@ -129,6 +172,14 @@ export const WINDOWS: Record<WindowSlug, WindowDef> = {
       const now = new Date();
       const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
       return { startSec: Math.floor(now.getTime() / 1000), endSec: endOfDayUtc(lastDayOfMonth) };
+    },
+    dynamicLabel: () => {
+      const now = new Date();
+      return `This month — ${fmtMonthYear(now)}`;
+    },
+    dynamicDescription: () => {
+      const now = new Date();
+      return `Token unlocks scheduled for the rest of ${fmtMonthYear(now)} (UTC).`;
     },
   },
   "30-days": {
@@ -197,13 +248,16 @@ export interface WindowResult {
  * active streams (capped at poolLimit), compute eventTime per row in JS
  * (= streamData.nextUnlockTime ?? endTime), and filter by that.
  *
- * `poolLimit` defaults to 2000. Combined with the SQL `endTime > startSec`
- * pre-filter and `ORDER BY endTime ASC`, this surfaces the soonest-ending
- * 2000 streams — which is exactly the candidate set we want for an
- * upcoming-unlocks calendar. Higher than 2000 risks Vercel gateway timeouts
- * because the streamData JSON blob is ~5 KB per row (5000 × 5 KB = 25 MB
- * transfer), and Sablier-scale protocols routinely hit the cap on per-
- * protocol queries.
+ * `poolLimit` defaults to 5000. The previous 2000 ceiling was saturating
+ * for 60- and 90-day windows: ordering by endTime ASC meant the top-2000
+ * rows had endTimes ≤ ~60 days out, so streams with far-future endTimes
+ * but a near-term `nextUnlockTime` (typical of multi-year monthly-drip
+ * vests) never made it into the JS filter. Symptom: Next 60 days and
+ * Next 90 days returned identical group counts (~1242 each) because we
+ * had no candidates beyond ~day 60 in the pool. 5000 doubles the headroom
+ * without significantly increasing query cost — postgres serves these
+ * from an indexed range scan and ships ~25 MB of JSON, well within
+ * Vercel's gateway tolerance for these landing-page queries.
  */
 const EMPTY_WINDOW_RESULT: WindowResult = {
   groups: [],
@@ -213,7 +267,7 @@ const EMPTY_WINDOW_RESULT: WindowResult = {
 export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
-  poolLimit = 2000,
+  poolLimit = 5000,
   /** Optional — if set, restrict to streams with one of these adapter IDs.
    *  Used by the per-protocol /protocols/[slug]/unlocks pages. Empty array
    *  is treated as "no filter" (same as undefined). */

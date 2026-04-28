@@ -149,8 +149,14 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     // Fall through with no count
   }
 
-  const title  = `Token unlocks ${def.label.toLowerCase()} — ${dateStr} | Vestream`;
-  const desc   = `${countLine}${def.description} Live data from Vestream's index of 9 vesting protocols.`;
+  // Prefer dynamic label/description for windows whose scope shifts with
+  // the calendar (this-week, this-month). Adds the actual end-date or
+  // month-year to the title — better for SEO ("Token unlocks April 2026"
+  // ranks for the month-name search) and clearer for users.
+  const dynLabel = def.dynamicLabel?.() ?? def.label;
+  const dynDesc  = def.dynamicDescription?.() ?? def.description;
+  const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | Vestream`;
+  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 9 vesting protocols.`;
   const url    = `https://vestream.io/unlocks/${range}`;
 
   return {
@@ -252,17 +258,17 @@ export default async function WindowPage({ params }: PageParams) {
             <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
             <li><Link href="/unlocks" className="hover:underline" style={{ color: "#8B8E92" }}>Unlocks</Link></li>
             <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
-            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{def.label}</li>
+            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{def.dynamicLabel?.() ?? def.label}</li>
           </ol>
         </nav>
         <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
-          Token unlock calendar · {def.label}
+          Token unlock calendar · {def.dynamicLabel?.() ?? def.label}
         </p>
         <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>
-          Token unlocks {def.label.toLowerCase()}
+          Token unlocks {(def.dynamicLabel?.() ?? def.label).toLowerCase()}
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-6" style={{ color: "#475569" }}>
-          {def.description}
+          {def.dynamicDescription?.() ?? def.description}
         </p>
 
         {/* Stat strip */}
