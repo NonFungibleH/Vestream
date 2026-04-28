@@ -26,7 +26,7 @@ interface TFApiResponse {
   stats?: unknown;
 }
 
-interface TFVesting {
+export interface TFVesting {
   address:           string;  // vesting contract address
   token:             string;  // token contract address
   tokenDecimals:     number;
@@ -47,7 +47,7 @@ interface CacheEntry { ts: number; vestings: TFVesting[] }
 const _walletCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 60_000; // 60 s
 
-async function fetchWalletVestings(wallet: string): Promise<TFVesting[]> {
+export async function fetchWalletVestings(wallet: string): Promise<TFVesting[]> {
   // Normalise to lowercase — the REST API is case-sensitive on the address path
   const addr  = wallet.toLowerCase();
   const entry = _walletCache.get(addr);
@@ -172,7 +172,7 @@ const CLAIM_EVENTS_QUERY = `
   }
 `;
 
-async function fetchClaimEvents(
+export async function fetchClaimEvents(
   account:          string,
   vestingAddresses: string[],
   chainId:          number,

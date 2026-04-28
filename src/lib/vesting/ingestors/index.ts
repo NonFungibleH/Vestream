@@ -36,6 +36,7 @@
 import type { SupportedChainId } from "../types";
 import { ingestSablierClaimsForUser } from "./sablier-claims";
 import { ingestHedgeyClaimsForUser } from "./hedgey-claims";
+import { ingestTeamFinanceClaimsForUser } from "./team-finance-claims";
 
 export type AdapterId =
   | "sablier"
@@ -59,7 +60,7 @@ export interface IngestResult {
 /** Adapters with shipped ingestors. Update this list as Phase 2 lands
  *  each one. Determines what /api/claims/history reports as `coverage`
  *  vs `pending`. */
-export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey"];
+export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey", "team-finance"];
 
 /** Stub for a not-yet-implemented adapter. Returns 0 + a flag the
  *  orchestrator surfaces in the response. */
@@ -88,6 +89,9 @@ export async function ingestAllClaimsForUser(
     ingestHedgeyClaimsForUser(userId, wallets, chainIds)
       .then((inserted) => ({ protocol: "hedgey" as const, inserted }))
       .catch((err) => ({ protocol: "hedgey" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestTeamFinanceClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "team-finance" as const, inserted }))
+      .catch((err) => ({ protocol: "team-finance" as const, inserted: 0, error: String(err?.message ?? err) })),
 
     // Phase 2 — TODO: replace each with a real ingestor.
     // Each adapter has its own data source quirks; see the existing
@@ -95,7 +99,6 @@ export async function ingestAllClaimsForUser(
     notYetImplemented("uncx"),
     notYetImplemented("uncx-vm"),
     notYetImplemented("unvest"),
-    notYetImplemented("team-finance"),
     notYetImplemented("superfluid"),
     notYetImplemented("pinksale"),
 
