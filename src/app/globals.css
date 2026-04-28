@@ -105,7 +105,37 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* The html element controls the iOS rubber-band overscroll colour. Without
+     this, pulling past the page end on mobile reveals an unstyled white
+     area beyond the warm-paper body — looks like a layout bug. Set on html
+     so the overscroll matches the body background regardless of which
+     theme (light/navy/dark) the current page uses for its body content. */
+  html {
+    background-color: var(--background);
+    /* Prevent the bounce-back at the bottom of the page from causing
+       layout shift on iOS Safari. Overscroll still works (UX expects it)
+       but it doesn't reveal a contrasting bg colour. */
+    overscroll-behavior-y: none;
+  }
   body {
     @apply bg-background text-foreground;
+    /* Body min-h-screen is set via className. The flex column ensures the
+       footer always sits at the page bottom even on short pages — without
+       this a short-content page leaves a gap above the footer. */
+    min-height: 100vh;
+    min-height: 100dvh;     /* iOS-aware viewport — accounts for URL bar */
+    display: flex;
+    flex-direction: column;
+  }
+  /* Main content wrapper — `flex-1` here pushes the footer to the bottom
+     on short pages while letting it sit naturally on long ones. Apply via
+     the existing `<Providers>{children}</Providers>` since that's already
+     the single consistent wrapper around page content. */
+  body > div:first-child,
+  body > main {
+    flex: 1 0 auto;
+  }
+  footer {
+    flex-shrink: 0;
   }
 }

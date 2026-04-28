@@ -1129,10 +1129,15 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* Tier cards */}
+        {/* Tier cards. Mobile padding is reduced to p-5 because p-7 (28px)
+            consumes 56px of horizontal space — too much on narrow phones
+            where the card is already constrained. The featured badges that
+            sit absolutely on top of cards 2 and 3 stay within bounds because
+            we add `min-w-0 overflow-visible` and tighten badge padding on
+            narrow screens (Pro card uses px-3 md:px-4). */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
           {/* Free */}
-          <div className="rounded-2xl p-7" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+          <div className="rounded-2xl p-5 md:p-7 min-w-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
             <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$0</p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Free forever. No credit card needed.</p>
@@ -1151,9 +1156,9 @@ export default async function Home() {
           </div>
 
           {/* Pro (featured) */}
-          <div className="relative rounded-2xl p-7" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
+          <div className="relative rounded-2xl p-5 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
+              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
                 Most popular
               </span>
@@ -1187,7 +1192,7 @@ export default async function Home() {
               white Pro card, so the accent stays in the brand teal family with
               a striking white-on-dark CTA. Avoids the colour-on-colour clash
               of bright green on dark next to bright teal on white. */}
-          <div className="relative rounded-2xl p-7" style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 64px rgba(0,0,0,0.32)" }}>
+          <div className="relative rounded-2xl p-5 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 64px rgba(0,0,0,0.32)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap"
                 style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 12px rgba(28,184,184,0.35)" }}>
@@ -1222,13 +1227,27 @@ export default async function Home() {
           </Link>
         </p>
 
+        {/* Mobile scroll hint — only renders below the md breakpoint so
+            users on phones see the swipe affordance before they hit the
+            edge of the visible table. Desktop hides it entirely. */}
+        <p className="md:hidden text-center text-[11px] mb-3" style={{ color: "#94a3b8" }}>
+          ← Swipe to see all tiers →
+        </p>
+
         {/* Comparison table — wrapped in overflow-x-auto so the 4-column grid
             stays legible on mobile (375px) by scrolling horizontally rather
             than crushing each column to ~80px. The min-w-[640px] inner
             container preserves desktop layout unchanged. */}
         <div
-          className="rounded-2xl overflow-x-auto"
-          style={{ border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
+          className="rounded-2xl overflow-x-auto w-full"
+          aria-label="Tier comparison table — scroll horizontally on mobile if needed"
+          role="region"
+          style={{
+            border: "1px solid rgba(21,23,26,0.10)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            // Smooth iOS momentum scroll (no-op on desktop / Android Chrome).
+            WebkitOverflowScrolling: "touch",
+          }}
         >
           <div className="min-w-[640px]">
           <div className="grid grid-cols-4 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>

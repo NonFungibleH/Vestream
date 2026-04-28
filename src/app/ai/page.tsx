@@ -41,13 +41,15 @@ function ShowcaseCard({ user, agent }: { user: string; agent: string }) {
 function Code({ children }: { children: string }) {
   return (
     <pre
-      className="rounded-xl p-5 text-xs leading-relaxed overflow-x-auto"
+      className="rounded-xl p-3 sm:p-5 text-[11px] sm:text-xs leading-relaxed overflow-x-auto"
       style={{
         background: "#080a10",
         border: "1px solid rgba(255,255,255,0.06)",
         color: "#a5f3fc",
         fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
         whiteSpace: "pre",
+        // iOS smooth-scroll for the horizontal overflow.
+        WebkitOverflowScrolling: "touch",
       }}
     >
       {children}
@@ -66,7 +68,7 @@ function ToolCard({
 }) {
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col gap-5"
+      className="rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 min-w-0"
       style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}
     >
       <div>
@@ -77,7 +79,7 @@ function ToolCard({
           >
             tool
           </span>
-          <code className="text-sm font-bold" style={{ color: "white" }}>{name}</code>
+          <code className="text-sm font-bold break-all" style={{ color: "white" }}>{name}</code>
         </div>
         <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{description}</p>
       </div>
@@ -86,11 +88,13 @@ function ToolCard({
         <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Parameters</p>
         <div className="flex flex-col gap-1.5">
           {params.map((p) => (
-            <div key={p.name} className="flex items-start gap-2 text-xs">
+            // flex-wrap so the parameter row reflows cleanly on narrow
+            // screens — `desc` was overflowing horizontally previously.
+            <div key={p.name} className="flex items-start gap-2 text-xs flex-wrap">
               <code style={{ color: "#1CB8B8", flexShrink: 0 }}>{p.name}</code>
               <span style={{ color: "#4b5563", flexShrink: 0 }}>{p.type}</span>
               {!p.required && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: "#6b7280", flexShrink: 0 }}>optional</span>}
-              <span style={{ color: "rgba(255,255,255,0.35)" }}>{p.desc}</span>
+              <span style={{ color: "rgba(255,255,255,0.35)", minWidth: 0, flex: "1 1 100%" }}>{p.desc}</span>
             </div>
           ))}
         </div>
@@ -163,8 +167,10 @@ export default function AiPage() {
             </Link>
           </div>
 
-          {/* Stats strip */}
-          <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
+          {/* Stats strip — gap shrinks on mobile to prevent crowded wraps,
+              and a 2-col grid on the smallest viewports keeps the strip
+              readable instead of cramming five items onto a single row. */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-x-6 gap-y-5 sm:gap-8 mt-10 sm:mt-14 sm:flex-wrap">
             {[
               { value: "9",      label: "Protocols indexed" },
               { value: "5",      label: "Chains (EVM + Solana)"  },
@@ -173,8 +179,8 @@ export default function AiPage() {
               { value: "REST",   label: "API available"     },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="font-bold text-2xl tracking-tight" style={{ letterSpacing: "-0.02em" }}>{s.value}</div>
-                <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</div>
+                <div className="font-bold text-xl sm:text-2xl tracking-tight" style={{ letterSpacing: "-0.02em" }}>{s.value}</div>
+                <div className="text-[11px] sm:text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</div>
               </div>
             ))}
           </div>

@@ -161,7 +161,7 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
   const headings = blocks.filter((b): b is Extract<Block, { type: "h2" }> => b.type === "h2");
   if (headings.length < 3) return null;
   return (
-    <nav className="rounded-2xl p-5 mb-8"
+    <nav className="rounded-2xl p-4 sm:p-5 mb-8"
       style={{ background: "rgba(28,184,184,0.04)", border: "1px solid rgba(28,184,184,0.12)" }}>
       <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1CB8B8" }}>
         In this article
@@ -171,7 +171,9 @@ function TableOfContents({ blocks }: { blocks: Block[] }) {
           <li key={i}>
             <a
               href={`#${h.text.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-              className="text-sm hover:text-blue-600 transition-colors"
+              // break-words prevents long heading anchors from overflowing
+              // the rounded TOC card on narrow screens.
+              className="text-sm hover:text-blue-600 transition-colors break-words"
               style={{ color: "#475569" }}>
               {h.text}
             </a>
@@ -351,23 +353,26 @@ export default async function ArticlePage(
 
         {/* ── Nav ─────────────────────────────────────────────────────────── */}
         <nav
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 h-16 gap-3"
           style={{ background: "rgba(248,250,252,0.85)", borderBottom: "1px solid rgba(21,23,26,0.10)", backdropFilter: "blur(12px)" }}
         >
-          <Link href="/" className="flex items-center gap-2.5">
-            <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <Link href="/" className="flex items-center gap-2.5 min-w-0">
+            <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
             <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
           </Link>
-          <div className="flex items-center gap-5">
-            <Link href="/resources" className="text-sm font-semibold transition-colors" style={{ color: "#1A1D20" }}>
+          {/* Mid-nav links hidden on phones — Resources/Pricing are reachable
+              via the breadcrumb + footer, and the cramped row was forcing
+              the Launch App CTA to overflow on <375px screens. */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Link href="/resources" className="hidden sm:inline-block text-sm font-semibold transition-colors" style={{ color: "#1A1D20" }}>
               Resources
             </Link>
-            <Link href="/pricing" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
+            <Link href="/pricing" className="hidden sm:inline-block text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
               Pricing
             </Link>
             <Link
               href="/login"
-              className="text-sm font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
+              className="text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-xl transition-all hover:opacity-90 whitespace-nowrap"
               style={{ background: "#1CB8B8", color: "white", boxShadow: "0 2px 12px rgba(28,184,184,0.3)" }}
             >
               Launch App →
@@ -376,7 +381,7 @@ export default async function ArticlePage(
         </nav>
 
         {/* ── Article header ──────────────────────────────────────────────── */}
-        <header className="relative overflow-hidden pt-28 pb-12 px-6"
+        <header className="relative overflow-hidden pt-20 md:pt-28 pb-8 md:pb-12 px-4 md:px-6"
           style={{ background: "white", borderBottom: "1px solid #e2e8f0" }}>
           <div
             className="absolute inset-0 pointer-events-none"

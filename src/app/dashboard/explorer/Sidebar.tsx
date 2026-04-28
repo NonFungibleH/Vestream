@@ -43,6 +43,11 @@ export function ExplorerSidebar({ tier }: { tier: Tier | null }) {
 
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
+          // Server component — no usePathname available. Explorer rendered
+          // here, so Explorer is the always-active item. Sub-routes (e.g.
+          // /dashboard/explorer/[chainId]/[tokenAddress]) fall through to a
+          // separate page that renders this same sidebar, so it remains
+          // active everywhere it's mounted.
           const active = item.href === "/dashboard/explorer";
           return (
             <Link

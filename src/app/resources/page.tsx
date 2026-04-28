@@ -173,19 +173,28 @@ export default function ResourcesPage() {
                   </span>
                 </div>
 
-                {/* Article cards — horizontal scroll */}
-                <div className="flex gap-5 overflow-x-auto pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
+                {/* Article cards — horizontal scroll on touch (mobile/tablet)
+                    so users can swipe through a category, but cards size to
+                    ~85% of viewport on phones so the next card peeks (a
+                    visual scroll affordance). On desktop the row reflows
+                    naturally and cards take a fixed 300px width.
+                    `-webkit-overflow-scrolling: touch` enables native iOS
+                    momentum scroll. */}
+                <div
+                  className="flex gap-3 sm:gap-5 overflow-x-auto pb-3 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0"
+                  style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+                >
                   {byCategory[cat].map((article) => (
                     <Link
                       key={article.slug}
                       href={`/resources/${article.slug}`}
-                      className="group flex-shrink-0 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl snap-start"
-                      style={{ width: "300px", background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+                      className="group flex-shrink-0 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl snap-start w-[85vw] sm:w-[300px] max-w-[300px]"
+                      style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
                     >
                       {/* Card accent */}
                       <div className="h-1.5" style={{ background: "#1CB8B8" }} />
 
-                      <div className="p-6">
+                      <div className="p-4 sm:p-6">
                         {/* Reading time */}
                         <div className="flex items-center justify-end mb-3">
                           <span className="text-[11px]" style={{ color: "#B8BABD" }}>{article.readingTime}</span>

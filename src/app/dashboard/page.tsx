@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import useSWR from "swr";
@@ -1165,9 +1165,9 @@ function SnapshotPanel({
   };
 
   return (
-    <div className="grid grid-cols-[1fr_1fr] gap-4 mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-4 mb-4">
       {/* Left: donut */}
-      <div className="rounded-2xl border p-5" style={cardStyle}>
+      <div className="rounded-2xl border p-4 md:p-5" style={cardStyle}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Portfolio Mix</h2>
         </div>
@@ -2465,7 +2465,7 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
           )}
         </div>
       ) : (
-        <div className="px-6 py-5 grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(visibleMarket.length, 4)}, 1fr)` }}>
+        <div className="px-4 md:px-6 py-4 md:py-5 grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {visibleMarket.map((m) => {
             const color          = getTokenColor(m.symbol);
             const liq            = LIQUIDITY_LABEL[m.liquidity];
@@ -3428,11 +3428,15 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
+// Nav definition — `active` is computed from usePathname() at render time,
+// not hardcoded. The previous static `active: true` on Dashboard meant the
+// Dashboard pill stayed highlighted regardless of which sub-route the user
+// was viewing, and the Explorer pill never lit up.
 const NAV_ITEMS = [
-  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: true  },
-  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer", active: false },
-  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: false },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: false },
+  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"          },
+  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer" },
+  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
+  { icon: <IconSettings />, label: "Settings",  href: "/settings"           },
 ];
 
 // ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
@@ -3603,6 +3607,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
   onFeedback: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   return (
     <aside
       className={`fixed md:relative z-50 md:z-auto w-56 flex-shrink-0 h-full md:h-screen flex flex-col transition-transform duration-200 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
@@ -3629,15 +3634,21 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         {NAV_ITEMS.map((item) => {
           const isFree         = tier === "free";
           const showFreeBadge  = isFree && (item.href === "/dashboard/discover");
+          // Dynamic active — Dashboard matches exact path; everything else
+          // matches when pathname starts with item.href so sub-routes
+          // (e.g. /dashboard/explorer/[token]) keep the parent highlighted.
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(item.href);
           return (
             <button key={item.label}
               onClick={() => router.push(item.href)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-              style={item.active
+              style={isActive
                 ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(59,130,246,0.15)" }
                 : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
-              onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
-              onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
+              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
+              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; } }}
             >
               <span className="opacity-80 flex-shrink-0">{item.icon}</span>
               {item.label}
@@ -4361,8 +4372,10 @@ export default function Dashboard() {
           <AddWalletBar tier={tier} onAdd={() => { loadWallets(); setShowAddWallet(false); }} onCancel={() => setShowAddWallet(false)} />
         )}
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto px-6 py-5">
+        {/* Content. px-4 on mobile (16px) drops to px-6 (24px) on tablet+
+            so the dashboard cards have breathing room on phones without
+            losing edge-of-screen space to padding (375px – 48px = 327px). */}
+        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
           {!walletsLoaded ? (
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : wallets.length === 0 ? (
@@ -4414,11 +4427,12 @@ export default function Dashboard() {
               })()} />
               <UnlockTimeline streams={filteredStreams} dark={dark} />
 
-              {/* Footer */}
-              <footer className="mt-6 pt-4 pb-2 flex items-center justify-between flex-shrink-0"
+              {/* Footer — stacks on mobile (links above copyright) so the
+                  links stay tap-friendly on phones, side-by-side on md+. */}
+              <footer className="mt-6 pt-4 pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between flex-shrink-0 gap-3 sm:gap-0"
                 style={{ borderTop: "1px solid var(--preview-border-2)" }}>
-                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>© 2026 Vestream. All rights reserved.</p>
-                <div className="flex items-center gap-5">
+                <p className="text-[11px] order-2 sm:order-1" style={{ color: "var(--preview-text-3)" }}>© 2026 Vestream. All rights reserved.</p>
+                <div className="flex items-center gap-5 order-1 sm:order-2">
                   <a href="/privacy" className="text-[11px] transition-colors hover:underline" style={{ color: "var(--preview-text-3)" }}>Privacy Policy</a>
                   <a href="/terms"   className="text-[11px] transition-colors hover:underline" style={{ color: "var(--preview-text-3)" }}>Terms of Service</a>
                 </div>

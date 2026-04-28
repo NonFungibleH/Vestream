@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
@@ -156,16 +156,31 @@ function IconSettings() {
   );
 }
 
+function IconCompass() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+    </svg>
+  );
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
+// Explorer included so users on the Discover surface can navigate sideways
+// to the search-explorer experience without bouncing back through Dashboard.
+// `active` left out — the sidebar component computes it from usePathname()
+// at render time so all sub-routes light up the right nav pill.
 const NAV_ITEMS = [
-  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard",          active: false },
-  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover", active: true  },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings",           active: false },
+  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"          },
+  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer" },
+  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
+  { icon: <IconSettings />, label: "Settings",  href: "/settings"           },
 ];
 
 function DiscoverSidebar({ tier }: { tier: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   return (
     <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
@@ -182,19 +197,24 @@ function DiscoverSidebar({ tier }: { tier: string }) {
 
       {/* Nav */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
-        {NAV_ITEMS.map((item) => (
-          <button key={item.label} onClick={() => router.push(item.href)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-            style={item.active
-              ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }
-              : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
-            onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
-            onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; } }}
-          >
-            <span className="opacity-80 flex-shrink-0">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(item.href);
+          return (
+            <button key={item.label} onClick={() => router.push(item.href)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+              style={isActive
+                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }
+                : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
+              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
+              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; } }}
+            >
+              <span className="opacity-80 flex-shrink-0">{item.icon}</span>
+              {item.label}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Spacer */}
