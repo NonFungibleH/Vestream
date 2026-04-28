@@ -63,6 +63,38 @@ const securityHeaders = [
   },
 ];
 
+// ── Cache-Control for marketing-data pages ──────────────────────────────────
+//
+// These pages are `force-dynamic` (DB-dependent at runtime) but the data they
+// surface — protocol stats, TVL, upcoming unlocks, token info — only
+// changes on a minute-or-slower scale. Without explicit Cache-Control,
+// `force-dynamic` returns `private, no-cache, no-store, must-revalidate`,
+// which means EVERY request hits a cold lambda + the slow data fetch path.
+// First user after data-cache eviction sees a 6+ second render.
+//
+// The fix: tell Vercel's edge to cache the rendered HTML aggressively with
+// stale-while-revalidate. Subsequent visitors within the SWR window get
+// the cached HTML in <100ms while the edge fetches a fresh version in the
+// background. The user-perceived render time is always sub-second, even
+// when the underlying data fetch is slow.
+//
+// Cache directive breakdown:
+//   - `public`: edge can cache + share across users (these are anonymous
+//     marketing pages — no per-user content)
+//   - `s-maxage=60`: serve from cache for 60s without revalidation
+//   - `stale-while-revalidate=300`: for the next 5 minutes, serve stale
+//     while async-revalidating in background
+//   - Total time the user sees a fast response: 6 minutes after first
+//     render, then the background re-fetch completes and the cycle continues
+//
+// Why not on every page: applying SWR globally would cache personalised
+// content (e.g. /dashboard, /settings) which is per-user and must stay
+// fresh. We keep this scoped to marketing-data routes.
+const dataCacheHeader = {
+  key:   "Cache-Control",
+  value: "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -70,6 +102,37 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      // Per-protocol marketing pages — slowest data path (DexScreener
+      // pricing on cold renders). SWR caching here is the biggest single
+      // win for user-perceived performance.
+      {
+        source: "/protocols/:slug",
+        headers: [dataCacheHeader],
+      },
+      // Per-protocol unlocks calendar — same data shape, same caching.
+      {
+        source: "/protocols/:slug/unlocks",
+        headers: [dataCacheHeader],
+      },
+      // Token explorer pages — same DexScreener pricing dependency.
+      {
+        source: "/token/:chainId/:address",
+        headers: [dataCacheHeader],
+      },
+      // /unlocks index + windowed pages (today, this-week, 30-days, etc.).
+      {
+        source: "/unlocks",
+        headers: [dataCacheHeader],
+      },
+      {
+        source: "/unlocks/:range",
+        headers: [dataCacheHeader],
+      },
+      // /protocols index page.
+      {
+        source: "/protocols",
+        headers: [dataCacheHeader],
       },
     ];
   },
