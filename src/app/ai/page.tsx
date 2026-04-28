@@ -167,10 +167,12 @@ export default function AiPage() {
             </Link>
           </div>
 
-          {/* Stats strip — gap shrinks on mobile to prevent crowded wraps,
-              and a 2-col grid on the smallest viewports keeps the strip
-              readable instead of cramming five items onto a single row. */}
-          <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-x-6 gap-y-5 sm:gap-8 mt-10 sm:mt-14 sm:flex-wrap">
+          {/* Stats strip — on mobile, 5 items in a 2-col grid leaves a
+              dangling 5th item taking the full width, which reads as
+              broken layout. We use a 3-col mobile grid (so 5 items reflow
+              as 3+2 — visibly intentional) and switch to flex on sm+
+              where horizontal space allows the natural row. */}
+          <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-x-4 sm:gap-x-6 gap-y-5 sm:gap-8 mt-10 sm:mt-14 sm:flex-wrap">
             {[
               { value: "9",      label: "Protocols indexed" },
               { value: "5",      label: "Chains (EVM + Solana)"  },
@@ -213,7 +215,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-6">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>MCP Tools</p>
-          <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Six tools. Everything an agent needs.</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Six tools. Everything an agent needs.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
             Install the MCP server and your agent immediately has read access to every wallet, stream, and
             upcoming unlock — plus webhook subscription management on Pro.
@@ -327,34 +329,40 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>In action</p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>Your agent, asking the right questions</h2>
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>Your agent, asking the right questions</h2>
         </div>
 
         <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
           {/* Terminal bar */}
-          <div className="flex items-center gap-2 px-4 py-3" style={{ background: "#0a0c12", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div className="w-3 h-3 rounded-full" style={{ background: "#B3322E" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#F0992E" }} />
-            <div className="w-3 h-3 rounded-full" style={{ background: "#2DB36A" }} />
-            <span className="ml-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Claude · Vestream MCP connected</span>
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3" style={{ background: "#0a0c12", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" style={{ background: "#B3322E" }} />
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" style={{ background: "#F0992E" }} />
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" style={{ background: "#2DB36A" }} />
+            <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>
+              {/* Shorter on mobile so it doesn't crowd the traffic lights. */}
+              <span className="sm:hidden">Vestream MCP</span>
+              <span className="hidden sm:inline">Claude · Vestream MCP connected</span>
+            </span>
           </div>
 
-          <div className="p-6 flex flex-col gap-5" style={{ background: "#0d0f14" }}>
+          <div className="p-3 sm:p-6 flex flex-col gap-4 sm:gap-5" style={{ background: "#0d0f14" }}>
             {/* User message */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2 sm:gap-3">
               <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>U</div>
-              <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm" style={{ background: "#1e2330", color: "white", maxWidth: "80%" }}>
+              <div className="rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm min-w-0" style={{ background: "#1e2330", color: "white", maxWidth: "85%" }}>
                 Check wallet 0x3f5CE96...8b2e for any token unlocks in the next 14 days. Summarise the total USD value and which protocols are involved.
               </div>
             </div>
 
-            {/* Tool call */}
-            <div className="ml-10">
-              <div className="flex items-center gap-2 mb-2">
+            {/* Tool call — ml-10 on desktop indents under the user avatar for
+                visual hierarchy. On mobile that wastes scarce horizontal
+                space for no reading benefit, so we drop the indent. */}
+            <div className="ml-0 sm:ml-10">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(15,138,138,0.15)", color: "#1CB8B8" }}>
                   → calling tool
                 </span>
-                <code className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>get_upcoming_unlocks</code>
+                <code className="text-xs break-all" style={{ color: "rgba(255,255,255,0.4)" }}>get_upcoming_unlocks</code>
               </div>
               <Code>{`{
   "address": "0x3f5CE96daD0cf8781AB329C5af6D6595beEf9A26",
@@ -363,7 +371,7 @@ export default function AiPage() {
             </div>
 
             {/* Tool response */}
-            <div className="ml-10">
+            <div className="ml-0 sm:ml-10">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "rgba(45,179,106,0.1)", color: "#34d399" }}>
                   ← result
@@ -394,13 +402,13 @@ export default function AiPage() {
             </div>
 
             {/* Agent reply */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2 sm:gap-3">
               <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
               </div>
-              <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed" style={{ background: "#141720", color: "rgba(255,255,255,0.85)", maxWidth: "80%" }}>
+              <div className="rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm leading-relaxed min-w-0" style={{ background: "#141720", color: "rgba(255,255,255,0.85)", maxWidth: "85%" }}>
                 You have <strong style={{ color: "white" }}>2 unlock events</strong> in the next 14 days totalling <strong style={{ color: "#34d399" }}>$22,630.50</strong>:<br /><br />
                 • <strong style={{ color: "white" }}>$18,420</strong> NOVA on <strong>Base</strong> via Sablier — cliff unlock on Apr 2<br />
                 • <strong style={{ color: "white" }}>$4,210</strong> FLUX on <strong>Ethereum</strong> via Hedgey — tranche unlock on Apr 8<br /><br />
@@ -415,7 +423,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Setup</p>
-          <h2 className="text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em" }}>Add to your agent in 60 seconds</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ letterSpacing: "-0.02em" }}>Add to your agent in 60 seconds</h2>
           <p className="text-base" style={{ color: "rgba(255,255,255,0.45)" }}>
             No SDK to install. No API glue code. Just add to your config and start querying.
           </p>
@@ -498,7 +506,7 @@ export default function AiPage() {
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
             What it looks like in practice
           </p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>
             Real conversations
           </h2>
         </div>
@@ -526,7 +534,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Use cases</p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with Vestream</h2>
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with Vestream</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -584,7 +592,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Find us</p>
-          <h2 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>Available where you build</h2>
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>Available where you build</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -636,7 +644,7 @@ export default function AiPage() {
             background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(15,138,138,0.15) 0%, transparent 70%)",
           }} />
           <div className="relative">
-            <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Ready to give your agent vesting superpowers?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Ready to give your agent vesting superpowers?</h2>
             <p className="text-base mb-8 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
               Get an API key, add the MCP server to your config, and start querying on-chain vesting data in minutes.
             </p>
