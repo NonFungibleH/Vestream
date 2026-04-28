@@ -6,6 +6,7 @@ import { isValidWalletAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { UpsellModal } from "@/components/UpsellModal";
 import { track } from "@/lib/analytics";
+import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1096,8 +1097,12 @@ export default function Settings() {
 
           {/* ── Account ──────────────────────────────────────────────────── */}
           {activeSection === "account" && <Section title="Account">
-            {/* Sign out */}
-            <div className="flex items-center justify-between">
+            {/* Display currency — purely cosmetic. Every $ figure across the
+                dashboard converts at the current FX rate. Tax exports use
+                historical rates and aren't affected. */}
+            <CurrencyPicker />
+
+            <div className="mt-5 pt-5 flex items-center justify-between" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <div>
                 <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Sign out</p>
                 <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
@@ -1168,6 +1173,67 @@ export default function Settings() {
           onClose={() => setUpsell(null)}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Currency picker ─────────────────────────────────────────────────────────
+// Self-contained: reads/writes localStorage + a mirror cookie + fires a
+// `vestream:currency-changed` window event so any CurrencyAware component on
+// the dashboard re-renders without a page reload.
+function CurrencyPicker() {
+  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("vestream-currency");
+      if (stored && SUPPORTED_CURRENCIES.some((c) => c.code === stored)) {
+        setCurrency(stored as CurrencyCode);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  function handleChange(code: CurrencyCode) {
+    setCurrency(code);
+    try { window.localStorage.setItem("vestream-currency", code); } catch { /* ignore */ }
+    try {
+      document.cookie = `vestream-currency=${code}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    } catch { /* ignore */ }
+    window.dispatchEvent(new CustomEvent("vestream:currency-changed", { detail: code }));
+    track("cta_clicked", { cta_id: "currency_changed", code });
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Display currency</p>
+        {savedFlash && (
+          <span className="text-[11px] font-semibold" style={{ color: "#3FA568" }}>Saved ✓</span>
+        )}
+      </div>
+      <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
+        Every USD figure on the dashboard converts at the current FX rate.
+        Tax exports use historical rates and aren&apos;t affected.
+      </p>
+      <select
+        value={currency}
+        onChange={(e) => handleChange(e.target.value as CurrencyCode)}
+        className="w-full text-sm px-3 py-2 rounded-lg outline-none"
+        style={{
+          background: "var(--preview-card)",
+          border: "1px solid var(--preview-border)",
+          color: "var(--preview-text)",
+        }}
+      >
+        {SUPPORTED_CURRENCIES.map((c) => (
+          <option key={c.code} value={c.code}>
+            {c.symbol} — {c.code}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
