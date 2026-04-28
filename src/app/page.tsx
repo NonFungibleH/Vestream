@@ -68,7 +68,7 @@ const homepageJsonLd = {
       name:      "Vestream",
       url:       "https://vestream.io",
       logo:      "https://vestream.io/logo.svg",
-      sameAs:    ["https://twitter.com/vestream_io"],
+      sameAs:    ["https://x.com/Vestream_"],
     },
     {
       "@type":   "WebSite",
@@ -268,7 +268,7 @@ export default async function Home() {
               { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
               { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
               { name: "UNCX",         color: "#F0992E", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-              { name: "Team Finance", color: "#2DB36A", bg: "rgba(45,179,106,0.07)",  border: "rgba(45,179,106,0.15)"  },
+              { name: "Team Finance", color: "#2563EB", bg: "rgba(37,99,235,0.07)",  border: "rgba(37,99,235,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -702,7 +702,7 @@ export default async function Home() {
                   { name: "Hedgey",       color: "#3b82f6" },
                   { name: "UNCX",         color: "#F0992E" },
                   { name: "Unvest",       color: "#06b6d4" },
-                  { name: "Team Finance", color: "#2DB36A" },
+                  { name: "Team Finance", color: "#2563EB" },
                   { name: "Superfluid",   color: "#28B895" },
                   { name: "PinkSale",     color: "#E063A0" },
                 ].map((p) => (
@@ -753,7 +753,7 @@ export default async function Home() {
               { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
               { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#F0992E" },
               { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
-              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#2DB36A" },
+              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#2563EB" },
               { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#28B895" },
               { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#E063A0" },
             ].map((r) => (

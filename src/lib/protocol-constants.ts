@@ -137,8 +137,8 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Team token vesting and lock proof",
     description:
       "Team Finance lets token issuers lock team and treasury tokens with transparent on-chain proof and scheduled release — the standard tool many launchpad-era projects rely on. Vestream indexes every Team Finance vesting contract across four chains so holders and the team can see the next unlock at a glance.",
-    color: "#2DB36A",
-    bg:    "rgba(45,179,106,0.08)",
+    color: "#2563EB",
+    bg:    "rgba(37,99,235,0.08)",
     border:"rgba(45,179,106,0.22)",
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
     officialUrl: "https://www.team.finance",

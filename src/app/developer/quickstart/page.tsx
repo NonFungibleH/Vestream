@@ -144,7 +144,7 @@ export default function QuickstartPage() {
   npx -y @vestream/mcp`}
             </pre>
             <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.45)" }}>
-              Still stuck? <a href="mailto:hello@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>hello@vestream.io</a>.
+              Still stuck? <a href="mailto:team@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>team@vestream.io</a>.
             </p>
           </div>
           <div className="rounded-2xl p-6"

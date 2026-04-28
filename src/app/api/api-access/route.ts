@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       already_issued: true,
       prefix: existing[0].keyPrefix,
       tier:   existing[0].tier,
-      message: `You already have a ${existing[0].tier} key (prefix ${existing[0].keyPrefix}). Email hello@vestream.io if you need to recover it.`,
+      message: `You already have a ${existing[0].tier} key (prefix ${existing[0].keyPrefix}). Email team@vestream.io if you need to recover it.`,
     });
   }
 

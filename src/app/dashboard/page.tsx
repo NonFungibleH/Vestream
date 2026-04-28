@@ -74,7 +74,7 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.1)",   border: "rgba(240,153,46,0.2)"  },
   hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.1)",    border: "rgba(28,184,184,0.2)"   },
-  "team-finance": { text: "#2DB36A", bg: "rgba(45,179,106,0.1)",   border: "rgba(45,179,106,0.2)"  },
+  "team-finance": { text: "#2563EB", bg: "rgba(37,99,235,0.1)",   border: "rgba(37,99,235,0.2)"  },
   uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
   "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
   unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.1)",    border: "rgba(11,160,203,0.2)"   },
@@ -3535,7 +3535,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
         {done ? (
           <div className="flex flex-col items-center text-center py-4 gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-              style={{ background: "rgba(45,179,106,0.1)" }}>✓</div>
+              style={{ background: "rgba(37,99,235,0.1)" }}>✓</div>
             <p className="font-semibold text-sm" style={{ color: "#1A1D20" }}>Thanks for the feedback!</p>
             <p className="text-xs" style={{ color: "#8B8E92" }}>We read every response and use it to make Vestream better.</p>
             <button onClick={onClose}

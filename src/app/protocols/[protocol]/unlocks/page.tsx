@@ -315,7 +315,10 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
                 headline={`See all ${meta.name} unlocks`}
                 subline="Free account · full calendar in your dashboard · alerts on the events you care about"
               >
-                {gatedRows.map((g, i) => (
+                {/* First 4 gated rows only — enough to suggest "there's more"
+                    without rendering 100+ blurred rows of dead DOM weight.
+                    The hiddenLabel above already communicates the full count. */}
+                {gatedRows.slice(0, 4).map((g) => (
                   <ProtocolUnlockRow
                     key={g.groupKey}
                     group={g}

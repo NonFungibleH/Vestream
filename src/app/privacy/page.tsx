@@ -49,7 +49,7 @@ export default function Privacy() {
             <p>
               For questions about this policy or to exercise any of your rights
               described below, contact us at{" "}
-              <a href="mailto:privacy@vestream.io" style={{ color: "#1CB8B8" }}>privacy@vestream.io</a>.
+              <a href="mailto:team@vestream.io" style={{ color: "#1CB8B8" }}>team@vestream.io</a>.
             </p>
           </Section>
 
@@ -227,7 +227,7 @@ export default function Privacy() {
             </p>
             <p>
               To exercise any of these, email{" "}
-              <a href="mailto:privacy@vestream.io" style={{ color: "#1CB8B8" }}>privacy@vestream.io</a>.
+              <a href="mailto:team@vestream.io" style={{ color: "#1CB8B8" }}>team@vestream.io</a>.
               We will respond within 30 days.
             </p>
             <p>
@@ -274,7 +274,7 @@ export default function Privacy() {
             <p>
               3UILD LLC<br />
               Email:{" "}
-              <a href="mailto:privacy@vestream.io" style={{ color: "#1CB8B8" }}>privacy@vestream.io</a>
+              <a href="mailto:team@vestream.io" style={{ color: "#1CB8B8" }}>team@vestream.io</a>
             </p>
           </Section>
         </div>

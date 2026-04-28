@@ -3347,7 +3347,7 @@ const articles: Article[] = [
   {
     slug:        "team-finance-vesting-guide",
     title:       "Team Finance Vesting: A Project Founder's Guide",
-    excerpt:     "Team Finance is the locker most associated with the green 'team tokens locked' badge. Here is how its vesting product works and why projects choose it.",
+    excerpt:     "Team Finance is the locker most associated with the blue 'team tokens locked' badge. Here is how its vesting product works and why projects choose it.",
     publishedAt: "2026-04-27",
     updatedAt:   "2026-04-27",
     readingTime: "8 min read",

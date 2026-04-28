@@ -292,7 +292,7 @@ export default function Terms() {
             <p>
               3UILD LLC<br />
               Email:{" "}
-              <a href="mailto:legal@vestream.io" style={{ color: "#1CB8B8" }}>legal@vestream.io</a>
+              <a href="mailto:team@vestream.io" style={{ color: "#1CB8B8" }}>team@vestream.io</a>
             </p>
           </Section>
         </div>

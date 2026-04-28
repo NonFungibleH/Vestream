@@ -28,7 +28,7 @@ const CHAIN_COLORS: Record<number, string> = {
 const PROTOCOL_COLORS: Record<string, string> = {
   sablier:        "#F0992E",
   hedgey:         "#1CB8B8",
-  "team-finance": "#2DB36A",
+  "team-finance": "#2563EB",
   uncx:           "#F0992E",
   "uncx-vm":      "#F0992E",
   unvest:         "#0BA0CB",
@@ -193,7 +193,7 @@ export default async function AdminPage() {
           <div className="grid grid-cols-6 gap-3 mb-6">
             <StatCard label="Beta users" value={totalUsers} sub={`${BETA_MAX - totalUsers} spots left`} accent="#0F8A8A" />
             <StatCard label="Wallets tracked" value={totalWallets} sub={`${(totalWallets / Math.max(totalUsers, 1)).toFixed(1)} avg / user`} accent="#1CB8B8" />
-            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2DB36A" />
+            <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2563EB" />
             <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#F0992E" />
             <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
             <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#F0992E" />
@@ -221,7 +221,7 @@ export default async function AdminPage() {
                   <span key={tier} className="text-xs px-2 py-0.5 rounded-md font-semibold"
                     style={{
                       background: tier === "fund" ? "rgba(45,179,106,0.15)" : tier === "pro" ? "rgba(28,184,184,0.15)" : "rgba(75,85,99,0.2)",
-                      color: tier === "fund" ? "#2DB36A" : tier === "pro" ? "#1CB8B8" : "#9ca3af",
+                      color: tier === "fund" ? "#2563EB" : tier === "pro" ? "#1CB8B8" : "#9ca3af",
                     }}>
                     {n} {tier}
                   </span>
@@ -491,7 +491,7 @@ export default async function AdminPage() {
                       <td className="px-4 py-3">
                         <span className="text-xs px-2 py-0.5 rounded-md font-semibold"
                           style={{
-                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(45,179,106,0.1)",
+                            background: k.tier === "pro" ? "rgba(15,138,138,0.15)" : "rgba(37,99,235,0.1)",
                             color:      k.tier === "pro" ? "#1CB8B8"               : "#34d399",
                           }}>
                           {k.tier}
@@ -560,7 +560,7 @@ export default async function AdminPage() {
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                         style={{
-                          background: r.reviewed ? "rgba(45,179,106,0.1)"  : "rgba(245,158,11,0.1)",
+                          background: r.reviewed ? "rgba(37,99,235,0.1)"  : "rgba(245,158,11,0.1)",
                           color:      r.reviewed ? "#34d399"                : "#F0B83D",
                         }}>
                         {r.reviewed ? "reviewed" : "pending"}

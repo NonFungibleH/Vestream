@@ -78,7 +78,7 @@ export function ApiAccessForm() {
         </p>
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
           Lost the plaintext? Email{" "}
-          <a href="mailto:hello@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>hello@vestream.io</a>
+          <a href="mailto:team@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>team@vestream.io</a>
           {" "}and we&apos;ll re-issue.
         </p>
       </div>
@@ -129,7 +129,7 @@ export function ApiAccessForm() {
           We&apos;ll never show the plaintext again — only the prefix{" "}
           <code style={{ fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>{result.prefix}</code>{" "}
           for identification. If you lose it, request a new one or email{" "}
-          <a href="mailto:hello@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>hello@vestream.io</a>.
+          <a href="mailto:team@vestream.io" className="underline" style={{ color: "#1CB8B8" }}>team@vestream.io</a>.
         </p>
 
         <div className="rounded-xl p-4 mb-3"

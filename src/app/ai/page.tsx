@@ -174,7 +174,7 @@ export default function AiPage() {
             {[
               { value: "9",      label: "Protocols indexed" },
               { value: "5",      label: "Chains (EVM + Solana)"  },
-              { value: "3",      label: "MCP tools"         },
+              { value: "6",      label: "MCP tools"         },
               { value: "MCP",    label: "Native support"    },
               { value: "REST",   label: "API available"     },
             ].map((s) => (

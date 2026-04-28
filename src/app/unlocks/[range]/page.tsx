@@ -387,7 +387,11 @@ export default async function WindowPage({ params }: PageParams) {
                   headline={`See every ${def.label.toLowerCase()} unlock`}
                   subline="Free account · full calendar in your dashboard · alerts on the events you care about"
                 >
-                  {gatedRows.map((g, i) => renderRow(g, i, i === 0))}
+                  {/* Only render the first 3 gated rows behind the blur —
+                      enough to communicate "there's more like this" without
+                      bloating the page with hundreds of rows the user can't
+                      see anyway. The hiddenLabel tells them the total. */}
+                  {gatedRows.slice(0, 3).map((g, i) => renderRow(g, i, i === 0))}
                 </PaywallTeaser>
               )}
             </div>

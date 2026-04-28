@@ -87,12 +87,12 @@ const LINK_GROUPS = [
   },
 ] as const;
 
-// Social — placeholder URLs until real accounts exist. Swap in real handles
-// here (they're the only two strings that change).
+// Social — real account handles. The trailing underscore on the X handle
+// is intentional (vestream/Vestream were both taken; @Vestream_ is ours).
 const SOCIAL = [
   {
     label: "X",
-    href:  "https://x.com/vestream",
+    href:  "https://x.com/Vestream_",
     // X (formerly Twitter) brand mark. currentColor lets the icon inherit
     // from the parent's colour so theme swaps work without editing the SVG.
     svg: (

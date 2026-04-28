@@ -51,7 +51,7 @@ function configureVapidOnce() {
   if (vapidConfigured) return;
   const pub     = process.env.VAPID_PUBLIC_KEY;
   const priv    = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_EMAIL ?? "mailto:hello@vestream.io";
+  const subject = process.env.VAPID_EMAIL ?? "mailto:team@vestream.io";
   if (!pub || !priv) {
     throw new Error("VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set");
   }

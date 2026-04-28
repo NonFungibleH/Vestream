@@ -65,8 +65,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    site: "@vestream_io",
-    creator: "@vestream_io",
+    site: "@Vestream_",
+    creator: "@Vestream_",
   },
 };
 

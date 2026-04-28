@@ -304,10 +304,14 @@ export async function getUpcomingUnlockGroupsAcross(
   limit = 10,
 ): Promise<UnlockGroupSummary[]> {
   const nowSec = Math.floor(Date.now() / 1000);
-  // Fetch up to 100 raw rows. A single mass distribution can collapse 50
-  // rows → 1 group, so we deliberately fetch more than the old 15×limit
-  // pool. Bounded so the query stays cheap on a growing cache.
-  const POOL_SIZE = Math.max(100, limit * 20);
+  // Fetch a generous raw row pool. A single mass distribution can collapse
+  // 50 rows → 1 group, so we over-fetch to ensure post-grouping we still
+  // have enough variety per protocol to fill the per-protocol cap.
+  // Bumped from 100 → 500 (and 20× → 50× the limit) to fix the homepage
+  // calendar undercounting vs /protocols totals — the previous pool was
+  // small enough that high-volume protocols (Sablier/Hedgey) could
+  // dominate the raw rows and leave little material for the rest.
+  const POOL_SIZE = Math.max(500, limit * 50);
 
   const rows = await db
     .select({
@@ -405,7 +409,15 @@ export async function getUpcomingUnlockGroupsAcross(
     (a, b) => (a.earliestEnd || Number.MAX_SAFE_INTEGER) - (b.earliestEnd || Number.MAX_SAFE_INTEGER),
   );
 
-  const PER_PROTOCOL_MAX = 3;
+  // Per-protocol cap exists to prevent a single high-volume protocol
+  // (Sablier or Hedgey can each have 100+ groups in a 30-day window)
+  // from monopolising the displayed calendar. Previous value of 3 was
+  // far too aggressive — a homepage calendar showing "9 protocols × 3
+  // unlocks each = 27 events" was reading as far smaller than the
+  // protocol-page totals users were comparing it against. Setting it to
+  // a fraction of the requested limit gives diversity without starving:
+  // limit=10 → max 4 per protocol; limit=50 → max 10 per protocol.
+  const PER_PROTOCOL_MAX = Math.max(4, Math.ceil(limit / 2));
   const countPerProto    = new Map<string, number>();
   const selected: Group[] = [];
   for (const g of ordered) {
