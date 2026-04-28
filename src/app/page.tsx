@@ -1104,16 +1104,16 @@ export default async function Home() {
                 ))}
               </ul>
               <div className="flex flex-wrap gap-3">
-                <a href="/dashboard/exports"
+                <Link href="/dashboard/exports"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
                   style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}>
                   Open Exports tab →
-                </a>
-                <a href="/resources/token-vesting-tax-guide"
+                </Link>
+                <Link href="/resources/token-vesting-tax-guide"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
                   style={{ background: "white", border: "1px solid rgba(28,184,184,0.25)", color: "#0F8A8A" }}>
                   How to file vesting taxes →
-                </a>
+                </Link>
               </div>
             </div>
             <div className="hidden md:block">
