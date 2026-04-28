@@ -187,12 +187,14 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, Team Finance, PinkSale, UNCX (V3 + VestingManager), Unvest</span> ·
-                Coming soon: Superfluid, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>all 10 protocols</span> · Sablier, Hedgey, Team Finance, PinkSale, UNCX (V3 + VestingManager), Unvest, Superfluid, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                We&apos;re rolling out one protocol at a time so each one&apos;s historical pricing is verified.
-                Hit refresh below to index your claims now; the rest will start appearing automatically as we ship.
+                Hit refresh below to index your claims. Two caveats: <strong>Superfluid</strong> captures
+                discrete cliff and end events — continuous flow accrual between them is not yet attributed.
+                <strong> Solana protocols</strong> (Streamflow, Jupiter Lock) use snapshot-diff: pre-Vestream
+                history shows as one baseline event per stream; subsequent claims are tracked individually
+                whenever you refresh.
               </p>
             </div>
           </div>

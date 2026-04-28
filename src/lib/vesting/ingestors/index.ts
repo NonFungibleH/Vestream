@@ -1,6 +1,6 @@
 // src/lib/vesting/ingestors/index.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Fan-out orchestrator for claim event ingestion across all 9 supported
+// Fan-out orchestrator for claim event ingestion across all 10 supported
 // protocols. Each per-protocol ingestor lives in a separate file and
 // exports a function with the shape:
 //
@@ -11,7 +11,7 @@
 // yet implemented return 0 with a clear `notImplemented: true` flag so
 // the API surface honestly reports coverage.
 //
-// Phase 1 shipped Sablier. Phase 2 will fill in the seven remaining
+// Phase 1 shipped Sablier. Phase 2 filled in the seven remaining
 // adapters. Each is a self-contained file because the data sources differ
 // substantially:
 //
@@ -22,15 +22,15 @@
 //   uncx         — The Graph subgraph WithdrawEvent        ✅ shipped
 //   uncx-vm      — eth_getLogs TokensReleased events       ✅ shipped
 //   unvest       — The Graph subgraph Claim entity         ✅ shipped
-//   superfluid   — VestingScheduler CFA flow integration   🚧 Phase 3 (different model)
-//   streamflow   — Solana program account snapshot diffs   🚧 Phase 3
-//   jupiter-lock — Solana program account snapshot diffs   🚧 Phase 3
+//   superfluid   — Subgraph cliff + end events             ✅ shipped (flow accrual N/A)
+//   streamflow   — Solana program account snapshot diffs   ✅ shipped (Solana-gated)
+//   jupiter-lock — Solana program account snapshot diffs   ✅ shipped (Solana-gated)
 //
-// Each Phase 2 adapter is ~150 lines of work and needs to be verified
-// against real subgraph responses — schema field names vary and shipping
-// untested queries silently fails for users. Stubbed here with clear
-// stubbing markers so the orchestrator + API surface land cleanly without
-// claiming coverage we don't have.
+// All 10 ingestors shipped. EVM ingestors run unconditionally. Solana
+// ingestors (streamflow, jupiter-lock) self-gate on SOLANA_ENABLED=true
+// + SOLANA_RPC_URL — they no-op silently in EVM-only deployments.
+// Schemas verified via GraphQL introspection against live subgraphs;
+// event signatures verified against deployed contract sources.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupportedChainId } from "../types";
@@ -41,6 +41,9 @@ import { ingestPinksaleClaimsForUser } from "./pinksale-claims";
 import { ingestUncxVmClaimsForUser } from "./uncx-vm-claims";
 import { ingestUncxClaimsForUser } from "./uncx-claims";
 import { ingestUnvestClaimsForUser } from "./unvest-claims";
+import { ingestSuperfluidClaimsForUser } from "./superfluid-claims";
+import { ingestStreamflowClaimsForUser } from "./streamflow-claims";
+import { ingestJupiterLockClaimsForUser } from "./jupiter-lock-claims";
 
 export type AdapterId =
   | "sablier"
@@ -72,13 +75,10 @@ export const SHIPPED_INGESTORS: AdapterId[] = [
   "uncx-vm",
   "uncx",
   "unvest",
+  "superfluid",
+  "streamflow",
+  "jupiter-lock",
 ];
-
-/** Stub for a not-yet-implemented adapter. Returns 0 + a flag the
- *  orchestrator surfaces in the response. */
-async function notYetImplemented(protocol: AdapterId): Promise<IngestResult> {
-  return { protocol, inserted: 0, notImplemented: true };
-}
 
 /**
  * Run every adapter's ingestor in parallel for the given user. Returns
@@ -118,21 +118,24 @@ export async function ingestAllClaimsForUser(
       .then((inserted) => ({ protocol: "unvest" as const, inserted }))
       .catch((err) => ({ protocol: "unvest" as const, inserted: 0, error: String(err?.message ?? err) })),
 
-    // Superfluid: deferred. Vesting Scheduler uses Constant Flow
-    // Agreements (CFA) — discrete events fire only at cliff
-    // (`VestingCliffAndFlowExecutedEvent.cliffAmount`) and end
-    // (`VestingEndExecutedEvent.earlyEndCompensation`); the bulk of
-    // value transfer happens via continuous flow at `flowRate`, with
-    // no discrete amount per claim. Tax-grade attribution needs flow
-    // integration over the user's holding window — different model
-    // from the per-event ingestors above. Tracked as Phase 3 work.
-    notYetImplemented("superfluid"),
+    // Superfluid ships discrete cliff + end events from the hosted
+    // VestingScheduler subgraph. Continuous flow accrual between
+    // cliff and end is NOT yet captured as discrete claim_events —
+    // see superfluid-claims.ts header comment.
+    ingestSuperfluidClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "superfluid" as const, inserted }))
+      .catch((err) => ({ protocol: "superfluid" as const, inserted: 0, error: String(err?.message ?? err) })),
 
-    // Phase 3 — Solana adapters. Different ingestion model entirely
-    // (program-account snapshot diffs, no event log model) so they
-    // cluster after the EVM ones.
-    notYetImplemented("streamflow"),
-    notYetImplemented("jupiter-lock"),
+    // Solana adapters: snapshot-diff strategy via vestingStreamsCache.
+    // Gated behind SOLANA_ENABLED=true. See per-file headers for the
+    // limitations (first-run baseline = lump sum, multi-claim bundling
+    // between refreshes).
+    ingestStreamflowClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "streamflow" as const, inserted }))
+      .catch((err) => ({ protocol: "streamflow" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestJupiterLockClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "jupiter-lock" as const, inserted }))
+      .catch((err) => ({ protocol: "jupiter-lock" as const, inserted: 0, error: String(err?.message ?? err) })),
   ];
 
   return Promise.all(tasks);
