@@ -37,6 +37,35 @@ export const users = pgTable("users", {
   pushAlertsSent:        integer("push_alerts_sent").default(0).notNull(),
 });
 
+// ── Token watchlist ─────────────────────────────────────────────────────────
+// Tokens the user wants to track WITHOUT receiving them — typically a token
+// they're considering buying, or watching for unlock pressure that might
+// affect their existing positions. Different from `wallets`: those are
+// addresses the user owns and we scan for vests; watchlist entries are
+// tokens whose unlock calendar the user wants alerts on, regardless of
+// whether they hold them.
+//
+// Free tier: 5 entries. Pro: unlimited.
+export const watchlist = pgTable("watchlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  chainId: integer("chain_id").notNull(),
+  // Lowercase canonical — same convention as wallets.address
+  tokenAddress: text("token_address").notNull(),
+  // User-visible label override; falls back to on-chain symbol if null.
+  label: text("label"),
+  // Per-entry alert toggle. Default: opt-in to weekly digest, opt-out of
+  // per-event push (per-event is noisy when watchlist grows).
+  weeklyDigest: boolean("weekly_digest").default(true).notNull(),
+  perEventPush: boolean("per_event_push").default(false).notNull(),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+}, (t) => [
+  index("watchlist_user_idx").on(t.userId),
+  uniqueIndex("watchlist_user_chain_token_uq").on(t.userId, t.chainId, t.tokenAddress),
+]);
+
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
