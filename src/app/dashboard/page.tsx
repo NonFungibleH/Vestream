@@ -10,6 +10,7 @@ import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
+import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { track } from "@/lib/analytics";
 import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
 
@@ -4408,6 +4409,7 @@ export default function Dashboard() {
           ) : (
             <>
               <MobileAppBanner />
+              <CancellableWatchdog streams={filteredStreams} />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
               <NextClaimCountdown streams={filteredStreams} />
               <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />
