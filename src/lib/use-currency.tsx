@@ -59,10 +59,19 @@ export function CurrencyProvider({ children, rates, initialCurrency }: ProviderP
   // On first client render, prefer localStorage over the server-detected
   // initial (in case the user toggled in another tab between server render
   // and hydration).
+  //
+  // The eslint-disable below is intentional: the `react-hooks/set-state-in-
+  // effect` rule discourages syncing setState in an effect, but for
+  // SSR-safe localStorage hydration this IS the correct pattern. Lazy
+  // useState() initialisers can't read localStorage without producing a
+  // hydration mismatch (server renders with the cookie value, client would
+  // render with localStorage value on first paint). Setting state inside
+  // the post-mount effect is the React-blessed solution.
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored && SUPPORTED_CURRENCIES.some((c) => c.code === stored)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrencyState(stored as CurrencyCode);
       }
     } catch { /* localStorage disabled — use the prop default */ }

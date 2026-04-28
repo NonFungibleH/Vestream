@@ -135,6 +135,12 @@ export default function ExportsPage() {
       sp.set("until", `${yearFilter}-12-31`);
     }
     track("cta_clicked", { cta_id: "exports_download", format, year: yearFilter });
+    // Trigger a same-tab download. window.location.href IS a navigation
+    // primitive, not a "mutation of external state" — the React compiler
+    // lint rule that flags this can't tell the difference. Suppress here
+    // rather than refactor to a hidden <a> tag, which would be ceremony
+    // for the same outcome.
+    // eslint-disable-next-line react-hooks/immutability
     window.location.href = `/api/claims/export?${sp.toString()}`;
   }
 
@@ -181,8 +187,8 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier</span> ·
-                Coming soon: Hedgey, UNCX, Team Finance, Superfluid, Unvest, PinkSale, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey</span> ·
+                Coming soon: UNCX, Team Finance, Superfluid, Unvest, PinkSale, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 We&apos;re rolling out one protocol at a time so each one&apos;s historical pricing is verified.

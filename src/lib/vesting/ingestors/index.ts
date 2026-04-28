@@ -35,6 +35,7 @@
 
 import type { SupportedChainId } from "../types";
 import { ingestSablierClaimsForUser } from "./sablier-claims";
+import { ingestHedgeyClaimsForUser } from "./hedgey-claims";
 
 export type AdapterId =
   | "sablier"
@@ -58,7 +59,7 @@ export interface IngestResult {
 /** Adapters with shipped ingestors. Update this list as Phase 2 lands
  *  each one. Determines what /api/claims/history reports as `coverage`
  *  vs `pending`. */
-export const SHIPPED_INGESTORS: AdapterId[] = ["sablier"];
+export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey"];
 
 /** Stub for a not-yet-implemented adapter. Returns 0 + a flag the
  *  orchestrator surfaces in the response. */
@@ -84,11 +85,13 @@ export async function ingestAllClaimsForUser(
     ingestSablierClaimsForUser(userId, wallets, chainIds)
       .then((inserted) => ({ protocol: "sablier" as const, inserted }))
       .catch((err) => ({ protocol: "sablier" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestHedgeyClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "hedgey" as const, inserted }))
+      .catch((err) => ({ protocol: "hedgey" as const, inserted: 0, error: String(err?.message ?? err) })),
 
     // Phase 2 — TODO: replace each with a real ingestor.
     // Each adapter has its own data source quirks; see the existing
     // adapters in /lib/vesting/adapters/{slug}.ts for the schema.
-    notYetImplemented("hedgey"),
     notYetImplemented("uncx"),
     notYetImplemented("uncx-vm"),
     notYetImplemented("unvest"),

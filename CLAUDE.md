@@ -690,6 +690,40 @@ preview_start("vestr-dev")   # server ID: changes each session — use preview_l
 ### Production
 Pushes to `main` auto-deploy via Vercel GitHub integration. No manual deploy step needed.
 
+#### ⚠️ Vercel project: ONE only — `vestream`
+The production Vercel project is named **`vestream`** (lowercase). It owns the `vestream.io` and `www.vestream.io` custom domains. **Never create a second project for this repo.**
+
+In April 2026 a session accidentally created a duplicate project (`vestr`) by answering "No" to `npx vercel link`'s "Link to existing project?" prompt. The duplicate ran in parallel for days, double-building every commit. It has since been deleted. To prevent recurrence:
+
+**Linking the local repo (one-time, do this on a fresh clone):**
+```bash
+cd /Users/howardpearce/vestr
+npx vercel link
+# Set up "~/vestr"?         → Y
+# Which scope?              → Howard's projects
+# Link to existing project? → Y          ← critical: do NOT answer N
+# Project name?             → vestream    ← lowercase, exact
+```
+A correct link writes `.vercel/project.json` with `"projectName":"vestream"`. The directory is gitignored, so it stays per-machine.
+
+**After that, both deploy paths are safe:**
+- `git push origin main` — GitHub webhook fires the Vercel build (default, preferred)
+- `npx vercel --prod` — pushes the local working tree to the linked `vestream` project (escape hatch for when the GitHub webhook is flaky)
+
+**Never:**
+- ❌ Answer "No" to "Link to existing project?". That creates a NEW project.
+- ❌ Run `npx vercel link` if `.vercel/project.json` already exists with `vestream` — already linked.
+- ❌ Type any project name other than `vestream` (lowercase). Vercel will offer to create whatever you type.
+
+**Sanity check:**
+```bash
+cat .vercel/project.json
+# Must show "projectName":"vestream"
+# If it shows anything else: rm -rf .vercel and re-link.
+```
+
+**If a Vercel build problem persists**: prefer dashboard fixes (Settings → Git → Disconnect / Reconnect on the `vestream` project) over CLI workarounds. The CLI is the second line of defence, not the first.
+
 ### DB migrations
 ```bash
 npm run db:generate    # generate migration from schema changes
