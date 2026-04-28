@@ -25,6 +25,7 @@ import {
 } from "@/lib/vesting/unlock-windows";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { listProtocols } from "@/lib/protocol-constants";
+import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
 // Marketing-page tease: top N rows visible to all visitors, the rest
 // blurred behind a "Sign up free" CTA. Full calendar lives inside the
@@ -196,6 +197,41 @@ export default async function WindowPage({ params }: PageParams) {
     result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
   }
 
+  // Enrich the byToken aggregates with USD value and re-sort by USD (with
+  // raw-amount as the tiebreaker for tokens we can't price). Users care
+  // about the dollar value of an unlock, not raw token counts — a 10B
+  // unlock of a $0.0001 memecoin is ~$1M; a 100 BTC unlock is ~$7M; the
+  // raw-amount sort puts the memecoin first which is misleading.
+  //
+  // Pricing budget: byToken is capped at 20 entries upstream, well within
+  // DexScreener's 30-pair batch limit. Adapter-level timeout (8s, see
+  // fetch-with-retry.ts) means a sick DexScreener can't hang the page —
+  // worst case we render with no USD values and the previous raw-amount
+  // sort, which is still functional.
+  const tokenPriceMap = await getQuickUsdPrices(
+    result.stats.byToken.map((t) => ({ chainId: t.chainId, address: t.address })),
+  );
+  const byTokenWithUsd = result.stats.byToken.map((t) => {
+    const price = tokenPriceMap.get(`${t.chainId}:${t.address.toLowerCase()}`);
+    const usd   = toUsdValue(t.amount.toString(), t.decimals, price);
+    return { ...t, usdValue: usd };
+  });
+  // Sort: tokens with a USD value first (descending by USD); tokens without
+  // a price fall to the bottom, sorted by raw amount as a fallback. This
+  // way the "Biggest unlocks" list leads with the dollar-meaningful entries.
+  byTokenWithUsd.sort((a, b) => {
+    if (a.usdValue !== null && b.usdValue !== null) return b.usdValue - a.usdValue;
+    if (a.usdValue !== null) return -1;
+    if (b.usdValue !== null) return 1;
+    return a.amount > b.amount ? -1 : a.amount < b.amount ? 1 : 0;
+  });
+  // Replace stats.byToken with the USD-enriched version. The render path
+  // below now consumes USD as the primary "size" signal.
+  result = {
+    ...result,
+    stats: { ...result.stats, byToken: byTokenWithUsd },
+  };
+
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
   // upper bound for ItemList rich results).
@@ -288,18 +324,16 @@ export default async function WindowPage({ params }: PageParams) {
             Biggest unlocks {def.label.toLowerCase()}
           </h2>
           <p className="text-sm mb-4" style={{ color: "#8B8E92" }}>
-            Sorted by total token amount unlocking in the window. Click a token for the per-token unlock schedule.
+            Sorted by USD value at today&apos;s price. Tokens we can&apos;t price (low DEX
+            liquidity, missing market data) drop to the bottom and show raw token amount instead.
+            Click a token for the per-token unlock schedule.
           </p>
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
             {result.stats.byToken.slice(0, 10).map((t, i) => {
-              // Find the first matching group for the chain context
-              const first = result.groups.find((g) => g.tokenAddress.toLowerCase() === t.address);
-              const chainId = first?.chainId;
-              const decimals = first?.tokenDecimals ?? 18;
               return (
                 <Link
-                  key={t.address}
-                  href={chainId ? `/token/${chainId}/${t.address}` : "#"}
+                  key={`${t.chainId}-${t.address}`}
+                  href={`/token/${t.chainId}/${t.address}`}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors"
                   style={{ borderTop: i > 0 ? "1px solid rgba(0,0,0,0.05)" : undefined }}
                 >
@@ -309,15 +343,28 @@ export default async function WindowPage({ params }: PageParams) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate" style={{ color: "#1A1D20" }}>{tokenLabel(t.symbol, t.address)}</p>
-                    {chainId && (
-                      <p className="text-xs" style={{ color: "#8B8E92" }}>{CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] ?? `chain ${chainId}`}</p>
-                    )}
+                    <p className="text-xs" style={{ color: "#8B8E92" }}>
+                      {CHAIN_NAMES[t.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${t.chainId}`}
+                      <span style={{ color: "#CBD5E1" }}> · </span>
+                      {fmtTokenAmount(t.amount.toString(), t.decimals)} {isMissingSymbol(t.symbol) ? "tokens" : t.symbol}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-base tabular-nums" style={{ color: "#0F8A8A" }}>
-                      {fmtTokenAmount(t.amount.toString(), decimals)}
-                    </p>
-                    <p className="text-[10px]" style={{ color: "#B8BABD" }}>{isMissingSymbol(t.symbol) ? "tokens" : t.symbol}</p>
+                    {t.usdValue !== null && t.usdValue !== undefined ? (
+                      <>
+                        <p className="font-bold text-base tabular-nums" style={{ color: "#0F8A8A" }}>
+                          {fmtUsd(t.usdValue)}
+                        </p>
+                        <p className="text-[10px]" style={{ color: "#B8BABD" }}>at today&apos;s price</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold text-base tabular-nums" style={{ color: "#1A1D20" }}>
+                          {fmtTokenAmount(t.amount.toString(), t.decimals)}
+                        </p>
+                        <p className="text-[10px]" style={{ color: "#B8BABD" }}>no USD price</p>
+                      </>
+                    )}
                   </div>
                 </Link>
               );

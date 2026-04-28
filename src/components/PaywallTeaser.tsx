@@ -44,7 +44,14 @@ export function PaywallTeaser({
   ctaLabel    = "Sign up free →",
 }: PaywallTeaserProps) {
   return (
-    <div className="relative">
+    // min-height ensures the card has room even when the blurred children
+    // are short (e.g. only 2-3 hidden rows). Previously, callers wrapping
+    // PaywallTeaser in `rounded-2xl overflow-hidden` saw the bottom of the
+    // card (CTA button + subline) clipped, because absolute-positioned
+    // children that overflow `inset-0` were getting cut off by the parent's
+    // overflow:hidden. min-height on the relative container forces enough
+    // box height for the card to fit fully.
+    <div className="relative" style={{ minHeight: "22rem" }}>
       <div
         aria-hidden="true"
         className="pointer-events-none select-none"

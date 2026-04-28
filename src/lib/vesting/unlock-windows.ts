@@ -224,9 +224,19 @@ export interface WindowAggregateStats {
   chainCount:    number;
   /** Distinct recipient wallets across all groups. */
   walletCount:   number;
-  /** Sum of locked amounts (per-token) — reported as a per-token map because
-   *  summing absolute amounts across different tokens would be meaningless. */
-  byToken:       Array<{ symbol: string | null; address: string; amount: bigint }>;
+  /** Sum of locked amounts (per-token-per-chain) — reported as a flat list
+   *  because summing absolute amounts across different tokens would be
+   *  meaningless. Keyed by (chainId, address) so a token deployed on
+   *  multiple chains gets its own entry per chain (USD pricing differs
+   *  by chain via DexScreener slug, and the dashboard links to a per-
+   *  chain explorer). */
+  byToken:       Array<{
+    symbol:   string | null;
+    address:  string;
+    chainId:  number;
+    decimals: number;
+    amount:   bigint;
+  }>;
 }
 
 // ── Window query — returns groups + aggregate stats ─────────────────────────
@@ -360,7 +370,17 @@ export async function getUnlocksInWindow(
 
   const groups = new Map<string, Group>();
   const allRecipients = new Set<string>();
-  const tokenAmountMap = new Map<string, { symbol: string | null; address: string; amount: bigint }>();
+  // Per-chain-per-token aggregator. Keyed on `${chainId}:${address}` so a
+  // token contract that exists on multiple chains (e.g. USDC on ETH/Base/
+  // Polygon) gets one row per chain — distinct prices, distinct explorer
+  // links, distinct rendering rather than a misleading cross-chain sum.
+  const tokenAmountMap = new Map<string, {
+    symbol:   string | null;
+    address:  string;
+    chainId:  number;
+    decimals: number;
+    amount:   bigint;
+  }>();
 
   for (const row of enriched) {
     const protoCanonical = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
@@ -398,14 +418,17 @@ export async function getUnlocksInWindow(
         const amt = BigInt(rawAmount);
         g.amountSum += amt;
         g.hasAmount  = true;
-        const existing = tokenAmountMap.get(tokenKey);
+        const tokenChainKey = `${row.chainId}:${tokenKey}`;
+        const existing = tokenAmountMap.get(tokenChainKey);
         if (existing) {
           existing.amount += amt;
         } else {
-          tokenAmountMap.set(tokenKey, {
-            symbol:  row.tokenSymbol,
-            address: tokenKey,
-            amount:  amt,
+          tokenAmountMap.set(tokenChainKey, {
+            symbol:   row.tokenSymbol,
+            address:  tokenKey,
+            chainId:  row.chainId,
+            decimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
+            amount:   amt,
           });
         }
       } catch {
