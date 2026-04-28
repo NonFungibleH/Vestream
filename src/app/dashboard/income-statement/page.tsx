@@ -162,6 +162,17 @@ export default function IncomeStatementPage() {
             <option value="all">All time</option>
             {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
+          {yearFilter !== "all" && (
+            <Link
+              href={`/dashboard/income-statement/print?year=${yearFilter}`}
+              target="_blank"
+              rel="noopener"
+              className="text-xs font-semibold px-3 py-2 rounded-lg"
+              style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.20)" }}
+            >
+              Year-end PDF →
+            </Link>
+          )}
           <Link
             href="/dashboard/exports"
             className="text-xs font-semibold ml-auto"

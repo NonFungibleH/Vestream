@@ -11,6 +11,7 @@ import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
+import { useCurrency } from "@/lib/use-currency";
 import { track } from "@/lib/analytics";
 import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
 
@@ -930,6 +931,12 @@ function MiniSparkline({ stream }: { stream: VestingStream }) {
 // ─── PortfolioHero ────────────────────────────────────────────────────────────
 
 function PortfolioHero({ streams, walletCount, dark, prices }: { streams: VestingStream[]; walletCount: number; dark: boolean; prices: Record<string, number> }) {
+  // Currency-aware formatters for the hero figures. Falls back to USD when
+  // the user hasn't picked anything (CurrencyProvider was added in the
+  // dashboard layout commit; the inner hook returns sensible defaults
+  // outside the provider, so this is safe even if the layout is bypassed).
+  const { format: fmtCurrencyFull, formatCompact: fmtCurrencyCompact } = useCurrency();
+
   const tokens         = buildTokenSummaries(streams, prices);
   const totalValue     = tokens.reduce((s, t) => s + t.claimableUSD + t.lockedUSD, 0);
   const totalClaimable = tokens.reduce((s, t) => s + t.claimableUSD, 0);
@@ -996,7 +1003,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
               Total Portfolio Value
             </p>
             <p className="text-5xl font-bold tabular-nums tracking-tight text-white leading-none">
-              {fmtUSDFull(totalValue)}
+              {fmtCurrencyFull(totalValue)}
             </p>
             <div className="flex items-center gap-2.5 mt-3">
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>
@@ -1005,7 +1012,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                   const parts: string[] = [];
                   if (hasPrice) {
                     // Some tokens have USD prices — show USD total + any no-price tokens separately
-                    if (totalClaimable >= 0.5) parts.push(fmtUSDFull(totalClaimable));
+                    if (totalClaimable >= 0.5) parts.push(fmtCurrencyFull(totalClaimable));
                     claimableNoPrice.forEach((t) =>
                       parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
                     );
@@ -1063,7 +1070,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
               {/* USD-priced claimable */}
               {totalClaimable > 0 && (
                 <>
-                  <p className="text-base font-bold tabular-nums mt-0.5 text-white">{fmtUSD(totalClaimable)}</p>
+                  <p className="text-base font-bold tabular-nums mt-0.5 text-white">{fmtCurrencyCompact(totalClaimable)}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{pctClaimable.toFixed(1)}% of total</p>
                 </>
               )}
@@ -1098,7 +1105,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
               {hasThisMonth ? (
                 <>
                   <p className="text-base font-bold tabular-nums mt-0.5 text-white">
-                    {hasPrice ? fmtUSD(thisMonth.usd) : thisMonth.raw.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                    {hasPrice ? fmtCurrencyCompact(thisMonth.usd) : thisMonth.raw.toLocaleString("en-US", { maximumFractionDigits: 2 })}
                   </p>
                   <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
                     {hasPrice ? "unlocking" : `tokens unlocking`}
