@@ -11,6 +11,7 @@ import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
+import { useDashboardChrome } from "@/components/DashboardChrome";
 import { useCurrency } from "@/lib/use-currency";
 import { track } from "@/lib/analytics";
 import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
@@ -3944,7 +3945,9 @@ export default function Dashboard() {
   const [activeTokens, setActiveTokens]   = useState<Set<string>>(new Set());
   const [exportOpen, setExportOpen]       = useState(false);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
-  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  // sidebarOpen state moved to DashboardChrome (the layout wrapper) — every
+  // dashboard sub-route now shares the same drawer state via context.
+  const { toggleSidebar }                 = useDashboardChrome();
   const [showFeedback, setShowFeedback]   = useState(false);
   const [costBasis, setCostBasis]         = useState<Record<string, number>>({});
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
@@ -4150,28 +4153,35 @@ export default function Dashboard() {
     await loadWallets();
   }
 
+  // The outer flex shell + sidebar + mobile drawer overlay are provided by
+  // src/app/dashboard/layout.tsx (DashboardChrome). The legacy inline
+  // Sidebar component (with its own NAV_ITEMS) has been removed; the
+  // layout's shared DashboardSidebar is now canonical and consistent
+  // across every dashboard sub-route. Wallet management UI continues to
+  // live on this page — it migrates from the sidebar into the main
+  // content area (see "Tracked wallets" section below). The mobile
+  // hamburger now calls `toggleSidebar()` from the chrome context.
+  //
+  // Returning a Fragment so the modals (which use position: fixed) can
+  // sit as siblings of the main content column without an extra wrapping
+  // div — keeps DOM clean and matches the previous mount semantics.
   return (
-    <div
-      className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
-      style={{ background: "var(--preview-bg)" }}
-      onClick={() => { if (walletChipOpen) setWalletChipOpen(false); if (exportOpen) setExportOpen(false); }}
-    >
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}
-          style={{ background: "rgba(0,0,0,0.5)" }} />
-      )}
-      <Sidebar wallets={wallets} tier={tier} walletLimit={walletLimit} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onAddWallet={() => setShowAddWallet((v) => !v)} onRemoveWallet={handleRemoveWallet} onFeedback={() => setShowFeedback(true)} />
-
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <>
+      <div
+        className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}
+        onClick={() => { if (walletChipOpen) setWalletChipOpen(false); if (exportOpen) setExportOpen(false); }}
+      >
         {/* Header */}
         <header className="h-14 px-4 md:px-6 flex items-center justify-between flex-shrink-0"
           style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
           <div className="flex items-center gap-3">
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger — toggles the layout's shared sidebar via the
+                chrome context. Pre-refactor this lived in the local Sidebar
+                state; now it's owned by DashboardChrome (the parent layout
+                wrapper), so we ask the chrome to toggle it. */}
             <button className="flex md:hidden w-8 h-8 items-center justify-center rounded-lg"
               style={{ color: "var(--preview-text-2)" }}
-              onClick={() => setSidebarOpen((v) => !v)}
+              onClick={toggleSidebar}
               aria-label="Toggle sidebar">
               <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -4452,6 +4462,32 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            {/* Wallet management — moved out of the sidebar (the layout's
+                shared sidebar doesn't carry per-page state). "+ Add" toggles
+                the AddWalletBar below; "Manage" links to /settings for the
+                full add/edit/remove experience. The wallets-tracked count
+                is the at-a-glance status the old sidebar gave users. */}
+            {wallets.length >= 0 && (
+              <div className="hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg"
+                style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)", color: "var(--preview-text-2)" }}>
+                <span>
+                  <strong style={{ color: "var(--preview-text)" }}>{wallets.length}</strong>
+                  {walletLimit !== null ? ` / ${walletLimit}` : ""} wallet{wallets.length === 1 ? "" : "s"}
+                </span>
+                <span style={{ color: "var(--preview-border)" }}>·</span>
+                <button
+                  onClick={() => setShowAddWallet((v) => !v)}
+                  className="font-semibold transition-colors hover:underline"
+                  style={{ color: "#0F8A8A" }}
+                >
+                  + Add
+                </button>
+                <span style={{ color: "var(--preview-border)" }}>·</span>
+                <a href="/settings" className="font-medium transition-colors hover:underline" style={{ color: "var(--preview-text-2)" }}>
+                  Manage
+                </a>
+              </div>
+            )}
             <DarkToggle dark={dark} onToggle={toggleDark} />
             {sessionAddress && (
               <WalletChip
@@ -4551,6 +4587,6 @@ export default function Dashboard() {
 
       {/* Beta feedback modal */}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
-    </div>
+    </>
   );
 }

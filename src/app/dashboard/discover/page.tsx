@@ -166,107 +166,13 @@ function IconCompass() {
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// Sidebar removed — now provided by src/app/dashboard/layout.tsx via the
+// shared DashboardSidebar component. This keeps nav consistent across every
+// dashboard sub-route. The legacy DiscoverSidebar (with its own NAV_ITEMS
+// list missing several entries) lived here previously; deleted in this
+// commit.
 
-// Explorer included so users on the Discover surface can navigate sideways
-// to the search-explorer experience without bouncing back through Dashboard.
-// `active` left out — the sidebar component computes it from usePathname()
-// at render time so all sub-routes light up the right nav pill.
-const NAV_ITEMS = [
-  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"          },
-  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer" },
-  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings"           },
-];
-
-function DiscoverSidebar({ tier }: { tier: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  return (
-    <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
-      style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
-
-      {/* Logo — swaps to dark icon when the dashboard root has .dark */}
-      <Link href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
-        style={{ borderBottom: "1px solid var(--preview-border)" }}>
-        <img src="/logo-icon.svg"      alt="Vestream" className="w-7 h-7 flex-shrink-0 block dark:hidden" />
-        <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-7 h-7 flex-shrink-0 hidden dark:block" />
-        <div>
-          <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
-          <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
-        </div>
-      </Link>
-
-      {/* Nav */}
-      <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
-        {NAV_ITEMS.map((item) => {
-          const isActive = item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname.startsWith(item.href);
-          return (
-            <button key={item.label} onClick={() => router.push(item.href)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-              style={isActive
-                ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.15)" }
-                : { color: "var(--preview-text-2)", border: "1px solid transparent" }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--preview-muted)"; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; } }}
-            >
-              <span className="opacity-80 flex-shrink-0">{item.icon}</span>
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Footer — tier badge */}
-      <div className="px-3 pb-3 flex-shrink-0 space-y-2" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
-        {tier === "free" && (
-          <div className="px-3 py-2.5 rounded-xl"
-            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Free Plan</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>FREE</span>
-            </div>
-            <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              3 free scans included · Pro for daily resets
-            </p>
-            <a href="/pricing"
-              className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "#1CB8B8" }}>
-              Upgrade to Pro →
-            </a>
-          </div>
-        )}
-        {tier === "pro" && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>PRO</span>
-            <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
-          </div>
-        )}
-        {tier === "fund" && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(28,184,184,0.10))", border: "1px solid rgba(28,184,184,0.25)" }}>
-            <span className="text-[10px]">✦</span>
-            <div>
-              <p className="text-[10px] font-bold" style={{ color: "#1CB8B8" }}>Fund Plan</p>
-              <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited wallets · all features</p>
-            </div>
-          </div>
-        )}
-        <p className="text-[8px] text-center" style={{ color: "var(--preview-text-3)" }}>
-          Read-only · No funds access
-        </p>
-      </div>
-    </aside>
-  );
-}
+function _DiscoverSidebarStub() { return null; }
 
 // ─── ResultCard ───────────────────────────────────────────────────────────────
 
@@ -635,14 +541,12 @@ export default function DiscoverPage() {
     }
   }
 
+  // The outer flex shell (sidebar + main column wrapping) is provided by
+  // src/app/dashboard/layout.tsx via DashboardChrome — every dashboard
+  // sub-page now shares the same nav rail. We render only the right-hand
+  // content column here.
   return (
-    <div
-      className={`flex h-screen overflow-hidden${dark ? " dark" : ""}`}
-      style={{ background: "var(--preview-bg)" }}
-    >
-      <DiscoverSidebar tier={tier} />
-
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}>
 
         {/* Header */}
         <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
@@ -986,7 +890,6 @@ export default function DiscoverPage() {
           )}
 
         </main>
-      </div>
     </div>
   );
 }

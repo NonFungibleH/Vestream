@@ -43,7 +43,9 @@ import { resolveEnsName } from "@/lib/ens";
 import { listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
-import { ExplorerSidebar } from "./Sidebar";
+// ExplorerSidebar removed — sidebar is now provided by
+// src/app/dashboard/layout.tsx via the shared DashboardSidebar component.
+// import { ExplorerSidebar } from "./Sidebar";
 import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
 
@@ -226,11 +228,10 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   ].filter(Boolean) as string[];
   const overFilterCap = isFree && activeFilters.length > FREE_TIER_FILTER_CAP;
 
+  // The flex shell + sidebar are provided by src/app/dashboard/layout.tsx
+  // (DashboardChrome). We render only the right-hand main content here.
   return (
-    <div className={`flex${dark ? " dark" : ""}`} style={{ minHeight: "100vh", background: "var(--preview-bg)" }}>
-      <ExplorerSidebar tier={tier} />
-
-      <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl">
+      <main className={`flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto${dark ? " dark" : ""}`}>
         {/* Header */}
         <header className="mb-5">
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
@@ -396,7 +397,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           </aside>
         </div>
       </main>
-    </div>
   );
 }
 
