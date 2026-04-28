@@ -197,7 +197,22 @@ export async function POST(req: NextRequest) {
     session.address   = email;
     await session.save();
 
-    return NextResponse.json({ ok: true });
+    // Successful OTP verification grants early-access automatically.
+    // Previously /login set only `vestr_session` and middleware bounced
+    // the user to /early-access where they re-entered email + OTP again
+    // just to claim the early-access cookie. One verification = both
+    // cookies = no double-OTP.
+    const res = NextResponse.json({ ok: true });
+    res.cookies.set({
+      name:     "vestr_early_access",
+      value:    "1",
+      httpOnly: false,             // some legacy client code reads this
+      sameSite: "strict",
+      secure:   process.env.NODE_ENV === "production",
+      path:     "/",
+      maxAge:   60 * 60 * 24 * 30, // 30 days, matches iron-session TTL
+    });
+    return res;
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

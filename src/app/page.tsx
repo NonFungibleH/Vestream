@@ -914,7 +914,11 @@ export default async function Home() {
               <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="#0F8A8A"/>
               {/* Notification text */}
               <text x="49" y="98" fontSize="8" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Token Unlock</text>
-              <text x="49" y="109" fontSize="7" fill="#8B8E92" fontFamily="system-ui">NOVA · 12,500 ready to claim</text>
+              {/* Short copy required — the banner has ~87px of inner space
+                  for this line (after the icon + "now" stamp on the right).
+                  Previous "NOVA · 12,500 ready to claim" overflowed and got
+                  clipped to "...ready to clai" on narrow phones. */}
+              <text x="49" y="109" fontSize="7" fill="#8B8E92" fontFamily="system-ui">NOVA · 12.5K claimable</text>
               <text x="128" y="98" fontSize="6.5" fill="#0F8A8A" textAnchor="end" fontFamily="system-ui">now</text>
               {/* Divider */}
               <line x1="14" y1="142" x2="136" y2="142" stroke="rgba(21,23,26,0.06)" strokeWidth="1"/>
