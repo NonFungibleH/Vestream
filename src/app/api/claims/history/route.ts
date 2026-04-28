@@ -21,9 +21,11 @@ import { db } from "@/lib/db";
 import { users, wallets } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import {
-  ingestSablierClaimsForUser,
+  ingestAllClaimsForUser,
   getClaimHistoryForUser,
-} from "@/lib/vesting/ingestors/sablier-claims";
+  SHIPPED_INGESTORS,
+  type AdapterId,
+} from "@/lib/vesting/ingestors";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import type { SupportedChainId } from "@/lib/vesting/types";
 
@@ -123,25 +125,24 @@ export async function POST(req: NextRequest) {
     ? [...allChainsRequested]
     : undefined; // adapter default
 
-  // Phase 1: Sablier only. Phase 2 fan-out:
-  //   const [sab, hed, unc, ...] = await Promise.all([
-  //     ingestSablierClaimsForUser(...),
-  //     ingestHedgeyClaimsForUser(...),
-  //     ingestUncxClaimsForUser(...),
-  //     ...
-  //   ]);
-  const inserted = await ingestSablierClaimsForUser(
-    auth.userId,
-    allWallets,
-    chainIds,
-  );
+  // Fan out across every adapter ingestor in parallel. Adapters that
+  // aren't yet implemented return inserted: 0 + notImplemented: true so
+  // the response honestly reports current coverage to the client.
+  const results = await ingestAllClaimsForUser(auth.userId, allWallets, chainIds);
+  const totalInserted = results.reduce((acc, r) => acc + r.inserted, 0);
+
+  const coverage: AdapterId[] = SHIPPED_INGESTORS;
+  const pending = results.filter((r) => r.notImplemented).map((r) => r.protocol);
+  const errors  = results.filter((r) => r.error).map((r) => ({ protocol: r.protocol, error: r.error }));
 
   return NextResponse.json({
-    inserted,
-    message: inserted === 0
+    inserted: totalInserted,
+    message:  totalInserted === 0
       ? "Already up to date."
-      : `Indexed ${inserted} new claim event${inserted === 1 ? "" : "s"}.`,
-    coverage: ["sablier"],     // documents what's currently indexed
-    pending:  ["hedgey", "uncx", "team-finance", "superfluid", "pinksale", "streamflow", "jupiter-lock"],
+      : `Indexed ${totalInserted} new claim event${totalInserted === 1 ? "" : "s"} across ${coverage.length} protocol${coverage.length === 1 ? "" : "s"}.`,
+    coverage,
+    pending,
+    errors,
+    perProtocol: results,
   });
 }

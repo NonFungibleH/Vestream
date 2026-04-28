@@ -14,9 +14,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { db } from "../../db";
-import { claimEvents, vestingStreamsCache } from "../../db/schema";
+import { claimEvents } from "../../db/schema";
 import { sql, and, eq } from "drizzle-orm";
-import { getHistoricalPrice } from "../historical-prices";
+import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
 import type { SupportedChainId } from "../types";
 
 const SABLIER_ENVIO_URL = "https://indexer.bigdevenergy.link/3b4ea6b/v1/graphql";
@@ -66,19 +66,7 @@ interface RawStream {
   actions:    RawAction[] | null;
 }
 
-export interface ClaimEventInput {
-  userId:        string;
-  streamId:      string;
-  protocol:      string;
-  chainId:       number;
-  recipient:     string;
-  tokenAddress:  string;
-  tokenSymbol:   string | null;
-  tokenDecimals: number;
-  amount:        string;       // bigint as string
-  claimedAt:     Date;
-  txHash:        string;       // synthetic if real hash unavailable
-}
+// ClaimEventInput moved to ./shared.ts so every adapter ingestor can import it.
 
 /**
  * Ingest Sablier withdrawal events for one user across all their tracked
@@ -117,7 +105,7 @@ export async function ingestSablierClaimsForUser(
         // the unique index still collapses replays.
         const txHash = action.hash
           ? action.hash.toLowerCase()
-          : `synthetic:${streamId}:${claimedAtSec}`;
+          : syntheticTxHash(streamId, claimedAtSec);
 
         inputs.push({
           userId,
@@ -139,69 +127,7 @@ export async function ingestSablierClaimsForUser(
   return upsertClaimEvents(inputs);
 }
 
-/**
- * Bulk insert claim events with historical-price enrichment.
- *
- * For each row: look up USD-at-claim price (cached after first call),
- * convert raw token amount × price → USD value, and upsert. Existing rows
- * (same chain+tx+recipient+token) are no-ops.
- */
-export async function upsertClaimEvents(inputs: ClaimEventInput[]): Promise<number> {
-  if (inputs.length === 0) return 0;
-  let inserted = 0;
-
-  for (const e of inputs) {
-    // Pricing is per-token-per-day-cached, so even thousands of events
-    // collapse to a small number of CoinGecko fetches.
-    const price = await getHistoricalPrice(
-      e.chainId,
-      e.tokenAddress,
-      Math.floor(e.claimedAt.getTime() / 1000),
-    );
-
-    let usdValueAtClaim: string | null = null;
-    if (price.usd !== null) {
-      try {
-        const tokensWhole = Number(BigInt(e.amount)) / Math.pow(10, e.tokenDecimals);
-        usdValueAtClaim = (tokensWhole * price.usd).toFixed(6);
-      } catch { /* malformed amount — leave null */ }
-    }
-
-    try {
-      const result = await db
-        .insert(claimEvents)
-        .values({
-          userId:           e.userId,
-          streamId:         e.streamId,
-          protocol:         e.protocol,
-          chainId:          e.chainId,
-          recipient:        e.recipient,
-          tokenAddress:     e.tokenAddress,
-          tokenSymbol:      e.tokenSymbol,
-          tokenDecimals:    e.tokenDecimals,
-          amount:           e.amount,
-          claimedAt:        e.claimedAt,
-          txHash:           e.txHash,
-          // gasNative + gasUsdValueAtClaim left null in v1 — adding tx
-          // receipt fetching is a Phase 2 enhancement (one extra RPC call
-          // per claim, mostly for gas-aware tax exports).
-          gasNative:        null,
-          usdValueAtClaim:  usdValueAtClaim,
-          priceConfidence:  price.confidence,
-          gasUsdValueAtClaim: null,
-        })
-        .onConflictDoNothing({
-          target: [claimEvents.chainId, claimEvents.txHash, claimEvents.recipient, claimEvents.tokenAddress],
-        })
-        .returning({ id: claimEvents.id });
-      if (result.length > 0) inserted++;
-    } catch (err) {
-      console.error("[sablier-claims] insert failed:", err);
-    }
-  }
-
-  return inserted;
-}
+// upsertClaimEvents moved to ./shared.ts
 
 async function fetchSablierActions(
   recipients: string[],
@@ -258,6 +184,3 @@ export async function getClaimHistoryForUser(
     .orderBy(sql`${claimEvents.claimedAt} desc`);
 }
 
-// Mark `vestingStreamsCache` as a touched import to silence the "unused
-// import" linter — we'll wire stream-id validation against it in Phase 2.
-void vestingStreamsCache;
