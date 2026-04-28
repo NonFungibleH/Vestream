@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
+import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,10 +186,11 @@ function DiscoverSidebar({ tier }: { tier: string }) {
     <aside className="w-56 flex-shrink-0 h-screen flex flex-col"
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
-      {/* Logo */}
+      {/* Logo — swaps to dark icon when the dashboard root has .dark */}
       <Link href="/" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
-        <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
+        <img src="/logo-icon.svg"      alt="Vestream" className="w-7 h-7 flex-shrink-0 block dark:hidden" />
+        <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-7 h-7 flex-shrink-0 hidden dark:block" />
         <div>
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
@@ -432,7 +434,7 @@ export default function DiscoverPage() {
   const [scanResetAt,    setScanResetAt]    = useState<string | null>(null);
 
   useEffect(() => {
-    try { if (localStorage.getItem("vestr-dark") === "1") setDark(true); } catch { /* ignore */ }
+    setDark(getDarkModePreference());
   }, []);
 
   const loadWallets = useCallback(async () => {
@@ -663,8 +665,9 @@ export default function DiscoverPage() {
             <button
               onClick={() => {
                 setDark(v => {
-                  try { localStorage.setItem("vestr-dark", !v ? "1" : "0"); } catch { /* ignore */ }
-                  return !v;
+                  const next = !v;
+                  setDarkModePreference(next);
+                  return next;
                 });
               }}
               className="h-8 w-8 flex items-center justify-center rounded-lg border transition-all text-sm"
@@ -713,13 +716,27 @@ export default function DiscoverPage() {
                 </svg>
               </div>
               <div>
+                {/* Hero copy explicitly frames Discover as "live scan of a
+                    specific wallet" — distinct from Explorer's "search the
+                    indexed universe". The two surfaces felt redundant
+                    visually, so we lean hard into the action verb here. */}
+                <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+                  Wallet Scanner
+                </div>
                 <h2 className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                  Find all vestings for a wallet
+                  Find every vesting on a wallet — live
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Enter any wallet address and we&apos;ll scan every supported platform across all 5 chains — EVM and Solana.
-                  Results appear below — click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
-                  add individual vestings to your dashboard.
+                  Paste any wallet address. We hit all 9 protocols across 5 chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
+                  Click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
+                  pin individual vestings to your dashboard.
+                </p>
+                <p className="text-[11px] mt-2" style={{ color: "var(--preview-text-3)" }}>
+                  Looking for general search instead? Use the{" "}
+                  <Link href="/dashboard/explorer" className="font-semibold hover:underline" style={{ color: "#0F8A8A" }}>
+                    Explorer →
+                  </Link>
                 </p>
               </div>
             </div>

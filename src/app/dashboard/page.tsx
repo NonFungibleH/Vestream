@@ -11,6 +11,7 @@ import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
 import { track } from "@/lib/analytics";
+import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1535,9 +1536,12 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                     </a>
                   </div>
 
-                  {/* 12. Claim / View CTA + All holders explorer link + expand chevron */}
+                  {/* 12. Claim / View CTA + All holders explorer link + expand chevron.
+                      Link points at /token/* (the canonical token page) directly
+                      instead of /explore/* which 308-redirects there — saves a
+                      round trip and means clicks feel instant. */}
                   <div className="flex items-center justify-end gap-1.5">
-                    <a href={`/explore/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
+                    <a href={`/token/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       title="See all vesting holders for this token"
                       className="text-[9px] font-semibold px-2 py-0.5 rounded-md transition-all duration-150 hover:brightness-125 flex-shrink-0"
@@ -3613,10 +3617,15 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       className={`fixed md:relative z-50 md:z-auto w-56 flex-shrink-0 h-full md:h-screen flex flex-col transition-transform duration-200 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
-      {/* Logo */}
+      {/* Logo. Two <img> tags, swapped via Tailwind's `dark:` variant
+          (defined in globals.css as `&:is(.dark *)` — i.e. any descendant
+          of a .dark element). The Sidebar lives under the dashboard root
+          which sets `.dark` based on the toggle, so the right variant
+          renders without JS. */}
       <a href="/dashboard" className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}>
-        <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
+        <img src="/logo-icon.svg"      alt="Vestream" className="w-7 h-7 flex-shrink-0 block dark:hidden" />
+        <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-7 h-7 flex-shrink-0 hidden dark:block" />
         <div>
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>Vestream</span>
           <p className="text-[9px] mt-0.5 leading-none" style={{ color: "var(--preview-text-3)" }}>Track every token unlock</p>
@@ -3864,9 +3873,11 @@ export default function Dashboard() {
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
   const [buys,  setBuys]                  = useState<Record<string, BuyTx[]>>({});
 
-  // Persist dark mode + cost basis + sells across page navigations via localStorage
+  // Persist dark mode + cost basis + sells across page navigations via localStorage.
+  // Dark mode also writes a cookie so server-rendered pages (Explorer)
+  // pick it up on first byte.
   useEffect(() => {
-    try { if (localStorage.getItem("vestr-dark") === "1") setDark(true); } catch { /* ignore */ }
+    setDark(getDarkModePreference());
     try {
       const stored = localStorage.getItem("vestr-cost-basis");
       if (stored) setCostBasis(JSON.parse(stored));
@@ -3903,7 +3914,7 @@ export default function Dashboard() {
   function toggleDark() {
     setDark((v) => {
       const next = !v;
-      try { localStorage.setItem("vestr-dark", next ? "1" : "0"); } catch { /* ignore */ }
+      setDarkModePreference(next);
       return next;
     });
   }
@@ -4380,7 +4391,8 @@ export default function Dashboard() {
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : wallets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <img src="/logo-icon.svg" alt="Vestream" className="w-14 h-14 mb-2" />
+              <img src="/logo-icon.svg"      alt="Vestream" className="w-14 h-14 mb-2 block dark:hidden" />
+              <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-14 h-14 mb-2 hidden dark:block" />
               <div>
                 <p className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No wallets tracked yet</p>
                 <p className="text-sm" style={{ color: "var(--preview-text-3)" }}>Add a wallet to start tracking vesting schedules.</p>

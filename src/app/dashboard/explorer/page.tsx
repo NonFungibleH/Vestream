@@ -27,6 +27,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
+import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import {
   getUnlocksInWindow,
   WINDOWS,
@@ -106,6 +107,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   if (!cookieStore.get("vestr_early_access")) {
     redirect("/early-access");
   }
+  // Inherit dark-mode preference from any prior dashboard surface. The
+  // /dashboard and /dashboard/discover client toggles set both localStorage
+  // and a cookie via setDarkModePreference(); this read picks up the
+  // cookie on first byte so the explorer renders in the right theme without
+  // a flash.
+  const dark = getDarkModeFromCookies(cookieStore);
 
   const tier: Tier | null = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
@@ -220,7 +227,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const overFilterCap = isFree && activeFilters.length > FREE_TIER_FILTER_CAP;
 
   return (
-    <div className="flex" style={{ minHeight: "100vh", background: "var(--preview-bg)" }}>
+    <div className={`flex${dark ? " dark" : ""}`} style={{ minHeight: "100vh", background: "var(--preview-bg)" }}>
       <ExplorerSidebar tier={tier} />
 
       <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl">
@@ -231,11 +238,25 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             <span>/</span>
             <span>Explorer</span>
           </div>
+          {/* Hero positioned as the indexed-universe SEARCH surface — distinct
+              from /dashboard/discover which is the live wallet SCANNER. The
+              two felt redundant visually before; the badge + tighter copy
+              makes the boundary obvious. */}
+          <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+            Vesting Search
+          </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Vesting search
+            Search the vesting universe
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
-            Search any wallet, token symbol, or protocol across every vesting schedule we index.
+            Query our index by wallet, token, or protocol. Filterable, shareable, and indexed across every supported chain.
+          </p>
+          <p className="text-xs mt-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Need a one-shot live scan of a specific wallet? Use the{" "}
+            <Link href="/dashboard/discover" className="font-semibold hover:underline" style={{ color: "#0F8A8A" }}>
+              Wallet Scanner →
+            </Link>
           </p>
         </header>
 

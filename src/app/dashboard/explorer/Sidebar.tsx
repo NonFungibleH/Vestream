@@ -30,7 +30,8 @@ export function ExplorerSidebar({ tier }: { tier: Tier | null }) {
         className="px-5 h-14 flex items-center gap-3 flex-shrink-0 transition-opacity hover:opacity-80"
         style={{ borderBottom: "1px solid var(--preview-border)" }}
       >
-        <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
+        <img src="/logo-icon.svg"      alt="Vestream" className="w-7 h-7 flex-shrink-0 block dark:hidden" />
+        <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-7 h-7 flex-shrink-0 hidden dark:block" />
         <div>
           <span className="font-bold text-sm tracking-tight leading-none" style={{ color: "var(--preview-text)" }}>
             Vestream

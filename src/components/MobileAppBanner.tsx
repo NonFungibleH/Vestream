@@ -4,10 +4,15 @@
 // iOS app. Clicking opens GetTheAppModal which mints a single-use handoff
 // token, so the app launches already signed-in.
 //
-// Doubles as the "two-surface mental model" affordance (Fix 5): explicitly
-// frames mobile as the alerts surface, web as research/discovery, so users
-// don't feel like the split is friction — they feel like there's "another
-// half of the product" waiting on their phone.
+// Doubles as the "two-surface mental model" affordance: explicitly frames
+// mobile as the alerts surface, web as research/discovery, so users don't
+// feel like the split is friction — they feel like there's "another half
+// of the product" waiting on their phone.
+//
+// Visual: solid teal gradient with white text + a phone glyph in a frosted
+// pill on the left. The previous low-contrast version (rgba(28,184,184,0.07)
+// background + 75% white text) read as decorative chrome that users
+// scrolled past — this version reads as a clear secondary action.
 
 import { useState, useEffect } from "react";
 import { GetTheAppModal } from "./GetTheAppModal";
@@ -41,56 +46,77 @@ export function MobileAppBanner() {
     <>
       <div
         style={{
-          background: "rgba(28,184,184,0.07)",
-          border: "1px solid rgba(28,184,184,0.15)",
-          borderRadius: "12px",
-          padding: "10px 16px",
+          // Solid brand gradient — reads on both light and dark dashboard
+          // surfaces. White text + frosted pill icon = high contrast in
+          // every theme without theme-conditional colour logic.
+          background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 100%)",
+          borderRadius: "14px",
+          padding: "12px 16px",
           display: "flex",
           alignItems: "center",
           gap: "12px",
           marginBottom: "16px",
+          boxShadow: "0 4px 16px rgba(28,184,184,0.28)",
         }}
       >
-        <svg
-          width={16}
-          height={16}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(96,165,250,0.9)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0 }}
+        {/* Phone glyph — frosted-glass pill on the gradient */}
+        <div
           aria-hidden="true"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            background: "rgba(255,255,255,0.18)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
         >
-          <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-          <line x1="12" y1="18" x2="12.01" y2="18" />
-        </svg>
+          <svg
+            width={16}
+            height={16}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <line x1="12" y1="18" x2="12.01" y2="18" />
+          </svg>
+        </div>
 
-        <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
-          Get push alerts for every unlock — sign in to the app with one tap
-        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "white", lineHeight: 1.3, marginBottom: 2 }}>
+            Get push alerts for every unlock
+          </div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.82)", lineHeight: 1.35 }}>
+            Sign in to the iOS app with one tap — no second OTP.
+          </div>
+        </div>
 
         <button
           type="button"
           onClick={openModal}
           style={{
             fontSize: "13px",
-            fontWeight: 600,
-            color: "#1CB8B8",
+            fontWeight: 700,
+            color: "#0F8A8A",
             whiteSpace: "nowrap",
-            textDecoration: "none",
             flexShrink: 0,
-            background: "transparent",
+            background: "white",
             border: "none",
+            borderRadius: 10,
+            padding: "8px 14px",
             cursor: "pointer",
-            padding: 0,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
           }}
         >
           Get the app →
         </button>
-
-        <div style={{ flex: 1 }} />
 
         <button
           onClick={dismiss}
@@ -99,20 +125,20 @@ export function MobileAppBanner() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 24,
-            height: 24,
-            borderRadius: 6,
+            width: 26,
+            height: 26,
+            borderRadius: 8,
             border: "none",
-            background: "transparent",
+            background: "rgba(255,255,255,0.16)",
             cursor: "pointer",
-            color: "rgba(255,255,255,0.35)",
+            color: "rgba(255,255,255,0.85)",
             flexShrink: 0,
             padding: 0,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.28)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.16)")}
         >
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
