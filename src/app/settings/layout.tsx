@@ -17,6 +17,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
+import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -48,10 +49,14 @@ export default async function SettingsLayout({
     getUserTier(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
+  // Mirror the dashboard layout's dark-mode application — see comment there.
+  const dark = getDarkModeFromCookies(cookieStore);
 
   return (
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>
-      <DashboardChrome tier={tier}>{children}</DashboardChrome>
+      <div className={dark ? "dark" : ""}>
+        <DashboardChrome tier={tier}>{children}</DashboardChrome>
+      </div>
     </CurrencyProvider>
   );
 }

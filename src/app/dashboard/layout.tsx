@@ -30,6 +30,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
+import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -68,10 +69,24 @@ export default async function DashboardLayout({
     getUserTier(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
+  // Read dark-mode preference from cookie at SSR. Pre-refactor, every
+  // dashboard page wrapped both its sidebar and its main column in a
+  // single `${dark ? " dark" : ""}` div, so both shared the theme. After
+  // we extracted the sidebar into this shared layout, the sidebar lost
+  // its `.dark` ancestor — users with dark mode on saw a light sidebar
+  // next to a dark main column, and on every page navigation there was
+  // a brief "load + skip" because the inner page component would
+  // re-apply `.dark` to its main element after hydration.
+  // Applying `.dark` here at the layout root puts both the sidebar AND
+  // the main column under the same theme class, server-rendered on
+  // first byte. No flicker, single source of truth.
+  const dark = getDarkModeFromCookies(cookieStore);
 
   return (
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>
-      <DashboardChrome tier={tier}>{children}</DashboardChrome>
+      <div className={dark ? "dark" : ""}>
+        <DashboardChrome tier={tier}>{children}</DashboardChrome>
+      </div>
     </CurrencyProvider>
   );
 }
