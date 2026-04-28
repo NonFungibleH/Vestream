@@ -140,6 +140,29 @@ async function fetchFreshRates(): Promise<RateBundle | null> {
   }
 }
 
+// ── Cookie helpers (server-side) ────────────────────────────────────────────
+
+const COOKIE_KEY = "vestream-currency";
+
+/**
+ * Server-side helper: read the cookie to get the user's chosen currency.
+ * Use in server components/layouts to render in the right currency on
+ * first byte (avoids hydration flash for non-USD users).
+ *
+ * Lives in currency.ts (not use-currency.tsx) because the latter has
+ * `"use client"` at the top — which would mark every export as a Client
+ * Component. Server layouts can't import server helpers from a "use
+ * client" module.
+ */
+export function getCurrencyFromCookies(
+  cookieStore: { get: (name: string) => { value: string } | undefined },
+): CurrencyCode {
+  const v = cookieStore.get(COOKIE_KEY)?.value;
+  if (!v) return "USD";
+  if (SUPPORTED_CURRENCIES.some((c) => c.code === v)) return v as CurrencyCode;
+  return "USD";
+}
+
 // ── Formatting (client-safe) ────────────────────────────────────────────────
 
 /**

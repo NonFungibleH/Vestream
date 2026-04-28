@@ -169,6 +169,12 @@ export default function ExportsPage() {
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
             Every vesting claim, with USD value at the moment of claim. Download as CSV for your accountant or import directly into Koinly, CoinTracker, or TurboTax.
           </p>
+          <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>
+            Want a P&amp;L-style summary?{" "}
+            <Link href="/dashboard/income-statement" className="font-semibold" style={{ color: "#0F8A8A" }}>
+              View your income statement →
+            </Link>
+          </p>
         </div>
 
         {/* Coverage banner — honest about what's indexed */}

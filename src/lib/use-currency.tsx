@@ -127,15 +127,6 @@ export function useCurrency(): CurrencyContextValue {
   return ctx;
 }
 
-/**
- * Server-side helper: read the cookie to get the user's chosen currency.
- * Use in server components to render in the right currency on first byte.
- */
-export function getCurrencyFromCookies(
-  cookieStore: { get: (name: string) => { value: string } | undefined },
-): CurrencyCode {
-  const v = cookieStore.get(COOKIE_KEY)?.value;
-  if (!v) return "USD";
-  if (SUPPORTED_CURRENCIES.some((c) => c.code === v)) return v as CurrencyCode;
-  return "USD";
-}
+// `getCurrencyFromCookies` moved to ./currency.ts (server-safe module) so
+// server components/layouts can import it without pulling in the "use
+// client" boundary that makes every export here a Client Component.

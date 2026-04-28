@@ -363,6 +363,18 @@ function IconExport() {
   );
 }
 
+// Income statement / P&L icon — matches the bar-chart hint for an
+// aggregated finances view, distinct from the simple "download" Exports icon.
+function IconIncomeStatement() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="20" x2="12" y2="10"/>
+      <line x1="18" y1="20" x2="18" y2="4"/>
+      <line x1="6"  y1="20" x2="6"  y2="14"/>
+    </svg>
+  );
+}
+
 // ─── DonutChart ───────────────────────────────────────────────────────────────
 
 function DonutChart({ tokens }: { tokens: TokenSummary[] }) {
@@ -3459,9 +3471,10 @@ const NAV_ITEMS = [
   { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"          },
   { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer" },
   { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
-  { icon: <IconBookmark />, label: "Watchlist", href: "/dashboard/watchlist"},
-  { icon: <IconExport />,   label: "Exports",   href: "/dashboard/exports"  },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings"           },
+  { icon: <IconBookmark />, label: "Watchlist",   href: "/dashboard/watchlist"        },
+  { icon: <IconIncomeStatement />, label: "Income", href: "/dashboard/income-statement" },
+  { icon: <IconExport />,   label: "Exports",     href: "/dashboard/exports"          },
+  { icon: <IconSettings />, label: "Settings",    href: "/settings"                   },
 ];
 
 // ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
