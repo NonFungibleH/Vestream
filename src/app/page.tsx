@@ -1194,7 +1194,7 @@ export default async function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, unlimited email alerts, and 3 free push alerts so you can try mobile notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets, unlimited push alerts, the Token Vesting Explorer (Discover), and CSV/PDF export — or contact us for Enterprise if you're a fund, team, or building on our data.",
+              a: "Yes — the Free plan includes 1 wallet, auto-scanned across every supported chain and platform, unlimited email alerts, and 3 free push alerts so you can try mobile notifications. Upgrade to Pro ($14.99/mo with a 14-day free trial) for 3 wallets, unlimited push alerts, the Token Vesting Explorer (Discover), and the full tax-prep stack — Koinly / CoinTracker / TurboTax CSV exports, vesting income statement, and one-click year-end PDF reports. Or contact us for Enterprise if you're a fund, team, or building on our data.",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1270,7 +1270,7 @@ export default async function Home() {
             </Link>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["3 wallet addresses", "Unlimited push alerts", "Email unlock alerts", "Token Vesting Explorer (Discover)", "Priority data refresh (60s)", "CSV & PDF export"].map(f => (
+              {["3 wallet addresses", "Unlimited push alerts", "Email unlock alerts", "Token Vesting Explorer (Discover)", "Priority data refresh (60s)", "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", "Vesting income statement (P&L view)", "Year-end PDF tax report"].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
@@ -1357,7 +1357,9 @@ export default async function Home() {
             ["Push notifications",         "3 lifetime",     "Unlimited",    "Unlimited"],
             ["Email alerts",               true,             true,           true],
             ["Token Vesting Explorer",     false,            true,           true],
-            ["CSV & PDF export",           false,            true,           true],
+            ["Tax-ready CSV (Koinly / CoinTracker / TurboTax)", false, true, true],
+            ["Vesting income statement",   false,            true,           true],
+            ["Year-end PDF tax report",    false,            true,           true],
             ["REST API + MCP server",      false,            false,          true],
             ["Team workspace",             false,            false,          true],
             ["SSO & custom SLA",           false,            false,          true],

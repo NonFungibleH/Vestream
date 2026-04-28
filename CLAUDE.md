@@ -347,11 +347,11 @@ Tables in `src/lib/db/schema.ts`:
 The `"fund"` tier stays in the DB/webhook plumbing for existing subscribers but is
 no longer self-serve. Enterprise customers go through the contact form.
 
-| Tier | Wallets | Token discovery | Push alerts | Discover page |
-|---|---|---|---|---|
-| Free | 1 | Auto-scan across all chains + all 7 platforms | 3 lifetime credits | Blocked (redirect to `/pricing`) |
-| Pro | 3 | Auto-scan | Unlimited | Full access |
-| Fund / Enterprise | Unlimited | Auto-scan | Unlimited | Full access |
+| Tier | Wallets | Token discovery | Push alerts | Discover page | Tax exports |
+|---|---|---|---|---|---|
+| Free | 1 | Auto-scan across all chains + all 9 platforms | 3 lifetime credits | Blocked (redirect to `/pricing`) | Blocked (Pro feature) |
+| Pro | 3 | Auto-scan | Unlimited | Full access | Tax-ready CSV (Koinly / CoinTracker / TurboTax) + Income Statement + Year-end PDF |
+| Fund / Enterprise | Unlimited | Auto-scan | Unlimited | Full access | All Pro tax features |
 
 **Free plan enforcement** (both `/api/wallets` and `/api/mobile/wallets`):
 - Enforced at the API layer purely by **wallet count** — all tiers can omit `chains`/`protocols`/`tokenAddress` for auto-scan.
@@ -569,7 +569,7 @@ Prices are **live and shown publicly** on `/pricing`.
 | Tier | Web price | In-app (iOS/Android) | Key feature |
 |---|---|---|---|
 | Free | $0 | $0 | 1 wallet (auto-scan), 3 lifetime push alerts |
-| Pro | $14.99/mo · $119.99/yr · 14-day free trial | $17.99/mo · $144.99/yr | 3 wallets, unlimited push + email alerts, Discover page |
+| Pro | $14.99/mo · $119.99/yr · 14-day free trial | $17.99/mo · $144.99/yr | 3 wallets, unlimited push + email alerts, Discover page, tax-ready CSV exports + Year-end PDF + Income Statement |
 | Enterprise | Contact | — | Unlimited wallets, REST API + MCP, Slack/Telegram/WhatsApp, SSO, dedicated support |
 
 In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($17.99) and `io.vestream.pro_annual` ($144.99).

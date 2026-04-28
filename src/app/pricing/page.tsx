@@ -7,11 +7,11 @@ import PricingCta from "@/components/PricingCta";
 
 export const metadata: Metadata = {
   title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
-  description: "Vestream is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, and the Discover page. Enterprise on request.",
+  description: "Vestream is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, the Discover page, and tax-ready CSV exports + year-end PDF reports for Koinly, CoinTracker, and TurboTax. Enterprise on request.",
   alternates:  { canonical: "https://vestream.io/pricing" },
   openGraph: {
     title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
-    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts and 3 wallets. Enterprise on request.",
+    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
     url:         "https://vestream.io/pricing",
     siteName:    "Vestream",
     type:        "website",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: {
     card:        "summary_large_image",
     title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
-    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts and 3 wallets. Enterprise on request.",
+    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
   },
 };
 
@@ -105,7 +105,7 @@ const pricingJsonLd = {
       priceCurrency: "USD",
       url:           "https://vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "3 wallets, unlimited push + email alerts, Discover page, 14-day free trial.",
+      description:   "3 wallets, unlimited push + email alerts, Discover page, tax-ready CSV exports + year-end PDF reports for Koinly / CoinTracker / TurboTax, 14-day free trial.",
       priceSpecification: {
         "@type":            "UnitPriceSpecification",
         price:              "14.99",
@@ -263,7 +263,9 @@ export default function Pricing() {
               <FeatureItem text="Email unlock alerts" checkColor="#1CB8B8" />
               <FeatureItem text="Token Vesting Explorer — Discover any stream on-chain" checkColor="#1CB8B8" />
               <FeatureItem text="Priority data refresh (60s)" checkColor="#1CB8B8" />
-              <FeatureItem text="CSV & PDF export" checkColor="#1CB8B8" />
+              <FeatureItem text="Tax-ready CSV exports — Koinly, CoinTracker, TurboTax" checkColor="#1CB8B8" />
+              <FeatureItem text="Vesting income statement (P&L view)" checkColor="#1CB8B8" />
+              <FeatureItem text="Year-end PDF tax report" checkColor="#1CB8B8" />
               <FeatureItem text="Ticketing support" checkColor="#1CB8B8" />
               <FeatureItem text="Search all receivers" included={false} />
               <FeatureItem text="Team workspace" included={false} />
@@ -353,7 +355,9 @@ export default function Pricing() {
               ["Push notifications",            "3 (lifetime)",    "Unlimited",     "Unlimited"],
               ["Email alerts",                  true,              true,            true],
               ["Token Vesting Explorer",        false,             true,            true],
-              ["CSV & PDF export",              false,             true,            true],
+              ["Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", false, true, true],
+              ["Vesting income statement (P&L view)", false,       true,            true],
+              ["Year-end PDF tax report",       false,             true,            true],
               ["REST API + MCP server",         false,             false,           true],
               ["Search all receivers",          false,             false,           true],
               ["Team workspace",                false,             false,           true],
@@ -417,7 +421,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans one wallet across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and CSV/PDF export."
+              a="The Free plan auto-scans one wallet across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
             />
             <FAQItem
               q="How do the 3 free push alerts work?"
