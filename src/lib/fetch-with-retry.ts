@@ -73,6 +73,18 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Error class thrown when a fetch attempt exceeds the configured timeout.
+ * Distinct from generic Error so callers + log handlers can recognise
+ * timeouts vs network resets vs HTTP errors.
+ */
+class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeoutError";
+  }
+}
+
 export async function fetchWithRetry(
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -92,23 +104,28 @@ export async function fetchWithRetry(
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
-    // Create a per-attempt AbortSignal. If the caller already passed a
-    // signal in `init`, we combine them: either signal aborting cancels
-    // the request. This way callers can still cancel from the outside
-    // (e.g. on component unmount) AND we get the timeout safety net.
-    const timeoutSignal = AbortSignal.timeout(timeoutMs);
-    const callerSignal  = init?.signal;
-    const signal = callerSignal
-      // AbortSignal.any is the standard way to combine signals (Node 20+
-      // and all modern browsers). Fallback to caller's signal if the
-      // runtime doesn't support `.any` — better than crashing.
-      ? (typeof AbortSignal.any === "function"
-          ? AbortSignal.any([timeoutSignal, callerSignal])
-          : timeoutSignal)
-      : timeoutSignal;
+    // Per-attempt timeout via Promise.race. We deliberately do NOT pass an
+    // AbortSignal into the fetch's init — Next.js's fetch interceptor
+    // treats requests with a signal as `cache: "no-store"`, which would
+    // poison the platform's data cache and force every render path to
+    // re-hit upstream cold. (We learned this the hard way: an earlier
+    // implementation here used AbortSignal.timeout() which silently took
+    // /protocols pages from sub-second cached renders to 6+ second cold
+    // hits in production.)
+    //
+    // The trade-off of Promise.race: if the upstream fetch hangs forever,
+    // the underlying TCP socket isn't actively closed when the timeout
+    // wins the race. The fetch promise just becomes a dangling I/O the
+    // GC will clean up later. That's acceptable for our use case
+    // (DexScreener / subgraph reads) — Vercel lambdas die after 60s
+    // anyway, so any leaked connection is reaped at lambda end. Worth
+    // it to keep Next's data cache working.
+    const timeoutPromise = new Promise<Response>((_, reject) =>
+      setTimeout(() => reject(new TimeoutError(`Request timed out after ${timeoutMs}ms`)), timeoutMs),
+    );
 
     try {
-      const res = await fetch(input, { ...init, signal });
+      const res = await Promise.race([fetch(input, init), timeoutPromise]);
 
       // Happy path: 2xx/3xx and 4xx-except-429. Return to caller.
       if (!isRetryableStatus(res.status, retryOn)) {
