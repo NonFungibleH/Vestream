@@ -137,6 +137,12 @@ export default function ExportsPage() {
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshMsg, setRefreshMsg]   = useState<string | null>(null);
   const [yearFilter, setYearFilter]   = useState<string>("all");
+  // Per-protocol inserted/error counts from the most recent refresh.
+  // Used to surface the per-protocol diagnostic panel right after a refresh
+  // so users can see exactly which ingestors ran, which inserted rows,
+  // and which errored out — instead of having to deduce coverage from the
+  // single aggregate totalInserted figure the previous flow showed.
+  const [perProtocol, setPerProtocol] = useState<IngestResult[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -172,6 +178,7 @@ export default function ExportsPage() {
       setRefreshMsg(data.message ?? "Indexing complete");
       setCoverage(data.coverage ?? []);
       setPending((data.perProtocol ?? []).filter((r: IngestResult) => r.notImplemented).map((r: IngestResult) => r.protocol));
+      setPerProtocol(data.perProtocol ?? []);
       track("cta_clicked", { cta_id: "exports_refresh", inserted: data.inserted });
       await load();
     } catch {
@@ -302,6 +309,43 @@ export default function ExportsPage() {
             Last refresh indexed: {coverage.join(", ")}.
             {pending.length > 0 && ` Pending adapters: ${pending.join(", ")}.`}
           </p>
+        )}
+
+        {/* Per-protocol breakdown — only shown after the most recent
+            refresh, so users see exactly which ingestors found data,
+            which were silent (no streams on that protocol — expected),
+            and which errored. Replaces the previous "single totalInserted"
+            figure that gave no diagnostic info. */}
+        {perProtocol.length > 0 && (
+          <div className="mb-5 rounded-xl p-3"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--preview-text-3)" }}>
+              Last refresh — per protocol
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px]">
+              {perProtocol.map((r) => {
+                const status = r.error
+                  ? { color: "#B3322E", text: `error: ${r.error.slice(0, 40)}${r.error.length > 40 ? "…" : ""}` }
+                  : r.notImplemented
+                    ? { color: "var(--preview-text-3)", text: "not yet shipped" }
+                    : r.inserted > 0
+                      ? { color: "#0F8A8A", text: `+${r.inserted} new` }
+                      : { color: "var(--preview-text-3)", text: "no new claims" };
+                return (
+                  <div key={r.protocol} className="flex justify-between items-baseline gap-2">
+                    <span className="capitalize" style={{ color: "var(--preview-text-2)" }}>
+                      {r.protocol.replace("-", " ")}
+                    </span>
+                    <span style={{ color: status.color }}>{status.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] mt-2" style={{ color: "var(--preview-text-3)" }}>
+              &quot;No new claims&quot; usually means you don&apos;t have any vesting streams on that
+              protocol — not an error. Errors will show in red.
+            </p>
+          </div>
         )}
 
         {/* Summary card */}

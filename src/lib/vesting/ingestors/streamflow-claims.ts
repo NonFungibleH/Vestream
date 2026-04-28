@@ -92,14 +92,13 @@ export async function ingestStreamflowClaimsForUser(
 ): Promise<number> {
   // Adapter only runs on Solana. Honour the chainIds filter when supplied.
   if (chainIds && !chainIds.includes(CHAIN_IDS.SOLANA)) return 0;
-  if (process.env.SOLANA_ENABLED !== "true") return 0;
   if (wallets.length === 0) return 0;
 
+  // Auto-skip on EVM-only deployments. Previously gated on an explicit
+  // SOLANA_ENABLED flag — see jupiter-lock-claims.ts header comment for
+  // the same fix.
   const rpcUrl = process.env.SOLANA_RPC_URL;
-  if (!rpcUrl) {
-    console.error("[streamflow-claims] SOLANA_RPC_URL not configured");
-    return 0;
-  }
+  if (!rpcUrl) return 0;
 
   let client: SolanaStreamClient;
   try {

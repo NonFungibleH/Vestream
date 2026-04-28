@@ -110,14 +110,16 @@ export async function ingestJupiterLockClaimsForUser(
   chainIds?: SupportedChainId[],
 ): Promise<number> {
   if (chainIds && !chainIds.includes(CHAIN_IDS.SOLANA)) return 0;
-  if (process.env.SOLANA_ENABLED !== "true") return 0;
   if (wallets.length === 0) return 0;
 
+  // Auto-skip on EVM-only deployments. Previously this was gated by an
+  // explicit SOLANA_ENABLED=true flag — but in practice that flag was
+  // missing in production despite SOLANA_RPC_URL being configured, so
+  // Jupiter Lock claims silently never ingested. Auto-detection via
+  // RPC presence is the more honest behaviour: if you have a Solana
+  // RPC URL configured, we'll ingest; if not, we skip.
   const rpcUrl = process.env.SOLANA_RPC_URL;
-  if (!rpcUrl) {
-    console.error("[jupiter-lock-claims] SOLANA_RPC_URL not configured");
-    return 0;
-  }
+  if (!rpcUrl) return 0;
 
   let connection: Connection;
   try {
