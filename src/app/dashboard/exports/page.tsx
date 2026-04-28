@@ -67,11 +67,64 @@ interface IngestResult {
   error?:          string;
 }
 
-const FORMATS: Array<{ id: string; name: string; subtitle: string }> = [
-  { id: "vestream-generic", name: "Vestream generic CSV", subtitle: "Universal — works with any spreadsheet or accountant" },
-  { id: "koinly",           name: "Koinly CSV",            subtitle: "Import → Koinly → Add Wallet → File Import → Custom CSV" },
-  { id: "cointracker",      name: "CoinTracker CSV",       subtitle: "Import → CoinTracker → Add Account → CSV upload" },
-  { id: "turbotax",         name: "TurboTax CSV",          subtitle: "TurboTax → Investments → Crypto → CSV upload" },
+// Platforms with a public import URL get a one-click "Open in <platform>" link
+// that deep-links straight to the right place. The CSV download is auto-
+// triggered when the user clicks the guided-send button so they don't have
+// to bounce back here to grab the file. None of these platforms have a
+// public push API (we researched — Koinly + CoinTracker only support
+// CSV upload or pull-direction integrations), so the guided flow is the
+// closest thing to a 1-click experience we can ship.
+interface ExportFormat {
+  id:        string;
+  name:      string;
+  subtitle:  string;
+  importUrl?: string;
+  /** Human-readable steps the user follows after we drop them on importUrl. */
+  steps?:    string[];
+}
+
+const FORMATS: ExportFormat[] = [
+  {
+    id:       "vestream-generic",
+    name:     "Vestream generic CSV",
+    subtitle: "Universal — works with any spreadsheet or accountant",
+  },
+  {
+    id:        "koinly",
+    name:      "Koinly CSV",
+    subtitle:  "Pre-formatted for Koinly's Custom CSV importer",
+    importUrl: "https://app.koinly.io/p/wallets/import",
+    steps:     [
+      "We'll download your Koinly-format CSV and open Koinly's import page in a new tab.",
+      "In Koinly, search for and select \"Custom CSV\" as the wallet type.",
+      "Click \"Upload File\" and pick the CSV we just downloaded.",
+      "Koinly maps the columns automatically — confirm and import.",
+    ],
+  },
+  {
+    id:        "cointracker",
+    name:      "CoinTracker CSV",
+    subtitle:  "Pre-formatted for CoinTracker's generic CSV upload",
+    importUrl: "https://www.cointracker.io/wallets",
+    steps:     [
+      "We'll download your CoinTracker-format CSV and open CoinTracker's wallets page.",
+      "Click \"Add Wallet\" and select \"Generic CSV\".",
+      "Upload the CSV we just downloaded.",
+      "CoinTracker validates the format and imports — review and confirm.",
+    ],
+  },
+  {
+    id:        "turbotax",
+    name:      "TurboTax CSV",
+    subtitle:  "Pre-formatted for the TurboTax crypto importer (US only)",
+    importUrl: "https://turbotax.intuit.com/personal-taxes/online/premier.jsp",
+    steps:     [
+      "We'll download your TurboTax-format CSV.",
+      "In TurboTax: Investments → Cryptocurrency → \"I'll type it in myself\" → Upload CSV.",
+      "Select \"Other\" as the platform and upload the CSV we just downloaded.",
+      "TurboTax classifies vesting income on Schedule 1 / capital gains on Schedule D — review the import preview.",
+    ],
+  },
 ];
 
 export default function ExportsPage() {
@@ -328,23 +381,11 @@ export default function ExportsPage() {
             <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>Download formats</h2>
             <div className="grid gap-3">
               {FORMATS.map((f) => (
-                <div
+                <ExportFormatCard
                   key={f.id}
-                  className="rounded-xl p-4 flex items-center justify-between gap-4"
-                  style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}
-                >
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{f.name}</div>
-                    <div className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{f.subtitle}</div>
-                  </div>
-                  <button
-                    onClick={() => downloadCsv(f.id)}
-                    className="text-xs font-semibold px-3 py-2 rounded-lg whitespace-nowrap"
-                    style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
-                  >
-                    Download →
-                  </button>
-                </div>
+                  format={f}
+                  onDownload={() => downloadCsv(f.id)}
+                />
               ))}
             </div>
             <p className="text-[11px] mt-4" style={{ color: "var(--preview-text-3)" }}>
@@ -366,6 +407,95 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
       style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
       <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--preview-text-3)" }}>{label}</div>
       <div className="text-xl font-bold" style={{ color: "var(--preview-text)" }}>{value}</div>
+    </div>
+  );
+}
+
+/**
+ * Per-format export card. Two action surfaces:
+ *
+ *   - Bare "Download CSV" button — for users who want the file and know
+ *     where it's going (their accountant, manual reconciliation, etc).
+ *   - "Send to <Platform>" button — for users importing into a specific
+ *     tax tool. Triggers the CSV download AND opens the platform's
+ *     import page in a new tab, then expands a numbered steps panel
+ *     so the user knows exactly what to click on the other side.
+ *
+ * The platforms covered (Koinly, CoinTracker, TurboTax) don't expose
+ * public push APIs — every one of them imports via CSV upload. The
+ * guided flow is the closest thing to 1-click we can build without a
+ * private partnership; researched + documented in the FORMATS const.
+ */
+function ExportFormatCard({
+  format,
+  onDownload,
+}: {
+  format:     ExportFormat;
+  onDownload: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  function handleGuidedSend() {
+    onDownload();
+    if (format.importUrl) {
+      window.open(format.importUrl, "_blank", "noopener,noreferrer");
+    }
+    setExpanded(true);
+    track("cta_clicked", { cta_id: "exports_guided_send", format: format.id });
+  }
+
+  return (
+    <div className="rounded-xl"
+      style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+      <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{format.name}</div>
+          <div className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{format.subtitle}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onDownload}
+            className="text-xs font-semibold px-3 py-2 rounded-lg whitespace-nowrap"
+            style={{ background: "transparent", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
+          >
+            Download CSV
+          </button>
+          {format.importUrl && (
+            <button
+              onClick={handleGuidedSend}
+              className="text-xs font-semibold px-3 py-2 rounded-lg whitespace-nowrap"
+              style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
+            >
+              Send to {format.name.replace(" CSV", "")} →
+            </button>
+          )}
+        </div>
+      </div>
+      {expanded && format.steps && (
+        <div className="px-4 pb-4 pt-0">
+          <div className="rounded-lg p-3"
+            style={{ background: "rgba(28,184,184,0.04)", border: "1px solid rgba(28,184,184,0.15)" }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#0F8A8A" }}>
+              Steps to import
+            </p>
+            <ol className="space-y-1.5 text-xs" style={{ color: "var(--preview-text-2)" }}>
+              {format.steps.map((step, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="flex-shrink-0 font-mono font-semibold" style={{ color: "#0F8A8A" }}>
+                    {i + 1}.
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-[10px] mt-2.5" style={{ color: "var(--preview-text-3)" }}>
+              Note: none of these platforms expose a public push API, so the CSV upload is the
+              official integration path. Your data never leaves your computer between Vestream
+              and the tax tool.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

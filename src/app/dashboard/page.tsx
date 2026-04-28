@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -97,6 +97,33 @@ const CLAIM_LINKS: Record<string, string> = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the current unix-second timestamp, but in a way that's safe to
+ * call during React 19's strict rendering rules. Rather than calling
+ * `Math.floor(Date.now() / 1000)` directly in component bodies (which
+ * trips `react-hooks/purity` because `Date.now()` is impure and produces
+ * unstable results across re-renders), we capture the time in component
+ * state and tick it every 30 seconds.
+ *
+ * Trade-off: components that derive "vested-so-far" / "time-until-unlock"
+ * stay accurate to ±15s on average without forcing a re-render every
+ * frame. For a vesting tracker that's fine — unlock schedules don't
+ * fire faster than that anyway.
+ *
+ * Use this hook anywhere you previously wrote
+ * `const nowSec = Math.floor(Date.now() / 1000)` at the top of a render.
+ */
+function useNowSec(tickIntervalMs: number = 30_000): number {
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNowSec(Math.floor(Date.now() / 1000));
+    }, tickIntervalMs);
+    return () => clearInterval(id);
+  }, [tickIntervalMs]);
+  return nowSec;
+}
 
 function toFloat(amount: string, decimals: number): number {
   const raw = BigInt(amount);
@@ -602,7 +629,7 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top  - PAD.bottom;
 
-  const nowSec   = Math.floor(Date.now() / 1000);
+  const nowSec   = useNowSec();
   const total    = toFloat(stream.totalAmount, stream.tokenDecimals);
   const withdrawn = toFloat(stream.withdrawnAmount, stream.tokenDecimals);
   const color    = getTokenColor(stream.tokenSymbol);
@@ -886,7 +913,7 @@ function ClaimHistory({ stream }: { stream: VestingStream }) {
 
 function MiniSparkline({ stream }: { stream: VestingStream }) {
   const W = 52, H = 22;
-  const nowSec = Math.floor(Date.now() / 1000);
+  const nowSec = useNowSec();
   const color  = getTokenColor(stream.tokenSymbol);
   const total  = toFloat(stream.totalAmount, stream.tokenDecimals);
   const dur    = stream.endTime - stream.startTime;
@@ -936,11 +963,11 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
   // dashboard layout commit; the inner hook returns sensible defaults
   // outside the provider, so this is safe even if the layout is bypassed).
   const { format: fmtCurrencyFull, formatCompact: fmtCurrencyCompact } = useCurrency();
+  const nowSec = useNowSec();
 
   const tokens         = buildTokenSummaries(streams, prices);
   const totalValue     = tokens.reduce((s, t) => s + t.claimableUSD + t.lockedUSD, 0);
   const totalClaimable = tokens.reduce((s, t) => s + t.claimableUSD, 0);
-  const totalLocked    = tokens.reduce((s, t) => s + t.lockedUSD, 0);
   const pctClaimable   = totalValue > 0 ? (totalClaimable / totalValue) * 100 : 0;
   const hasPrice       = totalValue > 0;
   const totalRaw       = tokens.reduce((s, t) => s + t.claimable + t.locked, 0);
@@ -959,7 +986,6 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
     if (!nextUnlockStream) return null;
     const s = nextUnlockStream;
     if (s.shape === "steps" && s.unlockSteps) {
-      const nowSec = Math.floor(Date.now() / 1000);
       const next   = s.unlockSteps.find((st) => st.timestamp > nowSec);
       if (next) {
         const amt = toFloat(next.amount, s.tokenDecimals);
@@ -1332,6 +1358,11 @@ function CopyButton({ text }: { text: string }) {
 const COL = "grid-cols-[160px_88px_98px_80px_80px_108px_98px_118px_80px_90px_130px]";
 
 function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: Record<string, number> }) {
+  // Single source of truth for "now" inside this table — used by the cliff /
+  // monthly-rate derivations below. Replaces inline Date.now() calls flagged
+  // by react-hooks/purity (Date.now isn't pure for React 19's strict-mode
+  // analysis). Re-renders every 30s so cliff-active flags stay accurate.
+  const nowSec = useNowSec();
   // Show any stream where not all tokens have been withdrawn yet.
   // Using totalAmount vs withdrawnAmount is more robust than relying on
   // isFullyVested / claimableNow which can mis-compute on edge-case data.
@@ -1387,7 +1418,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
               const claimablePct = total > 0n ? Number((claimable  * 10000n) / total) / 100 : 0;
               const claimableAmt = toFloat(s.claimableNow, s.tokenDecimals);
               const lockedAmt    = toFloat(s.lockedAmount, s.tokenDecimals);
-              const hasCliff       = s.cliffTime && s.cliffTime > Math.floor(Date.now() / 1000);
+              const hasCliff       = s.cliffTime && s.cliffTime > nowSec;
               const streamDuration = s.endTime - s.startTime;
               const monthlyRate    = streamDuration > 0
                 ? toFloat(s.totalAmount, s.tokenDecimals) * (30 * 86400) / streamDuration
@@ -1450,7 +1481,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                   {/* 5. End */}
                   <div>
                     <span className="text-[11px] tabular-nums" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.endTime)}</span>
-                    {!s.isFullyVested && s.endTime > Math.floor(Date.now() / 1000) && (
+                    {!s.isFullyVested && s.endTime > nowSec && (
                       <p className="text-[9px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
                         in {timeUntil(s.endTime)}
                       </p>
@@ -1858,7 +1889,7 @@ function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
 // ─── UnlockTimeline ───────────────────────────────────────────────────────────
 
 function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }) {
-  const nowSec = Math.floor(Date.now() / 1000);
+  const nowSec = useNowSec();
   const [emailAlerts, setEmailAlerts] = useState(false);
 
   useEffect(() => {
@@ -2511,7 +2542,6 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
           {visibleMarket.map((m) => {
             const color          = getTokenColor(m.symbol);
             const liq            = LIQUIDITY_LABEL[m.liquidity];
-            const changePositive = (m.change24h ?? 0) >= 0;
             const hasData        = m.price !== null;
             function changePill(label: string, val: number | null) {
               if (val === null) return null;
@@ -2768,8 +2798,14 @@ function PnLPanel({
     const px  = parseFloat(fmPrice.replace(/[^0-9.]/g, ""));
     if (isNaN(amt) || amt <= 0 || isNaN(px) || px <= 0 || !fmDate) return;
     const pricePer = fmMode === "total" ? px / amt : px;
+    // ID generation: React 19's react-hooks/purity flags Date.now() + Math.random()
+    // here because the function is defined during render. But this IS a click
+    // handler — it never runs during render, only when the user clicks Save. The
+    // disable scopes the suppression to this exact line.
+    // eslint-disable-next-line react-hooks/purity
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     onAddBuyTx(symbol, {
-      id:       Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      id,
       date:     fmDate,
       amount:   amt,
       pricePer,
@@ -3692,7 +3728,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             : pathname.startsWith(item.href);
           return (
             <button key={item.label}
-              onClick={() => router.push(item.href)}
+              onClick={() => { router.push(item.href); onClose(); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={isActive
                 ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(59,130,246,0.15)" }
@@ -4049,7 +4085,15 @@ export default function Dashboard() {
     "/api/prices", fetcher, { refreshInterval: 300_000 }
   );
 
-  const streams = data?.streams ?? [];
+  // Memoise the streams array so its identity is stable when SWR hands us the
+  // same payload again. Without this, the `?? []` fallback creates a brand-
+  // new empty array on every render and the useEffect below thinks `streams`
+  // has changed every tick. (Lint flagged this as exhaustive-deps; the real
+  // issue is dependency identity, not "missing deps".)
+  const streams = useMemo<VestingStream[]>(
+    () => data?.streams ?? [],
+    [data?.streams],
+  );
 
   useEffect(() => {
     if (streams.length === 0) return;

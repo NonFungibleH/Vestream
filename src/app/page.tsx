@@ -1063,6 +1063,94 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Tax exports — mid-page, below hero/features/onboarding.
+            Deliberately not in the hero: the headline value of Vestream is
+            tracking, not taxes. Tax is the secondary feature that turns
+            tracking users into yearly returners. Surface it where readers
+            who scrolled this far are already engaged. ───────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="rounded-3xl p-8 md:p-12"
+          style={{
+            background: "linear-gradient(135deg, rgba(28,184,184,0.06), rgba(124,58,237,0.04))",
+            border: "1px solid rgba(28,184,184,0.18)",
+          }}>
+          <div className="grid md:grid-cols-[1.2fr_1fr] gap-8 md:gap-12 items-center">
+            <div>
+              <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
+                Tax season? Sorted.
+              </p>
+              <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
+                Every claim, valued in USD at the moment it hit your wallet
+              </h2>
+              <p className="text-base mb-5 leading-relaxed" style={{ color: "#5C6066" }}>
+                Vesting income is taxed at receipt — at the price the token was worth the second
+                you claimed. Vestream indexes every claim across all 10 supported protocols,
+                computes USD value at claim time using historical pricing, and gives you a year-end
+                report your accountant can actually read.
+              </p>
+              <ul className="space-y-2.5 mb-6">
+                {[
+                  "CSV exports tuned for Koinly, CoinTracker, TurboTax, and any spreadsheet your accountant uses",
+                  "P&L-style income statement with year × protocol × token breakdowns",
+                  "One-click year-end PDF report — drop it into an email to your accountant",
+                  "Pricing-confidence flags so you know which numbers are exact-day and which need a manual cost basis",
+                ].map((item) => (
+                  <li key={item} className="flex gap-2.5 items-start text-sm" style={{ color: "#3A3D42" }}>
+                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                <a href="/dashboard/exports"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                  style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}>
+                  Open Exports tab →
+                </a>
+                <a href="/resources/token-vesting-tax-guide"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: "white", border: "1px solid rgba(28,184,184,0.25)", color: "#0F8A8A" }}>
+                  How to file vesting taxes →
+                </a>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              {/* Mock report card — purely illustrative, no real data. */}
+              <div className="rounded-2xl p-5"
+                style={{ background: "white", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 8px 24px rgba(28,184,184,0.10)" }}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: "#0F8A8A" }}>Tax year 2025</p>
+                  <span className="text-[10px] font-mono" style={{ color: "#94A3B8" }}>VESTING_INCOME.pdf</span>
+                </div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#94A3B8" }}>Total income</p>
+                <p className="text-3xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$184,250.00</p>
+                <div className="space-y-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
+                  {[
+                    { label: "Sablier",      value: "$98,400.00", pct: "53%" },
+                    { label: "Hedgey",       value: "$42,180.00", pct: "23%" },
+                    { label: "UNCX",         value: "$28,900.00", pct: "16%" },
+                    { label: "Streamflow",   value: "$14,770.00", pct: "8%"  },
+                  ].map((r) => (
+                    <div key={r.label} className="flex justify-between items-center text-xs">
+                      <span style={{ color: "#3A3D42" }}>{r.label}</span>
+                      <div className="text-right">
+                        <span className="font-semibold" style={{ color: "#1A1D20" }}>{r.value}</span>
+                        <span className="ml-2 text-[10px]" style={{ color: "#94A3B8" }}>{r.pct}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] mt-3 text-center" style={{ color: "#94A3B8" }}>
+                Illustrative. Your actual report uses on-chain claim data.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-3xl mx-auto">
         <div className="text-center mb-12">

@@ -4074,6 +4074,228 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 24 ───────────────────────────────────────────────────────────────
+  {
+    slug:        "token-vesting-tax-guide",
+    title:       "How to File Taxes on Token Vesting Income (And the One Spreadsheet That Saves You Hours)",
+    excerpt:     "Vesting income is taxed at receipt — at the price the token was worth the second you claimed. Here's how to compute it, what tax software needs, and how to stop reconciling claim history by hand.",
+    publishedAt: "2026-04-28",
+    updatedAt:   "2026-04-28",
+    readingTime: "10 min read",
+    category:    "Taxes",
+    tags:        ["taxes", "vesting income", "Koinly", "CoinTracker", "TurboTax", "year-end", "cost basis"],
+    content: [
+      {
+        type: "p",
+        html: "If you've received tokens through vesting — as a founder, an early investor, an employee, an advisor, or via an airdrop with vesting attached — you have a tax problem most people misunderstand. <strong>Vesting income is taxed at the moment each tranche unlocks, valued in your local currency at that exact moment.</strong> Not at TGE, not when you eventually sell, not at year-end average. Each individual claim is its own tax event.",
+      },
+      {
+        type: "p",
+        html: "This guide explains how the tax actually works, what software like Koinly, CoinTracker, and TurboTax need from you, and how Vestream collapses what is normally a 6-hour January spreadsheet into a 60-second download.",
+      },
+
+      { type: "h2", text: "The Core Rule: Income at Receipt, Capital Gains at Sale" },
+      {
+        type: "p",
+        html: "Across most major jurisdictions (US IRS, UK HMRC, EU member states, Australia ATO, Canada CRA), the tax treatment of vesting tokens follows the same two-step pattern:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>At each claim:</strong> the value of the tokens received counts as ordinary income, taxed at your marginal rate. Value = (number of tokens claimed) × (token's market price in your fiat currency at the moment of the claim).",
+          "<strong>At each sale:</strong> the difference between your sale price and the price at receipt counts as capital gain or loss. The <em>cost basis</em> for the capital-gains calculation is the same value you reported as income at the claim.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🧾",
+        title: "Two transactions, two tax events",
+        body:  "When you claim 10,000 tokens at $5 each: $50,000 of income today. When you sell them later at $8: $30,000 of capital gain. The $5 cost basis comes from the receipt — get it wrong, and your eventual capital-gains calculation is wrong too.",
+      },
+      {
+        type: "p",
+        html: "This means the value-at-claim is the <strong>most consequential single number</strong> in your year-end vesting tax position. Get it right and everything else flows. Get it wrong — by using TGE price, year-end price, or 'I'll figure it out later' — and you risk under- or over-paying both income tax now AND capital-gains tax later.",
+      },
+
+      { type: "h2", text: "What Counts as a 'Claim Event'?" },
+      {
+        type: "p",
+        html: "A claim is any on-chain transaction that moves tokens from a vesting contract to your wallet. Different protocols call it different things:",
+      },
+      {
+        type: "table",
+        headers: ["Protocol",       "On-chain event name",          "Notes"],
+        rows: [
+          ["Sablier",                "Withdraw / withdrawMax",        "Continuous streaming — claim any time after start"],
+          ["Hedgey",                 "PlanRedeemed",                  "Per-plan redemption against an NFT"],
+          ["UNCX (V3 + VM)",         "WithdrawEvent / TokensReleased","Each unlock is a discrete event"],
+          ["Unvest",                 "Claim",                         "Per-milestone or pro-rata draws"],
+          ["Team Finance",           "VestingClaim",                  "Claim against a vested allocation"],
+          ["Superfluid",             "VestingCliffAndFlowExecuted",   "Cliff payouts are discrete; continuous flow accrues every second"],
+          ["PinkSale",               "LockUnlocked",                  "Cycle-based unlocks"],
+          ["Streamflow / Jupiter Lock","Withdraw instruction",        "Solana — recorded against the program account"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Every protocol's withdraw/claim event is what creates a tax obligation — not the unlock itself. Tokens that have technically vested but have not yet been claimed are not (in most jurisdictions) taxable income. The tax meter starts when tokens move into your wallet.",
+      },
+
+      { type: "h2", text: "The Five Pieces of Information You Need Per Claim" },
+      {
+        type: "p",
+        html: "For any tax-software import or accountant handover, every claim event needs to carry these five fields:",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Date and time</strong> (UTC, to the second — block timestamp).",
+          "<strong>Token symbol and contract address</strong> (so software can match cost basis on later sales).",
+          "<strong>Quantity claimed</strong>, in whole token units (not raw on-chain wei).",
+          "<strong>USD value at claim</strong>, computed from the historical price on that exact date.",
+          "<strong>Transaction hash</strong> (proof, and the unique key that prevents double-counting).",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "📋",
+        title: "Why all five matter",
+        body:  "Tax software groups by token symbol + chain to track cost basis lots over time. If you skip the contract address, two tokens with the same symbol on different chains get merged. If you skip the tx hash, re-imports double-count. If you skip the historical price, the software guesses — usually wrong.",
+      },
+
+      { type: "h2", text: "How to Compute Historical Prices (And Why You Probably Shouldn't)" },
+      {
+        type: "p",
+        html: "The historical-price lookup is where most people lose hours of tax-prep time. CoinGecko and CoinMarketCap both offer a free API that returns historical daily price data; Etherscan and BscScan offer historical price for the chain's native token but not arbitrary ERC-20s.",
+      },
+      {
+        type: "p",
+        html: "If you wanted to build the lookup yourself, the procedure is roughly:",
+      },
+      {
+        type: "ol",
+        items: [
+          "For each claim event, take the block timestamp and convert to a UTC date.",
+          "Hit CoinGecko's <code>/coins/{id}/history?date=DD-MM-YYYY</code> with the token's CoinGecko ID for that date.",
+          "Read <code>market_data.current_price.usd</code>.",
+          "Multiply by the token quantity to get USD-at-claim.",
+          "Cache the result so you don't re-query for the same (token, date) twice.",
+          "Handle missing prices (illiquid tokens, pre-listing dates) with a manual cost basis or by accepting nearest-day.",
+        ],
+      },
+      {
+        type: "p",
+        html: "It's about 200 lines of code per dimension — token resolution, rate-limit-aware fetching, caching, fallback ladder. Vestream does this once, server-side, with a 7-day fallback window and price-confidence flags so you know which numbers are exact-day vs nearest-day vs missing.",
+      },
+
+      { type: "h2", text: "What Koinly, CoinTracker, and TurboTax Each Want" },
+      {
+        type: "p",
+        html: "Each tax-software platform accepts a slightly different CSV shape. Vestream generates all three formats from the same underlying claim_events table:",
+      },
+      {
+        type: "table",
+        headers: ["Platform",   "Import path",                            "Required columns"],
+        rows: [
+          ["Koinly",             "Settings → Wallets → Add → Custom CSV", "Date, Sent Amount + Currency, Received Amount + Currency, Label, TxHash, Description"],
+          ["CoinTracker",        "Add Wallet → Generic CSV upload",       "Date, Received Quantity + Currency, Sent Quantity + Currency, Fee, Tag, Tx Hash"],
+          ["TurboTax",           "Investments → Crypto → Upload CSV",     "Symbol, Quantity, Date Acquired, Date Sold, Cost Basis, Proceeds (vesting income goes in via 'other income' — Vestream's TurboTax format flags each row appropriately)"],
+        ],
+      },
+      {
+        type: "p",
+        html: "All three CSVs need the same five fields per claim — date, token, quantity, USD value, tx hash — they just label and order them differently. Vestream's Exports tab generates each format exactly to spec.",
+      },
+
+      { type: "h2", text: "The 60-Second Workflow on Vestream" },
+      {
+        type: "ol",
+        items: [
+          "Sign in at <a href=\"/login\">vestream.io</a> and add the wallets that received your vesting tokens.",
+          "Open the <a href=\"/dashboard/exports\">Exports tab</a> and hit Refresh claims. Vestream queries every supported protocol on every supported chain, indexes every withdrawal event since the wallet's first transaction, and computes USD-value-at-claim for each one.",
+          "Pick a tax year from the dropdown (e.g. 2025).",
+          "Click the format your accountant uses (Vestream generic / Koinly / CoinTracker / TurboTax). The CSV downloads instantly.",
+          "Optional: open the <a href=\"/dashboard/income-statement\">Income Statement</a> for a P&amp;L-style summary, then click Year-end PDF to generate a printable report you can email to your accountant directly.",
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "⚡",
+        title: "What the workflow replaces",
+        body:  "Without Vestream, the equivalent is: open every protocol's UI, scroll back through your claim history, copy each claim into a spreadsheet, look up the historical USD price for each row by hand, paste into the right tax-software CSV format, hope you didn't miss any. We've timed it — about 6 hours for a 50-claim year, with material risk of getting the historical prices wrong.",
+      },
+
+      { type: "h2", text: "Edge Cases Worth Knowing" },
+      {
+        type: "ul",
+        items: [
+          "<strong>Continuous streams (Sablier, Superfluid):</strong> when you call <code>withdraw</code>, you receive everything that has accrued since the last withdrawal. That single transaction is one tax event — you don't pro-rate it across the days the tokens were accruing. The block timestamp of the withdraw is the canonical receipt date.",
+          "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event happens when you <em>claim</em> those tokens, not on day 180 itself. If you wait three weeks to claim, your USD-at-claim uses the price on the claim date, not the cliff date.",
+          "<strong>Cancelled vests:</strong> if a stream is cancelled by the sender (cancellable vests), tokens already claimed are still income for the year they were claimed — the cancellation doesn't reverse it.",
+          "<strong>Re-vesting / topped-up vests:</strong> some protocols allow the sender to add tokens to an existing vest. New tokens have their own clock; new claims against them are new tax events, valued at the new claim date.",
+          "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. Vestream uses a snapshot-diff model — the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
+        ],
+      },
+
+      { type: "h2", text: "Timing, Forms, and When Returns Are Due" },
+      {
+        type: "p",
+        html: "Some quick reference on key jurisdictions (verify with a local accountant):",
+      },
+      {
+        type: "table",
+        headers: ["Jurisdiction", "Treatment of vesting income",     "Filing deadline",       "Reporting form"],
+        rows: [
+          ["United States",    "Ordinary income at marginal rate",  "April 15 (year +1)",     "Schedule 1 / Schedule D for sales"],
+          ["United Kingdom",   "Income tax + NICs at receipt",      "January 31 (year +1)",   "SA100 / SA108"],
+          ["Canada",           "Ordinary income at receipt",        "April 30 (year +1)",     "T1 General"],
+          ["Australia",        "Ordinary income at receipt",        "October 31 (year +1)",   "Tax return (TR) / Crypto schedule"],
+          ["Germany",          "Other income at receipt; CGT-free after 1y hold",  "July 31 (year +1)", "Anlage SO"],
+        ],
+      },
+      {
+        type: "p",
+        html: "Vestream does not provide tax advice. Use the data we surface to populate forms with your accountant. The CSV exports map cleanly to the import flows of Koinly, CoinTracker, and TurboTax — which themselves map to the right line items on the relevant local return.",
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Are vested-but-unclaimed tokens taxable?",
+            a: "In most jurisdictions, no — taxation triggers on receipt, which is when the tokens move into your wallet. Tokens still locked in the vesting contract are not yet 'received'. Confirm with a local accountant; some jurisdictions are tightening this."
+          },
+          { q: "What if the token had no liquid market on the claim date?",
+            a: "You'll need a manual cost basis. Vestream flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero — talk to your accountant before settling on a method."
+          },
+          { q: "Can I just enter total annual income at year-end and skip the per-claim detail?",
+            a: "Tax software needs per-event detail to track cost basis lots for capital-gains calculations on later sales. Lumping everything into one annual receipt loses the per-token cost-basis lots you'll need when you eventually sell. Per-claim is the right granularity."
+          },
+          { q: "Does Vestream submit my taxes for me?",
+            a: "No. Vestream produces the data your accountant or tax software needs. The actual filing is done in Koinly / CoinTracker / TurboTax / your accountant's tool of choice — Vestream's CSV imports cleanly into all of them."
+          },
+          { q: "What if I claimed across multiple wallets in the same year?",
+            a: "Add every receiving wallet to your Vestream dashboard. The Exports tab aggregates across all your tracked wallets, so the year-end report covers your entire vesting income regardless of which wallet received which claim."
+          },
+          { q: "Is the price I receive at claim the same as the cost basis for capital-gains later?",
+            a: "Yes — that's the whole point of the income-at-receipt rule. The USD value you report as income at the claim becomes your cost basis for that lot. When you sell, your gain/loss is (sale price − cost basis) per token."
+          },
+          { q: "What about staking / yield rewards on vested tokens?",
+            a: "Treated separately. If you stake tokens you've already received, the staking rewards are their own income events with their own dates and cost bases. Vestream tracks vesting receipts; staking rewards need a separate tool or accountant entry."
+          },
+        ],
+      },
+
+      { type: "h2", text: "Get the Spreadsheet" },
+      {
+        type: "callout",
+        emoji: "📊",
+        title: "Skip the 6-hour January reconciliation",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Exports tab. Every claim across all 10 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {

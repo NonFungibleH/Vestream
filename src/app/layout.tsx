@@ -30,9 +30,9 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // description>, OG and Twitter cards. Keeping these as constants makes it
 // obvious when one card drifts from another (the sin we just paid for —
 // Twitter and OG had subtly different descriptions before this commit).
-const SITE_TITLE       = "Vestream — Free Token Vesting Tracker for 9 Protocols";
+const SITE_TITLE       = "Vestream — Free Token Vesting Tracker + Tax Reports for 9 Protocols";
 const SITE_DESCRIPTION =
-  "Track every token unlock across 9 protocols (Sablier, Hedgey, UNCX, Streamflow + more) on Ethereum, Base, BNB, Polygon and Solana. Free, no signup.";
+  "Track every token unlock across 9 protocols (Sablier, Hedgey, UNCX, Streamflow + more) on Ethereum, Base, BNB, Polygon and Solana. Tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
 
 export const metadata: Metadata = {
   title: SITE_TITLE,
