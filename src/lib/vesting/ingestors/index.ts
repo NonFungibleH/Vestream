@@ -19,10 +19,10 @@
 //   hedgey       — eth_getLogs PlanRedeemed events         ✅ shipped
 //   team-finance — Squid endpoint vestingClaims            ✅ shipped (synthetic txHash)
 //   pinksale     — eth_getLogs LockUnlocked + multicall    ✅ shipped
-//   uncx         — The Graph subgraph Withdrawal events    🚧 Phase 2
+//   uncx         — The Graph subgraph WithdrawEvent        ✅ shipped
 //   uncx-vm      — eth_getLogs TokensReleased events       ✅ shipped
-//   unvest       — The Graph subgraph Released events      🚧 Phase 2
-//   superfluid   — hosted subgraph TokenWithdrawnEvent     🚧 Phase 2
+//   unvest       — The Graph subgraph Claim entity         ✅ shipped
+//   superfluid   — VestingScheduler CFA flow integration   🚧 Phase 3 (different model)
 //   streamflow   — Solana program account snapshot diffs   🚧 Phase 3
 //   jupiter-lock — Solana program account snapshot diffs   🚧 Phase 3
 //
@@ -39,6 +39,8 @@ import { ingestHedgeyClaimsForUser } from "./hedgey-claims";
 import { ingestTeamFinanceClaimsForUser } from "./team-finance-claims";
 import { ingestPinksaleClaimsForUser } from "./pinksale-claims";
 import { ingestUncxVmClaimsForUser } from "./uncx-vm-claims";
+import { ingestUncxClaimsForUser } from "./uncx-claims";
+import { ingestUnvestClaimsForUser } from "./unvest-claims";
 
 export type AdapterId =
   | "sablier"
@@ -62,7 +64,15 @@ export interface IngestResult {
 /** Adapters with shipped ingestors. Update this list as Phase 2 lands
  *  each one. Determines what /api/claims/history reports as `coverage`
  *  vs `pending`. */
-export const SHIPPED_INGESTORS: AdapterId[] = ["sablier", "hedgey", "team-finance", "pinksale", "uncx-vm"];
+export const SHIPPED_INGESTORS: AdapterId[] = [
+  "sablier",
+  "hedgey",
+  "team-finance",
+  "pinksale",
+  "uncx-vm",
+  "uncx",
+  "unvest",
+];
 
 /** Stub for a not-yet-implemented adapter. Returns 0 + a flag the
  *  orchestrator surfaces in the response. */
@@ -101,17 +111,21 @@ export async function ingestAllClaimsForUser(
     ingestUncxVmClaimsForUser(userId, wallets, chainIds)
       .then((inserted) => ({ protocol: "uncx-vm" as const, inserted }))
       .catch((err) => ({ protocol: "uncx-vm" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestUncxClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "uncx" as const, inserted }))
+      .catch((err) => ({ protocol: "uncx" as const, inserted: 0, error: String(err?.message ?? err) })),
+    ingestUnvestClaimsForUser(userId, wallets, chainIds)
+      .then((inserted) => ({ protocol: "unvest" as const, inserted }))
+      .catch((err) => ({ protocol: "unvest" as const, inserted: 0, error: String(err?.message ?? err) })),
 
-    // Phase 2 — TODO: replace each with a real ingestor.
-    // The 3 below all use The Graph subgraphs that only expose CURRENT
-    // STATE (sharesWithdrawn, claimed, settledAmount) — not per-event
-    // timestamped withdrawals. Need either: (a) a different subgraph
-    // query for withdrawal-event entities (need to verify each schema)
-    // or (b) eth_getLogs against the contract's Withdraw/Released event.
-    // Path (b) is proven (see hedgey-claims.ts, pinksale-claims.ts,
-    // uncx-vm-claims.ts).
-    notYetImplemented("uncx"),
-    notYetImplemented("unvest"),
+    // Superfluid: deferred. Vesting Scheduler uses Constant Flow
+    // Agreements (CFA) — discrete events fire only at cliff
+    // (`VestingCliffAndFlowExecutedEvent.cliffAmount`) and end
+    // (`VestingEndExecutedEvent.earlyEndCompensation`); the bulk of
+    // value transfer happens via continuous flow at `flowRate`, with
+    // no discrete amount per claim. Tax-grade attribution needs flow
+    // integration over the user's holding window — different model
+    // from the per-event ingestors above. Tracked as Phase 3 work.
     notYetImplemented("superfluid"),
 
     // Phase 3 — Solana adapters. Different ingestion model entirely

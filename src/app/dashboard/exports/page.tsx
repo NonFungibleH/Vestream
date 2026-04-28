@@ -187,8 +187,8 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, Team Finance, PinkSale, UNCX VestingManager</span> ·
-                Coming soon: UNCX (Token Locker), Superfluid, Unvest, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, Team Finance, PinkSale, UNCX (V3 + VestingManager), Unvest</span> ·
+                Coming soon: Superfluid, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 We&apos;re rolling out one protocol at a time so each one&apos;s historical pricing is verified.
