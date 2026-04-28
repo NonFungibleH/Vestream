@@ -37,6 +37,83 @@ export const users = pgTable("users", {
   pushAlertsSent:        integer("push_alerts_sent").default(0).notNull(),
 });
 
+// ── Claim events ────────────────────────────────────────────────────────────
+// Every withdrawal/claim event we've observed for any tracked stream.
+// Foundation for the Tax-ready claim history feature: tax exports
+// (Koinly / CoinTracker / TurboTax / IRS 8949 / HMRC SA108) all need a
+// per-claim row with timestamp, token, amount, USD value at claim time,
+// gas paid, and a link back to the source stream.
+//
+// Data source per protocol:
+//   - Sablier:      Withdrawal events from the Sablier Lockup subgraph
+//   - Hedgey:       PlanRedeemed events from the Hedgey subgraph
+//   - UNCX:         Withdrawn events from the UNCX subgraph
+//   - Team Finance: Released events from the team-finance subgraph
+//   - Superfluid:   ClaimedTotalAmount events
+//   - PinkSale:     LockUnlocked events (contract reads, no subgraph)
+//   - Streamflow:   Solana program-account snapshot diffs
+//   - Jupiter Lock: Solana program-account snapshot diffs
+//
+// USD value at claim is computed at ingestion time using historical prices
+// from CoinGecko (/coins/{id}/history endpoint cached in Upstash). Streams
+// without a CoinGecko id fall back to nearest-available price ±24h, or
+// null + a `priceConfidence` of "missing" so the UI can prompt the user
+// for a manual cost basis.
+//
+// Indexes:
+//   - (userId, claimedAt) — user's chronological claim feed
+//   - (streamId)          — per-stream history view
+//   - (chainId, txHash)   — dedup on backfill (each tx delivers one event)
+export const claimEvents = pgTable("claim_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Composite stream id matching vestingStreamsCache.streamId */
+  streamId: text("stream_id").notNull(),
+  protocol: text("protocol").notNull(),
+  chainId:  integer("chain_id").notNull(),
+  /** Recipient wallet that received the tokens (canonical lowercase). */
+  recipient: text("recipient").notNull(),
+  /** Token contract (canonical lowercase). */
+  tokenAddress: text("token_address").notNull(),
+  tokenSymbol:  text("token_symbol"),
+  tokenDecimals: integer("token_decimals").notNull(),
+  /** Amount claimed in token base units (stringified bigint — Postgres
+   *  numeric would lose precision on >2^53). */
+  amount: text("amount").notNull(),
+  /** Wall-clock time of the claim (block timestamp on EVM, slot time
+   *  derived for SVM). Stored as a timestamp for easy SQL date-range
+   *  queries. */
+  claimedAt: timestamp("claimed_at").notNull(),
+  /** Source transaction. txHash unique-per-chain serves as the natural
+   *  dedup key on backfill (each tx delivers one observable event). */
+  txHash: text("tx_hash").notNull(),
+  /** Gas paid in native chain token (wei for EVM, lamports for SVM)
+   *  as stringified bigint. Null if we couldn't fetch the receipt. */
+  gasNative: text("gas_native"),
+  /** USD value at claim time. Null when we couldn't price the token at
+   *  the claim block — UI prompts for manual cost basis in that case. */
+  usdValueAtClaim: numeric("usd_value_at_claim"),
+  /** Pricing confidence:
+   *    "exact"     — CoinGecko historical at the exact day
+   *    "nearest"   — fell back to the nearest available price within ±24h
+   *    "missing"   — no historical price available; usdValueAtClaim is null
+   */
+  priceConfidence: text("price_confidence").notNull().default("missing"),
+  /** Gas value in USD at the time of the claim (separate from token USD
+   *  so we don't double-count the wei→USD conversion). */
+  gasUsdValueAtClaim: numeric("gas_usd_value_at_claim"),
+  /** When this row was inserted into our index. Distinct from claimedAt:
+   *  a tx that happened years ago gets backfilled with the original
+   *  claimedAt but the indexedAt is now. */
+  indexedAt: timestamp("indexed_at").defaultNow().notNull(),
+}, (t) => [
+  index("claim_events_user_claimed_idx").on(t.userId, t.claimedAt),
+  index("claim_events_stream_idx").on(t.streamId),
+  uniqueIndex("claim_events_chain_tx_uq").on(t.chainId, t.txHash, t.recipient, t.tokenAddress),
+]);
+
 // ── Token watchlist ─────────────────────────────────────────────────────────
 // Tokens the user wants to track WITHOUT receiving them — typically a token
 // they're considering buying, or watching for unlock pressure that might
