@@ -99,6 +99,7 @@ interface DiagnosticResult {
   errors:             Array<{ stage: string; message: string }>;
   envVars: {
     cronSecret:        boolean;
+    graphApiKey:       boolean;
     rpcEthereum:       boolean;
     rpcBsc:            boolean;
     rpcPolygon:        boolean;
@@ -192,6 +193,7 @@ export async function GET(req: NextRequest) {
     errors,
     envVars: {
       cronSecret:  !!process.env.CRON_SECRET,
+      graphApiKey: !!process.env.GRAPH_API_KEY,
       rpcEthereum: !!process.env.ALCHEMY_RPC_URL_ETH,
       rpcBsc:      !!process.env.BSC_RPC_URL,
       rpcPolygon:  !!process.env.POLYGON_RPC_URL,

@@ -382,17 +382,20 @@ export default async function ProtocolLandingPage(
           />
         </div>
         {!hasData && (
-          // First-scan-in-progress nudge. When the seed cron hasn't yet
-          // populated this protocol's slice of vestingStreamsCache (or the
-          // page just rendered with the build-time empty fallback because
-          // ISR hasn't yet fetched runtime data), the stat strip shows all
-          // dashes — which reads like a broken page. This banner gives
-          // honest context: "we're fetching this, check back later" beats
-          // the implicit "this protocol has nothing."
+          // Honest empty-state copy. Earlier wording said "first scan in
+          // progress" which implied temporary emptiness. Untrue: the cache
+          // is UPSERT-only and never gets wiped during reindex (verified
+          // src/lib/vesting/dbcache.ts:127-137). If the stat strip is empty,
+          // it means the seeder has not yet successfully populated this
+          // protocol/chain combo — usually a one-time bootstrap issue
+          // (RPC config, subgraph URL, GRAPH_API_KEY) rather than a
+          // periodic indexing window. Tell users that honestly + tell
+          // them their personal wallet results are unaffected.
           <p className="text-xs text-center mt-3" style={{ color: "#94A3B8" }}>
-            First on-chain scan in progress — counts populate within an hour
-            of deploy and refresh nightly. If you arrived from a wallet
-            search, your specific results aren&apos;t affected by this.
+            We don&apos;t have indexed data for this protocol yet — our seed scanner
+            is working through it. If you arrived from a wallet search, your
+            specific results are unaffected — those come from a live on-chain
+            read, not this cache.
           </p>
         )}
       </section>
