@@ -381,6 +381,20 @@ export default async function ProtocolLandingPage(
             color={meta.color}
           />
         </div>
+        {!hasData && (
+          // First-scan-in-progress nudge. When the seed cron hasn't yet
+          // populated this protocol's slice of vestingStreamsCache (or the
+          // page just rendered with the build-time empty fallback because
+          // ISR hasn't yet fetched runtime data), the stat strip shows all
+          // dashes — which reads like a broken page. This banner gives
+          // honest context: "we're fetching this, check back later" beats
+          // the implicit "this protocol has nothing."
+          <p className="text-xs text-center mt-3" style={{ color: "#94A3B8" }}>
+            First on-chain scan in progress — counts populate within an hour
+            of deploy and refresh nightly. If you arrived from a wallet
+            search, your specific results aren&apos;t affected by this.
+          </p>
+        )}
       </section>
 
       {/* ── Latest + upcoming unlock row ─────────────────────────────────── */}

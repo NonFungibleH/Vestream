@@ -526,9 +526,27 @@ const PINKSALE_LOCK_ADDED_TOPIC =
   "0x694af1cc8727cdd0afbdd53d9b87b69248bd490224e9dd090e788546506e076f" as Hex;
 
 const PINKSALE_CHUNK  = 49_999n;   // PublicNode caps eth_getLogs at 50k blocks
-const PINKSALE_WINDOW = 2_000_000n; // ~10 months ETH, ~6 weeks BSC, ~6 weeks Polygon, ~45 days Base
+// Scan window per chain. PinkLock activity is very chain-skewed: BSC has the
+// vast majority of locks, ETH has many, Polygon and Base have far fewer.
+// Earlier we used a uniform 2M-block window for all chains, which on Polygon
+// (~2s blocks → ~46 days) and Base (~2s → ~46 days) often returned ZERO
+// LockAdded events because no PinkSale lock had been created on those chains
+// in the recent ~6 weeks. Result: the /protocols/pinksale page rendered
+// dashes everywhere because the seeder was discovering 0 recipients per
+// chain, even though there ARE historical PinkSale locks across all 4
+// chains.
+//
+// The fix: scale per chain so we always sweep at least ~9 months of
+// history. ETH at 12s blocks → 2M ≈ 9 months; BSC at 3s → 7M ≈ 8 months;
+// Polygon and Base at 2s → 12M ≈ 9 months.
+const PINKSALE_WINDOW_BY_CHAIN: Partial<Record<SupportedChainId, bigint>> = {
+  [CHAIN_IDS.ETHEREUM]:  2_000_000n,   // ~9 months at 12s/block
+  [CHAIN_IDS.BSC]:       7_000_000n,   // ~8 months at 3s/block
+  [CHAIN_IDS.POLYGON]:  12_000_000n,   // ~9 months at 2s/block
+  [CHAIN_IDS.BASE]:     12_000_000n,   // ~9 months at 2s/block
+};
 
-async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = PINKSALE_CONTRACTS_SEEDER[chainId];
   const rpcUrl   = getRpcUrl(chainId);
   const chain    = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
@@ -548,7 +566,8 @@ async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: numb
   try {
     const client      = createPublicClient({ chain, transport: http(rpcUrl) });
     const latestBlock = await client.getBlockNumber();
-    const fromBlock   = latestBlock > PINKSALE_WINDOW ? latestBlock - PINKSALE_WINDOW : 0n;
+    const window      = PINKSALE_WINDOW_BY_CHAIN[chainId] ?? 2_000_000n;
+    const fromBlock   = latestBlock > window ? latestBlock - window : 0n;
 
     // Build 50k-block chunks.
     const chunks: Array<{ from: bigint; to: bigint }> = [];
@@ -631,7 +650,7 @@ const STREAMFLOW_MAINNET_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg
 const STREAMFLOW_CONTRACT_DISC_BS58  = "Vrs1SmhAjj7";
 const STREAMFLOW_RECIPIENT_OFFSET    = 113;
 
-async function discoverStreamflowRecipients(
+export async function discoverStreamflowRecipients(
   chainId: SupportedChainId,
   limit:   number,
 ): Promise<string[]> {
@@ -700,7 +719,7 @@ const JUPITER_LOCK_PROGRAM_ID = "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn";
 const JUPITER_LOCK_DISC_BS58  = "hteFiUjrzUz"; // base58 of sha256("account:VestingEscrow")[0..8]
 const JUPITER_LOCK_RECIPIENT_OFFSET = 8;
 
-async function discoverJupiterLockRecipients(
+export async function discoverJupiterLockRecipients(
   chainId: SupportedChainId,
   limit:   number,
 ): Promise<string[]> {
@@ -777,7 +796,7 @@ const UNCX_VM_VESTING_CREATED_TOPIC =
 const UNCX_VM_CHUNK  = 49_999n;  // PublicNode caps eth_getLogs at 50k blocks
 const UNCX_VM_WINDOW = 500_000n; // ~69 days ETH, ~11 days BSC, ~11 days Base
 
-async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+export async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const config = UNCX_VM_CONFIG[chainId];
   const rpcUrl = getRpcUrl(chainId);
   const chain  = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
