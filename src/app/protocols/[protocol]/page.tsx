@@ -170,7 +170,11 @@ const loadProtocolData = unstable_cache(
       upcomingList: upcomingList.map((g) => enrich(g)!),
     };
   },
-  ["protocol-page-data-v4"],
+  // v5 = bump after 8ddabb7 (Promise.allSettled). Bumping the cache key
+  // invalidates every poisoned-empty entry from before that fix and forces
+  // a fresh render. Cheap operation — at most 9 protocols × N chains worth
+  // of cold renders, all of which fall under the new resilient code path.
+  ["protocol-page-data-v5"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 

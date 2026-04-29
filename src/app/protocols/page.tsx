@@ -175,7 +175,13 @@ const loadProtocolsData = unstable_cache(
       return empty;
     }
   },
-  ["protocols-page-data-v4"],
+  // v5 = bump after the partial-failure cache-poisoning fix on
+  // /protocols/[slug] (commit 8ddabb7). This page's render path is
+  // already more defensive (per-protocol inner try/catch on stats), but
+  // bumping the key flushes any stale empty entries from earlier in the
+  // session so the user gets fresh renders immediately rather than
+  // waiting up to 5 minutes for TTL expiry.
+  ["protocols-page-data-v5"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
