@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-auth";
 import { getCacheStatsCells, type CacheStatsCell } from "@/lib/vesting/cache-stats";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,19 @@ export interface CacheStatsResponse {
   cells:     CacheStatsCell[];
 }
 
+// Accept admin cookie OR Bearer token (CRON_SECRET) — same dual-auth pattern
+// as /api/admin/seed-diagnostic. Bearer lets ops invoke from a terminal
+// without the cookie-extraction dance; cookie is still the canonical
+// admin gate.
+function isAuthorized(req: NextRequest): boolean {
+  if (isAdminAuthorized(req)) return true;
+  const authHeader = req.headers.get("authorization");
+  if (env.CRON_SECRET && authHeader === `Bearer ${env.CRON_SECRET}`) return true;
+  return false;
+}
+
 export async function GET(req: NextRequest) {
-  if (!isAdminAuthorized(req)) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
