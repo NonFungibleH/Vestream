@@ -105,6 +105,7 @@ interface DiagnosticResult {
     rpcPolygon:        boolean;
     rpcBase:           boolean;
     rpcSolana:         boolean;
+    solanaEnabled:     boolean;
   };
 }
 
@@ -192,13 +193,18 @@ export async function GET(req: NextRequest) {
     streamSample:    streams,
     errors,
     envVars: {
-      cronSecret:  !!process.env.CRON_SECRET,
-      graphApiKey: !!process.env.GRAPH_API_KEY,
-      rpcEthereum: !!process.env.ALCHEMY_RPC_URL_ETH,
-      rpcBsc:      !!process.env.BSC_RPC_URL,
-      rpcPolygon:  !!process.env.POLYGON_RPC_URL,
-      rpcBase:     !!(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL),
-      rpcSolana:   !!process.env.SOLANA_RPC_URL,
+      cronSecret:    !!process.env.CRON_SECRET,
+      graphApiKey:   !!process.env.GRAPH_API_KEY,
+      rpcEthereum:   !!process.env.ALCHEMY_RPC_URL_ETH,
+      rpcBsc:        !!process.env.BSC_RPC_URL,
+      rpcPolygon:    !!process.env.POLYGON_RPC_URL,
+      rpcBase:       !!(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL),
+      rpcSolana:     !!process.env.SOLANA_RPC_URL,
+      // Streamflow + Jupiter Lock discoverers gate behind this exact value.
+      // Anything other than the literal string "true" returns [] immediately
+      // (43ms = cold start, no RPC call). Surface the actual value so a
+      // misconfiguration is visible at a glance instead of a silent zero.
+      solanaEnabled: process.env.SOLANA_ENABLED === "true",
     },
   };
 
