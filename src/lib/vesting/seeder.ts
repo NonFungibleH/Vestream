@@ -397,12 +397,25 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
+// Seeder RPC URLs. Falls back to public RPC nodes when paid env vars
+// aren't set so discovery still produces results in lower-effort environments.
+//
+// Why this changed: production was missing BSC_RPC_URL, POLYGON_RPC_URL,
+// and ALCHEMY_RPC_URL_BASE — the seeder was returning undefined for those
+// chains and the per-protocol discoverers were bailing out within 1ms,
+// silently producing zero recipients. PinkSale (which lives 90%+ on BSC)
+// consequently never had any cached streams. The fix: align the seeder's
+// fallback chain with the read-side adapter (src/lib/vesting/adapters/
+// pinksale.ts already used these public defaults). Public nodes are
+// rate-limited so production should still set the paid env vars; the
+// fallback is purely defensive against the silent-zero-recipients failure
+// mode we just hit.
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
   switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH;
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL;
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL;
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE;
+    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
+    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
+    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
+    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
     case CHAIN_IDS.SEPOLIA:  return process.env.SEPOLIA_RPC_URL;
     default:                 return undefined;
   }
