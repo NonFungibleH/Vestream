@@ -33,9 +33,24 @@ import { isAdminAuthorized } from "@/lib/admin-auth";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters";
 import { CHAIN_IDS, type SupportedChainId } from "@/lib/vesting/types";
 import type { VestingStream } from "@/lib/vesting/types";
+import { env } from "@/lib/env";
 
 function getAdapter(id: string) {
   return ADAPTER_REGISTRY.find((a) => a.id === id);
+}
+
+/**
+ * Accept either the admin cookie OR the CRON_SECRET Bearer header for this
+ * diagnostic. The cookie path is the canonical admin auth (same gate as
+ * /admin/*). The Bearer path lets ops invoke this from a terminal without
+ * the cookie-extraction dance — same secret already used by the cron jobs,
+ * so anyone with shell access to the Vercel env already has it.
+ */
+function isAuthorized(req: NextRequest): boolean {
+  if (isAdminAuthorized(req)) return true;
+  const authHeader = req.headers.get("authorization");
+  if (env.CRON_SECRET && authHeader === `Bearer ${env.CRON_SECRET}`) return true;
+  return false;
 }
 
 export const dynamic     = "force-dynamic";
@@ -93,7 +108,7 @@ interface DiagnosticResult {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAdminAuthorized(req)) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
