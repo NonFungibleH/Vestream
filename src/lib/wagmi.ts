@@ -54,11 +54,20 @@ import {
 // `ssr: true` tells wagmi to use cookieStorage and skip auto-connect on the
 // server, which keeps prerender stable for pages that don't actually use
 // wallet state.
+// IMPORTANT: appUrl MUST match the actual production origin, not the apex
+// domain. WalletConnect compares this against `window.location.origin` and
+// emits a warning to the console when they differ — but worse, in some
+// versions it triggers a retry loop on origin-verification calls that can
+// thrash the page (we've seen this manifest as iOS Safari's "this page
+// couldn't load" error sheet on the otherwise-static /login page, where
+// nothing else uses wagmi but Providers still mounts it). Production runs
+// on www.vestream.io (Vercel + Cloudflare), so that's what we use here.
+// If the apex domain ever becomes the canonical, update both values.
 export const wagmiConfig = getDefaultConfig({
   appName: "Vestream",
   appDescription: "Track every token unlock across 9 vesting protocols",
-  appUrl: "https://vestream.io",
-  appIcon: "https://vestream.io/icons/icon-192.png",
+  appUrl: "https://www.vestream.io",
+  appIcon: "https://www.vestream.io/icons/icon-192.png",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "vestr-dev",
   wallets: [
     {
