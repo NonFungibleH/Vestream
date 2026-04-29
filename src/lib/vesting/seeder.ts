@@ -598,43 +598,44 @@ export async function discoverStreamflowRecipients(
   }
 
   const tag = `streamflow/${chainId}`;
-  try {
-    const connection = new Connection(rpcUrl, "confirmed");
-    const programId  = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
+  // NOTE: errors are NOT swallowed here. They bubble up to runJob (which
+  // catches them as job-level errors and continues with other protocols),
+  // and to the seed-diagnostic endpoint (which surfaces them in errors[]).
+  // Previously this catch returned [] silently — useful in production but
+  // catastrophic for debugging, because a misconfigured RPC looked
+  // identical to "0 recipients legitimately found".
+  const connection = new Connection(rpcUrl, "confirmed");
+  const programId  = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
 
-    const accounts = await connection.getProgramAccounts(programId, {
-      commitment: "confirmed",
-      filters: [
-        { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
-      ],
-      // Returns ONLY the 32-byte recipient field from each account.
-      dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
-    });
+  const accounts = await connection.getProgramAccounts(programId, {
+    commitment: "confirmed",
+    filters: [
+      { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
+    ],
+    // Returns ONLY the 32-byte recipient field from each account.
+    dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
+  });
 
-    // Each account.data is a 32-byte Uint8Array (the recipient pubkey).
-    // Wrap in PublicKey() + toBase58() to serialise. Skip any with
-    // unexpected length (shouldn't happen, but defensive).
-    const recipients: string[] = [];
-    for (const { account } of accounts) {
-      const bytes = account.data;
-      if (bytes.length === 32) {
-        try {
-          recipients.push(new PublicKey(bytes).toBase58());
-        } catch {
-          /* malformed pubkey — skip */
-        }
+  // Each account.data is a 32-byte Uint8Array (the recipient pubkey).
+  // Wrap in PublicKey() + toBase58() to serialise. Skip any with
+  // unexpected length (shouldn't happen, but defensive).
+  const recipients: string[] = [];
+  for (const { account } of accounts) {
+    const bytes = account.data;
+    if (bytes.length === 32) {
+      try {
+        recipients.push(new PublicKey(bytes).toBase58());
+      } catch {
+        /* malformed pubkey — skip */
       }
     }
-
-    console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} Contract accounts → ${recipients.length} recipients`);
-
-    // dedupeAddresses now preserves Solana base58 casing (ecosystem-aware).
-    // Slice to `limit` so deep-mode can ask for more than incremental.
-    return dedupeAddresses(recipients).slice(0, limit);
-  } catch (err) {
-    console.error(`[seeder:${tag}] discovery failed:`, err);
-    return [];
   }
+
+  console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} Contract accounts → ${recipients.length} recipients`);
+
+  // dedupeAddresses now preserves Solana base58 casing (ecosystem-aware).
+  // Slice to `limit` so deep-mode can ask for more than incremental.
+  return dedupeAddresses(recipients).slice(0, limit);
 }
 
 // ─── Jupiter Lock discovery (Solana getProgramAccounts + dataSlice) ────────
@@ -667,36 +668,32 @@ export async function discoverJupiterLockRecipients(
   }
 
   const tag = `jupiter-lock/${chainId}`;
-  try {
-    const connection = new Connection(rpcUrl, "confirmed");
-    const programId  = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
+  // Same no-swallow rationale as discoverStreamflowRecipients above.
+  const connection = new Connection(rpcUrl, "confirmed");
+  const programId  = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
 
-    const accounts = await connection.getProgramAccounts(programId, {
-      commitment: "confirmed",
-      filters: [
-        { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
-      ],
-      dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
-    });
+  const accounts = await connection.getProgramAccounts(programId, {
+    commitment: "confirmed",
+    filters: [
+      { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
+    ],
+    dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
+  });
 
-    const recipients: string[] = [];
-    for (const { account } of accounts) {
-      const bytes = account.data;
-      if (bytes.length === 32) {
-        try {
-          recipients.push(new PublicKey(bytes).toBase58());
-        } catch {
-          /* skip malformed pubkey */
-        }
+  const recipients: string[] = [];
+  for (const { account } of accounts) {
+    const bytes = account.data;
+    if (bytes.length === 32) {
+      try {
+        recipients.push(new PublicKey(bytes).toBase58());
+      } catch {
+        /* skip malformed pubkey */
       }
     }
-
-    console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} VestingEscrow accounts → ${recipients.length} recipients`);
-    return dedupeAddresses(recipients).slice(0, limit);
-  } catch (err) {
-    console.error(`[seeder:${tag}] discovery failed:`, err);
-    return [];
   }
+
+  console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} VestingEscrow accounts → ${recipients.length} recipients`);
+  return dedupeAddresses(recipients).slice(0, limit);
 }
 
 // ─── UNCX VestingManager discovery (on-chain event scan, no filter) ─────────
