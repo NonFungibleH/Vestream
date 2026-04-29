@@ -10,7 +10,6 @@ import { http } from "wagmi";
 import { base, baseSepolia, bsc, mainnet, polygon, sepolia } from "wagmi/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import {
-  metaMaskWallet,
   rainbowWallet,
   coinbaseWallet,
   walletConnectWallet,
@@ -28,23 +27,31 @@ import {
 // Node static prerender. The list below covers every wallet a typical
 // token-vesting recipient is likely to be using.
 //
-// ── MetaMask + Phantom on mobile ────────────────────────────────────────
-// On mobile browsers there's no injected provider — `injectedWallet` alone
-// silently no-ops because `window.ethereum` is undefined. Users tap
-// "MetaMask" in the modal and nothing happens. The fix is to include the
-// branded `metaMaskWallet` and `phantomWallet` connectors, which use
-// WalletConnect under the hood and deep-link out to the wallet app
-// (`metamask://wc?uri=...`, `phantom://browse/...`).
+// ── MetaMask: NO explicit metaMaskWallet ────────────────────────────────
+// Listing `metaMaskWallet` explicitly was tried (commit 8efc45a) on the
+// theory that RainbowKit would dedupe against the EIP-6963 announcement
+// and surface a single branded entry in "Installed". In practice the
+// dedupe doesn't fire reliably — MetaMask ends up double-listed (or
+// worse: shown in "Popular" but NOT in "Installed", which the user
+// reported on Apr 29). Phantom dedupes correctly, MetaMask does not.
 //
-// On desktop, the same `metaMaskWallet` connector dedupes against the
-// EIP-6963 announcement from the extension (when present) so users see a
-// single "MetaMask" entry. The historic hang we saw on this combo was tied
-// to an older RainbowKit + the legacy MetaMask SDK init path; current
-// RainbowKit 2.2+ resolves through WalletConnect cleanly.
+// Restoring the proven-working approach from commit 6de5df1: rely entirely
+// on EIP-6963 to surface MetaMask in the "Installed" group when the
+// extension is present. RainbowKit auto-renders any EIP-6963-announcing
+// wallet without us needing to list a connector. Same mechanism that
+// makes Phantom / Magic Eden / Brave Wallet appear in your Installed list.
 //
-// `injectedWallet` is kept LAST so non-MetaMask injected wallets (Brave,
-// Rabby, etc.) still get a generic "Browser Wallet" entry without us
-// having to ship a connector per provider.
+// Mobile trade-off: mobile users lose the one-tap branded MetaMask entry.
+// They use `walletConnectWallet` (still in Popular) → scan QR → picks
+// MetaMask Mobile from the wallet picker. 2 taps instead of 1 — acceptable
+// vs the desktop regression of MetaMask not appearing as Installed at all.
+//
+// Phantom stays explicit because Phantom on mobile is a primary path for
+// our Solana audience and Phantom's dedupe DOES work on desktop.
+//
+// `injectedWallet` lives in "Other" so non-MetaMask injected wallets
+// (Brave, Rabby, etc.) still get a generic "Browser Wallet" entry
+// without shipping a connector per provider.
 //
 // ── WalletConnect projectId ─────────────────────────────────────────────
 // Required for both metaMaskWallet's deep link AND the standalone
@@ -73,7 +80,6 @@ export const wagmiConfig = getDefaultConfig({
     {
       groupName: "Popular",
       wallets: [
-        metaMaskWallet,
         phantomWallet,
         rainbowWallet,
         coinbaseWallet,
