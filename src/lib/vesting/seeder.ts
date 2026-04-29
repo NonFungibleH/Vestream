@@ -397,25 +397,29 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
-// Seeder RPC URLs. Falls back to public RPC nodes when paid env vars
-// aren't set so discovery still produces results in lower-effort environments.
+// Seeder RPC URLs.
 //
-// Why this changed: production was missing BSC_RPC_URL, POLYGON_RPC_URL,
-// and ALCHEMY_RPC_URL_BASE — the seeder was returning undefined for those
-// chains and the per-protocol discoverers were bailing out within 1ms,
-// silently producing zero recipients. PinkSale (which lives 90%+ on BSC)
-// consequently never had any cached streams. The fix: align the seeder's
-// fallback chain with the read-side adapter (src/lib/vesting/adapters/
-// pinksale.ts already used these public defaults). Public nodes are
-// rate-limited so production should still set the paid env vars; the
-// fallback is purely defensive against the silent-zero-recipients failure
-// mode we just hit.
+// Lesson learned the hard way (commit bec6fc9 documented this): for chains
+// where the seeder does eth_getLogs (PinkSale, UNCX-VM event scans), DO
+// NOT fall back to publicnode endpoints. publicnode prunes historical
+// logs aggressively — BSC ~17 days, Polygon ~10 days — so a 7M-block /
+// 9-month scan over publicnode silently returns zero matches with no
+// error.
+//
+// dRPC (`*.drpc.org`) is the documented-good free fallback: unauthenticated,
+// retains historical log data, used by the TVL walker for the same workload.
+// Mirrors src/lib/vesting/tvl-walker/pinksale.ts:104 which has the same
+// fallback pattern proven in production.
+//
+// If a paid Alchemy/QuickNode URL is in env, we use that for higher rate
+// limits — but the dRPC fallback means a missing env var produces
+// rate-limited-but-actually-working results, not silent zero.
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
   switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
+    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.drpc.org";
+    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.drpc.org";
+    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.drpc.org";
+    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.drpc.org";
     case CHAIN_IDS.SEPOLIA:  return process.env.SEPOLIA_RPC_URL;
     default:                 return undefined;
   }
