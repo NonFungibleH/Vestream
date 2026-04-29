@@ -104,42 +104,71 @@ const loadProtocolData = unstable_cache(
     if (process.env.NEXT_PHASE === "phase-production-build") {
       return EMPTY_PROTOCOL_DATA;
     }
-    try {
-      const [stats, latest, upcoming, upcomingList] = await Promise.all([
-        getProtocolStats(adapterIds),
-        getLatestUnlock(adapterIds),
-        getNextUpcomingUnlock(adapterIds),
-        getUpcomingUnlocksForProtocol(adapterIds, 6),
-      ]);
-      // Attach USD values to the cards. We batch-price every distinct
-      // (chain, address) across the latest + next + upcoming list so the
-      // card renderer doesn't need to know about pricing — it just reads
-      // `unlock.usdValue` and shows "—" when null.
-      const tokensToPrice: Array<{ chainId: number; address: string }> = [];
-      const pushToken = (u: UnlockSummary | null) => {
-        if (u && u.tokenAddress) {
-          tokensToPrice.push({ chainId: u.chainId, address: u.tokenAddress });
-        }
-      };
-      pushToken(latest);
-      pushToken(upcoming);
-      for (const u of upcomingList) pushToken(u);
-      const priceMap = await getQuickUsdPrices(tokensToPrice);
-      const enrich = <T extends UnlockSummary>(u: T | null): T | null => {
-        if (!u) return null;
-        const price = priceMap.get(`${u.chainId}:${u.tokenAddress.toLowerCase()}`);
-        return { ...u, usdValue: toUsdValue(u.amount, u.tokenDecimals, price) };
-      };
-      return {
-        stats,
-        latest:   enrich(latest),
-        upcoming: enrich(upcoming),
-        upcomingList: upcomingList.map((g) => enrich(g)!),
-      };
-    } catch (err) {
-      console.error(`[protocol-page] data fetch failed for ${adapterIds.join(",")}:`, err);
+    // Each query gets resolved independently. If three of four succeed and
+    // one throws (transient DB blip, Multicall timeout, RPC slow), we want
+    // to render with the three successful results, NOT discard everything
+    // and serve all-dashes. The previous Promise.all + try/catch returned
+    // EMPTY_PROTOCOL_DATA on any single failure, which then got cached for
+    // 5 minutes by the surrounding unstable_cache — turning a single 200ms
+    // hiccup into 5 minutes of empty-page UX. Production-incident
+    // pattern observed when the deep seed cron ran concurrently with
+    // page renders: random query slowdowns cascaded into oscillating
+    // empty/full pages as 5-min cache windows rolled over.
+    const settled = await Promise.allSettled([
+      getProtocolStats(adapterIds),
+      getLatestUnlock(adapterIds),
+      getNextUpcomingUnlock(adapterIds),
+      getUpcomingUnlocksForProtocol(adapterIds, 6),
+    ]);
+    const stats        = settled[0].status === "fulfilled" ? settled[0].value : null;
+    const latest       = settled[1].status === "fulfilled" ? settled[1].value : null;
+    const upcoming     = settled[2].status === "fulfilled" ? settled[2].value : null;
+    const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
+    for (let i = 0; i < settled.length; i++) {
+      const r = settled[i];
+      if (r.status === "rejected") {
+        const queryName = ["getProtocolStats", "getLatestUnlock", "getNextUpcomingUnlock", "getUpcomingUnlocksForProtocol"][i];
+        console.warn(`[protocol-page] ${queryName} failed for ${adapterIds.join(",")}:`, r.reason);
+      }
+    }
+
+    // Skip pricing entirely if EVERY query failed — saves an unnecessary
+    // DexScreener round-trip when there's nothing to price.
+    if (!stats && !latest && !upcoming && upcomingList.length === 0) {
       return EMPTY_PROTOCOL_DATA;
     }
+
+    // Attach USD values to the cards. We batch-price every distinct
+    // (chain, address) across the latest + next + upcoming list so the
+    // card renderer doesn't need to know about pricing — it just reads
+    // `unlock.usdValue` and shows "—" when null.
+    const tokensToPrice: Array<{ chainId: number; address: string }> = [];
+    const pushToken = (u: UnlockSummary | null) => {
+      if (u && u.tokenAddress) {
+        tokensToPrice.push({ chainId: u.chainId, address: u.tokenAddress });
+      }
+    };
+    pushToken(latest);
+    pushToken(upcoming);
+    for (const u of upcomingList) pushToken(u);
+    let priceMap;
+    try {
+      priceMap = await getQuickUsdPrices(tokensToPrice);
+    } catch (err) {
+      console.warn(`[protocol-page] pricing failed for ${adapterIds.join(",")}; rendering without USD values:`, err);
+      priceMap = new Map();
+    }
+    const enrich = <T extends UnlockSummary>(u: T | null): T | null => {
+      if (!u) return null;
+      const price = priceMap.get(`${u.chainId}:${u.tokenAddress.toLowerCase()}`);
+      return { ...u, usdValue: toUsdValue(u.amount, u.tokenDecimals, price) };
+    };
+    return {
+      stats,
+      latest:   enrich(latest),
+      upcoming: enrich(upcoming),
+      upcomingList: upcomingList.map((g) => enrich(g)!),
+    };
   },
   ["protocol-page-data-v4"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
