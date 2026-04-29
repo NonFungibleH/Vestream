@@ -122,10 +122,20 @@ export async function generateMetadata(
   const cid  = Number(chainId);
   if (!CHAIN_NAMES[cid]) return { title: "Token not found — Vestream" };
 
-  const [overview, market] = await Promise.all([
+  // Same allSettled pattern as the page render below — if metadata
+  // generation throws, Next fails the whole page with a 500 instead
+  // of rendering. Two fallbacks keep title/description sensible.
+  const [overviewRes, marketRes] = await Promise.allSettled([
     getTokenOverview(cid, address),
     getTokenMarketData(cid, address),
   ]);
+  const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
+  const market   = marketRes.status   === "fulfilled" ? marketRes.value   : {
+    priceUsd: null, fdv: null, marketCap: null, change24h: null,
+    liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
+    website: null, twitterUrl: null,
+    dexScreenerUrl: null, dexToolsUrl: null,
+  } as TokenMarketData;
 
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(address);
   const chain   = CHAIN_NAMES[cid];
@@ -161,7 +171,14 @@ export default async function TokenPage(
     notFound();
   }
 
-  const [overview, calendar, recipients, upcoming, market] = await Promise.all([
+  // Promise.allSettled (not Promise.all): each loader hits a different
+  // dependency (4 × DB query, 1 × DexScreener fetch). If any one throws
+  // — a transient pool exhaustion, a DexScreener 5xx, an RPC blip — we
+  // do NOT want the whole render to fail and ISR-cache an empty page for
+  // the next 60 seconds. Each fallback keeps the page renderable from
+  // whatever data DID load. Same partial-failure-resilience pattern as
+  // /protocols/[slug] (commit 8ddabb7).
+  const settled = await Promise.allSettled([
     getTokenOverview(cid, addr),
     // Past 12 + next 12 months = 24 monthly buckets. The calendar UI
     // auto-folds the historical half away when it's all zero (fresh tokens
@@ -172,6 +189,26 @@ export default async function TokenPage(
     getTokenUpcomingEvents(cid, addr, 8),
     getTokenMarketData(cid, addr),
   ]);
+
+  // Log every rejection — invisible failures are the whole reason cache
+  // poisoning bit us before. Production observability lives in logs.
+  settled.forEach((s, i) => {
+    if (s.status === "rejected") {
+      const stage = ["overview", "calendar", "recipients", "upcoming", "market"][i];
+      console.error(`[token-page] ${stage} failed for ${cid}/${addr}:`, s.reason);
+    }
+  });
+
+  const overview   = settled[0].status === "fulfilled" ? settled[0].value : null;
+  const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
+  const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
+  const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
+  const market: TokenMarketData = settled[4].status === "fulfilled" ? settled[4].value : {
+    priceUsd: null, fdv: null, marketCap: null, change24h: null,
+    liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
+    website: null, twitterUrl: null,
+    dexScreenerUrl: null, dexToolsUrl: null,
+  };
 
   const hasVesting  = overview !== null && overview.streamCount > 0;
   const priceUsd    = market.priceUsd;
