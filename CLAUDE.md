@@ -758,6 +758,46 @@ preview_resize("vestr-dev", preset="desktop")   # or width=1440, height=900
 
 ---
 
+## Pre-flight checks before infra / config changes
+
+These four checks are MANDATORY before proposing any change to env vars,
+fallback URLs, framework directives (`force-dynamic`, `revalidate`, etc),
+retry policies, or cache headers. Skipping them has cost real production
+time multiple times. See e.g. commit `ef21b41` (re-introduced a known-bad
+publicnode fallback that `bec6fc9` had explicitly warned against).
+
+1. **`git log -S "<identifier>"` for the thing you're touching.** Search
+   commits for the function name, env var name, URL, or directive
+   you're about to add/change. If a prior commit removed/added the same
+   thing, READ that commit before you act. Five minutes here saves
+   twenty minutes of regression.
+
+2. **Look for a proven-good neighbour.** Before inventing a new
+   fallback / config / pattern, check whether another file in the same
+   feature area solves the same problem. Walker ↔ adapter ↔ seeder are
+   sibling concerns; if one has a fallback chain, the others should
+   match unless there's a documented reason to diverge.
+
+3. **`grep -E "DO NOT|WARNING|IMPORTANT"` across the repo.** These
+   comments encode prior pain. Treat them as hard constraints, not
+   stylistic preferences. Specific landmines previously documented:
+   - publicnode endpoints PRUNE historical logs aggressively (BSC ~17
+     days, Polygon ~10 days). DO NOT use as fallback for event-scan
+     workloads. Use **dRPC** (`*.drpc.org`) instead — proven in
+     `src/lib/vesting/tvl-walker/pinksale.ts`.
+   - AbortSignal in fetch's `init` disables Next.js's data cache. Use
+     `Promise.race` for fetch timeouts instead. See `src/lib/fetch-with-retry.ts`.
+   - `force-dynamic` page directive overrides `next.config.ts` headers.
+     Use middleware to set Cache-Control on those routes. See
+     `src/middleware.ts`.
+
+4. **When the user says "we removed/decided/changed X" — STOP.** Search
+   git, read the commit message, then respond. Don't push back without
+   reading the history they're referring to. User domain knowledge
+   beats my freshly-loaded context every time.
+
+---
+
 ## Common Mistakes to Avoid
 
 - **Never hardcode grid columns without mobile fallback** — `grid-cols-3` must be `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
