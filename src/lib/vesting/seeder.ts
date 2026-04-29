@@ -726,7 +726,29 @@ const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
 const UNCX_VM_VESTING_CREATED_TOPIC =
   "0xcfcd2ea84a9e988255710b3adc4919275a012aa72f68b63acf1e9f67296e134f" as Hex;
 const UNCX_VM_CHUNK  = 49_999n;  // PublicNode caps eth_getLogs at 50k blocks
-const UNCX_VM_WINDOW = 500_000n; // ~69 days ETH, ~11 days BSC, ~11 days Base
+
+// Per-chain scan windows. Block times vary 4× across our chains, so a
+// fixed UNCX_VM_WINDOW = 500_000 was ~69 days on ETH but only ~11 days on
+// BSC/Base — too narrow to catch realistic UNCX-VM activity, which the
+// Apr 29 diagnostic confirmed (BSC + Base = 0 recipients found, ETH = 21).
+//
+// New approach: scan from the contract's deploy block up to a per-chain
+// recent cap. Each chain's cap is sized so that the chunked log-scan
+// stays under our 60s seeder budget on dRPC's free tier:
+//   ETH:  500k  blocks  (≈ 69 days at 12s blocks) — unchanged
+//   BSC:  3.0M  blocks  (≈ 100 days at 3s blocks)
+//   Base: 4.0M  blocks  (≈ 92 days at 2s blocks)
+// If the contract's own age is shorter than the window, we naturally
+// scan from the deploy block (the existing fromBlock floor handles this).
+const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
+  [CHAIN_IDS.ETHEREUM]:        500_000n,
+  [CHAIN_IDS.BSC]:           3_000_000n,
+  [CHAIN_IDS.BASE]:          4_000_000n,
+  [CHAIN_IDS.POLYGON]:               0n, // not in UNCX_VM_CONFIG
+  [CHAIN_IDS.SOLANA]:                0n, // EVM-only
+  [CHAIN_IDS.SEPOLIA]:               0n,
+  [CHAIN_IDS.BASE_SEPOLIA]:          0n,
+};
 
 export async function discoverUncxVmRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const config = UNCX_VM_CONFIG[chainId];
@@ -737,12 +759,13 @@ export async function discoverUncxVmRecipients(chainId: SupportedChainId, limit:
     return [];
   }
 
-  const tag = `uncx-vm/${chainId}`;
+  const tag    = `uncx-vm/${chainId}`;
+  const window = UNCX_VM_WINDOWS[chainId] ?? 500_000n;
   try {
     const client      = createPublicClient({ chain, transport: http(rpcUrl) });
     const latestBlock = await client.getBlockNumber();
-    const fromBlock   = latestBlock > UNCX_VM_WINDOW + config.fromBlock
-      ? latestBlock - UNCX_VM_WINDOW
+    const fromBlock   = latestBlock > window + config.fromBlock
+      ? latestBlock - window
       : config.fromBlock;
 
     // Build 50k-block chunks.

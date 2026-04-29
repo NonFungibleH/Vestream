@@ -409,12 +409,20 @@ export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise
         functionName: "allNormalTokenLockedCount",
       }),
     ) as bigint;
+    // Log on success too — without this, "0 recipients in 254ms" is
+    // ambiguous between (a) contract genuinely says 0n (probably wrong
+    // address for that chain) and (b) RPC swallowed an error. Vercel
+    // logs now disambiguate at a glance.
+    console.log(`[discoverPinkSaleOwners/${chainId}] totalTokens=${totalTokens.toString()} (contract=${contract})`);
   } catch (err) {
     console.error(`[discoverPinkSaleOwners/${chainId}] allNormalTokenLockedCount failed:`, err);
     return [];
   }
 
-  if (totalTokens === 0n) return [];
+  if (totalTokens === 0n) {
+    console.warn(`[discoverPinkSaleOwners/${chainId}] contract returned totalTokens=0 — verify contract address ${contract} is the live PinkLock V2 deployment for this chain`);
+    return [];
+  }
 
   const tokens = await fetchAllLockedTokens(chainId, contract, totalTokens, errors);
   if (tokens.length === 0) return [];
