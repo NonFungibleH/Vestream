@@ -790,6 +790,19 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
    - `force-dynamic` page directive overrides `next.config.ts` headers.
      Use middleware to set Cache-Control on those routes. See
      `src/middleware.ts`.
+   - **`BSC_RPC_URL` / `POLYGON_RPC_URL` / `ALCHEMY_RPC_URL_BASE` are
+     INTENTIONALLY OPTIONAL.** The user reviewed and rejected adding
+     these as required env vars in `ef21b41` (Apr 29, 07:00). The
+     canonical fallback is dRPC (`bsc.drpc.org`, `polygon.drpc.org`,
+     `base.drpc.org`) wired into both `src/lib/vesting/seeder.ts:getRpcUrl`
+     and `src/lib/vesting/tvl-walker/pinksale.ts:getRpcUrl`. If discovery
+     is returning zero recipients on those chains, **the fix is NOT to
+     tell the user to add env vars** — it's to debug why the dRPC path
+     is failing (rate limit, scan window too narrow, contract
+     misconfigured, etc). I have already made this exact mistake THREE
+     times (`6a09a13` → `ef21b41` → 2026-04-29 session). Search
+     `git log -S 'BSC_RPC_URL'` before EVER recommending env vars
+     for these.
 
 4. **When the user says "we removed/decided/changed X" — STOP.** Search
    git, read the commit message, then respond. Don't push back without
