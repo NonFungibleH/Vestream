@@ -367,6 +367,76 @@ async function fetchTokenMeta(
 
 // ─── Walker ────────────────────────────────────────────────────────────────────
 
+/**
+ * Discover the unique set of PinkLock V2 lock owners on a chain — i.e.
+ * every wallet address that has ever created a normal-token lock through
+ * the PinkSale launchpad.
+ *
+ * Why this lives in the walker module: it reuses the SAME enumeration
+ * pipeline `walkPinkSale` already uses (Multicall3 + getCumulativeNorm-
+ * alTokenLockInfo + getLocksForToken). Both the seeder (recipients for
+ * /protocols/pinksale stat strip) and the walker (TVL aggregation) need
+ * to enumerate locks; they just project the result differently.
+ *
+ * Why it does NOT use eth_getLogs (the seeder's previous approach):
+ *
+ *   - Free-tier RPCs cap eth_getLogs aggressively. Alchemy free is 10
+ *     blocks per request. publicnode prunes logs older than ~17 days
+ *     (BSC) / ~10 days (Polygon). dRPC has range caps too.
+ *   - PinkLock V2 has built-in enumeration helpers, so we don't need
+ *     logs at all. Contract reads via Multicall3 are just regular
+ *     eth_call requests every RPC supports without limits.
+ *
+ * Returned addresses are lowercase, deduplicated. Owner=0x0000…
+ * entries are filtered out (defensive — shouldn't happen in practice
+ * but cheaper to filter than to debug if a corrupt response slips
+ * through). Returns [] on any total-tokens-count failure (we'd rather
+ * the seeder fall back to its curated list than seed garbage).
+ */
+export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise<string[]> {
+  const contract = PINKSALE_CONTRACTS[chainId];
+  if (!contract) return [];
+
+  const errors: string[] = [];
+  const client = makeClient(chainId);
+
+  let totalTokens: bigint;
+  try {
+    totalTokens = await withRetry("allNormalTokenLockedCount", () =>
+      client.readContract({
+        address:      contract,
+        abi:          PINKSALE_ABI,
+        functionName: "allNormalTokenLockedCount",
+      }),
+    ) as bigint;
+  } catch (err) {
+    console.error(`[discoverPinkSaleOwners/${chainId}] allNormalTokenLockedCount failed:`, err);
+    return [];
+  }
+
+  if (totalTokens === 0n) return [];
+
+  const tokens = await fetchAllLockedTokens(chainId, contract, totalTokens, errors);
+  if (tokens.length === 0) return [];
+
+  const lockCounts = await fetchLockCounts(chainId, contract, tokens, errors);
+  const locks = await fetchAllLocks(chainId, contract, lockCounts, errors);
+
+  const owners = new Set<string>();
+  for (const lock of locks) {
+    if (!lock.owner) continue;
+    const lower = lock.owner.toLowerCase();
+    if (lower === "0x0000000000000000000000000000000000000000") continue;
+    owners.add(lower);
+  }
+
+  if (errors.length > 0) {
+    console.warn(`[discoverPinkSaleOwners/${chainId}] ${errors.length} non-fatal chunk errors during enumeration; recovered ${owners.size} owners regardless`);
+  }
+
+  return Array.from(owners);
+}
+
 export async function walkPinkSale(chainId: SupportedChainId): Promise<WalkerResult> {
   const started  = Date.now();
   const contract = PINKSALE_CONTRACTS[chainId];

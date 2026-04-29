@@ -512,128 +512,43 @@ async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number
   }
 }
 
-// ─── PinkSale discovery (on-chain event scan) ──────────────────────────────
+// ─── PinkSale discovery (contract enumeration via walker) ──────────────────
 //
-// PinkLock V2 has no subgraph. Prior to this commit the seeder relied on a
-// hand-curated wallet list (seed-wallets.ts) which shipped empty at launch
-// and required ops to add wallets manually — the /protocols card for
-// PinkSale consequently read "no data" indefinitely.
+// We delegate to the TVL walker's `discoverPinkSaleOwners` helper, which
+// uses PinkLock V2's built-in enumeration functions
+// (`allNormalTokenLockedCount` → `getCumulativeNormalTokenLockInfo` →
+// `getLocksForToken`) via Multicall3. NO eth_getLogs. This is what makes
+// the walker work on free-tier RPCs and what makes the seeder work now —
+// previously the seeder used eth_getLogs which is rate-limited everywhere
+// (Alchemy free caps at 10 blocks, publicnode prunes at ~17d, dRPC has
+// range caps), causing the seeder to silently return 0 recipients.
 //
-// Replaced with a proper event scan mirroring the uncx-vm approach:
-//   - LockAdded(uint256 indexed id, address token, address indexed owner, uint256 amount, uint256 unlockDate)
-//   - topic[0] = signature hash (precomputed below from viem keccak256)
-//   - topic[2] = owner (the indexed address we care about)
-// Scan the last PINKSALE_WINDOW blocks in PINKSALE_CHUNK-sized requests,
-// parallelised 10 at a time.
+// See src/lib/vesting/tvl-walker/pinksale.ts:1-23 for the full rationale.
+// The walker has been doing this successfully in production for the TVL
+// snapshot since b0f3cce / bcdcad2 / 744458f.
 //
-// The curated list in seed-wallets.ts is UNIONed in as a safety net — if
-// event discovery throws or returns zero (RPC outage, topic hash drift, a
-// fresh deploy with no locks yet), we still seed whatever ops has
-// hand-populated. Zero cost if the list is empty (the default).
+// The curated list in seed-wallets.ts stays as a safety net. Zero cost if
+// it's empty (the default).
 
-const PINKSALE_CONTRACTS_SEEDER: Partial<Record<SupportedChainId, `0x${string}`>> = {
-  [CHAIN_IDS.ETHEREUM]: "0x33d4cc8716beb13f814f538ad3b2de3b036f5e2a",
-  [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
-  [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
-  [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
-};
-
-// keccak256("LockAdded(uint256,address,address,uint256,uint256)")
-const PINKSALE_LOCK_ADDED_TOPIC =
-  "0x694af1cc8727cdd0afbdd53d9b87b69248bd490224e9dd090e788546506e076f" as Hex;
-
-const PINKSALE_CHUNK  = 49_999n;   // PublicNode caps eth_getLogs at 50k blocks
-// Scan window per chain. PinkLock activity is very chain-skewed: BSC has the
-// vast majority of locks, ETH has many, Polygon and Base have far fewer.
-// Earlier we used a uniform 2M-block window for all chains, which on Polygon
-// (~2s blocks → ~46 days) and Base (~2s → ~46 days) often returned ZERO
-// LockAdded events because no PinkSale lock had been created on those chains
-// in the recent ~6 weeks. Result: the /protocols/pinksale page rendered
-// dashes everywhere because the seeder was discovering 0 recipients per
-// chain, even though there ARE historical PinkSale locks across all 4
-// chains.
-//
-// The fix: scale per chain so we always sweep at least ~9 months of
-// history. ETH at 12s blocks → 2M ≈ 9 months; BSC at 3s → 7M ≈ 8 months;
-// Polygon and Base at 2s → 12M ≈ 9 months.
-const PINKSALE_WINDOW_BY_CHAIN: Partial<Record<SupportedChainId, bigint>> = {
-  [CHAIN_IDS.ETHEREUM]:  2_000_000n,   // ~9 months at 12s/block
-  [CHAIN_IDS.BSC]:       7_000_000n,   // ~8 months at 3s/block
-  [CHAIN_IDS.POLYGON]:  12_000_000n,   // ~9 months at 2s/block
-  [CHAIN_IDS.BASE]:     12_000_000n,   // ~9 months at 2s/block
-};
+import { discoverPinkSaleOwners } from "./tvl-walker/pinksale";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
-  const contract = PINKSALE_CONTRACTS_SEEDER[chainId];
-  const rpcUrl   = getRpcUrl(chainId);
-  const chain    = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
-  const tag      = `pinksale/${chainId}`;
-
-  // Safety-net list (usually empty; populated by ops for emergencies).
+  const tag = `pinksale/${chainId}`;
   const curated = PINKSALE_SEED_WALLETS[chainId] ?? [];
-  // `limit` is used to cap the returned set after dedupe, not the scan window
-  // (PinkLock volume is too high to size the window off a recipient count).
 
-  if (!contract || !rpcUrl || !chain) {
-    console.log(`[seeder:${tag}] no contract / RPC / chain config; falling back to curated list (${curated.length})`);
-    return dedupeAddresses(curated);
-  }
-
-  let eventRecipients: string[] = [];
+  let owners: string[] = [];
   try {
-    const client      = createPublicClient({ chain, transport: http(rpcUrl) });
-    const latestBlock = await client.getBlockNumber();
-    const window      = PINKSALE_WINDOW_BY_CHAIN[chainId] ?? 2_000_000n;
-    const fromBlock   = latestBlock > window ? latestBlock - window : 0n;
-
-    // Build 50k-block chunks.
-    const chunks: Array<{ from: bigint; to: bigint }> = [];
-    for (let from = fromBlock; from <= latestBlock; from += PINKSALE_CHUNK + 1n) {
-      chunks.push({ from, to: from + PINKSALE_CHUNK > latestBlock ? latestBlock : from + PINKSALE_CHUNK });
-    }
-
-    // Parallel batches of 10 — matches uncx-vm.
-    const BATCH = 10;
-    const rawLogs: Array<{ topics: readonly (Hex | null | undefined)[] }> = [];
-    for (let i = 0; i < chunks.length; i += BATCH) {
-      const batch   = chunks.slice(i, i + BATCH);
-      const results = await Promise.allSettled(
-        batch.map(({ from, to }) =>
-          client.getLogs({
-            address:   contract,
-            event:     undefined,
-            args:      undefined,
-            fromBlock: from,
-            toBlock:   to,
-          }).then((logs) =>
-            logs.filter((l) => l.topics[0] === PINKSALE_LOCK_ADDED_TOPIC),
-          ),
-        ),
-      );
-      for (const r of results) {
-        if (r.status === "fulfilled") rawLogs.push(...r.value);
-        else                          console.error(`[seeder:${tag}] chunk error:`, r.reason);
-      }
-    }
-
-    // topic[2] = owner (indexed address, left-padded to 32 bytes).
-    for (const log of rawLogs) {
-      const t2 = log.topics[2];
-      if (typeof t2 === "string" && t2.length === 66) {
-        eventRecipients.push(`0x${t2.slice(26)}`);
-      }
-    }
-
-    console.log(`[seeder:${tag}] scanned ${chunks.length} chunks (blocks ${fromBlock}..${latestBlock}), ${rawLogs.length} LockAdded → ${eventRecipients.length} raw owners`);
+    owners = await discoverPinkSaleOwners(chainId);
+    console.log(`[seeder:${tag}] enumerated ${owners.length} owners via walker`);
   } catch (err) {
-    console.error(`[seeder:${tag}] event scan failed; falling back to curated list:`, err);
-    eventRecipients = [];
+    console.error(`[seeder:${tag}] walker enumeration failed; falling back to curated list:`, err);
+    owners = [];
   }
 
-  // Union event scan + curated safety-net list. dedupeAddresses handles
+  // Union walker output + curated safety-net list. dedupeAddresses handles
   // case-normalisation, so overlap is harmless. Cap at `limit` so the deep
   // cron can ask for a bigger sweep than the daily pass.
-  return dedupeAddresses([...eventRecipients, ...curated]).slice(0, limit);
+  return dedupeAddresses([...owners, ...curated]).slice(0, limit);
 }
 
 // ─── Streamflow discovery (Solana getProgramAccounts + dataSlice) ───────────
