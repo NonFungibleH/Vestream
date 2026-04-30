@@ -573,6 +573,51 @@ export async function discoverPinksaleRecipients(chainId: SupportedChainId, limi
 // result set for mainnet Streamflow is on the order of tens of thousands
 // of accounts, returned in a single call.
 
+// Solana RPC retry helper.
+//
+// Alchemy's free Solana tier (and most others) cap compute-units-per-second.
+// A single getProgramAccounts call against a busy program (Streamflow,
+// Jupiter Lock) routinely 429s on the first attempt — Alchemy's own error
+// message reads: "If you have retries enabled, you can safely ignore this
+// message." The seeder previously had no retry, so a single 429 produced
+// 0 recipients with a thrown error.
+//
+// Backoff schedule: 1s, 2s, 4s, 8s, 16s (max 31s total wait + call time).
+// Fits inside the diagnostic endpoint's 60s lambda budget AND the
+// cron's 300s budget.
+//
+// Match conditions:
+//   - HTTP 429 in the error message
+//   - any error message containing "compute units per second"
+//   - any error message containing "rate limit"
+// Anything else throws immediately (real bugs shouldn't be retried).
+async function withSolanaRetry<T>(
+  label:    string,
+  fn:       () => Promise<T>,
+  maxAttempts = 5,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRateLimited =
+        msg.includes("429") ||
+        msg.toLowerCase().includes("compute units per second") ||
+        msg.toLowerCase().includes("rate limit");
+      if (!isRateLimited || attempt === maxAttempts) {
+        lastErr = err;
+        break;
+      }
+      const waitMs = 1000 * Math.pow(2, attempt - 1); // 1s, 2s, 4s, 8s, 16s
+      console.log(`[${label}] attempt ${attempt}/${maxAttempts} rate-limited; retrying in ${waitMs}ms`);
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+  }
+  throw lastErr;
+}
+
 // Streamflow mainnet-beta vesting program. Matches the SDK's
 // PROGRAM_ID.mainnet constant so we don't hard-code it twice.
 const STREAMFLOW_MAINNET_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
@@ -607,14 +652,16 @@ export async function discoverStreamflowRecipients(
   const connection = new Connection(rpcUrl, "confirmed");
   const programId  = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
 
-  const accounts = await connection.getProgramAccounts(programId, {
-    commitment: "confirmed",
-    filters: [
-      { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
-    ],
-    // Returns ONLY the 32-byte recipient field from each account.
-    dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
-  });
+  const accounts = await withSolanaRetry(`seeder:${tag}`, () =>
+    connection.getProgramAccounts(programId, {
+      commitment: "confirmed",
+      filters: [
+        { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
+      ],
+      // Returns ONLY the 32-byte recipient field from each account.
+      dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
+    }),
+  );
 
   // Each account.data is a 32-byte Uint8Array (the recipient pubkey).
   // Wrap in PublicKey() + toBase58() to serialise. Skip any with
@@ -672,13 +719,15 @@ export async function discoverJupiterLockRecipients(
   const connection = new Connection(rpcUrl, "confirmed");
   const programId  = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
 
-  const accounts = await connection.getProgramAccounts(programId, {
-    commitment: "confirmed",
-    filters: [
-      { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
-    ],
-    dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
-  });
+  const accounts = await withSolanaRetry(`seeder:${tag}`, () =>
+    connection.getProgramAccounts(programId, {
+      commitment: "confirmed",
+      filters: [
+        { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
+      ],
+      dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
+    }),
+  );
 
   const recipients: string[] = [];
   for (const { account } of accounts) {
