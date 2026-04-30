@@ -34,6 +34,10 @@ import {
 } from "@/lib/vesting/protocol-stats";
 import type { ProtocolTvl } from "@/lib/vesting/tvl";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
+import {
+  getLastGoodProtocolsData,
+  setLastGoodProtocolsData,
+} from "@/lib/vesting/page-data-fallback";
 
 // Page stays force-dynamic (DB-dependent data can't be pre-rendered at build
 // time — ECONNREFUSED without DATABASE_URL). Perf comes from caching one
@@ -171,8 +175,13 @@ const loadProtocolsData = unstable_cache(
 
       return { statsEntries, tvlMap, methodologyMap, computedAtMap };
     } catch (err) {
-      console.error("[unlocks] loadProtocolsData fatal:", err);
-      return empty;
+      // Throw — don't cache this empty result. unstable_cache doesn't
+      // persist thrown errors, so the next request retries fresh. The
+      // page component catches this and falls back to last-known-good
+      // from Redis (page-data-fallback.ts). See /protocols/[slug] page
+      // for the matching pattern.
+      console.error("[unlocks] loadProtocolsData fatal — throwing to skip cache write:", err);
+      throw err instanceof Error ? err : new Error(String(err));
     }
   },
   // v5 = bump after the partial-failure cache-poisoning fix on
@@ -210,8 +219,28 @@ export default async function UnlocksIndexPage() {
   // protocolTvlSnapshots table + per-protocol stream counts. The snapshot
   // table itself is populated daily by /api/cron/tvl-snapshot at 03:15 UTC;
   // render path is pure DB, no DefiLlama/subgraph/RPC calls.
-  const { statsEntries, tvlMap, methodologyMap, computedAtMap } =
-    await loadProtocolsData();
+  //
+  // "Never empty" pattern (matches /protocols/[slug]):
+  //   1. loadProtocolsData throws on fatal failure (won't cache empty)
+  //   2. We catch and fall back to Redis last-good
+  //   3. After successful render, we write to last-good (fire-and-forget)
+  type ProtocolsData = Awaited<ReturnType<typeof loadProtocolsData>>;
+  const fallbackEmpty: ProtocolsData = {
+    statsEntries:   protocols.map((p) => [p.slug, null]),
+    tvlMap:         {},
+    methodologyMap: {},
+    computedAtMap:  {},
+  };
+  let pageData: ProtocolsData;
+  try {
+    pageData = await loadProtocolsData();
+    setLastGoodProtocolsData(pageData);
+  } catch (err) {
+    console.warn("[protocols-index] loadProtocolsData threw, trying last-good:", err);
+    const lastGood = await getLastGoodProtocolsData<ProtocolsData>();
+    pageData = lastGood ?? fallbackEmpty;
+  }
+  const { statsEntries, tvlMap, methodologyMap, computedAtMap } = pageData;
   const statsMap = new Map(statsEntries);
 
   // Rows whose snapshot methodology is "defillama-vesting" — the UI surfaces

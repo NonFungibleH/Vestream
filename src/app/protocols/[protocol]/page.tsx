@@ -42,6 +42,10 @@ import {
   type UnlockSummary,
 } from "@/lib/vesting/protocol-stats";
 import { getQuickUsdPrices, toUsdValue, formatUsdCompact } from "@/lib/vesting/quick-prices";
+import {
+  getLastGoodProtocolData,
+  setLastGoodProtocolData,
+} from "@/lib/vesting/page-data-fallback";
 
 // ISR with 60-second revalidation. Builds pre-render every protocol slug
 // once, runtime requests are served from edge cache (Cache-Control:
@@ -132,9 +136,25 @@ const loadProtocolData = unstable_cache(
       }
     }
 
-    // Skip pricing entirely if EVERY query failed — saves an unnecessary
-    // DexScreener round-trip when there's nothing to price.
-    if (!stats && !latest && !upcoming && upcomingList.length === 0) {
+    // Detect "empty due to failure" vs "legitimately empty". A protocol
+    // that's truly fresh-with-no-data is rare but possible; a protocol
+    // whose every query rejected is the production-incident case.
+    const rejectionCount = settled.filter((r) => r.status === "rejected").length;
+    const allEmpty       = !stats && !latest && !upcoming && upcomingList.length === 0;
+
+    if (allEmpty && rejectionCount > 0) {
+      // THROW — don't cache an empty result that came from failures. The
+      // unstable_cache layer doesn't cache thrown errors, so the next
+      // request retries fresh. The page component catches this and falls
+      // back to last-known-good from Redis (page-data-fallback.ts).
+      throw new Error(
+        `[protocol-page] degraded render for ${adapterIds.join(",")}: ${rejectionCount}/${settled.length} queries failed; declining to cache empty result`,
+      );
+    }
+
+    // Skip pricing entirely if EVERY query genuinely returned empty —
+    // saves an unnecessary DexScreener round-trip.
+    if (allEmpty) {
       return EMPTY_PROTOCOL_DATA;
     }
 
@@ -226,7 +246,27 @@ export default async function ProtocolLandingPage(
   if (!meta) notFound();
 
   // Single-cached fetch for the page's data — see CACHE_TTL_SECONDS comment.
-  const { stats, latest, upcoming, upcomingList } = await loadProtocolData(meta.adapterIds);
+  //
+  // Three-layer resilience for "never empty" UX:
+  //   1. loadProtocolData throws on degraded result (Promise.allSettled
+  //      detected rejections AND all data was empty). This prevents
+  //      unstable_cache from poisoning a 5-min cache window with empty.
+  //   2. We catch the throw and read last-known-good from Redis. If a
+  //      previous successful render exists (almost always after the
+  //      first deploy), we render with that instead of dashes.
+  //   3. After a successful render, we write to last-good (fire-and-
+  //      forget — non-blocking). Each render keeps the fallback fresh.
+  let pageData: ProtocolPageData;
+  try {
+    pageData = await loadProtocolData(meta.adapterIds);
+    // Don't await — non-blocking write to Redis last-good.
+    setLastGoodProtocolData(meta.slug, pageData);
+  } catch (err) {
+    console.warn(`[protocol-page] loadProtocolData threw for ${meta.slug}:`, err);
+    const lastGood = await getLastGoodProtocolData<ProtocolPageData>(meta.slug);
+    pageData = lastGood ?? EMPTY_PROTOCOL_DATA;
+  }
+  const { stats, latest, upcoming, upcomingList } = pageData;
 
   // Stream counts now come from cache only (getGlobalStats was dropped —
   // see the loadProtocolData comment for the why).
