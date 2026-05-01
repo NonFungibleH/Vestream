@@ -137,9 +137,17 @@ function makeClient(chainId: SupportedChainId) {
 }
 
 // ─── Retry helper ──────────────────────────────────────────────────────────────
-// dRPC and other free tiers frequently return transient errors; 1s/2s/4s
-// exponential backoff over 3 attempts handles them.
-async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+// dRPC and other free tiers frequently return transient errors. Exponential
+// backoff (1/2/4/8/16s) over 5 attempts handles them.
+//
+// Bumped 3 → 5 attempts on May 1 2026 after BSC walker came back with only
+// 304 streams from a contract holding 22k tokens. The PinkSale walker uses
+// chunkedMulticall which batches O(N/chunk) eth_calls — at PAGE_SIZE=50 and
+// 22k tokens that's ~440 multicall round-trips. dRPC's free-tier rate limit
+// kicks in around 100 reqs/sec, so ~3-4 of those 440 chunks were getting
+// throttled and exhausting their 3-attempt retry budget. Five attempts with
+// up to 16s of backoff comfortably absorbs the throttle bursts.
+async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 5): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
@@ -156,6 +164,8 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 3
         msg.includes("503") ||
         msg.includes("502") ||
         msg.includes("500") ||
+        msg.includes("429") ||
+        msg.toLowerCase().includes("request timeout") ||
         msg.toLowerCase().includes("http request failed");
       if (!isTransient || attempt === maxAttempts - 1) throw err;
       void label;  // intentionally unused — retained for future telemetry
@@ -225,12 +235,20 @@ async function chunkedMulticall<T>(
   // its own retry budget, and individual readContract calls don't share the
   // multicall response-size / decode-poison failure modes.
   if (failedIndices.length > 0) {
-    // Cap pass-2 work — if HALF the calls failed in pass 1, the underlying
-    // RPC is broken and individually retrying just wastes time. Better to
-    // skip and report the partial result than burn 5min hitting a dead host.
-    if (failedIndices.length > calls.length / 2) {
-      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls — skipping pass-2`);
+    // Cap pass-2 work at 90% — if NEARLY ALL calls failed in pass 1 the
+    // underlying RPC is broken and individually retrying wastes time. The
+    // previous 50% threshold tripped on rate-limited BSC even when ~70%
+    // of calls would have recovered with a few retries (May 1 2026 deep
+    // seed: BSC walker returned only 304 streams of an expected ~3000+
+    // because we abandoned pass-2 after pass-1 looked rough). Lifting to
+    // 90% means we now actually retry rate-limited chunks instead of
+    // bailing on them.
+    if (failedIndices.length > calls.length * 0.9) {
+      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls — RPC appears dead, skipping pass-2`);
       return out;
+    }
+    if (failedIndices.length > calls.length / 2) {
+      console.warn(`[tvl-walker] ${label}: pass-1 failed for ${failedIndices.length}/${calls.length} (>50%) — pass-2 will be slow`);
     }
     for (const idx of failedIndices) {
       const call = calls[idx];
@@ -436,6 +454,8 @@ export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise
   if (tokens.length === 0) return [];
 
   const lockCounts = await fetchLockCounts(chainId, contract, tokens, errors);
+  let totalLocks = 0;
+  for (const n of lockCounts.values()) totalLocks += Number(n);
   const locks = await fetchAllLocks(chainId, contract, lockCounts, errors);
 
   const owners = new Set<string>();
@@ -445,6 +465,19 @@ export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise
     if (lower === "0x0000000000000000000000000000000000000000") continue;
     owners.add(lower);
   }
+
+  // Always log the enumeration shape so partial-coverage is visible in
+  // ops without needing to dig through chunk-error logs. Useful signals:
+  //   - tokens fetched < totalTokens → fetchAllLockedTokens lost some
+  //   - locks fetched < totalLocks   → fetchAllLocks lost some
+  //   - owners < locks               → normal (one owner per many locks)
+  console.log(
+    `[discoverPinkSaleOwners/${chainId}] enumeration: ` +
+    `tokens=${tokens.length}/${totalTokens.toString()} ` +
+    `locks=${locks.length}/${totalLocks} ` +
+    `owners=${owners.size} ` +
+    `errors=${errors.length}`,
+  );
 
   if (errors.length > 0) {
     console.warn(`[discoverPinkSaleOwners/${chainId}] ${errors.length} non-fatal chunk errors during enumeration; recovered ${owners.size} owners regardless`);
