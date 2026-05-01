@@ -107,6 +107,27 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
   for (const s of streams) byId.set(s.id, s);
   const unique = Array.from(byId.values());
 
+  // Postgres bigint max is 2^63 - 1 ≈ 9.22 × 10^18. JS Number can represent
+  // values larger than that (up to 2^53 ≈ 9 × 10^15 with full precision, then
+  // approximate up to 1.79 × 10^308) but writes to a bigint column will reject
+  // anything over the bigint cap with "invalid input syntax for type bigint".
+  //
+  // Real-world UNCX-VM contracts on ETH have streams with sentinel endTime
+  // values like 9.6 × 10^27 (year 304 octillion AD — clearly garbage / a
+  // contract-level "never expires" marker). One bad row kills the entire
+  // batch insert and we lose every other stream in the batch too.
+  //
+  // 4_102_444_800 = 2099-12-31 UTC in unix seconds. Anything past that is
+  // either garbage data or so far in the future that we can safely treat
+  // it as "never expires" — clamp to the sentinel and move on.
+  const SAFE_END_TIME_MAX = 4_102_444_800;
+  const clampEndTime = (t: number | null | undefined): number | null => {
+    if (t == null) return null;
+    if (!Number.isFinite(t) || t < 0) return null;
+    if (t > SAFE_END_TIME_MAX) return SAFE_END_TIME_MAX;
+    return Math.floor(t);
+  };
+
   try {
     const now = new Date();
     const rows = unique.map((s) => ({
@@ -117,7 +138,7 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
       tokenAddress:    s.tokenAddress ?? null,
       tokenSymbol:     s.tokenSymbol ?? null,
       isFullyVested:   s.isFullyVested,
-      endTime:         s.endTime ?? null,
+      endTime:         clampEndTime(s.endTime),
       streamData:      s as unknown as Record<string, unknown>,
       firstSeenAt:     now,
       lastRefreshedAt: now,

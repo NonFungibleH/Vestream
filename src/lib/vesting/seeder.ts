@@ -794,25 +794,46 @@ const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
 };
 const UNCX_VM_VESTING_CREATED_TOPIC =
   "0xcfcd2ea84a9e988255710b3adc4919275a012aa72f68b63acf1e9f67296e134f" as Hex;
-const UNCX_VM_CHUNK  = 49_999n;  // PublicNode caps eth_getLogs at 50k blocks
-
-// Per-chain scan windows. Block times vary 4× across our chains, so a
-// fixed UNCX_VM_WINDOW = 500_000 was ~69 days on ETH but only ~11 days on
-// BSC/Base — too narrow to catch realistic UNCX-VM activity, which the
-// Apr 29 diagnostic confirmed (BSC + Base = 0 recipients found, ETH = 21).
+// dRPC tightened their free-tier eth_getLogs limit to 10k blocks per call
+// (verified on the Apr 29 2026 cron run: every chunk on BSC + Base failed
+// with "ranges over 10000 blocks are not supported on freetier"). Their
+// previous 50k cap is now paid-tier-only. Using 9_999 to stay under the
+// inclusive boundary.
 //
-// New approach: scan from the contract's deploy block up to a per-chain
-// recent cap. Each chain's cap is sized so that the chunked log-scan
-// stays under our 60s seeder budget on dRPC's free tier:
-//   ETH:  500k  blocks  (≈ 69 days at 12s blocks) — unchanged
-//   BSC:  3.0M  blocks  (≈ 100 days at 3s blocks)
-//   Base: 4.0M  blocks  (≈ 92 days at 2s blocks)
-// If the contract's own age is shorter than the window, we naturally
-// scan from the deploy block (the existing fromBlock floor handles this).
+// Trade-off: 5x more chunks per scan, but at PARALLEL=10 batches the
+// total wall time stays similar. We compensated by reducing the per-chain
+// windows in UNCX_VM_WINDOWS — see the comment there for sizing maths.
+const UNCX_VM_CHUNK  = 9_999n;
+
+// Per-chain scan windows.
+//
+// Sizing: chunk = 10_000 blocks (dRPC free-tier limit). PARALLEL = 10 means
+// each batch of 10 chunks scans 100k blocks. Cron has ~250s budget for
+// UNCX-VM (the rest goes to other protocols). Conservatively, ~50 batches
+// = 500k blocks per scan in 60s, and we run that for 2-3 minutes.
+//
+// Window targets (chosen to fit ~250s on dRPC free):
+//   ETH:  500k blocks (≈ 69 days at 12s blocks)
+//   BSC:  600k blocks (≈ 21 days at 3s blocks)  — was 3M, cut to keep
+//                                                  dRPC chunked-scan under
+//                                                  budget. Catches recent
+//                                                  activity.
+//   Base: 600k blocks (≈ 14 days at 2s blocks)  — same reasoning
+//
+// Trade-off: BSC/Base coverage went from "8+ months" with the old 50k chunks
+// to ~2-3 weeks now. Old streams won't be discovered through this scan; they
+// remain accessible via the per-wallet adapter path (where users connect a
+// wallet and we fetch THEIR streams directly). For seeding TVL+aggregate
+// stats, recent-activity coverage is what matters most.
+//
+// If we want full historical coverage for BSC/Base later, options are:
+//   1. Pay for dRPC (or move to BSC_RPC_URL/ALCHEMY_RPC_URL_BASE env vars)
+//   2. Run a one-shot deep historical seed via a dedicated maintenance cron
+//      that has a longer budget (e.g. 15 min) and runs weekly, not daily
 const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.ETHEREUM]:        500_000n,
-  [CHAIN_IDS.BSC]:           3_000_000n,
-  [CHAIN_IDS.BASE]:          4_000_000n,
+  [CHAIN_IDS.BSC]:             600_000n,
+  [CHAIN_IDS.BASE]:            600_000n,
   [CHAIN_IDS.POLYGON]:               0n, // not in UNCX_VM_CONFIG
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
   [CHAIN_IDS.SEPOLIA]:               0n,
