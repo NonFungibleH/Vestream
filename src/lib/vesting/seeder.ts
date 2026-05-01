@@ -709,8 +709,17 @@ export async function discoverStreamflowRecipients(
 //          the 8-byte Anchor discriminator).
 
 const JUPITER_LOCK_PROGRAM_ID = "LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn";
-const JUPITER_LOCK_DISC_BS58  = "hteFiUjrzUz"; // base58 of sha256("account:VestingEscrow")[0..8]
 const JUPITER_LOCK_RECIPIENT_OFFSET = 8;
+// Jupiter Lock's `VestingEscrow` struct is 296 bytes on mainnet.
+// Verified via direct Helius getProgramAccounts query (2026-04-29):
+//   - 296-byte accounts = VestingEscrow (the ones we want)
+//   - 70-byte accounts  = small PDA / config accounts (skip)
+//
+// Same dataSize-filter approach as Streamflow's Contract — see comment
+// on STREAMFLOW_CONTRACT_SIZE for full rationale. The previous
+// memcmp-on-discriminator filter returned [] under the same conditions
+// the Streamflow filter did, so we use the same proven workaround.
+const JUPITER_LOCK_ESCROW_SIZE = 296;
 
 export async function discoverJupiterLockRecipients(
   chainId: SupportedChainId,
@@ -736,7 +745,8 @@ export async function discoverJupiterLockRecipients(
     connection.getProgramAccounts(programId, {
       commitment: "confirmed",
       filters: [
-        { memcmp: { offset: 0, bytes: JUPITER_LOCK_DISC_BS58 } },
+        // dataSize filter — see JUPITER_LOCK_ESCROW_SIZE comment.
+        { dataSize: JUPITER_LOCK_ESCROW_SIZE },
       ],
       dataSlice: { offset: JUPITER_LOCK_RECIPIENT_OFFSET, length: 32 },
     }),
