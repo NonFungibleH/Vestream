@@ -32,19 +32,9 @@ import { mainnet, bsc, polygon, base } from "viem/chains";
 import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 
-// PinkLock V2 contract addresses. MUST stay in sync with the copies in
-// tvl-walker/pinksale.ts and adapters/pinksale.ts (3-way drift would
-// cause silent data corruption — adapter returning streams the
-// claims-ingestor doesn't track, etc). Source-of-truth refactor TBD.
-//
-// ETH note: 0x33d4cc...5e2a is V1 (basically dead, ~30 tokens). Active
-// V2 deployment is 0x71b5759d... — see the walker for full audit.
-const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
-  [CHAIN_IDS.ETHEREUM]: "0x71b5759d73262fbb223956913ecf4ecc51057641",
-  [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
-  [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
-  [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
-};
+// PinkLock V2 contract addresses now live in a single source of truth.
+// See PINKSALE_CONTRACT_ADDRESSES in src/lib/protocol-constants.ts.
+import { PINKSALE_CONTRACT_ADDRESSES as PINKSALE_CONTRACTS } from "../../protocol-constants";
 
 // Approximate deployment blocks per chain — bound the eth_getLogs scan.
 const DEPLOYMENT_BLOCKS: Partial<Record<SupportedChainId, bigint>> = {

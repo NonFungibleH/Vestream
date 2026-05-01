@@ -29,20 +29,10 @@ import type { WalkerResult, TokenAggregate } from "./types";
 
 // ─── Contract addresses ────────────────────────────────────────────────────────
 
-// PinkLock V2 contract addresses, one per chain. Verified May 1 2026 by
-// calling allNormalTokenLockedCount() against each — confirmed live and
-// returning non-trivial totals.
-//
-// ETH note: 0x33d4cc...5e2a is the OLDER PinkLock (V1) — only 30 tokens
-// locked, basically dead. The active V2 deployment on ETH is
-// 0x71b5759d... (2,184 tokens at time of audit). Etherscan labels:
-// "PinkLock" (V1) vs "PinkSale: Pink Lock" / PinkLock02 (V2).
-const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
-  [CHAIN_IDS.ETHEREUM]: "0x71b5759d73262fbb223956913ecf4ecc51057641",
-  [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
-  [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
-  [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
-};
+// PinkLock V2 contract addresses are now in a single source of truth.
+// See PINKSALE_CONTRACT_ADDRESSES in src/lib/protocol-constants.ts for
+// the V1/V2 history and audit comment.
+import { PINKSALE_CONTRACT_ADDRESSES as PINKSALE_CONTRACTS } from "../../protocol-constants";
 
 // Multicall3 — same address on all 4 supported chains.
 const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11" as const;

@@ -260,6 +260,10 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     adapterIds: ["pinksale"],
     name: "PinkSale",
     tagline: "PinkLock V2 token locker",
+    // CONTRACT ADDRESSES: see PINKSALE_CONTRACT_ADDRESSES export at the
+    // bottom of this file. Three downstream consumers (walker, adapter,
+    // claims-ingestor) all import that single map. See its docstring
+    // for the V1/V2 history and audit trail.
     description:
       "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock V2 is its on-chain token locker for team allocations and LP proofs. Vestream reads every PinkLock V2 contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
     color: "#E063A0",
@@ -380,3 +384,44 @@ export function getProtocol(slug: string): ProtocolMeta | undefined {
 export function listProtocols(): ProtocolMeta[] {
   return PROTOCOL_SLUGS.map((s) => PROTOCOLS[s]);
 }
+
+// ─── Per-protocol contract address sources of truth ────────────────────────────
+//
+// Address-drift bugs are silent and expensive. Single source of truth here
+// means a future address change happens in ONE place and propagates to every
+// consumer (walker, adapter, claims-ingestor, etc) at once.
+//
+// History — May 1 2026 PinkSale ETH bug:
+//   For months we had three copies of PINKSALE_CONTRACTS — in
+//   tvl-walker/pinksale.ts, adapters/pinksale.ts, and
+//   ingestors/pinksale-claims.ts. The walker was updated to point at the
+//   V2 ETH contract (0x71b5759d...) but the adapter still pointed at the
+//   dead V1 contract (0x33d4cc...). Discovery returned 50 valid wallets,
+//   but the adapter then queried V1 for those wallets' streams and got
+//   nothing — silent zero. Fixed in commit bb13dc2 by updating all three.
+//   This export prevents that recurring.
+//
+// Add other protocols here as their address constants get extracted from
+// per-file copies. See PR plan: similar consolidation for UNCX, Hedgey,
+// etc.
+
+/**
+ * PinkLock V2 deployments. The V2 contract on each chain has the
+ * `allNormalTokenLockedCount()` + `getCumulativeLockInfo()` ABI we use.
+ *
+ * NOT the V1 contracts — V1 (e.g. ETH 0x33d4cc...5e2a, BSC 0x7ee058...) is
+ * basically abandoned. Verified May 1 2026 by direct
+ * `allNormalTokenLockedCount()` calls:
+ *   - ETH V2 (this map):  2,184 tokens locked
+ *   - ETH V1 (NOT this):     30 tokens (dead)
+ *   - BSC V2 (this map): 22,622 tokens
+ *   - BSC V1 (NOT this):  4,668 tokens
+ */
+export const PINKSALE_CONTRACT_ADDRESSES: Partial<
+  Record<SupportedChainId, `0x${string}`>
+> = {
+  [CHAIN_IDS.ETHEREUM]: "0x71b5759d73262fbb223956913ecf4ecc51057641",
+  [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
+  [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
+  [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
+};
