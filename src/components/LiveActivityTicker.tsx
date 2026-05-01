@@ -70,6 +70,7 @@ function chainLabel(id: number): string {
     case 56:        return "BNB Chain";
     case 137:       return "Polygon";
     case 8453:      return "Base";
+    case 101:       return "Solana";
     case 11155111:  return "Sepolia";
     default:        return `Chain ${id}`;
   }
