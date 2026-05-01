@@ -621,11 +621,22 @@ async function withSolanaRetry<T>(
 // Streamflow mainnet-beta vesting program. Matches the SDK's
 // PROGRAM_ID.mainnet constant so we don't hard-code it twice.
 const STREAMFLOW_MAINNET_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
-// base58 encoding of the SDK's CONTRACT_DISCRIMINATOR byte array
-// [172, 138, 115, 242, 121, 67, 183, 26]. Cached as a string literal so
-// we don't pull in bs58 just to compute it at runtime.
-const STREAMFLOW_CONTRACT_DISC_BS58  = "Vrs1SmhAjj7";
 const STREAMFLOW_RECIPIENT_OFFSET    = 113;
+// Streamflow's `Contract` struct is exactly 1104 bytes on mainnet. Filtering
+// by data size is FAR more reliable than filtering by Anchor discriminator
+// for two reasons:
+//   (1) Discriminators can change across program upgrades; the byte length
+//       of the struct stays stable barring an explicit schema migration.
+//   (2) Some RPC providers handle memcmp filters inconsistently. Diagnostic
+//       run on 2026-04-29 with Helius confirmed that the same query
+//       returned `[]` with a memcmp discriminator filter but returned real
+//       Contract accounts with this dataSize filter — the discriminator
+//       filter was finding nothing despite the correct base58 encoding.
+//
+// Trade-off: any other 1104-byte account owned by this program would also
+// be returned. Streamflow's only other known structs (config, treasury,
+// metadata) are different sizes, so this is unique-enough in practice.
+const STREAMFLOW_CONTRACT_SIZE       = 1104;
 
 export async function discoverStreamflowRecipients(
   chainId: SupportedChainId,
@@ -656,7 +667,9 @@ export async function discoverStreamflowRecipients(
     connection.getProgramAccounts(programId, {
       commitment: "confirmed",
       filters: [
-        { memcmp: { offset: 0, bytes: STREAMFLOW_CONTRACT_DISC_BS58 } },
+        // dataSize filter — see STREAMFLOW_CONTRACT_SIZE comment for why
+        // we use this instead of memcmp on the Anchor discriminator.
+        { dataSize: STREAMFLOW_CONTRACT_SIZE },
       ],
       // Returns ONLY the 32-byte recipient field from each account.
       dataSlice: { offset: STREAMFLOW_RECIPIENT_OFFSET, length: 32 },
