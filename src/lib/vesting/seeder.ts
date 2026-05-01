@@ -957,7 +957,37 @@ export interface SeedRunResult {
   error?:               string;
 }
 
+// Job ordering matters because seedAll runs jobs in batches of 3 with
+// Promise.all. If the lambda hits its 300s budget mid-run, late jobs
+// don't execute. Order chosen by priority (most-impactful protocols
+// first) and by failure-mode visibility (cheap-to-fail Solana protocols
+// up front so a Solana RPC issue is detected within seconds, not at
+// minute-5 of the run).
+//
+// Apr 29 2026 reorder: heavy protocols (PinkSale × 4 chains, Solana ×
+// 2 programs) moved to the FRONT after the Apr 29 deep-seed timeout
+// at 16:53:38 UTC reached only the lighter protocols and orphaned
+// these. Lighter, faster protocols (Sablier, Hedgey, etc.) are now
+// the buffer at the end — if THEY get partially seeded, that's fine;
+// they re-fetch on the next cron tick and the data quality stays
+// high because they have subgraphs (vs the contract-read protocols
+// where every cron run is a fresh enumeration).
 const SEED_JOBS: SeedJob[] = [
+  // ─── HIGH PRIORITY (most-impactful, most-broken) ───
+  // PinkSale — four mainnets (curated wallet list; see seed-wallets.ts).
+  // Adapter doesn't support Sepolia. Contract-read enumeration; can be
+  // slow on BSC due to data volume but completes within budget alone.
+  { adapterId: "pinksale",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverPinksaleRecipients },
+  { adapterId: "pinksale",     chainId: CHAIN_IDS.BSC,      discover: discoverPinksaleRecipients },
+  { adapterId: "pinksale",     chainId: CHAIN_IDS.POLYGON,  discover: discoverPinksaleRecipients },
+  { adapterId: "pinksale",     chainId: CHAIN_IDS.BASE,     discover: discoverPinksaleRecipients },
+  // Streamflow + Jupiter Lock — Solana mainnet only. Guarded at adapter
+  // level by SOLANA_ENABLED flag; safe to list unconditionally because
+  // their discover fns return [] when the flag is off.
+  { adapterId: "streamflow",    chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
+  { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
+
+  // ─── STANDARD (subgraph-based, generally fast and reliable) ───
   // Sablier — ETH, BSC, Polygon, Base + Sepolia (testnet). Single Envio
   // endpoint; Sepolia is filtered in-query via the chainId variable.
   { adapterId: "sablier",      chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierRecipients },
@@ -972,11 +1002,20 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "uncx",         chainId: CHAIN_IDS.POLYGON,  discover: discoverUncxRecipients },
   { adapterId: "uncx",         chainId: CHAIN_IDS.BASE,     discover: discoverUncxRecipients },
   { adapterId: "uncx",         chainId: CHAIN_IDS.SEPOLIA,  discover: discoverUncxRecipients },
-  // UNCX VestingManager — ETH/BSC/Base only (not deployed on Polygon or
-  // Sepolia). On-chain event scan via getLogs; see discoverUncxVmRecipients.
+  // UNCX VestingManager — ETHEREUM ONLY.
+  //
+  // BSC + Base were dropped Apr 29 2026 because dRPC's free tier no
+  // longer serves eth_getLogs on those chains at all (every chunk
+  // returned "Request timeout on the free tier, please upgrade your
+  // tier to the paid one"). Spending lambda budget on doomed chunks
+  // wasted 30-60s and pushed the late protocols (PinkSale, Solana)
+  // past the 300s deadline. Re-add when we're on paid dRPC or when
+  // BSC_RPC_URL/ALCHEMY_RPC_URL_BASE env vars get set (currently
+  // intentionally absent — see CLAUDE.md landmine note).
+  //
+  // ETH still works because dRPC ETH free-tier doesn't have the same
+  // restriction yet, and our non-env fallback for ETH is publicnode.
   { adapterId: "uncx-vm",      chainId: CHAIN_IDS.ETHEREUM, discover: discoverUncxVmRecipients },
-  { adapterId: "uncx-vm",      chainId: CHAIN_IDS.BSC,      discover: discoverUncxVmRecipients },
-  { adapterId: "uncx-vm",      chainId: CHAIN_IDS.BASE,     discover: discoverUncxVmRecipients },
   // Unvest — four mainnets. Sepolia subgraph URL is undefined in the
   // adapter; adding a job would just log "0 recipients discovered" on every
   // run. Omitting keeps the summary cleaner.
@@ -1004,18 +1043,8 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.POLYGON,  discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BASE,     discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
-  // PinkSale — four mainnets (curated wallet list; see seed-wallets.ts).
-  // Adapter doesn't support Sepolia.
-  { adapterId: "pinksale",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverPinksaleRecipients },
-  { adapterId: "pinksale",     chainId: CHAIN_IDS.BSC,      discover: discoverPinksaleRecipients },
-  { adapterId: "pinksale",     chainId: CHAIN_IDS.POLYGON,  discover: discoverPinksaleRecipients },
-  { adapterId: "pinksale",     chainId: CHAIN_IDS.BASE,     discover: discoverPinksaleRecipients },
-  // Streamflow — Solana mainnet only. Guarded at adapter level by
-  // SOLANA_ENABLED flag; safe to list here unconditionally because
-  // discoverStreamflowRecipients returns [] when the flag is off.
-  { adapterId: "streamflow",    chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
-  // Jupiter Lock — Solana mainnet only, same flag-gating pattern as Streamflow.
-  { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
+  // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
+  // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)
 ];
 
 /** How many recipients to feed into a single adapter.fetch() call. */
