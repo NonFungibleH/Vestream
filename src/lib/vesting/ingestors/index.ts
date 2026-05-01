@@ -44,6 +44,7 @@ import { ingestUnvestClaimsForUser } from "./unvest-claims";
 import { ingestSuperfluidClaimsForUser } from "./superfluid-claims";
 import { ingestStreamflowClaimsForUser } from "./streamflow-claims";
 import { ingestJupiterLockClaimsForUser } from "./jupiter-lock-claims";
+import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 export type AdapterId =
   | "sablier"
@@ -93,49 +94,45 @@ export async function ingestAllClaimsForUser(
   wallets:   string[],
   chainIds?: SupportedChainId[],
 ): Promise<IngestResult[]> {
+  // Adapter gating: protocols flagged `disabled: true` in protocol-constants
+  // (e.g. team-finance, paused May 2026) are short-circuited here so no
+  // upstream API call goes out. Same gate as seedAll + aggregateVestingStreams
+  // — keep all three entry points consistent when toggling.
+  const gated = <P extends AdapterId>(
+    protocol: P,
+    run: () => Promise<number>,
+  ): Promise<IngestResult> => {
+    if (!isAdapterEnabled(protocol)) {
+      return Promise.resolve({ protocol, inserted: 0 });
+    }
+    return run()
+      .then((inserted) => ({ protocol, inserted }))
+      .catch((err): IngestResult => ({ protocol, inserted: 0, error: String(err?.message ?? err) }));
+  };
+
   const tasks: Array<Promise<IngestResult>> = [
     // Shipped:
-    ingestSablierClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "sablier" as const, inserted }))
-      .catch((err) => ({ protocol: "sablier" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestHedgeyClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "hedgey" as const, inserted }))
-      .catch((err) => ({ protocol: "hedgey" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestTeamFinanceClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "team-finance" as const, inserted }))
-      .catch((err) => ({ protocol: "team-finance" as const, inserted: 0, error: String(err?.message ?? err) })),
+    gated("sablier",      () => ingestSablierClaimsForUser(userId, wallets, chainIds)),
+    gated("hedgey",       () => ingestHedgeyClaimsForUser(userId, wallets, chainIds)),
+    gated("team-finance", () => ingestTeamFinanceClaimsForUser(userId, wallets, chainIds)),
 
-    ingestPinksaleClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "pinksale" as const, inserted }))
-      .catch((err) => ({ protocol: "pinksale" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestUncxVmClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "uncx-vm" as const, inserted }))
-      .catch((err) => ({ protocol: "uncx-vm" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestUncxClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "uncx" as const, inserted }))
-      .catch((err) => ({ protocol: "uncx" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestUnvestClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "unvest" as const, inserted }))
-      .catch((err) => ({ protocol: "unvest" as const, inserted: 0, error: String(err?.message ?? err) })),
+    gated("pinksale",     () => ingestPinksaleClaimsForUser(userId, wallets, chainIds)),
+    gated("uncx-vm",      () => ingestUncxVmClaimsForUser(userId, wallets, chainIds)),
+    gated("uncx",         () => ingestUncxClaimsForUser(userId, wallets, chainIds)),
+    gated("unvest",       () => ingestUnvestClaimsForUser(userId, wallets, chainIds)),
 
     // Superfluid ships discrete cliff + end events from the hosted
     // VestingScheduler subgraph. Continuous flow accrual between
     // cliff and end is NOT yet captured as discrete claim_events —
     // see superfluid-claims.ts header comment.
-    ingestSuperfluidClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "superfluid" as const, inserted }))
-      .catch((err) => ({ protocol: "superfluid" as const, inserted: 0, error: String(err?.message ?? err) })),
+    gated("superfluid",   () => ingestSuperfluidClaimsForUser(userId, wallets, chainIds)),
 
     // Solana adapters: snapshot-diff strategy via vestingStreamsCache.
     // Gated behind SOLANA_ENABLED=true. See per-file headers for the
     // limitations (first-run baseline = lump sum, multi-claim bundling
     // between refreshes).
-    ingestStreamflowClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "streamflow" as const, inserted }))
-      .catch((err) => ({ protocol: "streamflow" as const, inserted: 0, error: String(err?.message ?? err) })),
-    ingestJupiterLockClaimsForUser(userId, wallets, chainIds)
-      .then((inserted) => ({ protocol: "jupiter-lock" as const, inserted }))
-      .catch((err) => ({ protocol: "jupiter-lock" as const, inserted: 0, error: String(err?.message ?? err) })),
+    gated("streamflow",   () => ingestStreamflowClaimsForUser(userId, wallets, chainIds)),
+    gated("jupiter-lock", () => ingestJupiterLockClaimsForUser(userId, wallets, chainIds)),
   ];
 
   return Promise.all(tasks);

@@ -199,7 +199,14 @@ const loadProtocolData = unstable_cache(
 );
 
 export async function generateStaticParams() {
-  return PROTOCOL_SLUGS.map((slug) => ({ protocol: slug }));
+  // Skip disabled protocols (e.g. team-finance, paused May 2026) — paired
+  // with `dynamicParams = false` above this means a paused protocol's URL
+  // returns 404 from the static-params layer, before we ever hit the page
+  // body's notFound() guard.
+  return PROTOCOL_SLUGS
+    .map((slug) => ({ slug, meta: getProtocol(slug) }))
+    .filter(({ meta }) => meta && !meta.disabled)
+    .map(({ slug }) => ({ protocol: slug }));
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
@@ -209,7 +216,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { protocol } = await params;
   const meta = getProtocol(protocol);
-  if (!meta) return { title: "Not found" };
+  if (!meta || meta.disabled) return { title: "Not found" };
 
   const title = `${meta.name} unlock tracker & alerts — Vestream`;
   const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
@@ -243,7 +250,7 @@ export default async function ProtocolLandingPage(
 ) {
   const { protocol } = await params;
   const meta = getProtocol(protocol);
-  if (!meta) notFound();
+  if (!meta || meta.disabled) notFound();
 
   // Single-cached fetch for the page's data — see CACHE_TTL_SECONDS comment.
   //

@@ -116,7 +116,7 @@ function fmtDateUtc(unix: number): string {
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { protocol } = await params;
   const meta = getProtocol(protocol);
-  if (!meta) return { title: "Not found" };
+  if (!meta || meta.disabled) return { title: "Not found" };
 
   const url = `https://vestream.io/protocols/${meta.slug}/unlocks`;
 
@@ -151,7 +151,7 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
   const { protocol } = await params;
   const sp = await searchParams;
   const meta = getProtocol(protocol);
-  if (!meta) notFound();
+  if (!meta || meta.disabled) notFound();
 
   // Chain filter from ?chain=... query param. Null = no filter (show all chains).
   const filterChainId = parseChainParam(sp.chain);

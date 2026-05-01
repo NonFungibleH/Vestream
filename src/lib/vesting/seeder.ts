@@ -58,6 +58,7 @@ import { ADAPTER_REGISTRY } from "./adapters";
 import { resolveSubgraphUrl } from "./graph";
 import { PINKSALE_SEED_WALLETS } from "./seed-wallets";
 import { normaliseAddress } from "@/lib/address-validation";
+import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 // ─── Per-chain subgraph URLs (mirror the adapter files) ──────────────────────
 //
@@ -1145,8 +1146,22 @@ export async function seedAll(mode: SeedMode = "incremental"): Promise<SeedRunRe
   const limit    = limitFor(mode);
   const PARALLEL = 3;
   const results: SeedRunResult[] = [];
-  for (let i = 0; i < SEED_JOBS.length; i += PARALLEL) {
-    const batch   = SEED_JOBS.slice(i, i + PARALLEL);
+
+  // Filter out jobs whose protocol is flagged `disabled: true` in the
+  // protocol-constants registry. This is the temporary-pause hatch — see
+  // ProtocolMeta.disabled docstring. Disabled adapters make NO outbound
+  // calls; their existing cache rows are left in place so re-enabling is a
+  // single flag flip + a deep-seed.
+  const enabledJobs = SEED_JOBS.filter((j) => {
+    const enabled = isAdapterEnabled(j.adapterId);
+    if (!enabled) {
+      console.log(`[seeder] skipping ${j.adapterId}/${j.chainId} — protocol is disabled`);
+    }
+    return enabled;
+  });
+
+  for (let i = 0; i < enabledJobs.length; i += PARALLEL) {
+    const batch   = enabledJobs.slice(i, i + PARALLEL);
     const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
   }

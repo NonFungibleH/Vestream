@@ -1,5 +1,6 @@
 import { ADAPTER_REGISTRY } from "./adapters/index";
 import { VestingStream, SupportedChainId, ALL_CHAIN_IDS } from "./types";
+import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 /**
  * Fetch all vesting streams for the given wallets across all requested chains.
@@ -19,6 +20,11 @@ export async function aggregateVestingStreams(
   const tasks: Array<{ adapterId: string; chainId: SupportedChainId; promise: Promise<VestingStream[]> }> = [];
 
   for (const adapter of ADAPTER_REGISTRY) {
+    // Skip adapters whose protocol is flagged `disabled: true` in
+    // protocol-constants.ts (e.g. team-finance, paused May 2026 — no
+    // outbound API/RPC calls until re-enabled).
+    if (!isAdapterEnabled(adapter.id)) continue;
+
     // Skip adapters not in the optional protocol filter
     if (protocolIds && protocolIds.length > 0 && !protocolIds.includes(adapter.id)) continue;
 

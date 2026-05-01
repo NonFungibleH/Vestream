@@ -17,6 +17,7 @@ import {
   nextUnlockTimeForSteps,
 } from "./types";
 import { resolveSubgraphUrl } from "./graph";
+import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 // ─── Sablier subgraph URLs (V2.1 — all mainnet chains) ────────────────────────
 
@@ -682,11 +683,18 @@ export async function explorerFetch(
   tokenAddress: string,
   chainId: SupportedChainId
 ): Promise<VestingStream[]> {
+  // Team Finance is paused (May 2026) — see protocol-constants.ts
+  // `disabled: true` flag. Skip the upstream Squid call to honour the
+  // "no outbound calls" promise. Existing cache rows are unaffected;
+  // re-enabling restores this branch automatically via isAdapterEnabled.
+  const tfEnabled = isAdapterEnabled("team-finance");
   const [sablier, uncx, uncxVm, teamFinance] = await Promise.all([
     explorerFetchSablier(tokenAddress, chainId),
     explorerFetchUNCX(tokenAddress, chainId),
     explorerFetchUNCXVM(tokenAddress, chainId),
-    explorerFetchTeamFinance(tokenAddress, chainId),
+    tfEnabled
+      ? explorerFetchTeamFinance(tokenAddress, chainId)
+      : Promise.resolve([] as VestingStream[]),
   ]);
   // Deduplicate by stream id (shouldn't overlap, but belt + braces)
   const seen = new Set<string>();

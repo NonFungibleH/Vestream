@@ -82,7 +82,14 @@ async function runAll(protocolFilter: string | null): Promise<{
   durationMs: number;
 }> {
   const started = Date.now();
+  // listProtocols() filters out disabled protocols by default — so paused
+  // integrations (e.g. team-finance, May 2026) never get walker calls fired
+  // on their behalf, even if a manual `?protocol=team-finance` rerun is
+  // attempted. To re-enable, flip `disabled: false` in protocol-constants.ts.
   const protocols = listProtocols().filter((p) => !protocolFilter || p.slug === protocolFilter);
+  if (protocolFilter && protocols.length === 0) {
+    console.log(`[cron/tvl-snapshot] no enabled protocol matches "${protocolFilter}" — skipping (may be disabled in protocol-constants.ts)`);
+  }
 
   const runs = await Promise.all(
     protocols.map(async (p) => {

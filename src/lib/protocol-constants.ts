@@ -67,6 +67,17 @@ export interface ProtocolMeta {
     slug:      string | readonly string[];
     category?: string;     // Optional filter — "vesting" for Streamflow
   };
+  /**
+   * If true, the protocol is hidden from public surfaces (UI cards, /protocols
+   * index, search) AND skipped by the seeder + TVL snapshot cron — no
+   * outbound API/RPC calls are made on its behalf. Existing cache rows are
+   * left in place so re-enabling is one line + a deep-seed.
+   *
+   * Use sparingly — this exists for "temporarily pause an integration"
+   * scenarios (e.g. upstream API outage, rebrand, legal review). Permanent
+   * removal should delete the entry entirely instead.
+   */
+  disabled?: boolean;
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
@@ -160,6 +171,13 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // — it includes LP locks and general token locks. We compute the
     // vesting-specific slice ourselves via tvl-walker/team-finance.ts walking
     // the Squid `vestingFactoryVestings` entity.
+    //
+    // TEMPORARILY DISABLED — May 1 2026.
+    // The Squid GraphQL endpoint is no longer being called and the protocol is
+    // hidden from /protocols, search, and UI cards. Cache rows are LEFT IN
+    // PLACE so re-enabling is a single `disabled: false` flip + a deep-seed.
+    // Revisit when we're ready to bring it back.
+    disabled: true,
   },
 
   uncx: {
@@ -380,9 +398,35 @@ export function getProtocol(slug: string): ProtocolMeta | undefined {
   return PROTOCOLS[slug];
 }
 
-/** All protocols in display order. */
-export function listProtocols(): ProtocolMeta[] {
-  return PROTOCOL_SLUGS.map((s) => PROTOCOLS[s]);
+/**
+ * All protocols in display order.
+ *
+ * By default, protocols flagged `disabled: true` are filtered out — this is
+ * what every public surface (UI cards, /protocols index, search, sitemap)
+ * should call. Pass `{ includeDisabled: true }` for admin / diagnostic
+ * surfaces that need the full registry (e.g. an internal "all protocols
+ * including paused" view).
+ */
+export function listProtocols(opts: { includeDisabled?: boolean } = {}): ProtocolMeta[] {
+  const all = PROTOCOL_SLUGS.map((s) => PROTOCOLS[s]);
+  return opts.includeDisabled ? all : all.filter((p) => !p.disabled);
+}
+
+/**
+ * Adapter-id-level enabled check. Used by the seeder + TVL snapshot cron to
+ * skip outbound calls for paused protocols. Note this checks the PROTOCOL
+ * meta (keyed by slug) — the merged `uncx` entry covers both `uncx` and
+ * `uncx-vm` adapter IDs, so we look up by reverse-mapping adapterIds → slug.
+ */
+export function isAdapterEnabled(adapterId: string): boolean {
+  for (const meta of Object.values(PROTOCOLS)) {
+    if (meta.adapterIds.includes(adapterId)) {
+      return !meta.disabled;
+    }
+  }
+  // Adapters with no protocol-meta entry (shouldn't happen for any active
+  // adapter) default to enabled — fail-open rather than silently skipping.
+  return true;
 }
 
 // ─── Per-protocol contract address sources of truth ────────────────────────────
