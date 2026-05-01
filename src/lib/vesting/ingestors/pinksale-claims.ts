@@ -67,12 +67,11 @@ const ERC20_ABI = parseAbi([
 const SUPPORTED_CHAINS: SupportedChainId[] =
   Object.keys(PINKSALE_CONTRACTS).map(Number) as SupportedChainId[];
 
+// Claims ingestor scans events (eth_getLogs) — pass forLogs:true so the
+// pool excludes publicnode (which prunes historical logs).
+import { getRpcUrl as getRpcUrlPool } from "../rpc";
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
-  if (chainId === CHAIN_IDS.BASE)     return process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL;
-  if (chainId === CHAIN_IDS.ETHEREUM) return process.env.ALCHEMY_RPC_URL_ETH;
-  if (chainId === CHAIN_IDS.BSC)      return process.env.BSC_RPC_URL;
-  if (chainId === CHAIN_IDS.POLYGON)  return process.env.POLYGON_RPC_URL;
-  return undefined;
+  return getRpcUrlPool(chainId, { forLogs: true });
 }
 
 const tokenMetaCache = new Map<string, { symbol: string; decimals: number }>();

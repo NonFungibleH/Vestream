@@ -96,18 +96,13 @@ const ERC20_ABI = [
 ] as const;
 
 // ─── viem helpers ──────────────────────────────────────────────────────────────
-
-// Default fallback: dRPC. Even with dRPC's flakiness, contract reads are way
-// more forgiving than eth_getLogs.
-function getRpcUrl(chainId: SupportedChainId): string {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.drpc.org";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.drpc.org";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.drpc.org";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.drpc.org";
-    default:                 return "https://eth.drpc.org";
-  }
-}
+//
+// RPC selection now goes through the shared multi-RPC pool in
+// `src/lib/vesting/rpc.ts`. Each makeClient() call gets a different URL
+// from the round-robin rotation, so retries naturally hit different
+// providers and free-tier rate limits compound across the pool instead of
+// piling onto a single endpoint.
+import { getRpcUrl } from "../rpc";
 
 function getViemChain(chainId: SupportedChainId) {
   switch (chainId) {
@@ -120,9 +115,13 @@ function getViemChain(chainId: SupportedChainId) {
 }
 
 function makeClient(chainId: SupportedChainId) {
+  // Contract reads only — `forLogs` left as default false so all pool
+  // members are eligible (publicnode is fine for eth_call, only excluded
+  // for log scans).
+  const url = getRpcUrl(chainId) ?? "https://eth.drpc.org";
   return createPublicClient({
     chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId), { batch: true }),
+    transport: http(url, { batch: true }),
   });
 }
 

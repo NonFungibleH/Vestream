@@ -397,32 +397,19 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
-// Seeder RPC URLs.
+// Seeder RPC URLs — now go through the shared multi-RPC pool in
+// `src/lib/vesting/rpc.ts`. Each call rotates through providers, so retries
+// hit different endpoints and rate limits compound across the pool.
 //
-// Lesson learned the hard way (commit bec6fc9 documented this): for chains
-// where the seeder does eth_getLogs (PinkSale, UNCX-VM event scans), DO
-// NOT fall back to publicnode endpoints. publicnode prunes historical
-// logs aggressively — BSC ~17 days, Polygon ~10 days — so a 7M-block /
-// 9-month scan over publicnode silently returns zero matches with no
-// error.
-//
-// dRPC (`*.drpc.org`) is the documented-good free fallback: unauthenticated,
-// retains historical log data, used by the TVL walker for the same workload.
-// Mirrors src/lib/vesting/tvl-walker/pinksale.ts:104 which has the same
-// fallback pattern proven in production.
-//
-// If a paid Alchemy/QuickNode URL is in env, we use that for higher rate
-// limits — but the dRPC fallback means a missing env var produces
-// rate-limited-but-actually-working results, not silent zero.
+// Lesson learned the hard way (commit bec6fc9 documented this): for the
+// chains where the seeder does eth_getLogs (PinkSale, UNCX-VM event scans),
+// publicnode endpoints prune historical logs aggressively (BSC ~17 days,
+// Polygon ~10 days). The shared pool tags publicnode entries with
+// `excludeForLogs: true` and we pass `{ forLogs: true }` here so the seeder
+// only ever gets pool members that retain historical logs.
+import { getRpcUrl as getRpcUrlPool } from "./rpc";
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://eth.drpc.org";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.drpc.org";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.drpc.org";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.drpc.org";
-    case CHAIN_IDS.SEPOLIA:  return process.env.SEPOLIA_RPC_URL;
-    default:                 return undefined;
-  }
+  return getRpcUrlPool(chainId, { forLogs: true });
 }
 
 // Minimal ERC721Enumerable ABI fragment — inlined here so the adapter's own

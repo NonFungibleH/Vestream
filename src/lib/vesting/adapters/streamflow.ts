@@ -43,6 +43,14 @@ import {
 } from "@streamflow/stream";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
+import { mapBounded } from "../rpc";
+
+// Helius free tier caps compute units per second. Concurrency 4 with a
+// 100ms inter-batch delay keeps us comfortably under the limit while
+// still completing 50 wallets in ~5-10s. Bumping concurrency higher
+// triggers 429 storms (confirmed in production logs May 1 2026).
+const SOLANA_CONCURRENCY = 4;
+const SOLANA_BATCH_DELAY_MS = 100;
 
 // ─── Jupiter token list (symbol fallback) ───────────────────────────────────
 
@@ -164,34 +172,45 @@ async function fetchForChain(
     return [];
   }
 
-  // Fetch streams for every wallet in parallel. Invalid pubkeys
-  // (shouldn't happen — validated upstream — but defence in depth)
-  // are rejected per-wallet without sinking the whole batch.
+  // Bounded-concurrency fetch — see SOLANA_CONCURRENCY comment up top.
+  // Errors are recorded per-wallet without sinking the whole batch
+  // (mapBounded returns PromiseSettledResult[] so a few rejections
+  // don't fail the run).
   const allStreams: Array<[string, StreamflowContract]> = [];
-  await Promise.all(
-    wallets.map(async (wallet) => {
+  await mapBounded(
+    wallets,
+    SOLANA_CONCURRENCY,
+    async (wallet) => {
       try {
         new PublicKey(wallet); // throws on malformed pubkey
-        const result = await client.get({
-          address:   wallet,
-          type:      StreamType.All,
-          direction: StreamDirection.All,
-        });
-        for (const [id, stream] of result) {
-          // Skip AlignedContract — price-aligned unlocks are out of scope
-          // for v1 (see header comment).
-          if (stream instanceof AlignedContract) continue;
-          // Skip closed/cancelled streams — they're historical, and the
-          // cache is for active vestings. Fully-vested (but not closed)
-          // streams still return; they'll be flagged isFullyVested=true.
-          if (stream.closed) continue;
-          allStreams.push([id, stream]);
-        }
-      } catch (err) {
-        console.error(`[streamflow] fetch failed for ${wallet}:`, err);
+      } catch {
+        return; // invalid pubkey — skip
       }
-    }),
-  );
+      const result = await client.get({
+        address:   wallet,
+        type:      StreamType.All,
+        direction: StreamDirection.All,
+      });
+      for (const [id, stream] of result) {
+        // Skip AlignedContract — price-aligned unlocks are out of scope
+        // for v1 (see header comment).
+        if (stream instanceof AlignedContract) continue;
+        // Skip closed/cancelled streams — they're historical, and the
+        // cache is for active vestings. Fully-vested (but not closed)
+        // streams still return; they'll be flagged isFullyVested=true.
+        if (stream.closed) continue;
+        allStreams.push([id, stream]);
+      }
+    },
+    SOLANA_BATCH_DELAY_MS,
+  ).then((results) => {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === "rejected") {
+        console.error(`[streamflow] fetch failed for ${wallets[i]}:`, r.reason);
+      }
+    }
+  });
 
   if (allStreams.length === 0) return [];
 
@@ -205,8 +224,13 @@ async function fetchForChain(
   const decimalsByMint = new Map<string, number>();
   const symbolsByMint  = new Map<string, string>();
 
-  await Promise.all(
-    uniqueMints.map(async (mint) => {
+  // Bounded concurrency for the mint metadata fan-out — same Helius rate
+  // limit applies to every getMint call. With 50k+ unique mints from a
+  // deep seed, unbounded Promise.all here was the actual 429 trigger.
+  await mapBounded(
+    uniqueMints,
+    SOLANA_CONCURRENCY,
+    async (mint) => {
       const fromJupiter = jupiterList.get(mint);
       try {
         const mintInfo = await getMint(connection, new PublicKey(mint));
@@ -217,7 +241,8 @@ async function fetchForChain(
         decimalsByMint.set(mint, fromJupiter?.decimals ?? 9);
       }
       symbolsByMint.set(mint, fromJupiter?.symbol ?? `${mint.slice(0, 4)}…`);
-    }),
+    },
+    SOLANA_BATCH_DELAY_MS,
   );
 
   const nowSec = Math.floor(Date.now() / 1000);

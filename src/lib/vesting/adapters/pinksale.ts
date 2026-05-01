@@ -30,27 +30,54 @@ import { PINKSALE_CONTRACT_ADDRESSES as PINKSALE_CONTRACTS } from "../../protoco
 
 // ─── ABIs ──────────────────────────────────────────────────────────────────────
 
+// Single-lock tuple shape — re-used by both array-returning and indexed
+// variants of the lookup functions below.
+const LOCK_TUPLE = {
+  type: "tuple",
+  components: [
+    { name: "id",             type: "uint256" },
+    { name: "token",          type: "address" },
+    { name: "owner",          type: "address" },
+    { name: "amount",         type: "uint256" },
+    { name: "lockDate",       type: "uint256" },
+    { name: "tgeDate",        type: "uint256" },
+    { name: "tgeBps",         type: "uint256" },
+    { name: "cycle",          type: "uint256" },
+    { name: "cycleBps",       type: "uint256" },
+    { name: "unlockedAmount", type: "uint256" },
+    { name: "description",    type: "string"  },
+  ],
+} as const;
+
 const PINKSALE_ABI = [
+  // Bulk fetch — fast path for users with few locks. Response can blow past
+  // free-RPC response-size caps for power users (~100KB on publicnode); we
+  // gate on getUserNormalLocksLength below to decide which path to take.
   {
     name: "normalLocksForUser",
     type: "function" as const,
     inputs:  [{ name: "user", type: "address" }],
-    outputs: [{
-      type: "tuple[]",
-      components: [
-        { name: "id",             type: "uint256" },
-        { name: "token",          type: "address" },
-        { name: "owner",          type: "address" },
-        { name: "amount",         type: "uint256" },
-        { name: "lockDate",       type: "uint256" },
-        { name: "tgeDate",        type: "uint256" },
-        { name: "tgeBps",         type: "uint256" },
-        { name: "cycle",          type: "uint256" },
-        { name: "cycleBps",       type: "uint256" },
-        { name: "unlockedAmount", type: "uint256" },
-        { name: "description",    type: "string"  },
-      ],
-    }],
+    outputs: [{ ...LOCK_TUPLE, type: "tuple[]" }],
+    stateMutability: "view" as const,
+  },
+  // Paginated fetch — one lock at a time by (user, index). Used as the
+  // slow-but-reliable path when a user has too many locks for the bulk
+  // call to fit in free-tier RPC response budgets.
+  {
+    name: "getUserNormalLocksLength",
+    type: "function" as const,
+    inputs:  [{ name: "user", type: "address" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view" as const,
+  },
+  {
+    name: "getUserNormalLockAtIndex",
+    type: "function" as const,
+    inputs:  [
+      { name: "user",  type: "address" },
+      { name: "index", type: "uint256" },
+    ],
+    outputs: [LOCK_TUPLE],
     stateMutability: "view" as const,
   },
 ] as const;
@@ -62,15 +89,11 @@ const ERC20_ABI = [
 ] as const;
 
 // ─── viem helpers ──────────────────────────────────────────────────────────────
-
+// Adapter is per-user contract reads only (no log scans), so it's safe to
+// use the full multi-RPC pool including publicnode entries.
+import { getRpcUrl as getRpcUrlPool } from "../rpc";
 function getRpcUrl(chainId: SupportedChainId): string {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
-    default:                 return "https://ethereum.publicnode.com";
-  }
+  return getRpcUrlPool(chainId) ?? "https://eth.drpc.org";
 }
 
 function getViemChain(chainId: SupportedChainId) {
@@ -195,16 +218,88 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     transport: http(getRpcUrl(chainId)),
   });
 
-  // Fetch locks for all wallets in parallel
-  const locksByWallet = await Promise.allSettled(
+  // Two-phase fetch to dodge free-RPC response-size caps:
+  //   Phase 1: ask each wallet how many locks it has (cheap, fixed-size).
+  //   Phase 2: for wallets with ≤ BULK_FETCH_THRESHOLD locks, use the
+  //            bulk normalLocksForUser call (one round-trip).
+  //            For wallets above that, paginate via getUserNormalLockAtIndex
+  //            in batched multicalls — each lock is its own ~500-byte
+  //            response, so no individual call breaches the 100KB cap.
+  //
+  // Why this is necessary: publicnode (and several other free Polygon RPCs)
+  // cap eth_call responses at 100KB. Power users on PinkSale Polygon have
+  // 100+ locks each, returning ~250-450KB arrays from normalLocksForUser
+  // and silently dropping out of the seed. Confirmed in production logs
+  // May 1 2026: dozens of `call returned result of length 254944 exceeding
+  // limit 100000` errors per seed run. Pagination eliminates this class
+  // of failure entirely.
+  const BULK_FETCH_THRESHOLD = 50;
+
+  // Phase 1 — lengths (one cheap call per wallet, all in parallel).
+  const lengthByWallet = await Promise.allSettled(
     wallets.map((wallet) =>
       client.readContract({
         address:      contractAddress,
         abi:          PINKSALE_ABI,
-        functionName: "normalLocksForUser",
+        functionName: "getUserNormalLocksLength",
         args:         [wallet as `0x${string}`],
       })
     )
+  );
+
+  // Phase 2 — fetch locks per wallet, choosing path by length.
+  type LockRaw = readonly {
+    id: bigint; token: string; owner: string; amount: bigint;
+    lockDate: bigint; tgeDate: bigint; tgeBps: bigint; cycle: bigint;
+    cycleBps: bigint; unlockedAmount: bigint; description: string;
+  }[];
+
+  const locksByWallet = await Promise.allSettled(
+    wallets.map(async (wallet, i): Promise<LockRaw> => {
+      const lenRes = lengthByWallet[i];
+      if (lenRes.status !== "fulfilled") {
+        throw lenRes.reason;
+      }
+      const count = Number(lenRes.value as bigint);
+      if (count === 0) return [];
+
+      // Small enough for the bulk call — one round-trip, fast path.
+      if (count <= BULK_FETCH_THRESHOLD) {
+        const result = await client.readContract({
+          address:      contractAddress,
+          abi:          PINKSALE_ABI,
+          functionName: "normalLocksForUser",
+          args:         [wallet as `0x${string}`],
+        });
+        return result as LockRaw;
+      }
+
+      // Big array — paginate via getUserNormalLockAtIndex. Multicall'd in
+      // chunks of 50 to keep each multicall response under 100KB
+      // (50 locks × ~500 bytes ≈ 25KB).
+      const PAGE = 50;
+      const out: LockRaw[number][] = [];
+      for (let start = 0; start < count; start += PAGE) {
+        const end = Math.min(start + PAGE, count);
+        const calls = [];
+        for (let idx = start; idx < end; idx++) {
+          calls.push({
+            address:      contractAddress,
+            abi:          PINKSALE_ABI,
+            functionName: "getUserNormalLockAtIndex" as const,
+            args:         [wallet as `0x${string}`, BigInt(idx)] as const,
+          });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const results = await client.multicall({ contracts: calls as any, allowFailure: true });
+        for (const r of results) {
+          if (r.status === "success" && r.result) {
+            out.push(r.result as LockRaw[number]);
+          }
+        }
+      }
+      return out as LockRaw;
+    })
   );
 
   const allLocks: PinkLockRaw[] = [];

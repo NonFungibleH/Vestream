@@ -52,6 +52,11 @@ import {
 } from "../types";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
+import { mapBounded } from "../rpc";
+
+// Helius free-tier CU/s ceiling — see streamflow.ts for the same constants.
+const SOLANA_CONCURRENCY = 4;
+const SOLANA_BATCH_DELAY_MS = 100;
 
 // ─── Program identity + account layout ──────────────────────────────────────
 
@@ -215,37 +220,44 @@ async function fetchForChain(
   // dataSlice is NOT used here because we need the full account body to
   // decode cliff/period/amount fields. Payload is ~300 bytes per escrow,
   // so fetching the whole thing is still cheap.
+  // Bounded-concurrency per-wallet getProgramAccounts. See SOLANA_CONCURRENCY.
   const escrows: DecodedEscrow[] = [];
-  await Promise.all(
-    wallets.map(async (wallet) => {
+  await mapBounded(
+    wallets,
+    SOLANA_CONCURRENCY,
+    async (wallet) => {
       try {
         new PublicKey(wallet);
       } catch {
         return; // invalid pubkey — skip
       }
 
-      try {
-        const accounts = await connection.getProgramAccounts(programId, {
-          commitment: "confirmed",
-          filters: [
-            { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
-            { memcmp: { offset: OFFSET_RECIPIENT, bytes: wallet } },
-          ],
-        });
+      const accounts = await connection.getProgramAccounts(programId, {
+        commitment: "confirmed",
+        filters: [
+          { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
+          { memcmp: { offset: OFFSET_RECIPIENT, bytes: wallet } },
+        ],
+      });
 
-        for (const { pubkey, account } of accounts) {
-          const data = account.data instanceof Buffer ? account.data : Buffer.from(account.data);
-          const decoded = decodeEscrow(pubkey.toBase58(), data);
-          if (!decoded) continue;
-          // Skip cancelled escrows — they're historical, not active.
-          if (decoded.cancelledAt > 0) continue;
-          escrows.push(decoded);
-        }
-      } catch (err) {
-        console.error(`[jupiter-lock] fetch failed for ${wallet}:`, err);
+      for (const { pubkey, account } of accounts) {
+        const data = account.data instanceof Buffer ? account.data : Buffer.from(account.data);
+        const decoded = decodeEscrow(pubkey.toBase58(), data);
+        if (!decoded) continue;
+        // Skip cancelled escrows — they're historical, not active.
+        if (decoded.cancelledAt > 0) continue;
+        escrows.push(decoded);
       }
-    }),
-  );
+    },
+    SOLANA_BATCH_DELAY_MS,
+  ).then((results) => {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === "rejected") {
+        console.error(`[jupiter-lock] fetch failed for ${wallets[i]}:`, r.reason);
+      }
+    }
+  });
 
   if (escrows.length === 0) return [];
 
@@ -256,8 +268,11 @@ async function fetchForChain(
   const decimalsByMint = new Map<string, number>();
   const symbolsByMint  = new Map<string, string>();
 
-  await Promise.all(
-    uniqueMints.map(async (mint) => {
+  // Bounded-concurrency mint metadata fan-out — same Helius rate budget.
+  await mapBounded(
+    uniqueMints,
+    SOLANA_CONCURRENCY,
+    async (mint) => {
       const fromJupiter = jupiterList.get(mint);
       try {
         const mintInfo = await getMint(connection, new PublicKey(mint));
@@ -266,7 +281,8 @@ async function fetchForChain(
         decimalsByMint.set(mint, fromJupiter?.decimals ?? 9);
       }
       symbolsByMint.set(mint, fromJupiter?.symbol ?? `${mint.slice(0, 4)}…`);
-    }),
+    },
+    SOLANA_BATCH_DELAY_MS,
   );
 
   const nowSec = Math.floor(Date.now() / 1000);
