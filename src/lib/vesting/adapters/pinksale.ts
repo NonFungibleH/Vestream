@@ -24,8 +24,18 @@ import { mainnet, bsc, polygon, base } from "viem/chains";
 
 // ─── Contract addresses ────────────────────────────────────────────────────────
 
+// PinkLock V2 contract addresses. Must match
+// src/lib/vesting/tvl-walker/pinksale.ts:PINKSALE_CONTRACTS exactly —
+// they were drifted before May 1 2026 (walker pointed at V2 ETH while
+// adapter still pointed at V1 ETH, so discovery surfaced recipients
+// but the per-recipient fetch found nothing). Single source of truth
+// candidate for a future refactor.
+//
+// ETH note: 0x33d4cc...5e2a is the OLDER PinkLock (V1) — only ~30
+// tokens locked there. Active V2 deployment is 0x71b5759d... — see
+// the walker file for the full audit comment.
 const PINKSALE_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
-  [CHAIN_IDS.ETHEREUM]: "0x33d4cc8716beb13f814f538ad3b2de3b036f5e2a",
+  [CHAIN_IDS.ETHEREUM]: "0x71b5759d73262fbb223956913ecf4ecc51057641",
   [CHAIN_IDS.BSC]:      "0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe",
   [CHAIN_IDS.POLYGON]:  "0x6C9A0D8B1c7a95a323d744dE30cf027694710633",
   [CHAIN_IDS.BASE]:     "0xdd6e31a046b828cbbafb939c2a394629aff8bbdc",
