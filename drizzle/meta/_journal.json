@@ -92,6 +92,13 @@
       "when": 1777800000000,
       "tag": "0012_token_lookup_index",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777900000000,
+      "tag": "0013_stream_annotations",
+      "breakpoints": true
     }
   ]
 }

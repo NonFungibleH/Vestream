@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
 import { db } from "./index";
 import {
   users,
@@ -6,6 +6,7 @@ import {
   notificationPreferences,
   notificationsSent,
   betaFeedback,
+  streamAnnotations,
 } from "./schema";
 import { normaliseAddress } from "@/lib/address-validation";
 
@@ -358,4 +359,117 @@ export async function saveFeedback(opts: {
     message:     opts.message,
     page:        opts.page       ?? null,
   });
+}
+
+// ─── Stream annotations (custom names + notes) ──────────────────────────────
+
+/** Cap matches the API-layer enforcement — keep in sync. */
+export const STREAM_ANNOTATION_NOTES_MAX = 200;
+/** Custom names get a tighter cap — they render inline next to amounts. */
+export const STREAM_ANNOTATION_NAME_MAX  = 80;
+
+export interface StreamAnnotation {
+  streamId:   string;
+  customName: string | null;
+  notes:      string | null;
+  updatedAt:  Date;
+}
+
+/** Fetch a single annotation. Returns null if the user hasn't annotated this stream. */
+export async function getStreamAnnotation(
+  userId:   string,
+  streamId: string,
+): Promise<StreamAnnotation | null> {
+  const rows = await db
+    .select({
+      streamId:   streamAnnotations.streamId,
+      customName: streamAnnotations.customName,
+      notes:      streamAnnotations.notes,
+      updatedAt:  streamAnnotations.updatedAt,
+    })
+    .from(streamAnnotations)
+    .where(and(
+      eq(streamAnnotations.userId,   userId),
+      eq(streamAnnotations.streamId, streamId),
+    ))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * Fetch all annotations for a user, optionally filtered to a stream-id list.
+ * Used by the dashboard to bulk-attach annotations to its stream list in one
+ * round-trip rather than one query per stream.
+ */
+export async function getStreamAnnotationsForUser(
+  userId:       string,
+  streamIds?:   readonly string[],
+): Promise<StreamAnnotation[]> {
+  const where = streamIds && streamIds.length > 0
+    ? and(eq(streamAnnotations.userId, userId), inArray(streamAnnotations.streamId, [...streamIds]))
+    : eq(streamAnnotations.userId, userId);
+  return db
+    .select({
+      streamId:   streamAnnotations.streamId,
+      customName: streamAnnotations.customName,
+      notes:      streamAnnotations.notes,
+      updatedAt:  streamAnnotations.updatedAt,
+    })
+    .from(streamAnnotations)
+    .where(where);
+}
+
+/**
+ * Upsert a stream annotation. Pass `customName: null` and `notes: null`
+ * together to clear (or use deleteStreamAnnotation directly — same effect
+ * via the row-removal path, with the bonus of freeing the row).
+ *
+ * Caller is responsible for length-cap enforcement (the API route does
+ * this so we can return a clean 400 with a useful message). DB schema
+ * has no length cap so future relaxation doesn't need a migration.
+ */
+export async function upsertStreamAnnotation(opts: {
+  userId:     string;
+  streamId:   string;
+  customName: string | null;
+  notes:      string | null;
+}): Promise<StreamAnnotation> {
+  const now = new Date();
+  const [row] = await db
+    .insert(streamAnnotations)
+    .values({
+      userId:     opts.userId,
+      streamId:   opts.streamId,
+      customName: opts.customName,
+      notes:      opts.notes,
+      createdAt:  now,
+      updatedAt:  now,
+    })
+    .onConflictDoUpdate({
+      target: [streamAnnotations.userId, streamAnnotations.streamId],
+      set: {
+        customName: opts.customName,
+        notes:      opts.notes,
+        updatedAt:  now,
+      },
+    })
+    .returning({
+      streamId:   streamAnnotations.streamId,
+      customName: streamAnnotations.customName,
+      notes:      streamAnnotations.notes,
+      updatedAt:  streamAnnotations.updatedAt,
+    });
+  return row;
+}
+
+export async function deleteStreamAnnotation(
+  userId:   string,
+  streamId: string,
+): Promise<void> {
+  await db
+    .delete(streamAnnotations)
+    .where(and(
+      eq(streamAnnotations.userId,   userId),
+      eq(streamAnnotations.streamId, streamId),
+    ));
 }

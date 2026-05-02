@@ -10,6 +10,7 @@ import {
   index,
   uniqueIndex,
   numeric,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -141,6 +142,45 @@ export const watchlist = pgTable("watchlist", {
 }, (t) => [
   index("watchlist_user_idx").on(t.userId),
   uniqueIndex("watchlist_user_chain_token_uq").on(t.userId, t.chainId, t.tokenAddress),
+]);
+
+/**
+ * Per-user, per-stream annotations — custom name + freeform notes.
+ *
+ * Stickiness feature shipped May 2026. Lets users rename streams away
+ * from auto-generated labels ("Sablier stream #12345" → "Series A —
+ * Acme Capital") and attach short context notes (200 chars max).
+ *
+ * Design notes:
+ *  - Per-user — annotations are personal context. User A's note on a
+ *    stream user B also tracks is invisible to B.
+ *  - stream_id matches the canonical VestingStream.id format
+ *    (`{protocol}-{chainId}-{nativeId}`) — stable across cache rebuilds.
+ *  - Sparse — only streams that have been annotated get a row.
+ *  - Cascade-delete with the user. If we ever add wallet-level
+ *    cascade we can also delete by stream_id prefix.
+ *  - notes is capped at 200 chars at the API layer (see PUT route).
+ *    Schema permits longer to allow future relaxation without a
+ *    migration.
+ */
+export const streamAnnotations = pgTable("stream_annotations", {
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Composite stream id matching VestingStream.id — `{protocol}-{chainId}-{nativeId}`. */
+  streamId:    text("stream_id").notNull(),
+  /** User-chosen display name. Null = use protocol-derived auto-name. */
+  customName:  text("custom_name"),
+  /** Freeform plain-text note. 200-char cap enforced at API layer. */
+  notes:       text("notes"),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.streamId] }),
+  // Read pattern: "all annotations for this user across all their streams" —
+  // used to bulk-attach annotations to the dashboard's stream list in one
+  // query rather than one-per-stream.
+  index("stream_annotations_user_idx").on(t.userId),
 ]);
 
 export const wallets = pgTable("wallets", {
