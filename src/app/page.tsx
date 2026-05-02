@@ -16,6 +16,16 @@ import {
 export const revalidate = 60;
 
 async function getHomepageLiveStats() {
+  // Skip DB work during the build phase. Postgres-js hangs for 60s on
+  // ECONNREFUSED / mid-build connection drops (e.g. May 2 2026 build —
+  // FATAL XX000 mid-collect, then `/page: /` retried 3× and exited 1).
+  // Returning the empty shape lets the build finish in seconds; ISR fills
+  // it with real data on the first runtime request after deploy. Same
+  // pattern as /protocols/[protocol] — see its loadProtocolData comment.
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
+  }
+
   // Aggregate across all 9 protocols. Any single-protocol failure must not
   // sink the homepage render — silently fall back to nulls.
   try {
