@@ -45,6 +45,12 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   [CHAIN_IDS.BASE]:         [],
   [CHAIN_IDS.SEPOLIA]:      [],
   [CHAIN_IDS.BASE_SEPOLIA]: [],
-  [CHAIN_IDS.ARBITRUM]:     [], // PinkSale doesn't appear to deploy on Arbitrum; left empty
+  // PinkSale: NOT deployed on Arbitrum. Confirmed 2026-05-02 by probing
+  // each known PinkLock V2 address (ETH/BSC/Polygon/Base variants) on
+  // Arbitrum — bytecode exists at two addresses (vanity / CREATE2 collision)
+  // but neither responds to allNormalTokenLockedCount() (selector
+  // 0x475831c8). PinkSale's primary chain is BSC; they don't ship to
+  // Arbitrum at this time.
+  [CHAIN_IDS.ARBITRUM]:     [],
   [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };

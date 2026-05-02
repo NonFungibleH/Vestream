@@ -40,7 +40,13 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               "5foyqAtEVWtcSJX62sMC6fVR7FmetsFy8eYRKRT2E7DU"
                             ),
   [CHAIN_IDS.BASE_SEPOLIA]: undefined, // UNCX is on Sepolia, not Base Sepolia
-  [CHAIN_IDS.ARBITRUM]:     undefined, // TODO: research UNCX Arbitrum subgraph deployment ID
+  // Arbitrum: UNCX docs (checked 2026-05-02) only publish a Liquidity
+  // Locker V3 subgraph on Arbitrum — NOT the TokenVesting V3 we use here.
+  // It's unclear whether UNCX has a TokenVesting V3 deployment on Arbitrum
+  // at all; their token-vesting product may be ETH/BSC/Base only.
+  // Action to unblock: contact UNCX team or check their GitHub for an
+  // Arbitrum TokenVesting deployment + matching subgraph.
+  [CHAIN_IDS.ARBITRUM]:     undefined,
   [CHAIN_IDS.SOLANA]:       undefined, // UNCX does not deploy on Solana
 };
 

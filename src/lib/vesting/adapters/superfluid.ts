@@ -6,17 +6,22 @@ import {
   nextUnlockTime,
 } from "../types";
 import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum } from "viem/chains";
 
 // ─── Superfluid VestingScheduler ──────────────────────────────────────────────
 // Uses Superfluid's own hosted subgraph infrastructure — no GRAPH_API_KEY needed.
 // Docs: https://docs.superfluid.finance/docs/protocol/advanced-topics/vesting-scheduler
+//
+// Slug convention is per-chain: `{chain}-mainnet` for the four original
+// chains, but Arbitrum uses just `arbitrum-one` (no `-mainnet` suffix).
+// Verified 2026-05-02 via direct GraphQL probe — schedules indexed.
 
 const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.ETHEREUM]: "https://subgraph-endpoints.superfluid.dev/eth-mainnet/vesting-scheduler",
   [CHAIN_IDS.BSC]:      "https://subgraph-endpoints.superfluid.dev/bsc-mainnet/vesting-scheduler",
   [CHAIN_IDS.POLYGON]:  "https://subgraph-endpoints.superfluid.dev/polygon-mainnet/vesting-scheduler",
   [CHAIN_IDS.BASE]:     "https://subgraph-endpoints.superfluid.dev/base-mainnet/vesting-scheduler",
+  [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
 };
 
 // ─── viem clients for ERC-20 metadata ─────────────────────────────────────────
@@ -27,6 +32,11 @@ function getRpcUrl(chainId: SupportedChainId): string {
     case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
     case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
     case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
+    // Arbitrum: same shared multi-RPC pool fallback pattern would be cleaner
+    // (matches the seeder + Hedgey adapter post-97ce9ae). For now keep this
+    // file's per-env-var resolver and use Arbitrum's public RPC as the
+    // fallback. TODO: migrate this whole getRpcUrl to the shared pool.
+    case CHAIN_IDS.ARBITRUM: return process.env.ARBITRUM_RPC_URL      ?? "https://arb1.arbitrum.io/rpc";
     default:                 return "https://ethereum.publicnode.com";
   }
 }
@@ -37,6 +47,7 @@ function getViemChain(chainId: SupportedChainId) {
     case CHAIN_IDS.BSC:      return bsc;
     case CHAIN_IDS.POLYGON:  return polygon;
     case CHAIN_IDS.BASE:     return base;
+    case CHAIN_IDS.ARBITRUM: return arbitrum;
     default:                 return mainnet;
   }
 }
@@ -250,6 +261,7 @@ export const superfluidAdapter: VestingAdapter = {
     CHAIN_IDS.BSC,
     CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
+    CHAIN_IDS.ARBITRUM,
   ],
   fetch: fetchForChain,
 };

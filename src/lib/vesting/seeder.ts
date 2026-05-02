@@ -97,6 +97,9 @@ const SUPERFLUID_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.BSC]:      "https://subgraph-endpoints.superfluid.dev/bsc-mainnet/vesting-scheduler",
   [CHAIN_IDS.POLYGON]:  "https://subgraph-endpoints.superfluid.dev/polygon-mainnet/vesting-scheduler",
   [CHAIN_IDS.BASE]:     "https://subgraph-endpoints.superfluid.dev/base-mainnet/vesting-scheduler",
+  // Arbitrum uses the bare `arbitrum-one` slug — no `-mainnet` suffix.
+  // Verified 2026-05-02 via direct GraphQL probe (real schedules indexed).
+  [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
 };
 
 // ─── Discovery queries ────────────────────────────────────────────────────────
@@ -1105,6 +1108,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BSC,      discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.POLYGON,  discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BASE,     discover: discoverSuperfluidRecipients },
+  { adapterId: "superfluid",   chainId: CHAIN_IDS.ARBITRUM, discover: discoverSuperfluidRecipients },
   // Team Finance — four mainnets + Sepolia (Squid GraphQL, different stack).
   // Note: Base returns 0 because Team Finance's Squid doesn't index Base
   // yet; that's logged distinctly inside the discover fn.

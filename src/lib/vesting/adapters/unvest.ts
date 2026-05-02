@@ -27,7 +27,11 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_BASE_SEPOLIA,
                               "CZxkjYEnom7ijhKv77n3Qf2WGuPMLkfVsyZzRB6EhMmP"
                             ),
-  [CHAIN_IDS.ARBITRUM]:     undefined, // TODO: research Unvest Arbitrum subgraph deployment ID
+  // Arbitrum: Unvest's subgraph deployment IDs aren't publicly catalogued
+  // for Arbitrum as of 2026-05-02. May not be deployed there at all.
+  // Action to unblock: check Unvest's docs / GitHub for an Arbitrum
+  // Holder Balance subgraph; if missing, contact the Unvest team.
+  [CHAIN_IDS.ARBITRUM]:     undefined,
   [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 
