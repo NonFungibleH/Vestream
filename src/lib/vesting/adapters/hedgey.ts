@@ -2,6 +2,7 @@ import { createPublicClient, http, erc20Abi } from "viem";
 import { mainnet, bsc, polygon, base, sepolia } from "viem/chains";
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
+import { getRpcUrl as getRpcUrlPool } from "../rpc";
 
 // Module-level token metadata cache — survives within the same serverless instance
 // Key: `${chainId}:${tokenAddress}`, Value: { symbol, decimals }
@@ -49,13 +50,18 @@ type HedgeyPlan = {
   rate: bigint; period: bigint; vestingAdmin: `0x${string}`; adminTransferOBO: boolean;
 };
 
+// Delegate to the shared multi-RPC pool (lib/vesting/rpc.ts) so missing
+// per-chain env vars (BSC_RPC_URL / POLYGON_RPC_URL / ALCHEMY_RPC_URL_BASE
+// — INTENTIONALLY OPTIONAL per CLAUDE.md landmine) fall through to dRPC
+// rather than returning undefined and silently bailing.
+//
+// Pre-fix bug: the local resolver returned undefined for BSC/Polygon/Base
+// when those env vars weren't set, the adapter short-circuited to [] with
+// no error logged, and Hedgey on those three chains stayed silently broken
+// for 8+ days (May 2 2026 cache-stats audit). Same shape as the seeder fix
+// in `bec6fc9` and the PinkSale walker fix in `tvl-walker/pinksale.ts`.
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
-  if (chainId === CHAIN_IDS.BASE)     return process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL;
-  if (chainId === CHAIN_IDS.ETHEREUM) return process.env.ALCHEMY_RPC_URL_ETH;
-  if (chainId === CHAIN_IDS.BSC)      return process.env.BSC_RPC_URL;
-  if (chainId === CHAIN_IDS.POLYGON)  return process.env.POLYGON_RPC_URL;
-  if (chainId === CHAIN_IDS.SEPOLIA)  return process.env.SEPOLIA_RPC_URL;
-  return undefined;
+  return getRpcUrlPool(chainId);
 }
 
 async function fetchForChain(wallets: string[], chainId: SupportedChainId): Promise<VestingStream[]> {
