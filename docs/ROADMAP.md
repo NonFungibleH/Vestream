@@ -1,0 +1,151 @@
+# Vestream Roadmap (internal)
+
+> Working document. Edit liberally. Items are sized roughly — `S` = a few hours,
+> `M` = 1–3 days, `L` = a week, `XL` = multi-week. Sizes are coding time only,
+> not including review/testing/marketing follow-up. Re-rank when priorities
+> change. **This is for internal planning — not a public commitment.**
+>
+> _Last updated: 2026-05-02_
+
+---
+
+## Now (active or queued this week)
+
+### Verify today's shipping batch
+- **What** — Tomorrow morning UK time, run the cache-stats freshness check + confirm `/protocols/llamapay` card shows TVL + verify Sablier Arbitrum streams populated.
+- **Why** — We shipped 9+ commits today (LlamaPay, Arbitrum, fan-out cron, hedgey pagination, build-phase guards, setWhere optimisation, Team Finance pause, marketing sweep, CLAUDE.md). Without verification, all of it is theoretical.
+- **Size** — `S` (one curl + one page load + visual sanity check)
+- **Open question** — Hedgey BSC/Polygon/Base still 12,000+m stale at last check. If the next fan-out doesn't unstick them, the pagination fix isn't doing what we think.
+
+### Hedgey + UNCX on Arbitrum
+- **What** — Same shape as Sablier Arbitrum integration just shipped. Hedgey contract is the same address on every EVM chain (verified). UNCX needs the Arbitrum subgraph deployment ID looked up.
+- **Why** — Currently we claim "Arbitrum support" but only Sablier is wired. Two more protocols brings real coverage to 3 of 9.
+- **Size** — `M` if the subgraph IDs publish cleanly; `L` if we need to read the contracts directly.
+
+---
+
+## Next (this month)
+
+### Auto P&L tracking (DEX sells)
+- **What** — Detect when tracked wallets sell vested tokens via DEX swaps; pull historical USD value at sale; match to claim events for cost basis; surface auto-populated rows in the existing P&L panel.
+- **Why** — Strongest product extension on top of what we have. We already track claim events with timestamps (income side); generic crypto-tax tools have to estimate that. With auto sell-detection, our P&L for vested tokens is *more accurate* than CoinTracker/Koinly for the exact use case our users care about.
+- **Size** — `XL` (~3–4 weeks for credible v1)
+  - Transaction history fetch via Alchemy/Covalent: ~1 week
+  - DEX swap classification (UniV2/V3/V4, Sushi, Aerodrome, PancakeSwap, Curve): ~1 week
+  - Historical price cache: ~3 days
+  - FIFO lot-matching engine: ~3–5 days
+  - CEX-detection UX (prompt-on-transfer to known exchange addresses): ~2 days
+  - UI integration: ~3 days
+- **Caveats**
+  - Don't market as "tax-ready" until per-jurisdiction logic (FIFO/LIFO/pooling/wash sales) lands. Market as "auto P&L" first.
+  - Wrapped tokens / LSTs (wstETH↔ETH, WBTC↔BTC) aren't sells — need a no-op pair classifier.
+  - CEX sells need user confirmation; we can see the transfer-out but not the trade.
+- **Stack** — Likely Alchemy `getAssetTransfers` + per-router Swap event ABI parsing. Historical prices from DexScreener (free) with CoinGecko Pro fallback for older blocks.
+
+### Real LlamaPay adapter (per-wallet streams)
+- **What** — Move LlamaPay from TVL-only DefiLlama passthrough to a real adapter that surfaces per-wallet streams in the dashboard.
+- **Why** — Today /protocols/llamapay shows TVL but no actual stream tracking. The "track your payroll stream" promise on the homepage is currently an IOU.
+- **Size** — `L` (1–2 days)
+- **Approach** — LlamaPay has factory contracts on each chain emitting `StreamCreated` events. Either subgraph (if public deployment exists) or factory-contract event scan via the multi-RPC pool.
+- **Dependency** — Pairs naturally with Auto P&L (same data layer touches transactions for the same wallets).
+
+### Payroll-recipient positioning push
+- **What** — A small landing module / hero variant aimed specifically at crypto-paid contractors: "track your stablecoin streams, get tax-ready exports, alert on cliffs." A/B test against current homepage hero.
+- **Why** — We added LlamaPay + Superfluid coverage specifically because of this thesis. Now is the validation moment — if no one clicks, we know the recipient-payroll angle isn't real before we build the real LlamaPay adapter.
+- **Size** — `M` (1–2 days for variant + analytics wiring)
+- **Success criteria** — Watch for 30 days post-launch. Lift in `wallet_added` events from `/payroll` route vs control. If no lift, drop the angle and don't build the LlamaPay adapter for it.
+
+### Hedgey BSC/Polygon/Base un-stick
+- **What** — If `288c25c` pagination fix doesn't unstick the 8.5-day staleness, dig into why. Possible causes: contract not deployed at expected address, Multicall3 not at expected address, viem multicall response shape difference, dRPC gating something specific to those chains.
+- **Why** — Three chains × Hedgey is real volume. Silent failures are the worst kind.
+- **Size** — `S` to debug, `M` if it requires a different fetch pattern.
+
+---
+
+## Soon (1–3 months)
+
+### More chains
+Priority order based on TVL/protocol overlap:
+1. **Optimism** — `M`. Sablier, Hedgey, UNCX all deployed. Same shape as Arbitrum integration.
+2. **Avalanche** — `M`. Sablier, Hedgey deployed.
+3. **zkSync Era / Linea / Scroll** — `M` each, lower volume. Probably do as a single batch.
+
+After each chain adds, run the marketing-copy sweep (search for "6 chains" → "7 chains" etc — this would be ~30+ files; **worth refactoring to a shared `SUPPORTED_CHAIN_COUNT` const before the next chain to avoid the manual sweep**).
+
+### More protocols (real adapters, not passthroughs)
+Each requires research before sizing — does it have a subgraph? Factory contract events? Per-recipient enumerable interface?
+- **Liquifi** — not on DefiLlama. Need to read contracts directly. `L`.
+- **TokenOps** — not on DefiLlama. `L`.
+- **Magna** — verify DefiLlama listing first; might be a passthrough quick-win like LlamaPay.
+- **Decubate** — verify DefiLlama listing.
+- **Custom contract import** — let users add an arbitrary vesting contract address and Vestream parses what it can. `XL`. Long-tail SEO + power-user feature.
+
+### Mobile app design system rollout
+- **What** — Calendar tab already upgraded to premium-mockup tier (commit `e51b6534d`). Apply same design language to Home, Discover, Onboarding, Alerts screens.
+- **Why** — Visual consistency across the app; calendar tab is the only one currently at the App Store screenshot quality.
+- **Size** — `L` per screen, can be parallelised.
+
+### Tax-grade accuracy (US/UK/EU)
+- **What** — Per-jurisdiction lot-matching rules layered on top of Auto P&L:
+  - US: FIFO default, allow specific-ID election; wash-sale detection (30-day rule)
+  - UK: 30-day pooling rule + Section 104 holding
+  - EU: Varies by country; Germany has a 1-year hold rule, Portugal/Belgium are flat
+- **Why** — Unlocks "tax-ready" marketing claim and pushes Pro tier upgrade rate.
+- **Size** — `XL` (per-jurisdiction logic + tested fixtures + accountant review). Don't ship without an accountant signing off on the math per jurisdiction.
+
+---
+
+## Later (vision)
+
+### B2B / Corporate offering for token issuers
+- **What** — Sender-side companion: companies issuing vests use Vestream as the white-label recipient experience. Already have a `/corporate/token-payroll` page hinting at this.
+- **Why** — Annual contracts > B2C subscriptions. One company with 50 employees = 50 Pro accounts.
+- **Size** — `XL`+. Different sales motion (B2B SaaS), different SLA expectations, custom branding, SSO.
+- **Open question** — Is this Vestream or a separate product? Brand stretches awkwardly across token-holder-tracker AND HR-ops platform.
+
+### "Custom contract" vesting tracker
+- **What** — User pastes a vesting contract address; Vestream attempts to parse it via heuristics (common ABI patterns) and surfaces what it can. Premium feature.
+- **Why** — Long-tail coverage. Most launchpad-built bespoke vesting contracts don't fit any of our standard adapters.
+- **Size** — `XL`. Heuristic parsing is open-ended.
+
+### Public TVL leaderboard / trends API
+- **What** — Open the daily TVL snapshot table as a queryable public dataset (rate-limited free tier, paid for higher volume). Position Vestream as the canonical "vesting TVL by protocol" data source.
+- **Why** — Defensible content moat (DefiLlama doesn't separate vesting from token-locker for several protocols; we do). SEO + developer-acquisition flywheel.
+- **Size** — `M` to expose; `L` to grow into a real API product.
+
+---
+
+## Infrastructure / hygiene (run during slack time)
+
+### Rotate leaked secrets
+- `CRON_SECRET`, Alchemy Solana key, Helius key were committed to git history at various points. Not actively exploited as far as we know, but cheaper to rotate than to discover an incident.
+- **Size** — `S` (~30 min: generate new keys, update Vercel env vars, push, smoke-test).
+
+### Articles.ts cleanup post-Team-Finance pause
+- **Context** — `src/lib/articles.ts` has 50+ Team Finance references. We deliberately left them untouched in the May 2 marketing sweep because the dedicated TF article is legitimate SEO content (Team Finance still exists on-chain; we just paused our indexer).
+- **What needs cleanup** — Lines that say "Vestream's Team Finance adapter covers..." are now factually wrong. Other passing mentions ("compares Sablier vs UNCX vs Team Finance") are fine.
+- **Size** — `S`-`M`. Worth doing before Team Finance unpauses (else copy goes through two stale states).
+
+### Refactor "9 protocols" / "6 chains" hardcoded counts
+- **Context** — Today's marketing sweep touched 30+ files. Will repeat every protocol/chain change. Currently invariant-bound to actual code, but every count change is manual.
+- **What** — Extract to constants in `protocol-constants.ts` (`ENABLED_PROTOCOL_COUNT`, `SUPPORTED_MAINNET_CHAIN_COUNT`); replace hardcoded numbers in JSX with const interpolations.
+- **Size** — `M` (touches ~30 files but mechanical).
+- **When** — Before the next protocol or chain addition.
+
+### CLAUDE.md upkeep cadence
+- Updated 2026-05-02 (commit `9031926`) — was 3 days stale.
+- **Soft rule** — flag stale entries when they're > 1 week old or after any infrastructure-pattern change.
+
+### Supabase Disk IO monitoring
+- May 2 alert prompted the `setWhere` optimisation. Watch the IO graph for the next two weeks to confirm the fix landed.
+- If IO climbs again post-fix, evaluate: drop `DEEP_SEED_LIMIT` 5000 → 2500, or upgrade Supabase compute tier (~$10/mo Small).
+
+---
+
+## Decided NOT to do (yet)
+
+These have been considered and explicitly held — capture the reasoning so future sessions don't re-litigate.
+
+- **Pivot Vestream into a crypto payroll *platform* (sender-side).** Discussed 2026-05-02. Crypto-native payroll TAM is real but niche; pivoting to compete with Toku/Request requires a different product, sales motion, and competitor set. Decision: lean into recipient-side payroll features instead.
+- **Add `BSC_RPC_URL` / `POLYGON_RPC_URL` / `ALCHEMY_RPC_URL_BASE` as required env vars.** Reviewed and rejected three times (`6a09a13`, `ef21b41`, 2026-04-29). Canonical fallback is dRPC. See CLAUDE.md landmine note.
+- **Drop `DEEP_SEED_LIMIT` 5000 → 2500.** Held until IO data shows 1+2 (skip-unchanged + weekly-not-daily-deep) aren't enough. Real coverage trade-off — only do it with data.

@@ -576,44 +576,53 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Panel 3: Export + Token Market */}
+          {/* Panel 3: Tax-ready exports */}
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
-            <div className="px-4 pt-4 pb-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Token Market Data</p>
-              <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Live prices &amp; export</p>
+            <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Tax-Ready Exports</p>
+                <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Income statement &amp; broker CSVs</p>
+              </div>
+              <span style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", color: "#0F8A8A", fontSize: "8px", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: "999px" }}>Pro</span>
             </div>
             <div className="px-4 pb-4 space-y-2">
+              {/* Tax-year summary */}
+              <div style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "3px" }}>
+                  <span style={{ color: "#8B8E92", fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Tax year 2025</span>
+                  <span style={{ color: "#0F8A4A", fontSize: "13px", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>$12,580</span>
+                </div>
+                <span style={{ color: "#8B8E92", fontSize: "9px" }}>14 claims · ordinary income</span>
+              </div>
+
+              {/* Example claim events (cost-basis at receipt) */}
               {[
-                { sym: "VOLT", price: "$1.04",    mc: "$38.7B", liq: "$741M", color: "#1CB8B8" },
-                { sym: "NOVA", price: "$1.84",    mc: "$756M",  liq: "$48M",  color: "#F0992E" },
-                { sym: "FLUX", price: "$3,241.00", mc: "$389B", liq: "$2.1B", color: "#0F8A8A" },
-              ].map((t) => (
-                <div key={t.sym} style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                { date: "15 Jan", sym: "NOVA", amt: "1,000 @ $1.00",  usd: "+$1,000", color: "#F0992E" },
+                { date: "20 Feb", sym: "FLUX", amt: "0.5 @ $3,241",   usd: "+$1,620", color: "#0F8A8A" },
+                { date: "04 Mar", sym: "VEST", amt: "200 @ $4.20",    usd: "+$840",   color: "#28B895" },
+              ].map((r) => (
+                <div key={r.date + r.sym} style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                      <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: t.color + "1F", border: `1px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ color: t.color, fontSize: "6px", fontWeight: 800 }}>{t.sym.slice(0,2)}</span>
+                      <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: r.color + "1F", border: `1px solid ${r.color}40`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ color: r.color, fontSize: "6px", fontWeight: 800 }}>{r.sym.slice(0,2)}</span>
                       </div>
-                      <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700 }}>{t.sym}</span>
+                      <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700 }}>{r.date}</span>
                     </div>
-                    <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{t.price}</span>
+                    <span style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.usd}</span>
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#8B8E92", fontSize: "8px" }}>MCap {t.mc}</span>
-                    <span style={{ color: "#8B8E92", fontSize: "8px" }}>Liq {t.liq}</span>
-                  </div>
+                  <span style={{ color: "#8B8E92", fontSize: "8px" }}>{r.sym} · {r.amt}</span>
                 </div>
               ))}
-              {/* Export buttons */}
-              <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-                <div style={{ flex: 1, background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  <span style={{ color: "#0F8A8A", fontSize: "9px", fontWeight: 700 }}>CSV / Excel</span>
-                </div>
-                <div style={{ flex: 1, background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.22)", borderRadius: "8px", padding: "6px 8px", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  <span style={{ color: "#0F8A8A", fontSize: "9px", fontWeight: 700 }}>Print / PDF</span>
-                </div>
+
+              {/* Broker-format export pills */}
+              <div style={{ display: "flex", gap: "5px", marginTop: "4px" }}>
+                {["Koinly", "CoinTracker", "TurboTax"].map((b) => (
+                  <div key={b} style={{ flex: 1, background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", borderRadius: "8px", padding: "6px 4px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                    <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span style={{ color: "#0F8A8A", fontSize: "8.5px", fontWeight: 700 }}>{b}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
