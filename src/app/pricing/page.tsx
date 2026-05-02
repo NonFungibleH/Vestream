@@ -84,7 +84,7 @@ const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
   name:         "Vestream",
-  description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 6 chains.",
+  description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 7 chains.",
   brand:        { "@type": "Brand", name: "Vestream" },
   url:          "https://vestream.io/pricing",
   image:        "https://vestream.io/logo.svg",

@@ -105,6 +105,15 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
   ]),
+  // OP Mainnet (Optimism). Same provider universe as Arbitrum: dRPC + 1RPC
+  // free tiers, publicnode (logs-pruned), Optimism's own public RPC as
+  // the log-safe fallback.
+  [CHAIN_IDS.OPTIMISM]: buildPool(process.env.OPTIMISM_RPC_URL, [
+    { url: "https://optimism.drpc.org" },
+    { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://1rpc.io/op" },
+    { url: "https://mainnet.optimism.io" },
+  ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
     { url: "https://1rpc.io/sepolia" },

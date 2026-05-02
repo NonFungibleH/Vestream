@@ -249,7 +249,7 @@ export default function AiPage() {
         <div className="flex flex-col gap-5">
           <ToolCard
             name="get_wallet_vestings"
-            description="Get all token vesting streams for a wallet (EVM or Solana) across all 9 supported protocols and 6 chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
+            description="Get all token vesting streams for a wallet (EVM or Solana) across all 9 supported protocols and 7 chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
               { name: "address", type: "string", required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, team-finance, superfluid, pinksale, streamflow, jupiter-lock" },

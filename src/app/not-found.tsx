@@ -86,7 +86,7 @@ export default function NotFound() {
                 Find your vestings
               </h2>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
-                Paste any wallet — we scan 9 protocols across 6 chains in seconds.
+                Paste any wallet — we scan 9 protocols across 7 chains in seconds.
               </p>
               <span className="inline-flex items-center gap-1 mt-4 text-xs font-semibold" style={{ color: "white" }}>
                 Scan a wallet →

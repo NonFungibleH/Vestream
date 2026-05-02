@@ -93,7 +93,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#F0992E",
     bg:    "rgba(240,153,46,0.08)",
     border:"rgba(240,153,46,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://sablier.com",
     claimUrl:   "https://app.sablier.com/portfolio",
     searchKeywords: [
@@ -122,7 +122,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#8169E0",
     bg:    "rgba(129,105,224,0.08)",
     border:"rgba(129,105,224,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://hedgey.finance",
     claimUrl:   "https://app.hedgey.finance",
     searchKeywords: [
@@ -251,7 +251,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#28B895",
     bg:    "rgba(40,184,149,0.08)",
     border:"rgba(40,184,149,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://superfluid.finance",
     claimUrl:   "https://app.superfluid.finance",
     searchKeywords: [
@@ -362,7 +362,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // Optimism + Avalanche will get added here as we ship those chains —
     // DefiLlama already publishes Arbitrum-vesting at $3.6M, the largest
     // L2 contributor.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://llamapay.io",
     claimUrl:   "https://llamapay.io/withdraw",
     searchKeywords: [

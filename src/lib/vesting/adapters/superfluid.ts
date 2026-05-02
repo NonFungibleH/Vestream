@@ -6,7 +6,7 @@ import {
   nextUnlockTime,
 } from "../types";
 import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, optimism } from "viem/chains";
 
 // ─── Superfluid VestingScheduler ──────────────────────────────────────────────
 // Uses Superfluid's own hosted subgraph infrastructure — no GRAPH_API_KEY needed.
@@ -22,6 +22,7 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.POLYGON]:  "https://subgraph-endpoints.superfluid.dev/polygon-mainnet/vesting-scheduler",
   [CHAIN_IDS.BASE]:     "https://subgraph-endpoints.superfluid.dev/base-mainnet/vesting-scheduler",
   [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
+  [CHAIN_IDS.OPTIMISM]: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/vesting-scheduler",
 };
 
 // ─── viem clients for ERC-20 metadata ─────────────────────────────────────────
@@ -37,6 +38,7 @@ function getRpcUrl(chainId: SupportedChainId): string {
     // file's per-env-var resolver and use Arbitrum's public RPC as the
     // fallback. TODO: migrate this whole getRpcUrl to the shared pool.
     case CHAIN_IDS.ARBITRUM: return process.env.ARBITRUM_RPC_URL      ?? "https://arb1.arbitrum.io/rpc";
+    case CHAIN_IDS.OPTIMISM: return process.env.OPTIMISM_RPC_URL      ?? "https://mainnet.optimism.io";
     default:                 return "https://ethereum.publicnode.com";
   }
 }
@@ -48,6 +50,7 @@ function getViemChain(chainId: SupportedChainId) {
     case CHAIN_IDS.POLYGON:  return polygon;
     case CHAIN_IDS.BASE:     return base;
     case CHAIN_IDS.ARBITRUM: return arbitrum;
+    case CHAIN_IDS.OPTIMISM: return optimism;
     default:                 return mainnet;
   }
 }
@@ -262,6 +265,7 @@ export const superfluidAdapter: VestingAdapter = {
     CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
     CHAIN_IDS.ARBITRUM,
+    CHAIN_IDS.OPTIMISM,
   ],
   fetch: fetchForChain,
 };

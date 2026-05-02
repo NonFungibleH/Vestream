@@ -50,7 +50,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createPublicClient, http, type Hex } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum, sepolia } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia } from "viem/chains";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
@@ -100,6 +100,8 @@ const SUPERFLUID_URLS: Partial<Record<SupportedChainId, string>> = {
   // Arbitrum uses the bare `arbitrum-one` slug — no `-mainnet` suffix.
   // Verified 2026-05-02 via direct GraphQL probe (real schedules indexed).
   [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
+  // Optimism uses `optimism-mainnet` — verified 2026-05-02 via direct probe.
+  [CHAIN_IDS.OPTIMISM]: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/vesting-scheduler",
 };
 
 // ─── Discovery queries ────────────────────────────────────────────────────────
@@ -392,6 +394,9 @@ const HEDGEY_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   // Arbitrum: same address as the other mainnets — verified 2026-05-02
   // (totalSupply returned 1,191 plans via arb1.arbitrum.io/rpc).
   [CHAIN_IDS.ARBITRUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
+  // Optimism: same address — verified 2026-05-02 (totalSupply returned
+  // 422 plans via optimism.drpc.org).
+  [CHAIN_IDS.OPTIMISM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   // Sepolia deploys a different address (same bytecode) — mirrors adapters/hedgey.ts.
   [CHAIN_IDS.SEPOLIA]:  "0x68b6986416c7A38F630cBc644a2833A0b78b3631",
 };
@@ -402,6 +407,7 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.POLYGON]:  polygon,
   [CHAIN_IDS.BASE]:     base,
   [CHAIN_IDS.ARBITRUM]: arbitrum,
+  [CHAIN_IDS.OPTIMISM]: optimism,
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
@@ -875,6 +881,7 @@ const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.BASE]:            600_000n,
   [CHAIN_IDS.POLYGON]:               0n, // not in UNCX_VM_CONFIG
   [CHAIN_IDS.ARBITRUM]:              0n, // UNCX-VM not yet wired for Arbitrum
+  [CHAIN_IDS.OPTIMISM]:              0n, // UNCX-VM not yet wired for Optimism
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
   [CHAIN_IDS.SEPOLIA]:               0n,
   [CHAIN_IDS.BASE_SEPOLIA]:          0n,
@@ -1073,6 +1080,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "sablier",      chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.BASE,     discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.SEPOLIA,  discover: discoverSablierRecipients },
   // UNCX (TokenVesting V3) — ETH/BSC/Base + Sepolia. Polygon subgraph is
   // deprecated; skipping until a replacement publishes.
@@ -1109,6 +1117,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "superfluid",   chainId: CHAIN_IDS.POLYGON,  discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BASE,     discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.ARBITRUM, discover: discoverSuperfluidRecipients },
+  { adapterId: "superfluid",   chainId: CHAIN_IDS.OPTIMISM, discover: discoverSuperfluidRecipients },
   // Team Finance — four mainnets + Sepolia (Squid GraphQL, different stack).
   // Note: Base returns 0 because Team Finance's Squid doesn't index Base
   // yet; that's logged distinctly inside the discover fn.
@@ -1123,6 +1132,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.POLYGON,  discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BASE,     discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverHedgeyRecipients },
+  { adapterId: "hedgey",       chainId: CHAIN_IDS.OPTIMISM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
   // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
   // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)

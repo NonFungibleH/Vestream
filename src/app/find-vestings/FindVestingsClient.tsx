@@ -176,7 +176,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 9 protocols and 6 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 9 protocols and 7 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the
@@ -675,7 +675,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#8B8E92" }}>
-        We scanned 9 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
+        We scanned 9 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
       </p>
     </div>
   );
@@ -715,7 +715,7 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
         <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
           {hasResults
             ? "Install Vestream, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
-            : "Vestream watches all 9 protocols across 6 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
+            : "Vestream watches all 9 protocols across 7 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
         </p>
 
         {/* App store badges */}

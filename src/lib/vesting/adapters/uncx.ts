@@ -47,6 +47,9 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
   // Action to unblock: contact UNCX team or check their GitHub for an
   // Arbitrum TokenVesting deployment + matching subgraph.
   [CHAIN_IDS.ARBITRUM]:     undefined,
+  // Optimism: same status as Arbitrum — TokenVesting V3 subgraph not
+  // publicly catalogued. Action to unblock: ask UNCX team.
+  [CHAIN_IDS.OPTIMISM]:     undefined,
   [CHAIN_IDS.SOLANA]:       undefined, // UNCX does not deploy on Solana
 };
 

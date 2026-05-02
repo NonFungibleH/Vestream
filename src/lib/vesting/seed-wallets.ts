@@ -52,5 +52,8 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   // 0x475831c8). PinkSale's primary chain is BSC; they don't ship to
   // Arbitrum at this time.
   [CHAIN_IDS.ARBITRUM]:     [],
+  // PinkSale: status on Optimism unconfirmed. PinkSale's primary chain
+  // remains BSC. Left empty until verified.
+  [CHAIN_IDS.OPTIMISM]:     [],
   [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };

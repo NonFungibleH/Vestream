@@ -4,7 +4,7 @@
 //
 // Flow:
 //   1. User pastes an address
-//   2. /api/find-vestings scans all 9 protocols × 6 chains (EVM + Solana)
+//   2. /api/find-vestings scans all 9 protocols × 7 chains (EVM + Solana)
 //   3. Results render as a grouped summary (protocol × chain × token)
 //   4. Strong mobile app CTAs prompt them to install for push alerts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ const CHAINS = [
   { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
   { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
   { name: "Arbitrum",  color: "#28A0F0", bg: "rgba(40,160,240,0.07)",   border: "rgba(40,160,240,0.16)"   },
+  { name: "Optimism",  color: "#FF0420", bg: "rgba(255,4,32,0.07)",     border: "rgba(255,4,32,0.16)"     },
   { name: "Solana",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",   border: "rgba(93,206,157,0.22)"   },
 ] as const;
 
@@ -63,7 +64,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
-          Free · No signup · 9 protocols · 6 chains
+          Free · No signup · 9 protocols · 7 chains
         </div>
 
         <h1

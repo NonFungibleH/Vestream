@@ -32,6 +32,8 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
   // Action to unblock: check Unvest's docs / GitHub for an Arbitrum
   // Holder Balance subgraph; if missing, contact the Unvest team.
   [CHAIN_IDS.ARBITRUM]:     undefined,
+  // Optimism: same status as Arbitrum — pending subgraph ID research.
+  [CHAIN_IDS.OPTIMISM]:     undefined,
   [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 

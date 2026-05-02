@@ -40,6 +40,7 @@ export const CHAIN_IDS = {
   POLYGON:      137,
   BASE:         8453,
   ARBITRUM:     42161,     // Arbitrum One — largest L2 by TVL
+  OPTIMISM:     10,        // OP Mainnet — major L2 (OP token vesting + ecosystem)
   SEPOLIA:      11155111,  // Ethereum Sepolia testnet
   BASE_SEPOLIA: 84532,     // Base Sepolia testnet
   SOLANA:       101,       // Solana mainnet-beta (non-EVM)
@@ -53,6 +54,7 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.POLYGON]:      "Polygon",
   [CHAIN_IDS.BASE]:         "Base",
   [CHAIN_IDS.ARBITRUM]:     "Arbitrum",
+  [CHAIN_IDS.OPTIMISM]:     "Optimism",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",
   [CHAIN_IDS.BASE_SEPOLIA]: "Base Sepolia",
   [CHAIN_IDS.SOLANA]:       "Solana",
@@ -76,6 +78,7 @@ export const EVM_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.POLYGON,
   CHAIN_IDS.BASE,
   CHAIN_IDS.ARBITRUM,
+  CHAIN_IDS.OPTIMISM,
   CHAIN_IDS.SEPOLIA,
   CHAIN_IDS.BASE_SEPOLIA,
 ];
