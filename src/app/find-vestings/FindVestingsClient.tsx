@@ -336,10 +336,10 @@ export default function FindVestingsClient() {
 const SCAN_PROTOCOLS = [
   "Sablier",
   "Hedgey",
+  "Superfluid",
+  "LlamaPay",
   "UNCX",
   "Unvest",
-  "Team Finance",
-  "Superfluid",
   "PinkSale",
   "Streamflow",
   "Jupiter Lock",

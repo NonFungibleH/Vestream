@@ -16,7 +16,7 @@ import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
   title: "Find your token vestings — scan any wallet · Vestream",
-  description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
+  description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
   alternates: { canonical: "https://vestream.io/find-vestings" },
 };
 
@@ -28,7 +28,7 @@ const PROTOCOLS_ROW_1 = [
   { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
   { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
   { name: "UNCX",         color: "#F0992E", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-  { name: "Team Finance", color: "#2DB36A", bg: "rgba(45,179,106,0.07)",  border: "rgba(45,179,106,0.15)"  },
+  { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
 ] as const;
 
 const PROTOCOLS_ROW_2 = [

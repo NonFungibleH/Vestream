@@ -278,7 +278,7 @@ export default async function Home() {
               { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
               { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
               { name: "UNCX",         color: "#F0992E", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
-              { name: "Team Finance", color: "#2563EB", bg: "rgba(37,99,235,0.07)",  border: "rgba(37,99,235,0.15)"  },
+              { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
@@ -443,7 +443,7 @@ export default async function Home() {
                   </div>
                   {[
                     { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#1CB8B8", prog: 15 },
-                    { token: "NOVA", protocol: "Team Finance",   claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#0F8A4A", prog: 35 },
+                    { token: "NOVA", protocol: "LlamaPay",       claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#A26B3F", prog: 35 },
                     { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#D97706", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
@@ -637,7 +637,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -712,7 +712,7 @@ export default async function Home() {
                   { name: "Hedgey",       color: "#3b82f6" },
                   { name: "UNCX",         color: "#F0992E" },
                   { name: "Unvest",       color: "#06b6d4" },
-                  { name: "Team Finance", color: "#2563EB" },
+                  { name: "LlamaPay",     color: "#A26B3F" },
                   { name: "Superfluid",   color: "#28B895" },
                   { name: "PinkSale",     color: "#E063A0" },
                 ].map((p) => (
@@ -763,7 +763,7 @@ export default async function Home() {
               { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
               { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#F0992E" },
               { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
-              { protocol: "Team Finance", chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#2563EB" },
+              { protocol: "LlamaPay",     chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#A26B3F" },
               { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#28B895" },
               { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#E063A0" },
             ].map((r) => (
@@ -1163,7 +1163,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports Sablier (linear & tranched streaming), Hedgey (vesting plans), UNCX Network (locker & VestingManager), Unvest, Team Finance, Superfluid (streaming vesting), PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports Sablier (linear & tranched streaming), Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

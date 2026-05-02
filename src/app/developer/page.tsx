@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API — Vestream",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, and Solana. Normalised JSON, agent-native, ready in minutes.",
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://vestream.io/developer" },
   openGraph: {
     title: "Developer API — Vestream",
@@ -70,7 +70,7 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock —
+            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock —
             across Ethereum, BNB Chain, Polygon, Base and Solana.
             Clean REST API with OpenAPI spec and native MCP support.
           </p>
@@ -124,7 +124,7 @@ export default function DeveloperPage() {
               { name: "UNCX",          color: "#1CB8B8", bg: "rgba(28,184,184,0.08)",   border: "rgba(28,184,184,0.18)",   note: "Token locks" },
               { name: "Hedgey",        color: "#0F8A8A", bg: "rgba(15,138,138,0.08)",  border: "rgba(15,138,138,0.18)",  note: "NFT-based vesting" },
               { name: "Unvest",        color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.18)",   note: "Multi-chain" },
-              { name: "Team Finance",  color: "#2DB36A", bg: "rgba(45,179,106,0.08)",  border: "rgba(45,179,106,0.18)",  note: "Team vesting" },
+              { name: "LlamaPay",      color: "#A26B3F", bg: "rgba(162,107,63,0.08)",  border: "rgba(162,107,63,0.18)",  note: "Streaming + payroll" },
               { name: "Superfluid",    color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.18)",   note: "Streaming vesting" },
               { name: "PinkSale",      color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.18)",  note: "PinkLock V2" },
               { name: "Streamflow",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)",  note: "Solana vesting" },

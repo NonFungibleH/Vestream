@@ -68,7 +68,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is Vestream?",
-        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from nine major platforms — Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BNB Chain, Polygon, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
+        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from nine major platforms — Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BNB Chain, Polygon, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
       },
       {
         q: "Who is Vestream for?",
@@ -95,7 +95,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Which vesting protocols does Vestream support?",
-        a: "Seven as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), Team Finance (team token vesting), Superfluid (cliff + linear streaming via its VestingScheduler), and PinkSale PinkLock V2 (TGE + cycle schedules). Each protocol has its own dedicated adapter that normalises its data into a shared VestingStream shape.",
+        a: "Nine as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), PinkSale PinkLock V2 (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (Solana's default token locker). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
       },
       {
         q: "Which blockchains are supported?",
@@ -103,7 +103,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How does Vestream get the vesting data?",
-        a: "For six protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest, Team Finance) we query each protocol's official subgraph on The Graph Network — same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale is the exception: it has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
+        a: "For five EVM protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest) we query each protocol's official subgraph on The Graph Network — same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. Streamflow + Jupiter Lock are read directly from Solana via the protocols' SDKs and getProgramAccounts. LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
       },
       {
         q: "How fresh is the data?",

@@ -253,7 +253,7 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>all 9 protocols</span> · Sablier, Hedgey, Team Finance, PinkSale, UNCX, Unvest, Superfluid, Streamflow, Jupiter Lock
+                Indexed: <span style={{ color: "#0F8A8A" }}>all 9 protocols</span> · Sablier, Hedgey, Superfluid, LlamaPay, PinkSale, UNCX, Unvest, Streamflow, Jupiter Lock
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 Hit refresh below to index your claims. Three caveats: <strong>tax basis</strong> — we

@@ -246,13 +246,13 @@ export default function TokenPayrollPage() {
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: THEME.slateBody }}>
                 You keep using whichever vesting protocol fits your setup —
-                Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid,
-                PinkSale, or any combination. Vestream indexes what you&rsquo;ve
+                Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
+                or any combination. Vestream indexes what you&rsquo;ve
                 already deployed and gives your team a branded mobile app to
                 live with it.
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Sablier", "Hedgey", "UNCX", "Unvest", "Team Finance", "Superfluid", "PinkSale"].map((p) => (
+                {["Sablier", "Hedgey", "Superfluid", "LlamaPay", "UNCX", "Unvest", "PinkSale"].map((p) => (
                   <span
                     key={p}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-semibold"
@@ -285,9 +285,9 @@ export default function TokenPayrollPage() {
                 We don&rsquo;t create vestings, hold funds, or charge gas to
                 deploy contracts. Your existing process for setting those up
                 stays exactly as it is — whether that&rsquo;s your legal
-                counsel on Sablier, your CFO on Hedgey, or your launchpad
-                partner on Team Finance. We&rsquo;re purely the UX layer the
-                moment after.
+                counsel on Sablier, your CFO on Hedgey, or your payroll
+                stack on Superfluid or LlamaPay. We&rsquo;re purely the UX layer
+                the moment after.
               </p>
             </div>
           </div>
@@ -650,7 +650,7 @@ export default function TokenPayrollPage() {
         >
           <FaqItem
             q="Which vesting protocols do you support?"
-            a="Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, and PinkSale across Ethereum, Base, BSC, and Polygon. If you're using a protocol we don't index yet, tell us — we'll quote a timeline."
+            a="Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, and PinkSale across Ethereum, Base, BSC, and Polygon, plus Streamflow + Jupiter Lock on Solana. If you're using a protocol we don't index yet, tell us — we'll quote a timeline."
           />
           <FaqItem
             q="Can we use this without Vestream touching our payroll?"

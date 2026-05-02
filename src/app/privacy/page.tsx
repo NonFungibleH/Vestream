@@ -132,8 +132,8 @@ export default function Privacy() {
             <p>
               Vestream maintains an aggregated, anonymised index of public
               vesting positions across the protocols and chains we support
-              (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid,
-              PinkSale, Streamflow, Jupiter Lock — across Ethereum, BNB Chain,
+              (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
+              Streamflow, Jupiter Lock — across Ethereum, BNB Chain,
               Polygon, Base, and Solana). This index is built from publicly
               available on-chain data and protocol subgraphs.
             </p>
@@ -181,7 +181,7 @@ export default function Privacy() {
               <li><strong>Resend</strong> — transactional email (sign-in OTP, unlock alerts).</li>
               <li><strong>Alchemy</strong> — Ethereum, Base, and Solana RPC.</li>
               <li><strong>BSC and Polygon RPC providers</strong> — chain reads.</li>
-              <li><strong>The Graph</strong> — protocol subgraphs (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid).</li>
+              <li><strong>The Graph</strong> — protocol subgraphs (Sablier, Hedgey, UNCX, Unvest, Superfluid).</li>
               <li><strong>DefiLlama</strong> — public TVL aggregates for select protocols.</li>
               <li><strong>DexScreener</strong> and <strong>CoinGecko</strong> — token price data for USD-equivalents shown in the dashboard.</li>
               <li><strong>Stripe</strong> — web subscription billing.</li>
