@@ -12,6 +12,7 @@ import { UpsellModal } from "@/components/UpsellModal";
 import { MobileAppBanner } from "@/components/MobileAppBanner";
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { useDashboardChrome } from "@/components/DashboardChrome";
+import { StreamAnnotationEditor } from "@/components/StreamAnnotationEditor";
 import { useCurrency } from "@/lib/use-currency";
 import { track } from "@/lib/analytics";
 import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
@@ -1364,6 +1365,26 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
   // by react-hooks/purity (Date.now isn't pure for React 19's strict-mode
   // analysis). Re-renders every 30s so cliff-active flags stay accurate.
   const nowSec = useNowSec();
+
+  // Bulk-fetch the user's stream annotations once. We expose a Map<streamId,
+  // annotation> for O(1) row-level lookup. Cheap because annotations are
+  // sparse — most users have 0–10 rows, so the response is tiny.
+  const { data: annData } = useSWR<{ annotations: Array<{ streamId: string; customName: string | null; notes: string | null }> }>(
+    "/api/streams/annotations",
+    async (url: string) => {
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+    { revalidateOnFocus: false },
+  );
+  const annotationByStreamId = useMemo(() => {
+    const m = new Map<string, { customName: string | null; notes: string | null }>();
+    for (const a of annData?.annotations ?? []) {
+      m.set(a.streamId, { customName: a.customName, notes: a.notes });
+    }
+    return m;
+  }, [annData]);
   // Show any stream where not all tokens have been withdrawn yet.
   // Using totalAmount vs withdrawnAmount is more robust than relying on
   // isFullyVested / claimableNow which can mis-compute on edge-case data.
@@ -1445,16 +1466,35 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                   <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: tokenColor }} />
 
-                  {/* 1. Asset — token symbol + chain name + recipient */}
+                  {/* 1. Asset — token symbol + chain name + recipient.
+                      If the user set a customName via StreamAnnotationEditor,
+                      it becomes the row's primary label; the on-chain symbol
+                      drops to a subtitle so the user can still see it. */}
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0"
                       style={{ background: tokenColor + "18", borderColor: tokenColor + "30" }}>
                       <span className="text-[10px] font-bold" style={{ color: tokenColor }}>{s.tokenSymbol.slice(0, 3)}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</p>
-                      <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
-                      <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
+                      {(() => {
+                        const customName = annotationByStreamId.get(s.id)?.customName;
+                        if (customName) {
+                          return (
+                            <>
+                              <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }} title={customName}>{customName}</p>
+                              <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{s.tokenSymbol} · {chainName}</p>
+                              <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
+                            </>
+                          );
+                        }
+                        return (
+                          <>
+                            <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</p>
+                            <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
+                            <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -1656,6 +1696,9 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                   <>
                     <EmissionChart stream={s} />
                     <ClaimHistory stream={s} />
+                    <div className="px-6 pb-5" onClick={(e) => e.stopPropagation()}>
+                      <StreamAnnotationEditor streamId={s.id} />
+                    </div>
                   </>
                 )}
                 </div>
