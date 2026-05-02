@@ -621,13 +621,14 @@ export function truncateAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-/** Human-readable chain name for a chain ID (5 public chains incl. Solana). */
+/** Human-readable chain name for a chain ID (6 public chains incl. Solana). */
 export function chainLabel(chainId: number): string {
   switch (chainId) {
     case 1:     return "Ethereum";
     case 56:    return "BNB Chain";
     case 137:   return "Polygon";
     case 8453:  return "Base";
+    case 42161: return "Arbitrum";
     case 101:   return "Solana";
     case 11155111: return "Sepolia";
     case 84532:    return "Base Sepolia";

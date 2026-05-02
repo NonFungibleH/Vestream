@@ -10,12 +10,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API — Vestream",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, and Solana. Normalised JSON, agent-native, ready in minutes.",
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, Arbitrum, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://vestream.io/developer" },
   openGraph: {
     title: "Developer API — Vestream",
     description:
-      "REST + MCP for 9 vesting protocols across 5 chains — EVM and Solana. Normalised JSON, agent-native.",
+      "REST + MCP for 9 vesting protocols across 6 chains — EVM and Solana. Normalised JSON, agent-native.",
     url: "https://vestream.io/developer",
     siteName: "Vestream",
     type: "website",
@@ -71,7 +71,7 @@ export default function DeveloperPage() {
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
             Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock —
-            across Ethereum, BNB Chain, Polygon, Base and Solana.
+            across Ethereum, BNB Chain, Polygon, Base, Arbitrum and Solana.
             Clean REST API with OpenAPI spec and native MCP support.
           </p>
 
@@ -95,7 +95,7 @@ export default function DeveloperPage() {
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
               { value: "9",     label: "Protocols indexed" },
-              { value: "5",     label: "Chains (EVM + Solana)" },
+              { value: "6",     label: "Chains (EVM + Solana)" },
               { value: "3",     label: "API endpoints" },
               { value: "JSON",  label: "Normalised output" },
               { value: "MCP",   label: "Agent-native" },
@@ -536,7 +536,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "9 protocols · 5 chains (EVM + Solana)",
+                  "9 protocols · 6 chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

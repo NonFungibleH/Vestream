@@ -867,6 +867,7 @@ const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.BSC]:             600_000n,
   [CHAIN_IDS.BASE]:            600_000n,
   [CHAIN_IDS.POLYGON]:               0n, // not in UNCX_VM_CONFIG
+  [CHAIN_IDS.ARBITRUM]:              0n, // UNCX-VM not yet wired for Arbitrum
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
   [CHAIN_IDS.SEPOLIA]:               0n,
   [CHAIN_IDS.BASE_SEPOLIA]:          0n,
@@ -1064,6 +1065,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "sablier",      chainId: CHAIN_IDS.BSC,      discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.BASE,     discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.SEPOLIA,  discover: discoverSablierRecipients },
   // UNCX (TokenVesting V3) — ETH/BSC/Base + Sepolia. Polygon subgraph is
   // deprecated; skipping until a replacement publishes.

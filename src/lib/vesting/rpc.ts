@@ -93,6 +93,18 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://base.meowrpc.com" },
     { url: "https://mainnet.base.org" },
   ]),
+  // Arbitrum One. Free pool drawn from the same provider universe as our
+  // other EVM chains. publicnode is `excludeForLogs: true` because they
+  // historically prune logs aggressively (matches BSC/Polygon/Base
+  // behaviour — see header comment). Arbitrum's own public RPC
+  // (arb1.arbitrum.io/rpc) and Arbitrum-native dRPC/1RPC are the
+  // log-safe fallbacks.
+  [CHAIN_IDS.ARBITRUM]: buildPool(process.env.ARBITRUM_RPC_URL, [
+    { url: "https://arbitrum.drpc.org" },
+    { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://1rpc.io/arb" },
+    { url: "https://arb1.arbitrum.io/rpc" },
+  ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
     { url: "https://1rpc.io/sepolia" },
