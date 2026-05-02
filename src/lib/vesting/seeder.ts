@@ -928,6 +928,44 @@ function limitFor(mode: SeedMode): number {
   return mode === "deep" ? DEEP_SEED_LIMIT : SEED_LIMIT;
 }
 
+/**
+ * Workload partitions for the seed-cache fan-out pattern. Each group is
+ * meant to fit comfortably inside a single 300s function invocation. The
+ * /api/cron/seed-cache route fires three background fetches in parallel —
+ * one per group — so no single invocation has to budget for everything.
+ *
+ * Group rationale:
+ *   - "heavy"     PinkSale × 4 chains. The slowest workload by far —
+ *                 paginated multicall against `getUserNormalLockAtIndex`,
+ *                 plus large discovery wallet lists. Used to time the
+ *                 entire seedAll out by itself.
+ *   - "solana"    Streamflow + Jupiter Lock. Throttled to 4 concurrent
+ *                 calls vs Helius free CU/s — predictable but not fast.
+ *                 Isolated so a Helius rate-limit can't starve EVM jobs.
+ *   - "subgraphs" Sablier / Hedgey / UNCX / UNCX-VM / Unvest / Superfluid /
+ *                 Team Finance (when enabled). Mostly The Graph + a couple
+ *                 of hosted endpoints. Each chain is a single GraphQL
+ *                 round-trip; the whole bucket runs in well under 300s.
+ */
+export type SeedGroup = "heavy" | "solana" | "subgraphs";
+
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs"] as const;
+
+function groupFor(adapterId: string): SeedGroup {
+  if (adapterId === "pinksale") return "heavy";
+  if (adapterId === "streamflow" || adapterId === "jupiter-lock") return "solana";
+  return "subgraphs";
+}
+
+function isSeedGroup(s: string): s is SeedGroup {
+  return (SEED_GROUPS as readonly string[]).includes(s);
+}
+
+export function parseSeedGroup(raw: string | null | undefined): SeedGroup | null {
+  if (!raw) return null;
+  return isSeedGroup(raw) ? raw : null;
+}
+
 export interface SeedRunResult {
   adapterId:            string;
   chainId:              number;
@@ -1142,7 +1180,10 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
  *     minutes; run via the `?mode=deep` query parameter on the cron route
  *     (manually or via a separate weekly cron), not on every tick.
  */
-export async function seedAll(mode: SeedMode = "incremental"): Promise<SeedRunResult[]> {
+export async function seedAll(
+  mode:  SeedMode  = "incremental",
+  group: SeedGroup | null = null,
+): Promise<SeedRunResult[]> {
   const limit    = limitFor(mode);
   const PARALLEL = 3;
   const results: SeedRunResult[] = [];
@@ -1152,7 +1193,7 @@ export async function seedAll(mode: SeedMode = "incremental"): Promise<SeedRunRe
   // ProtocolMeta.disabled docstring. Disabled adapters make NO outbound
   // calls; their existing cache rows are left in place so re-enabling is a
   // single flag flip + a deep-seed.
-  const enabledJobs = SEED_JOBS.filter((j) => {
+  let jobs = SEED_JOBS.filter((j) => {
     const enabled = isAdapterEnabled(j.adapterId);
     if (!enabled) {
       console.log(`[seeder] skipping ${j.adapterId}/${j.chainId} — protocol is disabled`);
@@ -1160,8 +1201,16 @@ export async function seedAll(mode: SeedMode = "incremental"): Promise<SeedRunRe
     return enabled;
   });
 
-  for (let i = 0; i < enabledJobs.length; i += PARALLEL) {
-    const batch   = enabledJobs.slice(i, i + PARALLEL);
+  // Optional group filter. Used by the seed-cache route's fan-out pattern
+  // so each background invocation runs only its slice — heavy/solana/
+  // subgraphs each get their own 300s budget.
+  if (group) {
+    jobs = jobs.filter((j) => groupFor(j.adapterId) === group);
+    console.log(`[seeder] running group="${group}" — ${jobs.length} job(s)`);
+  }
+
+  for (let i = 0; i < jobs.length; i += PARALLEL) {
+    const batch   = jobs.slice(i, i + PARALLEL);
     const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
   }
