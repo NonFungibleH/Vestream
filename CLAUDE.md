@@ -401,6 +401,7 @@ interface VestingStream {
 | BNB Chain | 56 | EVM |
 | Polygon | 137 | EVM |
 | Base | 8453 | EVM |
+| Arbitrum One | 42161 | EVM |
 | Solana | 101 | Non-EVM (SVM) |
 | Sepolia (testnet) | 11155111 | EVM |
 | Base Sepolia (testnet) | 84532 | EVM |
@@ -410,15 +411,17 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 ### Supported protocols
 | Protocol | ID | Chains | Data source | Notes |
 |---|---|---|---|---|
-| Sablier | `sablier` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Linear + tranched (LockupTranched) |
-| Hedgey | `hedgey` | ETH, BSC, Polygon, Base | The Graph subgraph | NFT-based vesting plans |
+| Sablier | `sablier` | ETH, BSC, Polygon, Base, Arbitrum, Sepolia | Envio Hasura (single endpoint, chainId-filtered) | Linear + tranched (LockupTranched). Replaced per-chain The Graph subgraphs in 2025. |
+| Hedgey | `hedgey` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph + ERC721Enumerable contract reads for discovery | NFT-based vesting plans. Discovery uses paginated `tokenByIndex` + `ownerOf` multicalls (HEDGEY_PAGE_SIZE=100) — see seeder.ts landmine note. |
 | UNCX (TokenVesting) | `uncx` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Token locker v3 |
-| UNCX (VestingManager) | `uncx-vm` | ETH, BSC, Polygon, Base | The Graph subgraph | Hidden in UI; merged with `uncx` |
+| UNCX (VestingManager) | `uncx-vm` | ETH only | `eth_getLogs` event scan via shared multi-RPC pool | Hidden in UI; merged with `uncx`. BSC/Base/Polygon dropped Apr 29 2026 — dRPC free tier no longer serves eth_getLogs there. Re-add if/when paid RPC env vars set. |
 | Unvest | `unvest` | ETH, BSC, Polygon, Base | The Graph subgraph | Step/milestone vesting |
-| Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Team token vesting — used in Demo C on /demo |
+| Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | Squid GraphQL (different stack than The Graph) | **TEMPORARILY PAUSED — May 2 2026.** `disabled: true` flag set in protocol-constants.ts; no seeder calls, no UI surfaces, cache rows preserved for re-enable. See "Pausing an integration" subsection below. |
 | Superfluid | `superfluid` | ETH, BSC, Polygon, Base | Superfluid hosted subgraph (no GRAPH_API_KEY) | Cliff + linear streaming; endpoint: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler` |
-| PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem | TGE + cycle-based schedule; no subgraph |
-| Streamflow | `streamflow` | Solana | @streamflow/stream SDK + Alchemy free Solana RPC | First non-EVM protocol. Per-user fetches only (no seeder in v1). /protocols card TVL sourced from DefiLlama (api.llama.fi/protocol/streamflow, "vesting" category). AlignedContract variant skipped. Feature-flagged behind `SOLANA_ENABLED=true`. |
+| PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem (no subgraph) | TGE + cycle-based schedule. Adapter pages `getUserNormalLockAtIndex` in batches of 50 to dodge free-RPC 100KB response cap (Polygon-shaped bug). PINKSALE_CONTRACT_ADDRESSES is the single-source-of-truth map in protocol-constants.ts — do NOT add per-file copies. |
+| Streamflow | `streamflow` | Solana | @streamflow/stream SDK | Per-user fetches throttled via `mapBounded` (concurrency 4, 100ms inter-batch delay) to stay under Helius free CU/s. AlignedContract variant skipped. Gated behind `SOLANA_ENABLED=true`. |
+| Jupiter Lock | `jupiter-lock` | Solana | Solana `getProgramAccounts` + dataSize=296 filter | Solana's default token locker (used by JUP team allocations). Same `mapBounded` throttle as Streamflow. Helius is the only free Solana RPC that supports `getProgramAccounts`. |
+| LlamaPay | `llamapay` | ETH, BSC, Polygon, Base, Arbitrum (TVL only) | DefiLlama passthrough (`chainTvls.vesting`) | TVL-only — no per-wallet adapter yet. Extends the recipient-side TAM toward streamed payroll. Future work: build a real adapter for per-wallet stream tracking. |
 
 ### Adding a new adapter
 Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapter` object with `id`, `name`, `supportedChainIds`, and `fetch(wallets, chainId)`. Register it in `adapters/index.ts`.
@@ -427,6 +430,31 @@ Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapte
 **Superfluid exception**: uses its own hosted endpoints — no GRAPH_API_KEY, endpoint format: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler`
 **Contract-read adapters** (PinkSale): use viem `createPublicClient` + `http()` transport with RPC env vars. No subgraph.
 **Non-EVM adapters** (Streamflow): use the protocol's own TS SDK (e.g. `@streamflow/stream`'s `SolanaStreamClient`) against a Solana RPC URL set in `SOLANA_RPC_URL`. For TVL display on the /protocols card, consider sourcing from DefiLlama (`src/lib/defillama.ts`) via the optional `externalTvl` field on `ProtocolMeta` rather than our own priced-cache pipeline. Feature-flag non-EVM adapters behind an env var (e.g. `SOLANA_ENABLED=true`) so EVM-only environments are unaffected.
+
+### Pausing an integration (the `disabled` flag)
+
+Some scenarios call for temporarily turning a protocol off without deleting it — upstream API outage, pending legal review, rebrand, low-volume protocol where the seeder cost isn't worth it for a while. The pattern is the `disabled?: boolean` field on `ProtocolMeta`. Worked example: Team Finance pause (May 2 2026, commit `e49b0a2`).
+
+Setting `disabled: true`:
+- `listProtocols()` filters it out by default — UI cards, /protocols index, search, sitemap, generateStaticParams all skip it.
+- `getProtocol(slug)?.disabled` is the check used in `notFound()` guards on `/protocols/[slug]` + `/protocols/[slug]/unlocks`.
+- `isAdapterEnabled(adapterId)` returns false → `seedAll()` filters out matching SEED_JOBS, `aggregateVestingStreams()` skips the adapter's `fetch` call, every entry in `ingestAllClaimsForUser` short-circuits to `inserted: 0`, the token explorer's combined fetch skips the call.
+- `runAll()` in the TVL snapshot cron honours the filter even on manual `?protocol=X` reruns.
+- Existing `vesting_streams_cache` rows are LEFT IN PLACE — re-enabling is a single `disabled: false` flip + a deep-seed.
+
+To re-enable: flip `disabled` to `false`, then trigger a deep seed:
+```bash
+curl -X POST "https://www.vestream.io/api/cron/seed-cache?mode=deep" \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+Use this hatch sparingly — the `disabled` flag is for *pauses*, not *removals*. If you're permanently dropping a protocol, delete the entry entirely, drop its cache rows, and remove its adapter from `ADAPTER_REGISTRY`.
+
+### `lastRefreshedAt` semantic shift (May 2 2026)
+
+The `vesting_streams_cache.lastRefreshedAt` column used to mean "last time the seeder touched this row." After commit `df6a6b3` it means "last time the row's data actually moved." We added a `setWhere` clause to the ON CONFLICT branch in `writeToCache` so unchanged rows skip the UPDATE entirely — saved ~90% of write IO during typical incremental cron runs (driver of the May 2 Supabase Disk IO Budget warning).
+
+**Diagnostic implication:** the `freshestSec` column on `/api/admin/cache-stats` is now a "is data still flowing?" signal, not "did the cron run?" signal. A row stuck at days-old freshest means *either* the protocol genuinely has no new data *or* the discovery/adapter pipeline is silently broken (the way Hedgey BSC/Polygon/Base was broken for 8.5 days pre-pagination-fix). Both are actionable. For "did the cron run?" check Vercel logs for the seeder summary line instead.
 
 ---
 
@@ -487,18 +515,52 @@ Otherwise:
 
 ### Cron + manual ops
 
+Two daily crons:
+
+| Cron | Schedule | Purpose |
+|---|---|---|
+| `/api/cron/seed-cache` | 03:00 UTC daily | Refreshes `vesting_streams_cache` — discover recipients per (adapter, chain), fetch streams, upsert. |
+| `/api/cron/seed-cache?mode=deep` | 04:00 UTC Sundays | Weekly deep seed (DEEP_SEED_LIMIT=5000 vs 500 incremental). |
+| `/api/cron/tvl-snapshot` | 03:15 UTC daily | Writes `protocolTvlSnapshots` rows powering /protocols TVL numbers. |
+
+#### Seed-cache fan-out pattern
+
+Single Vercel function gets 300s. PinkSale × 4 chains alone can exhaust that, leaving every later protocol stale. Since commit `4924c63` the `/api/cron/seed-cache` route is a *dispatcher*: when hit without a `?group=` param it fires three background self-fetches in parallel — one per `SeedGroup` — and returns 202 immediately. Each child fetch is its own function invocation with its own fresh 300s budget.
+
+The three groups (defined in `seeder.ts:groupFor`):
+- `heavy` — PinkSale × 4 chains. Slowest workload.
+- `solana` — Streamflow + Jupiter Lock. Helius-throttled.
+- `subgraphs` — everything else (Sablier, Hedgey, UNCX, UNCX-VM, Unvest, Superfluid, plus paused adapters).
+
 ```bash
-# Full refresh (all 9 protocols, daily cron default)
+# Full refresh (all 9 protocols, fan-out into 3 background invocations)
+curl -X POST https://vestream.io/api/cron/seed-cache \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Just one group (skips the dispatcher, runs inline up to 300s)
+curl -X POST "https://vestream.io/api/cron/seed-cache?group=heavy" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Deep seed via fan-out — each group gets 300s
+curl -X POST "https://vestream.io/api/cron/seed-cache?mode=deep" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# TVL snapshot — full refresh
 curl -X POST https://vestream.io/api/cron/tvl-snapshot \
   -H "Authorization: Bearer $CRON_SECRET"
 
-# Single-protocol rerun (use for debugging or staggered slow walkers)
+# TVL single-protocol rerun (use for debugging or staggered slow walkers)
 curl -X POST "https://vestream.io/api/cron/tvl-snapshot?protocol=pinksale" \
   -H "Authorization: Bearer $CRON_SECRET"
 
-# Background mode (returns 202 immediately, work continues 2-5 min)
+# TVL background mode (returns 202 immediately, work continues 2-5 min)
 curl -X POST "https://vestream.io/api/cron/tvl-snapshot?protocol=uncx-vm&background=true" \
   -H "Authorization: Bearer $CRON_SECRET"
+
+# Cache freshness diagnostic — `freshestSec` per (protocol, chainId)
+curl -s -H "Authorization: Bearer $CRON_SECRET" \
+  "https://www.vestream.io/api/admin/cache-stats" | \
+jq -r '.nowMs as $now | .cells[] | ((($now/1000) - .freshestSec) / 60 | floor) as $m | "\(.protocol)  chain \(.chainId)  streams=\(.streams)  fresh=\($m)m ago"' | sort
 ```
 
 ### Headline-confidence rules (defends against dust pricing)
@@ -784,7 +846,10 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
    - publicnode endpoints PRUNE historical logs aggressively (BSC ~17
      days, Polygon ~10 days). DO NOT use as fallback for event-scan
      workloads. Use **dRPC** (`*.drpc.org`) instead — proven in
-     `src/lib/vesting/tvl-walker/pinksale.ts`.
+     `src/lib/vesting/tvl-walker/pinksale.ts`. The shared multi-RPC
+     pool (`src/lib/vesting/rpc.ts`) tags publicnode entries with
+     `excludeForLogs: true`; pass `{ forLogs: true }` to `getRpcUrl()`
+     for any caller doing eth_getLogs.
    - AbortSignal in fetch's `init` disables Next.js's data cache. Use
      `Promise.race` for fetch timeouts instead. See `src/lib/fetch-with-retry.ts`.
    - `force-dynamic` page directive overrides `next.config.ts` headers.
@@ -803,6 +868,33 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
      times (`6a09a13` → `ef21b41` → 2026-04-29 session). Search
      `git log -S 'BSC_RPC_URL'` before EVER recommending env vars
      for these.
+   - **Free-tier EVM RPCs cap response size around 100KB on Polygon
+     and similar on BSC/Base.** A multicall of 200+ calls (or any
+     single eth_call returning > ~100KB JSON) silently fails with a
+     viem error, the catch returns [], and the discovery/adapter run
+     yields zero. PinkSale Polygon (`a65044e`) and Hedgey BSC/Polygon/Base
+     (`288c25c`, 8.5-day silent breakage) were both this shape. **Always
+     paginate large multicalls** in chunks of 50–100 — see PinkSale
+     adapter PAGE=50 and `discoverHedgeyRecipients` HEDGEY_PAGE_SIZE=100.
+     Per-page failures are logged but don't abort, so partial coverage
+     beats none. If you find yourself adding a 500+ call multicall,
+     STOP — paginate first.
+   - **DB-touching helpers must short-circuit during `next build`.**
+     Vercel production builds occasionally lose the Supabase pooler
+     mid-build (XX000 FATAL); subsequent queries CONNECTION_CLOSED
+     and individual static pages exhaust their 60s × 3 retry budget,
+     killing the whole build. The fix shipped in `805f74d` adds
+     `if (process.env.NEXT_PHASE === "phase-production-build") return EMPTY_X`
+     at the top of every helper that hits Postgres. New DB query
+     helpers MUST follow this pattern — see `getProtocolStats`,
+     `getUnlocksInWindow`, `getLatestUnlock`, etc. ISR fills with real
+     data on the first runtime request after deploy.
+   - **`writeToCache` only updates rows whose data actually changed**
+     (commit `df6a6b3`, `setWhere` clause). `lastRefreshedAt` therefore
+     means "last time data moved" not "last time the seeder ran" — see
+     the "lastRefreshedAt semantic shift" subsection above. Don't
+     "fix" this by removing the `setWhere` thinking the timestamp is
+     broken; the change is intentional and saved ~90% of write IO.
 
 4. **When the user says "we removed/decided/changed X" — STOP.** Search
    git, read the commit message, then respond. Don't push back without

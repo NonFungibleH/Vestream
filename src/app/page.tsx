@@ -108,7 +108,7 @@ const homepageJsonLd = {
       featureList: [
         "Track token vestings across 9 protocols",
         "Real-time unlock alerts via push and email",
-        "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Solana",
+        "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Solana",
         "P&L tracking and CSV export",
         "Protocol-by-protocol TVL transparency",
       ],
