@@ -345,6 +345,46 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     },
   },
 
+  llamapay: {
+    slug: "llamapay",
+    adapterIds: ["llamapay"],
+    name: "LlamaPay",
+    tagline: "Token streaming for vesting and payroll",
+    description:
+      "LlamaPay streams ERC-20 tokens by the second — used both for team vesting and for crypto-native payroll. DefiLlama publishes a vesting-specific TVL slice that excludes their general payments product. Vestream surfaces the vesting headline and links recipients to the LlamaPay claim page; per-wallet stream tracking is coming as we expand the recipient-side product.",
+    // Llama brown — distinctive from the existing palette (no other entry
+    // sits in warm neutral). Matches the protocol's literal name + branding.
+    color: "#A26B3F",
+    bg:    "rgba(162,107,63,0.08)",
+    border:"rgba(162,107,63,0.22)",
+    // Mainnet chains where DefiLlama reports a non-trivial LlamaPay vesting
+    // slice AND we currently index per-wallet on the EVM side. Arbitrum +
+    // Optimism + Avalanche will get added here as we ship those chains —
+    // DefiLlama already publishes Arbitrum-vesting at $3.6M, the largest
+    // L2 contributor.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    officialUrl: "https://llamapay.io",
+    claimUrl:   "https://llamapay.io/withdraw",
+    searchKeywords: [
+      "llamapay unlock",
+      "llamapay vesting tracker",
+      "llamapay payroll",
+      "llamapay stream tracker",
+    ],
+    useCases: [
+      { title: "Continuous-stream vesting",  body: "Some token teams use LlamaPay's per-second streaming for team vesting instead of cliff-and-cycle contracts. Vestream tracks the DefiLlama-published vesting slice so the recipient can see total committed value at a glance." },
+      { title: "Crypto-native payroll",      body: "LlamaPay is widely used to pay contractors and remote teams in stablecoins. Vestream's tax-export tooling (Pro tier) treats streamed payments the same way as cliff vests — Koinly / CoinTracker / TurboTax CSVs come out cleanly." },
+      { title: "Multi-chain coverage",       body: "LlamaPay deploys on most major EVM chains. Vestream displays the TVL footprint sourced directly from DefiLlama's vesting-only category — no double-counting with their payments product." },
+    ],
+    relatedSlugs: ["sablier", "superfluid", "hedgey"],
+    testimonials: [],
+    // DefiLlama publishes a chainTvls.vesting aggregate distinct from their
+    // headline (which is mostly the payments product). The runDefiLlamaSnapshot
+    // path auto-prefers the `vesting` slice when present — same as Sablier,
+    // Hedgey, Streamflow.
+    externalTvl: { source: "defillama", slug: "llamapay" },
+  },
+
   "jupiter-lock": {
     slug: "jupiter-lock",
     adapterIds: ["jupiter-lock"],
@@ -389,6 +429,7 @@ export const PROTOCOL_SLUGS = [
   "pinksale",
   "streamflow",
   "jupiter-lock",
+  "llamapay",
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];
