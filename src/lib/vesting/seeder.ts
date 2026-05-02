@@ -425,6 +425,21 @@ const HEDGEY_ENUMERABLE_ABI = [
     inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }] },
 ] as const;
 
+// Multicall page size for hedgey discovery.
+//
+// Free-tier RPCs cap response sizes — Polygon at ~100KB, BSC and Base similar.
+// A single multicall of 500-5000 calls easily exceeds that, viem throws,
+// the catch returns []. Symptom we hit: hedgey BSC/Polygon/Base went 8.5
+// days without ANY freshestSec update because every discovery run silently
+// returned [] (commit cache-stats audit, May 2 2026).
+//
+// 100 calls per page is conservative enough for the smallest cap (Polygon
+// 100KB) — each tokenByIndex/ownerOf response is ~200 bytes inside the
+// aggregate3 envelope. 100 calls × ~200 bytes = ~20KB per page, well under
+// the cap. Pages are run in series so transient RPC errors only invalidate
+// one page, not the whole run.
+const HEDGEY_PAGE_SIZE = 100;
+
 async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
   const rpcUrl   = getRpcUrl(chainId);
@@ -458,41 +473,70 @@ async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number
     const indices: number[] = [];
     for (let i = start; i < N; i++) indices.push(i);
 
-    // Round 1: tokenByIndex(i) for every slot.
-    const tokenIdResults = await client.multicall({
-      contracts: indices.map((i) => ({
-        address: contract,
-        abi:     HEDGEY_ENUMERABLE_ABI,
-        functionName: "tokenByIndex" as const,
-        args:    [BigInt(i)] as const,
-      })),
-      allowFailure: true,
-    });
-    const tokenIds = tokenIdResults
-      .map((r) => (r.status === "success" ? (r.result as bigint) : null))
-      .filter((x): x is bigint => x !== null);
+    // Round 1 — tokenByIndex(i): paginated multicall.
+    //
+    // Single 500-5000-call multicalls overflow free-tier response caps on
+    // BSC/Polygon/Base. We page through the indices in HEDGEY_PAGE_SIZE
+    // chunks; per-page failures are logged but don't abort the run, so
+    // partial coverage is preserved across transient RPC errors.
+    const tokenIds: bigint[] = [];
+    let pageFailures = 0;
+    for (let p = 0; p < indices.length; p += HEDGEY_PAGE_SIZE) {
+      const page = indices.slice(p, p + HEDGEY_PAGE_SIZE);
+      try {
+        const pageResults = await client.multicall({
+          contracts: page.map((i) => ({
+            address: contract,
+            abi:     HEDGEY_ENUMERABLE_ABI,
+            functionName: "tokenByIndex" as const,
+            args:    [BigInt(i)] as const,
+          })),
+          allowFailure: true,
+        });
+        for (const r of pageResults) {
+          if (r.status === "success") tokenIds.push(r.result as bigint);
+        }
+      } catch (err) {
+        pageFailures++;
+        console.warn(`[seeder:${tag}] tokenByIndex page ${p}-${p + page.length} failed:`, err);
+      }
+    }
 
     if (tokenIds.length === 0) {
-      console.warn(`[seeder:${tag}] tokenByIndex multicall returned 0 usable tokenIds (totalSupply=${totalSupply})`);
+      console.warn(`[seeder:${tag}] tokenByIndex multicall returned 0 usable tokenIds (totalSupply=${totalSupply}, pageFailures=${pageFailures})`);
       return [];
     }
 
-    // Round 2: ownerOf(tokenId) for each of those tokenIds.
-    const ownerResults = await client.multicall({
-      contracts: tokenIds.map((tokenId) => ({
-        address: contract,
-        abi:     HEDGEY_ENUMERABLE_ABI,
-        functionName: "ownerOf" as const,
-        args:    [tokenId] as const,
-      })),
-      allowFailure: true,
-    });
-    const owners = ownerResults
-      .map((r) => (r.status === "success" ? (r.result as string) : null))
-      .filter((x): x is string => x !== null);
+    // Round 2 — ownerOf(tokenId): paginated multicall using the same page size.
+    const owners: string[] = [];
+    let ownerPageFailures = 0;
+    for (let p = 0; p < tokenIds.length; p += HEDGEY_PAGE_SIZE) {
+      const page = tokenIds.slice(p, p + HEDGEY_PAGE_SIZE);
+      try {
+        const pageResults = await client.multicall({
+          contracts: page.map((tokenId) => ({
+            address: contract,
+            abi:     HEDGEY_ENUMERABLE_ABI,
+            functionName: "ownerOf" as const,
+            args:    [tokenId] as const,
+          })),
+          allowFailure: true,
+        });
+        for (const r of pageResults) {
+          if (r.status === "success") owners.push(r.result as string);
+        }
+      } catch (err) {
+        ownerPageFailures++;
+        console.warn(`[seeder:${tag}] ownerOf page ${p}-${p + page.length} failed:`, err);
+      }
+    }
 
     const recipients = dedupeAddresses(owners);
-    console.log(`[seeder:${tag}] enumerated ${indices.length} slots (of ${totalSupply} total) → ${recipients.length} unique owners`);
+    console.log(
+      `[seeder:${tag}] enumerated ${indices.length} slots (of ${totalSupply} total) → ` +
+      `${tokenIds.length} tokenIds → ${recipients.length} unique owners ` +
+      `(pageFailures: tokenByIndex=${pageFailures}, ownerOf=${ownerPageFailures})`
+    );
     return recipients;
   } catch (err) {
     console.error(`[seeder:${tag}] enumerable read failed:`, err);
