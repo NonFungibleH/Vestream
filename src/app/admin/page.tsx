@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { waitlist, apiAccessRequests, apiKeys, users, wallets, vestingStreamsCache, notificationPreferences, betaFeedback } from "@/lib/db/schema";
-import { desc, sql, count } from "drizzle-orm";
+import {
+  waitlist, apiAccessRequests, apiKeys, users, wallets, vestingStreamsCache,
+  notificationPreferences, betaFeedback, streamAnnotations, mobileTokens,
+  protocolTvlSnapshots,
+} from "@/lib/db/schema";
+import { desc, sql, count, gt } from "drizzle-orm";
 import { ApproveButton } from "./ApproveButton";
 import { RevokeButton } from "./RevokeButton";
 
@@ -14,7 +18,10 @@ const CHAIN_NAMES: Record<number, string> = {
   56:       "BNB Chain",
   137:      "Polygon",
   8453:     "Base",
+  42161:    "Arbitrum",
+  101:      "Solana",
   11155111: "Sepolia",
+  84532:    "Base Sepolia",
 };
 
 const CHAIN_COLORS: Record<number, string> = {
@@ -22,16 +29,24 @@ const CHAIN_COLORS: Record<number, string> = {
   56:       "#f3ba2f",
   137:      "#8247e5",
   8453:     "#1CB8B8",
+  42161:    "#28A0F0",
+  101:      "#5DCE9D",
   11155111: "#B8BABD",
+  84532:    "#9aa0a6",
 };
 
 const PROTOCOL_COLORS: Record<string, string> = {
   sablier:        "#F0992E",
-  hedgey:         "#1CB8B8",
+  hedgey:         "#3b82f6",
   "team-finance": "#2563EB",
-  uncx:           "#F0992E",
-  "uncx-vm":      "#F0992E",
+  uncx:           "#3D7FD0",
+  "uncx-vm":      "#3D7FD0",
   unvest:         "#0BA0CB",
+  superfluid:     "#28B895",
+  pinksale:       "#E063A0",
+  streamflow:     "#5DCE9D",
+  "jupiter-lock": "#F0B83D",
+  llamapay:       "#A26B3F",
 };
 
 function formatDate(d: Date | null | string) {
@@ -101,6 +116,63 @@ export default async function AdminPage() {
       cnt: count(),
     }).from(users).where(sql`created_at >= now() - interval '30 days'`)
       .groupBy(sql`date_trunc('day', created_at)::date`).orderBy(sql`date_trunc('day', created_at)::date`)),
+
+    // ── Index Health (12: unique recipients excl. testnets) ──────────────────
+    // The headline marketing number — distinct wallets vested-to across all
+    // active mainnet protocols. Exclude testnets so the count is credible.
+    withTimeout(db.select({
+      uniqueWallets: sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
+    }).from(vestingStreamsCache).where(sql`chain_id NOT IN (11155111, 84532)`)),
+
+    // ── Index Health (13: USD value indexed) ────────────────────────────────
+    // Sum the latest TVL snapshot rows per (protocol, chainId). Each row is
+    // already the result of the daily TVL cron — credible methodology
+    // (DefiLlama-vesting passthrough or our own walker + DexScreener pricing
+    // with confidence bands). See CLAUDE.md "TVL Methodology" for details.
+    withTimeout(db.select({
+      tvlUsd: sql<string>`coalesce(sum(${protocolTvlSnapshots.tvlUsd}), 0)::text`,
+      rows:   count(),
+    }).from(protocolTvlSnapshots)),
+
+    // ── Index Health (14: annotation adoption) ──────────────────────────────
+    // How many users have set ≥1 custom name or note. Total annotations.
+    // Direct measure of the stickiness feature shipped May 2026.
+    withTimeout(db.select({
+      totalAnnotations: count(),
+      uniqueUsers:      sql<number>`count(distinct ${streamAnnotations.userId})::int`,
+    }).from(streamAnnotations)),
+
+    // ── Index Health (15: mobile push adoption) ─────────────────────────────
+    // Live (non-expired) mobile bearer tokens — proxy for installed-and-
+    // signed-in mobile users. Each device gets one token, so this also
+    // approximates the device count.
+    withTimeout(db.select({ cnt: count() })
+      .from(mobileTokens)
+      .where(gt(mobileTokens.expiresAt, new Date()))),
+
+    // ── Index Health (16: cache freshness rollup) ───────────────────────────
+    // How many (protocol, chain) cells have been refreshed in the last
+    // 24h vs are stale. Quick health-check — surfaces silently-broken
+    // pipelines like the Hedgey BSC/Polygon/Base 8.85-day staleness we
+    // hit on May 2.
+    withTimeout(db.select({
+      protocol: vestingStreamsCache.protocol,
+      chainId:  vestingStreamsCache.chainId,
+      streams:  count(),
+      // Treat lastRefreshedAt as "last time any row in this cell moved"
+      // (semantic shift from `df6a6b3` setWhere optimisation — see
+      // CLAUDE.md). For a "did the cron run?" signal use Vercel logs.
+      freshestSec: sql<number>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
+    }).from(vestingStreamsCache)
+      .where(sql`chain_id NOT IN (11155111, 84532)`)
+      .groupBy(vestingStreamsCache.protocol, vestingStreamsCache.chainId)),
+
+    // ── Index Health (17: streams added in last 24h) ─────────────────────────
+    // Count rows where firstSeenAt is within the last 24h. Direct measure of
+    // index growth — how much new data did yesterday's cron pull in.
+    withTimeout(db.select({ cnt: count() })
+      .from(vestingStreamsCache)
+      .where(sql`first_seen_at >= now() - interval '24 hours' AND chain_id NOT IN (11155111, 84532)`)),
   ]);
 
   // Unwrap allSettled results — fall back to empty arrays so timed-out queries degrade gracefully
@@ -119,6 +191,36 @@ export default async function AdminPage() {
   const emailAlertsCount   = ok(results[9],  [{ cnt: 0 }]);
   const feedbackRows       = ok(results[10], []);
   const signupTrend        = ok(results[11], []);
+
+  // ── Index Health unwrap ──────────────────────────────────────────────────
+  const uniqueWalletsRow   = ok(results[12], [{ uniqueWallets: 0 }]);
+  const tvlSummaryRow      = ok(results[13], [{ tvlUsd: "0", rows: 0 }]);
+  const annotationStatsRow = ok(results[14], [{ totalAnnotations: 0, uniqueUsers: 0 }]);
+  const mobileTokenCount   = ok(results[15], [{ cnt: 0 }]);
+  const freshnessCells     = ok(results[16], []);
+  const newStreams24h      = ok(results[17], [{ cnt: 0 }]);
+
+  const uniqueRecipients   = Number(uniqueWalletsRow[0]?.uniqueWallets ?? 0);
+  const totalUsdIndexed    = Number(tvlSummaryRow[0]?.tvlUsd ?? "0");
+  const tvlSnapshotRows    = Number(tvlSummaryRow[0]?.rows ?? 0);
+  const annotationsTotal   = Number(annotationStatsRow[0]?.totalAnnotations ?? 0);
+  const annotationsUsers   = Number(annotationStatsRow[0]?.uniqueUsers ?? 0);
+  const mobileDevices      = Number(mobileTokenCount[0]?.cnt ?? 0);
+  const newStreamsLast24h  = Number(newStreams24h[0]?.cnt ?? 0);
+
+  // Cache freshness rollup — count cells fresh / stale by 6h, 24h, 7d windows.
+  const nowSec = Math.floor(Date.now() / 1000);
+  const SIX_H  = 6 * 60 * 60;
+  const ONE_D  = 24 * 60 * 60;
+  const ONE_W  = 7 * 24 * 60 * 60;
+  let cellsFresh6h = 0, cellsFresh24h = 0, cellsStale7d = 0;
+  for (const c of freshnessCells) {
+    const ageSec = nowSec - Number(c.freshestSec ?? 0);
+    if (ageSec < SIX_H) cellsFresh6h++;
+    if (ageSec < ONE_D) cellsFresh24h++;
+    if (ageSec > ONE_W) cellsStale7d++;
+  }
+  const totalCells = freshnessCells.length;
 
   const pendingRequests = requestRows.filter(r => !r.reviewed);
   const activeKeys      = keyRows.filter(k => !k.revokedAt);
@@ -395,6 +497,146 @@ export default async function AdminPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* ── Index Health ───────────────────────────────────────────────────── */}
+        {/*
+          Investor + marketing pull-quotes plus daily pipeline-health checks.
+          The headline metrics (unique recipients, USD indexed) are the
+          numbers that go into pitch decks and "X tracked" marketing copy.
+          Cache freshness + new-streams-24h are the operational signals that
+          tell us if the seeder is doing real work.
+        */}
+        <div className="mb-12" style={{ borderTop: "1px solid #1e2330", paddingTop: "2rem" }}>
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="font-bold text-xl">Index Health</h2>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>
+              live
+            </span>
+            <span className="text-[11px]" style={{ color: "#4b5563" }}>
+              mainnet only · testnets excluded
+            </span>
+          </div>
+
+          {/* Headline metrics — investor-deck row */}
+          <div className="grid grid-cols-6 gap-3 mb-6">
+            <StatCard
+              label="Unique recipients"
+              value={uniqueRecipients.toLocaleString()}
+              sub="distinct wallets vested-to"
+              accent="#1CB8B8"
+            />
+            <StatCard
+              label="USD indexed"
+              value={
+                totalUsdIndexed >= 1_000_000_000
+                  ? `$${(totalUsdIndexed / 1_000_000_000).toFixed(2)}B`
+                  : totalUsdIndexed >= 1_000_000
+                  ? `$${(totalUsdIndexed / 1_000_000).toFixed(1)}M`
+                  : `$${totalUsdIndexed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+              }
+              sub={`${tvlSnapshotRows} (proto, chain) rows`}
+              accent="#0F8A4A"
+            />
+            <StatCard
+              label="Streams indexed"
+              value={totalStreams.toLocaleString()}
+              sub={`+${newStreamsLast24h.toLocaleString()} in last 24h`}
+              accent="#2563EB"
+            />
+            <StatCard
+              label="Mobile devices"
+              value={mobileDevices.toLocaleString()}
+              sub="active bearer tokens"
+              accent="#F0992E"
+            />
+            <StatCard
+              label="Annotations"
+              value={annotationsTotal.toLocaleString()}
+              sub={`${annotationsUsers} users · ${
+                totalUsers > 0
+                  ? Math.round((annotationsUsers / totalUsers) * 100)
+                  : 0
+              }% adoption`}
+              accent="#A26B3F"
+            />
+            <StatCard
+              label="Cache cells fresh < 24h"
+              value={`${cellsFresh24h}/${totalCells}`}
+              sub={cellsStale7d > 0 ? `${cellsStale7d} stale > 7d ⚠` : "all cells healthy"}
+              accent={cellsStale7d > 0 ? "#F0B83D" : "#0F8A4A"}
+            />
+          </div>
+
+          {/* Cache freshness panel — per-cell breakdown so we can spot the
+              "Hedgey BSC stuck for 8 days" pattern at a glance. Cells are
+              sorted oldest-first so the most concerning ones float to the
+              top of the list. */}
+          <div className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid #1e2330" }}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#4b5563" }}>
+                Cache freshness · per (protocol, chain)
+              </p>
+              <div className="flex items-center gap-3 text-[10px]" style={{ color: "#9ca3af" }}>
+                <span><span style={{ color: "#0F8A4A" }}>●</span> &lt;6h</span>
+                <span><span style={{ color: "#1CB8B8" }}>●</span> &lt;24h</span>
+                <span><span style={{ color: "#F0B83D" }}>●</span> &lt;7d</span>
+                <span><span style={{ color: "#B3322E" }}>●</span> &gt;7d</span>
+              </div>
+            </div>
+            {freshnessCells.length === 0 ? (
+              <p className="text-xs" style={{ color: "#4b5563" }}>No cache rows yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                {[...freshnessCells]
+                  .sort((a, b) => Number(a.freshestSec ?? 0) - Number(b.freshestSec ?? 0))
+                  .map((c) => {
+                    const ageSec  = nowSec - Number(c.freshestSec ?? 0);
+                    const ageMin  = Math.floor(ageSec / 60);
+                    const ageHr   = Math.floor(ageSec / 3600);
+                    const ageD    = Math.floor(ageSec / 86400);
+                    const ageStr  = ageD >= 1 ? `${ageD}d` : ageHr >= 1 ? `${ageHr}h` : `${ageMin}m`;
+                    const dot     = ageSec < SIX_H ? "#0F8A4A"
+                                  : ageSec < ONE_D ? "#1CB8B8"
+                                  : ageSec < ONE_W ? "#F0B83D"
+                                  : "#B3322E";
+                    const protoLabel = c.protocol === "team-finance" ? "Team Finance"
+                      : c.protocol === "uncx-vm" ? "UNCX VM"
+                      : c.protocol === "jupiter-lock" ? "Jupiter Lock"
+                      : c.protocol.charAt(0).toUpperCase() + c.protocol.slice(1);
+                    const chainLabel = CHAIN_NAMES[c.chainId] ?? `chain ${c.chainId}`;
+                    return (
+                      <div key={`${c.protocol}-${c.chainId}`}
+                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md"
+                        style={{ background: "#0d0f14", border: "1px solid #1e2330" }}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span style={{ color: dot, fontSize: 10 }}>●</span>
+                          <span className="text-xs truncate" style={{ color: "white" }}>{protoLabel}</span>
+                          <span className="text-[10px]" style={{ color: "#4b5563" }}>·</span>
+                          <span className="text-[10px] truncate" style={{ color: "#9ca3af" }}>{chainLabel}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] tabular-nums" style={{ color: "#4b5563" }}>
+                            {Number(c.streams).toLocaleString()} streams
+                          </span>
+                          <span className="text-[10px] tabular-nums font-semibold" style={{ color: dot, minWidth: 32, textAlign: "right" }}>
+                            {ageStr}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+            <p className="text-[10px] mt-4" style={{ color: "#4b5563" }}>
+              Freshness = max(last_refreshed_at) per cell. Since the May 2026
+              setWhere optimisation, this means &ldquo;last time data actually
+              moved&rdquo; — frozen cells could mean genuinely-quiet protocols
+              OR silently broken pipelines. Cross-check with Vercel cron logs
+              for cells stuck &gt; 24h.
+            </p>
           </div>
         </div>
 
