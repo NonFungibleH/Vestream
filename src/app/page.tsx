@@ -586,32 +586,29 @@ export default async function Home() {
               <span style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", color: "#0F8A8A", fontSize: "8px", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: "999px" }}>Pro</span>
             </div>
             <div className="px-4 pb-4 space-y-2">
-              {/* Tax-year summary */}
-              <div style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "10px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "3px" }}>
-                  <span style={{ color: "#8B8E92", fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Tax year 2025</span>
-                  <span style={{ color: "#0F8A4A", fontSize: "13px", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>$12,580</span>
-                </div>
-                <span style={{ color: "#8B8E92", fontSize: "9px" }}>14 claims · ordinary income</span>
+              {/* Tax-year summary — single-line so the panel total height
+                  matches the surrounding P&L Tracker / Monthly Forecast
+                  cards (was 320px vs 255px when this was 2-line). */}
+              <div style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "#8B8E92", fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Tax year 2025 · 14 claims</span>
+                <span style={{ color: "#0F8A4A", fontSize: "13px", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>$12,580</span>
               </div>
 
-              {/* Example claim events (cost-basis at receipt) */}
+              {/* Example claim events (cost-basis at receipt) — single-line
+                  rows to match the surrounding panels' compact rhythm. */}
               {[
                 { date: "15 Jan", sym: "NOVA", amt: "1,000 @ $1.00",  usd: "+$1,000", color: "#F0992E" },
                 { date: "20 Feb", sym: "FLUX", amt: "0.5 @ $3,241",   usd: "+$1,620", color: "#0F8A8A" },
-                { date: "04 Mar", sym: "VEST", amt: "200 @ $4.20",    usd: "+$840",   color: "#28B895" },
               ].map((r) => (
-                <div key={r.date + r.sym} style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                      <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: r.color + "1F", border: `1px solid ${r.color}40`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ color: r.color, fontSize: "6px", fontWeight: 800 }}>{r.sym.slice(0,2)}</span>
-                      </div>
-                      <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700 }}>{r.date}</span>
+                <div key={r.date + r.sym} style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", minWidth: 0, flex: 1 }}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: r.color + "1F", border: `1px solid ${r.color}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ color: r.color, fontSize: "6px", fontWeight: 800 }}>{r.sym.slice(0,2)}</span>
                     </div>
-                    <span style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.usd}</span>
+                    <span style={{ color: "#1A1D20", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{r.date}</span>
+                    <span style={{ color: "#8B8E92", fontSize: "9px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.sym} · {r.amt}</span>
                   </div>
-                  <span style={{ color: "#8B8E92", fontSize: "8px" }}>{r.sym} · {r.amt}</span>
+                  <span style={{ color: "#0F8A4A", fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{r.usd}</span>
                 </div>
               ))}
 
