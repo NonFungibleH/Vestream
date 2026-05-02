@@ -440,7 +440,7 @@ const HEDGEY_ENUMERABLE_ABI = [
 // one page, not the whole run.
 const HEDGEY_PAGE_SIZE = 100;
 
-async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
   const rpcUrl   = getRpcUrl(chainId);
   if (!contract || !rpcUrl) {

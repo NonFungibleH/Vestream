@@ -78,6 +78,10 @@ async function loadDiscoverer(
     "uncx-vm":      "discoverUncxVmRecipients",
     "streamflow":   "discoverStreamflowRecipients",
     "jupiter-lock": "discoverJupiterLockRecipients",
+    // Added 2026-05-02 to debug Hedgey BSC/Polygon/Base 8.5-day staleness.
+    // Hedgey uses ERC721Enumerable contract reads (paginated multicall via
+    // viem) — same shape as the other contract-read protocols above.
+    "hedgey":       "discoverHedgeyRecipients",
   }[protocol];
   if (!fnName) return null;
   const fn = registry[fnName];
