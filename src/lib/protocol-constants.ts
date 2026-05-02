@@ -118,11 +118,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Hedgey",
     tagline: "NFT-based team vesting plans",
     description:
-      "Hedgey represents every vesting plan as an NFT — portable, on-chain, and fully visible in any wallet. It's the default for team token distribution at dozens of mid-cap projects. Vestream indexes every Hedgey plan across Ethereum, Base, BSC and Polygon and reminds the beneficiary before each unlock.",
+      "Hedgey represents every vesting plan as an NFT — portable, on-chain, and fully visible in any wallet. It's the default for team token distribution at dozens of mid-cap projects. Vestream indexes every Hedgey plan across Ethereum, Base, BSC, Polygon and Arbitrum and reminds the beneficiary before each unlock.",
     color: "#8169E0",
     bg:    "rgba(129,105,224,0.08)",
     border:"rgba(129,105,224,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
     officialUrl: "https://hedgey.finance",
     claimUrl:   "https://app.hedgey.finance",
     searchKeywords: [

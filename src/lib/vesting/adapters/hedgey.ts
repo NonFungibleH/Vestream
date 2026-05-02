@@ -1,5 +1,5 @@
 import { createPublicClient, http, erc20Abi } from "viem";
-import { mainnet, bsc, polygon, base, sepolia } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, sepolia } from "viem/chains";
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
 import { getRpcUrl as getRpcUrlPool } from "../rpc";
@@ -10,21 +10,24 @@ const TOKEN_META_CACHE = new Map<string, { symbol: string; decimals: number }>()
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // Hedgey TokenVestingPlans contract addresses per chain
-// Verified on-chain: 0x2CDE... = same bytecode on ETH, Base, BSC, and Polygon
+// Verified on-chain: 0x2CDE... = same bytecode on ETH, Base, BSC, Polygon, Arbitrum
 //                    0x68b6... = 30402 bytes on Sepolia (same bytecode, from Locked_VestingTokenPlans repo)
+// Arbitrum verified 2026-05-02 — totalSupply() returned 1,191 plans via arb1.arbitrum.io/rpc.
 const CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.ETHEREUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.BSC]:      "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.POLYGON]:  "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.BASE]:     "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
+  [CHAIN_IDS.ARBITRUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.SEPOLIA]:  "0x68b6986416c7A38F630cBc644a2833A0b78b3631",
 };
 
-const VIEM_CHAINS: Partial<Record<SupportedChainId, typeof mainnet | typeof bsc | typeof polygon | typeof base | typeof sepolia>> = {
+const VIEM_CHAINS: Partial<Record<SupportedChainId, typeof mainnet | typeof bsc | typeof polygon | typeof base | typeof arbitrum | typeof sepolia>> = {
   [CHAIN_IDS.ETHEREUM]: mainnet,
   [CHAIN_IDS.BSC]:      bsc,
   [CHAIN_IDS.POLYGON]:  polygon,
   [CHAIN_IDS.BASE]:     base,
+  [CHAIN_IDS.ARBITRUM]: arbitrum,
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 };
 
@@ -203,6 +206,6 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
 export const hedgeyAdapter: VestingAdapter = {
   id:   "hedgey",
   name: "Hedgey Finance",
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.SEPOLIA],
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.SEPOLIA],
   fetch: fetchForChain,
 };

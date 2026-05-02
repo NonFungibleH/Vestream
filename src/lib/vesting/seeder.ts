@@ -50,7 +50,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createPublicClient, http, type Hex } from "viem";
-import { mainnet, bsc, polygon, base, sepolia } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, sepolia } from "viem/chains";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
@@ -386,6 +386,9 @@ const HEDGEY_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.BSC]:      "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.POLYGON]:  "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.BASE]:     "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
+  // Arbitrum: same address as the other mainnets — verified 2026-05-02
+  // (totalSupply returned 1,191 plans via arb1.arbitrum.io/rpc).
+  [CHAIN_IDS.ARBITRUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   // Sepolia deploys a different address (same bytecode) — mirrors adapters/hedgey.ts.
   [CHAIN_IDS.SEPOLIA]:  "0x68b6986416c7A38F630cBc644a2833A0b78b3631",
 };
@@ -395,6 +398,7 @@ const VIEM_CHAIN_MAP = {
   [CHAIN_IDS.BSC]:      bsc,
   [CHAIN_IDS.POLYGON]:  polygon,
   [CHAIN_IDS.BASE]:     base,
+  [CHAIN_IDS.ARBITRUM]: arbitrum,
   [CHAIN_IDS.SEPOLIA]:  sepolia,
 } as const;
 
@@ -1114,6 +1118,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BSC,      discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.POLYGON,  discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BASE,     discover: discoverHedgeyRecipients },
+  { adapterId: "hedgey",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
   // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
   // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)
