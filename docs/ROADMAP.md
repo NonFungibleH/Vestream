@@ -9,6 +9,28 @@
 
 ---
 
+## Recently shipped (last 24h)
+
+- **Stream annotations** (custom names + notes, 200-char cap) — schema, API,
+  web dashboard editor + Asset-column display, mobile editor card +
+  portfolio cell custom-name display, CSV export descriptions threaded
+  through Koinly / TurboTax / Vestream-generic formats.
+- **Hedgey BSC/Polygon/Base RPC fix** — adapter-level migration to the
+  shared multi-RPC pool. Cleared the 8.85-day silent failure.
+- **Arbitrum chain** — Sablier wired end-to-end, LlamaPay TVL covers it
+  via DefiLlama passthrough. Hedgey/UNCX/Unvest/Superfluid Arbitrum
+  pending (see "Now").
+- **LlamaPay protocol** — DefiLlama vesting passthrough, listed on
+  /protocols.
+- **Team Finance pause** — `disabled` flag pattern documented in
+  CLAUDE.md.
+- **Seed-cache fan-out** — single cron entry → 3 background self-fetches
+  (heavy / solana / subgraphs), each with its own 300s budget.
+- **writeToCache setWhere** — skip UPDATE when stream data unchanged;
+  ~90% IO reduction in typical incremental cron runs.
+
+---
+
 ## Now (active or queued this week)
 
 ### Verify today's shipping batch
@@ -25,6 +47,33 @@
 ---
 
 ## Next (this month)
+
+### Stickiness trifecta — calendar export + tags
+
+The next two stickiness wins on top of stream notes (shipped May 2026).
+Compound differently from notes:
+- **Notes** = personal context per stream (shipped — view/edit on web + mobile, flows into CSV exports).
+- **Tags** = a personal taxonomy spanning streams (Investor / Salary / Advisor / etc).
+- **Calendar export** = where you live. Once a user pins Vestream events to their calendar, they see Vestream every time they look at it.
+
+**Tags** (`L`, ~2-3 days): same per-user-per-stream shape as notes. New `stream_tags` table with `(user_id, stream_id, tag, color)`. Free-form tag creation, dashboard filter chips, color-coded ribbons on cards. Same dual-auth API pattern. Mobile parity.
+
+**Calendar export** (`L`, ~2-3 days): `.ics` feed at `/api/calendar/[token].ics` (token = a user-scoped opaque slug). Subscribe URL on the dashboard with one-click "Add to Google Calendar / Apple Calendar / Outlook". Auto-includes upcoming unlocks for all tracked wallets, refreshes server-side. Uses iCal RFC 5545 — every calendar app on earth speaks this.
+
+After these land, the personal-context trifecta is complete: what (notes), how organised (tags), where it lives (calendar).
+
+### Other stickiness candidates (sequenced behind the trifecta)
+
+| Idea | Build | Stickiness mechanic |
+|---|---|---|
+| **Watchlist / pin streams** | ~1 day | Tiny build, big UX for users with many vestings. |
+| **Per-stream alert preferences** (mute / custom thresholds) | 2-3 days | Quietens noise without losing important events. |
+| **Counterparty / issuer field** ("Issued by Acme Capital") | ~1 day | Structured extension of notes. Enables future grouping. |
+| **Pinned KPI tiles on dashboard** (user-defined widgets) | 3-4 days | User-built dashboard = personal config = switching cost. |
+| **Goal tracker** ("$50k by July" + progress bar) | 3-4 days | Emotional commitment > functional commitment. |
+| **Shared view-only links for accountants** | 3-4 days | Two-sided stickiness — accountants bookmark Vestream during tax season. |
+| **Document attachments** (grant PDFs, side letters) | ~5 days | Highest per-feature value; needs Supabase storage. |
+| **Email forwarding bucket** (`vestr-{id}@vestream.io` → docs) | 1-2 weeks | Power-user feature, distinctive moat. |
 
 ### Auto P&L tracking (DEX sells)
 - **What** — Detect when tracked wallets sell vested tokens via DEX swaps; pull historical USD value at sale; match to claim events for cost basis; surface auto-populated rows in the existing P&L panel.

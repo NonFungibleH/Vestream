@@ -66,10 +66,37 @@ function isoDateTime(d: Date): string {
   return d.toISOString().replace("T", " ").slice(0, 19); // YYYY-MM-DD HH:MM:SS UTC
 }
 
+/**
+ * User-supplied per-stream context, threaded into all CSV builders below.
+ * Caller passes a `Map<streamId, { customName, notes }>` populated via
+ * `getStreamAnnotationsForUser()`. When absent, builders fall back to the
+ * existing protocol-derived descriptions — annotations are pure additive
+ * context, never replacing the underlying machine-readable data.
+ */
+export interface AnnotationsByStreamId {
+  get(streamId: string): { customName: string | null; notes: string | null } | undefined;
+}
+
+/** Compose a description fragment from a stream's annotation. Returns "" when
+ *  no annotation exists or when both fields are blank. */
+function annotationDescription(
+  annotations: AnnotationsByStreamId | undefined,
+  streamId:    string,
+): string {
+  const a = annotations?.get(streamId);
+  if (!a) return "";
+  const parts: string[] = [];
+  if (a.customName) parts.push(a.customName);
+  if (a.notes)      parts.push(a.notes);
+  return parts.join(" — ");
+}
+
 // ── Vestream generic format ─────────────────────────────────────────────────
-// 12 columns. Designed to work as the source-of-truth dump that the user
-// can hand to any accountant — no software-specific formatting.
-function buildVestreamGeneric(rows: ClaimRow[]): string {
+// 13 columns. Designed to work as the source-of-truth dump that the user
+// can hand to any accountant — no software-specific formatting. The
+// "Description" column carries the user's custom name + notes (when set)
+// so accountants get human context alongside the machine-readable data.
+function buildVestreamGeneric(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
   const header = csvRow([
     "Date (UTC)",
     "Time (UTC)",
@@ -83,6 +110,7 @@ function buildVestreamGeneric(rows: ClaimRow[]): string {
     "Recipient Address",
     "Tx Hash",
     "Stream ID",
+    "Description",
   ]);
   const body = rows.map((r) => csvRow([
     isoDate(r.claimedAt),
@@ -97,6 +125,7 @@ function buildVestreamGeneric(rows: ClaimRow[]): string {
     r.recipient,
     r.txHash.startsWith("synthetic:") ? "" : r.txHash,
     r.streamId,
+    annotationDescription(annotations, r.streamId),
   ]));
   return [header, ...body].join("\n") + "\n";
 }
@@ -110,7 +139,7 @@ function buildVestreamGeneric(rows: ClaimRow[]): string {
 // For vesting claims, the Sent side is empty (nothing leaves your wallet —
 // vested tokens arrive). Received side is the token + amount. Net Worth is
 // the USD value at claim, which Koinly uses to compute cost basis.
-function buildKoinly(rows: ClaimRow[]): string {
+function buildKoinly(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
   const header = csvRow([
     "Date",
     "Sent Amount",
@@ -125,20 +154,29 @@ function buildKoinly(rows: ClaimRow[]): string {
     "Description",
     "TxHash",
   ]);
-  const body = rows.map((r) => csvRow([
-    isoDateTime(r.claimedAt) + " UTC",
-    "",                                    // Sent Amount (empty — nothing left wallet)
-    "",                                    // Sent Currency
-    tokensWhole(r.amount, r.tokenDecimals),
-    r.tokenSymbol ?? r.tokenAddress.slice(0, 8),
-    "",                                    // Fee Amount (gas not yet captured — Phase 2)
-    "",                                    // Fee Currency
-    r.usdValueAtClaim ?? "",
-    r.usdValueAtClaim ? "USD" : "",
-    "income",                              // Koinly label for vesting claims
-    `Vesting claim on ${r.protocol} (${CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`})`,
-    r.txHash.startsWith("synthetic:") ? "" : r.txHash,
-  ]));
+  const body = rows.map((r) => {
+    // Description column: when the user has annotated this stream, prefix
+    // their custom name + notes onto the machine description. Format is
+    // "<custom> — Vesting claim on <protocol> (<chain>)" so accountants
+    // see context first, technical detail second.
+    const ann = annotationDescription(annotations, r.streamId);
+    const machine = `Vesting claim on ${r.protocol} (${CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`})`;
+    const description = ann ? `${ann} — ${machine}` : machine;
+    return csvRow([
+      isoDateTime(r.claimedAt) + " UTC",
+      "",                                    // Sent Amount (empty — nothing left wallet)
+      "",                                    // Sent Currency
+      tokensWhole(r.amount, r.tokenDecimals),
+      r.tokenSymbol ?? r.tokenAddress.slice(0, 8),
+      "",                                    // Fee Amount (gas not yet captured — Phase 2)
+      "",                                    // Fee Currency
+      r.usdValueAtClaim ?? "",
+      r.usdValueAtClaim ? "USD" : "",
+      "income",                              // Koinly label for vesting claims
+      description,
+      r.txHash.startsWith("synthetic:") ? "" : r.txHash,
+    ]);
+  });
   return [header, ...body].join("\n") + "\n";
 }
 
@@ -181,7 +219,7 @@ function buildCoinTracker(rows: ClaimRow[]): string {
 // not Sale. We export it as a 'Date Acquired' row with USD = cost basis,
 // proceeds blank. The user files this under Form 1040 Schedule 1 (Other
 // Income) and uses the cost basis later when they sell.
-function buildTurboTax(rows: ClaimRow[]): string {
+function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
   const header = csvRow([
     "Date Acquired",
     "Description",
@@ -189,27 +227,36 @@ function buildTurboTax(rows: ClaimRow[]): string {
     "Proceeds",
     "Gain/Loss",
   ]);
-  const body = rows.map((r) => csvRow([
-    isoDate(r.claimedAt),
-    `${tokensWhole(r.amount, r.tokenDecimals)} ${r.tokenSymbol ?? r.tokenAddress.slice(0, 8)} via ${r.protocol}`,
-    r.usdValueAtClaim ?? "",
-    "",
-    "",
-  ]));
+  const body = rows.map((r) => {
+    const ann = annotationDescription(annotations, r.streamId);
+    const machine = `${tokensWhole(r.amount, r.tokenDecimals)} ${r.tokenSymbol ?? r.tokenAddress.slice(0, 8)} via ${r.protocol}`;
+    const description = ann ? `${ann} — ${machine}` : machine;
+    return csvRow([
+      isoDate(r.claimedAt),
+      description,
+      r.usdValueAtClaim ?? "",
+      "",
+      "",
+    ]);
+  });
   return [header, ...body].join("\n") + "\n";
 }
 
 // ── Public dispatcher ──────────────────────────────────────────────────────
 
-export function buildClaimsCsv(rows: ClaimRow[], format: ExportFormat): string {
+export function buildClaimsCsv(
+  rows:        ClaimRow[],
+  format:      ExportFormat,
+  annotations?: AnnotationsByStreamId,
+): string {
   switch (format) {
-    case "vestream-generic": return buildVestreamGeneric(rows);
-    case "koinly":           return buildKoinly(rows);
-    case "cointracker":      return buildCoinTracker(rows);
-    case "turbotax":         return buildTurboTax(rows);
+    case "vestream-generic": return buildVestreamGeneric(rows, annotations);
+    case "koinly":           return buildKoinly(rows, annotations);
+    case "cointracker":      return buildCoinTracker(rows);  // no description column in CT format
+    case "turbotax":         return buildTurboTax(rows, annotations);
     default:
       // Exhaustive switch; TypeScript will catch missing branches at compile time.
-      return buildVestreamGeneric(rows);
+      return buildVestreamGeneric(rows, annotations);
   }
 }
 

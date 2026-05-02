@@ -17,6 +17,7 @@ import { users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { getClaimHistoryForUser } from "@/lib/vesting/ingestors";
 import { buildClaimsCsv, csvFilename, type ExportFormat } from "@/lib/vesting/csv-exports";
+import { getStreamAnnotationsForUser } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,16 @@ export async function GET(req: NextRequest) {
     until: until ? new Date(until) : undefined,
   });
 
-  const csv = buildClaimsCsv(events, format);
+  // Load the user's stream annotations and build a Map for O(1) lookup
+  // inside the CSV builders. Most users have 0–10 annotations so this is
+  // a cheap query.
+  const annotationsList = await getStreamAnnotationsForUser(u.id);
+  const annotationMap = new Map<string, { customName: string | null; notes: string | null }>();
+  for (const a of annotationsList) {
+    annotationMap.set(a.streamId, { customName: a.customName, notes: a.notes });
+  }
+
+  const csv = buildClaimsCsv(events, format, annotationMap);
 
   // Year hints for the filename — pull from the actual data range so an
   // empty selection produces a sensible filename ("all-time").
