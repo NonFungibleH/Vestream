@@ -144,7 +144,24 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
       lastRefreshedAt: now,
     }));
 
-    // Batch upsert — on conflict update mutable fields only
+    // Batch upsert — on conflict update mutable fields only.
+    //
+    // setWhere skips the UPDATE entirely when nothing changed. Most rows
+    // in a typical cron pass have identical stream_data + is_fully_vested
+    // to what's already in the cache (a vesting schedule that's still
+    // releasing on the same curve produces the same VestingStream every
+    // run). The previous version unconditionally re-wrote every matched
+    // row, generating heavy index updates and WAL volume — the May 2 2026
+    // Supabase Disk IO Budget warning was driven by exactly this pattern.
+    //
+    // Semantics shift slightly: lastRefreshedAt now means "last time this
+    // row's data actually moved" rather than "last time the seeder
+    // touched it". This is more useful diagnostically — the cache-stats
+    // freshestSec column becomes a real "is data still flowing?" signal.
+    // For "did the cron run?" use the seeder's summary log instead.
+    //
+    // IS DISTINCT FROM correctly compares NULLs as equal (unlike `<>`),
+    // and works on jsonb because Postgres canonicalizes jsonb on insert.
     await db
       .insert(vestingStreamsCache)
       .values(rows)
@@ -155,6 +172,10 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
           streamData:      sql`excluded.stream_data`,
           lastRefreshedAt: sql`excluded.last_refreshed_at`,
         },
+        setWhere: sql`
+          ${vestingStreamsCache.streamData} IS DISTINCT FROM excluded.stream_data
+          OR ${vestingStreamsCache.isFullyVested} IS DISTINCT FROM excluded.is_fully_vested
+        `,
       });
     return unique.length;
   } catch (err) {
