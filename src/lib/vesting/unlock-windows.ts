@@ -287,13 +287,23 @@ export async function getUnlocksInWindow(
    *  unlocks"). Empty array → no filter. */
   chainIds?: readonly number[],
 ): Promise<WindowResult> {
-  // Build-time short-circuit. CI runs `next build` with a dummy
-  // `postgres://ci:ci@localhost:5432/ci` URL so module imports resolve;
-  // the real connection isn't reachable, and postgres burns 30-60s per
-  // page in connect-retry, timing the build out. Treat unset OR
-  // localhost-pointing URLs as unreachable.
+  // Build-time short-circuit. Two cases:
+  //  (a) CI runs `next build` with a dummy `postgres://ci:ci@localhost:...`
+  //      URL — postgres burns 30-60s per page in connect-retry.
+  //  (b) Vercel production builds use the real Supabase URL, BUT the
+  //      pooler occasionally drops mid-build (XX000 FATAL). Once that
+  //      happens every subsequent query CONNECTION_CLOSEDs and individual
+  //      static pages still exhaust their 60s build-attempt budget on
+  //      retries — observed May 2 2026, where /sitemap.xml and
+  //      /unlocks/[range] timed out 3× and exited the build.
+  // Both cases short-circuit here. ISR + revalidate fills with real data
+  // on the first runtime request after deploy.
   const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl || /(\/\/|@)(localhost|127\.0\.0\.1)/.test(dbUrl)) {
+  if (
+    !dbUrl ||
+    /(\/\/|@)(localhost|127\.0\.0\.1)/.test(dbUrl) ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
     return EMPTY_WINDOW_RESULT;
   }
 

@@ -146,12 +146,43 @@ function rowToUnlock(row: {
 // ─── queries ─────────────────────────────────────────────────────────────────
 
 /**
+ * Build-time short-circuit predicate.
+ *
+ * Vercel production builds occasionally have the Supabase pooler drop
+ * mid-build (observed May 2 2026 — XX000 FATAL during /sitemap.xml +
+ * /unlocks/[range] static generation). Once it drops, every subsequent
+ * query CONNECTION_CLOSEDs, but individual static pages still exhaust
+ * their per-page 60s budget retrying — three timeouts, exit 1.
+ *
+ * Skipping DB work entirely during `next build` lets the build finish
+ * in seconds. ISR (revalidate=60–3600 depending on the page) then fills
+ * each page with real data on the first runtime request after deploy.
+ *
+ * Same guard already lives inside `getUnlocksInWindow` for the same
+ * reason — keep these in sync.
+ */
+function shouldSkipDbAtBuildTime(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+const EMPTY_PROTOCOL_STATS: ProtocolStats = {
+  totalStreams:   0,
+  activeStreams:  0,
+  chainIds:       [],
+  tokensTracked:  0,
+  recipientCount: 0,
+  lastIndexedAt:  null,
+};
+
+/**
  * Aggregate stats for a protocol (or a merged group — pass multiple adapter IDs
  * for UNCX which has classic + VestingManager variants).
  */
 export async function getProtocolStats(
   adapterIds: readonly string[],
 ): Promise<ProtocolStats> {
+  if (shouldSkipDbAtBuildTime()) return EMPTY_PROTOCOL_STATS;
+
   const filter = adapterFilter(adapterIds);
 
   const [statsRow] = await db
@@ -195,6 +226,8 @@ function toDate(v: Date | string | null | undefined): Date | null {
 export async function getLatestUnlock(
   adapterIds: readonly string[],
 ): Promise<UnlockSummary | null> {
+  if (shouldSkipDbAtBuildTime()) return null;
+
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -221,6 +254,8 @@ export async function getLatestUnlock(
 export async function getNextUpcomingUnlock(
   adapterIds: readonly string[],
 ): Promise<UnlockSummary | null> {
+  if (shouldSkipDbAtBuildTime()) return null;
+
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = await db
     .select({
@@ -303,6 +338,8 @@ export async function getNextUpcomingUnlock(
 export async function getUpcomingUnlockGroupsAcross(
   limit = 10,
 ): Promise<UnlockGroupSummary[]> {
+  if (shouldSkipDbAtBuildTime()) return [];
+
   const nowSec = Math.floor(Date.now() / 1000);
   // Fetch a generous raw row pool. A single mass distribution can collapse
   // 50 rows → 1 group, so we over-fetch to ensure post-grouping we still
@@ -472,6 +509,8 @@ export async function getUpcomingUnlocksForProtocol(
   adapterIds: readonly string[],
   limit = 6,
 ): Promise<UnlockGroupSummary[]> {
+  if (shouldSkipDbAtBuildTime()) return [];
+
   const nowSec = Math.floor(Date.now() / 1000);
   // 60-second buffer past now: rows whose endTime is within 60s of `now`
   // routinely render as "in 0s" by the time the HTML reaches the browser.
