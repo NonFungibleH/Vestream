@@ -89,67 +89,62 @@ export default async function StatusPage() {
     cellMap.set(`${c.protocol}|${c.chainId}`, c.freshestSec ?? null);
   }
 
-  // Aggregate freshness across the whole matrix for a top-line summary.
-  let freshCount = 0, staleCount = 0, stuckCount = 0, noneCount = 0;
+  // Binary health signal — green if no cell has crossed the "stuck"
+  // threshold, red if any has. The matrix below shows which cells.
+  // Amber/stale (between cron runs) is expected behaviour and does NOT
+  // flip the headline; only red-band cells count as cause for concern.
+  const stuckCells: Array<{ protocol: string; chainId: SupportedChainId; label: string }> = [];
   for (const proto of protocols) {
+    if (proto.disabled) continue; // paused protocols don't count against health
     for (const chainId of CHAIN_COLUMNS) {
       if (!proto.chainIds.includes(chainId)) continue;
       const b = bucket(cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null, nowSec);
-      if (b.kind === "fresh") freshCount++;
-      else if (b.kind === "stale") staleCount++;
-      else if (b.kind === "stuck") stuckCount++;
-      else noneCount++;
+      if (b.kind === "stuck") {
+        stuckCells.push({ protocol: proto.name, chainId, label: b.label });
+      }
     }
   }
-  const totalCells = freshCount + staleCount + stuckCount + noneCount;
-  const overall: { label: string; color: string } =
-    stuckCount > 0
-      ? { label: "Indexer issue", color: "#dc2626" }
-      : staleCount > totalCells / 2
-      ? { label: "Slow refresh", color: "#d97706" }
-      : { label: "All systems normal", color: "#10b981" };
+  const isHealthy = stuckCells.length === 0;
+  const overall = isHealthy
+    ? { label: "All systems operational", color: "#10b981" }
+    : { label: `${stuckCells.length} cell${stuckCells.length === 1 ? "" : "s"} need attention`, color: "#dc2626" };
 
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <SiteNav theme="light" />
 
       <main className="mx-auto max-w-5xl px-4 md:px-8 pb-24 pt-12">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <span
-              style={{ background: overall.color, boxShadow: `0 0 12px ${overall.color}80` }}
-              className="inline-block h-2.5 w-2.5 rounded-full"
-            />
-            <h1 className="text-3xl font-semibold" style={{ letterSpacing: "-0.02em", color: "#0f172a" }}>
+        {/* Hero — single binary signal. Big enough that the
+            green/red is the only thing the eye lands on at first glance. */}
+        <div
+          className="mb-10 rounded-2xl p-8 flex items-center gap-5"
+          style={{
+            background: `${overall.color}0F`,
+            border:     `1px solid ${overall.color}40`,
+          }}
+        >
+          <span
+            className="inline-block rounded-full flex-shrink-0"
+            style={{
+              background: overall.color,
+              width:      28,
+              height:     28,
+              boxShadow:  `0 0 24px ${overall.color}A0`,
+            }}
+          />
+          <div>
+            <h1
+              className="text-3xl md:text-4xl font-semibold"
+              style={{ letterSpacing: "-0.02em", color: overall.color }}
+            >
               {overall.label}
             </h1>
+            <p className="text-sm mt-1" style={{ color: "#64748b" }}>
+              {isHealthy
+                ? "Every protocol × chain we index is refreshing within the expected window."
+                : "One or more cells haven't refreshed in over 30 hours. See the matrix below for which."}
+            </p>
           </div>
-          <p className="text-sm" style={{ color: "#64748b" }}>
-            Live indexing freshness across every supported protocol × chain. Auto-refreshes every minute.
-          </p>
-        </div>
-
-        {/* Summary chips */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {([
-            ["Fresh",  freshCount, "#10b981"],
-            ["Slow",   staleCount, "#d97706"],
-            ["Stuck",  stuckCount, "#dc2626"],
-            ["Not indexed", noneCount, "#94a3b8"],
-          ] as const).map(([label, count, color]) => (
-            <div
-              key={label}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-              style={{
-                background: `${color}14`,
-                border: `1px solid ${color}33`,
-                color,
-              }}
-            >
-              <span>{label}</span>
-              <span style={{ opacity: 0.85 }}>{count}</span>
-            </div>
-          ))}
         </div>
 
         {/* Matrix */}
@@ -205,35 +200,46 @@ export default async function StatusPage() {
                     </div>
                   </td>
                   {CHAIN_COLUMNS.map((chainId) => {
+                    // Three distinct cell states:
+                    //   1. Chain not supported by this protocol → blank cell
+                    //   2. Chain supported but cache empty (e.g. brand-new
+                    //      adapter that hasn't run yet) → grey "Pending" pill
+                    //   3. Chain has data → fresh/stale/stuck pill
                     if (!proto.chainIds.includes(chainId)) {
+                      return <td key={chainId} className="px-3 py-3" />;
+                    }
+                    const freshestSec = cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null;
+                    if (freshestSec === null) {
                       return (
-                        <td
-                          key={chainId}
-                          className="px-3 py-3 text-xs"
-                          style={{ color: "#cbd5e1" }}
-                        >
-                          —
+                        <td key={chainId} className="px-3 py-3 text-xs">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono"
+                            style={{
+                              background: "rgba(100,116,139,0.08)",
+                              color:      "#64748b",
+                              border:     "1px dashed rgba(100,116,139,0.30)",
+                            }}
+                          >
+                            Pending
+                          </span>
                         </td>
                       );
                     }
-                    const freshestSec = cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null;
-                    const b           = bucket(freshestSec, nowSec);
+                    const b = bucket(freshestSec, nowSec);
                     return (
                       <td key={chainId} className="px-3 py-3 text-xs">
                         <span
                           className="inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono"
                           style={{
-                            background: b.kind === "none" ? "transparent" : `${b.color}14`,
+                            background: `${b.color}14`,
                             color:      b.color,
-                            border:     b.kind === "none" ? "none" : `1px solid ${b.color}33`,
+                            border:     `1px solid ${b.color}33`,
                           }}
                         >
-                          {b.kind !== "none" && (
-                            <span
-                              className="inline-block h-1.5 w-1.5 rounded-full"
-                              style={{ background: b.color }}
-                            />
-                          )}
+                          <span
+                            className="inline-block h-1.5 w-1.5 rounded-full"
+                            style={{ background: b.color }}
+                          />
                           {b.label}
                         </span>
                       </td>
@@ -261,7 +267,10 @@ export default async function StatusPage() {
               <span style={{ color: "#dc2626", fontWeight: 600 }}>Red</span> = more than 30 hours stale; the indexer for that cell may be broken.
             </li>
             <li>
-              <span style={{ color: "#94a3b8", fontWeight: 600 }}>—</span> = chain not supported by that protocol, or not yet indexed.
+              <span style={{ color: "#64748b", fontWeight: 600 }}>Pending</span> = chain we support but the cache is empty (newly added adapter, awaiting first seed run).
+            </li>
+            <li>
+              <span style={{ color: "#cbd5e1", fontWeight: 600 }}>blank</span> = protocol does not deploy on that chain.
             </li>
           </ul>
           <p className="mt-4">
