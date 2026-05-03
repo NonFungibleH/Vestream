@@ -185,6 +185,7 @@ export async function POST(req: NextRequest) {
         userType:            user.userType,
         vestingCount:        user.vestingCount,
         currentTracking:     user.currentTracking,
+        audienceCategory:    user.audienceCategory ?? null,
         onboardingCompleted: !!user.onboardingCompletedAt,
       },
     });

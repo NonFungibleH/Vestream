@@ -27,6 +27,13 @@ export const users = pgTable("users", {
   userType:              text("user_type"),           // "team_member"|"investor"|"fund_manager"|"airdrop_recipient"
   vestingCount:          text("vesting_count"),        // "1-3"|"4-10"|"10+"|"unsure"
   currentTracking:       text("current_tracking"),     // "spreadsheet"|"protocol_websites"|"nothing"|"another_tool"
+  // Worker-pivot field: which side of the product this user identifies with.
+  // Drives dashboard hero copy, default tax export type, and which
+  // protocols get recommended. Nullable for back-compat — existing users
+  // read as "unknown" and get the legacy investor-flavoured UI until they
+  // self-identify (next onboarding visit or via settings).
+  //   "investor" | "worker" | "both"
+  audienceCategory:      text("audience_category"),
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
   expoPushToken:         text("expo_push_token"),
   // Billing / trial columns (Task 17)

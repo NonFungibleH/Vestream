@@ -11,13 +11,23 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { userType, vestingCount, currentTracking, hoursBeforeUnlock } = body;
+  const { userType, vestingCount, currentTracking, hoursBeforeUnlock, audienceCategory } = body;
+
+  // Worker-pivot field: only persist if it's one of the three valid
+  // values — anything else is ignored (defensive against an older client
+  // sending arbitrary strings; the UI enforces the allowed set).
+  const validAudience = audienceCategory === "investor"
+                     || audienceCategory === "worker"
+                     || audienceCategory === "both"
+                       ? (audienceCategory as "investor" | "worker" | "both")
+                       : null;
 
   await db.update(users)
     .set({
       userType:              userType             ?? null,
       vestingCount:          vestingCount         ?? null,
       currentTracking:       currentTracking      ?? null,
+      audienceCategory:      validAudience,
       onboardingCompletedAt: new Date(),
     })
     .where(eq(users.id, userId));
