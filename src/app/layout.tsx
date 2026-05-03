@@ -30,9 +30,14 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // description>, OG and Twitter cards. Keeping these as constants makes it
 // obvious when one card drifts from another (the sin we just paid for —
 // Twitter and OG had subtly different descriptions before this commit).
-const SITE_TITLE       = "Vestream — Free Token Vesting Tracker + Tax Reports for 9 Protocols";
+// Title + description cover BOTH audiences (investor vesting + worker
+// payroll/streaming) — the worker pivot launched May 2026 added LlamaPay
+// and Sablier Flow as first-class stream-category protocols. Tax export
+// vocabulary likewise mentions both Koinly/CoinTracker (capital-gains)
+// and 1099-NEC/SA103 (ordinary-income) so search picks up either intent.
+const SITE_TITLE       = "Vestream — Token Vesting & Crypto Payroll Tracker · Tax-ready Exports";
 const SITE_DESCRIPTION =
-  "Track every token unlock across 9 protocols (Sablier, Hedgey, UNCX, Streamflow + more) on Ethereum, Base, BNB, Polygon and Solana. Tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
+  "Track every token you're owed — investor vesting unlocks (Sablier, Hedgey, UNCX, Streamflow + more) and crypto payroll streams (LlamaPay, Sablier Flow). Tax-ready CSV exports for Koinly, CoinTracker, TurboTax, and 1099-NEC / SA103 ordinary-income summaries. Free, no signup.";
 
 export const metadata: Metadata = {
   title: SITE_TITLE,

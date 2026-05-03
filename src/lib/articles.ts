@@ -4338,6 +4338,171 @@ const articles: Article[] = [
     ],
   },
 
+  // ── Article 22 — Worker-pivot SEO surface ────────────────────────────────────
+  // Targets the "I get paid in crypto" search audience (DAO contributors,
+  // remote contractors, grant recipients). Distinct enough from the
+  // existing investor-flavoured tax guide that both can rank without
+  // cannibalising each other.
+  {
+    slug:        "crypto-payroll-and-contributor-income-guide",
+    title:       "Crypto Payroll & Contributor Income: A Practical 2026 Guide",
+    excerpt:     "Getting paid in tokens is now mainstream — DAO contributors, crypto-native contractors, and grant recipients all need to track receipts, runway, and tax. Here is how it works, what your tax authority expects, and how to never miss a payslip.",
+    publishedAt: "2026-05-03",
+    updatedAt:   "2026-05-03",
+    readingTime: "10 min read",
+    category:    "Guides",
+    tags:        ["crypto payroll", "stablecoin salary", "DAO contributor pay", "1099-NEC", "SA103", "ordinary income", "crypto streaming", "LlamaPay", "Sablier Flow"],
+    content: [
+      {
+        type: "p",
+        html: "If you are paid in tokens — by a DAO, a remote-first crypto company, a grant programme, or as a contractor billing in stablecoins — you are already part of the fastest-growing slice of crypto's recipient-side economy. <strong>This is not investor vesting</strong>. It is payroll, and it is taxed completely differently.",
+      },
+      {
+        type: "p",
+        html: "This guide is for the worker side: the contributor showing up Monday morning to ship code in exchange for USDC, the marketing lead taking 60% of comp in a project's native token, the freelance designer billing five DAOs at once. We cover the rails (LlamaPay, Sablier Flow, Superfluid), the tax framework (US 1099-NEC, UK SA103, broad guidance for other jurisdictions), and the operational practices that turn token income from chaotic to clean.",
+      },
+      {
+        type: "callout",
+        emoji: "📌",
+        title: "The big distinction",
+        body:  "Investor vesting tokens are <em>capital assets</em> that vest into your control. Worker payment tokens are <em>ordinary income</em> at the moment they hit your wallet. That single distinction changes the tax rate, the form you file on, and the cost basis math.",
+      },
+
+      { type: "h2", text: "How Crypto Payroll Actually Works" },
+      {
+        type: "p",
+        html: "Three patterns dominate the recipient side of token payroll right now. Each has a different feel; understanding which one your payer uses helps you reason about cashflow.",
+      },
+      { type: "h3", text: "Pattern 1 — Continuous per-second streaming" },
+      {
+        type: "p",
+        html: "<strong>LlamaPay</strong> and <strong>Sablier Flow</strong> are the dominant rails. Your employer creates a stream from their treasury to your wallet at a set rate — say <code>$5,000/month / 30 / 24 / 60 / 60 ≈ $0.00193 per second</code>. The contract literally accrues your balance one second at a time. You can withdraw any time; whatever you do not withdraw stays earning in the contract.",
+      },
+      {
+        type: "p",
+        html: "This is how crypto-native companies pay because it cancels two things working in real-world payroll: (a) the awkward two-week lag between work done and money received, and (b) the operational overhead of running a payroll cycle. The treasury just deposits a quarter's runway and the math handles itself.",
+      },
+      { type: "h3", text: "Pattern 2 — Cliff + linear vesting" },
+      {
+        type: "p",
+        html: "Common for team token grants and longer-tenure contributor agreements. <strong>Sablier Lockup</strong> and <strong>Hedgey</strong> are the typical rails. You receive a non-transferable claim against a pool of tokens that unlocks linearly (often after a 6-12 month cliff) over 2-4 years. Each unlock is taxable income at FMV-on-receipt.",
+      },
+      {
+        type: "p",
+        html: "If you have BOTH a streaming salary AND a longer vesting grant from the same employer, you have two simultaneous tax events on different cadences. The streaming side is usually higher-frequency-lower-volume; the vesting side is lower-frequency-higher-volume. They go on the same return but you'll want to track them separately.",
+      },
+      { type: "h3", text: "Pattern 3 — Milestone or one-shot grants" },
+      {
+        type: "p",
+        html: "Grant programmes (Optimism RetroPGF, Arbitrum STIP, Gitcoin rounds) and bounty platforms drop tokens to recipients on milestone completion. No vesting, no stream — just a transfer. Tax treatment is identical to streaming: ordinary income at FMV on the date of receipt.",
+      },
+
+      { type: "h2", text: "What Your Tax Authority Expects" },
+      {
+        type: "p",
+        html: "Three jurisdictions cover the bulk of crypto-native workers. The framework in each is similar enough that one operational practice (track FMV at receipt, sum totals annually, file in the ordinary-income section) covers everyone.",
+      },
+      { type: "h3", text: "United States" },
+      {
+        type: "p",
+        html: "If you are a contractor (1099-NEC), you owe tax on <strong>gross income at FMV-on-receipt</strong> — no deduction for the fact you held the token instead of selling immediately. Goes on Schedule C (self-employment) or as Other Income on Schedule 1, depending on whether crypto-paid contracting is a trade-or-business for you.",
+      },
+      {
+        type: "p",
+        html: "Each receipt also establishes a <strong>cost basis</strong> equal to the FMV used as income. When you later sell or convert that token, your capital gain or loss is calculated against that basis. Lose track of basis and you double-pay tax — once at receipt, again on the entire sale price as if it were pure profit.",
+      },
+      { type: "h3", text: "United Kingdom" },
+      {
+        type: "p",
+        html: "HMRC treats crypto received for services as miscellaneous income or self-employment turnover, depending on whether the work is a trade. Most regular contributors fall under self-employment and report on <strong>SA103S box 9</strong> (turnover) or <strong>SA103F box 15</strong> (full self-employment).",
+      },
+      {
+        type: "p",
+        html: "Convert each receipt to GBP using HMRC's published exchange rates — they publish monthly averages and yearly averages on gov.uk. The choice of rate (transaction-time vs year-end average) is a documentable methodology; pick one and apply it consistently across the year.",
+      },
+      { type: "h3", text: "Other jurisdictions" },
+      {
+        type: "p",
+        html: "Most OECD jurisdictions follow the same pattern: ordinary income at FMV-on-receipt, in your local fiat. Notable exceptions: Germany has a one-year holding rule that can convert later sales into tax-free disposals (income side is still taxable normally). Portugal historically had favourable treatment but updated its laws in 2023 to bring crypto-paid income into the standard income brackets. Always check local guidance.",
+      },
+
+      { type: "h2", text: "The Operational Practice That Saves You at Year-End" },
+      {
+        type: "p",
+        html: "Workers paid in tokens often arrive at March or April having done none of the bookkeeping. The result is a frantic week of trying to reconstruct receipts from on-chain history while the tax deadline closes. Three habits make this almost-trivial instead.",
+      },
+      {
+        type: "ol",
+        items: [
+          "<strong>Track every payer.</strong> Add the streaming contract addresses (or grant programme contract addresses) to Vestream so every receipt lands in your dashboard automatically. No re-keying at year-end.",
+          "<strong>Capture FMV at the moment of each receipt.</strong> Tax software needs per-receipt USD value, not a single annual total. Vestream pre-prices every claim using DexScreener / CoinGecko, with a confidence flag so you know which figures need a manual sanity check.",
+          "<strong>Run the year-end CSV the day after Dec 31.</strong> Drop it into Koinly / CoinTracker / your accountant's tool. The income totals slot into 1099-NEC summary boxes (US) or SA103 (UK) directly.",
+        ],
+      },
+
+      { type: "h2", text: "Streaming Salary Specifics" },
+      {
+        type: "p",
+        html: "Streams have one operational quirk that vesting grants don't: <strong>you can leave money in the contract</strong>. The temptation is to claim infrequently to save gas; the catch is that some jurisdictions (UK / Australia) test taxation on <em>unlocked</em> rather than <em>received</em>. Continuously-streaming income is, technically, continuously unlocked.",
+      },
+      {
+        type: "p",
+        html: "Operationally, claim quarterly. Gas costs are a rounding error compared to the bookkeeping clarity of having physical receipts every 3 months. If you absolutely never claim until year-end, talk to your accountant about whether your jurisdiction wants you to recognise unrealised stream balance as income during the year — most don't, but the answer is jurisdiction-specific.",
+      },
+
+      { type: "h2", text: "Where Vesting and Streaming Coexist" },
+      {
+        type: "p",
+        html: "Many contributors have both — a streaming salary AND a longer-term token grant. Both are income, both go on the same return, but the receipts behave differently in tax software:",
+      },
+      {
+        type: "table",
+        headers: ["", "Streaming salary", "Cliff/linear vesting"],
+        rows: [
+          ["Tax category",         "Ordinary income",   "Ordinary income"],
+          ["Frequency",             "Per claim (often quarterly in practice)", "Per unlock event (monthly / quarterly / annually)"],
+          ["FMV basis",             "Date of withdrawal",                       "Date of unlock (tx hash)"],
+          ["Cost basis carry-over", "Yes — at the FMV used as income",          "Yes — at the FMV used as income"],
+          ["US form",               "Schedule C / 1099-NEC summary",            "Schedule C / 1099-NEC summary (or Schedule 1 Other Income)"],
+          ["UK form",               "SA103 turnover (box 9 / 15)",              "SA103 turnover (box 9 / 15)"],
+        ],
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          { q: "Is my crypto salary capital gains or ordinary income?",
+            a: "Ordinary income, almost everywhere. Capital gains apply to ASSETS YOU OWN that change in value — but tokens you receive as compensation aren't yours until you receive them, so the receipt itself is the income event. Later sales of those received tokens DO trigger capital gains, calculated against the cost basis you established at receipt."
+          },
+          { q: "Do I owe tax on a stream balance I haven't withdrawn?",
+            a: "Jurisdiction-specific. US, Canada, Germany, most of the EU: no — taxation is on withdrawal. UK and Australia: maybe — both use a beneficial-ownership test that can apply to streamed-but-unwithdrawn balance. When in doubt, withdraw at least quarterly and ask a local accountant before year-end."
+          },
+          { q: "What if my employer pays me in their illiquid token instead of stablecoin?",
+            a: "You owe tax at FMV on the receipt date — same rule. The challenge is establishing FMV when there's no market. Common practice: use the most recent OTC sale, the most recent funding-round valuation, or zero. Whatever you choose, document it as your methodology and apply it consistently."
+          },
+          { q: "Can I deduct gas fees from my streaming salary?",
+            a: "If you're filing as self-employed (Schedule C / SA103F), gas paid to claim is a business expense — deductible. If you're treating crypto income as miscellaneous Other Income (Schedule 1) the answer is murkier; talk to your accountant. Vestream's exports include gas USD value per claim so the totals are easy to grab."
+          },
+          { q: "How does this compare to an investor vesting allocation?",
+            a: "Same tax category (ordinary income) but the relationship to capital-gains is different. Worker income at receipt establishes a cost basis; investors who SAFT-purchased tokens have a cost basis from purchase, not from unlock — the unlock just removes the time-lock. Vestream branches the income statement by audience so the framing matches: 'Vesting income' for investors, 'Crypto income' for workers, 'Token income' for those who are both."
+          },
+          { q: "Does Vestream handle workers paid in tokens?",
+            a: "Yes — that's the worker side of the product. Add the streaming or grant contract address to your dashboard, set notifications, run the year-end Payroll Income CSV. The whole flow is symmetrical with the investor side; the difference is the tax export shape and the framing copy."
+          },
+        ],
+      },
+
+      { type: "h2", text: "Track Your Token Payslip" },
+      {
+        type: "callout",
+        emoji: "💸",
+        title: "Set up the dashboard once, never lose track of a receipt",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your wallet, and select the streaming contracts paying you. Every accrual hits your dashboard with FMV-on-receipt automatically; year-end CSV maps directly to 1099-NEC / SA103 / your local form.",
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {
