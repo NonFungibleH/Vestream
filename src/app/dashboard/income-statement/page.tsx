@@ -54,6 +54,43 @@ interface IncomeStatement {
   byToken:        TokenRow[];
   byYearProtocol: PivotRow[];
   confidenceMix:  ConfidenceMix;
+  audienceCategory?: string | null;
+}
+
+/** Centralised copy table — keeps the three audience modes labelled
+ *  consistently across both the interactive page and the print page.
+ *  Investor framing emphasises capital assets / cliff events; worker
+ *  framing emphasises ordinary income / continuous receipt. "Both"
+ *  hedges by using neutral language. */
+function copyForAudience(category: string | null | undefined): {
+  eyebrow:  string;
+  title:    string;
+  subtitle: (currency: string) => string;
+} {
+  const audience = category ?? "investor";
+  if (audience === "worker") {
+    return {
+      eyebrow:  "Crypto income",
+      title:    "Crypto income statement",
+      subtitle: (currency) =>
+        `Ordinary income received from streams, grants, and contributor pay — broken down by tax year, payer, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
+    };
+  }
+  if (audience === "both") {
+    return {
+      eyebrow:  "Token income",
+      title:    "Token income statement",
+      subtitle: (currency) =>
+        `Every token you've received — vesting unlocks, salary streams, and grant disbursements — broken down by tax year, source, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
+    };
+  }
+  // investor (default / null)
+  return {
+    eyebrow:  "Vesting income",
+    title:    "Vesting income statement",
+    subtitle: (currency) =>
+      `What vesting paid you, broken down by tax year, protocol, and token. All amounts USD-anchored at the moment of each on-chain claim${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
+  };
 }
 
 const PROTOCOL_LABELS: Record<string, string> = {
@@ -133,21 +170,23 @@ export default function IncomeStatementPage() {
             <span>/</span>
             <span>Income statement</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Vesting income
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Vesting income statement
-          </h1>
-          <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
-            What vesting paid you, broken down by tax year, protocol, and token.
-            All amounts USD-anchored at the moment of each on-chain claim
-            {currency !== "USD" && (
-              <>, displayed in {currency} at today&apos;s rate</>
-            )}
-            .
-          </p>
+          {(() => {
+            const copy = copyForAudience(data?.audienceCategory);
+            return (
+              <>
+                <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+                  {copy.eyebrow}
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
+                  {copy.title}
+                </h1>
+                <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
+                  {copy.subtitle(currency)}
+                </p>
+              </>
+            );
+          })()}
           {/* Jurisdiction caveat — UK / AU users may need to map claim-date data
               to unlock-date tax events. Surfaced inline so it's not buried at
               the bottom of the page where the user might miss it. */}

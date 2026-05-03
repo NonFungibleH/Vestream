@@ -31,16 +31,22 @@ import { getSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
-async function getAuthedUser(): Promise<{ userId: string } | null> {
+async function getAuthedUser(): Promise<{
+  userId:           string;
+  audienceCategory: string | null;
+} | null> {
   const session = await getSession();
   if (!session.address) return null;
   const [u] = await db
-    .select({ id: users.id })
+    .select({
+      id:               users.id,
+      audienceCategory: users.audienceCategory,
+    })
     .from(users)
     .where(eq(users.address, session.address.toLowerCase()))
     .limit(1);
   if (!u) return null;
-  return { userId: u.id };
+  return { userId: u.id, audienceCategory: u.audienceCategory };
 }
 
 function parseDateRange(req: NextRequest): { since?: Date; until?: Date } {
@@ -214,5 +220,11 @@ export async function GET(req: NextRequest) {
     byToken,
     byYearProtocol,
     confidenceMix,
+    // Surfaces to the income-statement page + print page so they can
+    // branch headings and framing copy. Investor → "Vesting Income
+    // Statement" (cliff/unlock-flavoured); Worker → "Crypto Income
+    // Statement" (ordinary-income-flavoured); Both → mixed; null →
+    // investor-flavoured fallback.
+    audienceCategory: auth.audienceCategory,
   });
 }

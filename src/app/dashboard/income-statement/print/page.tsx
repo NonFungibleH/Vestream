@@ -51,6 +51,39 @@ interface IncomeStatement {
   byProtocol:     ProtocolRow[];
   byToken:        TokenRow[];
   confidenceMix:  ConfidenceMix;
+  audienceCategory?: string | null;
+}
+
+/** Print-page header copy keyed by audience. Drops "Vesting" framing for
+ *  workers — accountants reading the worker version need to know up-front
+ *  that this is ordinary-income (Schedule C / SA103) not capital-asset
+ *  (Schedule D / Capital Gains). Mirrors copyForAudience() in the
+ *  interactive page; differs in tone (more formal, accountant-facing). */
+function printHeaderForAudience(category: string | null | undefined): {
+  rubric:   string;
+  receiptLabel: string;  // "claim" vs "receipt" — used in the totals subtitle
+  taxFraming: string;    // one-liner under the headline totals
+} {
+  const audience = category ?? "investor";
+  if (audience === "worker") {
+    return {
+      rubric:       "Vestream — Crypto Income Report",
+      receiptLabel: "receipt",
+      taxFraming:   "Ordinary income at FMV-on-receipt. US: Schedule C / 1099-NEC summary. UK: SA103 self-employment turnover. Convert to local currency at year-end published rates.",
+    };
+  }
+  if (audience === "both") {
+    return {
+      rubric:       "Vestream — Token Income Report",
+      receiptLabel: "receipt",
+      taxFraming:   "Combines investor vesting income (capital asset basis events) with worker streaming income (ordinary income). Treat each line per its source category — your accountant can split filings.",
+    };
+  }
+  return {
+    rubric:       "Vestream — Vesting Income Report",
+    receiptLabel: "claim",
+    taxFraming:   "USD-anchored at the date of each on-chain claim — the canonical tax-event basis used for capital-asset vesting (Schedule D / capital-gains framework).",
+  };
 }
 
 const PROTOCOL_LABELS: Record<string, string> = {
@@ -185,16 +218,26 @@ export default function PrintIncomeStatementPage() {
           </button>
         </div>
 
-        {/* Header */}
-        <header className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#0F8A8A" }}>
-            Vestream — Vesting Income Report
-          </p>
-          <h1>Tax year {year}</h1>
-          <p className="text-xs muted mt-1">
-            Generated {generatedAt} · All amounts in USD at the date of each claim
-          </p>
-        </header>
+        {/* Header — audience-aware. Investor and worker both file in
+            different sections of their respective tax codes; the rubric +
+            framing copy here primes the receiving accountant. */}
+        {(() => {
+          const h = printHeaderForAudience(data.audienceCategory);
+          return (
+            <header className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#0F8A8A" }}>
+                {h.rubric}
+              </p>
+              <h1>Tax year {year}</h1>
+              <p className="text-xs muted mt-1">
+                Generated {generatedAt} · All amounts in USD at the date of each {h.receiptLabel}
+              </p>
+              <p className="text-[11px] mt-2" style={{ color: "#475569", maxWidth: 720 }}>
+                {h.taxFraming}
+              </p>
+            </header>
+          );
+        })()}
 
         {/* Headline totals */}
         <section style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>

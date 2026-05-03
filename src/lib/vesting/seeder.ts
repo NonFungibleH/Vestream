@@ -1153,6 +1153,26 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "sablier",      chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.SEPOLIA,  discover: discoverSablierRecipients },
+  // ── Worker-pivot stream protocols (LlamaPay + Sablier Flow) ──
+  // Promoted to run BEFORE Hedgey because the Hedgey discovery path
+  // can eat the 300s subgraphs budget when one or more chains hit the
+  // multicall pagination failure mode. Stream-category cells were
+  // showing Pending forever as a result. Both adapters are
+  // single-endpoint subgraph queries (fast — ~1-2s per chain), so
+  // putting them up front costs the run almost nothing if they were
+  // previously fitting inside the budget.
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.BSC,      discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.POLYGON,  discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.BASE,     discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.ARBITRUM, discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.OPTIMISM, discover: discoverLlamapayRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BSC,      discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BASE,     discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierFlowRecipients },
   // UNCX (TokenVesting V3) — ETH/BSC/Base + Sepolia. Polygon subgraph is
   // deprecated; skipping until a replacement publishes.
   { adapterId: "uncx",         chainId: CHAIN_IDS.ETHEREUM, discover: discoverUncxRecipients },
@@ -1205,27 +1225,9 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.OPTIMISM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
-  // LlamaPay — six EVM mainnets via The Graph network. Subgraph is the
-  // sole data source (no on-chain fallback yet); if a chain's deployment
-  // gets deprecated the run for that chain returns 0 and the others
-  // continue. Same group as the other subgraph adapters.
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.BSC,      discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.POLYGON,  discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.BASE,     discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.ARBITRUM, discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.OPTIMISM, discover: discoverLlamapayRecipients },
-  // Sablier Flow — six EVM mainnets on the SAME Envio endpoint as Lockup
-  // but querying the FlowStream entity instead of LockupStream. Worker-
-  // pivot's flagship EVM payroll protocol alongside LlamaPay (category:
-  // stream). Sepolia covered for testnet flows but adapter accepts more
-  // chains than we seed today; future chains are a one-line add here.
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierFlowRecipients },
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BSC,      discover: discoverSablierFlowRecipients },
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierFlowRecipients },
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BASE,     discover: discoverSablierFlowRecipients },
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierFlowRecipients },
-  { adapterId: "sablier-flow", chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierFlowRecipients },
+  // (LlamaPay + Sablier Flow moved up to the top of STANDARD — they
+  // were timing out at the tail of the run when Hedgey's slower
+  // discovery path consumed the 300s subgraphs budget.)
   // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
   // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)
 ];
