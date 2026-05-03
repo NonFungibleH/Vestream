@@ -11,9 +11,9 @@
 // it for free.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { sql } from "drizzle-orm";
+import { asc, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { vestingStreamsCache } from "@/lib/db/schema";
+import { statusSummary, vestingStreamsCache } from "@/lib/db/schema";
 
 export interface CacheStatsCell {
   /** Adapter id — "sablier", "hedgey", "uncx", "uncx-vm", "unvest",
@@ -41,12 +41,18 @@ export interface CacheStatsCell {
 }
 
 /**
- * Single GROUP BY scan of vesting_streams_cache. Returns one row per
- * (protocol, chainId). Empty cache → empty array (not an error).
+ * Cell rollup reader.
  *
- * Uses `extract(epoch from …)::int` so timestamps come back as integers
- * rather than Date objects — sidesteps the PgBouncer-transaction-pooler
- * Date-marshalling quirk that bit the live-activity route earlier.
+ * Now reads from the materialised `status_summary` table (~60 rows,
+ * sub-50ms) instead of doing a GROUP BY full-scan over
+ * vesting_streams_cache (~50-100k rows). The summary table is maintained
+ * by `refreshStatusSummary()` below, called from the seed-cache cron at
+ * the end of each group's run.
+ *
+ * Falls back to the legacy GROUP BY if the summary table is empty (e.g.
+ * fresh deploy where migration 0016 ran but the cron hasn't yet
+ * populated the rollup). This guarantees /status renders SOMETHING from
+ * day one of the migration without a stale-empty grace period.
  */
 export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // Build-time guard — see CLAUDE.md landmine. The /status page renders
@@ -55,6 +61,50 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // before. ISR fills with real data on the first runtime request.
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
 
+  // ── Fast path: read the materialised rollup ────────────────────────────────
+  const fast = await db
+    .select({
+      protocol:        statusSummary.protocol,
+      chainId:         statusSummary.chainId,
+      streams:         statusSummary.streams,
+      active:          statusSummary.active,
+      withTokenSymbol: statusSummary.withTokenSymbol,
+      distinctTokens:  statusSummary.distinctTokens,
+      freshestSec:     statusSummary.freshestSec,
+      oldestSec:       statusSummary.oldestSec,
+    })
+    .from(statusSummary)
+    .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId));
+
+  if (fast.length > 0) {
+    return fast.map((r) => ({
+      protocol:        r.protocol,
+      chainId:         r.chainId,
+      streams:         r.streams,
+      active:          r.active,
+      withTokenSymbol: r.withTokenSymbol,
+      distinctTokens:  r.distinctTokens,
+      freshestSec:     r.freshestSec,
+      oldestSec:       r.oldestSec,
+    }));
+  }
+
+  // ── Bootstrap fallback: legacy GROUP BY ────────────────────────────────────
+  // Fires on fresh deploys before the first cron run after migration 0016.
+  // Drops out as soon as refreshStatusSummary() has populated even one row.
+  return computeCacheStatsCellsFromCache();
+}
+
+/**
+ * Underlying GROUP BY computation — the same expression that the legacy
+ * getCacheStatsCells() ran on every read. Now extracted so it can be
+ * called from refreshStatusSummary() (write path) and as a bootstrap
+ * fallback in getCacheStatsCells (read path).
+ *
+ * Uses `extract(epoch from …)::int` so timestamps come back as integers
+ * — sidesteps the PgBouncer-transaction-pooler Date-marshalling quirk.
+ */
+async function computeCacheStatsCellsFromCache(): Promise<CacheStatsCell[]> {
   const rows = await db
     .select({
       protocol:        vestingStreamsCache.protocol,
@@ -80,6 +130,58 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
     freshestSec:     r.freshestSec ?? null,
     oldestSec:       r.oldestSec   ?? null,
   }));
+}
+
+/**
+ * Recompute status_summary from the live cache and upsert every row.
+ *
+ * Called from the seed-cache cron at the end of each group's run. One
+ * call covers all (protocol, chainId) cells — the GROUP BY runs once and
+ * we batch-upsert the result. Idempotent: running it twice in a row
+ * produces no schema changes.
+ *
+ * Build-time guard: short-circuits during `next build` so a transient
+ * pooler drop mid-build doesn't kill the build.
+ */
+export async function refreshStatusSummary(): Promise<{ rows: number }> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return { rows: 0 };
+
+  const cells = await computeCacheStatsCellsFromCache();
+  if (cells.length === 0) return { rows: 0 };
+
+  const now = new Date();
+  // Single multi-row upsert is much faster than per-row inserts on a
+  // PgBouncer-pooled connection. ON CONFLICT (protocol, chain_id) keeps
+  // the table at exactly one row per cell — never grows beyond ~60.
+  await db
+    .insert(statusSummary)
+    .values(
+      cells.map((c) => ({
+        protocol:        c.protocol,
+        chainId:         c.chainId,
+        streams:         c.streams,
+        active:          c.active,
+        withTokenSymbol: c.withTokenSymbol,
+        distinctTokens:  c.distinctTokens,
+        freshestSec:     c.freshestSec,
+        oldestSec:       c.oldestSec,
+        computedAt:      now,
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [statusSummary.protocol, statusSummary.chainId],
+      set: {
+        streams:         sql`excluded.streams`,
+        active:          sql`excluded.active`,
+        withTokenSymbol: sql`excluded.with_token_symbol`,
+        distinctTokens:  sql`excluded.distinct_tokens`,
+        freshestSec:     sql`excluded.freshest_sec`,
+        oldestSec:       sql`excluded.oldest_sec`,
+        computedAt:      sql`excluded.computed_at`,
+      },
+    });
+
+  return { rows: cells.length };
 }
 
 /**

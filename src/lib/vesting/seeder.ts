@@ -54,6 +54,7 @@ import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia } from "viem/c
 import { Connection, PublicKey } from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
+import { refreshStatusSummary } from "./cache-stats";
 import { ADAPTER_REGISTRY } from "./adapters";
 import { resolveSubgraphUrl } from "./graph";
 import { PINKSALE_SEED_WALLETS } from "./seed-wallets";
@@ -1373,6 +1374,19 @@ export async function seedAll(
     const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
   }
+
+  // Materialise the (protocol × chain) rollup into status_summary so
+  // /status reads from a small fixed-size table instead of GROUP BY-ing
+  // the full vesting_streams_cache. Runs once at the end of each group's
+  // seed pass — independent failure mode (logged but doesn't break the
+  // seed run, which is what the caller actually asked for).
+  try {
+    const refreshed = await refreshStatusSummary();
+    console.log(`[seeder] status_summary refreshed: ${refreshed.rows} cells`);
+  } catch (err) {
+    console.error("[seeder] status_summary refresh failed:", err);
+  }
+
   return results;
 }
 

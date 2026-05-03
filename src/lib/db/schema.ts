@@ -574,6 +574,45 @@ export const protocolTvlSnapshots = pgTable(
   ]
 );
 
+// ── Status summary materialised view ─────────────────────────────────────────
+// Pre-aggregated rollup of vesting_streams_cache, written by the seeder cron
+// after each successful run. Replaces the GROUP BY full-scan that used to
+// power /status and /api/admin/cache-stats.
+//
+// Why a real table not a view: the GROUP BY is expensive on the live cache
+// table (50-100k rows growing). A real table is sub-50ms to read, cheap to
+// write (~60 rows total — one per protocol × chain), and lets us add a
+// `computedAt` provenance timestamp the UI can surface ("Last computed: 5m
+// ago") without an extra query.
+//
+// Update strategy: refreshStatusSummary() runs the same aggregation
+// expression that getCacheStatsCells() used to compute on-the-fly, then
+// upserts the entire result in one transaction. Called from the seed-cache
+// cron at the END of each group's run (not after each individual job —
+// that would be 30-50 redundant rewrites per cron). Idempotent.
+//
+// Columns mirror CacheStatsCell for one-line read-path migration.
+export const statusSummary = pgTable(
+  "status_summary",
+  {
+    protocol:        text("protocol").notNull(),
+    chainId:         integer("chain_id").notNull(),
+    streams:         integer("streams").notNull().default(0),
+    active:          integer("active").notNull().default(0),
+    withTokenSymbol: integer("with_token_symbol").notNull().default(0),
+    distinctTokens:  integer("distinct_tokens").notNull().default(0),
+    // Unix seconds, nullable — null means cell is empty.
+    freshestSec:     integer("freshest_sec"),
+    oldestSec:       integer("oldest_sec"),
+    // When this rollup row was last computed by the cron — independent of
+    // the freshness numbers above, which describe the underlying data.
+    computedAt:      timestamp("computed_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.protocol, t.chainId] }),
+  ],
+);
+
 // ── Demo web-push subscriptions ───────────────────────────────────────────────
 // Anonymous push subscriptions for the 15-minute vesting demo on /demo.
 // One row per (sessionId, endpoint) pair — when a visitor subscribes we mirror
