@@ -203,17 +203,17 @@ export default async function Home() {
 
         <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
           style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}>
-          Never miss a<br />
+          Every token you&rsquo;re owed,<br />
           <span style={{ color: "#1CB8B8" }}>
-            token unlock.
+            in one place.
           </span>
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#8B8E92" }}>
-          Find and track every vesting you&apos;re owed — across all protocols and chains — and get push notifications the moment a token is ready to claim.
+          Whether you&rsquo;re tracking investor unlocks or a stablecoin salary — find every vesting and payment stream across every protocol and chain, and get notified the moment a token is claimable.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#B8BABD" }}>
-          Plus a full-featured web dashboard for deeper analysis: P&amp;L tracking, monthly cashflow forecasts, exports, and multi-wallet management.
+          Built for both — crypto investors and people paid in tokens. Same dashboard. Same alerts. Same tax-ready exports at year-end.
         </p>
 
         {/* Primary CTA — points straight at the find-vestings scanner. The
@@ -232,7 +232,7 @@ export default async function Home() {
               boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
             }}
           >
-            Find my vestings →
+            Find what I&rsquo;m owed →
           </Link>
 
           <div className="flex flex-col items-center gap-2">

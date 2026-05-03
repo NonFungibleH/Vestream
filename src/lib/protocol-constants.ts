@@ -78,6 +78,18 @@ export interface ProtocolMeta {
    * removal should delete the entry entirely instead.
    */
   disabled?: boolean;
+  /**
+   * Primary product category — drives the /protocols category-split UI
+   * and the homepage messaging. "vesting" = cliff/unlock investor or
+   * team-grant tokens; "stream" = continuous per-second payments
+   * (payroll, contributor pay). Defaults to "vesting" when omitted so
+   * existing entries don't need updating.
+   *
+   * If a protocol legitimately serves both (e.g. Sablier's Lockup product
+   * + their separate Flow product), the secondary category will be added
+   * via a future "categories" array. For now: pick the dominant one.
+   */
+  category?: "vesting" | "stream";
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
@@ -349,9 +361,10 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     slug: "llamapay",
     adapterIds: ["llamapay"],
     name: "LlamaPay",
-    tagline: "Token streaming for vesting and payroll",
+    tagline: "Per-second token streaming for crypto payroll",
+    category: "stream",
     description:
-      "LlamaPay streams ERC-20 tokens by the second — used both for team vesting and for crypto-native payroll. Vestream tracks per-recipient streams across all six EVM chains (Ethereum, BSC, Polygon, Base, Arbitrum, Optimism), surfacing accrued-but-unclaimed balance any time. The TVL headline uses DefiLlama's vesting-specific slice, which excludes their general payments product.",
+      "LlamaPay is the leading per-second token streaming protocol — pay or get paid in real time, claim anytime. Used by DAO contributors, remote contractors, grant programmes, and crypto-native payroll. Vestream tracks every stream you receive across six EVM chains (Ethereum, BSC, Polygon, Base, Arbitrum, Optimism) with accrued-balance updates and tax-ready income exports.",
     // Llama brown — distinctive from the existing palette (no other entry
     // sits in warm neutral). Matches the protocol's literal name + branding.
     color: "#A26B3F",
@@ -369,11 +382,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "llamapay stream tracker",
     ],
     useCases: [
-      { title: "Continuous-stream vesting",  body: "Some token teams use LlamaPay's per-second streaming for team vesting instead of cliff-and-cycle contracts. Vestream tracks the DefiLlama-published vesting slice so the recipient can see total committed value at a glance." },
-      { title: "Crypto-native payroll",      body: "LlamaPay is widely used to pay contractors and remote teams in stablecoins. Vestream's tax-export tooling (Pro tier) treats streamed payments the same way as cliff vests — Koinly / CoinTracker / TurboTax CSVs come out cleanly." },
-      { title: "Multi-chain coverage",       body: "LlamaPay deploys on most major EVM chains. Vestream displays the TVL footprint sourced directly from DefiLlama's vesting-only category — no double-counting with their payments product." },
+      { title: "Crypto-native payroll",     body: "LlamaPay is the default rail for paying remote contractors and DAO contributors in stablecoins. Vestream gives every recipient their own dashboard — see accrued balance, set claim alerts, export year-end income for tax." },
+      { title: "DAO contributor pay",       body: "DAOs that pay core contributors via per-second streams need a recipient-side view. Vestream surfaces the live stream rate, projected monthly income, and a payslip-ready CSV per payer." },
+      { title: "Grant-programme streams",   body: "Grant DAOs use LlamaPay to release funding linearly to recipients over a vesting period. Vestream tracks accrued-but-unclaimed balance across every grant you receive in one place." },
     ],
-    relatedSlugs: ["sablier", "superfluid", "hedgey"],
+    relatedSlugs: ["superfluid", "sablier", "hedgey"],
     testimonials: [],
     // DefiLlama publishes a chainTvls.vesting aggregate distinct from their
     // headline (which is mostly the payments product). The runDefiLlamaSnapshot
