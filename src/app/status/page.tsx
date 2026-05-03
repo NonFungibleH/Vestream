@@ -21,6 +21,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
 import { getCacheStatsCells } from "@/lib/vesting/cache-stats";
+import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 
 export const metadata: Metadata = {
   title:       "Status — Vestream",
@@ -52,6 +53,15 @@ interface StatusBucket {
   color: string;
 }
 
+/** Compact USD format for cell footers — "$1.2M", "$340K", "$12", "—". */
+function formatCompactUsd(n: number): string {
+  if (!isFinite(n) || n <= 0) return "—";
+  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000)     return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)         return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${Math.round(n)}`;
+}
+
 /** Bucket a freshness value (seconds since indexer touched the cell) into a
  *  user-readable label + colour. Thresholds calibrated to our daily seeder:
  *    < 2h        green   (just ran or live-ingest update)
@@ -80,27 +90,62 @@ export default async function StatusPage() {
   // claimed support matrix, not the currently-active one. Disabled protocols
   // get a "Paused" badge so the row isn't misleading.
   const protocols = listProtocols({ includeDisabled: true });
-  const cells     = await getCacheStatsCells();
-  const nowSec    = Math.floor(Date.now() / 1000);
+  // Parallel reads — both queries are independent and the page already
+  // has a 60s revalidate budget.
+  const [cells, tvlRows] = await Promise.all([
+    getCacheStatsCells(),
+    readAllSnapshots(),
+  ]);
+  const nowSec = Math.floor(Date.now() / 1000);
 
-  // Build a quick { "protocol|chainId" → freshestSec } lookup.
+  // Build per-cell lookups. cellMap holds freshness; metaMap holds the
+  // monitoring snapshot (TVL + stream count) for the cell footer.
   const cellMap = new Map<string, number | null>();
   for (const c of cells) {
     cellMap.set(`${c.protocol}|${c.chainId}`, c.freshestSec ?? null);
+  }
+  const metaMap = new Map<string, { tvlUsd: number; streams: number }>();
+  for (const r of tvlRows) {
+    metaMap.set(`${r.protocol}|${r.chainId}`, {
+      tvlUsd:  r.tvlUsd,
+      streams: r.streamCount,
+    });
+  }
+  // Fall back to cache-stats stream count when there's no TVL snapshot
+  // (e.g. brand-new adapter that hasn't had its first daily TVL run).
+  for (const c of cells) {
+    const k = `${c.protocol}|${c.chainId}`;
+    if (!metaMap.has(k)) {
+      metaMap.set(k, { tvlUsd: 0, streams: c.streams });
+    }
   }
 
   // Binary health signal — green if no cell has crossed the "stuck"
   // threshold, red if any has. The matrix below shows which cells.
   // Amber/stale (between cron runs) is expected behaviour and does NOT
   // flip the headline; only red-band cells count as cause for concern.
+  // Pending cells (cache empty for a chain we DO support) are reported
+  // separately in the summary line so they're visible without flipping
+  // the headline red.
+  let operationalCount = 0;
+  let pendingCount     = 0;
   const stuckCells: Array<{ protocol: string; chainId: SupportedChainId; label: string }> = [];
   for (const proto of protocols) {
     if (proto.disabled) continue; // paused protocols don't count against health
     for (const chainId of CHAIN_COLUMNS) {
       if (!proto.chainIds.includes(chainId)) continue;
-      const b = bucket(cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null, nowSec);
+      const freshestSec = cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null;
+      if (freshestSec === null) {
+        pendingCount++;
+        continue;
+      }
+      const b = bucket(freshestSec, nowSec);
       if (b.kind === "stuck") {
         stuckCells.push({ protocol: proto.name, chainId, label: b.label });
+      } else {
+        // fresh + stale both count as operational — stale is normal
+        // behaviour between cron runs.
+        operationalCount++;
       }
     }
   }
@@ -144,6 +189,24 @@ export default async function StatusPage() {
                 ? "Every protocol × chain we index is refreshing within the expected window."
                 : "One or more cells haven't refreshed in over 30 hours. See the matrix below for which."}
             </p>
+            {/* Counts breakdown — same numbers in every state, so the
+                operator can see scale at a glance. */}
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium" style={{ color: "#64748b" }}>
+              <span>
+                <span style={{ color: "#10b981", fontWeight: 700 }}>{operationalCount}</span>
+                {" "}operational
+              </span>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <span>
+                <span style={{ color: pendingCount > 0 ? "#64748b" : "#cbd5e1", fontWeight: 700 }}>{pendingCount}</span>
+                {" "}pending
+              </span>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <span>
+                <span style={{ color: stuckCells.length > 0 ? "#dc2626" : "#cbd5e1", fontWeight: 700 }}>{stuckCells.length}</span>
+                {" "}need attention
+              </span>
+            </div>
           </div>
         </div>
 
@@ -206,12 +269,24 @@ export default async function StatusPage() {
                     //      adapter that hasn't run yet) → grey "Pending" pill
                     //   3. Chain has data → fresh/stale/stuck pill
                     if (!proto.chainIds.includes(chainId)) {
-                      return <td key={chainId} className="px-3 py-3" />;
+                      // Protocol doesn't deploy on this chain — render a
+                      // faded em-dash so the eye still tracks the row
+                      // (an empty cell looks like a layout glitch).
+                      return (
+                        <td
+                          key={chainId}
+                          className="px-3 py-3 text-xs"
+                          style={{ color: "#cbd5e1" }}
+                          aria-label="Not deployed on this chain"
+                        >
+                          —
+                        </td>
+                      );
                     }
                     const freshestSec = cellMap.get(`${proto.adapterIds[0]}|${chainId}`) ?? null;
                     if (freshestSec === null) {
                       return (
-                        <td key={chainId} className="px-3 py-3 text-xs">
+                        <td key={chainId} className="px-3 py-3 text-xs align-top">
                           <span
                             className="inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono"
                             style={{
@@ -225,23 +300,34 @@ export default async function StatusPage() {
                         </td>
                       );
                     }
-                    const b = bucket(freshestSec, nowSec);
+                    const b    = bucket(freshestSec, nowSec);
+                    const meta = metaMap.get(`${proto.adapterIds[0]}|${chainId}`);
                     return (
-                      <td key={chainId} className="px-3 py-3 text-xs">
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono"
-                          style={{
-                            background: `${b.color}14`,
-                            color:      b.color,
-                            border:     `1px solid ${b.color}33`,
-                          }}
-                        >
+                      <td key={chainId} className="px-3 py-3 text-xs align-top">
+                        <div className="flex flex-col gap-1">
                           <span
-                            className="inline-block h-1.5 w-1.5 rounded-full"
-                            style={{ background: b.color }}
-                          />
-                          {b.label}
-                        </span>
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono w-fit"
+                            style={{
+                              background: `${b.color}14`,
+                              color:      b.color,
+                              border:     `1px solid ${b.color}33`,
+                            }}
+                          >
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full"
+                              style={{ background: b.color }}
+                            />
+                            {b.label}
+                          </span>
+                          {meta && (
+                            <span
+                              className="font-mono text-[10px] leading-tight pl-1"
+                              style={{ color: "#94a3b8" }}
+                            >
+                              {formatCompactUsd(meta.tvlUsd)} · {meta.streams.toLocaleString()} stream{meta.streams === 1 ? "" : "s"}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     );
                   })}

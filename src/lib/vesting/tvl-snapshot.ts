@@ -600,6 +600,12 @@ export async function readProtocolSnapshot(
 
 /** Read the entire snapshot table in one pass — for the /protocols index. */
 export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
+  // Build-time guard — see CLAUDE.md landmine. /protocols (cached) and
+  // /status (revalidate=60) both call this; transient pooler drops mid-
+  // build have killed builds before. ISR fills with real data on the
+  // first runtime request.
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+
   const rows = await db
     .select({
       protocol:     protocolTvlSnapshots.protocol,
