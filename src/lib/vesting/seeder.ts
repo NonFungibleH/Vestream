@@ -263,6 +263,39 @@ async function discoverSablierRecipients(chainId: SupportedChainId, limit: numbe
   return dedupeAddresses(all);
 }
 
+/**
+ * Sablier Flow discovery — same Envio endpoint as Lockup, different entity
+ * (`FlowStream`). Filter to currently-flowing streams (not paused or voided)
+ * so we don't waste a seed slot on terminated history. `recipient` is the
+ * payee; `startTime` is the per-row creation time.
+ */
+async function discoverSablierFlowRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+  const tag = `sablier-flow/${chainId}`;
+  const query = `
+    query SeedSablierFlow($first: Int!, $skip: Int!, $chainId: numeric!) {
+      FlowStream(
+        where: {
+          chainId: { _eq: $chainId }
+          paused:  { _eq: false }
+          voided:  { _eq: false }
+        }
+        order_by: { startTime: desc }
+        limit:  $first
+        offset: $skip
+      ) {
+        recipient
+      }
+    }
+  `;
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ FlowStream?: Array<{ recipient: string }> }>(
+      SABLIER_ENVIO_URL, query, { first, skip, chainId }, tag,
+    );
+    return (data?.FlowStream ?? []).map((s) => s.recipient);
+  });
+  return dedupeAddresses(all);
+}
+
 /** UNCX locks schema — owner.id is the recipient. Sort by lockDate desc for recent. */
 async function discoverUncxRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const url = UNCX_URLS[chainId];
@@ -1182,6 +1215,17 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "llamapay",     chainId: CHAIN_IDS.BASE,     discover: discoverLlamapayRecipients },
   { adapterId: "llamapay",     chainId: CHAIN_IDS.ARBITRUM, discover: discoverLlamapayRecipients },
   { adapterId: "llamapay",     chainId: CHAIN_IDS.OPTIMISM, discover: discoverLlamapayRecipients },
+  // Sablier Flow — six EVM mainnets on the SAME Envio endpoint as Lockup
+  // but querying the FlowStream entity instead of LockupStream. Worker-
+  // pivot's flagship EVM payroll protocol alongside LlamaPay (category:
+  // stream). Sepolia covered for testnet flows but adapter accepts more
+  // chains than we seed today; future chains are a one-line add here.
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BSC,      discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.POLYGON,  discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.BASE,     discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierFlowRecipients },
+  { adapterId: "sablier-flow", chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierFlowRecipients },
   // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
   // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)
 ];
