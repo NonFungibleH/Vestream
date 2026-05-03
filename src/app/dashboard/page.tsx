@@ -13,6 +13,7 @@ import { MobileAppBanner } from "@/components/MobileAppBanner";
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { useDashboardChrome } from "@/components/DashboardChrome";
 import { StreamAnnotationEditor } from "@/components/StreamAnnotationEditor";
+import { StreamTagsEditor } from "@/components/StreamTagsEditor";
 import { useCurrency } from "@/lib/use-currency";
 import { track } from "@/lib/analytics";
 import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
@@ -1385,6 +1386,28 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
     }
     return m;
   }, [annData]);
+
+  // Same pattern for tags. We render tags inline on each row's Asset column
+  // (small chips next to the title) so users see the personal taxonomy
+  // without having to expand each row.
+  const { data: tagData } = useSWR<{ tags: Array<{ streamId: string; tag: string; color: string | null }> }>(
+    "/api/streams/tags",
+    async (url: string) => {
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+    { revalidateOnFocus: false },
+  );
+  const tagsByStreamId = useMemo(() => {
+    const m = new Map<string, Array<{ tag: string; color: string | null }>>();
+    for (const t of tagData?.tags ?? []) {
+      const arr = m.get(t.streamId) ?? [];
+      arr.push({ tag: t.tag, color: t.color });
+      m.set(t.streamId, arr);
+    }
+    return m;
+  }, [tagData]);
   // Show any stream where not all tokens have been withdrawn yet.
   // Using totalAmount vs withdrawnAmount is more robust than relying on
   // isFullyVested / claimableNow which can mis-compute on edge-case data.
@@ -1469,13 +1492,16 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                   {/* 1. Asset — token symbol + chain name + recipient.
                       If the user set a customName via StreamAnnotationEditor,
                       it becomes the row's primary label; the on-chain symbol
-                      drops to a subtitle so the user can still see it. */}
+                      drops to a subtitle so the user can still see it.
+                      Tag chips render below the recipient if the user has
+                      tagged this stream — small, colour-coded, max 2 visible
+                      with overflow indicator. */}
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0"
                       style={{ background: tokenColor + "18", borderColor: tokenColor + "30" }}>
                       <span className="text-[10px] font-bold" style={{ color: tokenColor }}>{s.tokenSymbol.slice(0, 3)}</span>
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       {(() => {
                         const customName = annotationByStreamId.get(s.id)?.customName;
                         if (customName) {
@@ -1493,6 +1519,38 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                             <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
                             <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
                           </>
+                        );
+                      })()}
+                      {(() => {
+                        const rowTags = tagsByStreamId.get(s.id) ?? [];
+                        if (rowTags.length === 0) return null;
+                        const visible = rowTags.slice(0, 2);
+                        const overflow = rowTags.length - visible.length;
+                        return (
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {visible.map((t) => {
+                              // Deterministic palette colour matching StreamTagsEditor.
+                              const palette = ["#1CB8B8", "#F0992E", "#8169E0", "#28B895", "#E063A0", "#3D7FD0", "#0BA0CB", "#F0B83D", "#A26B3F", "#5DCE9D", "#dc2626", "#7c3aed"];
+                              let h = 0;
+                              for (let i = 0; i < t.tag.length; i++) h = t.tag.charCodeAt(i) + ((h << 5) - h);
+                              const c = t.color ?? palette[Math.abs(h) % palette.length];
+                              return (
+                                <span
+                                  key={t.tag}
+                                  className="inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold whitespace-nowrap"
+                                  style={{ background: c + "1F", color: c, border: `1px solid ${c}33` }}
+                                  title={t.tag}
+                                >
+                                  {t.tag.replace(/\b\w/g, (l) => l.toUpperCase())}
+                                </span>
+                              );
+                            })}
+                            {overflow > 0 && (
+                              <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
+                                +{overflow}
+                              </span>
+                            )}
+                          </div>
                         );
                       })()}
                     </div>
@@ -1696,8 +1754,9 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                   <>
                     <EmissionChart stream={s} />
                     <ClaimHistory stream={s} />
-                    <div className="px-6 pb-5" onClick={(e) => e.stopPropagation()}>
+                    <div className="px-6 pb-5 space-y-2" onClick={(e) => e.stopPropagation()}>
                       <StreamAnnotationEditor streamId={s.id} />
+                      <StreamTagsEditor streamId={s.id} />
                     </div>
                   </>
                 )}

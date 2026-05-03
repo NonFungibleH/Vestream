@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { UpsellModal } from "@/components/UpsellModal";
+import { CalendarSubscribeCard } from "@/components/CalendarSubscribeCard";
 import { track } from "@/lib/analytics";
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency";
 
@@ -1102,6 +1103,21 @@ export default function Settings() {
               </div>
             </div>
           </Section>}
+
+          {/* ── Calendar subscription ───────────────────────────────────── */}
+          {/* Lives under the Notifications section because the iCal feed is
+              effectively another notification surface — users who'd rather
+              see unlocks in Google/Apple/Outlook Calendar than receive push
+              alerts. Sub-section (no separate nav entry); rendered when
+              the notifications tab is active. */}
+          {activeSection === "notifications" && (
+            <Section
+              title="Calendar export"
+              description="Subscribe to your upcoming token unlocks in any calendar app — Google, Apple, Outlook."
+            >
+              <CalendarSubscribeCard />
+            </Section>
+          )}
 
           {/* ── Account ──────────────────────────────────────────────────── */}
           {activeSection === "account" && <Section title="Account">

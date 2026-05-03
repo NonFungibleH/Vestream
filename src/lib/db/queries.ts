@@ -7,7 +7,10 @@ import {
   notificationsSent,
   betaFeedback,
   streamAnnotations,
+  streamTags,
+  calendarTokens,
 } from "./schema";
+import { randomBytes } from "node:crypto";
 import { normaliseAddress } from "@/lib/address-validation";
 
 export async function getUserByAddress(address: string) {
@@ -472,4 +475,166 @@ export async function deleteStreamAnnotation(
       eq(streamAnnotations.userId,   userId),
       eq(streamAnnotations.streamId, streamId),
     ));
+}
+
+// ─── Stream tags ────────────────────────────────────────────────────────────
+
+/** Caps mirror API-layer enforcement; keep in sync with the route validator. */
+export const STREAM_TAG_VALUE_MAX = 30;
+/** Max number of distinct tags per stream — prevents abuse/clutter. */
+export const STREAM_TAG_PER_STREAM_MAX = 10;
+
+export interface StreamTag {
+  streamId: string;
+  tag:      string;
+  color:    string | null;
+}
+
+export async function getStreamTags(userId: string, streamId: string): Promise<StreamTag[]> {
+  return db
+    .select({
+      streamId: streamTags.streamId,
+      tag:      streamTags.tag,
+      color:    streamTags.color,
+    })
+    .from(streamTags)
+    .where(and(eq(streamTags.userId, userId), eq(streamTags.streamId, streamId)));
+}
+
+/** Bulk fetch — all of a user's tags across all streams. Used by the
+ *  dashboard to populate filter chips + per-row pills in one round-trip. */
+export async function getStreamTagsForUser(
+  userId:    string,
+  streamIds?: readonly string[],
+): Promise<StreamTag[]> {
+  const where = streamIds && streamIds.length > 0
+    ? and(eq(streamTags.userId, userId), inArray(streamTags.streamId, [...streamIds]))
+    : eq(streamTags.userId, userId);
+  return db
+    .select({
+      streamId: streamTags.streamId,
+      tag:      streamTags.tag,
+      color:    streamTags.color,
+    })
+    .from(streamTags)
+    .where(where);
+}
+
+/**
+ * Replace the full tag set for a single (user, streamId). Inserts new
+ * tags, removes deleted ones — atomic-ish via two queries (delete-then-
+ * insert). Acceptable for a low-write feature like tags; if write
+ * frequency grows, switch to a proper merge.
+ */
+export async function setStreamTags(
+  userId:   string,
+  streamId: string,
+  tags:     Array<{ tag: string; color: string | null }>,
+): Promise<StreamTag[]> {
+  // Wipe existing tags for this (user, stream).
+  await db
+    .delete(streamTags)
+    .where(and(eq(streamTags.userId, userId), eq(streamTags.streamId, streamId)));
+
+  if (tags.length === 0) return [];
+
+  // Dedupe by tag value before insert (composite PK rejects dupes; cheaper
+  // to filter here than catch the violation).
+  const seen = new Set<string>();
+  const rows = tags
+    .filter((t) => {
+      if (seen.has(t.tag)) return false;
+      seen.add(t.tag);
+      return true;
+    })
+    .map((t) => ({
+      userId,
+      streamId,
+      tag:   t.tag,
+      color: t.color,
+    }));
+
+  if (rows.length === 0) return [];
+
+  await db.insert(streamTags).values(rows);
+  return rows.map((r) => ({ streamId: r.streamId, tag: r.tag, color: r.color }));
+}
+
+export async function deleteStreamTags(userId: string, streamId: string): Promise<void> {
+  await db
+    .delete(streamTags)
+    .where(and(eq(streamTags.userId, userId), eq(streamTags.streamId, streamId)));
+}
+
+// ─── Calendar tokens (per-user iCal feed auth) ──────────────────────────────
+
+/** Token format prefix — matches our `vstr_*` convention elsewhere. */
+const CALENDAR_TOKEN_PREFIX = "vstr_cal_";
+
+function generateCalendarToken(): string {
+  return CALENDAR_TOKEN_PREFIX + randomBytes(32).toString("hex");
+}
+
+export interface CalendarTokenRow {
+  userId:        string;
+  token:         string;
+  createdAt:     Date;
+  lastFetchedAt: Date | null;
+}
+
+/**
+ * Get the user's existing calendar token, or generate one if none exists.
+ * Idempotent — calling repeatedly returns the same token until a rotation.
+ */
+export async function getOrCreateCalendarToken(userId: string): Promise<CalendarTokenRow> {
+  const existing = await db
+    .select()
+    .from(calendarTokens)
+    .where(eq(calendarTokens.userId, userId))
+    .limit(1);
+  if (existing[0]) return existing[0];
+
+  const token = generateCalendarToken();
+  const [row] = await db
+    .insert(calendarTokens)
+    .values({ userId, token })
+    .returning();
+  return row;
+}
+
+/**
+ * Force a new token, invalidating the old one. Calendar apps subscribed
+ * to the old URL will start 404'ing — by design, since the user
+ * presumably rotated for a security reason.
+ */
+export async function rotateCalendarToken(userId: string): Promise<CalendarTokenRow> {
+  const token = generateCalendarToken();
+  await db
+    .delete(calendarTokens)
+    .where(eq(calendarTokens.userId, userId));
+  const [row] = await db
+    .insert(calendarTokens)
+    .values({ userId, token })
+    .returning();
+  return row;
+}
+
+/** Lookup by token (URL path). Returns the user's id + the row, or null. */
+export async function findUserByCalendarToken(token: string): Promise<{ userId: string; row: CalendarTokenRow } | null> {
+  const [row] = await db
+    .select()
+    .from(calendarTokens)
+    .where(eq(calendarTokens.token, token))
+    .limit(1);
+  if (!row) return null;
+  return { userId: row.userId, row };
+}
+
+/** Bumped from the .ics handler each time a calendar app polls.
+ *  Fire-and-forget — never blocks the response. */
+export async function touchCalendarToken(userId: string): Promise<void> {
+  await db
+    .update(calendarTokens)
+    .set({ lastFetchedAt: new Date() })
+    .where(eq(calendarTokens.userId, userId));
 }

@@ -183,6 +183,77 @@ export const streamAnnotations = pgTable("stream_annotations", {
   index("stream_annotations_user_idx").on(t.userId),
 ]);
 
+/**
+ * Per-user, per-stream tags — free-form labels with optional colour.
+ *
+ * Sister feature to stream_annotations (notes + custom names). Tags let
+ * users build a personal taxonomy: "Investor", "Salary", "Advisor",
+ * "Side-project", etc. Filterable on the dashboard, exported in CSV.
+ *
+ * Design notes:
+ *  - Per-user — each user's tag set is private. User A's "Salary" tag
+ *    on a stream user B also tracks is invisible to B.
+ *  - Multiple tags per stream allowed (composite PK includes `tag`).
+ *  - Tag value stored as text (max 30 chars enforced at API layer).
+ *    Lowercase normalisation also at API layer so "Salary"/"salary"/
+ *    "SALARY" don't proliferate.
+ *  - `color` is a hex string ("#RRGGBB") — nullable; UI defaults from a
+ *    palette when null.
+ *  - Index on user_id supports the "all tags for this user" bulk read
+ *    used by the dashboard to populate filter chips and per-row pills.
+ *  - Cascade-deletes with the user. We don't cascade off
+ *    vesting_streams_cache because tags should survive seeder rebuilds.
+ */
+export const streamTags = pgTable("stream_tags", {
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Composite stream id matching VestingStream.id — `{protocol}-{chainId}-{nativeId}`. */
+  streamId:  text("stream_id").notNull(),
+  /** Tag value, lowercase-normalised at API layer. Cap 30 chars (API). */
+  tag:       text("tag").notNull(),
+  /** Optional hex colour ("#RRGGBB"). Renderer falls back to a default
+   *  palette when null so users get colour without having to pick. */
+  color:     text("color"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.streamId, t.tag] }),
+  index("stream_tags_user_idx").on(t.userId),
+  // Used when filtering "show all my streams tagged X"
+  index("stream_tags_user_tag_idx").on(t.userId, t.tag),
+]);
+
+/**
+ * Per-user opaque tokens for the public iCal calendar feed.
+ *
+ * Generated once on demand; stable across sessions; revocable by the user.
+ * The token in the URL acts as the auth — `/api/calendar/{token}.ics` is
+ * deliberately public-readable (so calendar apps can poll without
+ * negotiating cookies/bearer tokens) but the token is opaque enough that
+ * guessing it is infeasible.
+ *
+ * Token format: `vstr_cal_{32 bytes hex}` — same shape as the API key
+ * format we use elsewhere. Stored as the literal token (no hash) because
+ * we need to look it up by URL parameter; tokens are URL-safe and meant
+ * to be shared in calendar-subscription URLs anyway.
+ *
+ * One token per user. Re-generation rotates it (old token invalidated).
+ */
+export const calendarTokens = pgTable("calendar_tokens", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token:        text("token").notNull().unique(),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
+  /** Updated each time a calendar app fetches the .ics — useful diagnostic
+   *  for "is the user actually subscribed?" without a separate analytics
+   *  table. Nullable because never-fetched tokens shouldn't lie. */
+  lastFetchedAt: timestamp("last_fetched_at"),
+}, (t) => [
+  // Lookup is by token (in URL path), not user_id. Index accordingly.
+  index("calendar_tokens_token_idx").on(t.token),
+]);
+
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
