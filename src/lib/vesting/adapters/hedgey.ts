@@ -107,7 +107,23 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
       const planIds = planIdResults
         .filter((r) => r.status === "success")
         .map((r) => r.result as bigint);
-      if (planIds.length === 0) continue;
+
+      // Diagnostic: when balanceOf > 0 but all multicall results failed,
+      // log the first failure reason. Otherwise the silent-empty pattern
+      // is invisible (Hedgey Polygon was stuck for 9+ days because of this
+      // exact shape — adapter returned 0 streams with no error logged).
+      // Same hedgey adapter runs on every chain so this catches the next
+      // chain-specific multicall regression too.
+      if (planIds.length === 0) {
+        const firstFailure = planIdResults.find((r) => r.status === "failure");
+        if (firstFailure && "error" in firstFailure) {
+          console.error(
+            `[hedgey/${chainId}] tokenOfOwnerByIndex multicall returned all-failures for ${wallet} ` +
+            `(balance=${balance}, results=${planIdResults.length}). First error: ${(firstFailure.error as Error)?.message ?? String(firstFailure.error)}`
+          );
+        }
+        continue;
+      }
 
       // Batch: get plan details
       const detailResults = await client.multicall({
@@ -116,6 +132,18 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
           functionName: "plans" as const, args: [planId] as [bigint],
         })),
       });
+
+      // Same diagnostic for the plan-details multicall.
+      const successCount = detailResults.filter((r) => r.status === "success").length;
+      if (successCount === 0 && detailResults.length > 0) {
+        const firstFailure = detailResults.find((r) => r.status === "failure");
+        if (firstFailure && "error" in firstFailure) {
+          console.error(
+            `[hedgey/${chainId}] plans() multicall returned all-failures for ${wallet} ` +
+            `(planIds=${planIds.length}). First error: ${(firstFailure.error as Error)?.message ?? String(firstFailure.error)}`
+          );
+        }
+      }
 
       // Batch-fetch token metadata for all unique tokens not already cached
       const successPlans = detailResults
