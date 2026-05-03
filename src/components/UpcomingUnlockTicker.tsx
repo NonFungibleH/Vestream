@@ -163,7 +163,13 @@ export function UpcomingUnlockTicker() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch("/api/unlocks/upcoming?limit=10", { cache: "no-store" });
+        // No `cache: "no-store"` — that defeats the route's
+        // Cache-Control: s-maxage=300 edge cache and was hammering Postgres
+        // every minute (XX000 EDBHANDLEREXITED + ECHECKOUTTIMEOUT cascades
+        // observed 2026-05-03). Default fetch caching pairs with the
+        // server-side header so the CDN serves repeated calls and origin
+        // sees ~one hit per 5min instead of N×visitors per minute.
+        const res = await fetch("/api/unlocks/upcoming?limit=10");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const body = (await res.json()) as UpcomingResponse;
         if (!cancelled) { setData(body); setErr(null); }

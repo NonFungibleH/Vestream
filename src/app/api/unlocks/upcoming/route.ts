@@ -77,8 +77,20 @@ export async function GET(req: NextRequest) {
         unlocks: enriched,
       } satisfies UpcomingUnlocksResponse,
       {
-        // Edge-cache lightly so we don't hit the DB on every visitor
-        headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+        // Edge-cache aggressively so we don't hit the DB on every visitor.
+        // Was s-maxage=30 — the homepage UpcomingUnlockTicker polls this
+        // every 60s (`refresh interval`), and with the client passing
+        // `cache: "no-store"`, even a 30s edge cache wasn't being used
+        // properly. With multiple visitors and Supabase free-tier
+        // connection limits, this endpoint was exhausting the pool every
+        // minute (XX000 EDBHANDLEREXITED + ECHECKOUTTIMEOUT cascades
+        // observed 2026-05-03).
+        //
+        // Bumped to 5 min — unlock data updates infrequently relative to
+        // the polling cadence, so 5-min staleness is fine for a ticker
+        // widget. SWR window of 10 min keeps responses snappy while the
+        // edge revalidates in the background.
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
       },
     );
   } catch (err) {
