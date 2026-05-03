@@ -27,7 +27,9 @@ export type ExportFormat =
   | "koinly"
   | "cointracker"
   | "turbotax"
-  | "payroll-income";  // worker-pivot: ordinary-income summary at FMV-on-receipt
+  | "payroll-income"     // per-claim ordinary-income detail at FMV-on-receipt
+  | "payroll-summary-us" // payer-grouped totals for IRS / 1099-NEC summary
+  | "payroll-summary-uk"; // payer-grouped totals for HMRC / SA103 self-employment
 
 /**
  * Format a single CSV cell — escape if it contains a comma, quote, or
@@ -296,6 +298,168 @@ function buildPayrollIncome(rows: ClaimRow[], annotations?: AnnotationsByStreamI
   return [header, ...body].join("\n") + "\n";
 }
 
+// ── Payroll summary variants — payer-grouped totals ───────────────────────
+//
+// Same data as buildPayrollIncome() but aggregated by payer (stream).
+// Tax filings generally want one line per payer with summed totals, not
+// one line per per-second tick. Two jurisdiction variants share an
+// internal aggregation pass; only the column headers and the trailing
+// notes line differ.
+//
+// Aggregation strategy: group by streamId (the canonical "<protocol>-<chain>-<id>"
+// composite). Each row carries:
+//   - source label   = annotation.customName || "<protocol> via chain <chainId>"
+//   - protocol/chain = preserved for accountant audit trail
+//   - tokens         = sum of human-readable token amounts (per token)
+//   - usdTotal       = sum of FMV USD across all claims from this payer
+//   - claimCount     = number of distinct receipts
+//   - dateFirst/Last = receipt date range
+//
+// We preserve the *first* token symbol/decimals seen for each payer; mixed-
+// token streams from one payer are rare in practice (a payer streams ONE
+// asset) but if encountered the 'tokens' column will show only the first
+// token type — the per-claim CSV remains the source of truth for audits.
+
+interface PayrollAggregate {
+  streamId:      string;
+  source:        string;
+  protocol:      string;
+  chainId:       number;
+  tokenSymbol:   string;
+  tokens:        bigint;
+  tokenDecimals: number;
+  usdTotal:      number;
+  claimCount:    number;
+  dateFirst:     Date;
+  dateLast:      Date;
+}
+
+function aggregatePayroll(
+  rows:         ClaimRow[],
+  annotations?: AnnotationsByStreamId,
+): PayrollAggregate[] {
+  const map = new Map<string, PayrollAggregate>();
+  for (const r of rows) {
+    const ann = annotationDescription(annotations, r.streamId);
+    const source = ann || `${r.protocol} via chain ${r.chainId}`;
+    const existing = map.get(r.streamId);
+    const usd = r.usdValueAtClaim ? Number(r.usdValueAtClaim) : 0;
+    if (!existing) {
+      map.set(r.streamId, {
+        streamId:      r.streamId,
+        source,
+        protocol:      r.protocol,
+        chainId:       r.chainId,
+        tokenSymbol:   r.tokenSymbol ?? r.tokenAddress.slice(0, 10),
+        tokens:        BigInt(r.amount),
+        tokenDecimals: r.tokenDecimals,
+        usdTotal:      usd,
+        claimCount:    1,
+        dateFirst:     r.claimedAt,
+        dateLast:      r.claimedAt,
+      });
+    } else {
+      existing.tokens     += BigInt(r.amount);
+      existing.usdTotal   += usd;
+      existing.claimCount += 1;
+      if (r.claimedAt < existing.dateFirst) existing.dateFirst = r.claimedAt;
+      if (r.claimedAt > existing.dateLast)  existing.dateLast  = r.claimedAt;
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => b.usdTotal - a.usdTotal);
+}
+
+// US — IRS framing. The receiver pastes total USD per payer into TurboTax
+// → 1099-NEC summary, OR attaches the CSV as supporting documentation if
+// they're filing Schedule C with a long contributor list. Column names
+// borrow IRS terminology so accountants don't have to map.
+function buildPayrollSummaryUs(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+  const aggs = aggregatePayroll(rows, annotations);
+  const header = csvRow([
+    "Payer",                       // who the income came from
+    "Protocol",                    // streaming rail (Sablier Flow / LlamaPay / etc)
+    "Chain",
+    "Token",
+    "Tokens Received",
+    "Gross Income (USD)",          // 1099-NEC Box 1: Nonemployee Compensation
+    "Number of Receipts",
+    "First Receipt",
+    "Last Receipt",
+    "Stream ID",
+  ]);
+  const body = aggs.map((a) =>
+    csvRow([
+      a.source,
+      a.protocol,
+      a.chainId,
+      a.tokenSymbol,
+      tokensWhole(a.tokens.toString(), a.tokenDecimals),
+      a.usdTotal.toFixed(2),
+      a.claimCount,
+      isoDate(a.dateFirst),
+      isoDate(a.dateLast),
+      a.streamId,
+    ]),
+  );
+  // Trailing total row — pre-summed for direct paste into 1099-NEC Box 1
+  const grand = aggs.reduce((acc, a) => acc + a.usdTotal, 0);
+  const total = csvRow([
+    "TOTAL", "", "", "", "", grand.toFixed(2), "", "", "", "",
+  ]);
+  return [header, ...body, total].join("\n") + "\n";
+}
+
+// UK — HMRC SA103 self-employment / SA103S short. Receiver enters Box 9
+// (Turnover) on SA103S, OR Box 15 if reporting on SA103F. Amounts stay
+// in USD with a footer note pointing the user to HMRC's published
+// exchange rate page — converting to GBP requires the year-end average
+// or transaction-time rate, both of which we'd need extra data to
+// compute reliably. Better to leave one explicit conversion step than
+// fabricate a bad GBP figure.
+function buildPayrollSummaryUk(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+  const aggs = aggregatePayroll(rows, annotations);
+  const header = csvRow([
+    "Source of Income",
+    "Streaming Platform",
+    "Chain",
+    "Token",
+    "Tokens Received",
+    "Gross Income (USD)",          // SA103 Turnover — convert to GBP at year-end
+    "Number of Receipts",
+    "Period Start",
+    "Period End",
+    "Stream ID",
+  ]);
+  const body = aggs.map((a) =>
+    csvRow([
+      a.source,
+      a.protocol,
+      a.chainId,
+      a.tokenSymbol,
+      tokensWhole(a.tokens.toString(), a.tokenDecimals),
+      a.usdTotal.toFixed(2),
+      a.claimCount,
+      isoDate(a.dateFirst),
+      isoDate(a.dateLast),
+      a.streamId,
+    ]),
+  );
+  const grand = aggs.reduce((acc, a) => acc + a.usdTotal, 0);
+  const total = csvRow([
+    "TOTAL", "", "", "", "", grand.toFixed(2), "", "", "", "",
+  ]);
+  // HMRC accepts USD figures with a published-rate conversion. We don't
+  // pick a rate for the user — the exact rate (year-end average vs spot
+  // at receipt) varies by accountant preference. Surfacing the total
+  // separately so the conversion is one multiplication rather than a
+  // pivot-table exercise.
+  const footer = csvRow([
+    "Note: convert USD → GBP using HMRC published rates. https://www.gov.uk/government/publications/hmrc-exchange-rates-for-2025-monthly",
+    "", "", "", "", "", "", "", "", "",
+  ]);
+  return [header, ...body, total, footer].join("\n") + "\n";
+}
+
 // ── Public dispatcher ──────────────────────────────────────────────────────
 
 export function buildClaimsCsv(
@@ -308,7 +472,9 @@ export function buildClaimsCsv(
     case "koinly":           return buildKoinly(rows, annotations);
     case "cointracker":      return buildCoinTracker(rows);  // no description column in CT format
     case "turbotax":         return buildTurboTax(rows, annotations);
-    case "payroll-income":   return buildPayrollIncome(rows, annotations);
+    case "payroll-income":      return buildPayrollIncome(rows, annotations);
+    case "payroll-summary-us":  return buildPayrollSummaryUs(rows, annotations);
+    case "payroll-summary-uk":  return buildPayrollSummaryUk(rows, annotations);
     default:
       // Exhaustive switch; TypeScript will catch missing branches at compile time.
       return buildVestreamGeneric(rows, annotations);

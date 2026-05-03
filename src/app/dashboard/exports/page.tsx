@@ -81,6 +81,10 @@ interface ExportFormat {
   importUrl?: string;
   /** Human-readable steps the user follows after we drop them on importUrl. */
   steps?:    string[];
+  /** Audience this format primarily serves. Drives the order cards appear
+   *  in (workers see payroll formats first, investors see capital-gains
+   *  formats first). "any" formats sit in the middle for everyone. */
+  audience: "investor" | "worker" | "any";
 }
 
 const FORMATS: ExportFormat[] = [
@@ -88,6 +92,7 @@ const FORMATS: ExportFormat[] = [
     id:       "vestream-generic",
     name:     "Vestream generic CSV",
     subtitle: "Universal — works with any spreadsheet or accountant",
+    audience: "any",
   },
   {
     id:        "koinly",
@@ -100,6 +105,7 @@ const FORMATS: ExportFormat[] = [
       "Click \"Upload File\" and pick the CSV we just downloaded.",
       "Koinly maps the columns automatically — confirm and import.",
     ],
+    audience: "investor",
   },
   {
     id:        "cointracker",
@@ -112,6 +118,7 @@ const FORMATS: ExportFormat[] = [
       "Upload the CSV we just downloaded.",
       "CoinTracker validates the format and imports — review and confirm.",
     ],
+    audience: "investor",
   },
   {
     id:        "turbotax",
@@ -124,23 +131,71 @@ const FORMATS: ExportFormat[] = [
       "Select \"Other\" as the platform and upload the CSV we just downloaded.",
       "TurboTax classifies vesting income on Schedule 1 / capital gains on Schedule D — review the import preview.",
     ],
+    audience: "investor",
   },
-  // Worker-pivot — ordinary-income summary at FMV-on-receipt. Distinct
+  // Worker-pivot formats — ordinary-income at FMV-on-receipt. Distinct
   // from the four capital-gains formats above. For DAO contributors,
   // crypto-paid contractors, and salary streams.
   {
     id:        "payroll-income",
-    name:      "Payroll income summary",
-    subtitle:  "For crypto salary, contributor pay, and DAO income — ordinary-income, not capital gains",
+    name:      "Payroll income — detail",
+    subtitle:  "Per-claim CSV at FMV-on-receipt — the audit-trail format your accountant will want",
     steps:     [
       "We'll download a CSV with one row per claim received as income.",
       "Each row carries the FMV in USD at the moment of receipt — the figure your tax authority wants.",
-      "US: paste the totals into TurboTax → 1099-NEC summary box, or attach the CSV as supporting documentation.",
-      "UK: the per-row figures map onto SA103 (Self-employment) box 15 — your accountant can sum and convert to GBP at year-end.",
+      "US: paste totals into TurboTax → 1099-NEC summary, or attach the CSV as supporting documentation.",
+      "UK: the per-row figures map onto SA103 (Self-employment) — your accountant can sum and convert to GBP at year-end.",
       "Other countries: the CSV is generic enough for any accountant to use directly.",
     ],
+    audience: "worker",
+  },
+  {
+    id:        "payroll-summary-us",
+    name:      "Payroll income — US 1099-NEC summary",
+    subtitle:  "One row per payer with summed totals — drops directly into TurboTax / FreeTaxUSA / 1099-NEC line 1",
+    steps:     [
+      "We'll download a CSV with one row per payer (the streaming contract paying you).",
+      "Each row carries the total Gross Income (USD) you received from that payer in the selected period.",
+      "Paste the per-payer total into TurboTax → 1099-NEC → \"Box 1: Nonemployee Compensation\" — one entry per payer.",
+      "Self-employed (Schedule C) filers: total of all rows is your gross receipts.",
+      "Per-claim audit detail is in the \"Payroll income — detail\" CSV.",
+    ],
+    audience: "worker",
+  },
+  {
+    id:        "payroll-summary-uk",
+    name:      "Payroll income — UK SA103 summary",
+    subtitle:  "Self-employment turnover by payer — for HMRC SA103 / SA103S box 9",
+    steps:     [
+      "We'll download a CSV with one row per payer (the streaming contract paying you).",
+      "Amounts stay in USD — the CSV's footer note links to HMRC's published exchange-rate page for year-end conversion.",
+      "Sum all payers (last row of the CSV) → convert to GBP → enter on SA103S box 9 (Turnover) or SA103F box 15.",
+      "Keep the CSV as supporting documentation in case HMRC requests the breakdown.",
+      "Per-claim audit detail is in the \"Payroll income — detail\" CSV.",
+    ],
+    audience: "worker",
   },
 ];
+
+/** Sort export formats by audience preference — workers see payroll
+ *  formats first, investors see capital-gains formats first. "any"-tagged
+ *  formats sit between. Stable sort preserves the original relative order
+ *  inside each audience bucket. Falls back to investor-first when the
+ *  user hasn't completed onboarding (audienceCategory === null). */
+function sortFormatsForAudience(
+  formats:          ExportFormat[],
+  audienceCategory: string | null,
+): ExportFormat[] {
+  const isWorker   = audienceCategory === "worker";
+  const isBoth     = audienceCategory === "both";
+  const orderFor = (a: ExportFormat["audience"]): number => {
+    if (isWorker) return a === "worker" ? 0 : a === "any" ? 1 : 2;
+    if (isBoth)   return a === "worker" ? 0 : a === "investor" ? 1 : 2;
+    // investor (or unknown) → capital-gains formats first
+    return a === "investor" ? 0 : a === "any" ? 1 : 2;
+  };
+  return [...formats].sort((x, y) => orderFor(x.audience) - orderFor(y.audience));
+}
 
 export default function ExportsPage() {
   const router = useRouter();
@@ -148,6 +203,12 @@ export default function ExportsPage() {
   const [summary, setSummary]   = useState<Summary | null>(null);
   const [coverage, setCoverage] = useState<string[]>([]);
   const [pending, setPending]   = useState<string[]>([]);
+  // From the user record. Drives the export-format card ordering — workers
+  // see payroll-flavoured CSVs first; investors see capital-gains formats
+  // first; null falls back to investor-first. Captured from the same
+  // /api/claims/history response that populates events + summary, so no
+  // extra round-trip.
+  const [audienceCategory, setAudienceCategory] = useState<string | null>(null);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshMsg, setRefreshMsg]   = useState<string | null>(null);
@@ -173,6 +234,7 @@ export default function ExportsPage() {
       const data = await res.json();
       setEvents(data.events ?? []);
       setSummary(data.summary ?? null);
+      setAudienceCategory(data.audienceCategory ?? null);
     } finally {
       setLoading(false);
     }
@@ -445,7 +507,7 @@ export default function ExportsPage() {
           <div>
             <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>Download formats</h2>
             <div className="grid gap-3">
-              {FORMATS.map((f) => (
+              {sortFormatsForAudience(FORMATS, audienceCategory).map((f) => (
                 <ExportFormatCard
                   key={f.id}
                   format={f}

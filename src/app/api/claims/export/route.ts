@@ -27,6 +27,8 @@ const VALID_FORMATS = new Set<ExportFormat>([
   "cointracker",
   "turbotax",
   "payroll-income",
+  "payroll-summary-us",
+  "payroll-summary-uk",
 ]);
 
 export async function GET(req: NextRequest) {

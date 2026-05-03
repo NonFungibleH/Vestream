@@ -32,16 +32,24 @@ import type { SupportedChainId } from "@/lib/vesting/types";
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel — refresh can take a while across adapters
 
-async function getAuthedUser(): Promise<{ userId: string; address: string } | null> {
+async function getAuthedUser(): Promise<{
+  userId:           string;
+  address:          string;
+  audienceCategory: string | null;
+} | null> {
   const session = await getSession();
   if (!session.address) return null;
   const [u] = await db
-    .select({ id: users.id, address: users.address })
+    .select({
+      id:               users.id,
+      address:          users.address,
+      audienceCategory: users.audienceCategory,
+    })
     .from(users)
     .where(eq(users.address, session.address.toLowerCase()))
     .limit(1);
   if (!u) return null;
-  return { userId: u.id, address: u.address };
+  return { userId: u.id, address: u.address, audienceCategory: u.audienceCategory };
 }
 
 // ── GET — list events ──────────────────────────────────────────────────────
@@ -79,7 +87,11 @@ export async function GET(req: NextRequest) {
     { totalRows: 0, totalUsd: 0, byYear: {} },
   );
 
-  return NextResponse.json({ events, summary });
+  // audienceCategory is consumed by /dashboard/exports to bias the export
+  // format ordering — workers see payroll-income first, investors see the
+  // capital-gains formats first. Null for users who haven't onboarded;
+  // page falls back to investor-first ordering in that case.
+  return NextResponse.json({ events, summary, audienceCategory: auth.audienceCategory });
 }
 
 // ── POST — ingest (manual refresh) ─────────────────────────────────────────
