@@ -104,6 +104,18 @@ const SUPERFLUID_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.OPTIMISM]: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/vesting-scheduler",
 };
 
+// LlamaPay — The Graph decentralized network deployments. IDs cross-checked
+// with the adapter file (src/lib/vesting/adapters/llamapay.ts) — keep the
+// two maps in sync if a new chain is added or a deployment is migrated.
+const LLAMAPAY_URLS: Partial<Record<SupportedChainId, string>> = {
+  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_ETH,      "5Ac1MryeCPqmzmXGMcchhmKsdaVKwzQ796KApoLGNtqZ") ?? "",
+  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_BSC,      "4e3YbwrXML1gFuRSmtqvt89N4APWjyfvkBA8pDDuYZAD") ?? "",
+  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_POLYGON,  "egF47mBwB7ytP3aQafhRNHAdtAFHUaZUGy5Me7bq2ew")  ?? "",
+  [CHAIN_IDS.ARBITRUM]: resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_ARBITRUM, "6ULAzMy7FSRdHngU9S725hr51tq9zqB5Q6LbRYHMSSuy") ?? "",
+  [CHAIN_IDS.OPTIMISM]: resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_OPTIMISM, "Hw2mERc7LMD9papcf1QPq4puBpHJqh4tNrEZYRC65Hqe") ?? "",
+  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.LLAMAPAY_SUBGRAPH_URL_BASE,     "9LPDj38RmbDzyPaPWKSkxHPm9Bzv6oRCHJ2oMxr4LPaz") ?? "",
+};
+
 // ─── Discovery queries ────────────────────────────────────────────────────────
 //
 // Each query returns the newest `first` streams on that chain. We only need
@@ -291,6 +303,32 @@ async function discoverUnvestRecipients(chainId: SupportedChainId, limit: number
       url, query, { first, skip }, `unvest/${chainId}`,
     );
     return (data?.holderBalances ?? []).map((h) => h.user);
+  });
+  return dedupeAddresses(all);
+}
+
+/** LlamaPay — payee is the recipient. Filter to actively-flowing streams
+ *  (active && !paused) so we don't waste a seed slot on cancelled history.
+ *  The User entity has `id` = lowercased payee address. */
+async function discoverLlamapayRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
+  const url = LLAMAPAY_URLS[chainId];
+  if (!url) return [];
+  const query = `
+    query SeedLlamapay($first: Int!, $skip: Int!) {
+      streams(
+        where: { active: true, paused: false }
+        orderBy: createdTimestamp
+        orderDirection: desc
+        first: $first
+        skip: $skip
+      ) { payee { id } }
+    }
+  `;
+  const all = await paginateDiscover(limit, async (first, skip) => {
+    const data = await postGraph<{ streams?: Array<{ payee: { id: string } }> }>(
+      url, query, { first, skip }, `llamapay/${chainId}`,
+    );
+    return (data?.streams ?? []).map((s) => s.payee.id);
   });
   return dedupeAddresses(all);
 }
@@ -1134,6 +1172,16 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.OPTIMISM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
+  // LlamaPay — six EVM mainnets via The Graph network. Subgraph is the
+  // sole data source (no on-chain fallback yet); if a chain's deployment
+  // gets deprecated the run for that chain returns 0 and the others
+  // continue. Same group as the other subgraph adapters.
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.BSC,      discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.POLYGON,  discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.BASE,     discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.ARBITRUM, discover: discoverLlamapayRecipients },
+  { adapterId: "llamapay",     chainId: CHAIN_IDS.OPTIMISM, discover: discoverLlamapayRecipients },
   // (PinkSale + Streamflow + Jupiter Lock moved to the FRONT of this list
   // — see "HIGH PRIORITY" block above. Apr 29 2026 reorder.)
 ];
