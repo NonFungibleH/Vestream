@@ -81,3 +81,27 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
     oldestSec:       r.oldestSec   ?? null,
   }));
 }
+
+/**
+ * Single-row "when did data last move?" lookup.
+ *
+ * Per the May 2 2026 lastRefreshedAt semantic shift (CLAUDE.md), this is
+ * literally "max wall-clock time of the most recent row that had its
+ * stream_data change in any way" — i.e. the cron ran AND found something
+ * worth updating. A multi-hour-stale max is the strongest single signal
+ * that the seeder pipeline is broken: either the cron isn't running, or
+ * it's running and silently producing nothing usable.
+ *
+ * Returns null if the cache is empty (fresh deploy / migration recovery).
+ */
+export async function getMaxLastRefreshedAt(): Promise<number | null> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return null;
+
+  const [row] = await db
+    .select({
+      maxSec: sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
+    })
+    .from(vestingStreamsCache);
+
+  return row?.maxSec ?? null;
+}

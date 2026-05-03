@@ -17,11 +17,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { SiteNav } from "@/components/SiteNav";
 import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
-import { getCacheStatsCells } from "@/lib/vesting/cache-stats";
+import { getCacheStatsCells, getMaxLastRefreshedAt } from "@/lib/vesting/cache-stats";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
+import { StatusAutoRefresh } from "./StatusAutoRefresh";
 
 export const metadata: Metadata = {
   title:       "Status — Vestream",
@@ -44,13 +46,49 @@ export const metadata: Metadata = {
 // no value in caching a snapshot of a dashboard whose entire purpose is
 // to show "what's happening right now."
 export const dynamic = "force-dynamic";
-
-// Bump the function timeout from Vercel's 10s default to 30s. Both DB
-// queries on this page (getCacheStatsCells + readAllSnapshots) are full
-// table scans that occasionally take 5-10s under Supabase pooler pressure.
-// Default 10s was leaving too little headroom and producing the generic
-// "This page couldn't load" error in the browser.
 export const maxDuration = 30;
+
+// Single cached load wrapping all three DB reads. Mirrors the pattern in
+// /protocols (which caches readAllSnapshots() over the same data source).
+//
+// 60s TTL = the page feels live for operator monitoring while a single
+// DB hammering pass produces ~60 free reads. Without this wrapper, every
+// refresh — manual or via the StatusAutoRefresh client component below —
+// triggered two full-table-scans against Supabase. Three concurrent
+// users hitting refresh could plausibly DDoS the pooler.
+//
+// `tags: ["status-page"]` lets us blow this cache from a future cron
+// hook (`revalidateTag("status-page")` after the seeder finishes) so
+// the next pageview gets fresh data instantly without waiting for the
+// 60s TTL.
+const loadStatusData = unstable_cache(
+  async (): Promise<{
+    cells:    Awaited<ReturnType<typeof getCacheStatsCells>>;
+    tvlRows:  Awaited<ReturnType<typeof readAllSnapshots>>;
+    maxLastRefreshedSec: number | null;
+    error:    string | null;
+  }> => {
+    try {
+      const [cells, tvlRows, maxLastRefreshedSec] = await Promise.all([
+        getCacheStatsCells(),
+        readAllSnapshots(),
+        getMaxLastRefreshedAt(),
+      ]);
+      return { cells, tvlRows, maxLastRefreshedSec, error: null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[/status] loadStatusData failed:", err);
+      return {
+        cells:               [],
+        tvlRows:             [],
+        maxLastRefreshedSec: null,
+        error:               message,
+      };
+    }
+  },
+  ["status-page-data-v1"],
+  { revalidate: 60, tags: ["status-page"] },
+);
 
 // Column order — most-trafficked chains on the left, Solana last (Solana
 // only intersects two protocols so its column is mostly empty).
@@ -81,13 +119,22 @@ function formatCompactUsd(n: number): string {
   return `$${Math.round(n)}`;
 }
 
+// Daily seed cron runs at 03:00 UTC. We want fresh-green for any cell
+// touched within one cron-cycle (24h), amber for 1.5x cycles (a missed
+// run is now visible), red for 2+ cycles (the indexer for that cell is
+// likely broken). These thresholds are correct for the current cron
+// cadence — if/when we add live-ingest paths or per-protocol cadences,
+// extend ProtocolMeta with `expectedRefreshIntervalHours` and pipe it
+// through here.
+const DAILY_CRON_HOURS = 24;
+const FRESH_THRESHOLD_MIN = DAILY_CRON_HOURS * 60;        // ≤ 24h → green
+const STALE_THRESHOLD_MIN = DAILY_CRON_HOURS * 60 * 1.5;  // ≤ 36h → amber
+                                                           // > 36h → red
+
 /** Bucket a freshness value (seconds since indexer touched the cell) into a
- *  user-readable label + colour. Thresholds calibrated to our daily seeder:
- *    < 2h        green   (just ran or live-ingest update)
- *    2-30h       amber   (normal — between cron runs)
- *    > 30h       red     (cron likely missed or adapter broken)
- *    null        grey "—" (we don't index this cell)
- */
+ *  user-readable label + colour. Cadence-aware: green for the full 24h
+ *  expected window, amber for the next 12h grace window (one cron run
+ *  could miss), red beyond that. */
 function bucket(freshestSec: number | null, nowSec: number): StatusBucket {
   if (freshestSec === null) {
     return { kind: "none", label: "—", color: "#94a3b8" };
@@ -99,9 +146,19 @@ function bucket(freshestSec: number | null, nowSec: number): StatusBucket {
   else if (ageMin < 60 * 24) label = `${Math.floor(ageMin / 60)}h ago`;
   else                   label = `${Math.floor(ageMin / (60 * 24))}d ago`;
 
-  if (ageMin <= 120)        return { kind: "fresh", label, color: "#10b981" };
-  if (ageMin <= 60 * 30)    return { kind: "stale", label, color: "#d97706" };
+  if (ageMin <= FRESH_THRESHOLD_MIN) return { kind: "fresh", label, color: "#10b981" };
+  if (ageMin <= STALE_THRESHOLD_MIN) return { kind: "stale", label, color: "#d97706" };
   return { kind: "stuck", label, color: "#dc2626" };
+}
+
+/** Format an absolute lastRefreshed timestamp as "Xm ago" / "Xh ago" /
+ *  "Xd ago" relative to now. Used in the hero line. */
+function relativeAge(unixSec: number, nowSec: number): string {
+  const ageMin = Math.max(0, Math.floor((nowSec - unixSec) / 60));
+  if (ageMin < 1)            return "just now";
+  if (ageMin < 60)           return `${ageMin}m ago`;
+  if (ageMin < 60 * 24)      return `${Math.floor(ageMin / 60)}h ago`;
+  return `${Math.floor(ageMin / (60 * 24))}d ago`;
 }
 
 export default async function StatusPage() {
@@ -110,24 +167,11 @@ export default async function StatusPage() {
   // get a "Paused" badge so the row isn't misleading.
   const protocols = listProtocols({ includeDisabled: true });
 
-  // Parallel reads — both queries are independent. Catch errors per-query
-  // so a transient pooler drop or query timeout shows a degraded page
-  // ("system status check failed") instead of crashing the whole route
-  // with a generic browser error. force-dynamic means every request hits
-  // the DB live; the page must be resilient to one of those queries
-  // failing.
-  let cells: Awaited<ReturnType<typeof getCacheStatsCells>> = [];
-  let tvlRows: Awaited<ReturnType<typeof readAllSnapshots>> = [];
-  let queryError: string | null = null;
-  try {
-    [cells, tvlRows] = await Promise.all([
-      getCacheStatsCells(),
-      readAllSnapshots(),
-    ]);
-  } catch (err) {
-    queryError = err instanceof Error ? err.message : "Unknown error";
-    console.error("[/status] DB query failed:", err);
-  }
+  // Single cached call — all error handling lives in loadStatusData. If
+  // the query layer failed, `error` is set and we render the degraded
+  // hero ("Status check failed") with empty matrices below. If it
+  // succeeded, `cells`/`tvlRows`/`maxLastRefreshedSec` are populated.
+  const { cells, tvlRows, maxLastRefreshedSec, error: queryError } = await loadStatusData();
 
   const nowSec = Math.floor(Date.now() / 1000);
 
@@ -195,6 +239,11 @@ export default async function StatusPage() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <SiteNav theme="light" />
+      {/* Auto-refresh client component — calls router.refresh() every
+          60s. Server runs are cheap because loadStatusData() is cached
+          for 60s; the refresh just re-fetches the cached snapshot. */}
+      <StatusAutoRefresh />
+
 
       <main className="mx-auto max-w-5xl px-4 md:px-8 pb-24 pt-12">
         {/* Hero — single binary signal. Big enough that the
@@ -227,8 +276,21 @@ export default async function StatusPage() {
                 ? `Couldn't reach the freshness database — try refresh in a moment. (${queryError.slice(0, 80)})`
                 : isHealthy
                 ? "Every protocol × chain we index is refreshing within the expected window."
-                : "One or more cells haven't refreshed in over 30 hours. See the matrix below for which."}
+                : `One or more cells haven't refreshed in over ${Math.floor(STALE_THRESHOLD_MIN / 60)} hours. See the matrix below.`}
             </p>
+            {/* Single highest-value operator signal — "is the seeder
+                actually producing usable output?" — surfaced in the hero
+                where the eye lands. Reads from MAX(lastRefreshedAt),
+                which moves only when data actually changes (per the
+                May 2 2026 semantic shift in CLAUDE.md). */}
+            {maxLastRefreshedSec !== null && (
+              <p className="text-xs mt-2" style={{ color: "#94a3b8" }}>
+                Last data update across all cells:{" "}
+                <span style={{ color: "#0f172a", fontWeight: 600 }}>
+                  {relativeAge(maxLastRefreshedSec, nowSec)}
+                </span>
+              </p>
+            )}
             {/* Counts breakdown — same numbers in every state, so the
                 operator can see scale at a glance. */}
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium" style={{ color: "#64748b" }}>
