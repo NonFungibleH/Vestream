@@ -17,7 +17,7 @@ import { users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { getClaimHistoryForUser } from "@/lib/vesting/ingestors";
 import { buildClaimsCsv, csvFilename, type ExportFormat } from "@/lib/vesting/csv-exports";
-import { getStreamAnnotationsForUser } from "@/lib/db/queries";
+import { getStreamAnnotationsForUser, getStreamTagsForUser } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
 
@@ -54,16 +54,28 @@ export async function GET(req: NextRequest) {
     until: until ? new Date(until) : undefined,
   });
 
-  // Load the user's stream annotations and build a Map for O(1) lookup
-  // inside the CSV builders. Most users have 0–10 annotations so this is
-  // a cheap query.
-  const annotationsList = await getStreamAnnotationsForUser(u.id);
+  // Load the user's stream annotations + tags in parallel and build
+  // O(1) lookup maps for the CSV builders. Most users have 0-10 of
+  // each so both are cheap queries.
+  const [annotationsList, tagsList] = await Promise.all([
+    getStreamAnnotationsForUser(u.id),
+    getStreamTagsForUser(u.id),
+  ]);
   const annotationMap = new Map<string, { customName: string | null; notes: string | null }>();
   for (const a of annotationsList) {
     annotationMap.set(a.streamId, { customName: a.customName, notes: a.notes });
   }
+  // Group tag rows by streamId so each stream produces a string[] in
+  // the order the user added them. The DB returns them already-
+  // lowercased; CSV builders pipe-join.
+  const tagMap = new Map<string, string[]>();
+  for (const t of tagsList) {
+    const arr = tagMap.get(t.streamId) ?? [];
+    arr.push(t.tag);
+    tagMap.set(t.streamId, arr);
+  }
 
-  const csv = buildClaimsCsv(events, format, annotationMap);
+  const csv = buildClaimsCsv(events, format, annotationMap, tagMap);
 
   // Year hints for the filename — pull from the actual data range so an
   // empty selection produces a sensible filename ("all-time").

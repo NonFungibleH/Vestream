@@ -84,6 +84,18 @@ export interface AnnotationsByStreamId {
   get(streamId: string): { customName: string | null; notes: string | null } | undefined;
 }
 
+/**
+ * Per-stream tag map. Caller passes a `Map<streamId, string[]>` populated
+ * via `getStreamTagsForUser()`. Tag values are already lowercased in the
+ * DB so consumers can render them as-is or title-case for display.
+ *
+ * The tag string list is what gets emitted in the CSV "Tags" column —
+ * empty array (or absent map) renders as a blank cell.
+ */
+export interface TagsByStreamId {
+  get(streamId: string): string[] | undefined;
+}
+
 /** Compose a description fragment from a stream's annotation. Returns "" when
  *  no annotation exists or when both fields are blank. */
 function annotationDescription(
@@ -98,12 +110,26 @@ function annotationDescription(
   return parts.join(" — ");
 }
 
+/** Pipe-separated tag list — chosen so a tag value can never collide with
+ *  the CSV's comma delimiter (commas are escaped by csvCell anyway, but
+ *  pipes scan more cleanly when an accountant pastes the column into
+ *  Excel). Empty list → empty string. */
+function tagList(tags: TagsByStreamId | undefined, streamId: string): string {
+  const t = tags?.get(streamId);
+  if (!t || t.length === 0) return "";
+  return t.join(" | ");
+}
+
 // ── Vestream generic format ─────────────────────────────────────────────────
 // 13 columns. Designed to work as the source-of-truth dump that the user
 // can hand to any accountant — no software-specific formatting. The
 // "Description" column carries the user's custom name + notes (when set)
 // so accountants get human context alongside the machine-readable data.
-function buildVestreamGeneric(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildVestreamGeneric(
+  rows:         ClaimRow[],
+  annotations?: AnnotationsByStreamId,
+  tags?:        TagsByStreamId,
+): string {
   const header = csvRow([
     "Date (UTC)",
     "Time (UTC)",
@@ -118,6 +144,7 @@ function buildVestreamGeneric(rows: ClaimRow[], annotations?: AnnotationsByStrea
     "Tx Hash",
     "Stream ID",
     "Description",
+    "Tags",
   ]);
   const body = rows.map((r) => csvRow([
     isoDate(r.claimedAt),
@@ -133,6 +160,7 @@ function buildVestreamGeneric(rows: ClaimRow[], annotations?: AnnotationsByStrea
     r.txHash.startsWith("synthetic:") ? "" : r.txHash,
     r.streamId,
     annotationDescription(annotations, r.streamId),
+    tagList(tags, r.streamId),
   ]));
   return [header, ...body].join("\n") + "\n";
 }
@@ -263,7 +291,11 @@ function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): s
 // then reads them through capital-gains math. This format omits the
 // capital-gains scaffolding entirely so worker users aren't filing the
 // wrong return.
-function buildPayrollIncome(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildPayrollIncome(
+  rows:         ClaimRow[],
+  annotations?: AnnotationsByStreamId,
+  tags?:        TagsByStreamId,
+): string {
   const header = csvRow([
     "Date",
     "Source",                   // free-form: annotation customName, else "<protocol> via <chain>"
@@ -272,6 +304,7 @@ function buildPayrollIncome(rows: ClaimRow[], annotations?: AnnotationsByStreamI
     "FMV USD at Receipt",       // canonical income figure for tax filing
     "Pricing Confidence",       // high / medium / low / missing — auditable
     "Income Type",              // "salary" | "vesting income" | "grant" — derived from stream category
+    "Tags",                     // user-supplied taxonomy ("Investor", "Salary", "Advisor", etc.)
     "Stream Address",           // payer contract — proxy for the "employer" / payer
     "Tx Hash",
   ]);
@@ -291,6 +324,7 @@ function buildPayrollIncome(rows: ClaimRow[], annotations?: AnnotationsByStreamI
       r.usdValueAtClaim ?? "",
       r.priceConfidence,
       incomeType,
+      tagList(tags, r.streamId),
       r.streamId,                   // composite "<protocol>-<chain>-<id>" — recognisable to the user
       r.txHash,
     ]);
@@ -463,16 +497,17 @@ function buildPayrollSummaryUk(rows: ClaimRow[], annotations?: AnnotationsByStre
 // ── Public dispatcher ──────────────────────────────────────────────────────
 
 export function buildClaimsCsv(
-  rows:        ClaimRow[],
-  format:      ExportFormat,
+  rows:         ClaimRow[],
+  format:       ExportFormat,
   annotations?: AnnotationsByStreamId,
+  tags?:        TagsByStreamId,
 ): string {
   switch (format) {
-    case "vestream-generic": return buildVestreamGeneric(rows, annotations);
-    case "koinly":           return buildKoinly(rows, annotations);
-    case "cointracker":      return buildCoinTracker(rows);  // no description column in CT format
-    case "turbotax":         return buildTurboTax(rows, annotations);
-    case "payroll-income":      return buildPayrollIncome(rows, annotations);
+    case "vestream-generic":    return buildVestreamGeneric(rows, annotations, tags);
+    case "koinly":              return buildKoinly(rows, annotations);
+    case "cointracker":         return buildCoinTracker(rows);  // no description column in CT format
+    case "turbotax":            return buildTurboTax(rows, annotations);
+    case "payroll-income":      return buildPayrollIncome(rows, annotations, tags);
     case "payroll-summary-us":  return buildPayrollSummaryUs(rows, annotations);
     case "payroll-summary-uk":  return buildPayrollSummaryUk(rows, annotations);
     default:
