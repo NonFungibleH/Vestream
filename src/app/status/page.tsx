@@ -45,6 +45,13 @@ export const metadata: Metadata = {
 // to show "what's happening right now."
 export const dynamic = "force-dynamic";
 
+// Bump the function timeout from Vercel's 10s default to 30s. Both DB
+// queries on this page (getCacheStatsCells + readAllSnapshots) are full
+// table scans that occasionally take 5-10s under Supabase pooler pressure.
+// Default 10s was leaving too little headroom and producing the generic
+// "This page couldn't load" error in the browser.
+export const maxDuration = 30;
+
 // Column order — most-trafficked chains on the left, Solana last (Solana
 // only intersects two protocols so its column is mostly empty).
 const CHAIN_COLUMNS: SupportedChainId[] = [
@@ -102,12 +109,26 @@ export default async function StatusPage() {
   // claimed support matrix, not the currently-active one. Disabled protocols
   // get a "Paused" badge so the row isn't misleading.
   const protocols = listProtocols({ includeDisabled: true });
-  // Parallel reads — both queries are independent and the page already
-  // has a 60s revalidate budget.
-  const [cells, tvlRows] = await Promise.all([
-    getCacheStatsCells(),
-    readAllSnapshots(),
-  ]);
+
+  // Parallel reads — both queries are independent. Catch errors per-query
+  // so a transient pooler drop or query timeout shows a degraded page
+  // ("system status check failed") instead of crashing the whole route
+  // with a generic browser error. force-dynamic means every request hits
+  // the DB live; the page must be resilient to one of those queries
+  // failing.
+  let cells: Awaited<ReturnType<typeof getCacheStatsCells>> = [];
+  let tvlRows: Awaited<ReturnType<typeof readAllSnapshots>> = [];
+  let queryError: string | null = null;
+  try {
+    [cells, tvlRows] = await Promise.all([
+      getCacheStatsCells(),
+      readAllSnapshots(),
+    ]);
+  } catch (err) {
+    queryError = err instanceof Error ? err.message : "Unknown error";
+    console.error("[/status] DB query failed:", err);
+  }
+
   const nowSec = Math.floor(Date.now() / 1000);
 
   // Build per-cell lookups. cellMap holds freshness; metaMap holds the
@@ -161,8 +182,13 @@ export default async function StatusPage() {
       }
     }
   }
-  const isHealthy = stuckCells.length === 0;
-  const overall = isHealthy
+  // Health rollup. The query-error case wins over both healthy/unhealthy
+  // because it means we don't actually KNOW the state — better to flag
+  // the failure honestly than show a misleading green.
+  const isHealthy = stuckCells.length === 0 && !queryError;
+  const overall = queryError
+    ? { label: "Status check failed",  color: "#dc2626" }
+    : isHealthy
     ? { label: "All systems operational", color: "#10b981" }
     : { label: `${stuckCells.length} cell${stuckCells.length === 1 ? "" : "s"} need attention`, color: "#dc2626" };
 
@@ -197,7 +223,9 @@ export default async function StatusPage() {
               {overall.label}
             </h1>
             <p className="text-sm mt-1" style={{ color: "#64748b" }}>
-              {isHealthy
+              {queryError
+                ? `Couldn't reach the freshness database — try refresh in a moment. (${queryError.slice(0, 80)})`
+                : isHealthy
                 ? "Every protocol × chain we index is refreshing within the expected window."
                 : "One or more cells haven't refreshed in over 30 hours. See the matrix below for which."}
             </p>
