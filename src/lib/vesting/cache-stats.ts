@@ -49,6 +49,12 @@ export interface CacheStatsCell {
  * Date-marshalling quirk that bit the live-activity route earlier.
  */
 export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
+  // Build-time guard — see CLAUDE.md landmine. The /status page renders
+  // statically with revalidate=60 and would otherwise call into the DB
+  // during `next build`; transient pooler drops there have killed builds
+  // before. ISR fills with real data on the first runtime request.
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+
   const rows = await db
     .select({
       protocol:        vestingStreamsCache.protocol,

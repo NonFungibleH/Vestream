@@ -351,17 +351,14 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "LlamaPay",
     tagline: "Token streaming for vesting and payroll",
     description:
-      "LlamaPay streams ERC-20 tokens by the second — used both for team vesting and for crypto-native payroll. DefiLlama publishes a vesting-specific TVL slice that excludes their general payments product. Vestream surfaces the vesting headline and links recipients to the LlamaPay claim page; per-wallet stream tracking is coming as we expand the recipient-side product.",
+      "LlamaPay streams ERC-20 tokens by the second — used both for team vesting and for crypto-native payroll. Vestream tracks per-recipient streams across all six EVM chains (Ethereum, BSC, Polygon, Base, Arbitrum, Optimism), surfacing accrued-but-unclaimed balance any time. The TVL headline uses DefiLlama's vesting-specific slice, which excludes their general payments product.",
     // Llama brown — distinctive from the existing palette (no other entry
     // sits in warm neutral). Matches the protocol's literal name + branding.
     color: "#A26B3F",
     bg:    "rgba(162,107,63,0.08)",
     border:"rgba(162,107,63,0.22)",
-    // Mainnet chains where DefiLlama reports a non-trivial LlamaPay vesting
-    // slice AND we currently index per-wallet on the EVM side. Arbitrum +
-    // Optimism + Avalanche will get added here as we ship those chains —
-    // DefiLlama already publishes Arbitrum-vesting at $3.6M, the largest
-    // L2 contributor.
+    // All six EVM chains where LlamaPay has a deployed factory + an active
+    // The Graph subgraph deployment. Subgraph IDs live in the adapter file.
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://llamapay.io",
     claimUrl:   "https://llamapay.io/withdraw",

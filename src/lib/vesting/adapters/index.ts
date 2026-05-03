@@ -29,6 +29,7 @@ import { superfluidAdapter }  from "./superfluid";
 import { pinksaleAdapter }    from "./pinksale";
 import { streamflowAdapter }  from "./streamflow";
 import { jupiterLockAdapter } from "./jupiter-lock";
+import { llamapayAdapter }    from "./llamapay";
 
 export const ADAPTER_REGISTRY: VestingAdapter[] = [
   sablierAdapter,
@@ -39,6 +40,7 @@ export const ADAPTER_REGISTRY: VestingAdapter[] = [
   unvestAdapter,
   superfluidAdapter,
   pinksaleAdapter,
+  llamapayAdapter,
   // Streamflow + Jupiter Lock are both Solana-only and behind
   // SOLANA_ENABLED=true. Adapters return [] when the flag is off, so
   // EVM-only environments are unaffected.
