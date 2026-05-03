@@ -142,6 +142,7 @@ export async function explorerFetchSablier(
     return {
       id:              `sablier-${chainId}-${raw.subgraphId}`,
       protocol:        "sablier",
+      category:        "vesting",
       chainId,
       recipient:       raw.recipient,
       tokenAddress:    raw.asset.id,
@@ -340,6 +341,7 @@ export async function explorerFetchUNCX(
     return {
       id:              `uncx-${chainId}-${raw.lockID}`,
       protocol:        "uncx",
+      category:        "vesting",
       chainId,
       recipient:       raw.owner.id,
       tokenAddress:    raw.token.id,
@@ -449,6 +451,7 @@ export async function explorerFetchTeamFinance(
       return {
         id:              `team-finance-explorer-${chainId}-${v.id}`,
         protocol:        "team-finance",
+        category:        "vesting",
         chainId,
         // recipient = the vesting CONTRACT address (not an individual wallet)
         recipient:       v.address,
@@ -653,6 +656,7 @@ export async function explorerFetchUNCXVM(
     streams.push({
       id:              `uncx-vm-${chainId}-${vestingIds[i].toString()}`,
       protocol:        "uncx-vm",
+      category:        "vesting",
       chainId,
       recipient:       (s.beneficiary as string).toLowerCase(),
       tokenAddress:    tokenAddress.toLowerCase(),

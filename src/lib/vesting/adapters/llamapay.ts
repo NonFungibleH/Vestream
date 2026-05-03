@@ -206,6 +206,9 @@ async function fetchForChain(
     return {
       id:              `llamapay-${chainId}-${s.id}`,
       protocol:        "llamapay",
+      // LlamaPay is the canonical "stream" — continuous per-second flow.
+      // Drives UI to show streaming-rate + runway instead of cliff/unlock.
+      category:        "stream",
       chainId,
       recipient:       s.payee.id,
       tokenAddress:    s.token.address,

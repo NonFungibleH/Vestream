@@ -214,6 +214,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
       return {
         id:              `unvest-${chainId}-${raw.id}`,
         protocol:        "unvest",
+        category:        "vesting",
         chainId,
         recipient:       raw.user,
         tokenAddress:    token?.id    ?? "",
@@ -251,6 +252,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     return {
       id:              `unvest-${chainId}-${raw.lockID}`,
       protocol:        "unvest",
+      category:        "vesting",
       chainId,
       recipient:       raw.beneficiary,
       tokenAddress:    raw.token.id,

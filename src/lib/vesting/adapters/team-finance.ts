@@ -306,6 +306,7 @@ async function fetchForChain(
     return {
       id,
       protocol:        "team-finance",
+      category:        "vesting",
       chainId,
       recipient:       v.walletAddr,
       tokenAddress:    v.token,

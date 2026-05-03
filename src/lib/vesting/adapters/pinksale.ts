@@ -363,6 +363,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     return {
       id:              `pinksale-${chainId}-${lock.id.toString()}`,
       protocol:        "pinksale",
+      category:        "vesting",
       chainId,
       recipient:       lock.owner.toLowerCase(),
       tokenAddress:    lock.token.toLowerCase(),

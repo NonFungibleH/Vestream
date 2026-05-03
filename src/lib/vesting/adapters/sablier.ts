@@ -174,6 +174,10 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     return {
       id:              `sablier-${chainId}-${raw.subgraphId}`,
       protocol:        "sablier",
+      // Sablier Lockup (Linear/Tranched/Dynamic) — investor vesting. The
+      // separate Sablier Flow product is "stream" but lives in a different
+      // adapter (planned).
+      category:        "vesting",
       chainId,
       recipient:       raw.recipient,
       tokenAddress:    raw.asset.address,

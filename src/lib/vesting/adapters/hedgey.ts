@@ -209,6 +209,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         streams.push({
           id:              `hedgey-${chainId}-${planIds[i].toString()}`,
           protocol:        "hedgey",
+          category:        "vesting",
           chainId,
           recipient:       wallet,
           tokenAddress:    plan.token,

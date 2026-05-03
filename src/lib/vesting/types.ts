@@ -24,9 +24,12 @@ export {
   nextUnlockTime,
   computeStepVesting,
   nextUnlockTimeForSteps,
+  categoryForProtocol,
+  PROTOCOL_DEFAULT_CATEGORY,
 } from "@vestream/shared";
 
 export type {
   SupportedChainId,
   VestingStream,
+  StreamCategory,
 } from "@vestream/shared";

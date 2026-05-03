@@ -236,6 +236,10 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     return {
       id:              `superfluid-${chainId}-${raw.id}`,
       protocol:        "superfluid",
+      // Superfluid VestingScheduler — investor cliff/linear vesting. The
+      // separate Superfluid Money Streams product (continuous flows) would
+      // be category: "stream" in a future adapter.
+      category:        "vesting",
       chainId,
       recipient:       raw.receiver.toLowerCase(),
       tokenAddress:    raw.superToken.toLowerCase(),

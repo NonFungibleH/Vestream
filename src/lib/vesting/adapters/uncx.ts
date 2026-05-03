@@ -179,6 +179,7 @@ async function fetchForChain(
     return {
       id:              `uncx-${chainId}-${raw.lockID}`,
       protocol:        "uncx",
+      category:        "vesting",
       chainId,
       recipient:       raw.owner.id,
       tokenAddress:    raw.token.id,

@@ -278,6 +278,10 @@ async function fetchForChain(
     return {
       id:              `streamflow-${CHAIN_IDS.SOLANA}-${id}`,
       protocol:        "streamflow",
+      // Streamflow Vesting product — investor team token unlocks. The
+      // separate "Payments" product (continuous payroll on Solana) is
+      // skipped today; when added it'll be category: "stream".
+      category:        "vesting",
       chainId:         CHAIN_IDS.SOLANA,
       recipient:       stream.recipient,
       tokenAddress:    stream.mint,

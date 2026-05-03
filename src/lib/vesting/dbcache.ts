@@ -18,8 +18,20 @@
 import { db } from "@/lib/db";
 import { vestingStreamsCache } from "@/lib/db/schema";
 import { inArray, and, gte, sql } from "drizzle-orm";
-import { VestingStream } from "./types";
+import { VestingStream, categoryForProtocol } from "./types";
 import { normaliseAddress } from "@/lib/address-validation";
+
+/** Hydrate a cached stream blob into a typed VestingStream. Back-fills the
+ *  `category` field for rows written before the field existed (every adapter
+ *  now sets it explicitly, but old cache rows survive until next refresh).
+ *  Cheaper than running a one-shot UPDATE migration. */
+function hydrateCachedStream(blob: Record<string, unknown>): VestingStream {
+  const s = blob as Partial<VestingStream> & { protocol: string };
+  if (!s.category) {
+    s.category = categoryForProtocol(s.protocol);
+  }
+  return s as VestingStream;
+}
 
 /** How old cached data can be before we re-fetch from subgraphs */
 const ACTIVE_TTL_SECONDS   = 30 * 60;      // 30 min for active streams (tighten when needed)
@@ -69,7 +81,7 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
 
     if (fresh) {
       freshWallets.add(row.recipient);
-      streams.push(row.streamData as unknown as VestingStream);
+      streams.push(hydrateCachedStream(row.streamData as Record<string, unknown>));
     }
   }
 

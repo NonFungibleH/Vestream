@@ -206,6 +206,7 @@ async function fetchForChain(
       streams.push({
         id:              `uncx-vm-${chainId}-${entries[i].vestingId.toString()}`,
         protocol:        "uncx-vm",
+        category:        "vesting",
         chainId,
         recipient:       entries[i].recipient,
         tokenAddress:    tokenAddr,

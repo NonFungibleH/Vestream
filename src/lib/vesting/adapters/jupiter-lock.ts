@@ -310,6 +310,7 @@ async function fetchForChain(
     return {
       id:              `jupiter-lock-${CHAIN_IDS.SOLANA}-${e.escrowPubkey}`,
       protocol:        "jupiter-lock",
+      category:        "vesting",
       chainId:         CHAIN_IDS.SOLANA,
       recipient:       e.recipient,
       tokenAddress:    e.tokenMint,
