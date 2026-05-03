@@ -125,6 +125,21 @@ const FORMATS: ExportFormat[] = [
       "TurboTax classifies vesting income on Schedule 1 / capital gains on Schedule D — review the import preview.",
     ],
   },
+  // Worker-pivot — ordinary-income summary at FMV-on-receipt. Distinct
+  // from the four capital-gains formats above. For DAO contributors,
+  // crypto-paid contractors, and salary streams.
+  {
+    id:        "payroll-income",
+    name:      "Payroll income summary",
+    subtitle:  "For crypto salary, contributor pay, and DAO income — ordinary-income, not capital gains",
+    steps:     [
+      "We'll download a CSV with one row per claim received as income.",
+      "Each row carries the FMV in USD at the moment of receipt — the figure your tax authority wants.",
+      "US: paste the totals into TurboTax → 1099-NEC summary box, or attach the CSV as supporting documentation.",
+      "UK: the per-row figures map onto SA103 (Self-employment) box 15 — your accountant can sum and convert to GBP at year-end.",
+      "Other countries: the CSV is generic enough for any accountant to use directly.",
+    ],
+  },
 ];
 
 export default function ExportsPage() {

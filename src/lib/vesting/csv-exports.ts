@@ -22,7 +22,12 @@ import { CHAIN_NAMES } from "./types";
 // Drizzle row shape from `select().from(claimEvents)`.
 type ClaimRow = typeof claimEvents.$inferSelect;
 
-export type ExportFormat = "vestream-generic" | "koinly" | "cointracker" | "turbotax";
+export type ExportFormat =
+  | "vestream-generic"
+  | "koinly"
+  | "cointracker"
+  | "turbotax"
+  | "payroll-income";  // worker-pivot: ordinary-income summary at FMV-on-receipt
 
 /**
  * Format a single CSV cell — escape if it contains a comma, quote, or
@@ -242,6 +247,55 @@ function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): s
   return [header, ...body].join("\n") + "\n";
 }
 
+// ── Payroll-income (worker audience) ──────────────────────────────────────
+// Ordinary-income summary, jurisdiction-agnostic. Each claim is treated as
+// income at fair-market-value-on-receipt (the only basis HMRC, IRS, ATO,
+// and CRA all accept for crypto-paid wages and contributor pay).
+//
+// Column shape is designed to be human-scannable AND paste-able into:
+//   - TurboTax → 1099-NEC summary box (US)
+//   - HMRC SA103 box 15 (UK self-employment)
+//   - Generic accountant import (everywhere else — figures already in USD)
+//
+// Distinct from buildKoinly() which labels claims as "income" too — Koinly
+// then reads them through capital-gains math. This format omits the
+// capital-gains scaffolding entirely so worker users aren't filing the
+// wrong return.
+function buildPayrollIncome(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+  const header = csvRow([
+    "Date",
+    "Source",                   // free-form: annotation customName, else "<protocol> via <chain>"
+    "Token",
+    "Amount Received",
+    "FMV USD at Receipt",       // canonical income figure for tax filing
+    "Pricing Confidence",       // high / medium / low / missing — auditable
+    "Income Type",              // "salary" | "vesting income" | "grant" — derived from stream category
+    "Stream Address",           // payer contract — proxy for the "employer" / payer
+    "Tx Hash",
+  ]);
+  const body = rows.map((r) => {
+    const ann = annotationDescription(annotations, r.streamId);
+    const source = ann ?? `${r.protocol} via chain ${r.chainId}`;
+    // Income-type derivation: claim_events doesn't store stream category
+    // directly, but we can infer from protocol — llamapay = salary,
+    // everything else = vesting income. Future: read from a denormalised
+    // category column on claim_events when streams gain multi-category.
+    const incomeType = r.protocol === "llamapay" ? "salary" : "vesting income";
+    return csvRow([
+      isoDate(r.claimedAt),
+      source,
+      r.tokenSymbol ?? r.tokenAddress.slice(0, 10),
+      tokensWhole(r.amount, r.tokenDecimals),
+      r.usdValueAtClaim ?? "",
+      r.priceConfidence,
+      incomeType,
+      r.streamId,                   // composite "<protocol>-<chain>-<id>" — recognisable to the user
+      r.txHash,
+    ]);
+  });
+  return [header, ...body].join("\n") + "\n";
+}
+
 // ── Public dispatcher ──────────────────────────────────────────────────────
 
 export function buildClaimsCsv(
@@ -254,6 +308,7 @@ export function buildClaimsCsv(
     case "koinly":           return buildKoinly(rows, annotations);
     case "cointracker":      return buildCoinTracker(rows);  // no description column in CT format
     case "turbotax":         return buildTurboTax(rows, annotations);
+    case "payroll-income":   return buildPayrollIncome(rows, annotations);
     default:
       // Exhaustive switch; TypeScript will catch missing branches at compile time.
       return buildVestreamGeneric(rows, annotations);

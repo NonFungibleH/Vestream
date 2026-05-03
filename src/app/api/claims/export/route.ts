@@ -21,7 +21,13 @@ import { getStreamAnnotationsForUser } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
 
-const VALID_FORMATS = new Set<ExportFormat>(["vestream-generic", "koinly", "cointracker", "turbotax"]);
+const VALID_FORMATS = new Set<ExportFormat>([
+  "vestream-generic",
+  "koinly",
+  "cointracker",
+  "turbotax",
+  "payroll-income",
+]);
 
 export async function GET(req: NextRequest) {
   const session = await getSession();

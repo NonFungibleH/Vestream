@@ -29,9 +29,21 @@ export const metadata: Metadata = {
   robots:      { index: false, follow: false },
 };
 
-// Re-render at most once a minute. Per-cell staleness is dominated by the
-// daily seed cron, so finer freshness on this page is wasted effort.
-export const revalidate = 60;
+// force-dynamic (was: revalidate = 60).
+//
+// ISR + the build-time DB guard combined to give a confusing first-load
+// experience: at build time both getCacheStatsCells() and readAllSnapshots()
+// short-circuit to [] (per the CLAUDE.md landmine — DB helpers must
+// short-circuit during `next build` or transient pooler drops can kill
+// the build), so the pre-rendered snapshot was empty. The first user
+// post-deploy got that empty snapshot; ISR background revalidation took
+// 30+ seconds to swap in real data.
+//
+// /status is low-traffic and operator-facing — paying 1-3s of DB-query
+// latency per request to get always-live data is the right trade. There's
+// no value in caching a snapshot of a dashboard whose entire purpose is
+// to show "what's happening right now."
+export const dynamic = "force-dynamic";
 
 // Column order — most-trafficked chains on the left, Solana last (Solana
 // only intersects two protocols so its column is mostly empty).
