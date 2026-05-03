@@ -110,26 +110,39 @@ async function dispatchFanOut(
   }, { status: 202 });
 }
 
-/** Leaf path — runs a single group's jobs inline up to maxDuration. */
-async function runOneGroup(group: SeedGroup, mode: SeedMode): Promise<NextResponse> {
-  const startedAt = Date.now();
-  try {
-    const results = await seedAll(mode, group);
-    const summary = summariseRun(results);
-    const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
-    console.log(`[cron/seed-cache] group="${group}" mode="${mode}" complete in ${elapsed}s —`, summary);
-    return NextResponse.json({
-      ok:            true,
-      group,
-      mode,
-      elapsedSec:    elapsed,
-      summary,
-      perJobResults: results,
-    });
-  } catch (err) {
-    console.error(`[cron/seed-cache] group="${group}" job failed:`, err);
-    return NextResponse.json({ error: "Seeder job failed", group }, { status: 500 });
-  }
+/**
+ * Leaf path — runs a single group's jobs IN THE BACKGROUND via `after()`,
+ * returns 202 immediately.
+ *
+ * Was inline until 2026-05-03. The inline path hit Cloudflare's ~100s
+ * gateway timeout (524 errors) for the heavy group (PinkSale × 4 chains
+ * routinely takes 2-3 min). Vercel itself allows 300s — the bottleneck
+ * was the CDN in front of vestream.io.
+ *
+ * Background pattern matches the dispatcher: caller (human OR dispatcher
+ * self-fetch) gets a sub-second 202 confirming the work is queued, then
+ * the seeder runs to completion within Vercel's maxDuration (300s).
+ */
+function runOneGroup(group: SeedGroup, mode: SeedMode): NextResponse {
+  after(async () => {
+    const startedAt = Date.now();
+    try {
+      const results = await seedAll(mode, group);
+      const summary = summariseRun(results);
+      const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
+      console.log(`[cron/seed-cache] group="${group}" mode="${mode}" complete in ${elapsed}s —`, summary);
+    } catch (err) {
+      console.error(`[cron/seed-cache] group="${group}" job failed:`, err);
+    }
+  });
+  return NextResponse.json({
+    ok:        true,
+    group,
+    mode,
+    accepted:  true,
+    message:   `Group "${group}" queued in background. Check Vercel logs for completion.`,
+    startedAt: new Date().toISOString(),
+  }, { status: 202 });
 }
 
 async function handle(req: NextRequest) {
