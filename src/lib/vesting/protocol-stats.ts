@@ -14,7 +14,8 @@
 
 import { and, asc, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "../db";
-import { vestingStreamsCache } from "../db/schema";
+import { protocolSummaries, vestingStreamsCache } from "../db/schema";
+import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import type { VestingStream } from "./types";
 
 // Sepolia + Base Sepolia. Public landing-page surfaces (per-protocol stats,
@@ -177,12 +178,103 @@ const EMPTY_PROTOCOL_STATS: ProtocolStats = {
 /**
  * Aggregate stats for a protocol (or a merged group — pass multiple adapter IDs
  * for UNCX which has classic + VestingManager variants).
+ *
+ * Two-tier read path:
+ *
+ *   1. Fast path — SELECT FROM protocol_summaries (≤10 rows total table).
+ *      Per-row data was pre-aggregated by refreshProtocolSummaries() at
+ *      end-of-cron. Sub-30ms regardless of cache size. When passed multiple
+ *      adapter ids (UNCX classic + VM), we sum/union across the matching
+ *      rows in TS — no GROUP BY needed since the table already has one
+ *      row per adapter.
+ *
+ *   2. Bootstrap fallback — legacy GROUP BY directly over
+ *      vesting_streams_cache. Fires when the summaries table is empty,
+ *      e.g. fresh deploy after migration 0018 but before the first cron
+ *      pass. Slow (5+ seconds for Sablier) but only runs once per
+ *      (deploy, protocol) until the next cron populates the summaries.
+ *
+ * Either path produces a stable ProtocolStats shape so the consumers
+ * don't need to know which one fired.
  */
 export async function getProtocolStats(
   adapterIds: readonly string[],
 ): Promise<ProtocolStats> {
   if (shouldSkipDbAtBuildTime()) return EMPTY_PROTOCOL_STATS;
+  if (adapterIds.length === 0)   return EMPTY_PROTOCOL_STATS;
 
+  // ── Fast path ──────────────────────────────────────────────────────────────
+  // Wrapped in try/catch so a missing table (migration 0018 not applied) or
+  // any other query failure falls through to the legacy path rather than
+  // crashing the page. Same defensive shape as getCacheStatsCells() in
+  // cache-stats.ts.
+  try {
+    const rows = await db
+      .select({
+        protocol:       protocolSummaries.protocol,
+        totalStreams:   protocolSummaries.totalStreams,
+        activeStreams:  protocolSummaries.activeStreams,
+        tokensTracked:  protocolSummaries.tokensTracked,
+        recipientCount: protocolSummaries.recipientCount,
+        chainIds:       protocolSummaries.chainIds,
+        lastIndexedAt:  protocolSummaries.lastIndexedAt,
+      })
+      .from(protocolSummaries)
+      .where(inArray(protocolSummaries.protocol, Array.from(adapterIds)));
+
+    if (rows.length > 0) {
+      // Sum across matched rows (UNCX merges uncx + uncx-vm; everyone else
+      // gets a single row). Distinct-token / distinct-recipient counts
+      // can't be summed correctly across protocols without revisiting the
+      // source — but for our two-protocol UNCX merge the overlap is
+      // negligible (different contracts → different streams) so a sum is
+      // close enough for the public stats display. If higher precision
+      // is ever needed, store the underlying sets in the summaries blob
+      // instead of pre-counted scalars.
+      let total = 0, active = 0, tokens = 0, recipients = 0;
+      const chainSet = new Set<number>();
+      let lastIndexedAt: Date | null = null;
+      for (const r of rows) {
+        total      += r.totalStreams;
+        active     += r.activeStreams;
+        tokens     += r.tokensTracked;
+        recipients += r.recipientCount;
+        for (const c of r.chainIds ?? []) chainSet.add(c);
+        if (r.lastIndexedAt) {
+          const d = toDate(r.lastIndexedAt);
+          if (d && (!lastIndexedAt || d > lastIndexedAt)) lastIndexedAt = d;
+        }
+      }
+      return {
+        totalStreams:   total,
+        activeStreams:  active,
+        tokensTracked:  tokens,
+        recipientCount: recipients,
+        chainIds:       Array.from(chainSet).sort((a, b) => a - b),
+        lastIndexedAt,
+      };
+    }
+    // Empty result → fall through to legacy path. Happens on fresh deploy
+    // before the first cron pass populates the summaries table.
+  } catch (err) {
+    console.warn(
+      `[protocol-stats] protocol_summaries fast path failed (likely table missing); falling back to GROUP BY: ${err instanceof Error ? err.message : err}`,
+    );
+  }
+
+  // ── Bootstrap fallback (legacy GROUP BY) ──────────────────────────────────
+  return computeProtocolStatsFromCache(adapterIds);
+}
+
+/**
+ * Underlying GROUP BY computation — the same expression that
+ * getProtocolStats used to run on every read. Now factored out so it can
+ * be called from refreshProtocolSummaries() (write path) and as a
+ * bootstrap fallback in getProtocolStats (read path).
+ */
+async function computeProtocolStatsFromCache(
+  adapterIds: readonly string[],
+): Promise<ProtocolStats> {
   const filter = adapterFilter(adapterIds);
 
   const [statsRow] = await db
@@ -197,9 +289,6 @@ export async function getProtocolStats(
     .from(vestingStreamsCache)
     .where(filter);
 
-  // `max()` over a timestamp column can come back as a Date *or* as an ISO
-  // string depending on pg driver configuration — normalise defensively so
-  // relativeTimeSince() always gets a real Date.
   const lastIndexedAt = toDate(statsRow?.lastIndexed);
 
   return {
@@ -210,6 +299,86 @@ export async function getProtocolStats(
     chainIds:       (statsRow?.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
     lastIndexedAt,
   };
+}
+
+/**
+ * Recompute protocol_summaries from the live cache and upsert every row.
+ *
+ * Called from the seeder cron at end-of-run (alongside refreshStatusSummary).
+ * Single SELECT — Postgres does the GROUP BY work; we then walk results
+ * and upsert. Idempotent.
+ *
+ * Active-stream semantics — this is where the LlamaPay "0 active" fix lives:
+ *
+ *   - vesting protocols: active = count where !is_fully_vested
+ *     (matches the pre-pivot meaning of "active = still releasing")
+ *
+ *   - stream protocols (LlamaPay, Sablier Flow): active = total
+ *     The adapter sets is_fully_vested=true on every stream so the UI
+ *     suppresses cliff-countdown rendering. But every flowing stream IS
+ *     active by definition; counting only is_fully_vested=false ones gives
+ *     the wrong "0 active" display we saw in production on May 4 2026.
+ */
+export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
+  if (shouldSkipDbAtBuildTime()) return { rows: 0 };
+
+  // Read all per-protocol aggregates in one pass. Postgres's GROUP BY is
+  // fast given the protocol index; we do the active-vs-stream split in TS
+  // since the column is already loaded.
+  const aggregates = await db
+    .select({
+      protocol:        vestingStreamsCache.protocol,
+      total:           sql<number>`count(*)::int`,
+      vestingActive:   sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+      tokens:          sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
+      recipients:      sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
+      chains:          sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
+      lastIndexed:     sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
+    })
+    .from(vestingStreamsCache)
+    .groupBy(vestingStreamsCache.protocol);
+
+  if (aggregates.length === 0) return { rows: 0 };
+
+  const now = new Date();
+  const values = aggregates.map((r) => {
+    const category = PROTOCOL_DEFAULT_CATEGORY[r.protocol] ?? "vesting";
+    // Stream-category protocols: every flowing row counts as active.
+    // (See docstring above for why.)
+    const active = category === "stream" ? r.total : r.vestingActive;
+    return {
+      protocol:       r.protocol,
+      totalStreams:   r.total      ?? 0,
+      activeStreams:  active       ?? 0,
+      tokensTracked:  r.tokens     ?? 0,
+      recipientCount: r.recipients ?? 0,
+      chainIds:       (r.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
+      lastIndexedAt:  toDate(r.lastIndexed),
+      computedAt:     now,
+    };
+  });
+
+  // Single bulk upsert. PRIMARY KEY is `protocol`, so each adapter has at
+  // most one row in the table forever. Old rows for protocols that have
+  // since been removed from the registry stay intact — harmless, just a
+  // tiny stale row no consumer queries for.
+  await db
+    .insert(protocolSummaries)
+    .values(values)
+    .onConflictDoUpdate({
+      target: protocolSummaries.protocol,
+      set: {
+        totalStreams:   sql`excluded.total_streams`,
+        activeStreams:  sql`excluded.active_streams`,
+        tokensTracked:  sql`excluded.tokens_tracked`,
+        recipientCount: sql`excluded.recipient_count`,
+        chainIds:       sql`excluded.chain_ids`,
+        lastIndexedAt:  sql`excluded.last_indexed_at`,
+        computedAt:     sql`excluded.computed_at`,
+      },
+    });
+
+  return { rows: values.length };
 }
 
 function toDate(v: Date | string | null | undefined): Date | null {

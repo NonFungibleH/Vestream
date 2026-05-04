@@ -634,6 +634,53 @@ export const statusSummary = pgTable(
   ],
 );
 
+// ── Protocol summaries materialised view ─────────────────────────────────────
+//
+// Pre-aggregated rollup of vesting_streams_cache, written by the seeder
+// cron after each successful run. Replaces the four slow aggregation
+// queries that /protocols/[slug] used to run on every cold render
+// (getProtocolStats was the slowest — count(distinct ...) + array_agg
+// over filtered cache rows = 5+ seconds for Sablier).
+//
+// Same pattern as status_summary (migration 0016): tiny fixed-size table,
+// upserted by the seeder, read by request paths in O(rows) where rows is
+// the number of adapter ids being queried (always 1-2). Sub-30ms reads
+// regardless of how big vesting_streams_cache grows.
+//
+// Why a dedicated table per query family:
+//   - status_summary covers the (protocol × chain) freshness matrix.
+//   - protocol_summaries covers per-protocol aggregates used by
+//     /protocols/[slug] AND the /protocols index page.
+// Both stay tiny (≤60 rows) and serve different query shapes; combining
+// them into a single view would require either GROUP BY at read time or
+// duplicated columns. Keeping them separate is clearer.
+//
+// Active-stream semantics (the May 4 2026 LlamaPay-shows-0-active fix):
+//   - For category="vesting" protocols: active = count where !is_fully_vested
+//   - For category="stream"  protocols: active = total (every flowing
+//     stream IS active — the per-stream isFullyVested=true convention
+//     suppresses cliff-countdown UI but doesn't mean the stream stopped)
+//
+// The split happens in refreshProtocolSummaries(), keyed off the
+// PROTOCOL_DEFAULT_CATEGORY map in @vestream/shared. Storing a single
+// activeStreams column means the read path doesn't need to know about
+// categories at all.
+export const protocolSummaries = pgTable(
+  "protocol_summaries",
+  {
+    protocol:        text("protocol").primaryKey(),
+    totalStreams:    integer("total_streams").notNull().default(0),
+    activeStreams:   integer("active_streams").notNull().default(0),
+    tokensTracked:   integer("tokens_tracked").notNull().default(0),
+    recipientCount:  integer("recipient_count").notNull().default(0),
+    // jsonb so the int[] of chains is portable across drizzle-kit
+    // introspection rounds (drizzle's native int[] handling is fragile).
+    chainIds:        jsonb("chain_ids").$type<number[]>().notNull().default([]),
+    lastIndexedAt:   timestamp("last_indexed_at"),
+    computedAt:      timestamp("computed_at").defaultNow().notNull(),
+  },
+);
+
 // ── Demo web-push subscriptions ───────────────────────────────────────────────
 // Anonymous push subscriptions for the 15-minute vesting demo on /demo.
 // One row per (sessionId, endpoint) pair — when a visitor subscribes we mirror

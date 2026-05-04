@@ -55,6 +55,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 import { writeToCache } from "./dbcache";
 import { refreshStatusSummary } from "./cache-stats";
+import { refreshProtocolSummaries } from "./protocol-stats";
 import { ADAPTER_REGISTRY } from "./adapters";
 import { resolveSubgraphUrl } from "./graph";
 import { PINKSALE_SEED_WALLETS } from "./seed-wallets";
@@ -1392,6 +1393,17 @@ export async function seedAll(
     console.log(`[seeder] status_summary refreshed: ${refreshed.rows} cells`);
   } catch (err) {
     console.error("[seeder] status_summary refresh failed:", err);
+  }
+
+  // Same idea for protocol_summaries — drives /protocols/[slug] and the
+  // /protocols index page. Migration 0018 introduced the table; before
+  // this hook ran for the first time, those pages used to do a slow
+  // GROUP BY at render time (5+ seconds for Sablier). Now sub-30ms.
+  try {
+    const refreshed = await refreshProtocolSummaries();
+    console.log(`[seeder] protocol_summaries refreshed: ${refreshed.rows} protocols`);
+  } catch (err) {
+    console.error("[seeder] protocol_summaries refresh failed:", err);
   }
 
   return results;

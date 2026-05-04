@@ -52,7 +52,19 @@ const securityHeaders = [
       // initialise and wallet connectors (incl. MetaMask) never get a chance to
       // open — which presents as "MetaMask popup never fires". GA: googletagmanager
       // serves gtag.js; google-analytics.com is the collection endpoint.
-      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://*.google-analytics.com https://*.googletagmanager.com",
+      // viem default RPC fallbacks for the EVM chains in our wagmi config.
+      // Without these, wagmi's wallet-state reads fail with 32+ console
+      // CSP errors per page — fired in a tight loop because viem retries
+      // each chain on every reconnect attempt. Endpoints added May 4 2026:
+      //   - eth.merkle.io / cloudflare-eth.com / ethereum.publicnode.com (mainnet)
+      //   - bsc-rpc.publicnode.com / bsc.publicnode.com (covered by *.publicnode.com)
+      //   - polygon-rpc.com (Polygon's official public RPC)
+      //   - mainnet.base.org (Base official RPC)
+      //   - arbitrum-one.publicnode.com (covered)
+      //   - optimism.publicnode.com (covered)
+      // dRPC is included for chains where we configure it explicitly server-
+      // side — keeps client + server allowlists symmetric.
+      "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://eth.merkle.io https://cloudflare-eth.com https://polygon-rpc.com https://*.base.org https://*.drpc.org https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://*.google-analytics.com https://*.googletagmanager.com",
       // Web3Modal occasionally embeds verify.walletconnect.org in an iframe for
       // origin verification on certain wallet flows.
       "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
