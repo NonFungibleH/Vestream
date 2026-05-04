@@ -14,7 +14,7 @@
 // to connect from this browser).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -306,26 +306,77 @@ export default function FindVestingsClient() {
           {result.totalStreams === 0 ? (
             <NoResults address={result.address} />
           ) : (
-            <>
-              <ResultsSummary result={result} />
-              {/* Strong inline CTA — placed RIGHT after the summary so users
-                  see the call to install the app at the moment they realise
-                  they have real vestings to track. The full app-store CTA
-                  block at the bottom of the page stays as a deeper second
-                  touchpoint, but this inline strip catches eyeballs first. */}
-              <ResultsActionStrip totalStreams={result.totalStreams} walletAddress={result.address} />
-              <div className="grid grid-cols-1 gap-3">
-                {result.groups.map((g) => (
-                  <GroupCard key={`${g.protocolId}-${g.chainId}`} group={g} />
-                ))}
-              </div>
-            </>
+            <ResultsBlock result={result} />
           )}
 
           <MobileAppCta hasResults={result.totalStreams > 0} />
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Renders the populated-results section: summary + conversion strip + per-
+ * group cards + sticky app bar. Extracted from the parent so the
+ * sticky-bar IntersectionObserver can observe a stable ref to the inline
+ * strip's anchor (which would re-mount if it lived inline alongside the
+ * loading branch).
+ */
+function ResultsBlock({ result }: { result: ScanResponse }) {
+  // Anchor that the sticky bar observes — when this is offscreen, the
+  // sticky bar slides in. When it's on-screen, sticky bar slides out so
+  // we never double-CTA the user.
+  const stripRef = useRef<HTMLDivElement | null>(null);
+
+  // Pick a "primary symbol" to personalise the conversion headline. We
+  // use the symbol with the most streams as a heuristic — it's the user's
+  // dominant exposure and the one they'll most viscerally not-want-to-miss.
+  // Falls back to null if nothing has a symbol (rare; renders generic copy).
+  const primarySymbol = useMemo<string | null>(() => {
+    const counts = new Map<string, number>();
+    for (const g of result.groups) {
+      for (const tok of g.tokens) {
+        if (!tok.symbol) continue;
+        counts.set(tok.symbol, (counts.get(tok.symbol) ?? 0) + (tok.streamCount || 1));
+      }
+    }
+    let best: string | null = null;
+    let bestCount = 0;
+    for (const [sym, n] of counts) {
+      if (n > bestCount) { bestCount = n; best = sym; }
+    }
+    return best;
+  }, [result]);
+
+  return (
+    <>
+      <ResultsSummary result={result} />
+      {/* Strong inline CTA — placed RIGHT after the summary so users
+          see the call to install the app at the moment they realise
+          they have real vestings to track. */}
+      <div ref={stripRef}>
+        <ResultsActionStrip
+          totalStreams={result.totalStreams}
+          walletAddress={result.address}
+          primarySymbol={primarySymbol}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {result.groups.map((g) => (
+          <GroupCard
+            key={`${g.protocolId}-${g.chainId}`}
+            group={g}
+            walletAddress={result.address}
+          />
+        ))}
+      </div>
+      <StickyAppBar
+        totalStreams={result.totalStreams}
+        walletAddress={result.address}
+        anchorRef={stripRef}
+      />
+    </>
   );
 }
 
@@ -485,62 +536,272 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
 // Results action strip — inline CTA shown right after ResultsSummary
 // ─────────────────────────────────────────────────────────────────────────
 
-function ResultsActionStrip({ totalStreams, walletAddress }: { totalStreams: number; walletAddress: string }) {
+function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { totalStreams: number; walletAddress: string; primarySymbol: string | null }) {
+  // Conversion-tier action card. The previous single-row strip read as a
+  // suggestion ("Track in Vestream") that users skimmed past once they'd
+  // visually confirmed their vestings on web. This version is built around
+  // three product principles drawn from the May 2026 conversion review:
+  //
+  //   1. Make the WEB view feel partial. Users see static totals here;
+  //      the app shows them live progress, the moment of unlock, and a
+  //      direct claim path. We surface a stylised lock-screen notification
+  //      preview so the value is visual, not just listed.
+  //
+  //   2. Loss-framed headline. "Track in Vestream" is benefit-positive;
+  //      "Don't miss your next NOVA unlock" is loss-framed. Same fact,
+  //      ~2× conversion uplift in this kind of slot per industry data.
+  //      We anchor on the user's actual primary token symbol when we have
+  //      one, so the headline is personalised to their portfolio.
+  //
+  //   3. Specific bullets, not vague copy. "Push alerts the moment
+  //      anything unlocks · one-tap claim links · no spreadsheets" is
+  //      OK, but bulleting the three things WITH icons reads as a
+  //      checklist — visually inventories what they get for free.
   return (
     <div
-      className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
+      className="rounded-2xl p-5 md:p-7 relative overflow-hidden"
       style={{
-        background: "#1CB8B8",
-        boxShadow: "0 10px 30px rgba(28,184,184,0.25)",
+        background: "linear-gradient(135deg, #1CB8B8 0%, #189D9D 100%)",
+        boxShadow: "0 14px 38px rgba(28,184,184,0.32)",
       }}
     >
-      {/* Subtle decorative glow */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-50"
+        className="absolute inset-0 pointer-events-none opacity-60"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 85% 50%, rgba(255,255,255,0.18), transparent 50%)",
+            "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.20), transparent 45%), radial-gradient(circle at 10% 110%, rgba(0,0,0,0.18), transparent 50%)",
         }}
       />
-      <div className="relative flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
+
+      <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6 md:gap-10 items-center">
+        {/* Left: copy + bullets + CTA */}
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider mb-3"
+            style={{ background: "rgba(255,255,255,0.18)", color: "white", letterSpacing: "0.08em" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "white" }} />
+            Next step
+          </div>
+
+          <h3
+            className="text-xl md:text-3xl font-bold leading-tight mb-2"
+            style={{ color: "white", letterSpacing: "-0.02em" }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+            {primarySymbol
+              ? <>Don&rsquo;t miss your next <span style={{ background: "rgba(255,255,255,0.22)", padding: "0 6px", borderRadius: 6 }}>{primarySymbol}</span> unlock</>
+              : <>Don&rsquo;t miss your next unlock</>}
+          </h3>
+          <p className="text-sm md:text-base mb-5" style={{ color: "rgba(255,255,255,0.86)", lineHeight: 1.55 }}>
+            You&rsquo;ve seen your {totalStreams === 1 ? "vesting" : `${totalStreams} vestings`} on web. The app keeps watching them — even when this tab is closed.
+          </p>
+
+          {/* Three specific value bullets with icons. Replaces the
+              comma-separated tagline; reads as a "you'll get this"
+              checklist. */}
+          <ul className="space-y-2 mb-6">
+            {[
+              "Push alert the second any of them unlocks",
+              "Live progress bars + one-tap claim links",
+              "Tax-ready CSV at year-end (Pro)",
+            ].map((b, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm md:text-[15px]" style={{ color: "rgba(255,255,255,0.95)" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" className="mt-0.5 flex-shrink-0">
+                  <path d="M5 12.5l4.2 4.2L19 7" />
+                </svg>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <TrackInAppCTA
+              walletAddress={walletAddress}
+              surface="find_vestings_results"
+              className="results-action-cta inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm md:text-base font-bold transition-all hover:opacity-95 whitespace-nowrap"
+              style={{
+                background: "white",
+                color: "#1CB8B8",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.20)",
+              }}
+            >
+              Set my alerts now →
+            </TrackInAppCTA>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
+              Free · iOS &amp; Android
+            </span>
+          </div>
+        </div>
+
+        {/* Right: stylised lock-screen notification preview. Visual proof
+            of what "push alert the moment it unlocks" actually feels like
+            on the user's phone. Custom inline SVG-ish layout — no image
+            asset dependency, scales cleanly, dark-mode invariant. Hidden
+            on small screens (image takes too much vertical space; the
+            text + CTA already do the conversion work there). */}
+        <NotificationMockup primarySymbol={primarySymbol} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Stylised lock-screen notification preview for the action strip. Shown on
+ * md+ screens; collapses to nothing on mobile where vertical space is
+ * better spent on the text + CTA.
+ *
+ * Deliberately abstract — not a real device chrome, just enough visual
+ * vocabulary that users read it as "phone notification". Avoids brand
+ * confusion (looks like neither a real iPhone nor a Pixel) while still
+ * landing the message: this is what the app does for you.
+ */
+function NotificationMockup({ primarySymbol }: { primarySymbol: string | null }) {
+  const tokenLabel = primarySymbol ?? "NOVA";
+  return (
+    <div
+      className="hidden md:flex flex-col gap-2 w-[280px] flex-shrink-0"
+      aria-hidden="true"
+    >
+      {/* Status-bar hint */}
+      <div className="flex items-center justify-between px-2 text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
+        <span>9:41</span>
+        <span>● Vestream</span>
+      </div>
+
+      {/* Notification card */}
+      <div
+        className="rounded-2xl p-3.5 backdrop-blur-md"
+        style={{
+          background: "rgba(255,255,255,0.95)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+        }}
+      >
+        <div className="flex items-start gap-2.5">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+          >
+            <span className="text-[13px] font-bold" style={{ color: "white" }}>V</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#64748b" }}>
+                Vestream
+              </span>
+              <span className="text-[10px]" style={{ color: "#94a3b8" }}>
+                now
+              </span>
+            </div>
+            <div className="text-[13px] font-bold leading-snug" style={{ color: "#0f172a" }}>
+              {tokenLabel} just unlocked
+            </div>
+            <div className="text-[12px] leading-snug" style={{ color: "#64748b" }}>
+              Tap to claim before the window closes →
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Second, more subtle peek — implies a STREAM of alerts, not one */}
+      <div
+        className="rounded-2xl p-2.5 mx-2 opacity-70"
+        style={{
+          background: "rgba(255,255,255,0.85)",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.10)",
+        }}
+      >
+        <div className="text-[11px] font-semibold" style={{ color: "#64748b" }}>
+          ⏰ Reminder · Sablier · 2 days
+        </div>
+        <div className="text-[11px]" style={{ color: "#94a3b8" }}>
+          {tokenLabel} unlocks in 48h
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Sticky bottom bar shown after the user scrolls past the inline action
+ * strip. Locks the conversion path within thumb-reach as they keep
+ * scrolling through GroupCards. Auto-hides when the user scrolls back up
+ * to the inline strip (no double-CTA visual stack).
+ *
+ * Why a sticky bar specifically: the inline strip is a single visual
+ * moment; once it's offscreen the user still has the dopamine of seeing
+ * their numbers but no reminder of the next step. The sticky bar is
+ * "Smart App Banner"-style — a low-cost permanent affordance that the
+ * user dismisses by scrolling away or acting on.
+ */
+function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams: number; walletAddress: string; anchorRef: React.RefObject<HTMLDivElement | null> }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = anchorRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      // SSR / older browsers — keep hidden, no JS-driven CTA. The inline
+      // strip alone covers conversion in that path.
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          // Show the sticky bar when the inline strip is OFF screen
+          // (intersectionRatio = 0). When the user scrolls back up to
+          // the strip, ratio > 0 → hide the bar so we don't double-CTA.
+          setVisible(e.intersectionRatio === 0);
+        }
+      },
+      { threshold: [0, 0.01] },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [anchorRef]);
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-3 md:pb-4 transition-all duration-300"
+      style={{
+        transform: visible ? "translateY(0)" : "translateY(120%)",
+        opacity:   visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+      }}
+      aria-hidden={!visible}
+    >
+      <div
+        className="mx-auto max-w-3xl rounded-2xl px-4 py-3 flex items-center gap-3"
+        style={{
+          background: "#0f172a",
+          boxShadow: "0 -8px 30px rgba(15,23,42,0.30)",
+        }}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round">
               <rect x="5" y="2" width="14" height="20" rx="3" />
               <line x1="12" y1="18" x2="12.01" y2="18" />
             </svg>
           </div>
           <div className="min-w-0">
-            <div className="text-base md:text-lg font-bold leading-snug" style={{ color: "white", letterSpacing: "-0.01em" }}>
-              Track {totalStreams === 1 ? "this" : "all " + totalStreams} live in Vestream
+            <div className="text-sm font-bold leading-tight" style={{ color: "white" }}>
+              Track {totalStreams === 1 ? "this" : `${totalStreams}`} in the app
             </div>
-            <div className="text-xs md:text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }}>
-              Push alerts the moment anything unlocks · one-tap claim links · no spreadsheets
+            <div className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.65)" }}>
+              Push alerts · one-tap claims
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Deep-link CTA — opens the app pre-filled with the wallet the
-              user just scanned, falls through to App Store if not installed.
-              Replaces the previous /early-access link so the path from
-              "I just saw my vestings on web" to "tracked in my pocket"
-              is one tap, not a sign-up form + install + re-search. */}
-          <TrackInAppCTA
-            walletAddress={walletAddress}
-            surface="find_vestings_results"
-            className="results-action-cta inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-95 whitespace-nowrap"
-            style={{
-              background: "white",
-              color: "#1CB8B8",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-            }}
-          >
-            Open in app →
-          </TrackInAppCTA>
-        </div>
+        <TrackInAppCTA
+          walletAddress={walletAddress}
+          surface="find_vestings_sticky_bar"
+          className="inline-flex items-center gap-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-95 whitespace-nowrap flex-shrink-0"
+          style={{
+            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+            color: "white",
+            boxShadow: "0 4px 14px rgba(37,99,235,0.35)",
+          }}
+        >
+          Open
+        </TrackInAppCTA>
       </div>
     </div>
   );
@@ -589,8 +850,20 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
   );
 }
 
-function GroupCard({ group }: { group: Group }) {
+function GroupCard({ group, walletAddress }: { group: Group; walletAddress: string }) {
   const colour = PROTOCOL_COLOURS[group.protocolId] ?? "#8B8E92";
+
+  // Surface any "claimable now" presence at the card level — anything that
+  // could be claimed right now is the highest-conversion-signal moment. If
+  // we know there's a live claim window, the per-card footer becomes much
+  // more pointed ("Claim {SYMBOL} now in app →") instead of generic.
+  let liveClaimableSymbol: string | null = null;
+  for (const tok of group.tokens) {
+    if (BigInt(tok.claimableNowRaw || "0") > 0n) {
+      liveClaimableSymbol = tok.symbol || null;
+      break;
+    }
+  }
 
   return (
     <div
@@ -629,9 +902,6 @@ function GroupCard({ group }: { group: Group }) {
             <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
               Total
             </div>
-            {/* Allow token total to wrap rather than truncate — the number
-                is the key data on this card and hiding it behind ellipsis
-                on mobile hurts more than a two-line wrap. */}
             <div className="font-mono text-sm font-semibold break-all" style={{ color: "#1A1D20" }}>
               {fmtAmount(tok.totalAmountRaw, tok.decimals)}
             </div>
@@ -649,6 +919,38 @@ function GroupCard({ group }: { group: Group }) {
           + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the Vestream app
         </p>
       )}
+
+      {/* Per-card conversion footer. Reinforces that THIS card is the
+          static web view of a stream the app would show live. When there's
+          claimable-now value the copy gets pointed ("Claim now"); otherwise
+          we surface the persistent "track live" framing. Each card thus
+          has its own micro-CTA — every protocol/chain section is its own
+          conversion surface, not just one big strip up top. */}
+      <div className="mt-4 pt-3 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div className="text-[11px] md:text-xs flex items-center gap-1.5 min-w-0" style={{ color: "#64748b" }}>
+          <span
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ background: liveClaimableSymbol ? "#2DB36A" : "#cbd5e1" }}
+          />
+          <span className="truncate">
+            {liveClaimableSymbol
+              ? <><strong style={{ color: "#0f172a" }}>{liveClaimableSymbol}</strong> ready to claim — open in app to do it</>
+              : <>Live progress &amp; alerts available in the app</>}
+          </span>
+        </div>
+        <TrackInAppCTA
+          walletAddress={walletAddress}
+          surface={`find_vestings_group_${group.protocolId}`}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap flex-shrink-0"
+          style={{
+            background: liveClaimableSymbol ? "#2DB36A" : "rgba(28,184,184,0.10)",
+            color: liveClaimableSymbol ? "white" : "#1CB8B8",
+            border: liveClaimableSymbol ? "none" : "1px solid rgba(28,184,184,0.25)",
+          }}
+        >
+          {liveClaimableSymbol ? "Claim now →" : "Track in app →"}
+        </TrackInAppCTA>
+      </div>
     </div>
   );
 }
