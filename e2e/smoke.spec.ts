@@ -38,7 +38,12 @@ test.describe("homepage", () => {
   test("renders with correct page title", async ({ page }) => {
     await page.goto("/");
     // Title comes from layout metadata — no dependency on any API call.
-    await expect(page).toHaveTitle(/Vestream.*Token Vesting Tracker/i);
+    // Regex stays loose: "Vestream" + "Tracker" anywhere with anything
+    // between, because the title now mentions both vesting AND payroll
+    // ("Vestream — Token Vesting & Crypto Payroll Tracker · …" as of
+    // the May 2026 worker-pivot SEO refresh) and we want copy tweaks to
+    // not break smoke tests.
+    await expect(page).toHaveTitle(/Vestream.*Tracker/i);
   });
 
   test("nav links to /developer and /ai are present", async ({ page }) => {
