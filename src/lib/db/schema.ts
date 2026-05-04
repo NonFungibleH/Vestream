@@ -475,6 +475,17 @@ export const vestingStreamsCache = pgTable(
     index("vsc_recipient_idx").on(t.recipient),
     index("vsc_recipient_chain_idx").on(t.recipient, t.chainId),
     index("vsc_recipient_protocol_idx").on(t.recipient, t.protocol),
+    // Single-column protocol filter — used by /protocols/[slug] page
+    // (getProtocolStats, getLatestUnlock, etc). Without this, a query
+    // filtering only by `protocol` does a Seq Scan over 130k+ rows
+    // (5-6s) and the protocol detail page hits the Cloudflare 100s
+    // ceiling. Added live to prod via CREATE INDEX CONCURRENTLY on
+    // May 4 2026 after pages went unusable; recovered to <1.5s.
+    index("vsc_protocol_idx").on(t.protocol),
+    // Compound (protocol, end_time) for the "upcoming unlocks for
+    // protocol X" queries. Range-scans the hot tail of upcoming
+    // events without re-filtering 40k+ Sablier rows in memory.
+    index("vsc_protocol_end_time_idx").on(t.protocol, t.endTime),
   ]
 );
 
