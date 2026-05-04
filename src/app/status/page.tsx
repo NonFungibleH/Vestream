@@ -86,7 +86,12 @@ const loadStatusData = unstable_cache(
       };
     }
   },
-  ["status-page-data-v1"],
+  // Bumped v1 → v2 on May 4 2026 to force-invalidate the unstable_cache
+  // entries that had captured a "status_summary table missing" error
+  // before migration 0016 was applied to prod. Without this bump, /status
+  // kept serving the cached error even after the resilience fix in e96a089
+  // and the migration recovery via psql.
+  ["status-page-data-v2"],
   { revalidate: 60, tags: ["status-page"] },
 );
 
