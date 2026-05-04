@@ -7,7 +7,48 @@
 import "./node-localstorage-shim";
 
 import { http } from "wagmi";
-import { base, baseSepolia, bsc, mainnet, polygon, sepolia } from "wagmi/chains";
+import { base as _base, baseSepolia as _baseSepolia, bsc as _bsc, mainnet as _mainnet, polygon as _polygon, sepolia as _sepolia } from "wagmi/chains";
+
+// ── CORS-friendly RPC overrides ──────────────────────────────────────────────
+//
+// We override `rpcUrls.default.http` on each chain definition because:
+//
+//   - viem/chains' built-in defaults point at endpoints that don't support
+//     browser CORS for cross-origin POSTs (mainnet defaults to eth.merkle.io
+//     as of 2025+; that endpoint returns no Access-Control-Allow-Origin
+//     header so every browser-initiated request hits a preflight failure).
+//
+//   - Setting `transports[chainId]: http("publicnode-url")` is NOT enough.
+//     Wagmi/RainbowKit + multiple viem call sites read
+//     `chain.rpcUrls.default.http[0]` DIRECTLY when constructing things
+//     like the wallet-connect modal's chain metadata or the EIP-1193
+//     provider's chain-data. Those bypass our transport config.
+//
+//   - The clean fix is overriding the chain definition itself so EVERY
+//     consumer (transports, wallet modal, viem fallbacks, etc.) sees the
+//     CORS-friendly URL.
+//
+// publicnode endpoints support CORS by design, are free / no-API-key,
+// geo-distributed, and are the same endpoints Uniswap and Aave use.
+function withRpc<C extends { rpcUrls: { default: { http: readonly string[] } } }>(
+  chain: C,
+  url:   string,
+): C {
+  return {
+    ...chain,
+    rpcUrls: {
+      ...chain.rpcUrls,
+      default: { http: [url] },
+    },
+  };
+}
+
+const mainnet     = withRpc(_mainnet,     "https://ethereum-rpc.publicnode.com");
+const base        = withRpc(_base,        "https://base-rpc.publicnode.com");
+const bsc         = withRpc(_bsc,         "https://bsc-rpc.publicnode.com");
+const polygon     = withRpc(_polygon,     "https://polygon-bor-rpc.publicnode.com");
+const sepolia     = withRpc(_sepolia,     "https://ethereum-sepolia-rpc.publicnode.com");
+const baseSepolia = withRpc(_baseSepolia, "https://base-sepolia-rpc.publicnode.com");
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import {
   rainbowWallet,
