@@ -1345,7 +1345,14 @@ export async function seedAll(
   group: SeedGroup | null = null,
 ): Promise<SeedRunResult[]> {
   const limit    = limitFor(mode);
-  const PARALLEL = 3;
+  // Parallel job count within a single group invocation. Was 3; bumped to
+  // 6 May 4 2026 because subgraphs has 30+ jobs (Sablier × 7 chains, LlamaPay
+  // × 6, Sablier Flow × 6, etc.) and at PARALLEL=3 the tail jobs (typically
+  // Sablier Flow) were getting cut off when Hedgey Polygon's broken multicall
+  // ate the 300s budget. Subgraph queries are I/O-bound so doubling
+  // concurrency is essentially free; the gateway endpoints handle 6
+  // concurrent requests easily and Postgres writes are batched per job.
+  const PARALLEL = 6;
   const results: SeedRunResult[] = [];
 
   // Filter out jobs whose protocol is flagged `disabled: true` in the
