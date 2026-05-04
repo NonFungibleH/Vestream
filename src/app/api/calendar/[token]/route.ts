@@ -1,82 +1,36 @@
 // src/app/api/calendar/[token]/route.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Public iCal feed endpoint. URL is `/api/calendar/{vstr_cal_*}.ics` —
-// the token IS the auth, so calendar apps can subscribe without sending
-// cookies/bearer tokens.
+// LEGACY iCal feed path — preserved as a 308 (Permanent Redirect) to the
+// canonical `/calendar/<token>.ics` URL.
 //
-// Cached at the edge for 30 min. Calendar apps poll on their own schedule
-// (Google ~24h, Apple ~5min when in foreground), so 30-min freshness is
-// fine and dramatically reduces our DB load even if a user has 50 calendar
-// clients across devices.
+// The route was originally hosted at `/api/calendar/<token>.ics` because
+// it's an API route handler. UX testing surfaced that the masked URL on
+// the settings page (`https://www.vestream.io/api/cale•••...`) read as
+// "API" to non-technical users — making the calendar feature look like
+// a developer integration. We moved the live feed to `/calendar/<token>.ics`
+// so the masked preview now reads `https://www.vestream.io/calendar/...`,
+// which is unambiguously about calendars.
 //
-// Token validation lives in db/queries.ts (findUserByCalendarToken) so the
-// schema reference + hash semantics stay co-located.
+// 308 (not 301) so calendar apps re-issue the same GET method on the new
+// URL without rewriting POSTs into anything weird (defensive — calendar
+// apps shouldn't POST here, but the spec's stronger).
+//
+// Existing subscribers (calendar apps that already polled the old URL)
+// follow the redirect transparently. We can drop this shim once analytics
+// show negligible traffic on the legacy path — review around 6 months
+// post-deploy.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByCalendarToken, touchCalendarToken } from "@/lib/db/queries";
-import { generateCalendarFeed } from "@/lib/vesting/calendar-ics";
 
 export const dynamic = "force-dynamic";
 
-// Token format: `vstr_cal_{32 hex chars}` = 9 + 64 = 73 chars total.
-// May arrive with `.ics` suffix appended by the calendar app — strip it.
-const TOKEN_RE = /^vstr_cal_[0-9a-f]{64}$/;
-
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ token: string }> },
 ) {
-  const { token: rawToken } = await params;
-  const token = decodeURIComponent(rawToken).replace(/\.ics$/i, "");
-
-  if (!TOKEN_RE.test(token)) {
-    return new NextResponse("Invalid calendar token", {
-      status: 404,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
-
-  const found = await findUserByCalendarToken(token);
-  if (!found) {
-    // 404 not 401 — calendar apps don't handle auth challenges; just look
-    // unsubscribed if the token's been rotated/revoked.
-    return new NextResponse("Calendar feed not found", {
-      status: 404,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
-
-  // Bump lastFetchedAt — fire-and-forget so we never block the response.
-  // Useful diagnostic for "is the user actually subscribed?".
-  touchCalendarToken(found.userId).catch(() => {});
-
-  let body: string;
-  try {
-    body = await generateCalendarFeed(found.userId);
-  } catch (err) {
-    console.error(`[calendar/${token.slice(0, 16)}…] feed generation failed:`, err);
-    // Return a minimal valid empty calendar rather than 500 — keeps the
-    // user's subscription "alive" in their calendar app even when our DB
-    // hiccups. Better UX than the calendar showing red error states.
-    body =
-      "BEGIN:VCALENDAR\r\n" +
-      "VERSION:2.0\r\n" +
-      "PRODID:-//Vestream//Token Vesting Calendar//EN\r\n" +
-      "X-WR-CALNAME:Vestream — Token unlocks\r\n" +
-      "END:VCALENDAR\r\n";
-  }
-
-  return new NextResponse(body, {
-    status: 200,
-    headers: {
-      "Content-Type":  "text/calendar; charset=utf-8",
-      // 30-min edge cache. Apple Calendar respects the REFRESH-INTERVAL
-      // hint inside the body (PT6H); Google polls on its own ~24h cadence.
-      // Edge cache protects DB regardless.
-      "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
-      // Suggest a friendly filename on download (most apps ignore).
-      "Content-Disposition": `inline; filename="vestream-unlocks.ics"`,
-    },
-  });
+  const { token } = await params;
+  const url = new URL(req.url);
+  const target = `${url.origin}/calendar/${token}${url.search}`;
+  return NextResponse.redirect(target, 308);
 }

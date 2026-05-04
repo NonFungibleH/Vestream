@@ -95,6 +95,56 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
   };
 }
 
+// ─── Read (no TTL filter — for merge fallback) ───────────────────────────────
+//
+// Returns EVERY cached row for these wallets, regardless of staleness.
+//
+// Use case: route handlers that union live adapter results with last-known-
+// good cache rows so transient adapter failures don't make streams "disappear"
+// from the user's portfolio. Without this, the full-miss path in
+// /api/vesting and /api/mobile/vestings replaces the cache wholesale with
+// whatever adapters return NOW — and a single Sepolia subgraph hiccup could
+// drop the user's other streams from the UI even though we already had them.
+//
+// Discovered May 4 2026: user's wallet had 3 streams in cache (Sablier FeeC,
+// Sablier SEP, Hedgey SEP — all Sepolia) but the mobile portfolio only
+// showed 1 because that day's adapter run only re-fetched FeeC successfully
+// and the route's full-miss path returned only that fresh result.
+//
+// This helper is intentionally simple — no freshness logic, no merging.
+// Callers do the union themselves so they can apply their own merge policy
+// (overwrite-by-id is the obvious one, but a future caller might want
+// "drop streams older than X days from cache" or similar).
+export async function readAllStreamsForWallets(wallets: string[]): Promise<VestingStream[]> {
+  if (wallets.length === 0) return [];
+  const normalisedWallets = wallets.map(normaliseAddress);
+  const rows = await db
+    .select()
+    .from(vestingStreamsCache)
+    .where(inArray(vestingStreamsCache.recipient, normalisedWallets));
+  return rows.map((r) => hydrateCachedStream(r.streamData as Record<string, unknown>));
+}
+
+/**
+ * Union helper used by route handlers: take the fresh adapter results as
+ * canonical for any stream id they cover, and fall back to the last-known-
+ * good cache row for any id that fresh DIDN'T cover. Result is deduped by
+ * stream id, fresh wins on conflict.
+ *
+ * O(n + m) — single pass over each list with a Set membership check.
+ */
+export function mergeFreshWithCached(
+  fresh:  VestingStream[],
+  cached: VestingStream[],
+): VestingStream[] {
+  const freshIds = new Set(fresh.map((s) => s.id));
+  const out: VestingStream[] = fresh.slice();
+  for (const c of cached) {
+    if (!freshIds.has(c.id)) out.push(c);
+  }
+  return out;
+}
+
 // ─── Write ────────────────────────────────────────────────────────────────────
 
 /**

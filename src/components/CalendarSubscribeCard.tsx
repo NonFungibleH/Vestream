@@ -204,8 +204,8 @@ export function CalendarSubscribeCard() {
       <div className="flex items-center justify-between pt-2" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
         <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
           {data.lastFetchedAt
-            ? `Last fetched ${new Date(data.lastFetchedAt).toLocaleString()}`
-            : "Never fetched yet — subscribe in your calendar app to start receiving updates."}
+            ? `Last polled by your calendar ${new Date(data.lastFetchedAt).toLocaleString()}`
+            : "No calendar app has subscribed yet — click “Add to Calendar” above and your calendar will start polling on its own schedule."}
         </p>
         <button
           type="button"

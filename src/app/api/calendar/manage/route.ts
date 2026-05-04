@@ -46,11 +46,17 @@ function buildSubscribeUrl(token: string, host: string): string {
   // Calendar apps often want both a `https://` URL (for browser preview)
   // and a `webcal://` URL (which auto-launches the calendar app on iOS /
   // macOS). Caller picks which to display; we return both.
-  return `https://${host}/api/calendar/${token}.ics`;
+  //
+  // Path is `/calendar/<token>.ics` (NOT `/api/calendar/...`) so the
+  // user-facing URL doesn't read "API" to non-technical users when the
+  // first visible chunk gets shown on the settings page. The old
+  // `/api/calendar/<token>.ics` path 308-redirects here so existing
+  // calendar subscribers transparently migrate.
+  return `https://${host}/calendar/${token}.ics`;
 }
 
 function buildWebcalUrl(token: string, host: string): string {
-  return `webcal://${host}/api/calendar/${token}.ics`;
+  return `webcal://${host}/calendar/${token}.ics`;
 }
 
 export async function GET(req: NextRequest) {

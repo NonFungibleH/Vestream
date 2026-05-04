@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { wallets as walletsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
-import { readFromCache, writeToCache } from "@/lib/vesting/dbcache";
+import { readFromCache, writeToCache, readAllStreamsForWallets, mergeFreshWithCached } from "@/lib/vesting/dbcache";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 
 export async function GET(req: NextRequest) {
@@ -56,14 +56,31 @@ export async function GET(req: NextRequest) {
     if (dbResult.isFresh) {
       streams = dbResult.streams;
     } else if (dbResult.staleWallets.length < addresses.length) {
-      // Partial hit: re-fetch only the stale wallets
+      // Partial hit: re-fetch only the stale wallets, then merge with the
+      // last-known-good rows we already have (including stale ones for the
+      // wallets we DID re-fetch — adapter coverage can shift run-to-run).
       const fresh = await aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds);
       void writeToCache(fresh);
-      streams = [...dbResult.streams, ...fresh];
+      const allCached = await readAllStreamsForWallets(addresses);
+      // dbResult.streams is the FRESH cached rows for fresh wallets;
+      // allCached spans every wallet (including the ones we just re-fetched).
+      // Union order: latest fresh > stale cache > redundant fresh-cache.
+      streams = mergeFreshWithCached([...dbResult.streams, ...fresh], allCached);
     } else {
-      // Full miss
-      streams = await aggregateVestingStreams(addresses, chainIds, protocolIds);
-      void writeToCache(streams);
+      // Full miss — every wallet's cache was stale (or empty). Run the live
+      // adapters AND read every existing cache row, then union them. Without
+      // this merge, a single subgraph/RPC blip on a chain that contributes
+      // ONE stream wipes the rest of the user's portfolio from the response
+      // until the next successful run. With it, we always serve at least the
+      // last-known-good streams (the user's "winning feature": every stream
+      // visible the moment they open the app, regardless of upstream weather).
+      const fresh    = await aggregateVestingStreams(addresses, chainIds, protocolIds);
+      const stale    = await readAllStreamsForWallets(addresses);
+      streams = mergeFreshWithCached(fresh, stale);
+      // Persist only fresh — writeToCache uses lastRefreshedAt setWhere so
+      // unchanged stale rows keep their old timestamps and the freshness
+      // signal stays meaningful.
+      void writeToCache(fresh);
     }
     // Apply chain filter in memory (cache stores all chains per wallet)
     if (chainIds.length < ALL_CHAIN_IDS.length) {

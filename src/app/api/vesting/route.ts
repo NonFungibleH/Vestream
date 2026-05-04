@@ -4,7 +4,7 @@ import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
-import { readFromCache, writeToCache } from "@/lib/vesting/dbcache";
+import { readFromCache, writeToCache, readAllStreamsForWallets, mergeFreshWithCached } from "@/lib/vesting/dbcache";
 
 // ─── Hot in-memory cache (L1) ─────────────────────────────────────────────────
 // Avoids DB round-trips for the same request within a single server instance.
@@ -130,7 +130,12 @@ export async function GET(req: NextRequest) {
       // Write only the newly fetched streams back to DB (fire-and-forget)
       void writeToCache(freshData);
 
-      let streams = [...freshStreams, ...freshData];
+      // Union with EVERY cached row (including stale ones) so transient
+      // adapter failures on a chain that contributes one of the user's
+      // streams don't drop that stream from the response. See the
+      // companion comment in /api/mobile/vestings — same principle.
+      const allCached = await readAllStreamsForWallets(wallets);
+      let streams = mergeFreshWithCached([...freshStreams, ...freshData], allCached);
       if (chainIds !== ALL_CHAIN_IDS) {
         streams = streams.filter((s) => chainIds.includes(s.chainId));
       }
@@ -145,7 +150,22 @@ export async function GET(req: NextRequest) {
 
   // ── L3: full subgraph fetch ──────────────────────────────────────────────────
   const fetchedAt = new Date().toISOString();
-  let streams     = await aggregateVestingStreams(wallets, chainIds, protocolIds);
+  const fresh     = await aggregateVestingStreams(wallets, chainIds, protocolIds);
+
+  // Union with last-known-good cache rows (any age). This guarantees that
+  // an upstream subgraph blip can't make a previously-discovered stream
+  // disappear from the user's portfolio between requests. The next
+  // successful adapter run will overwrite the merged-in stale row with
+  // a fresh one (same id, fresh content).
+  let streams: VestingStream[];
+  if (useDbCache) {
+    const allCached = await readAllStreamsForWallets(wallets);
+    streams = mergeFreshWithCached(fresh, allCached);
+  } else {
+    // Token / protocol filters are active — bypass merge to avoid leaking
+    // streams that don't match the filter back into the response.
+    streams = fresh;
+  }
 
   // Apply per-wallet token filter
   if (hasTokenFilters) {
@@ -156,8 +176,10 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Write to DB cache (fire-and-forget — never blocks response)
-  void writeToCache(streams);
+  // Write only the freshly-fetched streams. Stale cache rows that survived
+  // into the merged response keep their old lastRefreshedAt so /status's
+  // "freshestSec" continues to surface adapter coverage gaps honestly.
+  void writeToCache(fresh);
 
   // Write to hot cache
   hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
