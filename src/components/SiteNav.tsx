@@ -15,9 +15,17 @@ interface Props {
 // "Find Vestings" lives in the CTA slot below — it's the primary funnel
 // entry point so it gets the loud gradient button rather than a regular
 // nav link. Keeping it out of NAV_LINKS prevents it appearing twice.
+//
+// "Invest" and "Payroll" surface the two-mode segmentation we ship in the
+// app — same naming, same promise. /invest is the investor-side landing
+// (vesting / cliff / TGE schedules); /payroll is the worker-side landing
+// (Sablier Flow / LlamaPay / Superfluid streaming income). Each ranks
+// for its own search intent and converts a different audience.
 const NAV_LINKS = [
-  { label: "Protocols",     href: "/protocols"     },
-  { label: "Demo",          href: "/demo"          },
+  { label: "Invest",    href: "/invest"    },
+  { label: "Payroll",   href: "/payroll"   },
+  { label: "Protocols", href: "/protocols" },
+  { label: "Demo",      href: "/demo"      },
 ] as const;
 
 const THEME = {
