@@ -100,13 +100,29 @@ export const wagmiConfig = getDefaultConfig({
   // (we read Solana addresses via the manual paste flow + the future
   // Solana wallet adapter integration).
   chains: [mainnet, base, bsc, polygon, sepolia, baseSepolia],
+  // Explicit transport URLs — DO NOT use viem's `http()` default. viem's
+  // default Ethereum RPC (eth.merkle.io as of 2025+) does not return
+  // Access-Control-Allow-Origin headers for browser-initiated cross-
+  // origin POSTs. Result: 12+ CORS preflight failures per page load,
+  // visible in console as "blocked by CORS policy: Response to preflight
+  // request doesn't pass access control check." Bug observed May 4 2026
+  // on /protocols/sablier and every other page that mounts Providers.
+  //
+  // publicnode endpoints (RPC.publicnode.com) explicitly support CORS for
+  // browser apps and are already in our CSP allowlist (*.publicnode.com).
+  // Free, no API key, geo-distributed. This is the same approach Uniswap
+  // and Aave use for their public-facing dApps.
+  //
+  // dRPC is the fallback (also CORS-friendly + already in CSP). If a
+  // chain's publicnode endpoint is unavailable, viem retries against
+  // the second http() transport in the array.
   transports: {
-    [mainnet.id]:     http(),
-    [base.id]:        http(),
-    [bsc.id]:         http(),
-    [polygon.id]:     http(),
-    [sepolia.id]:     http(),
-    [baseSepolia.id]: http(),
+    [mainnet.id]:     http("https://ethereum-rpc.publicnode.com"),
+    [base.id]:        http("https://base-rpc.publicnode.com"),
+    [bsc.id]:         http("https://bsc-rpc.publicnode.com"),
+    [polygon.id]:     http("https://polygon-bor-rpc.publicnode.com"),
+    [sepolia.id]:     http("https://ethereum-sepolia-rpc.publicnode.com"),
+    [baseSepolia.id]: http("https://base-sepolia-rpc.publicnode.com"),
   },
   ssr: true,
 });
