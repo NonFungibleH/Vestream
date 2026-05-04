@@ -232,7 +232,23 @@ async function chunkedMulticall<T>(
     // because we abandoned pass-2 after pass-1 looked rough). Lifting to
     // 90% means we now actually retry rate-limited chunks instead of
     // bailing on them.
-    if (failedIndices.length > calls.length * 0.9) {
+    //
+    // BUT — the 90% heuristic only makes sense when there are ENOUGH calls
+    // for "90%" to be a real signal. On small workloads (Polygon PinkSale
+    // has ~611 tokens → 13 multicall page-calls; the entire list fits in a
+    // single chunk of size 20), a single transient batch failure means
+    // 13/13 calls failed → 100% > 90% → bailout fires → fetchAllLockedTokens
+    // returns 0 tokens → discoverPinkSaleOwners returns 0 owners. Polygon
+    // production trace May 4 2026: totalTokens=611 then "enumerated 0 owners"
+    // 88ms later, no enumeration log line — exactly this bypass pattern.
+    //
+    // Skip the bailout when calls.length is small (<= 50). Pass-2's per-call
+    // retry budget is bounded enough that even retrying 50 calls one-by-one
+    // is fast — and for small N, "ALL failed" means "one batch hiccupped",
+    // not "RPC is dead". The bailout still protects large-N workloads (BSC's
+    // 22k tokens → ~440 multi-page calls) where blanket pass-2 retries
+    // genuinely would waste time on a dead provider.
+    if (calls.length > 50 && failedIndices.length > calls.length * 0.9) {
       errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls — RPC appears dead, skipping pass-2`);
       return out;
     }
