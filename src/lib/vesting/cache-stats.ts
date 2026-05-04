@@ -62,36 +62,53 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
 
   // ── Fast path: read the materialised rollup ────────────────────────────────
-  const fast = await db
-    .select({
-      protocol:        statusSummary.protocol,
-      chainId:         statusSummary.chainId,
-      streams:         statusSummary.streams,
-      active:          statusSummary.active,
-      withTokenSymbol: statusSummary.withTokenSymbol,
-      distinctTokens:  statusSummary.distinctTokens,
-      freshestSec:     statusSummary.freshestSec,
-      oldestSec:       statusSummary.oldestSec,
-    })
-    .from(statusSummary)
-    .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId));
+  //
+  // Wrapped in try/catch because the table can be MISSING (migration 0016
+  // not yet applied — happens on first deploy after introducing the table,
+  // and notably happened in prod when drizzle-kit migrate silently failed
+  // against the Supabase transaction pooler). On any failure here, fall
+  // back to computing the rollup live — slow but correct, and the user
+  // sees data instead of an error banner.
+  try {
+    const fast = await db
+      .select({
+        protocol:        statusSummary.protocol,
+        chainId:         statusSummary.chainId,
+        streams:         statusSummary.streams,
+        active:          statusSummary.active,
+        withTokenSymbol: statusSummary.withTokenSymbol,
+        distinctTokens:  statusSummary.distinctTokens,
+        freshestSec:     statusSummary.freshestSec,
+        oldestSec:       statusSummary.oldestSec,
+      })
+      .from(statusSummary)
+      .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId));
 
-  if (fast.length > 0) {
-    return fast.map((r) => ({
-      protocol:        r.protocol,
-      chainId:         r.chainId,
-      streams:         r.streams,
-      active:          r.active,
-      withTokenSymbol: r.withTokenSymbol,
-      distinctTokens:  r.distinctTokens,
-      freshestSec:     r.freshestSec,
-      oldestSec:       r.oldestSec,
-    }));
+    if (fast.length > 0) {
+      return fast.map((r) => ({
+        protocol:        r.protocol,
+        chainId:         r.chainId,
+        streams:         r.streams,
+        active:          r.active,
+        withTokenSymbol: r.withTokenSymbol,
+        distinctTokens:  r.distinctTokens,
+        freshestSec:     r.freshestSec,
+        oldestSec:       r.oldestSec,
+      }));
+    }
+    // Empty rollup → fall through to bootstrap path.
+  } catch (err) {
+    // Most common cause: table not present in the deployed DB. Log loudly
+    // (one-line so the line shows up in Vercel without scrollback) and
+    // serve the GROUP BY answer.
+    console.warn(
+      `[cache-stats] status_summary fast path failed (likely table missing); falling back to GROUP BY: ${err instanceof Error ? err.message : err}`,
+    );
   }
 
   // ── Bootstrap fallback: legacy GROUP BY ────────────────────────────────────
-  // Fires on fresh deploys before the first cron run after migration 0016.
-  // Drops out as soon as refreshStatusSummary() has populated even one row.
+  // Fires on (a) fresh deploys before the first cron run after migration
+  // 0016 has populated the rollup, and (b) any error path above.
   return computeCacheStatsCellsFromCache();
 }
 
