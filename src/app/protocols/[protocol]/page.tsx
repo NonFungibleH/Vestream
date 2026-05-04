@@ -78,7 +78,14 @@ export const dynamicParams = false;
 // getGlobalStats has been DROPPED entirely (same as the /protocols index
 // rewrite) — the cache count from getProtocolStats is the canonical
 // source. Subgraph live counts were redundant + slow.
-const CACHE_TTL_SECONDS = 300;
+// Bumped 300 → 3600 (1h) on May 4 2026. The protocol detail pages were
+// hitting the Cloudflare 100s ceiling under deploy-cache-reset conditions
+// because each cold render makes 4 DB aggregations + a DexScreener pricing
+// call. With a 60s revalidate, the cache window kept rolling closed and
+// every fresh refresh hit a cold path. 1h means one cold render per
+// (protocol, deploy) instead of one every minute, and amortises the
+// pricing cost across thousands of subsequent visits.
+const CACHE_TTL_SECONDS = 3600;
 
 interface ProtocolPageData {
   stats:        ProtocolStats | null;
@@ -171,9 +178,20 @@ const loadProtocolData = unstable_cache(
     pushToken(latest);
     pushToken(upcoming);
     for (const u of upcomingList) pushToken(u);
+    // Pricing call gets a hard 5s ceiling. DexScreener occasionally hangs
+    // under load and a stalled fetch cascades into the Cloudflare 100s
+    // gateway timeout. Better to render without USD values than serve a
+    // 504 — the unlock card still shows the token amount + symbol.
+    // Promise.race because AbortSignal in fetch's `init` disables Next's
+    // data cache (CLAUDE.md landmine).
     let priceMap;
     try {
-      priceMap = await getQuickUsdPrices(tokensToPrice);
+      priceMap = await Promise.race([
+        getQuickUsdPrices(tokensToPrice),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("pricing timeout (5s)")), 5_000),
+        ),
+      ]);
     } catch (err) {
       console.warn(`[protocol-page] pricing failed for ${adapterIds.join(",")}; rendering without USD values:`, err);
       priceMap = new Map();
