@@ -17,6 +17,14 @@ export async function GET(req: NextRequest) {
   const userId = token ? await validateMobileToken(token) : null;
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // ?refresh=1 forces a live adapter run, bypassing the L1 DB cache. Mobile
+  // pull-to-refresh sets this so users who just claimed on-chain see the
+  // updated state immediately instead of waiting for the next adapter cron
+  // (otherwise a "Ready to claim" row in the past tab would linger for up
+  // to ACTIVE_TTL_SECONDS even after the user actually claimed). Mirrors
+  // the same flag on the web /api/vesting route.
+  const refresh = req.nextUrl.searchParams.get("refresh") === "1";
+
   const userWallets = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   if (!userWallets.length) return NextResponse.json({ streams: [] });
 
@@ -47,8 +55,9 @@ export async function GET(req: NextRequest) {
 
   // ── L1: DB cache ────────────────────────────────────────────────────────────
   // Only safe when there are no adapter-level filters, since the cache is
-  // keyed per-wallet and holds ALL protocols/chains for that wallet.
-  const canUseCache = !protocolIds;
+  // keyed per-wallet and holds ALL protocols/chains for that wallet. Also
+  // bypassed when the caller explicitly asked for fresh data (?refresh=1).
+  const canUseCache = !protocolIds && !refresh;
   let streams: VestingStream[] = [];
 
   if (canUseCache) {
@@ -96,8 +105,18 @@ export async function GET(req: NextRequest) {
       streams = streams.filter(s => chainIds.includes(s.chainId));
     }
   } else {
-    // Cache disabled when protocol filter is active — fetch fresh
-    streams = await aggregateVestingStreams(addresses, chainIds, protocolIds);
+    // Cache disabled — either because a protocol filter is active OR the
+    // caller passed ?refresh=1. Fetch live but still merge with the
+    // last-known-good cache so a single transient adapter failure during
+    // an explicit refresh doesn't drop streams the user can still see.
+    const fresh = await aggregateVestingStreams(addresses, chainIds, protocolIds);
+    if (refresh && !protocolIds) {
+      const stale = await readAllStreamsForWallets(addresses);
+      streams = mergeFreshWithCached(fresh, stale);
+      void writeToCache(fresh);
+    } else {
+      streams = fresh;
+    }
   }
 
   // ── Per-wallet token address filter (free-plan scoping) ─────────────────────
