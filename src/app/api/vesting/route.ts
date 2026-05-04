@@ -110,8 +110,16 @@ export async function GET(req: NextRequest) {
   if (useDbCache) {
     const dbResult = await readFromCache(wallets);
     if (dbResult.isFresh) {
-      // All wallets had fresh data — apply chain filter in memory and serve
-      let streams = dbResult.streams;
+      // All wallets had fresh data — apply chain filter in memory and serve.
+      // Note: readFromCache marks a wallet "fresh" if ANY of its rows are
+      // within TTL, but only returns the in-TTL rows. After the May 2 2026
+      // setWhere optimization, unchanged rows drift past the TTL one-by-one
+      // even while the seeder keeps running — so the wallet looks fresh but
+      // some streams silently fall off the response. Union with the full
+      // cache (any age) here so every previously-discovered stream stays
+      // visible.
+      const allCached = await readAllStreamsForWallets(wallets);
+      let streams = mergeFreshWithCached(dbResult.streams, allCached);
       if (chainIds !== ALL_CHAIN_IDS) {
         streams = streams.filter((s) => chainIds.includes(s.chainId));
       }

@@ -54,7 +54,16 @@ export async function GET(req: NextRequest) {
   if (canUseCache) {
     const dbResult = await readFromCache(addresses);
     if (dbResult.isFresh) {
-      streams = dbResult.streams;
+      // Fresh-path merge: readFromCache marks a wallet "fresh" if ANY of
+      // its rows are within the TTL window, but it only RETURNS the rows
+      // that are themselves fresh. After the May 2 2026 setWhere
+      // optimization in writeToCache (only updates rows whose data changed),
+      // unchanged rows individually drift past the TTL while the wallet as
+      // a whole keeps getting touched by the seeder — so the stale row
+      // gets silently dropped from the response while the wallet appears
+      // healthy. Reading all rows and unioning here closes that gap.
+      const allCached = await readAllStreamsForWallets(addresses);
+      streams = mergeFreshWithCached(dbResult.streams, allCached);
     } else if (dbResult.staleWallets.length < addresses.length) {
       // Partial hit: re-fetch only the stale wallets, then merge with the
       // last-known-good rows we already have (including stale ones for the
