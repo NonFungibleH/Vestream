@@ -18,12 +18,89 @@
 
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
+import { Redis } from "@upstash/redis";
 import { SiteNav } from "@/components/SiteNav";
 import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
 import { getCacheStatsCells, getMaxLastRefreshedAt } from "@/lib/vesting/cache-stats";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 import { StatusAutoRefresh } from "./StatusAutoRefresh";
+
+// ── Last-known-good persistence ───────────────────────────────────────────────
+//
+// The DB query path (Supabase pooler → status_summary → tvl_snapshots) is
+// reliable in steady state but flaky on cold starts: a fresh Vercel lambda
+// instance occasionally CONNECTION_CLOSEDs the first request after the
+// pooler's idle timeout dropped its underlying socket. ISR + the build-time
+// DB short-circuit guard (per CLAUDE.md) means the pre-rendered snapshot
+// is empty too, so the user sees "Status check failed — couldn't reach
+// the freshness database" until the next request warms the connection.
+//
+// We sidestep that by mirroring the most recent successful payload into
+// Upstash Redis (already configured for ratelimiting / currency / mobile
+// handoff). Every successful render writes the snapshot; every failure
+// reads the last good copy back. The user only sees the "Status check
+// failed" UI if the redis store is ALSO empty (truly first-ever cold
+// render after deploy), which is now an extreme edge case rather than
+// the norm.
+//
+// 7-day TTL gives us a generous window — if the DB has been broken for
+// a week the stale data is the smaller of our problems.
+//
+// `stale: true` is added to the payload so the hero can show a soft
+// "showing last known data" line instead of the hard red error banner.
+const STATUS_CACHE_KEY = "status:last-good-v1";
+const STATUS_CACHE_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
+
+interface StatusPayload {
+  cells:                Awaited<ReturnType<typeof getCacheStatsCells>>;
+  tvlRows:              Awaited<ReturnType<typeof readAllSnapshots>>;
+  maxLastRefreshedSec:  number | null;
+}
+interface StatusResult extends StatusPayload {
+  error: string | null;
+  /** True iff the live DB query failed and we're rendering from Redis. */
+  stale: boolean;
+  /** Unix seconds when the cached payload was originally captured. */
+  capturedAt: number | null;
+}
+
+function maybeRedis(): Redis | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  try {
+    return Redis.fromEnv();
+  } catch {
+    return null;
+  }
+}
+
+async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) | null> {
+  const redis = maybeRedis();
+  if (!redis) return null;
+  try {
+    return await redis.get<StatusPayload & { capturedAt: number }>(STATUS_CACHE_KEY);
+  } catch (err) {
+    console.warn("[/status] redis read failed:", err);
+    return null;
+  }
+}
+
+async function writeLastGood(payload: StatusPayload): Promise<void> {
+  const redis = maybeRedis();
+  if (!redis) return;
+  try {
+    await redis.set(
+      STATUS_CACHE_KEY,
+      { ...payload, capturedAt: Math.floor(Date.now() / 1000) },
+      { ex: STATUS_CACHE_TTL_SEC },
+    );
+  } catch (err) {
+    // Best-effort. Failing to persist a fallback shouldn't break the page.
+    console.warn("[/status] redis write failed:", err);
+  }
+}
 
 export const metadata: Metadata = {
   title:       "Status — Vestream",
@@ -62,27 +139,47 @@ export const maxDuration = 30;
 // the next pageview gets fresh data instantly without waiting for the
 // 60s TTL.
 const loadStatusData = unstable_cache(
-  async (): Promise<{
-    cells:    Awaited<ReturnType<typeof getCacheStatsCells>>;
-    tvlRows:  Awaited<ReturnType<typeof readAllSnapshots>>;
-    maxLastRefreshedSec: number | null;
-    error:    string | null;
-  }> => {
+  async (): Promise<StatusResult> => {
     try {
       const [cells, tvlRows, maxLastRefreshedSec] = await Promise.all([
         getCacheStatsCells(),
         readAllSnapshots(),
         getMaxLastRefreshedAt(),
       ]);
-      return { cells, tvlRows, maxLastRefreshedSec, error: null };
+      const payload: StatusPayload = { cells, tvlRows, maxLastRefreshedSec };
+      // Persist successful payload as the last-known-good fallback for
+      // the next time the DB hiccups. Awaited (not fire-and-forget) so
+      // the unstable_cache doesn't consider the request done before the
+      // write lands — but writeLastGood swallows its own errors, so a
+      // Redis outage never bubbles up here.
+      await writeLastGood(payload);
+      return { ...payload, error: null, stale: false, capturedAt: Math.floor(Date.now() / 1000) };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[/status] loadStatusData failed:", err);
+      // Fall back to the last-known-good payload from Redis. Users see
+      // the previous data with a softer "showing last known data" hero
+      // rather than the hard red error banner.
+      const fallback = await readLastGood();
+      if (fallback) {
+        return {
+          cells:               fallback.cells,
+          tvlRows:             fallback.tvlRows,
+          maxLastRefreshedSec: fallback.maxLastRefreshedSec,
+          error:               null,
+          stale:               true,
+          capturedAt:          fallback.capturedAt,
+        };
+      }
+      // Truly cold — no live data, no Redis fallback. Render the error
+      // hero as before so operators know to investigate.
       return {
         cells:               [],
         tvlRows:             [],
         maxLastRefreshedSec: null,
         error:               message,
+        stale:               false,
+        capturedAt:          null,
       };
     }
   },
@@ -176,7 +273,14 @@ export default async function StatusPage() {
   // the query layer failed, `error` is set and we render the degraded
   // hero ("Status check failed") with empty matrices below. If it
   // succeeded, `cells`/`tvlRows`/`maxLastRefreshedSec` are populated.
-  const { cells, tvlRows, maxLastRefreshedSec, error: queryError } = await loadStatusData();
+  const {
+    cells,
+    tvlRows,
+    maxLastRefreshedSec,
+    error:      queryError,
+    stale:      isStale,
+    capturedAt: cachedAtSec,
+  } = await loadStatusData();
 
   const nowSec = Math.floor(Date.now() / 1000);
 
@@ -234,9 +338,20 @@ export default async function StatusPage() {
   // Health rollup. The query-error case wins over both healthy/unhealthy
   // because it means we don't actually KNOW the state — better to flag
   // the failure honestly than show a misleading green.
+  //
+  // `isStale` (live DB query failed but we recovered last-known-good from
+  // Redis) is rendered with the cells' actual freshness colours rather
+  // than a hard "failed" banner — the data IS valid, just slightly old.
+  // The hero gets a soft amber pill reminder that the live query couldn't
+  // run; an operator can still see whether the underlying cells are
+  // healthy or not from the matrix below.
   const isHealthy = stuckCells.length === 0 && !queryError;
   const overall = queryError
     ? { label: "Status check failed",  color: "#dc2626" }
+    : isStale
+    ? stuckCells.length > 0
+      ? { label: `${stuckCells.length} cell${stuckCells.length === 1 ? "" : "s"} need attention`, color: "#dc2626" }
+      : { label: "All systems operational", color: "#10b981" }
     : isHealthy
     ? { label: "All systems operational", color: "#10b981" }
     : { label: `${stuckCells.length} cell${stuckCells.length === 1 ? "" : "s"} need attention`, color: "#dc2626" };
@@ -279,6 +394,8 @@ export default async function StatusPage() {
             <p className="text-sm mt-1" style={{ color: "#64748b" }}>
               {queryError
                 ? `Couldn't reach the freshness database — try refresh in a moment. (${queryError.slice(0, 80)})`
+                : isStale
+                ? `Showing last known data from ${cachedAtSec ? relativeAge(cachedAtSec, nowSec) : "earlier"}. Live query refreshing in the background.`
                 : isHealthy
                 ? "Every protocol × chain we index is refreshing within the expected window."
                 : `One or more cells haven't refreshed in over ${Math.floor(STALE_THRESHOLD_MIN / 60)} hours. See the matrix below.`}
