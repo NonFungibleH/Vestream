@@ -486,6 +486,16 @@ export const vestingStreamsCache = pgTable(
     // protocol X" queries. Range-scans the hot tail of upcoming
     // events without re-filtering 40k+ Sablier rows in memory.
     index("vsc_protocol_end_time_idx").on(t.protocol, t.endTime),
+    // Single-column token_symbol — used by getTopSymbols() at build
+    // time and on /tokens index. Without it the GROUP BY does a Seq
+    // Scan over 130k+ rows (1.6s); with it the planner uses the index
+    // for the grouping (160ms).
+    index("vsc_token_symbol_idx").on(t.tokenSymbol),
+    // Expression index on lower(token_symbol) — used by
+    // getTokensBySymbol() and any case-insensitive symbol filter.
+    // Without it: 290ms parallel Seq Scan. With: 3ms index lookup.
+    // Drizzle doesn't natively model expression indexes; declared via
+    // raw SQL in migration 0017 and mirrored here as a comment.
   ]
 );
 

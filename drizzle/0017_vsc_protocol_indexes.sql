@@ -32,3 +32,16 @@ CREATE INDEX IF NOT EXISTS "vsc_protocol_idx"
 
 CREATE INDEX IF NOT EXISTS "vsc_protocol_end_time_idx"
   ON "vesting_streams_cache" ("protocol", "end_time");
+
+-- Token-symbol index — used by getTopSymbols() (build-time, /tokens
+-- index page) and any GROUP BY token_symbol path. Brought
+-- 1594ms → 164ms in EXPLAIN.
+CREATE INDEX IF NOT EXISTS "vsc_token_symbol_idx"
+  ON "vesting_streams_cache" ("token_symbol");
+
+-- Expression index on lower(token_symbol) — used by
+-- getTokensBySymbol() and the symbol disambiguation pages. Drizzle
+-- can't natively model expression indexes, so this only lives in the
+-- migration; brought 289ms → 3ms in EXPLAIN.
+CREATE INDEX IF NOT EXISTS "vsc_lower_token_symbol_idx"
+  ON "vesting_streams_cache" (lower("token_symbol"));
