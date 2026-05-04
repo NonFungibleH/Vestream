@@ -55,7 +55,9 @@ export async function GET(
   try {
     body = await generateCalendarFeed(found.userId);
   } catch (err) {
-    console.error(`[calendar/${token.slice(0, 16)}…] feed generation failed:`, err);
+    // Audit M1: never log any portion of the token — it's a credential.
+    // Use the userId (UUID, not user-secret) for correlation instead.
+    console.error(`[calendar feed] generation failed for user ${found.userId}:`, err);
     // Return a minimal valid empty calendar rather than 500 — keeps the
     // user's subscription "alive" in their calendar app even when our DB
     // hiccups. Better UX than the calendar showing red error states.

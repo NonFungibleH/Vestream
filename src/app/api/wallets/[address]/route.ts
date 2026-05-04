@@ -55,6 +55,17 @@ export async function PATCH(
 
   const { address } = await params;
 
+  // Audit M3: validate + normalise the URL param before any DB lookup.
+  // The DELETE handler does this; PATCH used to skip it, which silently
+  // corrupts Solana base58 (case-sensitive) when updateWallet's internal
+  // `.toLowerCase()` ran on a path that never matched the stored row.
+  // Apply the same normalisation here so EVM and Solana wallets edit
+  // identically.
+  if (!isValidWalletAddress(address)) {
+    return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
+  }
+  const normalisedAddress = normaliseAddress(address);
+
   const user = await getUserByAddress(session.address);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -97,7 +108,7 @@ export async function PATCH(
       : null;
   }
 
-  const updated = await updateWallet(user.id, address, patchData);
+  const updated = await updateWallet(user.id, normalisedAddress, patchData);
   if (!updated) {
     return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
   }

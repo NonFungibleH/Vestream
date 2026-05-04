@@ -26,13 +26,13 @@ import {
   getStreamsByRecipient,
 } from "@/lib/vesting/explorer-queries";
 import { resolveEnsName } from "@/lib/ens";
+import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
 
 async function handle(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!env.CRON_SECRET || authHeader !== `Bearer ${env.CRON_SECRET}`) {
+  if (!bearerEquals(req.headers.get("authorization"), env.CRON_SECRET ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

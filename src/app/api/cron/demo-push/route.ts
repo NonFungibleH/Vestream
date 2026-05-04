@@ -21,6 +21,7 @@ import { eq, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { demoPushSubscriptions } from "@/lib/db/schema";
 import { sendWebPush } from "@/lib/notifications/webpush";
+import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 /** The percentages at which we ping. Ordered ascending, values in [0,1]. */
 const MILESTONES = [0.25, 0.5, 0.75, 1.0] as const;
@@ -61,9 +62,7 @@ function buildPayload(milestone: number, total: bigint, symbol: string): { title
 }
 
 async function handle(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!bearerEquals(req.headers.get("authorization"), process.env.CRON_SECRET ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

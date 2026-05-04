@@ -32,6 +32,7 @@ import {
   type DefiLlamaSnapshotSummary,
 } from "@/lib/vesting/tvl-snapshot";
 import { env } from "@/lib/env";
+import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 // Snapshot runs are slow — PinkSale + UNCX-VM walk large event windows.
 // Raise the function timeout to the Vercel max (300s on Pro).
@@ -131,9 +132,7 @@ async function runAll(protocolFilter: string | null): Promise<{
 }
 
 async function handle(req: NextRequest) {
-  const cronSecret = env.CRON_SECRET;
-  const authHeader = req.headers.get("authorization");
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!bearerEquals(req.headers.get("authorization"), env.CRON_SECRET ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

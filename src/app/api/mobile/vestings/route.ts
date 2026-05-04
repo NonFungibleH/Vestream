@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { readFromCache, writeToCache, readAllStreamsForWallets, mergeFreshWithCached } from "@/lib/vesting/dbcache";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function GET(req: NextRequest) {
   const token  = extractBearerToken(req);
@@ -24,6 +25,22 @@ export async function GET(req: NextRequest) {
   // to ACTIVE_TTL_SECONDS even after the user actually claimed). Mirrors
   // the same flag on the web /api/vesting route.
   const refresh = req.nextUrl.searchParams.get("refresh") === "1";
+
+  // Audit bonus: refresh hammers every adapter / subgraph / RPC the user's
+  // wallet touches. A jailbroken device in a tight loop could amplify cost
+  // significantly. 30/min per user is generous for legitimate pull-to-
+  // refresh use (you'd never trigger that organically) and tight enough
+  // that abuse is bounded. Non-refresh reads are uncapped — they're cache-
+  // served and cheap.
+  if (refresh) {
+    const rl = await checkRateLimit("mobile:vestings:refresh", userId, 30, "1 m");
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many refreshes — try again in a minute." },
+        { status: 429 },
+      );
+    }
+  }
 
   const userWallets = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   if (!userWallets.length) return NextResponse.json({ streams: [] });

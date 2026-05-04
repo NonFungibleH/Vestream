@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export interface ContactEnquiry {
   name:    string;
@@ -7,11 +8,37 @@ export interface ContactEnquiry {
   message: string;
 }
 
+function getIp(req: NextRequest): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
 // ── POST /api/contact ──────────────────────────────────────────────────────────
 // Accepts a contact form submission. Currently logs to console; ready to be
 // wired to a CRM (HubSpot, Pipedrive, Attio, etc.) when configured.
+//
+// Rate-limited at 5/h per IP — once we wire to a CRM, every successful
+// POST creates a record there too, so a spammer in a loop becomes a CRM
+// data-quality problem fast. Matches the /api/waitlist + /api/feedback
+// shape.
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const ip = getIp(req);
+  const rl = await checkRateLimit("contact", ip, 5, "1 h");
+  if (!rl.allowed) {
+    if (rl.reason === "rate-limit-misconfigured") {
+      return NextResponse.json({ error: "Service temporarily unavailable." }, { status: 503 });
+    }
+    return NextResponse.json(
+      { error: "Too many submissions — try again in an hour." },
+      { status: 429 },
+    );
+  }
+
   try {
     const body = await req.json() as Partial<ContactEnquiry>;
 

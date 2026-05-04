@@ -21,6 +21,7 @@ import { db } from "@/lib/db";
 import { webhookSubscriptions } from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { getUpcomingUnlockGroupsAcross } from "@/lib/vesting/protocol-stats";
+import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
@@ -29,8 +30,7 @@ const FAILURE_DISABLE_THRESHOLD = 10;
 const DELIVERY_TIMEOUT_MS       = 10_000;
 
 async function handle(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!env.CRON_SECRET || authHeader !== `Bearer ${env.CRON_SECRET}`) {
+  if (!bearerEquals(req.headers.get("authorization"), env.CRON_SECRET ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

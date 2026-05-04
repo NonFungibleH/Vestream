@@ -46,6 +46,7 @@ import {
   type SeedGroup,
 } from "@/lib/vesting/seeder";
 import { env } from "@/lib/env";
+import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 // Each group fits inside 300s. The dispatcher path returns 202 in <1s.
 export const maxDuration = 300;
@@ -146,9 +147,10 @@ function runOneGroup(group: SeedGroup, mode: SeedMode): NextResponse {
 }
 
 async function handle(req: NextRequest) {
-  const cronSecret = env.CRON_SECRET;
+  // Pull the header once — used both for the constant-time auth check
+  // AND the fan-out (each child invocation re-uses the same bearer).
   const authHeader = req.headers.get("authorization");
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!bearerEquals(authHeader, env.CRON_SECRET ?? "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -161,7 +163,10 @@ async function handle(req: NextRequest) {
   }
 
   // Dispatcher path — fan out into 3 background self-fetches and return 202.
-  return dispatchFanOut(req, mode, authHeader);
+  // authHeader is non-null here — bearerEquals() above returns false on null
+  // and we'd have returned 401 already. The explicit `?? ""` keeps TS happy
+  // without weakening any runtime invariant.
+  return dispatchFanOut(req, mode, authHeader ?? "");
 }
 
 export async function GET(req: NextRequest) {
