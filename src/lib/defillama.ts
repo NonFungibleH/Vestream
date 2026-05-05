@@ -108,6 +108,28 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
             .sort((a, b) => b.usd - a.usd);
         }
 
+        // ── Per-chain sanity cap ─────────────────────────────────────────
+        // DefiLlama's per-chain numbers occasionally include obvious data
+        // errors — a single memecoin priced at a stale or corrupted oracle
+        // value can balloon a chain row by 10-100×. Real example
+        // (May 5 2026): sablier-lockup → Arbitrum-vesting reported $4.93B
+        // while every other chain sat under $300M and the global
+        // chainTvls.vesting headline was $5.5B (the bad chain alone
+        // accounted for 90% of it). Hard-capping at 5× the next-largest
+        // chain protects us from these outliers without clamping
+        // legitimately-dominant chains (Streamflow on Solana, Jupiter on
+        // Solana, etc.). When a row IS clamped we also reduce totalUsd
+        // by the difference so the headline matches the post-cap sum.
+        if (perChain.length >= 2) {
+          const second = perChain[1].usd;
+          const cap    = second * 5;
+          if (perChain[0].usd > cap) {
+            const reduction = perChain[0].usd - cap;
+            perChain[0] = { ...perChain[0], usd: cap };
+            totalUsd = Math.max(0, totalUsd - reduction);
+          }
+        }
+
         if (totalUsd > 0) {
           bySlug.set(p.slug, { totalUsd, perChain, fetchedAt });
         }
