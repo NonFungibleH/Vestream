@@ -34,11 +34,9 @@
 // PinkSale uses; see pinksale.ts for the rationale).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum, optimism } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
-import { getRpcUrl } from "../rpc";
+import { makeFallbackClient } from "../rpc";
 
 const CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.ETHEREUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
@@ -98,24 +96,17 @@ interface PlanRaw {
 
 // ─── viem helpers ────────────────────────────────────────────────────────────
 
-function getViemChain(chainId: SupportedChainId) {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return mainnet;
-    case CHAIN_IDS.BSC:      return bsc;
-    case CHAIN_IDS.POLYGON:  return polygon;
-    case CHAIN_IDS.BASE:     return base;
-    case CHAIN_IDS.ARBITRUM: return arbitrum;
-    case CHAIN_IDS.OPTIMISM: return optimism;
-    default:                 return mainnet;
-  }
-}
-
+// Build a multi-provider fallback client. If the first RPC in the pool
+// is dead at the moment of the call (the failure mode that blanked
+// Hedgey on ETH + Polygon during the 2026-05-05 daily cron), viem's
+// fallback transport automatically tries the next URL — so a single
+// dead provider can no longer kill the whole walk.
 function makeClient(chainId: SupportedChainId) {
-  const url = getRpcUrl(chainId) ?? "https://eth.drpc.org";
-  return createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(url, { batch: true }),
-  });
+  const client = makeFallbackClient(chainId, { batch: true });
+  if (!client) {
+    throw new Error(`Hedgey: no RPC pool configured for chain ${chainId}`);
+  }
+  return client;
 }
 
 async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 5): Promise<T> {

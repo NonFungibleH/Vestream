@@ -22,8 +22,6 @@
 // Source: https://bscscan.com/address/0x407993575c91ce7643a4d4ccacc9a98c36ee1bbe#code
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 
@@ -98,31 +96,21 @@ const ERC20_ABI = [
 // ─── viem helpers ──────────────────────────────────────────────────────────────
 //
 // RPC selection now goes through the shared multi-RPC pool in
-// `src/lib/vesting/rpc.ts`. Each makeClient() call gets a different URL
-// from the round-robin rotation, so retries naturally hit different
-// providers and free-tier rate limits compound across the pool instead of
-// piling onto a single endpoint.
-import { getRpcUrl } from "../rpc";
-
-function getViemChain(chainId: SupportedChainId) {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return mainnet;
-    case CHAIN_IDS.BSC:      return bsc;
-    case CHAIN_IDS.POLYGON:  return polygon;
-    case CHAIN_IDS.BASE:     return base;
-    default:                 return mainnet;
-  }
-}
+// `src/lib/vesting/rpc.ts` via viem's `fallback` transport. Every call
+// the client makes tries every URL in the pool in priority order until
+// one succeeds — so a single dead provider can no longer kill the walk.
+// Replaces the previous round-robin pattern that left the whole walk
+// pinned to whichever URL `getRpcUrl()` happened to hand out at the
+// makeClient() call site (the failure mode that blanked Hedgey on
+// ETH + Polygon during the 2026-05-05 daily TVL cron).
+import { makeFallbackClient } from "../rpc";
 
 function makeClient(chainId: SupportedChainId) {
-  // Contract reads only — `forLogs` left as default false so all pool
-  // members are eligible (publicnode is fine for eth_call, only excluded
-  // for log scans).
-  const url = getRpcUrl(chainId) ?? "https://eth.drpc.org";
-  return createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(url, { batch: true }),
-  });
+  const client = makeFallbackClient(chainId, { batch: true });
+  if (!client) {
+    throw new Error(`PinkSale: no RPC pool configured for chain ${chainId}`);
+  }
+  return client;
 }
 
 // ─── Retry helper ──────────────────────────────────────────────────────────────

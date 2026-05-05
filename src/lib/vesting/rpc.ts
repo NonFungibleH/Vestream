@@ -43,6 +43,8 @@
 // here by `excludeForLogs: true` on those entries.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { fallback, http, createPublicClient, type Chain, type PublicClient } from "viem";
+import { mainnet, bsc, polygon, base, arbitrum, optimism } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 
 interface Provider {
@@ -190,6 +192,76 @@ export function getAllRpcUrls(
  */
 export function getRpcPoolSize(chainId: SupportedChainId, opts: { forLogs?: boolean } = {}): number {
   return getAllRpcUrls(chainId, opts).length;
+}
+
+// ─── Fallback-transport client builder ───────────────────────────────────────
+//
+// Why this exists: getRpcUrl() returns ONE provider per call. If that
+// provider is dead at the moment of the call, every subsequent operation
+// against the resulting viem client fails — even if other providers in
+// the pool are healthy. We hit this on 2026-05-05 when the daily TVL cron
+// caught a polygon-rpc.publicnode.com 404 and an Ethereum dRPC outage,
+// blanking Hedgey on those chains for the day.
+//
+// viem's `fallback` transport is the correct primitive: hand it ALL the
+// pool URLs in priority order and it automatically retries the next on
+// any failure. Combined with `batch: true` for HTTP batching, it gives
+// us per-call provider failover without the walker having to think
+// about it.
+//
+// Use `makeFallbackClient(chainId)` instead of the per-walker
+// `makeClient` patterns whenever you can — fewer silent failure modes
+// during the daily cron.
+
+const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
+  [CHAIN_IDS.ETHEREUM]: mainnet,
+  [CHAIN_IDS.BSC]:      bsc,
+  [CHAIN_IDS.POLYGON]:  polygon,
+  [CHAIN_IDS.BASE]:     base,
+  [CHAIN_IDS.ARBITRUM]: arbitrum,
+  [CHAIN_IDS.OPTIMISM]: optimism,
+};
+
+/**
+ * Returns a viem PublicClient whose transport is a `fallback` over every
+ * RPC URL in the pool (env-var paid providers FIRST, then free pool).
+ * If ANY provider succeeds, the call succeeds. Only fails if every URL
+ * in the pool is down — much more resilient than the single-URL
+ * `http(getRpcUrl(chainId))` pattern.
+ *
+ * `opts.forLogs` excludes log-pruning providers (publicnode et al) for
+ * eth_getLogs callers — same semantics as `getRpcUrl`.
+ *
+ * `opts.rank` enables viem's transport-ranking (periodic latency/health
+ * pings to reorder providers). We DON'T enable this by default — it
+ * fires extra requests against free providers and the failover order
+ * we set in the pool is already correct (paid first, dRPC second,
+ * then publicnode last). Pass `{ rank: true }` if you have a long-
+ * lived client where the extra pings amortise.
+ */
+export function makeFallbackClient(
+  chainId: SupportedChainId,
+  opts: { forLogs?: boolean; rank?: boolean; batch?: boolean } = {},
+): PublicClient | undefined {
+  const chain = VIEM_CHAINS[chainId];
+  if (!chain) return undefined;
+
+  const urls = getAllRpcUrls(chainId, { forLogs: opts.forLogs });
+  if (urls.length === 0) return undefined;
+
+  const transports = urls.map((url) =>
+    http(url, { batch: opts.batch ?? true }),
+  );
+
+  return createPublicClient({
+    chain,
+    transport: fallback(transports, {
+      rank:    opts.rank ?? false,
+      retryCount: 1,        // viem retries WITHIN a transport before moving on
+      retryDelay: 200,
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any;
 }
 
 /**
