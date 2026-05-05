@@ -146,6 +146,14 @@ async function chunkedMulticall<T>(
   const out: (T | null)[] = new Array(calls.length).fill(null);
   const failedIndices: number[] = [];
 
+  // Inter-chunk pacing — dRPC free tier caps around 25 req/s per chain.
+  // Six chains walking in parallel × 200 chunks each fires multicalls
+  // back-to-back; without spacing we cluster bursts that earn HTTP 429
+  // even though the per-chain average sits below the ceiling. 75ms
+  // between chunks pushes us under the per-chain rate without
+  // meaningfully extending walltime (a 200-chunk walk pays ~15s extra,
+  // which is fine inside Vercel's 300s budget).
+  const INTER_CHUNK_MS = 75;
   for (let i = 0; i < calls.length; i += chunkSize) {
     const slice = calls.slice(i, i + chunkSize);
     try {
@@ -160,6 +168,9 @@ async function chunkedMulticall<T>(
       }
     } catch {
       for (let j = 0; j < slice.length; j++) failedIndices.push(i + j);
+    }
+    if (i + chunkSize < calls.length) {
+      await new Promise((r) => setTimeout(r, INTER_CHUNK_MS));
     }
   }
 
