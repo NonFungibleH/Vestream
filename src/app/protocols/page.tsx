@@ -190,7 +190,7 @@ const loadProtocolsData = unstable_cache(
   // wrongly-clamped $78M, etc.). Key bump force-flushes Vercel's Data
   // Cache so users see the new figures immediately rather than waiting
   // out the 5-min TTL. v5 lasted from the page-data-fallback work.
-  ["protocols-page-data-v6"],
+  ["protocols-page-data-v7"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
@@ -251,7 +251,15 @@ export default async function UnlocksIndexPage() {
     if (methodologyMap[slug] === "defillama-vesting") externallySourced.add(slug);
   }
 
-  const tvlRows = protocols.map((p) => ({ protocol: p, tvl: tvlMap[p.slug] ?? null }));
+  const tvlRows = protocols.map((p) => ({
+    protocol:      p,
+    tvl:           tvlMap[p.slug] ?? null,
+    // Active stream count from indexed-cache stats — same number that
+    // populates the per-protocol detail page. Surfaced next to the
+    // dollar TVL so the headline reflects scale alongside dollars
+    // (Sablier alone manages ~365k positions across our chains).
+    activeStreams: statsMap.get(p.slug)?.activeStreams ?? null,
+  }));
 
   // Oldest snapshot age across rendered protocols, used by the
   // TvlComparisonBar tooltip as a "last verified X ago" signal.

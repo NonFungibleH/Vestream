@@ -23,8 +23,14 @@ import type { ProtocolMeta } from "@/lib/protocol-constants";
 import type { ProtocolTvl } from "@/lib/vesting/tvl";
 
 export interface TvlComparisonRow {
-  protocol: ProtocolMeta;
-  tvl:      ProtocolTvl | null;
+  protocol:      ProtocolMeta;
+  tvl:           ProtocolTvl | null;
+  /** Indexed-cache active stream count from getProtocolStats. Surfaced
+   *  beneath the protocol name as a "X active streams" sub-label so
+   *  the headline reflects scale alongside dollars — these protocols
+   *  manage hundreds of thousands of vesting positions even at modest
+   *  USD valuations. Optional so callers can omit until ready. */
+  activeStreams?: number | null;
 }
 
 function compactUsd(n: number): string {
@@ -33,6 +39,13 @@ function compactUsd(n: number): string {
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
   return `$${n.toFixed(0)}`;
+}
+
+function compactCount(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString();
 }
 
 export function TvlComparisonBar({
@@ -216,12 +229,13 @@ export function TvlComparisonBar({
           </div>
         ) : (
           <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-            {sorted.map(({ protocol, tvl }) => {
+            {sorted.map(({ protocol, tvl, activeStreams }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
+              const streams     = activeStreams ?? 0;
               // Rows where we have NO data yet (zero priced tokens, no external
               // source) get the "Indexing…" label instead of a terse "no data"
               // — makes the empty state feel intentional rather than broken.
@@ -247,9 +261,20 @@ export function TvlComparisonBar({
                     >
                       {protocol.name.charAt(0)}
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
-                      {protocol.name}
-                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold leading-tight" style={{ color: "#1A1D20" }}>
+                        {protocol.name}
+                      </span>
+                      {streams > 0 && (
+                        <span
+                          className="text-[10.5px] tabular-nums leading-tight mt-0.5"
+                          style={{ color: "#8B8E92" }}
+                          title={`${streams.toLocaleString()} active streams indexed across all chains we cover`}
+                        >
+                          {compactCount(streams)} active streams
+                        </span>
+                      )}
+                    </div>
                     <div className="flex-1" />
                     <span
                       className="text-sm font-bold tabular-nums"
