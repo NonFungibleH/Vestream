@@ -9,14 +9,12 @@
 //   B. Design-a-vesting + App Store funnel (no signup)
 //      User designs a sample schedule (token symbol, amount, duration) and is
 //      funnelled to the App Store to see it tick live on the mobile app.
-//      Browser simulation is available as a hidden "Run simulation" expander
-//      for QA + power users, but the hero path is the App Store.
 //
-//   C. Deploy-your-own on Sepolia via thirdweb (~10 min, real on-chain)
-//      Three deep-links to the Google Cloud Sepolia faucet, a thirdweb
-//      ERC-20 token deploy, and a thirdweb vesting contract. Vestream
-//      auto-indexes VestingWallet contracts on Sepolia, so once deployed
-//      the user can verify the full indexing loop end-to-end.
+//   C. Deploy-your-own on Sepolia via Sablier (~10 min, real on-chain)
+//      Three deep-links: Sepolia ETH faucet, Circle's Sepolia USDC faucet
+//      to get a test ERC-20 in hand, then Sablier's Sepolia app to wrap
+//      the USDC in a vesting stream. Vestream auto-indexes Sablier on
+//      Sepolia, so the resulting stream lands in the dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
@@ -29,25 +27,27 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title: "Interactive + live vesting demo · Vestream",
-  description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy with thirdweb.",
+  description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy on Sablier.",
   alternates: { canonical: "https://vestream.io/demo" },
 };
 
-// External deep-links used by Demo C. The flow is now unified on Team Finance
-// for steps 2 + 3, so the user minting a token and creating a vesting is the
-// same thing a real team would do in production — not a faucet-and-Sablier
-// workaround. Team Finance is one of our indexed protocols on Sepolia (see
-// supportedChainIds in adapters/team-finance.ts), so the tokens AND the
-// vesting both land in Vestream automatically, closing the loop end-to-end.
+// External deep-links used by Demo C. Replaces the prior Team-Finance-based
+// flow, since Team Finance is paused (`disabled: true` in protocol-constants).
+// Sablier's app handles vesting creation on Sepolia and we already index
+// it there, so the stream lands in Vestream automatically. Sablier doesn't
+// have a token mint built in — we hand users to Circle's Sepolia USDC
+// faucet for a real ERC-20 they can vest, instead of asking them to deploy
+// their own.
 //
 //   SEPOLIA_ETH_FAUCET    → free Sepolia ETH for gas (Google Cloud faucet)
-//   TEAM_FINANCE_MINT     → Token Mint — deploy a real ERC-20 on Sepolia
-//                           with a custom name, symbol, and supply, no
-//                           contract code required
-//   TEAM_FINANCE_VESTING  → Create the vesting using the token just minted
-const SEPOLIA_ETH_FAUCET    = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
-const TEAM_FINANCE_MINT     = "https://www.team.finance/mint";
-const TEAM_FINANCE_VESTING  = "https://www.team.finance/vesting";
+//   SEPOLIA_USDC_FAUCET   → 10 Sepolia USDC per day from Circle's official
+//                           faucet, a real ERC-20 to vest in step 3
+//   SABLIER_SEPOLIA       → Sablier app — connect, switch chain to Sepolia,
+//                           create a Lockup vesting using the USDC just
+//                           claimed from step 2
+const SEPOLIA_ETH_FAUCET   = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
+const SEPOLIA_USDC_FAUCET  = "https://faucet.circle.com/";
+const SABLIER_SEPOLIA      = "https://app.sablier.com/";
 
 export default function DemoPage() {
   return (
@@ -78,7 +78,7 @@ export default function DemoPage() {
           <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
             <strong style={{ color: "#1A1D20" }}>A.</strong> A 90-second interactive walkthrough.{" "}
             <strong style={{ color: "#1A1D20" }}>B.</strong> Design a vesting and watch it live on the mobile app.{" "}
-            <strong style={{ color: "#1A1D20" }}>C.</strong> Deploy a real on-chain vesting on Sepolia via thirdweb.
+            <strong style={{ color: "#1A1D20" }}>C.</strong> Deploy a real on-chain vesting on Sepolia via Sablier.
           </p>
         </div>
       </section>
@@ -154,7 +154,7 @@ export default function DemoPage() {
           </Link>
         </div>
 
-        {/* Divider into Demo C. Same mobile rule as above. */}
+        {/* Divider into Demo C. Same mobile rule as the A→B divider above. */}
         <div className="flex items-center justify-center gap-4 mt-12 md:mt-14 mb-2">
           <div className="hidden sm:block h-px flex-1 max-w-[120px]" style={{ background: "rgba(21,23,26,0.10)" }} />
           <span className="text-xs font-semibold uppercase tracking-widest text-center" style={{ color: "#B8BABD" }}>
@@ -164,20 +164,20 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Demo C — Deploy a live Sepolia vesting via thirdweb ──────────── */}
+      {/* ── Demo C — Deploy a live Sepolia vesting via Sablier ───────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <DemoIntro
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
           title="Create a real Sepolia vesting Vestream will index"
-          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, mint a test token with Team Finance, then create a vesting schedule for it &mdash; all on Team Finance&rsquo;s Sepolia app, which Vestream indexes automatically."
+          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, claim test USDC from Circle&rsquo;s faucet, then create a vesting schedule on Sablier&rsquo;s Sepolia app, which Vestream indexes automatically."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <DeployStep
             n="1"
             title="Get Sepolia ETH"
-            body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for minting the token and creating the vesting. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
+            body="You'll need a tiny bit of Sepolia ETH (~0.01 ETH) to cover gas for claiming test tokens and creating the vesting. The Google Cloud faucet drops test ETH instantly, once per day, straight to any address you paste in."
             href={SEPOLIA_ETH_FAUCET}
             cta="Open the Google Cloud faucet"
             accent="#F0992E"
@@ -187,10 +187,10 @@ export default function DemoPage() {
 
           <DeployStep
             n="2"
-            title="Mint your test token"
-            body="Team Finance's Token Mint deploys a real ERC-20 on Sepolia with a custom name, symbol, and supply. Connect, switch chain to Sepolia, name your token, and mint — you now have something to vest in step 3."
-            href={TEAM_FINANCE_MINT}
-            cta="Open Team Finance Mint"
+            title="Claim test USDC"
+            body="Circle's official Sepolia faucet drops 10 USDC per day to any address — a real ERC-20 you can vest. Connect, paste your wallet, and request — funds land in seconds and you have something to lock up in step 3."
+            href={SEPOLIA_USDC_FAUCET}
+            cta="Open the Circle USDC faucet"
             accent="#1CB8B8"
             accentBg="rgba(28,184,184,0.08)"
             accentBorder="rgba(28,184,184,0.22)"
@@ -198,24 +198,17 @@ export default function DemoPage() {
 
           <DeployStep
             n="3"
-            title="Create a vesting schedule"
-            body="Same app, different tab. Pick the token you just minted, set a recipient + duration, and submit. Within a minute Vestream auto-indexes the vesting — scan the recipient wallet on /find-vestings to see it live."
-            href={TEAM_FINANCE_VESTING}
-            cta="Open Team Finance Vesting"
+            title="Create a Sablier vesting"
+            body="Open Sablier's app, switch chain to Sepolia, and create a Lockup Linear stream with the USDC you just claimed. Pick a recipient + duration and submit. Within a minute Vestream auto-indexes the stream — scan the recipient wallet on /find-vestings to see it live."
+            href={SABLIER_SEPOLIA}
+            cta="Open Sablier"
             accent="#2DB36A"
             accentBg="rgba(45,179,106,0.08)"
             accentBorder="rgba(45,179,106,0.22)"
           />
         </div>
 
-        {/* Note on why the whole flow sits on Team Finance (mint + vesting):
-            thirdweb blocks iframe embedding (wallet-signing security) and even
-            their deep-linked deploy is a 4-step shuffle (deploy contract →
-            mint → fund vesting → configure) that stalls pre-launch demo
-            users. Team Finance's Sepolia app handles mint + vesting in the
-            same UI, and because we already index Team Finance on Sepolia the
-            tokens AND the vesting appear in Vestream automatically — no
-            separate block-explorer step. */}
+        {/* Note on why each step opens in a new tab + the indexing handoff. */}
         <div
           className="mt-6 rounded-2xl p-4 text-xs flex items-start gap-3"
           style={{ background: "rgba(0,0,0,0.02)", border: "1px solid rgba(21,23,26,0.10)", color: "#8B8E92" }}
@@ -226,7 +219,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your vesting is live on Team Finance, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>Find vestings</Link> to watch Vestream index it.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your Sablier stream is live on Sepolia, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>Find vestings</Link> to watch Vestream index it.
           </p>
         </div>
       </section>
@@ -332,7 +325,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <SiteFooter theme="light" note="Demo A + B use illustrative data so you can explore without signing anything. Demo C deploys real contracts on Sepolia testnet via thirdweb — no real money, no mainnet risk." />
+      <SiteFooter theme="light" note="Demo A + B use illustrative data so you can explore without signing anything. Demo C creates a real Sablier vesting on Sepolia testnet — no real money, no mainnet risk." />
     </main>
   );
 }
