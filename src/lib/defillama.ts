@@ -115,14 +115,23 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
         // (May 5 2026): sablier-lockup → Arbitrum-vesting reported $4.93B
         // while every other chain sat under $300M and the global
         // chainTvls.vesting headline was $5.5B (the bad chain alone
-        // accounted for 90% of it). Hard-capping at 5× the next-largest
-        // chain protects us from these outliers without clamping
-        // legitimately-dominant chains (Streamflow on Solana, Jupiter on
-        // Solana, etc.). When a row IS clamped we also reduce totalUsd
-        // by the difference so the headline matches the post-cap sum.
-        if (perChain.length >= 2) {
-          const second = perChain[1].usd;
-          const cap    = second * 5;
+        // accounted for 90% of it).
+        //
+        // The cap is the LARGER of "5× the next-largest chain" and a
+        // $1B absolute floor. Two failure modes the floor protects:
+        //   - Streamflow on Solana ($552M legit, but next chain is ~$15M
+        //     so a relative-only cap would clip Solana to $75M).
+        //   - Jupiter Lock on Solana (single-chain protocol, would be
+        //     clamped to second-largest × 5 = ~$0).
+        // The relative cap protects against "every chain is plausible
+        // except one" (the Sablier Arbitrum case).
+        //
+        // When a row IS clamped we also reduce totalUsd by the difference
+        // so the headline matches the post-cap sum.
+        const ABSOLUTE_CHAIN_CAP_USD = 1_000_000_000;
+        if (perChain.length >= 1) {
+          const second = perChain[1]?.usd ?? 0;
+          const cap    = Math.max(second * 5, ABSOLUTE_CHAIN_CAP_USD);
           if (perChain[0].usd > cap) {
             const reduction = perChain[0].usd - cap;
             perChain[0] = { ...perChain[0], usd: cap };
