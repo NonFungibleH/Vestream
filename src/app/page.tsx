@@ -130,56 +130,8 @@ export default async function Home() {
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNav />
 
-      {/* ── Mode chooser strip ──────────────────────────────────────────────
-          Pairs with the in-app Vestream Invest / Vestream Payroll
-          segmentation. Lets visitors who already know which mental
-          model they need jump straight to the relevant landing page —
-          /invest converts the investor audience, /payroll converts
-          the worker audience. Keeps the homepage as the discovery
-          surface for users who haven't decided which they are yet. */}
-      <section
-        className="px-4 md:px-8 pt-16 md:pt-20 pb-2 max-w-3xl mx-auto w-full"
-        aria-label="Mode chooser"
-      >
-        <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-          <Link
-            href="/invest"
-            className="flex-1 group rounded-2xl px-5 py-3.5 transition-all hover:shadow-md flex items-center gap-3"
-            style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.20)" }}
-          >
-            <span className="text-2xl">🔓</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: "#2563eb" }}>
-                Vestream Invest
-              </div>
-              <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
-                Track vesting unlocks &amp; cliffs →
-              </div>
-            </div>
-          </Link>
-          <Link
-            href="/payroll"
-            className="flex-1 group rounded-2xl px-5 py-3.5 transition-all hover:shadow-md flex items-center gap-3"
-            style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)" }}
-          >
-            <span className="text-2xl">💸</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: "#059669" }}>
-                Vestream Payroll
-              </div>
-              <div className="text-sm font-semibold" style={{ color: "#0f172a" }}>
-                Track streamed crypto income →
-              </div>
-            </div>
-          </Link>
-        </div>
-        <p className="text-xs text-center mt-3" style={{ color: "#94a3b8" }}>
-          Not sure which? Keep scrolling — the homepage covers both.
-        </p>
-      </section>
-
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center text-center px-5 pt-12 pb-16 md:pt-16 md:pb-32 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-5 pt-24 pb-16 md:pt-40 md:pb-32 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(circle, rgba(21,23,26,0.10) 1px, transparent 1px)`, backgroundSize: "28px 28px" }} />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at top, rgba(28,184,184,0.07) 0%, transparent 65%)" }} />
