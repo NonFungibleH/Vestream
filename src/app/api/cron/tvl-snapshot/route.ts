@@ -130,7 +130,9 @@ async function runAll(protocolFilter: string | null): Promise<{
   // the 5-min unstable_cache TTL. Same tag is also used by
   // /protocols/[slug] pages.
   try {
-    revalidateTag("protocols-page");
+    // Next 16 changed revalidateTag to require a cache profile arg.
+    // "max" = invalidate immediately, no grace period.
+    revalidateTag("protocols-page", "max");
   } catch (err) {
     console.warn("[cron/tvl-snapshot] revalidateTag failed (non-fatal):", err);
   }
