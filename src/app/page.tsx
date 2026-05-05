@@ -154,7 +154,7 @@ export default async function Home() {
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
           style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
-        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr,auto] gap-10 lg:gap-12 items-start">
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 lg:gap-12 items-start">
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
