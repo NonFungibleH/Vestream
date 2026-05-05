@@ -49,13 +49,33 @@ import { buildGraphUrl } from "../graph";
 // in 2024. Each chain has its own deployment ID. See:
 // github.com/LlamaPay/interface → lib/networkDetails.ts
 
+// Only ETHEREUM + OPTIMISM are currently indexed by The Graph network.
+// BSC/Polygon/Arbitrum/Base subgraphs return "subgraph not found: no
+// allocations" or "bad indexers" — the deployment hashes are registered
+// but no indexers are economically allocating to them. Verified May 5
+// 2026 by querying each ID directly:
+//
+//   ETHEREUM  → OK
+//   OPTIMISM  → OK
+//   BSC       → FAIL (bad indexers: 0xbdfb5...Unavailable)
+//   POLYGON   → FAIL (no allocations)
+//   ARBITRUM  → FAIL (no allocations)
+//   BASE      → FAIL (no allocations)
+//
+// Action: enable only the working chains here. The TVL pipeline still
+// covers BSC/Polygon/Arbitrum/Base via DefiLlama's per-chain breakdown
+// (those chains have small LlamaPay TVL, ~$5M combined). The per-wallet
+// stream view returns [] for users on the 4 broken chains until
+// LlamaPay redeploys their subgraphs OR we build a non-subgraph
+// adapter (e.g. on-chain factory reads).
 const SUBGRAPH_IDS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.ETHEREUM]: "5Ac1MryeCPqmzmXGMcchhmKsdaVKwzQ796KApoLGNtqZ",
-  [CHAIN_IDS.BSC]:      "4e3YbwrXML1gFuRSmtqvt89N4APWjyfvkBA8pDDuYZAD",
-  [CHAIN_IDS.POLYGON]:  "egF47mBwB7ytP3aQafhRNHAdtAFHUaZUGy5Me7bq2ew",
-  [CHAIN_IDS.ARBITRUM]: "6ULAzMy7FSRdHngU9S725hr51tq9zqB5Q6LbRYHMSSuy",
   [CHAIN_IDS.OPTIMISM]: "Hw2mERc7LMD9papcf1QPq4puBpHJqh4tNrEZYRC65Hqe",
-  [CHAIN_IDS.BASE]:     "9LPDj38RmbDzyPaPWKSkxHPm9Bzv6oRCHJ2oMxr4LPaz",
+  // Re-enable when working IDs are available:
+  // [CHAIN_IDS.BSC]:      "4e3YbwrXML1gFuRSmtqvt89N4APWjyfvkBA8pDDuYZAD",
+  // [CHAIN_IDS.POLYGON]:  "egF47mBwB7ytP3aQafhRNHAdtAFHUaZUGy5Me7bq2ew",
+  // [CHAIN_IDS.ARBITRUM]: "6ULAzMy7FSRdHngU9S725hr51tq9zqB5Q6LbRYHMSSuy",
+  // [CHAIN_IDS.BASE]:     "9LPDj38RmbDzyPaPWKSkxHPm9Bzv6oRCHJ2oMxr4LPaz",
 };
 
 const SUPPORTED_CHAINS: SupportedChainId[] = Object.keys(SUBGRAPH_IDS).map(

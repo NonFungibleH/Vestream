@@ -250,7 +250,13 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#3D7FD0",
     bg:    "rgba(61,127,208,0.08)",
     border:"rgba(61,127,208,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    // Polygon dropped May 5 2026 — UNCX's Polygon subgraph
+    // (Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD) was deprecated by The
+    // Graph network and no replacement has been published. UNCX still
+    // deploys on Polygon, we just have no data source. Re-add when a
+    // working subgraph URL is available — see the comment in
+    // src/lib/vesting/adapters/uncx.ts SUBGRAPH_IDS map.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC],
     officialUrl: "https://app.uncx.network",
     claimUrl:   "https://app.uncx.network/services/token-vesting/list",
     searchKeywords: [
@@ -412,15 +418,22 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Per-second token streaming for crypto payroll",
     category: "stream",
     description:
-      "LlamaPay is the leading per-second token streaming protocol — pay or get paid in real time, claim anytime. Used by DAO contributors, remote contractors, grant programmes, and crypto-native payroll. Vestream tracks every stream you receive across six EVM chains (Ethereum, BSC, Polygon, Base, Arbitrum, Optimism) with accrued-balance updates and tax-ready income exports.",
+      "LlamaPay is the leading per-second token streaming protocol — pay or get paid in real time, claim anytime. Used by DAO contributors, remote contractors, grant programmes, and crypto-native payroll. Vestream tracks every stream you receive on Ethereum and Optimism, with accrued-balance updates and tax-ready income exports.",
     // Llama brown — distinctive from the existing palette (no other entry
     // sits in warm neutral). Matches the protocol's literal name + branding.
     color: "#A26B3F",
     bg:    "rgba(162,107,63,0.08)",
     border:"rgba(162,107,63,0.22)",
-    // All six EVM chains where LlamaPay has a deployed factory + an active
-    // The Graph subgraph deployment. Subgraph IDs live in the adapter file.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
+    // BSC/Polygon/Arbitrum/Base dropped May 5 2026 — LlamaPay subgraphs on
+    // those chains have lost their indexer allocations on The Graph
+    // network ("subgraph not found: no allocations" / "bad indexers"
+    // errors). LlamaPay still deploys on those chains; we just can't
+    // index them right now. TVL on those chains was ~$5M combined
+    // (per DefiLlama). Re-add when LlamaPay redeploys their subgraphs
+    // OR we build an on-chain factory adapter — see comments in
+    // src/lib/vesting/adapters/llamapay.ts SUBGRAPH_IDS for the full
+    // verification log.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://llamapay.io",
     claimUrl:   "https://llamapay.io/withdraw",
     searchKeywords: [

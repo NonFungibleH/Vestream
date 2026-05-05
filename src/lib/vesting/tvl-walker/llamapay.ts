@@ -46,16 +46,15 @@ import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 import { buildGraphUrl } from "../graph";
 
-// LlamaPay subgraph deployment IDs — keep in sync with the per-wallet adapter
-// (src/lib/vesting/adapters/llamapay.ts). The walker queries the same data
-// source; only the filter changes (no recipient list, paginated full scan).
+// LlamaPay subgraph deployment IDs — keep in sync with the per-wallet
+// adapter (src/lib/vesting/adapters/llamapay.ts). Only ETH + Optimism
+// are currently indexed; the other 4 chains have no indexer allocations
+// on The Graph network. See the adapter file for the verification log
+// and the re-enable plan. Walker now uses DefiLlama as primary (see
+// `externalTvl` on the protocol entry), so this is fallback-only.
 const SUBGRAPH_IDS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.ETHEREUM]: "5Ac1MryeCPqmzmXGMcchhmKsdaVKwzQ796KApoLGNtqZ",
-  [CHAIN_IDS.BSC]:      "4e3YbwrXML1gFuRSmtqvt89N4APWjyfvkBA8pDDuYZAD",
-  [CHAIN_IDS.POLYGON]:  "egF47mBwB7ytP3aQafhRNHAdtAFHUaZUGy5Me7bq2ew",
-  [CHAIN_IDS.ARBITRUM]: "6ULAzMy7FSRdHngU9S725hr51tq9zqB5Q6LbRYHMSSuy",
   [CHAIN_IDS.OPTIMISM]: "Hw2mERc7LMD9papcf1QPq4puBpHJqh4tNrEZYRC65Hqe",
-  [CHAIN_IDS.BASE]:     "9LPDj38RmbDzyPaPWKSkxHPm9Bzv6oRCHJ2oMxr4LPaz",
 };
 
 const SUPPORTED_CHAINS: SupportedChainId[] = Object.keys(SUBGRAPH_IDS).map(
