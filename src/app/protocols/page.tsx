@@ -184,13 +184,13 @@ const loadProtocolsData = unstable_cache(
       throw err instanceof Error ? err : new Error(String(err));
     }
   },
-  // v5 = bump after the partial-failure cache-poisoning fix on
-  // /protocols/[slug] (commit 8ddabb7). This page's render path is
-  // already more defensive (per-protocol inner try/catch on stats), but
-  // bumping the key flushes any stale empty entries from earlier in the
-  // session so the user gets fresh renders immediately rather than
-  // waiting up to 5 minutes for TTL expiry.
-  ["protocols-page-data-v5"],
+  // v6 = bump after the May 5 2026 DefiLlama chain-filtering + sanity-cap
+  // pivot. Numbers materially shifted (Sablier $5.48B → $1.69B with
+  // Arbitrum-vesting outlier capped, Streamflow $552M restored from a
+  // wrongly-clamped $78M, etc.). Key bump force-flushes Vercel's Data
+  // Cache so users see the new figures immediately rather than waiting
+  // out the 5-min TTL. v5 lasted from the page-data-fallback work.
+  ["protocols-page-data-v6"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],

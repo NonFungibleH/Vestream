@@ -24,6 +24,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { revalidateTag } from "next/cache";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   runWalkerSnapshot,
@@ -123,6 +124,16 @@ async function runAll(protocolFilter: string | null): Promise<{
     const t = "totalUsd" in r.summary ? r.summary.totalUsd : 0;
     return s + (typeof t === "number" ? t : 0);
   }, 0);
+
+  // Snapshot rows just changed → bust the /protocols Data Cache so users
+  // see the new figures on their next page load instead of waiting out
+  // the 5-min unstable_cache TTL. Same tag is also used by
+  // /protocols/[slug] pages.
+  try {
+    revalidateTag("protocols-page");
+  } catch (err) {
+    console.warn("[cron/tvl-snapshot] revalidateTag failed (non-fatal):", err);
+  }
 
   return {
     runs,
