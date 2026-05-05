@@ -233,75 +233,149 @@ export default async function Home() {
                   overflow: "hidden",
                 }}
               >
-                {/* Status bar */}
-                <div className="flex justify-between items-center px-4 pt-3 text-[9px] font-semibold" style={{ color: "#0f172a" }}>
-                  <span>9:41</span>
-                  <span style={{ color: "#0f172a", opacity: 0.6 }}>● ● ● ●</span>
+                {/* Big lock-screen time. Status bar (small 9:41 + signal
+                    dots) intentionally dropped — for the marketing
+                    mockup, the carrier/battery indicators add visual
+                    noise without adding meaning. The big time is
+                    enough to read as "iOS lock screen" without the
+                    duplicate top bar. */}
+                <div className="text-center pt-7" style={{ color: "#0f172a" }}>
+                  <div style={{ fontSize: 12, opacity: 0.55, fontWeight: 500, letterSpacing: "0.02em" }}>
+                    Tuesday, 14 May
+                  </div>
+                  <div style={{ fontSize: 64, fontWeight: 600, letterSpacing: "-0.05em", lineHeight: 1, marginTop: 6 }}>
+                    9:41
+                  </div>
                 </div>
-                {/* Big time */}
-                <div className="text-center mt-3" style={{ color: "#0f172a" }}>
-                  <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 500 }}>Tuesday · 14 May</div>
-                  <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, marginTop: 4 }}>9:41</div>
-                </div>
-                {/* The notification — primary */}
-                <div className="absolute left-3 right-3" style={{ top: 175 }}>
+
+                {/* ── Notification stack ─────────────────────────────────
+                    Two cards rendered in iOS lock-screen style:
+                      1. Primary (foreground, full opacity) — the live
+                         "$NOVA unlocked" alert that sells the value.
+                      2. Secondary (background, slightly inset, lower
+                         opacity) — implies a STREAM of alerts, not a
+                         one-off. This is the same visual pattern iOS
+                         uses when multiple notifications are stacked
+                         from the same app: same shape, smaller, behind. */}
+                <div className="absolute left-2.5 right-2.5" style={{ top: 165 }}>
+                  {/* Primary card */}
                   <div
                     style={{
-                      background: "rgba(255,255,255,0.95)",
+                      background: "rgba(255,255,255,0.92)",
                       backdropFilter: "blur(20px)",
+                      WebkitBackdropFilter: "blur(20px)",
                       borderRadius: 18,
-                      padding: 13,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                      padding: "11px 13px",
+                      boxShadow: "0 6px 20px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",
+                      position: "relative",
+                      zIndex: 2,
                     }}
                   >
                     <div className="flex items-start gap-2.5">
+                      {/* App icon — refined: a softer gradient + inner
+                          highlight that mimics how iOS app icons render
+                          with a subtle top-light. */}
                       <div
                         style={{
-                          width: 32, height: 32, borderRadius: 8,
-                          background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                          width: 30, height: 30, borderRadius: 7,
+                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 35%, #0F8A8A 100%)",
                           flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                         }}
                       >
-                        <span style={{ color: "white", fontWeight: 700, fontSize: 13 }}>V</span>
+                        <span
+                          style={{
+                            color: "white",
+                            fontWeight: 800,
+                            fontSize: 14,
+                            letterSpacing: "-0.03em",
+                            textShadow: "0 1px 2px rgba(0,0,0,0.10)",
+                          }}
+                        >
+                          V
+                        </span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: "#475569",
+                            letterSpacing: "0.02em",
+                          }}>
                             Vestream
                           </span>
-                          <span style={{ fontSize: 10, color: "#94a3b8" }}>now</span>
+                          <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
+                            now
+                          </span>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>
+                        <div style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "#0f172a",
+                          lineHeight: 1.32,
+                          letterSpacing: "-0.01em",
+                        }}>
                           $432.18 of NOVA just unlocked
                         </div>
-                        <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.3, marginTop: 2 }}>
-                          Tap to claim before the window closes →
+                        <div style={{
+                          fontSize: 11.5,
+                          color: "#475569",
+                          lineHeight: 1.35,
+                          marginTop: 2,
+                        }}>
+                          Tap to claim before the window closes
                         </div>
                       </div>
                     </div>
                   </div>
-                  {/* Faded second peek — implies a stream of alerts */}
+
+                  {/* Secondary card — narrower (mx-2 inset), behind, dimmer.
+                      Reads as "another notification in the stack" without
+                      drawing attention away from the primary CTA. */}
                   <div
-                    className="mx-3 mt-1.5"
+                    className="mx-2"
                     style={{
-                      background: "rgba(255,255,255,0.75)",
-                      borderRadius: 14,
-                      padding: 9,
-                      boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
-                      opacity: 0.65,
+                      background: "rgba(255,255,255,0.72)",
+                      backdropFilter: "blur(16px)",
+                      WebkitBackdropFilter: "blur(16px)",
+                      borderRadius: 16,
+                      padding: "9px 12px",
+                      boxShadow: "0 4px 14px rgba(15,23,42,0.05)",
+                      marginTop: -4,
+                      paddingTop: 12,
+                      position: "relative",
+                      zIndex: 1,
                     }}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 600, color: "#64748b" }}>
-                      ⏰ Reminder · OP unlocks in 48h
+                    <div className="flex items-center gap-2">
+                      <div
+                        style={{
+                          width: 18, height: 18, borderRadius: 5,
+                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 35%, #0F8A8A 100%)",
+                          flexShrink: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: "inset 0 0.5px 0 rgba(255,255,255,0.30)",
+                        }}
+                      >
+                        <span style={{ color: "white", fontWeight: 800, fontSize: 9, letterSpacing: "-0.03em" }}>
+                          V
+                        </span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#334155" }}>
+                          OP unlocks in 48h
+                        </span>
+                        <span style={{ fontSize: 10, color: "#94a3b8", marginLeft: 6 }}>
+                          · Reminder
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <p className="text-[11px] mt-4 text-center" style={{ color: "#B8BABD" }}>
-              What it looks like the moment a token unlocks
-            </p>
           </div>
 
         </div>
