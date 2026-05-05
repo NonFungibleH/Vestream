@@ -88,10 +88,12 @@ const UNCX_URLS: Partial<Record<SupportedChainId, string>> = {
 };
 
 const UNVEST_URLS: Partial<Record<SupportedChainId, string>> = {
-  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ETH,     "HR7owbk45vXNgf8XXyDd7fRLuVo6QGYY6XbGjRCPgUuD") ?? "",
-  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BSC,     "5RiFDxL1mDFdSojrC7tRkVXqiiQgysf77iC7c1KK5CAp") ?? "",
-  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_POLYGON, "7EwmQS7MyeY9BZC5xeAr25WgjcgbRNpAY95dZNBvqgja") ?? "",
-  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BASE,    "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M") ?? "",
+  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ETH,      "HR7owbk45vXNgf8XXyDd7fRLuVo6QGYY6XbGjRCPgUuD") ?? "",
+  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BSC,      "5RiFDxL1mDFdSojrC7tRkVXqiiQgysf77iC7c1KK5CAp") ?? "",
+  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_POLYGON,  "7EwmQS7MyeY9BZC5xeAr25WgjcgbRNpAY95dZNBvqgja") ?? "",
+  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BASE,     "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M") ?? "",
+  [CHAIN_IDS.ARBITRUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ARBITRUM, "9soNvLk5RWaJ3HtgJSsr9m5Nafo985kNyrArPM7iopUV") ?? "",
+  [CHAIN_IDS.OPTIMISM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_OPTIMISM, "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb") ?? "",
 };
 
 const SUPERFLUID_URLS: Partial<Record<SupportedChainId, string>> = {
@@ -1203,6 +1205,8 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "unvest",       chainId: CHAIN_IDS.BSC,      discover: discoverUnvestRecipients },
   { adapterId: "unvest",       chainId: CHAIN_IDS.POLYGON,  discover: discoverUnvestRecipients },
   { adapterId: "unvest",       chainId: CHAIN_IDS.BASE,     discover: discoverUnvestRecipients },
+  { adapterId: "unvest",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverUnvestRecipients },
+  { adapterId: "unvest",       chainId: CHAIN_IDS.OPTIMISM, discover: discoverUnvestRecipients },
   // Superfluid — four mainnets. Its hosted subgraph endpoints don't include
   // a Sepolia deployment, so no testnet job.
   { adapterId: "superfluid",   chainId: CHAIN_IDS.ETHEREUM, discover: discoverSuperfluidRecipients },

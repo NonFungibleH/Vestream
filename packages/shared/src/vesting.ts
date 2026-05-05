@@ -134,6 +134,7 @@ export type StreamCategory = "vesting" | "stream" | "milestone";
  */
 export const PROTOCOL_DEFAULT_CATEGORY: Record<string, StreamCategory> = {
   sablier:        "vesting",
+  "sablier-flow": "stream",
   hedgey:         "vesting",
   uncx:           "vesting",
   "uncx-vm":      "vesting",

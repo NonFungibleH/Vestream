@@ -31,10 +31,14 @@ import type { WalkerResult, TokenAggregate } from "./types";
 // Same subgraph IDs as adapters/unvest.ts — duplicated intentionally (walker
 // files stay self-contained; do not cross-import module-private consts).
 const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
-  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ETH,     "HR7owbk45vXNgf8XXyDd7fRLuVo6QGYY6XbGjRCPgUuD"),
-  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BSC,     "5RiFDxL1mDFdSojrC7tRkVXqiiQgysf77iC7c1KK5CAp"),
-  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_POLYGON, "7EwmQS7MyeY9BZC5xeAr25WgjcgbRNpAY95dZNBvqgja"),
-  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BASE,    "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M"),
+  [CHAIN_IDS.ETHEREUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ETH,      "HR7owbk45vXNgf8XXyDd7fRLuVo6QGYY6XbGjRCPgUuD"),
+  [CHAIN_IDS.BSC]:      resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BSC,      "5RiFDxL1mDFdSojrC7tRkVXqiiQgysf77iC7c1KK5CAp"),
+  [CHAIN_IDS.POLYGON]:  resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_POLYGON,  "7EwmQS7MyeY9BZC5xeAr25WgjcgbRNpAY95dZNBvqgja"),
+  [CHAIN_IDS.BASE]:     resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_BASE,     "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M"),
+  // Arbitrum + Optimism — added May 5 2026 from working IDs verified
+  // against the Graph network gateway.
+  [CHAIN_IDS.ARBITRUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ARBITRUM, "9soNvLk5RWaJ3HtgJSsr9m5Nafo985kNyrArPM7iopUV"),
+  [CHAIN_IDS.OPTIMISM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_OPTIMISM, "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb"),
 };
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap

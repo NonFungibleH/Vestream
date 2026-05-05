@@ -20,6 +20,7 @@ export interface VestingAdapter {
 // Import adapters and add them here. Order does not matter.
 
 import { sablierAdapter }     from "./sablier";
+import { sablierFlowAdapter } from "./sablier-flow";
 import { hedgeyAdapter }      from "./hedgey";
 import { teamFinanceAdapter } from "./team-finance";
 import { uncxAdapter }        from "./uncx";
@@ -33,6 +34,7 @@ import { llamapayAdapter }    from "./llamapay";
 
 export const ADAPTER_REGISTRY: VestingAdapter[] = [
   sablierAdapter,
+  sablierFlowAdapter,
   hedgeyAdapter,
   teamFinanceAdapter,
   uncxAdapter,

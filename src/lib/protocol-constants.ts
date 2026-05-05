@@ -285,11 +285,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Unvest",
     tagline: "Step and milestone vesting",
     description:
-      "Unvest gives token issuers fine-grained control over release schedules — step-by-step milestones, custom cliffs, and per-beneficiary plans. Common for token sales that need deliberate, event-driven release. Vestream indexes every Unvest V3 contract across Ethereum, Base, BSC and Polygon.",
+      "Unvest gives token issuers fine-grained control over release schedules — step-by-step milestones, custom cliffs, and per-beneficiary plans. Common for token sales that need deliberate, event-driven release. Vestream indexes every Unvest V3 contract across Ethereum, Base, BSC, Polygon, Arbitrum, and Optimism.",
     color: "#0BA0CB",
     bg:    "rgba(11,160,203,0.08)",
     border:"rgba(11,160,203,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://unvest.io",
     claimUrl:   "https://app.unvest.io",
     searchKeywords: [

@@ -27,13 +27,17 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_BASE_SEPOLIA,
                               "CZxkjYEnom7ijhKv77n3Qf2WGuPMLkfVsyZzRB6EhMmP"
                             ),
-  // Arbitrum: Unvest's subgraph deployment IDs aren't publicly catalogued
-  // for Arbitrum as of 2026-05-02. May not be deployed there at all.
-  // Action to unblock: check Unvest's docs / GitHub for an Arbitrum
-  // Holder Balance subgraph; if missing, contact the Unvest team.
-  [CHAIN_IDS.ARBITRUM]:     undefined,
-  // Optimism: same status as Arbitrum — pending subgraph ID research.
-  [CHAIN_IDS.OPTIMISM]:     undefined,
+  // Arbitrum + Optimism — added May 5 2026 from working IDs verified
+  // against the Graph network gateway. Schema is the same HolderBalance
+  // shape as the other mainnet chains.
+  [CHAIN_IDS.ARBITRUM]:     resolveSubgraphUrl(
+                              process.env.UNVEST_SUBGRAPH_URL_ARBITRUM,
+                              "9soNvLk5RWaJ3HtgJSsr9m5Nafo985kNyrArPM7iopUV"
+                            ),
+  [CHAIN_IDS.OPTIMISM]:     resolveSubgraphUrl(
+                              process.env.UNVEST_SUBGRAPH_URL_OPTIMISM,
+                              "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb"
+                            ),
   [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 
