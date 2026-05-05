@@ -59,11 +59,14 @@ const DS_CHAIN_SLUG: Record<number, string> = {
 };
 
 const CG_PLATFORM_SLUG: Record<number, string> = {
-  1:    "ethereum",
-  56:   "binance-smart-chain",
-  137:  "polygon-pos",
-  8453: "base",
-  101:  "solana",    // CoinGecko platform slug for SPL tokens
+  1:     "ethereum",
+  56:    "binance-smart-chain",
+  137:   "polygon-pos",
+  8453:  "base",
+  42161: "arbitrum-one",        // added May 5 2026 — was missing, so any
+  10:    "optimistic-ethereum", // Arbitrum/Optimism token DexScreener
+                                 // missed got no Pass B fallback at all
+  101:   "solana",              // CoinGecko platform slug for SPL tokens
 };
 
 // Pricing thresholds (USD liquidity) — tiered to preserve the long tail

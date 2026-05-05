@@ -352,6 +352,23 @@ export async function runWalkerSnapshot(
         return REAL_SYMBOL_RE.test(symbol);
       }
 
+      // ── LOW band partial credit (May 5 2026) ─────────────────────────
+      //
+      // Previously the LOW band ($100-$1k DEX liquidity, OR demoted
+      // unverified-symbol tokens) was tracked in tvl_low but completely
+      // excluded from the headline tvl_usd. That made self-indexed
+      // protocols like PinkSale, UNCX, Unvest look "extraordinarily low"
+      // because most vesting-locked project tokens live in the $100-$1k
+      // pool-depth range — they exist on DEXs, just not deep ones.
+      //
+      // The compromise: credit LOW band to headline at 50% discount.
+      // Acknowledges that the dollars aren't fully realisable at that
+      // pool depth (you'd slip the price moving 50% of pool TVL) without
+      // pretending the locked value is zero. Full value still tracked
+      // in tvl_low for audit, but the headline reflects honest "soft"
+      // dollars + full hard dollars from HIGH/MEDIUM.
+      const LOW_BAND_HEADLINE_DISCOUNT = 0.5;
+
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
         const cap = perTokenCeiling(p);
@@ -369,7 +386,13 @@ export async function runWalkerSnapshot(
         // Bucket the credited (capped) portion by confidence.
         if      (effectiveConfidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
         else if (effectiveConfidence === "medium") { perChain.medium += credited; perChain.tvl += credited; }
-        else                                         perChain.low    += credited;   // thin, excluded from headline
+        else {
+          // LOW band: full value in tvl_low for audit, half value in
+          // headline so thin-pool dollars still show up but at a
+          // realistic discount.
+          perChain.low += credited;
+          perChain.tvl += credited * LOW_BAND_HEADLINE_DISCOUNT;
+        }
 
         // Anything above the cap goes into the LOW bucket as "excess" —
         // visible in breakdown for auditability, never in headline.

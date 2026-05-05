@@ -155,8 +155,8 @@ export function TvlComparisonBar({
               <span className="font-semibold" style={{ color: "#1CB8B8" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s data
               source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts, and price each
               token via DexScreener with CoinGecko as fallback. Tokens with ≥$10k DEX liquidity are <span className="font-semibold" style={{ color: "#1A1D20" }}>high</span> confidence,
-              {" "}$1k–$10k <span className="font-semibold" style={{ color: "#1A1D20" }}>medium</span>; the headline excludes anything thinner. Single-token
-              contributions over $200M must be high-confidence to count.
+              {" "}$1k–$10k <span className="font-semibold" style={{ color: "#1A1D20" }}>medium</span>, $100–$1k <span className="font-semibold" style={{ color: "#1A1D20" }}>thin</span> (counted at 50% to acknowledge slippage). Single-token
+              contributions are capped at $500M to defend against pricing outliers.
               {snapshotAgeHours !== null && snapshotAgeHours !== undefined && (
                 <>
                   <br /><br />
