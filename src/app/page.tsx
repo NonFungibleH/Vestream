@@ -158,19 +158,41 @@ export default async function Home() {
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
+            {/* Live indicator — small pulsing pill above the H1 signals
+                "active product, currently watching the chains" without
+                returning to the institutional stat-flex of the previous
+                "1.4M streams indexed" strip. The dot animates via the
+                Tailwind `animate-pulse` class. */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+              style={{
+                background: "rgba(28,184,184,0.07)",
+                border: "1px solid rgba(28,184,184,0.20)",
+              }}>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                  style={{ background: "#1CB8B8" }} />
+                <span className="relative inline-flex rounded-full h-2 w-2"
+                  style={{ background: "#1CB8B8" }} />
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest"
+                style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
+                Live · Watching every chain 24/7
+              </span>
+            </div>
+
             <h1 className="text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-6"
               style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}>
-              Every token you&rsquo;re owed,<br />
+              Never miss a <br />
               <span style={{ color: "#1CB8B8" }}>
-                in one place.
+                token unlock.
               </span>
             </h1>
 
             <p className="text-lg max-w-xl mb-3 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
-              Find every vesting unlock and cliff you&rsquo;re owed across every protocol and chain — and get notified the moment a token is claimable.
+              Find and track every token vesting you&rsquo;re owed — across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              Nine protocols. Seven chains. One inbox. Tax-ready exports at year-end.
+              Nine vesting protocols. Seven chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs — primary scanner + app badges. The scanner gets
@@ -187,7 +209,7 @@ export default async function Home() {
                   boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
                 }}
               >
-                Find what I&rsquo;m owed →
+                Find my vestings →
               </Link>
 
               <div className="flex flex-col items-center lg:items-start gap-2">
@@ -212,7 +234,13 @@ export default async function Home() {
               the text and phone now sit alongside each other — both
               top-aligned — exactly the "two columns of equal weight"
               hero pattern Apple / Linear / Things use. */}
-          <div className="hidden md:flex flex-col items-center lg:justify-self-end">
+          {/* Phone visible on every viewport. On <md it stacks below the
+              text (single-column grid); on md+ it sits to the right.
+              Slight tilt (rotate(4deg)) gives the device-shot energy
+              Apple / Linear / Things use in their hero phones — without
+              it the rectangle reads as too-flat / engineered, with it
+              the page feels alive. */}
+          <div className="flex flex-col items-center lg:justify-self-end">
             <div
               style={{
                 width: 220,
@@ -221,6 +249,8 @@ export default async function Home() {
                 borderRadius: 36,
                 padding: 8,
                 boxShadow: "0 28px 64px rgba(15,23,42,0.30), 0 0 0 1px rgba(255,255,255,0.05) inset",
+                transform: "rotate(4deg)",
+                transformOrigin: "center center",
               }}
             >
               <div
