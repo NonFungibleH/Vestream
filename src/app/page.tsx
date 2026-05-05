@@ -154,7 +154,7 @@ export default async function Home() {
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
           style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
-        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr,auto] gap-10 lg:gap-16 items-center">
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr,auto] gap-10 lg:gap-12 items-start">
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
@@ -203,16 +203,23 @@ export default async function Home() {
               Stylized iPhone frame with a Vestream lock-screen
               notification rendered inside. CSS-only — no image asset, so
               stays sharp at every density and tracks theme changes.
-              Hidden on small screens to keep the hero CTAs above the
-              fold; from md+ it sits to the right of the copy. */}
-          <div className="hidden md:flex flex-col items-center justify-center lg:justify-self-end">
+
+              Sized to MATCH the text column's natural height (~440px).
+              Previously 260×520 dominated the row and forced
+              `items-center` to centre-vertically, which orphaned the
+              text at the top of an oversized row with empty space below.
+              At 220×440 with `items-start` (set on the grid container),
+              the text and phone now sit alongside each other — both
+              top-aligned — exactly the "two columns of equal weight"
+              hero pattern Apple / Linear / Things use. */}
+          <div className="hidden md:flex flex-col items-center lg:justify-self-end">
             <div
               style={{
-                width: 260,
-                height: 520,
+                width: 220,
+                height: 440,
                 background: "#0f172a",
-                borderRadius: 42,
-                padding: 9,
+                borderRadius: 36,
+                padding: 8,
                 boxShadow: "0 28px 64px rgba(15,23,42,0.30), 0 0 0 1px rgba(255,255,255,0.05) inset",
               }}
             >
@@ -221,23 +228,23 @@ export default async function Home() {
                   width: "100%",
                   height: "100%",
                   background: "linear-gradient(165deg, #f0fdf4 0%, #ecfeff 50%, #eef2ff 100%)",
-                  borderRadius: 33,
+                  borderRadius: 28,
                   position: "relative",
                   overflow: "hidden",
                 }}
               >
                 {/* Status bar */}
-                <div className="flex justify-between items-center px-5 pt-4 text-[10px] font-semibold" style={{ color: "#0f172a" }}>
+                <div className="flex justify-between items-center px-4 pt-3 text-[9px] font-semibold" style={{ color: "#0f172a" }}>
                   <span>9:41</span>
                   <span style={{ color: "#0f172a", opacity: 0.6 }}>● ● ● ●</span>
                 </div>
                 {/* Big time */}
-                <div className="text-center mt-5" style={{ color: "#0f172a" }}>
-                  <div style={{ fontSize: 14, opacity: 0.65, fontWeight: 500 }}>Tuesday · 14 May</div>
-                  <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, marginTop: 4 }}>9:41</div>
+                <div className="text-center mt-3" style={{ color: "#0f172a" }}>
+                  <div style={{ fontSize: 12, opacity: 0.65, fontWeight: 500 }}>Tuesday · 14 May</div>
+                  <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, marginTop: 4 }}>9:41</div>
                 </div>
                 {/* The notification — primary */}
-                <div className="absolute left-3 right-3" style={{ top: 230 }}>
+                <div className="absolute left-3 right-3" style={{ top: 175 }}>
                   <div
                     style={{
                       background: "rgba(255,255,255,0.95)",
@@ -299,8 +306,12 @@ export default async function Home() {
 
         </div>
 
-        {/* Protocol strip */}
-        <div className="relative mt-8">
+        {/* Protocol strip — centred under the hero grid (text + phone).
+            Lives inside the same hero <section> so the radial-gradient
+            backgrounds bleed underneath it. mt-16 gives clear visual
+            separation from the hero so it reads as its own block, not
+            an appendage to the right column. */}
+        <div className="relative mt-16">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#B8BABD" }}>Integrated with</p>
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
