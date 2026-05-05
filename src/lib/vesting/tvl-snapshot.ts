@@ -517,12 +517,16 @@ export async function runDefiLlamaSnapshot(
   // "other chains" bucket keyed to chainId=0 so the row-sum equals totalUsd.
   const CHAIN_NAME_TO_ID: Record<string, SupportedChainId> = {
     // DefiLlama's canonical names (case-insensitive match below).
-    ethereum: CHAIN_IDS.ETHEREUM,
-    binance:  CHAIN_IDS.BSC,
-    bsc:      CHAIN_IDS.BSC,
-    polygon:  CHAIN_IDS.POLYGON,
-    base:     CHAIN_IDS.BASE,
-    solana:   CHAIN_IDS.SOLANA,
+    ethereum:     CHAIN_IDS.ETHEREUM,
+    binance:      CHAIN_IDS.BSC,
+    bsc:          CHAIN_IDS.BSC,
+    polygon:      CHAIN_IDS.POLYGON,
+    base:         CHAIN_IDS.BASE,
+    arbitrum:     CHAIN_IDS.ARBITRUM,
+    "arbitrum one": CHAIN_IDS.ARBITRUM,
+    optimism:     CHAIN_IDS.OPTIMISM,
+    "op mainnet": CHAIN_IDS.OPTIMISM,
+    solana:       CHAIN_IDS.SOLANA,
   };
 
   let accountedUsd = 0;
@@ -554,30 +558,16 @@ export async function runDefiLlamaSnapshot(
     summary.chainsWritten++;
   }
 
-  // If DefiLlama reported more USD than we accounted for (e.g. Arbitrum /
-  // Optimism slices) we ALSO write a catch-all row on ETHEREUM so the
-  // /protocols headline matches DefiLlama's. This is rare for Sablier/Hedgey/
-  // Streamflow where the main chains cover >95%, but we shouldn't silently
-  // drop liquidity.
-  const leftover = snap.totalUsd - accountedUsd;
-  if (leftover > snap.totalUsd * 0.05 && !writtenChains.includes(CHAIN_IDS.ETHEREUM)) {
-    await upsertSnapshot({
-      protocol,
-      chainId:         CHAIN_IDS.ETHEREUM,
-      tvlUsd:          leftover,
-      tvlHigh:         leftover,
-      tvlMedium:       0,
-      tvlLow:          0,
-      streamCount:     0,
-      tokensPriced:    0,
-      tokensTotal:     0,
-      methodology:     "defillama-vesting",
-      topContributors: [],
-      notes:           `DefiLlama aggregate of unmapped chains (fetchedAt=${snap.fetchedAt})`,
-    });
-    writtenChains.push(CHAIN_IDS.ETHEREUM);
-    summary.chainsWritten++;
-  }
+  // Intentionally NO leftover-on-Ethereum catch-all. Sablier/Hedgey deploy
+  // on 30+ chains; Vestream only indexes 6. Dumping the unaccounted USD onto
+  // the ETH row would inflate it by ~$300M (Linea, Avalanche, Scroll, etc.)
+  // and misrepresent which chains we actually cover. The headline is now
+  // explicitly "Vestream-scope TVL = sum of chains we index" — apples-to-
+  // apples with our self-indexed protocols (UNCX, Unvest, etc.).
+  //
+  // The summary.totalUsd below reflects that scoped sum, not DefiLlama's
+  // global figure.
+  summary.totalUsd = accountedUsd;
 
   await pruneOtherChains(protocol, writtenChains);
 

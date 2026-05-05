@@ -121,11 +121,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "hedgey", "uncx"],
     testimonials: [],
-    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/sablier.ts.
-    // DefiLlama's sablier-lockup figure sums across every chain Sablier
-    // deploys on (Avalanche, Linea, Scroll, Mantle, etc) — but Vestream
-    // only indexes 6 of those chains, so the DefiLlama number was
-    // apples-to-oranges next to our self-indexed protocols.
+    // DefiLlama publishes per-chain `chainTvls.{Chain}-vesting` breakdowns;
+    // runDefiLlamaSnapshot filters to chains we index (CHAIN_NAME_TO_ID in
+    // tvl-snapshot.ts) and sums. Apples-to-apples with our self-indexed
+    // protocols, but using DefiLlama's curated pricing — orders of
+    // magnitude more accurate than DexScreener-only at the per-token level.
+    externalTvl: { source: "defillama", slug: "sablier-lockup" },
   },
 
   // Sablier Flow — distinct product from Sablier Lockup. Per-second
@@ -193,12 +194,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "team-finance", "uncx"],
     testimonials: [],
-    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/hedgey.ts.
-    // Walker enumerates every plan NFT via ERC721Enumerable + Multicall3
-    // across our 6 supported chains, computes locked = max(0, amount -
-    // vested) per plan with cliff + period/rate semantics, aggregates by
-    // token. Replaces the DefiLlama passthrough which globalised all
-    // chains they index.
+    // DefiLlama per-chain breakdown; chain-filtered to our 6 supported
+    // chains. Self-indexed walker (tvl-walker/hedgey.ts) is kept as a
+    // fallback path but DefiLlama is preferred while it gives more
+    // accurate pricing per-token than our DexScreener-first pipeline.
+    externalTvl: { source: "defillama", slug: "hedgey" },
   },
 
   "team-finance": {
@@ -436,12 +436,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "sablier", "hedgey"],
     testimonials: [],
-    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/llamapay.ts.
-    // Walker paginates the per-chain LlamaPay subgraphs across our 6
-    // supported chains (same subgraph IDs as the per-wallet adapter),
-    // aggregating streamed-but-unclaimed amounts per token — the value
-    // literally sitting in the LlamaPay contract waiting to be withdrawn.
-    // Replaces the DefiLlama passthrough which globalised all chains.
+    // DefiLlama per-chain breakdown; chain-filtered to our 6 supported
+    // chains. Self-indexed walker (tvl-walker/llamapay.ts) is kept as a
+    // fallback path; DefiLlama wins for now because its numbers reflect
+    // the full deposited-balance-per-stream rather than just the streamed
+    // slice the walker computes.
+    externalTvl: { source: "defillama", slug: "llamapay" },
   },
 
   "jupiter-lock": {
