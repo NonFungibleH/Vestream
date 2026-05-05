@@ -244,10 +244,10 @@ export default async function Home() {
               style={{
                 width: 220,
                 height: 440,
-                background: "#0f172a",
+                background: "#0a0e14",
                 borderRadius: 36,
-                padding: 8,
-                boxShadow: "0 28px 64px rgba(15,23,42,0.30), 0 0 0 1px rgba(255,255,255,0.05) inset",
+                padding: 6,
+                boxShadow: "0 28px 64px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
                 transform: "rotate(4deg)",
                 transformOrigin: "center center",
               }}
@@ -256,149 +256,197 @@ export default async function Home() {
                 style={{
                   width: "100%",
                   height: "100%",
-                  background: "linear-gradient(165deg, #f0fdf4 0%, #ecfeff 50%, #eef2ff 100%)",
-                  borderRadius: 28,
+                  background: "#0f1218",
+                  borderRadius: 30,
                   position: "relative",
                   overflow: "hidden",
                 }}
               >
-                {/* Big lock-screen time. Status bar (small 9:41 + signal
-                    dots) intentionally dropped — for the marketing
-                    mockup, the carrier/battery indicators add visual
-                    noise without adding meaning. The big time is
-                    enough to read as "iOS lock screen" without the
-                    duplicate top bar. */}
-                <div className="text-center pt-7" style={{ color: "#0f172a" }}>
-                  <div style={{ fontSize: 12, opacity: 0.55, fontWeight: 500, letterSpacing: "0.02em" }}>
-                    Tuesday, 14 May
+                {/* iOS-style status bar — signal/wifi/battery glyphs at
+                    the top right. Subtle but tells the eye "real phone
+                    UI" before the brain reads anything. */}
+                <div
+                  className="flex items-center justify-end gap-1"
+                  style={{ paddingTop: 10, paddingRight: 18, color: "rgba(255,255,255,0.75)" }}
+                >
+                  {/* Signal bars */}
+                  <svg width="13" height="9" viewBox="0 0 17 11" fill="currentColor">
+                    <rect x="0"  y="7" width="3" height="3" rx="0.5"/>
+                    <rect x="4.5" y="5" width="3" height="5" rx="0.5"/>
+                    <rect x="9"  y="2.5" width="3" height="7.5" rx="0.5"/>
+                    <rect x="13.5" y="0" width="3" height="10" rx="0.5"/>
+                  </svg>
+                  {/* WiFi */}
+                  <svg width="12" height="9" viewBox="0 0 13 9" fill="currentColor">
+                    <path d="M6.5 8.5l1.5-1.5a2.1 2.1 0 0 0-3 0l1.5 1.5z"/>
+                    <path d="M6.5 5L8.7 7.2a3.1 3.1 0 0 0-4.4 0L6.5 5z" opacity="0.85"/>
+                    <path d="M6.5 1.5L9.9 4.9a4.8 4.8 0 0 0-6.8 0L6.5 1.5z" opacity="0.7"/>
+                  </svg>
+                  {/* Battery */}
+                  <div
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 1.5,
+                      marginLeft: 2,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18, height: 8, borderRadius: 2,
+                        border: "1px solid rgba(255,255,255,0.55)",
+                        position: "relative",
+                        padding: 1,
+                      }}
+                    >
+                      <div style={{ width: "85%", height: "100%", background: "rgba(255,255,255,0.85)", borderRadius: 1 }} />
+                    </div>
+                    <div style={{ width: 1.5, height: 4, background: "rgba(255,255,255,0.55)", borderRadius: 1 }} />
                   </div>
-                  <div style={{ fontSize: 64, fontWeight: 600, letterSpacing: "-0.05em", lineHeight: 1, marginTop: 6 }}>
+                </div>
+
+                {/* Date + giant time, mirroring the iOS lock-screen
+                    layout from the App Store screenshot reference. */}
+                <div className="text-center" style={{ color: "white", paddingTop: 22 }}>
+                  <div
+                    className="inline-flex items-center justify-center gap-1"
+                    style={{ fontSize: 11, opacity: 0.7, fontWeight: 500, letterSpacing: "0.02em" }}
+                  >
+                    {/* Tiny lock glyph — same iconography iOS uses next
+                        to the date on a locked screen. */}
+                    <svg width="8" height="9" viewBox="0 0 10 11" fill="none" stroke="currentColor" strokeWidth="1.4">
+                      <rect x="2" y="5" width="6" height="5" rx="1"/>
+                      <path d="M3.4 5V3.5a1.6 1.6 0 0 1 3.2 0V5"/>
+                    </svg>
+                    <span>Wednesday, 14 May</span>
+                  </div>
+                  <div style={{ fontSize: 70, fontWeight: 300, letterSpacing: "-0.06em", lineHeight: 1, marginTop: 4 }}>
                     9:41
                   </div>
                 </div>
 
                 {/* ── Notification stack ─────────────────────────────────
-                    Two cards rendered in iOS lock-screen style:
-                      1. Primary (foreground, full opacity) — the live
-                         "$NOVA unlocked" alert that sells the value.
-                      2. Secondary (background, slightly inset, lower
-                         opacity) — implies a STREAM of alerts, not a
-                         one-off. This is the same visual pattern iOS
-                         uses when multiple notifications are stacked
-                         from the same app: same shape, smaller, behind. */}
-                <div className="absolute left-2.5 right-2.5" style={{ top: 165 }}>
-                  {/* Primary card */}
+                    Three iOS lock-screen cards:
+                      1. (now)        Vestream — NOVA unlocked just now
+                      2. (5m)         Vestream — Unlock in 5 minutes
+                      3. (yesterday)  Vestream Mail — Email · 24h preview sent
+                    Removed from the App Store ref: the 7-day heads-up and
+                    the 1-hour-to-unlock email — keep the stack short
+                    enough to read at hero size. */}
+                <div className="absolute left-2 right-2 flex flex-col gap-1.5" style={{ top: 168 }}>
+                  {/* Primary card — VESTREAM · NOVA unlocked just now */}
                   <div
                     style={{
-                      background: "rgba(255,255,255,0.92)",
-                      backdropFilter: "blur(20px)",
-                      WebkitBackdropFilter: "blur(20px)",
-                      borderRadius: 18,
-                      padding: "11px 13px",
-                      boxShadow: "0 6px 20px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)",
-                      position: "relative",
-                      zIndex: 2,
+                      background: "rgba(255,255,255,0.96)",
+                      backdropFilter: "blur(18px)",
+                      WebkitBackdropFilter: "blur(18px)",
+                      borderRadius: 14,
+                      padding: "9px 11px",
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
                     }}
                   >
-                    <div className="flex items-start gap-2.5">
-                      {/* App icon — refined: a softer gradient + inner
-                          highlight that mimics how iOS app icons render
-                          with a subtle top-light. */}
+                    <div className="flex items-start gap-2">
                       <div
                         style={{
-                          width: 30, height: 30, borderRadius: 7,
-                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 35%, #0F8A8A 100%)",
+                          width: 22, height: 22, borderRadius: 5,
+                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 45%, #0F8A8A 100%)",
                           flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
                           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                         }}
                       >
-                        <span
-                          style={{
-                            color: "white",
-                            fontWeight: 800,
-                            fontSize: 14,
-                            letterSpacing: "-0.03em",
-                            textShadow: "0 1px 2px rgba(0,0,0,0.10)",
-                          }}
-                        >
-                          V
-                        </span>
+                        <span style={{ color: "white", fontWeight: 800, fontSize: 11, letterSpacing: "-0.03em" }}>V</span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
-                          <span style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            color: "#475569",
-                            letterSpacing: "0.02em",
-                          }}>
-                            Vestream
-                          </span>
-                          <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
-                            now
-                          </span>
+                        <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM</span>
+                          <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>now</span>
                         </div>
-                        <div style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "#0f172a",
-                          lineHeight: 1.32,
-                          letterSpacing: "-0.01em",
-                        }}>
-                          $432.18 of NOVA just unlocked
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
+                          NOVA unlocked just now
                         </div>
-                        <div style={{
-                          fontSize: 11.5,
-                          color: "#475569",
-                          lineHeight: 1.35,
-                          marginTop: 2,
-                        }}>
-                          Tap to claim before the window closes
+                        <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3, marginTop: 1 }}>
+                          $4,200 streaming to 0x3f5C — tap to claim
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Secondary card — narrower (mx-2 inset), behind, dimmer.
-                      Reads as "another notification in the stack" without
-                      drawing attention away from the primary CTA. */}
+                  {/* Card 2 — VESTREAM · Unlock in 5 minutes */}
                   <div
-                    className="mx-2"
                     style={{
-                      background: "rgba(255,255,255,0.72)",
+                      background: "rgba(255,255,255,0.92)",
                       backdropFilter: "blur(16px)",
                       WebkitBackdropFilter: "blur(16px)",
-                      borderRadius: 16,
-                      padding: "9px 12px",
-                      boxShadow: "0 4px 14px rgba(15,23,42,0.05)",
-                      marginTop: -4,
-                      paddingTop: 12,
-                      position: "relative",
-                      zIndex: 1,
+                      borderRadius: 14,
+                      padding: "9px 11px",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.14)",
                     }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-start gap-2">
                       <div
                         style={{
-                          width: 18, height: 18, borderRadius: 5,
-                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 35%, #0F8A8A 100%)",
+                          width: 22, height: 22, borderRadius: 5,
+                          background: "linear-gradient(155deg, #2DD4D4 0%, #1CB8B8 45%, #0F8A8A 100%)",
                           flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          boxShadow: "inset 0 0.5px 0 rgba(255,255,255,0.30)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                         }}
                       >
-                        <span style={{ color: "white", fontWeight: 800, fontSize: 9, letterSpacing: "-0.03em" }}>
-                          V
-                        </span>
+                        <span style={{ color: "white", fontWeight: 800, fontSize: 11, letterSpacing: "-0.03em" }}>V</span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                          OP unlocks in 48h
-                        </span>
-                        <span style={{ fontSize: 10, color: "#94a3b8", marginLeft: 6 }}>
-                          · Reminder
-                        </span>
+                        <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM</span>
+                          <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>5m</span>
+                        </div>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
+                          Unlock in 5 minutes
+                        </div>
+                        <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3, marginTop: 1 }}>
+                          NOVA · final countdown · push + email
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3 — VESTREAM MAIL · Email · 24h preview sent.
+                      Orange envelope icon distinguishes the email channel
+                      from push notifications above. */}
+                  <div
+                    style={{
+                      background: "rgba(255,255,255,0.88)",
+                      backdropFilter: "blur(14px)",
+                      WebkitBackdropFilter: "blur(14px)",
+                      borderRadius: 14,
+                      padding: "9px 11px",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div
+                        style={{
+                          width: 22, height: 22, borderRadius: 5,
+                          background: "linear-gradient(155deg, #FBBF24 0%, #F59E0B 45%, #D97706 100%)",
+                          flexShrink: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                        }}
+                      >
+                        <svg width="11" height="9" viewBox="0 0 14 11" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="1.5" width="12" height="8" rx="1.4"/>
+                          <path d="M1.5 2.5l5.5 4 5.5-4"/>
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM MAIL</span>
+                          <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>yesterday</span>
+                        </div>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
+                          Email · 24h preview sent
+                        </div>
+                        <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3, marginTop: 1 }}>
+                          NOVA · cliff ends tomorrow 09:00 UTC
+                        </div>
                       </div>
                     </div>
                   </div>
