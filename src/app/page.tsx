@@ -2,7 +2,6 @@ import Link from "next/link";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import ContactTrigger from "@/components/ContactTrigger";
 import { listProtocols } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
@@ -475,6 +474,212 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Mobile App section ─────────────────────────────────────────────
+          The first of two surface-specific feature blocks (the second is
+          the desktop dashboard further down). Tells the user "Vestream
+          lives on your phone first" — push alerts, live countdowns,
+          one-tap claim links, calendar view. Phone mockup on the right
+          (or stacked below on mobile) shows a Portfolio-tab screenshot
+          mock so the visual matches the words. */}
+      <section className="px-4 md:px-8 pt-12 md:pt-20 pb-16 md:pb-24">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 lg:gap-16 items-center">
+
+          {/* Left: copy + features */}
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.20)" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2.2} strokeLinecap="round">
+                <rect x="6" y="2" width="12" height="20" rx="3" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+              <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
+                Mobile app
+              </span>
+            </div>
+
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] mb-5"
+              style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
+              Track your unlocks <br />
+              on the go.
+            </h2>
+
+            <p className="text-base md:text-lg max-w-xl mb-8 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
+              Vestream is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page — all in your pocket.
+            </p>
+
+            <ul className="space-y-3 mb-8 max-w-md mx-auto lg:mx-0 text-left">
+              {[
+                "Push alerts the moment a token unlocks",
+                "Live countdown to your next claim",
+                "One-tap links straight to the protocol claim page",
+                "Calendar view of every upcoming unlock",
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-3 text-sm md:text-base" style={{ color: "#1A1D20" }}>
+                  <svg className="flex-shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2.6} strokeLinecap="round">
+                    <path d="M5 12.5l4.2 4.2L19 7" />
+                  </svg>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col items-center lg:items-start gap-2">
+              <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+                Get the app
+              </p>
+              <AppStoreBadges align="start" comingSoon />
+            </div>
+          </div>
+
+          {/* Right: phone mockup — Portfolio-tab snapshot, distinct from
+              the lock-screen-flavoured hero phone. Same outer frame
+              (consistency) but the inner content is the Portfolio screen
+              mock: greeting, big "$ vesting" headline, two stat cards,
+              a stream row preview. CSS-only. Tilted 4deg the OTHER way
+              from the hero (-4deg) so the two phones on the page lean
+              toward each other rather than the same direction. */}
+          <div className="flex flex-col items-center lg:justify-self-end">
+            <div
+              style={{
+                width: 230,
+                height: 460,
+                background: "#0f172a",
+                borderRadius: 38,
+                padding: 8,
+                boxShadow: "0 28px 64px rgba(15,23,42,0.30), 0 0 0 1px rgba(255,255,255,0.05) inset",
+                transform: "rotate(-4deg)",
+                transformOrigin: "center center",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "white",
+                  borderRadius: 30,
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Top of-screen padding */}
+                <div className="px-4 pt-6">
+                  <p className="text-[10px] font-medium" style={{ color: "#94a3b8", letterSpacing: "0.04em" }}>
+                    Good evening
+                  </p>
+                  <p className="text-[22px] font-bold" style={{ color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2 }}>
+                    Portfolio
+                  </p>
+                </div>
+
+                {/* Hero card — same gradient as the real PortfolioHero */}
+                <div className="mx-3 mt-4 rounded-xl p-3"
+                  style={{ background: "linear-gradient(135deg, #0F8A8A 0%, #1CB8B8 100%)" }}>
+                  <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.65)" }}>
+                    Total vesting
+                  </p>
+                  <p className="text-[22px] font-bold" style={{ color: "white", letterSpacing: "-0.02em", marginTop: 2 }}>
+                    $4,238
+                  </p>
+                  <div className="flex gap-2 mt-3">
+                    <div className="flex-1 rounded-lg p-2"
+                      style={{ background: "rgba(255,255,255,0.15)" }}>
+                      <p className="text-[7px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.05em" }}>
+                        Claimable
+                      </p>
+                      <p className="text-[11px] font-bold" style={{ color: "white" }}>$215</p>
+                    </div>
+                    <div className="flex-1 rounded-lg p-2"
+                      style={{ background: "rgba(255,255,255,0.15)" }}>
+                      <p className="text-[7px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.7)", letterSpacing: "0.05em" }}>
+                        Next
+                      </p>
+                      <p className="text-[11px] font-bold" style={{ color: "white" }}>14d 6h</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stream row preview */}
+                <div className="px-3 mt-4">
+                  <p className="text-[8px] font-bold uppercase tracking-widest mb-2" style={{ color: "#94a3b8" }}>
+                    Active vestings
+                  </p>
+                  {[
+                    { sym: "NOVA", protocol: "Sablier",  pct: 45, pctColor: "#F0992E", value: "$1,920" },
+                    { sym: "OP",   protocol: "Hedgey",   pct: 60, pctColor: "#3b82f6", value: "$1,270" },
+                    { sym: "LAYER", protocol: "Unvest",  pct: 25, pctColor: "#06b6d4", value: "$1,050" },
+                  ].map((s) => (
+                    <div key={s.sym} className="rounded-lg mb-1.5 p-2"
+                      style={{ background: "#f8fafc", border: "1px solid rgba(15,23,42,0.06)" }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-4 h-4 rounded flex items-center justify-center"
+                            style={{ background: s.pctColor + "22" }}>
+                            <span style={{ fontSize: 7, fontWeight: 700, color: s.pctColor }}>{s.sym[0]}</span>
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>{s.sym}</span>
+                          <span style={{ fontSize: 8, color: "#94a3b8" }}>· {s.protocol}</span>
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: "#0f172a" }}>{s.value}</span>
+                      </div>
+                      <div className="rounded-full h-1" style={{ background: "rgba(15,23,42,0.06)" }}>
+                        <div className="rounded-full h-1" style={{ width: `${s.pct}%`, background: s.pctColor }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Desktop Dashboard section ───────────────────────────────────────
+          Second surface-specific feature block. Title above the existing
+          dashboard mockup tells the user the web is for power-tools work
+          (tax exports, Discover/explorer, multi-wallet portfolio,
+          search-all-holders). Mockup itself is the existing browser-
+          chromed Vestream dashboard render below. */}
+      <section className="px-4 md:px-8 pt-8 md:pt-12 pb-8 md:pb-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+            style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.22)" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth={2.2} strokeLinecap="round">
+              <rect x="2" y="4" width="20" height="14" rx="2" />
+              <line x1="8" y1="22" x2="16" y2="22" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+            </svg>
+            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#4f46e5", letterSpacing: "0.12em" }}>
+              Desktop dashboard
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] mb-4"
+            style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
+            Power tools when <br />
+            you&rsquo;re at your desk.
+          </h2>
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#8B8E92" }}>
+            The mobile app handles your day-to-day. The web dashboard is where you do tax season, dig into the Vesting Explorer, and search any wallet&rsquo;s positions.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mb-2">
+            {[
+              "Tax-ready CSV exports",
+              "Vesting Explorer",
+              "Search any wallet",
+              "Multi-wallet portfolio",
+            ].map((f) => (
+              <span key={f} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", color: "#475569" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={2.6} strokeLinecap="round">
+                  <path d="M5 12.5l4.2 4.2L19 7" />
+                </svg>
+                {f}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Dashboard preview (updated to match real UI) ─────────────────── */}
       <section className="px-3 md:px-8 pb-16 md:pb-24 flex justify-center">
         <div className="relative w-full max-w-5xl rounded-2xl overflow-hidden"
@@ -542,9 +747,9 @@ export default async function Home() {
                 <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $215 claimable now · 2 wallets tracked</p>
                 <div className="flex gap-2 mt-3">
                   {[
-                    { l: "Claimable", v: "$5,650",  c: "rgba(52,211,153,0.18)"  },
-                    { l: "Locked",    v: "$200,850", c: "rgba(255,255,255,0.10)" },
-                    { l: "Streams",   v: "4 active", c: "rgba(240,184,61,0.18)"  },
+                    { l: "Claimable", v: "$215",     c: "rgba(52,211,153,0.18)"  },
+                    { l: "Locked",    v: "$4,023",   c: "rgba(255,255,255,0.10)" },
+                    { l: "Streams",   v: "3 active", c: "rgba(240,184,61,0.18)"  },
                     { l: "Next",      v: "14d 6h",   c: "rgba(240,184,61,0.18)"  },
                   ].map((s) => (
                     <div key={s.l} className="rounded-lg px-2.5 py-1.5 flex-1" style={{ background: s.c, border: "1px solid rgba(255,255,255,0.10)" }}>
@@ -562,9 +767,9 @@ export default async function Home() {
                   <p className="text-[9px] font-semibold mb-2.5" style={{ color: "#1A1D20" }}>Token Snapshot</p>
                   <div className="space-y-2">
                     {[
-                      { s: "USDC", clPct: 12, lkPct: 88, color: "#1CB8B8", total: "$137,500" },
-                      { s: "NOVA", clPct:  8, lkPct: 92, color: "#F0992E", total: "$45,000"  },
-                      { s: "FLUX", clPct:  5, lkPct: 95, color: "#0F8A8A", total: "$24,000"  },
+                      { s: "NOVA",  clPct: 12, lkPct: 88, color: "#F0992E", total: "$1,920" },
+                      { s: "OP",    clPct:  8, lkPct: 92, color: "#1CB8B8", total: "$1,270" },
+                      { s: "LAYER", clPct:  5, lkPct: 95, color: "#0F8A8A", total: "$1,050" },
                     ].map((t) => (
                       <div key={t.s}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -589,9 +794,9 @@ export default async function Home() {
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(15,138,74,0.12)", color: "#0F8A4A" }}>4 streams</span>
                   </div>
                   {[
-                    { token: "USDC", protocol: "Sablier",       claimable: "$4,050", locked: "$133,450", color: "#1CB8B8", proto: "#1CB8B8", prog: 15 },
-                    { token: "NOVA", protocol: "LlamaPay",       claimable: "$1,600", locked: "$43,400",  color: "#059669", proto: "#A26B3F", prog: 35 },
-                    { token: "FLUX", protocol: "UNCX",           claimable: "—",      locked: "$24,000",  color: "#0F8A8A", proto: "#D97706", prog: 5  },
+                    { token: "NOVA",  protocol: "Sablier",  claimable: "$162", locked: "$1,758", color: "#F0992E", proto: "#F0992E", prog: 15 },
+                    { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#3b82f6", prog: 35 },
+                    { token: "LAYER", protocol: "Unvest",   claimable: "—",    locked: "$1,050", color: "#0F8A8A", proto: "#06b6d4", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid rgba(21,23,26,0.06)" : undefined }}>
@@ -644,20 +849,30 @@ export default async function Home() {
               <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Unlock cashflow by month</p>
             </div>
             <div className="px-4 pb-4">
+              {/* Cashflow numbers calibrated to the everyday-investor
+                  audience (Maya persona, ~$4k vesting). Previous values
+                  ranged $12k–$52k/month — implied a wealthy investor
+                  unlocking tens of thousands per cliff. Realistic
+                  individual values: $200–$1,200/month. The display
+                  formats both ranges identically (`$Xk` if ≥$1k, plain
+                  `$X` otherwise) so the visual is unchanged; only the
+                  numbers match the actual user. */}
               <div className="space-y-1.5 mt-2">
                 {[
-                  { m: "Mar 2025", v: 45000, w: 85 },
-                  { m: "Apr 2025", v: 32000, w: 60 },
-                  { m: "May 2025", v: 18500, w: 35 },
-                  { m: "Jun 2025", v: 52000, w: 98 },
-                  { m: "Jul 2025", v: 28000, w: 53 },
-                  { m: "Aug 2025", v: 12000, w: 23 },
+                  { m: "Mar 2025", v: 920,  w: 85 },
+                  { m: "Apr 2025", v: 640,  w: 60 },
+                  { m: "May 2025", v: 380,  w: 35 },
+                  { m: "Jun 2025", v: 1080, w: 98 },
+                  { m: "Jul 2025", v: 560,  w: 53 },
+                  { m: "Aug 2025", v: 240,  w: 23 },
                 ].map((r) => (
                   <div key={r.m} className="flex items-center gap-2">
                     <span style={{ color: "#8B8E92", fontSize: "9px", width: "52px", flexShrink: 0 }}>{r.m}</span>
                     <div style={{ flex: 1, background: "rgba(21,23,26,0.04)", borderRadius: "3px", height: "14px", overflow: "hidden" }}>
                       <div style={{ width: `${r.w}%`, height: "100%", background: "#1CB8B8", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5px" }}>
-                        <span style={{ color: "rgba(255,255,255,0.95)", fontSize: "8px", fontWeight: 700 }}>${(r.v/1000).toFixed(0)}k</span>
+                        <span style={{ color: "rgba(255,255,255,0.95)", fontSize: "8px", fontWeight: 700 }}>
+                          {r.v >= 1000 ? `$${(r.v/1000).toFixed(1)}k` : `$${r.v}`}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -868,6 +1083,8 @@ export default async function Home() {
                   { name: "LlamaPay",     color: "#A26B3F" },
                   { name: "Superfluid",   color: "#28B895" },
                   { name: "PinkSale",     color: "#E063A0" },
+                  { name: "Streamflow",   color: "#5DCE9D" },
+                  { name: "Jupiter Lock", color: "#F0B83D" },
                 ].map((p) => (
                   <span
                     key={p.name}
@@ -888,7 +1105,7 @@ export default async function Home() {
             <ul className="flex flex-col gap-3.5">
               {[
                 "9 protocols scanned simultaneously — every one listed above",
-                "Ethereum, Base, BNB Chain, Polygon & Solana",
+                "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
                 <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#1A1D20" }}>
@@ -912,13 +1129,15 @@ export default async function Home() {
             {/* Result rows — one per supported protocol so a visitor sees all 7
                 integrations represented, not just a convenient subset. */}
             {[
-              { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "12,500", color: "#F0992E" },
-              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "4,200",  color: "#3b82f6" },
-              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST", amount: "8,750",  color: "#F0992E" },
-              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR", amount: "2,400",  color: "#06b6d4" },
-              { protocol: "LlamaPay",     chain: "Ethereum",   token: "NOVA", amount: "6,300",  color: "#A26B3F" },
-              { protocol: "Superfluid",   chain: "Polygon",    token: "VEST", amount: "3,100",  color: "#28B895" },
-              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX", amount: "5,000",  color: "#E063A0" },
+              { protocol: "Sablier",      chain: "Base",       token: "NOVA",  amount: "1,250", color: "#F0992E" },
+              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#3b82f6" },
+              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#F0992E" },
+              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#06b6d4" },
+              { protocol: "LlamaPay",     chain: "Arbitrum",   token: "NOVA",  amount: "630",   color: "#A26B3F" },
+              { protocol: "Superfluid",   chain: "Optimism",   token: "VEST",  amount: "310",   color: "#28B895" },
+              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX",  amount: "500",   color: "#E063A0" },
+              { protocol: "Streamflow",   chain: "Solana",     token: "JUP",   amount: "1,800", color: "#5DCE9D" },
+              { protocol: "Jupiter Lock", chain: "Solana",     token: "WEN",   amount: "12,000", color: "#F0B83D" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
@@ -933,7 +1152,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>7 vestings found across 9 protocols</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>9 vestings found across 9 protocols</p>
           </div>
         </div>
       </section>
@@ -1173,14 +1392,19 @@ export default async function Home() {
           via the top nav + footer, so a dark navy section in the middle of the
           retail narrative was off-theme. Those pages still exist unchanged. */}
 
-      {/* ── How it works ────────────────────────────────────────────────── */}
+      {/* ── How it works ──────────────────────────────────────────────────
+          Reflects the actual user journey we want: download the app →
+          paste a wallet → push alerts. The previous "Connect wallet →
+          Add wallets → Never miss" flow was web-dashboard-flavoured;
+          users coming through the funnel should land on the App Store,
+          not the SIWE login page. */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Simple by design</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
             Up and running in 60 seconds
           </h2>
-          <p className="text-base" style={{ color: "#8B8E92" }}>No sign-up forms. No email verification. No KYC.</p>
+          <p className="text-base" style={{ color: "#8B8E92" }}>Download. Paste. Done. No sign-up forms, no email verification, no KYC.</p>
         </div>
 
         <div className="relative">
@@ -1190,21 +1414,21 @@ export default async function Home() {
             {[
               {
                 step: "01", color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.18)",
-                title: "Connect your wallet",
-                body: "Click \"Launch App\" and sign a message with your Ethereum wallet. No password, no account, no personal data required.",
-                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>,
+                title: "Download the app",
+                body: "Free on the App Store and Google Play. No account, no email, no KYC. Open the app and you're already signed in.",
+                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
               },
               {
                 step: "02", color: "#0F8A8A", bg: "rgba(15,138,138,0.08)", border: "rgba(15,138,138,0.18)",
-                title: "Add wallets to track",
-                body: "Paste any Ethereum address — yours, your team's, or an investor's. Track as many wallets as you need with optional labels.",
-                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+                title: "Paste a wallet address",
+                body: "Add any wallet you want to track — yours, your team's, an investor's. We instantly scan every chain and protocol for active vestings.",
+                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M8 14h4"/></svg>,
               },
               {
                 step: "03", color: "#059669", bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.18)",
                 title: "Never miss an unlock",
-                body: "Your full vesting timeline appears instantly. Enable email alerts and Vestream will notify you before every token unlock event.",
-                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+                body: "Get a push alert the moment a token unlocks. Tap the notification, claim it on the protocol's site, done.",
+                icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
               },
             ].map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">
@@ -1367,15 +1591,27 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* Tier cards. Mobile padding is reduced to p-5 because p-7 (28px)
-            consumes 56px of horizontal space — too much on narrow phones
-            where the card is already constrained. The featured badges that
-            sit absolutely on top of cards 2 and 3 stay within bounds because
-            we add `min-w-0 overflow-visible` and tighten badge padding on
-            narrow screens (Pro card uses px-3 md:px-4). */}
+        {/* Tier cards — Free / Mobile / Pro.
+            Enterprise dropped from the homepage on May 5 2026 — we don't
+            sell to enterprise self-serve and the dark card was confusing
+            the consumer audience. Builders interested in API access find
+            us via the /developer link below.
+            Pro reframed as "Mobile + Dashboard" — same $14.99/mo as
+            before, but the value prop is now explicit: web dashboard
+            unlocks the tax + discover + explorer features that aren't
+            in the mobile-only tier.
+            Mobile is a new in-between tier at $9.99/mo capturing users
+            who want push alerts + multi-wallet but don't need tax
+            exports.
+            Mobile responsiveness improvements:
+              - Cards stack to grid-cols-1 below md (existing) but the
+                "Most popular" badges are now position-tuned for narrow
+                widths (px-2.5 md:px-3 instead of px-3 md:px-4).
+              - Card padding tightened p-4 md:p-7 (was p-5) so the
+                cards fit comfortably on a 320pt iPhone SE column. */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
           {/* Free */}
-          <div className="rounded-2xl p-5 md:p-7 min-w-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+          <div className="rounded-2xl p-4 md:p-7 min-w-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
             <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$0</p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Free forever. No credit card needed.</p>
@@ -1384,19 +1620,60 @@ export default async function Home() {
               Start free →
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["1 wallet — auto-scanned across all chains", "All 9 vesting platforms (EVM + Solana)", "Real-time vesting dashboard", "Claimable balance tracking", "Unlock calendar", "3 free push alerts (lifetime)"].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              {[
+                "1 wallet — auto-scanned across all chains",
+                "All 9 vesting protocols",
+                "Real-time vesting dashboard",
+                "Claimable balance tracking",
+                "Unlock calendar",
+                "3 free push alerts (lifetime)",
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "#374151" }}>
+                  <svg className="flex-shrink-0 mt-0.5" width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Pro (featured) */}
-          <div className="relative rounded-2xl p-5 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
+          {/* Mobile — middle tier, between Free and Pro. The "Pro on your
+              phone" plan: push alerts, multi-wallet, no web dashboard. */}
+          <div className="rounded-2xl p-4 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#0F8A8A" }}>Mobile</p>
+            <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
+              $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
+            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
+              style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
+              14-day free trial
+            </div>
+            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Push alerts and multi-wallet on your phone.</p>
+            <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
+              style={{ background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.25)", color: "#0F8A8A" }}>
+              Get Mobile →
+            </Link>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
+              {[
+                "3 wallet addresses",
+                "Unlimited push alerts",
+                "Email unlock alerts",
+                "Live countdowns + reminders",
+                "Priority data refresh (60s)",
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "#374151" }}>
+                  <svg className="flex-shrink-0 mt-0.5" width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pro (featured) — Mobile + Dashboard. Tax exports, Vesting
+              Explorer, search-any-wallet. The "everything" tier. */}
+          <div className="relative rounded-2xl p-4 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
+              <span className="inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
                 style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.4)" }}>
                 Most popular
               </span>
@@ -1409,47 +1686,24 @@ export default async function Home() {
               style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
               14-day free trial
             </div>
-            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>For active holders who want every unlock on their radar.</p>
+            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Mobile app + web dashboard. Tax exports + every Pro feature.</p>
             <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
               style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
               Get Pro →
             </Link>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Mobile, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["3 wallet addresses", "Unlimited push alerts", "Email unlock alerts", "Token Vesting Explorer (Discover)", "Priority data refresh (60s)", "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", "Vesting income statement (P&L view)", "Year-end PDF tax report"].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#374151" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Enterprise (replaces Fund self-serve). Stripe-style "premium dark"
-              treatment: dark card already differentiates the tier from the
-              white Pro card, so the accent stays in the brand teal family with
-              a striking white-on-dark CTA. Avoids the colour-on-colour clash
-              of bright green on dark next to bright teal on white. */}
-          <div className="relative rounded-2xl p-5 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 64px rgba(0,0,0,0.32)" }}>
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap"
-                style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 12px rgba(28,184,184,0.35)" }}>
-                Teams &amp; builders
-              </span>
-            </div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Enterprise</p>
-            <p className="text-3xl font-bold mb-1 text-white" style={{ letterSpacing: "-0.02em" }}>Custom</p>
-            <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>Built around your team — pricing on request.</p>
-            <ContactTrigger
-              label="Contact us →"
-              className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 mb-6"
-              style={{ background: "white", color: "#1A1D20", border: "none", cursor: "pointer" }}
-            />
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>Everything in Pro, plus:</p>
-            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {["Unlimited wallet addresses", "REST API + MCP server access", "Team workspace", "SSO & custom SLA", "Slack, Telegram & WhatsApp alerts", "Dedicated support channel"].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "#e5e7eb" }}>
-                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.15}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              {[
+                "Web dashboard access",
+                "Token Vesting Explorer (Discover)",
+                "Search any wallet's holdings",
+                "Multi-wallet portfolio view",
+                "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)",
+                "Vesting income statement (P&L)",
+                "Year-end PDF tax report",
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "#374151" }}>
+                  <svg className="flex-shrink-0 mt-0.5" width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   {f}
                 </li>
               ))}
@@ -1457,9 +1711,12 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* B2B / developer nudge */}
+        {/* B2B / developer nudge — replaces the dropped Enterprise card.
+            Same audience (builders, funds, agents) gets the same path
+            via the developer page; the homepage just doesn't push
+            them through a dedicated tier card. */}
         <p className="text-center text-sm mt-4 mb-8" style={{ color: "#8B8E92" }}>
-          Building on Vestream data?{" "}
+          Building on Vestream data, or need API access?{" "}
           <Link href="/developer" className="font-semibold" style={{ color: "#1CB8B8" }}>
             See the Developer API →
           </Link>
@@ -1487,41 +1744,42 @@ export default async function Home() {
             WebkitOverflowScrolling: "touch",
           }}
         >
-          <div className="min-w-[640px]">
+          <div className="min-w-[560px]">
           <div className="grid grid-cols-4 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#0F8A8A" }}>Mobile</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1A1D20" }}>Enterprise</span>
           </div>
           {([
-            ["Wallet addresses",           "1",              "3 wallets",    "Unlimited"],
-            ["Auto-scan all chains",       true,             true,           true],
-            ["Real-time dashboard",        true,             true,           true],
-            ["Claimable balance tracking", true,             true,           true],
-            ["Unlock calendar",            true,             true,           true],
-            ["Push notifications",         "3 lifetime",     "Unlimited",    "Unlimited"],
-            ["Email alerts",               true,             true,           true],
-            ["Token Vesting Explorer",     false,            true,           true],
-            ["Tax-ready CSV (Koinly / CoinTracker / TurboTax)", false, true, true],
-            ["Vesting income statement",   false,            true,           true],
-            ["Year-end PDF tax report",    false,            true,           true],
-            ["REST API + MCP server",      false,            false,          true],
-            ["Team workspace",             false,            false,          true],
-            ["SSO & custom SLA",           false,            false,          true],
-            ["Support",                    false,            "Ticketing",    "Dedicated"],
-          ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
+            ["Wallet addresses",           "1",              "3 wallets",   "3 wallets"],
+            ["Auto-scan all chains",       true,             true,          true],
+            ["All 9 vesting protocols",    true,             true,          true],
+            ["Real-time mobile app",       true,             true,          true],
+            ["Claimable balance tracking", true,             true,          true],
+            ["Unlock calendar",            true,             true,          true],
+            ["Push notifications",         "3 lifetime",     "Unlimited",   "Unlimited"],
+            ["Email alerts",               false,            true,          true],
+            ["Live countdowns + reminders", false,           true,          true],
+            ["Web dashboard access",       false,            false,         true],
+            ["Token Vesting Explorer",     false,            false,         true],
+            ["Search any wallet",          false,            false,         true],
+            ["Multi-wallet portfolio view", false,           false,         true],
+            ["Tax-ready CSV exports",      false,            false,         true],
+            ["Vesting income statement",   false,            false,         true],
+            ["Year-end PDF tax report",    false,            false,         true],
+          ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, mobile, pro], i, arr) => (
             <div key={feature} className="grid grid-cols-4 px-4 md:px-6 py-3.5 items-center"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
               <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
-              {([free, pro, fund] as (string | boolean)[]).map((val, j) => (
+              {([free, mobile, pro] as (string | boolean)[]).map((val, j) => (
                 <div key={j} className="flex justify-center">
                   {typeof val === "boolean" ? (
                     val
                       ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#0F8A8A" : "#1CB8B8" }}>{val}</span>
                   )}
                 </div>
               ))}
