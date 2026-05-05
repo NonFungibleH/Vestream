@@ -156,6 +156,44 @@ async function handle(req: NextRequest) {
 
   const mode  = parseMode(req);
   const group = parseSeedGroup(req.nextUrl.searchParams.get("group"));
+  const sync  = req.nextUrl.searchParams.get("sync") === "1";
+
+  // Diagnostic sync path: blocks until seedAll() completes and returns the
+  // actual per-job results. Use sparingly — caller pays the full latency
+  // (potentially 200s+ for the heavy group). Required for debugging when
+  // the background `after()` path swallows errors silently.
+  if (sync && group) {
+    const startedAt = Date.now();
+    try {
+      const results = await seedAll(mode, group);
+      const summary = summariseRun(results);
+      return NextResponse.json({
+        ok:      true,
+        group,
+        mode,
+        elapsedSec: Math.round((Date.now() - startedAt) / 100) / 10,
+        summary,
+        results: results.map((r) => ({
+          adapterId:            r.adapterId,
+          chainId:              r.chainId,
+          recipientsDiscovered: r.recipientsDiscovered,
+          streamsFetched:       r.streamsFetched,
+          streamsWritten:       r.streamsWritten,
+          batchFetchErrors:     r.batchFetchErrors,
+          batchWriteErrors:     r.batchWriteErrors,
+          error:                r.error ?? null,
+        })),
+      });
+    } catch (err) {
+      return NextResponse.json({
+        ok: false,
+        group,
+        mode,
+        elapsedSec: Math.round((Date.now() - startedAt) / 100) / 10,
+        error: err instanceof Error ? err.message : String(err),
+      }, { status: 500 });
+    }
+  }
 
   // Leaf path — caller (or dispatcher) asked for a specific group. Run inline.
   if (group) {
