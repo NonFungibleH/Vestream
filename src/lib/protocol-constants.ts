@@ -121,7 +121,50 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "hedgey", "uncx"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "sablier-lockup" },
+    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/sablier.ts.
+    // DefiLlama's sablier-lockup figure sums across every chain Sablier
+    // deploys on (Avalanche, Linea, Scroll, Mantle, etc) — but Vestream
+    // only indexes 6 of those chains, so the DefiLlama number was
+    // apples-to-oranges next to our self-indexed protocols.
+  },
+
+  // Sablier Flow — distinct product from Sablier Lockup. Per-second
+  // streaming for payroll / contributor pay. Same Envio indexer, different
+  // entity (FlowStream vs LockupStream). Worker-pivot's second stream
+  // protocol after LlamaPay; widest chain coverage of any stream protocol
+  // we index (24 chains supported by Sablier; we currently surface 6).
+  "sablier-flow": {
+    slug: "sablier-flow",
+    adapterIds: ["sablier-flow"],
+    name: "Sablier Flow",
+    tagline: "Per-second streaming for crypto payroll",
+    category: "stream",
+    description:
+      "Sablier Flow is the streaming-payments product from Sablier — distinct from Sablier Lockup (vesting). Used for DAO contributor pay, real-time payroll, grant streams, and any continuous on-chain transfer of value. Vestream gives every recipient a personal dashboard with their accrued-but-unclaimed balance, claim alerts, and tax-ready income exports — across six EVM chains.",
+    // Sablier-orange shifted slightly cooler to distinguish Flow from Lockup
+    // visually when both cards sit side-by-side on /protocols.
+    color: "#E07B1A",
+    bg:    "rgba(224,123,26,0.08)",
+    border:"rgba(224,123,26,0.22)",
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
+    officialUrl: "https://sablier.com",
+    claimUrl:   "https://app.sablier.com/portfolio",
+    searchKeywords: [
+      "sablier flow tracker",
+      "sablier payroll alerts",
+      "sablier streaming payments",
+      "crypto payroll dashboard",
+    ],
+    useCases: [
+      { title: "DAO contributor pay",       body: "DAOs paying contributors via Sablier Flow can point recipients at Vestream to see their own stream — accrued balance, runway, and claim alerts in one view." },
+      { title: "Real-time crypto payroll",  body: "Companies paying remote teams in stablecoins use Flow to drip salaries per second. Vestream's tax-export tooling treats each stream as ordinary income at FMV-on-receipt — payslip-ready CSV." },
+      { title: "Grant-programme streams",   body: "Grant DAOs use Flow to release funding linearly across the grant period. Vestream tracks accrued-but-unclaimed balance across every grant you receive in one dashboard." },
+    ],
+    relatedSlugs: ["llamapay", "sablier", "superfluid"],
+    testimonials: [],
+    // No DefiLlama vesting slice for Flow specifically — Sablier's DefiLlama
+    // entry rolls Lockup + Flow into one number. We'll compute Flow TVL
+    // ourselves via tvl-walker once volumes are meaningful.
   },
 
   hedgey: {
@@ -150,7 +193,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["sablier", "team-finance", "uncx"],
     testimonials: [],
-    externalTvl: { source: "defillama", slug: "hedgey" },
+    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/hedgey.ts.
+    // Walker enumerates every plan NFT via ERC721Enumerable + Multicall3
+    // across our 6 supported chains, computes locked = max(0, amount -
+    // vested) per plan with cliff + period/rate semantics, aggregates by
+    // token. Replaces the DefiLlama passthrough which globalised all
+    // chains they index.
   },
 
   "team-finance": {
@@ -388,11 +436,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "sablier", "hedgey"],
     testimonials: [],
-    // DefiLlama publishes a chainTvls.vesting aggregate distinct from their
-    // headline (which is mostly the payments product). The runDefiLlamaSnapshot
-    // path auto-prefers the `vesting` slice when present — same as Sablier,
-    // Hedgey, Streamflow.
-    externalTvl: { source: "defillama", slug: "llamapay" },
+    // No externalTvl: self-indexed via src/lib/vesting/tvl-walker/llamapay.ts.
+    // Walker paginates the per-chain LlamaPay subgraphs across our 6
+    // supported chains (same subgraph IDs as the per-wallet adapter),
+    // aggregating streamed-but-unclaimed amounts per token — the value
+    // literally sitting in the LlamaPay contract waiting to be withdrawn.
+    // Replaces the DefiLlama passthrough which globalised all chains.
   },
 
   "jupiter-lock": {

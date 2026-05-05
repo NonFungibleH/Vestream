@@ -321,16 +321,55 @@ export async function runWalkerSnapshot(
         source:       "dexscreener" | "coingecko";
       }> = [];
 
+      // ── Symbol-verification guard (May 5 2026) ────────────────────────
+      //
+      // Defends against Jupiter Lock-shape failures: Solana memecoin
+      // escrows where billions/trillions of token units sit locked,
+      // priced via DexScreener at a fraction of a cent each. The token
+      // has thin DEX liquidity (often $50–$500k), but enough that the
+      // multiplier × liquidity rule lets it ride to the $500M absolute
+      // ceiling. Multiple such tokens can each ride the ceiling and
+      // sum to multi-billion-dollar headlines.
+      //
+      // Empirical signal: those tokens never have a real symbol. They
+      // surface as the address-fragment fallback (e.g. "5US2…",
+      // "CkWg…") because token-list resolution failed. Real, indexable
+      // tokens have human-readable symbols (3–10 chars, alpha-heavy).
+      //
+      // Rule: a token without a real-shaped symbol cannot enter the
+      // HIGH band. Demote to LOW (still visible in breakdown for
+      // forensic audit, never in headline). Doesn't affect well-known
+      // tokens (JUP, SOL, USDC, NOVA, etc.) — they all pass.
+      //
+      // Pattern: 2–10 chars, mostly alphanumeric, with at least one
+      // letter (excludes pure numbers and ellipsis fragments). Rejects
+      // "5US2…" (has "…"), "0x1234abcd" (10+ chars, hex-shaped),
+      // null/empty, and "???" (the walker's failure marker).
+      const REAL_SYMBOL_RE = /^[A-Za-z][A-Za-z0-9$.-]{1,9}$/;
+      function hasRealSymbol(symbol: string | null): boolean {
+        if (!symbol) return false;
+        if (symbol === "???") return false;
+        return REAL_SYMBOL_RE.test(symbol);
+      }
+
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
         const cap = perTokenCeiling(p);
         const credited = Math.min(p.usd, cap);
         const overflow = Math.max(0, p.usd - cap);
 
+        // Demote unverified-symbol tokens before bucketing. Their
+        // pricing remains visible in tvl_low for transparency, but
+        // they never feed the headline regardless of liquidity depth.
+        const effectiveConfidence: "high" | "medium" | "low" =
+          (p.confidence === "high" && !hasRealSymbol(p.tokenSymbol))
+            ? "low"
+            : p.confidence;
+
         // Bucket the credited (capped) portion by confidence.
-        if      (p.confidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
-        else if (p.confidence === "medium") { perChain.medium += credited; perChain.tvl += credited; }
-        else                                  perChain.low    += credited;   // thin, excluded from headline
+        if      (effectiveConfidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
+        else if (effectiveConfidence === "medium") { perChain.medium += credited; perChain.tvl += credited; }
+        else                                         perChain.low    += credited;   // thin, excluded from headline
 
         // Anything above the cap goes into the LOW bucket as "excess" —
         // visible in breakdown for auditability, never in headline.
@@ -342,7 +381,7 @@ export async function runWalkerSnapshot(
           tokenSymbol:  p.tokenSymbol,
           usdRaw:       p.usd,
           usdCredited:  credited,
-          confidence:   p.confidence,
+          confidence:   effectiveConfidence,
           source:       p.source,
         });
       }

@@ -9,9 +9,15 @@
 // program accounts for Jupiter Lock.
 //
 // Not in the registry (intentional):
-//   - Sablier, Hedgey, Streamflow — use DefiLlama's chainTvls.vesting breakdown.
-//     DefiLlama already reports a vesting-specific number for those three; no
-//     point reinventing it.
+//   - Streamflow — uses DefiLlama's chainTvls.vesting breakdown. Their
+//     entry already exposes a vesting-specific slice that excludes their
+//     payments product; no point reinventing it.
+//
+// Self-indexed via walker (added Phase 2/3 of the May 2026 TVL methodology
+// pass): Sablier, Hedgey, LlamaPay. DefiLlama globalises across every
+// chain those protocols deploy on, but Vestream only indexes a subset, so
+// the passthrough was apples-to-oranges next to our self-indexed protocols
+// (UNCX, Unvest, etc.) which only count the chains we actually walk.
 //
 // To add a new self-indexed protocol:
 //   1. Write src/lib/vesting/tvl-walker/{protocol}.ts exporting walk{Protocol}
@@ -30,6 +36,9 @@ import { walkSuperfluid }  from "./superfluid";
 import { walkTeamFinance } from "./team-finance";
 import { walkPinkSale }    from "./pinksale";
 import { walkJupiterLock } from "./jupiter-lock";
+import { walkSablier }     from "./sablier";
+import { walkHedgey }      from "./hedgey";
+import { walkLlamapay }    from "./llamapay";
 
 export type { WalkerResult, TokenAggregate, WalkerFn };
 
@@ -50,6 +59,9 @@ export const WALKER_REGISTRY: Record<string, WalkerFn> = {
   "team-finance": walkTeamFinance,
   "pinksale":     walkPinkSale,
   "jupiter-lock": walkJupiterLock,
+  "sablier":      walkSablier,
+  "hedgey":       walkHedgey,
+  "llamapay":     walkLlamapay,
 };
 
 /**
