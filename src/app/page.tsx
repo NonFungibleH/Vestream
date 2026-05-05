@@ -6,7 +6,6 @@ import ContactTrigger from "@/components/ContactTrigger";
 import { listProtocols } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
-  relativeFreshness,
   toDateSafe,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
@@ -117,8 +116,14 @@ const homepageJsonLd = {
 };
 
 export default async function Home() {
-  const liveStats = await getHomepageLiveStats();
-
+  // The "live freshness strip" (1.4M streams indexed across N protocols,
+  // refreshed Xs ago) was removed in the May 5 2026 hero repositioning.
+  // Reasoning: it read as institutional credibility-flexing — Tokenomist-
+  // shaped trust signal — rather than something an everyday investor
+  // (the Maya persona) responds to. Maya doesn't care that we index 1.4M
+  // streams; she cares whether HER token is supported. The
+  // getHomepageLiveStats helper is left in place for the schema.org
+  // structured-data block + any future re-introduction.
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
@@ -138,18 +143,24 @@ export default async function Home() {
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
           style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
-        {/* Floating left card — portfolio value */}
+        {/* Floating left card — your-vestings preview. Numbers calibrated
+            to the actual everyday-investor we serve (Maya persona,
+            ~$4k vesting from airdrops + token allocations), not a
+            $200k+ HNW mockup. The mockup numbers used to read as
+            HNW-product staging; visitors with $300 in vestings would
+            bounce because the product clearly wasn't built for them.
+            $4,238 / $215 is what most users will actually see. */}
         <div className="absolute hidden xl:block pointer-events-none"
           style={{ left: "24px", top: "50%", transform: "translateY(-50%) rotate(-6deg)", zIndex: 0 }}>
           <div style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", borderRadius: "16px", boxShadow: "0 24px 64px rgba(15,23,42,0.12)", width: "210px", padding: "16px" }}>
-            <p style={{ color: "#B8BABD", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Total Portfolio Value</p>
-            <p style={{ color: "#1A1D20", fontSize: "22px", fontWeight: "800", lineHeight: 1.1, marginBottom: "2px" }}>$206,500</p>
-            <p style={{ color: "#2DB36A", fontSize: "11px", fontWeight: "600", marginBottom: "14px" }}>$5,650 claimable now</p>
+            <p style={{ color: "#B8BABD", fontSize: "9px", fontWeight: "700", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Your vestings</p>
+            <p style={{ color: "#1A1D20", fontSize: "22px", fontWeight: "800", lineHeight: 1.1, marginBottom: "2px" }}>$4,238</p>
+            <p style={{ color: "#2DB36A", fontSize: "11px", fontWeight: "600", marginBottom: "14px" }}>$215 claimable now</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {([
-                { symbol: "USDC", pct: 67, color: "#1CB8B8" },
-                { symbol: "NOVA", pct: 22, color: "#F0992E" },
-                { symbol: "FLUX", pct: 11, color: "#0F8A8A" },
+                { symbol: "NOVA",  pct: 45, color: "#F0992E" },
+                { symbol: "OP",    pct: 30, color: "#1CB8B8" },
+                { symbol: "LAYER", pct: 25, color: "#0F8A8A" },
               ] as const).map((t) => (
                 <div key={t.symbol}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
@@ -197,75 +208,145 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Beta/iOS badges removed per product decision — the App Store + Play Store
-            pill buttons below now carry the platform messaging, and the "Start now"
-            CTA replaces the previous waitlist capture. */}
-
-        <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-6"
+        {/* ── Hero copy (Maya-voice, May 5 2026) ────────────────────────────
+            Old hero: "Every token you're owed, in one place." + "Find every
+            vesting unlock and cliff you're owed across every protocol and
+            chain..." That copy was technically accurate and emotionally
+            zero. Maya (everyday investor, ~$4k vesting, lost $300 to a
+            forgotten airdrop once) doesn't read it as a product pitch.
+            She reads it as a directory.
+            New hero leads with the FEAR (loss-aversion subhead),
+            anchors on the audience ("people who actually use crypto" —
+            self-identifying language, not jargon), and replaces protocol-
+            count flexing with a habit-shaped instruction. App Store +
+            Play Store badges become the primary CTA — Vestream is a
+            mobile app first, web is the discovery surface. */}
+        <h1 className="relative text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] max-w-3xl mb-5"
           style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}>
-          Every token you&rsquo;re owed,<br />
-          <span style={{ color: "#1CB8B8" }}>
-            in one place.
-          </span>
+          Don&rsquo;t miss <br className="md:hidden" />
+          <span style={{ color: "#1CB8B8" }}>your next unlock.</span>
         </h1>
 
-        <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#8B8E92" }}>
-          Find every vesting unlock and cliff you&rsquo;re owed across every protocol and chain — and get notified the moment a token is claimable.
+        <p className="relative text-base md:text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#8B8E92" }}>
+          Forgot to claim an airdrop and watched it expire? You&rsquo;re not the only one. Vestream is the safety net.
         </p>
-        <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#B8BABD" }}>
-          Nine protocols. Seven chains. One inbox. Tax-ready exports at year-end.
+        <p className="relative text-sm md:text-base max-w-xl mb-8 leading-relaxed" style={{ color: "#B8BABD" }}>
+          Paste a wallet. We watch your tokens 24/7. We ping you the second one unlocks.
         </p>
 
-        {/* Primary CTA — points straight at the find-vestings scanner. The
-            old "Start now → /early-access" routed users into a waitlist
-            sign-up; we now want them to immediately try the product (paste
-            an address, see what's owed) before being asked for an email.
-            Email capture happens on /find-vestings results when they ask
-            for alerts. App badges below offer the mobile path. */}
-        <div className="relative flex flex-col items-center gap-5 w-full">
-          <Link
-            href="/find-vestings"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+        {/* Phone mockup — the hero element. Stylized iPhone frame with a
+            real-shape Vestream lock-screen notification rendered inside.
+            CSS-only (no image asset) so it stays sharp at every density
+            and matches whichever theme tokens we change. The product is
+            a mobile app; the homepage hero shows it.
+
+            Hidden on the smallest screens — we lead with copy + CTA there
+            so the first viewport doesn't push the badges below the fold. */}
+        <div className="relative hidden sm:flex flex-col items-center mb-10">
+          <div
             style={{
-              background: "#1CB8B8",
-              color: "white",
-              boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
+              width: 230,
+              height: 460,
+              background: "#0f172a",
+              borderRadius: 38,
+              padding: 8,
+              boxShadow: "0 28px 64px rgba(15,23,42,0.30), 0 0 0 1px rgba(255,255,255,0.05) inset",
             }}
           >
-            Find what I&rsquo;m owed →
-          </Link>
-
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
-              Or get it on your phone
-            </p>
-            <AppStoreBadges comingSoon />
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "linear-gradient(165deg, #f0fdf4 0%, #ecfeff 50%, #eef2ff 100%)",
+                borderRadius: 30,
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* Status bar */}
+              <div className="flex justify-between items-center px-5 pt-4 text-[10px] font-semibold" style={{ color: "#0f172a" }}>
+                <span>9:41</span>
+                <span style={{ color: "#0f172a", opacity: 0.6 }}>● ● ● ●</span>
+              </div>
+              {/* Big time */}
+              <div className="text-center mt-4" style={{ color: "#0f172a" }}>
+                <div style={{ fontSize: 14, opacity: 0.65, fontWeight: 500 }}>Tuesday · 14 May</div>
+                <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, marginTop: 4 }}>9:41</div>
+              </div>
+              {/* The notification */}
+              <div className="absolute left-3 right-3" style={{ top: 200 }}>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.95)",
+                    backdropFilter: "blur(20px)",
+                    borderRadius: 16,
+                    padding: 12,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                  }}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div
+                      style={{
+                        width: 30, height: 30, borderRadius: 8,
+                        background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+                        flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <span style={{ color: "white", fontWeight: 700, fontSize: 12 }}>V</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          Vestream
+                        </span>
+                        <span style={{ fontSize: 9, color: "#94a3b8" }}>now</span>
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>
+                        $432.18 of NOVA just unlocked
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.3, marginTop: 1 }}>
+                        Tap to claim before the window closes →
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Faded second peek — implies a stream of alerts */}
+                <div
+                  className="mx-3 mt-1.5"
+                  style={{
+                    background: "rgba(255,255,255,0.75)",
+                    borderRadius: 14,
+                    padding: 8,
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
+                    opacity: 0.65,
+                  }}
+                >
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "#64748b" }}>
+                    ⏰ Reminder · OP unlocks in 48h
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+          {/* Subtle "this is your phone" caption */}
+          <p className="text-[11px] mt-4" style={{ color: "#B8BABD" }}>
+            What it looks like on your phone the moment a token unlocks
+          </p>
         </div>
 
-        {/* Live freshness strip — aggregate stream count + last-indexed timestamp
-            across all 9 protocols, refreshed every 60s via ISR. Signals to search
-            engines and visitors alike that this index is active, not stale. */}
-        <div className="relative mt-10 flex justify-center">
+        {/* Primary CTAs — App Store + Play Store badges promoted to hero.
+            The product is mobile-first; the homepage should reflect that.
+            "Find what I'm owed" lives below as the secondary "try in
+            browser before installing" path. */}
+        <div className="relative flex flex-col items-center gap-4 w-full">
+          <AppStoreBadges comingSoon />
           <Link
-            href="/protocols"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:opacity-90"
-            style={{
-              background: "rgba(28,184,184,0.05)",
-              borderColor: "rgba(28,184,184,0.18)",
-              color: "#1CB8B8",
-            }}
+            href="/find-vestings"
+            className="inline-flex items-center gap-2 text-sm font-semibold transition-all hover:opacity-80"
+            style={{ color: "#1CB8B8" }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: "#1CB8B8" }}
-            />
-            Live · {liveStats.totalStreams.toLocaleString()} {liveStats.totalStreams === 1 ? "stream" : "streams"} indexed across {liveStats.protocolCount} protocols
-            {liveStats.lastIndexedAt && (
-              <span style={{ color: "#8B8E92", fontWeight: 500 }}>
-                · refreshed {relativeFreshness(liveStats.lastIndexedAt)}
-              </span>
-            )}
+            Or try it free in your browser →
           </Link>
         </div>
 
@@ -392,9 +473,9 @@ export default async function Home() {
             <div className="flex-1 p-4 space-y-3 overflow-hidden">
               {/* PortfolioHero gradient card — kept as the brand-defining element */}
               <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#0F8A8A 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Total Portfolio Value</p>
-                <p className="text-2xl font-bold text-white tabular-nums">$206,500</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $5,650 claimable now · 2 wallets tracked</p>
+                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Your vestings</p>
+                <p className="text-2xl font-bold text-white tabular-nums">$4,238</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $215 claimable now · 2 wallets tracked</p>
                 <div className="flex gap-2 mt-3">
                   {[
                     { l: "Claimable", v: "$5,650",  c: "rgba(52,211,153,0.18)"  },
