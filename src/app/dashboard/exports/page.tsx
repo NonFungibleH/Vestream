@@ -181,17 +181,22 @@ const FORMATS: ExportFormat[] = [
  *  formats first, investors see capital-gains formats first. "any"-tagged
  *  formats sit between. Stable sort preserves the original relative order
  *  inside each audience bucket. Falls back to investor-first when the
- *  user hasn't completed onboarding (audienceCategory === null). */
+ *  user hasn't completed onboarding (audienceCategory === null).
+ *
+ *  May 5 2026 — strategy reset: marketing surface focuses on vesting
+ *  while Payroll moves to the roadmap. The audience-aware sort code
+ *  is preserved (server still tracks audienceCategory; we'll re-enable
+ *  the worker-first ordering when Payroll relaunches), but the page
+ *  now hard-codes the investor-first sort regardless of the user's
+ *  stored audienceCategory. Worker-flavoured formats (1099-NEC / SA103)
+ *  remain in the format list — power users who want them can still
+ *  scroll down — they're just no longer hoisted to the top.
+ */
 function sortFormatsForAudience(
-  formats:          ExportFormat[],
-  audienceCategory: string | null,
+  formats:           ExportFormat[],
+  _audienceCategory: string | null,
 ): ExportFormat[] {
-  const isWorker   = audienceCategory === "worker";
-  const isBoth     = audienceCategory === "both";
   const orderFor = (a: ExportFormat["audience"]): number => {
-    if (isWorker) return a === "worker" ? 0 : a === "any" ? 1 : 2;
-    if (isBoth)   return a === "worker" ? 0 : a === "investor" ? 1 : 2;
-    // investor (or unknown) → capital-gains formats first
     return a === "investor" ? 0 : a === "any" ? 1 : 2;
   };
   return [...formats].sort((x, y) => orderFor(x.audience) - orderFor(y.audience));

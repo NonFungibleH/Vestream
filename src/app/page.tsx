@@ -210,10 +210,10 @@ export default async function Home() {
         </h1>
 
         <p className="relative text-lg max-w-xl mb-3 leading-relaxed" style={{ color: "#8B8E92" }}>
-          Whether you&rsquo;re tracking investor unlocks or a stablecoin salary — find every vesting and payment stream across every protocol and chain, and get notified the moment a token is claimable.
+          Find every vesting unlock and cliff you&rsquo;re owed across every protocol and chain — and get notified the moment a token is claimable.
         </p>
         <p className="relative text-base max-w-xl mb-10 leading-relaxed" style={{ color: "#B8BABD" }}>
-          Built for both — crypto investors and people paid in tokens. Same dashboard. Same alerts. Same tax-ready exports at year-end.
+          Nine protocols. Seven chains. One inbox. Tax-ready exports at year-end.
         </p>
 
         {/* Primary CTA — points straight at the find-vestings scanner. The

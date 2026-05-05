@@ -2,244 +2,139 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /payroll — Vestream Payroll landing page.
+// /payroll — "Vestream Payroll" coming-soon page.
 //
-// Audience: DAO contributors, remote contractors, grant recipients, full-
-// time crypto employees getting paid in streamed tokens. The salary mental
-// model. Pairs with the "Vestream Payroll" mode in the mobile app — same
-// naming, same promise, separate funnel.
+// May 5 2026 strategy reset: investor TAM is 10x+ payroll TAM today, and
+// the dual positioning was diluting the investor messaging that's actually
+// converting. We're parking the Payroll product as a roadmap item and
+// focusing the marketing surface on vesting.
 //
-// SEO target: queries like "crypto payroll tracker", "LlamaPay alerts",
-// "Sablier Flow contractor pay", "Superfluid earnings dashboard",
-// "DAO contributor income tracking". Distinct from /invest which targets
-// vesting-unlock queries.
+// This page replaces the previous fully-fledged Payroll landing. Reasons
+// to keep the URL alive (rather than 404 it):
+//   1. Search engines have started crawling it. A 404 invalidates that
+//      ranking; a coming-soon page preserves it AND captures intent from
+//      anyone searching for "crypto payroll tracker" today, ready to
+//      convert when we launch.
+//   2. The footer continues to link here as "Payroll · Coming soon" — a
+//      visible signal to existing users that we know about that audience
+//      and have a roadmap for it.
+//   3. The waitlist signup feeds an email list we'll mail when Payroll
+//      launches. Free pre-launch acquisition.
 //
-// Conversion path: same /find-vestings pipeline, same App Store funnel.
-// The difference is the messaging is pre-targeted to the worker audience
-// — "$312 earned this week" instead of "Next NOVA cliff in 65d", "1099-NEC
-// ready" instead of "capital gains CSV".
+// Sablier Flow / LlamaPay / Superfluid stream data continues to flow in
+// the app — users with those streams see them alongside their vesting
+// positions. The Payroll BRAND is what's parked, not the protocol
+// support.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Vestream Payroll — Track your streamed crypto income",
-  description: "Earnings dashboard for crypto contractors, DAO contributors and remote workers. Track Sablier Flow, LlamaPay and Superfluid streams across every chain. Push alerts when streams hit, gas-aware claim timing, year-end 1099-NEC / SA103 ready exports. Free.",
+  title:       "Vestream Payroll — Coming soon",
+  description: "Crypto payroll tracking for DAO contributors, contractors and remote workers. Sablier Flow, LlamaPay and Superfluid streams in one earnings dashboard. Coming soon — join the waitlist.",
   alternates:  { canonical: "/payroll" },
   openGraph: {
-    title:       "Vestream Payroll — Crypto income, accounted for",
-    description: "Sablier Flow · LlamaPay · Superfluid. One earnings inbox for every stream paying you.",
+    title:       "Vestream Payroll — Coming soon",
+    description: "An earnings dashboard for crypto contractors. Join the waitlist.",
     type:        "website",
     url:         "https://www.vestream.io/payroll",
   },
+  // Soft signal to search engines that this page isn't the priority
+  // surface yet — they can index it for the roadmap intent but shouldn't
+  // out-rank /invest or / for vesting queries.
+  robots: { index: true, follow: true },
 };
 
-const PROTOCOLS = [
-  { name: "Sablier Flow",  tagline: "Continuous streaming pay" },
-  { name: "LlamaPay",      tagline: "Per-second token streams" },
-  { name: "Superfluid",    tagline: "Programmable money streams" },
-];
-
-export default function PayrollLanding() {
+export default function PayrollComingSoon() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <SiteNav theme="light" />
 
       <main className="pt-24 md:pt-28 pb-16 md:pb-24">
-        {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="max-w-5xl mx-auto px-4 md:px-8">
+        <section className="max-w-3xl mx-auto px-4 md:px-8 text-center">
+          {/* Status pill */}
           <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
-            style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", color: "#059669" }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6"
+            style={{
+              background: "rgba(245,158,11,0.10)",
+              border: "1px solid rgba(245,158,11,0.30)",
+              color: "#b45309",
+            }}
           >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
-            Vestream Payroll
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
+            On the roadmap
           </div>
+
           <h1
             className="font-bold mb-5"
             style={{
-              fontSize: "clamp(2.5rem, 5vw, 3.75rem)",
+              fontSize: "clamp(2.25rem, 4.5vw, 3.5rem)",
               letterSpacing: "-0.03em",
               lineHeight: 1.1,
               color: "#0f172a",
             }}
           >
-            See every stream <br className="hidden md:inline" /> paying you.
+            Vestream Payroll <br className="hidden md:inline" />
+            is coming.
           </h1>
+
           <p
-            className="max-w-2xl text-base md:text-lg mb-8"
+            className="max-w-2xl mx-auto text-base md:text-lg mb-10"
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
-            Vestream tracks every Sablier Flow, LlamaPay and Superfluid stream paying tokens into your wallet. Live earnings rate. Push alert when a stream hits. Gas-aware claim suggestions. Year-end income statement formatted for 1099-NEC, UK SA103 or your accountant&rsquo;s preferred software.
+            An earnings dashboard purpose-built for crypto contractors, DAO contributors and remote workers paid in tokens. We&rsquo;re finishing the investor product first; Payroll is next on the roadmap.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <Link
-              href="/find-vestings"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm md:text-base"
-              style={{
-                background: "linear-gradient(135deg, #059669, #10b981)",
-                color: "white",
-                boxShadow: "0 6px 20px rgba(16,185,129,0.30)",
-              }}
-            >
-              Find my streams →
-            </Link>
-            <span className="text-sm" style={{ color: "#64748b" }}>
-              Free · paste a wallet · no signup
-            </span>
-          </div>
-
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            Or browse{" "}
-            <Link href="/protocols" className="underline" style={{ color: "#475569" }}>
-              every supported protocol
-            </Link>
-            {" · "}
-            <Link href="/invest" className="underline" style={{ color: "#475569" }}>
-              tracking vesting unlocks instead?
-            </Link>
-          </p>
-        </section>
-
-        {/* ── Three value bullets ─────────────────────────────────────────── */}
-        <section className="max-w-5xl mx-auto px-4 md:px-8 mt-16 md:mt-24">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {[
-              {
-                icon: "💸",
-                title: "Live earnings rate",
-                body:  "Watch your hourly / weekly / monthly take live as the stream accrues. No more guessing whether you've actually been paid this week.",
-              },
-              {
-                icon: "⏱",
-                title: "Gas-smart claim timing",
-                body:  "We tell you when claiming is worth it given current gas. No more burning $40 to claim $50 of accrued USDC at 11pm on a Friday.",
-              },
-              {
-                icon: "🧾",
-                title: "Income exports",
-                body:  "Year-end statement in 1099-NEC (US contractor), SA103 (UK self-assessment), or generic per-event CSV. Your accountant will thank you.",
-              },
-            ].map(b => (
-              <div
-                key={b.title}
-                className="rounded-2xl p-6"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-              >
-                <div className="text-3xl mb-3">{b.icon}</div>
-                <h3 className="font-semibold mb-2" style={{ color: "#0f172a", fontSize: 18, letterSpacing: "-0.01em" }}>
-                  {b.title}
-                </h3>
-                <p className="text-sm" style={{ color: "#64748b", lineHeight: 1.55 }}>
-                  {b.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Who it's for ──────────────────────────────────────────────── */}
-        <section className="max-w-5xl mx-auto px-4 md:px-8 mt-16 md:mt-24">
-          <div className="text-center mb-8">
-            <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#64748b" }}>
-              Built for
-            </div>
-            <h2
-              className="font-semibold"
-              style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", letterSpacing: "-0.02em", color: "#0f172a" }}
-            >
-              The way crypto actually pays people now.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {
-                title: "DAO contributors",
-                body:  "Streamed in stablecoins from a multisig. Vestream gives you a personal earnings dashboard without exposing your wallet to the org.",
-              },
-              {
-                title: "Remote contractors",
-                body:  "Paid weekly in USDC over LlamaPay. Pull-to-refresh shows the latest rate; year-end CSV maps cleanly to your 1099 or SA103.",
-              },
-              {
-                title: "Grant recipients",
-                body:  "Funded over a 12-month Sablier Flow stream. Track accrual without doing math; claim when gas is reasonable; report income correctly.",
-              },
-              {
-                title: "Crypto employees",
-                body:  "Salary in tokens via Superfluid. Live earnings counter on your home screen. Withdraw on a schedule that minimises gas + tax friction.",
-              },
-            ].map(p => (
-              <div
-                key={p.title}
-                className="rounded-2xl p-6"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
-              >
-                <h3 className="font-semibold mb-2" style={{ color: "#0f172a", fontSize: 17 }}>
-                  {p.title}
-                </h3>
-                <p className="text-sm" style={{ color: "#64748b", lineHeight: 1.55 }}>
-                  {p.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Protocols indexed ──────────────────────────────────────────── */}
-        <section className="max-w-3xl mx-auto px-4 md:px-8 mt-16 md:mt-24 text-center">
-          <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#64748b" }}>
-            Streams indexed
-          </div>
-          <div className="flex flex-wrap justify-center gap-3 mb-3">
-            {PROTOCOLS.map(p => (
-              <div
-                key={p.name}
-                className="px-4 py-2 rounded-full text-sm"
-                style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", color: "#0f172a" }}
-              >
-                <strong className="font-semibold">{p.name}</strong>
-                <span className="ml-1.5" style={{ color: "#94a3b8" }}>· {p.tagline}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
-            More streaming protocols added monthly — request integration{" "}
-            <Link href="/contact" className="underline" style={{ color: "#475569" }}>here</Link>.
-          </p>
-        </section>
-
-        {/* ── Final CTA ─────────────────────────────────────────────────── */}
-        <section className="max-w-3xl mx-auto px-4 md:px-8 mt-16 md:mt-24">
+          {/* Already-supported signal — the protocols still flow today,
+              they're just not the headline product yet. */}
           <div
-            className="rounded-3xl p-8 md:p-12 text-center"
+            className="rounded-2xl p-6 md:p-8 mb-10 text-left"
+            style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#64748b" }}>
+              Already tracking
+            </div>
+            <p className="text-base mb-4" style={{ color: "#0f172a", lineHeight: 1.5 }}>
+              If you receive <strong>Sablier Flow</strong>, <strong>LlamaPay</strong>, or <strong>Superfluid</strong> streams today, Vestream already indexes them. They show up in your portfolio and calendar alongside your vesting positions.
+            </p>
+            <p className="text-sm" style={{ color: "#64748b", lineHeight: 1.5 }}>
+              When Payroll launches as a dedicated product, you&rsquo;ll get earnings-rate views, gas-aware claim timing, and 1099-NEC / SA103 income exports — same data, framed for how workers think about it.
+            </p>
+          </div>
+
+          {/* Waitlist CTA — feeds the existing /api/waitlist endpoint with
+              a `source` flag we can filter on at launch time. */}
+          <div
+            className="rounded-2xl p-6 md:p-8 mb-10"
             style={{
               background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
-              boxShadow: "0 20px 50px rgba(6,78,59,0.25)",
+              boxShadow: "0 12px 32px rgba(6,78,59,0.20)",
             }}
           >
-            <h3
-              className="font-bold mb-3"
-              style={{ color: "white", fontSize: "clamp(1.5rem, 3vw, 2.25rem)", letterSpacing: "-0.02em" }}
-            >
-              Stop guessing what you&rsquo;re owed.
-            </h3>
-            <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>
-              Free to scan. Free to install. Pro upgrade only if you want unlimited wallets and the income-statement exports for tax season.
+            <h2 className="text-xl md:text-2xl font-bold mb-2" style={{ color: "white", letterSpacing: "-0.02em" }}>
+              Want first access?
+            </h2>
+            <p className="text-sm md:text-base mb-5" style={{ color: "rgba(255,255,255,0.80)", lineHeight: 1.55 }}>
+              Join the early-access list. We&rsquo;ll email you the day Payroll opens — no spam, no marketing in between.
             </p>
-            <div className="flex flex-wrap justify-center gap-3 mb-5">
-              <Link
-                href="/find-vestings"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm"
-                style={{ background: "white", color: "#065f46" }}
-              >
-                Find my streams →
-              </Link>
-            </div>
-            <AppStoreBadges />
+            <Link
+              href="/early-access?source=payroll"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm"
+              style={{ background: "white", color: "#065f46" }}
+            >
+              Join the Payroll waitlist →
+            </Link>
           </div>
+
+          {/* Forward-pointer to the active product so users don't feel
+              dead-ended. Investor users tracking vesting can convert
+              today; payroll-curious users go on the waitlist. */}
+          <p className="text-sm" style={{ color: "#64748b" }}>
+            Tracking <strong style={{ color: "#0f172a" }}>vesting</strong> instead?{" "}
+            <Link href="/invest" className="underline" style={{ color: "#2563eb" }}>
+              Vestream Invest is live →
+            </Link>
+          </p>
         </section>
       </main>
 

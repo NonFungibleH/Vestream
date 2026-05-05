@@ -16,14 +16,12 @@ interface Props {
 // entry point so it gets the loud gradient button rather than a regular
 // nav link. Keeping it out of NAV_LINKS prevents it appearing twice.
 //
-// "Invest" and "Payroll" surface the two-mode segmentation we ship in the
-// app — same naming, same promise. /invest is the investor-side landing
-// (vesting / cliff / TGE schedules); /payroll is the worker-side landing
-// (Sablier Flow / LlamaPay / Superfluid streaming income). Each ranks
-// for its own search intent and converts a different audience.
+// May 5 2026 strategy reset: focusing the marketing surface on vesting
+// while Payroll moves to the roadmap. Top nav drops the Invest / Payroll
+// dual links — /invest still exists as a vesting-focused SEO landing
+// page, /payroll redirects to a coming-soon waitlist (linked from the
+// footer instead of the nav).
 const NAV_LINKS = [
-  { label: "Invest",    href: "/invest"    },
-  { label: "Payroll",   href: "/payroll"   },
   { label: "Protocols", href: "/protocols" },
   { label: "Demo",      href: "/demo"      },
 ] as const;
