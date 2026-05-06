@@ -188,7 +188,7 @@ const loadStatusData = unstable_cache(
   // before migration 0016 was applied to prod. Without this bump, /status
   // kept serving the cached error even after the resilience fix in e96a089
   // and the migration recovery via psql.
-  ["status-page-data-v3"],
+  ["status-page-data-v4"],
   { revalidate: 60, tags: ["status-page"] },
 );
 
@@ -290,20 +290,34 @@ export default async function StatusPage() {
   for (const c of cells) {
     cellMap.set(`${c.protocol}|${c.chainId}`, c.freshestSec ?? null);
   }
+  // Per-cell metadata: TVL from snapshot (DefiLlama or self-indexed),
+  // stream count from cache-stats (the real number of indexed streams
+  // for that protocol×chain in vesting_streams_cache).
+  //
+  // We deliberately prefer cells.streams over r.streamCount because
+  // DefiLlama-sourced TVL snapshots write streamCount=0 (DefiLlama's
+  // API doesn't expose a stream count). Reading from cache-stats
+  // gives us the real per-chain count regardless of TVL source.
   const metaMap = new Map<string, { tvlUsd: number; streams: number }>();
-  for (const r of tvlRows) {
-    metaMap.set(`${r.protocol}|${r.chainId}`, {
-      tvlUsd:  r.tvlUsd,
-      streams: r.streamCount,
+  // Seed from cache-stats first so cells.streams is the default
+  // stream count for every (protocol, chain) we've indexed.
+  for (const c of cells) {
+    metaMap.set(`${c.protocol}|${c.chainId}`, {
+      tvlUsd:  0,
+      streams: c.streams,
     });
   }
-  // Fall back to cache-stats stream count when there's no TVL snapshot
-  // (e.g. brand-new adapter that hasn't had its first daily TVL run).
-  for (const c of cells) {
-    const k = `${c.protocol}|${c.chainId}`;
-    if (!metaMap.has(k)) {
-      metaMap.set(k, { tvlUsd: 0, streams: c.streams });
-    }
+  // Then overlay TVL snapshot $ values, preserving the cache-side
+  // stream count. If a TVL row exists for a cell with no cache data
+  // (rare — DefiLlama-only protocol with no per-wallet adapter yet),
+  // fall back to the snapshot's streamCount.
+  for (const r of tvlRows) {
+    const k = `${r.protocol}|${r.chainId}`;
+    const existing = metaMap.get(k);
+    metaMap.set(k, {
+      tvlUsd:  r.tvlUsd,
+      streams: existing?.streams ?? r.streamCount,
+    });
   }
 
   // Binary health signal — green if no cell has crossed the "stuck"
