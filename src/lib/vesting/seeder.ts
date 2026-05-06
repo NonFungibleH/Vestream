@@ -1101,20 +1101,15 @@ function limitFor(mode: SeedMode): number {
  *                 of hosted endpoints. Each chain is a single GraphQL
  *                 round-trip; the whole bucket runs in well under 300s.
  */
-export type SeedGroup = "heavy" | "solana" | "jupiter-lock" | "subgraphs";
+export type SeedGroup = "heavy" | "solana" | "subgraphs";
 
-// Jupiter Lock split out from "solana" on May 6 2026 — its
-// getProgramAccounts call returns 44k+ accounts (vs Streamflow's ~3.5k),
-// and putting both in the same 300s budget meant both routinely timed
-// out together as they competed for Helius free-tier compute units.
-// Each now gets its own dedicated function invocation. The dispatcher
-// fans out 4 groups in parallel (was 3); cron config is unchanged.
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "jupiter-lock", "subgraphs"] as const;
+// jupiter-lock group removed 2026-05-06 — JL per-stream seed disabled
+// while we're on Helius free tier (see SEED_JOBS for rationale).
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
-  if (adapterId === "pinksale")     return "heavy";
-  if (adapterId === "jupiter-lock") return "jupiter-lock";
-  if (adapterId === "streamflow")   return "solana";
+  if (adapterId === "pinksale")   return "heavy";
+  if (adapterId === "streamflow") return "solana";
   return "subgraphs";
 }
 
@@ -1172,7 +1167,19 @@ const SEED_JOBS: SeedJob[] = [
   // level by SOLANA_ENABLED flag; safe to list unconditionally because
   // their discover fns return [] when the flag is off.
   { adapterId: "streamflow",    chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
-  { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
+  // Jupiter Lock per-stream seed REMOVED 2026-05-06 (Option 0 / $0).
+  // Helius free tier can't enumerate JL's 44k+ accounts within the 300s
+  // seed budget. The TVL walker for JL keeps running on its own daily
+  // schedule and produces a correct $1B TVL figure — that path uses the
+  // same getProgramAccounts call but doesn't materialise per-stream
+  // rows, so it fits in budget. The per-wallet adapter is also untouched
+  // (users searching their own wallet still hit the 2-memcmp-filter
+  // path which is fast for individual queries).
+  //
+  // Re-enable when we have a paid Solana RPC (Helius Growth $49/mo or
+  // GetBlock Standard $20/mo). The runJupiterLockViaBulkFetch path
+  // remains in this file dormant for that flip.
+  // { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
 
   // ─── STANDARD (subgraph-based, generally fast and reliable) ───
   // Sablier — ETH, BSC, Polygon, Base + Sepolia (testnet). Single Envio
