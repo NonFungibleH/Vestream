@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { getUserByAddress } from "@/lib/db/queries";
+import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 import { explorerFetch } from "@/lib/vesting/explorer";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 
@@ -20,12 +21,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Server-side tier check — the explorer is Pro-and-above only.
-    // `session.address` holds either an email (OTP auth) or 0x wallet (SIWE).
-    // getUserByAddress lower-cases and matches on `users.address`, which works
-    // for both because upsertUser writes the lowered form on sign-in.
+    // Server-side tier check — the explorer is Pro only (mobile tier
+    // doesn't have web dashboard access). canAccessDashboard centralises
+    // the rule so future tier reshuffles only touch one helper.
     const user = await getUserByAddress(session.address);
-    if (!user || (user.tier !== "pro" && user.tier !== "fund")) {
+    if (!user || !canAccessDashboard(normaliseTier(user.tier))) {
       return NextResponse.json(
         { error: "Pro plan required", upgradeUrl: "/pricing" },
         { status: 403 }

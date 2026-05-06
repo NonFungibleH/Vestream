@@ -37,9 +37,22 @@ const ACTIVE_EVENTS = new Set(["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", 
 // Events that mean the subscription ended or is at risk
 const INACTIVE_EVENTS = new Set(["CANCELLATION", "EXPIRATION", "BILLING_ISSUE"]);
 
-function tierFromEntitlements(entitlementIds: string[]): "pro" | "fund" {
-  if (entitlementIds.includes("fund")) return "fund";
-  return "pro";
+// Map RevenueCat entitlement IDs → our internal tier name.
+//
+// RevenueCat entitlement IDs (configured in their dashboard, must match):
+//   "pro"    — the $14.99 plan: mobile app + web dashboard + tax exports
+//   "mobile" — the $9.99 plan: mobile app only (push + email alerts, multi-wallet)
+//
+// "Pro" is checked first so PRODUCT_CHANGE events that upgrade
+// mobile→pro register correctly even if both entitlements transit
+// through the same payload.
+function tierFromEntitlements(entitlementIds: string[]): "mobile" | "pro" {
+  if (entitlementIds.includes("pro"))    return "pro";
+  if (entitlementIds.includes("mobile")) return "mobile";
+  // Default to mobile — if RC says the user has any active entitlement
+  // but doesn't match either expected ID, treat them as the lower
+  // paid tier rather than incorrectly granting dashboard access.
+  return "mobile";
 }
 
 // RevenueCat event shape we care about (narrow subset; keep loose on unknown fields).
@@ -61,7 +74,7 @@ export async function POST(req: NextRequest) {
   // ── Auth: verify the shared secret RevenueCat sends in the Authorization header ──
   // Fail CLOSED when the env var is unset — an unset secret used to let every
   // request through, which is a critical privilege-escalation hole (anyone
-  // could flip any user to tier="fund" with a crafted POST).
+  // could flip any user to tier="pro" with a crafted POST).
   const secret = env.REVENUECAT_WEBHOOK_SECRET;
   if (!secret) {
     console.error("[RC Webhook] REVENUECAT_WEBHOOK_SECRET not set — rejecting request");

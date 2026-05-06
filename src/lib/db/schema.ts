@@ -347,7 +347,7 @@ export const apiKeys = pgTable("api_keys", {
   keyPrefix:        text("key_prefix").notNull(),           // first 12 chars, for display
   ownerEmail:       text("owner_email").notNull(),
   ownerName:        text("owner_name"),
-  tier:             text("tier").default("free").notNull(), // "free" | "pro"
+  tier:             text("tier").default("free").notNull(), // "free" | "mobile" | "pro"
   monthlyLimit:     integer("monthly_limit").default(1000).notNull(),
   usageThisMonth:   integer("usage_this_month").default(0).notNull(),
   usageMonthStart:  timestamp("usage_month_start").defaultNow().notNull(),

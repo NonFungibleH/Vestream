@@ -27,6 +27,7 @@ import {
 } from "@/lib/vesting/explorer-queries";
 import { resolveEnsName } from "@/lib/ens";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
+import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
@@ -52,9 +53,12 @@ async function handle(req: NextRequest) {
 
   for (const { search, user } of rows) {
     processed++;
-    // Skip free-tier rows — defensive in case a user was downgraded
-    // since saving. Saved searches survive but alerts pause.
-    if (user.tier !== "pro" && user.tier !== "fund") continue;
+    // Skip non-Pro rows — defensive in case a user was downgraded
+    // since saving. Saved searches survive but alerts pause until
+    // they re-upgrade. Mobile-tier users get push alerts via the
+    // app, but saved-search email alerts are Pro-only (they're a
+    // dashboard feature).
+    if (!canAccessDashboard(normaliseTier(user.tier))) continue;
 
     let params: Record<string, string>;
     try {

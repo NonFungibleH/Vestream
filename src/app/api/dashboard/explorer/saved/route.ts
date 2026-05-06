@@ -1,12 +1,13 @@
 // Saved-searches CRUD for the explorer.
-// Pro / Fund tier only. List, create. Per-row patch/delete in [id]/route.ts.
+// Pro tier only — saved searches live behind the web dashboard which the
+// mobile tier doesn't unlock.
 
 import { NextRequest, NextResponse } from "next/server";
 import { eq, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { savedSearches, users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
-import { isPaidTier, type Tier } from "@/lib/auth/tier";
+import { canAccessDashboard, normaliseTier, type Tier } from "@/lib/auth/tier";
 
 export const runtime = "nodejs";
 
@@ -26,11 +27,11 @@ async function authedPaidUser(): Promise<{ id: string; tier: Tier } | NextRespon
     .limit(1);
   const u = row[0];
   if (!u) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const tier = (u.tier === "pro" || u.tier === "fund") ? u.tier : "free";
-  if (!isPaidTier(tier as Tier)) {
+  const tier = normaliseTier(u.tier);
+  if (!canAccessDashboard(tier)) {
     return NextResponse.json({ error: "Saved searches are a Pro feature" }, { status: 403 });
   }
-  return { id: u.id, tier: tier as Tier };
+  return { id: u.id, tier };
 }
 
 export async function GET() {

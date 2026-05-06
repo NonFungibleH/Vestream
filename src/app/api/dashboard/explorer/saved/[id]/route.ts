@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { savedSearches, users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
-import { isPaidTier, type Tier } from "@/lib/auth/tier";
+import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 
 export const runtime = "nodejs";
 
@@ -21,8 +21,7 @@ async function authedPaidUser(): Promise<{ id: string } | NextResponse> {
     .limit(1);
   const u = row[0];
   if (!u) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const tier = (u.tier === "pro" || u.tier === "fund") ? u.tier : "free";
-  if (!isPaidTier(tier as Tier)) {
+  if (!canAccessDashboard(normaliseTier(u.tier))) {
     return NextResponse.json({ error: "Saved searches are a Pro feature" }, { status: 403 });
   }
   return { id: u.id };

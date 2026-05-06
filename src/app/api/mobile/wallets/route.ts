@@ -6,10 +6,14 @@ import { db } from "@/lib/db";
 import { wallets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
-const WALLET_LIMITS: Record<string, number | null> = {
-  free: 1,
-  pro:  3,
-  fund: null,
+// Wallet limits per tier — keep in sync with src/app/api/wallets/route.ts.
+//   free   → 1   (website search + a few alerts)
+//   mobile → 3   ($9.99 plan: mobile app + alerts + multi-wallet)
+//   pro    → 10  ($14.99 plan: + web dashboard + tax exports)
+const WALLET_LIMITS: Record<string, number> = {
+  free:   1,
+  mobile: 3,
+  pro:    10,
 };
 
 export async function GET(req: NextRequest) {
@@ -38,10 +42,19 @@ export async function POST(req: NextRequest) {
 
   // Enforce wallet limit
   const existing = await db.select().from(wallets).where(eq(wallets.userId, userId));
-  const limit = WALLET_LIMITS[user.tier] ?? null;
-  if (limit !== null && existing.length >= limit) {
+  const limit = WALLET_LIMITS[user.tier] ?? 1;
+  if (existing.length >= limit) {
+    const planLabel =
+      user.tier === "pro"    ? "Pro"
+      : user.tier === "mobile" ? "Mobile"
+      : "Free";
     return NextResponse.json(
-      { error: `${user.tier === "free" ? "Free" : "Pro"} plan limit reached. Upgrade to add more wallets.`, code: "WALLET_LIMIT_REACHED" },
+      {
+        error: `${planLabel} plan limit reached. Upgrade for more wallets.`,
+        code:  "WALLET_LIMIT_REACHED",
+        limit,
+        tier:  user.tier,
+      },
       { status: 402 }
     );
   }

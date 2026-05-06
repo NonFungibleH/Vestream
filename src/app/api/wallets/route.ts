@@ -5,16 +5,24 @@ import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
-// Wallet limits per tier: free=1, pro=3, fund=unlimited (null)
-const WALLET_LIMITS: Record<string, number | null> = {
-  free: 1,
-  pro:  3,
-  fund: null,
+// Wallet limits per tier (May 2026 scheme):
+//   free   → 1 wallet  (website search, basic alerts)
+//   mobile → 3 wallets ($9.99 mobile-app plan: push + email alerts)
+//   pro    → 10 wallets ($14.99 plan: mobile + web dashboard + tax exports)
+//
+// Pro-tier cap raised from "unlimited" to a finite 10 because the
+// dashboard renders all wallets in one view; allowing unbounded growth
+// would silently degrade UX (and cost) for power users with thousands.
+// 10 is generous for an individual investor; teams/funds requiring more
+// route through the contact form for an Enterprise plan.
+const WALLET_LIMITS: Record<string, number> = {
+  free:   1,
+  mobile: 3,
+  pro:    10,
 };
 
-function walletLimitForTier(tier: string): number | null {
-  // Use `in` check so that null (= unlimited) is preserved and not coalesced to 1
-  return tier in WALLET_LIMITS ? WALLET_LIMITS[tier] : 1;
+function walletLimitForTier(tier: string): number {
+  return WALLET_LIMITS[tier] ?? 1;
 }
 
 export async function GET() {
@@ -118,10 +126,13 @@ export async function POST(req: NextRequest) {
 
     // Enforce per-tier wallet limit
     const limit = walletLimitForTier(user.tier);
-    if (limit !== null && existingWallets.length >= limit) {
-      // User-facing tier label — internal "fund" surfaces as "Enterprise"
-      // everywhere in the UI per the /pricing page.
-      const planName = user.tier === "free" ? "Free" : user.tier === "pro" ? "Pro" : "Enterprise";
+    if (existingWallets.length >= limit) {
+      // User-facing tier labels match the homepage pricing cards:
+      //   free → "Free" · mobile → "Mobile" · pro → "Pro"
+      const planName =
+        user.tier === "pro"    ? "Pro"
+        : user.tier === "mobile" ? "Mobile"
+        : "Free";
       return NextResponse.json(
         {
           error: `${planName} plan limit reached`,
