@@ -109,7 +109,20 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // ── Bootstrap fallback: legacy GROUP BY ────────────────────────────────────
   // Fires on (a) fresh deploys before the first cron run after migration
   // 0016 has populated the rollup, and (b) any error path above.
-  return computeCacheStatsCellsFromCache();
+  //
+  // Hard-capped at 5s so it can NEVER hang the freshness UI when the
+  // GROUP BY hits a slow plan or the pooler is congested. If it doesn't
+  // come back fast, we return empty cells and the page surfaces a
+  // Redis last-known-good (its existing fallback path).
+  return Promise.race([
+    computeCacheStatsCellsFromCache(),
+    new Promise<CacheStatsCell[]>((resolve) =>
+      setTimeout(() => {
+        console.warn("[cache-stats] GROUP BY fallback exceeded 5s timeout — returning empty");
+        resolve([]);
+      }, 5000),
+    ),
+  ]);
 }
 
 /**
