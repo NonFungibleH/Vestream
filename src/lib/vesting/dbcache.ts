@@ -234,9 +234,23 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
           streamData:      sql`excluded.stream_data`,
           lastRefreshedAt: sql`excluded.last_refreshed_at`,
         },
+        // Update when:
+        //  - stream data moved (the always-update case from the original
+        //    optimization commit df6a6b3),
+        //  - OR the row hasn't been touched in 23h+ (added 2026-05-06 to
+        //    fix "Unvest ETH 2d ago" stale-freshness bug for low-activity
+        //    chains where streams genuinely don't move week-over-week —
+        //    those cells were reading as "broken" in the freshness UI
+        //    even though the seeder was healthy).
+        // 23h threshold matches the daily 03:00 UTC cron cadence: every
+        // stable row gets one UPDATE per day, freshestSec advances at
+        // most ~24h, no IO storm. Replaces the row-lock-contended
+        // bumpSeedHeartbeat (disabled in 4344cae) with a per-row,
+        // primary-key-only UPDATE that doesn't fight concurrent writers.
         setWhere: sql`
           ${vestingStreamsCache.streamData} IS DISTINCT FROM excluded.stream_data
           OR ${vestingStreamsCache.isFullyVested} IS DISTINCT FROM excluded.is_fully_vested
+          OR ${vestingStreamsCache.lastRefreshedAt} < NOW() - INTERVAL '23 hours'
         `,
       });
     return unique.length;
