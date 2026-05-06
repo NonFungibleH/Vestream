@@ -25,15 +25,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, optimism } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 
+// Subgraph endpoints — must match the seeder's SUPERFLUID_SUBGRAPH_URLS
+// list. Previously this walker only covered 4 chains (ETH/BSC/Polygon/
+// Base) while the per-stream adapter indexed 6 (those + Arbitrum +
+// Optimism). Result: ~2,500 Superfluid streams on Optimism showed up
+// in the cache and on the status page but contributed $0 to the TVL
+// snapshot because the walker had no endpoint for that chain. Added
+// Arbitrum + Optimism May 6 2026 to close that gap.
 const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.ETHEREUM]: "https://subgraph-endpoints.superfluid.dev/eth-mainnet/vesting-scheduler",
   [CHAIN_IDS.BSC]:      "https://subgraph-endpoints.superfluid.dev/bsc-mainnet/vesting-scheduler",
   [CHAIN_IDS.POLYGON]:  "https://subgraph-endpoints.superfluid.dev/polygon-mainnet/vesting-scheduler",
   [CHAIN_IDS.BASE]:     "https://subgraph-endpoints.superfluid.dev/base-mainnet/vesting-scheduler",
+  [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
+  // Optimism uses the `optimism-mainnet` slug — verified by the seeder
+  // 2026-05-02 against a direct probe. Same convention as the other 5.
+  [CHAIN_IDS.OPTIMISM]: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/vesting-scheduler",
 };
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap
@@ -86,10 +97,12 @@ interface RawVestingSchedule {
 
 function getRpcUrl(chainId: SupportedChainId): string {
   switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
+    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH      ?? "https://ethereum.publicnode.com";
+    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL              ?? "https://bsc.drpc.org";
+    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL          ?? "https://polygon.drpc.org";
+    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE     ?? "https://base.drpc.org";
+    case CHAIN_IDS.ARBITRUM: return process.env.ALCHEMY_RPC_URL_ARBITRUM ?? "https://arbitrum.drpc.org";
+    case CHAIN_IDS.OPTIMISM: return process.env.ALCHEMY_RPC_URL_OPTIMISM ?? "https://optimism.drpc.org";
     default:                 return "https://ethereum.publicnode.com";
   }
 }
@@ -100,6 +113,8 @@ function getViemChain(chainId: SupportedChainId) {
     case CHAIN_IDS.BSC:      return bsc;
     case CHAIN_IDS.POLYGON:  return polygon;
     case CHAIN_IDS.BASE:     return base;
+    case CHAIN_IDS.ARBITRUM: return arbitrum;
+    case CHAIN_IDS.OPTIMISM: return optimism;
     default:                 return mainnet;
   }
 }

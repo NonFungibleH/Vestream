@@ -313,7 +313,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "Superfluid",
     tagline: "Continuous per-second streaming",
     description:
-      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. TokenVest indexes Superfluid's vesting scheduler across Ethereum, Base, BSC, Polygon and Arbitrum.",
+      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. TokenVest indexes Superfluid's vesting scheduler across Ethereum, Base, BSC, Polygon, Arbitrum and Optimism.",
     color: "#28B895",
     bg:    "rgba(40,184,149,0.08)",
     border:"rgba(40,184,149,0.22)",

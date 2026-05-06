@@ -271,6 +271,9 @@ export async function getProtocolStats(
  * getProtocolStats used to run on every read. Now factored out so it can
  * be called from refreshProtocolSummaries() (write path) and as a
  * bootstrap fallback in getProtocolStats (read path).
+ *
+ * Active-count semantic + testnet filter mirror the write path — see
+ * refreshProtocolSummaries() docstring for the full reasoning.
  */
 async function computeProtocolStatsFromCache(
   adapterIds: readonly string[],
@@ -280,14 +283,25 @@ async function computeProtocolStatsFromCache(
   const [statsRow] = await db
     .select({
       total:       sql<number>`count(*)::int`,
-      active:      sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+      active:      sql<number>`count(*) filter (
+        where (
+          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
+          and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
+          and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
+            < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
+        )
+        or (
+          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is null
+          and ${vestingStreamsCache.isFullyVested} = false
+        )
+      )::int`,
       tokens:      sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
       recipients:  sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
       chains:      sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed: sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
     .from(vestingStreamsCache)
-    .where(filter);
+    .where(and(filter, excludeTestnets));
 
   const lastIndexedAt = toDate(statsRow?.lastIndexed);
 
@@ -308,16 +322,36 @@ async function computeProtocolStatsFromCache(
  * Single SELECT — Postgres does the GROUP BY work; we then walk results
  * and upsert. Idempotent.
  *
- * Active-stream semantics — this is where the LlamaPay "0 active" fix lives:
+ * Active-stream semantics (revised May 6 2026):
  *
- *   - vesting protocols: active = count where !is_fully_vested
- *     (matches the pre-pivot meaning of "active = still releasing")
+ *   - vesting protocols: active = count where the recipient still has
+ *     unclaimed tokens, i.e. (stream_data->>'withdrawnAmount')::numeric
+ *     < (stream_data->>'totalAmount')::numeric. This catches BOTH
+ *     mid-schedule streams (still releasing) AND past-end-time streams
+ *     where the recipient never claimed. Previously this filter was
+ *     `is_fully_vested = false` which was time-only — once endTime
+ *     passed the stream dropped out of "active" even if every token
+ *     was still sitting in the contract waiting to be claimed. For
+ *     protocols with many short locks (Jupiter Lock — token-launchpad
+ *     style 1-day locks) the time-only filter undercounted active by
+ *     >90% because most locks are time-expired but tokens are still
+ *     in the contract.
  *
  *   - stream protocols (LlamaPay, Sablier Flow): active = total
- *     The adapter sets is_fully_vested=true on every stream so the UI
- *     suppresses cliff-countdown rendering. But every flowing stream IS
- *     active by definition; counting only is_fully_vested=false ones gives
- *     the wrong "0 active" display we saw in production on May 4 2026.
+ *     Streaming protocols set is_fully_vested=true on every row to
+ *     suppress cliff-countdown rendering, and their per-second flow
+ *     model means there's no clean "withdrawn vs total" pair to check.
+ *     Every flowing stream is active by definition.
+ *
+ * Testnets (Sepolia, Base Sepolia) are excluded so the public per-protocol
+ * page totals match the /status page totals — both now apply the same
+ * `excludeTestnets` filter. Previously /protocols included Sepolia
+ * streams (Sablier had ~6.6K Sepolia rows inflating its total).
+ *
+ * Numeric-cast safety: stringified bigints in jsonb are bounded by the
+ * underlying token's max supply. JUP, ETH, etc. all fit comfortably in
+ * Postgres `numeric` (no precision limit). The ::numeric cast is the
+ * cleanest way to compare two stringified bigints in SQL.
  */
 export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
   if (shouldSkipDbAtBuildTime()) return { rows: 0 };
@@ -329,13 +363,30 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
     .select({
       protocol:        vestingStreamsCache.protocol,
       total:           sql<number>`count(*)::int`,
-      vestingActive:   sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+      // Active = there's still something unclaimed for the recipient.
+      // Falls back to !is_fully_vested when withdrawn/total are missing
+      // from streamData (legacy cache rows pre-2025) so we don't
+      // suddenly drop counts for any protocol that hasn't been re-indexed
+      // since the schema firmed up.
+      vestingActive:   sql<number>`count(*) filter (
+        where (
+          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
+          and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
+          and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
+            < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
+        )
+        or (
+          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is null
+          and ${vestingStreamsCache.isFullyVested} = false
+        )
+      )::int`,
       tokens:          sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
       recipients:      sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
       chains:          sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed:     sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
     .from(vestingStreamsCache)
+    .where(excludeTestnets)
     .groupBy(vestingStreamsCache.protocol);
 
   if (aggregates.length === 0) return { rows: 0 };

@@ -38,20 +38,23 @@ test.describe("homepage", () => {
   test("renders with correct page title", async ({ page }) => {
     await page.goto("/");
     // Title comes from layout metadata — no dependency on any API call.
-    // Regex stays loose: "Vestream" + "Tracker" anywhere with anything
-    // between, because the title now mentions both vesting AND payroll
-    // ("Vestream — Token Vesting & Crypto Payroll Tracker · …" as of
-    // the May 2026 worker-pivot SEO refresh) and we want copy tweaks to
-    // not break smoke tests.
-    await expect(page).toHaveTitle(/Vestream.*Tracker/i);
+    // Regex stays loose: brand name + "Tracker" anywhere with anything
+    // between. The brand is rebranding from Vestream → TokenVest as of
+    // May 2026; accept either so the test isn't a tripwire during the
+    // (multi-week) coordinated rebrand sweep across web + mobile + App
+    // Store + DNS.
+    await expect(page).toHaveTitle(/(Vestream|TokenVest).*Tracker/i);
   });
 
-  test("nav links to /developer and /ai are present", async ({ page }) => {
+  test("primary nav surfaces are server-rendered", async ({ page }) => {
     await page.goto("/");
-    // The nav ships in the server-rendered HTML — we don't need hydration to
-    // assert its presence.
-    await expect(page.locator('a[href="/developer"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/ai"]').first()).toBeVisible();
+    // The nav was simplified May 2026: the top bar now shows Protocols
+    // and Demo (was Portfolio / Developers / AI Agents). /developer
+    // and /ai still exist as standalone landing pages reached via the
+    // footer; the smoke test now asserts what's actually IN the nav so
+    // it stays useful when the nav drift again.
+    await expect(page.locator('nav a[href="/protocols"]').first()).toBeVisible();
+    await expect(page.locator('nav a[href="/demo"]').first()).toBeVisible();
   });
 });
 
@@ -69,7 +72,7 @@ test.describe("token explorer", () => {
     // Accept 200 (rendered) or 404 (no streams for this token yet). 500 fails.
     expect(resp?.status()).toBeLessThan(500);
     // Whatever path we take, the site chrome should render.
-    await expect(page).toHaveTitle(/Vestream/i);
+    await expect(page).toHaveTitle(/(Vestream|TokenVest)/i);
   });
 
   test("/explore/1/<USDC> permanent-redirects to /token/1/<USDC>", async ({ page }) => {
@@ -80,9 +83,12 @@ test.describe("token explorer", () => {
 });
 
 test.describe("authentication gates", () => {
-  test("/dashboard redirects unauthenticated visitors to /early-access", async ({ page }) => {
+  test("/dashboard redirects unauthenticated visitors to /login", async ({ page }) => {
+    // Phase 5 (May 2026) replaced the early-access waitlist gate with a
+    // QR-pair login. Middleware now redirects `/dashboard/*` to `/login`
+    // when the iron-session cookie is missing — see src/middleware.ts.
     await page.goto("/dashboard");
-    await expect(page).toHaveURL(/\/early-access/);
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test("/admin redirects unauthenticated visitors to /admin/login", async ({ page }) => {
