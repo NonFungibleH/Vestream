@@ -412,6 +412,71 @@ async function fetchTokenMeta(
  * through). Returns [] on any total-tokens-count failure (we'd rather
  * the seeder fall back to its curated list than seed garbage).
  */
+/**
+ * Returns ALL PinkSale locks for a chain plus the resolved token metadata.
+ * The seeder uses this to populate vesting_streams_cache directly,
+ * bypassing the per-wallet adapter — see seeder.ts pinksale special case.
+ *
+ * Why: the per-wallet adapter calls `getUserNormalLocksLength(owner)`
+ * which only counts CURRENTLY ACTIVE locks (i.e. locks whose unlockedAmount
+ * < amount). Walker-discovered owners often had all their locks fully
+ * withdrawn between discovery and seed-time, so the adapter returned []
+ * for them and the seeder logged "0 streams fetched, 0 errors". Using
+ * the walker's token-side enumeration (`getLocksForToken`) directly gives
+ * us every active lock without the owner-side filter ambiguity.
+ *
+ * Returns null on early-fail conditions (no contract, totalTokens=0,
+ * RPC dead) so the seeder can fall through to its existing path
+ * cleanly.
+ */
+export async function fetchPinkSaleAllLocks(
+  chainId: SupportedChainId,
+): Promise<{
+  locks:     PinkLockRaw[];
+  tokenMeta: Map<string, { symbol: string; decimals: number }>;
+  errors:    string[];
+} | null> {
+  const contract = PINKSALE_CONTRACTS[chainId];
+  if (!contract) return null;
+
+  const errors: string[] = [];
+  const client = makeClient(chainId);
+
+  let totalTokens: bigint;
+  try {
+    totalTokens = await withRetry("allNormalTokenLockedCount", () =>
+      client.readContract({
+        address:      contract,
+        abi:          PINKSALE_ABI,
+        functionName: "allNormalTokenLockedCount",
+      }),
+    ) as bigint;
+  } catch (err) {
+    errors.push(`allNormalTokenLockedCount failed: ${err instanceof Error ? err.message : String(err)}`);
+    return { locks: [], tokenMeta: new Map(), errors };
+  }
+  if (totalTokens === 0n) return { locks: [], tokenMeta: new Map(), errors };
+
+  const tokens = await fetchAllLockedTokens(chainId, contract, totalTokens, errors);
+  if (tokens.length === 0) return { locks: [], tokenMeta: new Map(), errors };
+
+  const lockCounts = await fetchLockCounts(chainId, contract, tokens, errors);
+  const locks      = await fetchAllLocks(chainId, contract, lockCounts, errors);
+
+  // Filter to ACTIVE locks (unlockedAmount < amount). This matches what the
+  // per-wallet adapter would return for live owners — historical locks
+  // that have been fully withdrawn don't belong in vesting_streams_cache
+  // either.
+  const activeLocks = locks.filter((l) => l.unlockedAmount < l.amount);
+
+  // Token metadata lookup for every unique token referenced by an active
+  // lock. Same shape the adapter expects.
+  const distinctTokens = Array.from(new Set(activeLocks.map((l) => l.token.toLowerCase())));
+  const tokenMeta      = await fetchTokenMeta(chainId, distinctTokens, errors);
+
+  return { locks: activeLocks, tokenMeta, errors };
+}
+
 export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise<string[]> {
   const contract = PINKSALE_CONTRACTS[chainId];
   if (!contract) return [];

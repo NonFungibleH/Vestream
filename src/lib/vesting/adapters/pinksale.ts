@@ -362,8 +362,26 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
   const uniqueTokens = [...new Set(allLocks.map((l) => l.token.toLowerCase()))];
   const tokenMeta    = await fetchTokenMeta(uniqueTokens, chainId);
 
-  const nowSec = Math.floor(Date.now() / 1000);
+  return locksToVestingStreams(allLocks, tokenMeta, chainId);
+}
 
+/**
+ * Convert raw PinkLockRaw entries to the VestingStream shape the cache
+ * stores. Exported so the seeder can call it on walker-fetched locks
+ * (bypassing the per-wallet adapter, which wouldn't see locks for
+ * owners whose `getUserNormalLocksLength` returns 0).
+ */
+export function locksToVestingStreams(
+  allLocks:  Array<{
+    id: bigint; token: string; owner: string; amount: bigint;
+    lockDate: bigint; tgeDate: bigint; tgeBps: bigint; cycle: bigint;
+    cycleBps: bigint; unlockedAmount: bigint; description: string;
+  }>,
+  tokenMeta: Map<string, { symbol: string; decimals: number }>,
+  chainId:   SupportedChainId,
+): VestingStream[] {
+  if (allLocks.length === 0) return [];
+  const nowSec = Math.floor(Date.now() / 1000);
   return allLocks.map((lock): VestingStream => {
     const tgeDate   = Number(lock.tgeDate);
     const lockDate  = Number(lock.lockDate);

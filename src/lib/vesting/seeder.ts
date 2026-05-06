@@ -650,7 +650,8 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 // The curated list in seed-wallets.ts stays as a safety net. Zero cost if
 // it's empty (the default).
 
-import { discoverPinkSaleOwners } from "./tvl-walker/pinksale";
+import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
+import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { getCachedRecipients } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
@@ -1285,12 +1286,92 @@ function emptyResult(job: SeedJob, error?: string): SeedRunResult {
   };
 }
 
+/**
+ * PinkSale dedicated seed path: bypass per-wallet adapter, use walker
+ * directly. The walker's `fetchPinkSaleAllLocks` returns every active
+ * lock + token metadata in one pass (token-side enumeration via
+ * `getLocksForToken`). Locks are converted into VestingStream rows with
+ * the same math the per-wallet adapter uses (computeStepVesting on
+ * tgeBps/cycleBps schedules) and written to vesting_streams_cache.
+ *
+ * Why we needed this: see runJob's pinksale branch comment.
+ */
+async function runPinkSaleViaWalker(job: SeedJob): Promise<SeedRunResult> {
+  const tag = `pinksale/${job.chainId}`;
+  const result = await fetchPinkSaleAllLocks(job.chainId).catch((err) => {
+    console.error(`[seeder:${tag}] walker fetch threw:`, err);
+    return null;
+  });
+  if (!result) {
+    return emptyResult(job, "walker returned null (no contract or RPC dead)");
+  }
+
+  const { locks, tokenMeta, errors } = result;
+  console.log(
+    `[seeder:${tag}] walker returned ${locks.length} active locks across ${tokenMeta.size} tokens (${errors.length} non-fatal errors)`,
+  );
+  if (locks.length === 0) {
+    return emptyResult(job);
+  }
+
+  // Convert raw walker locks → VestingStream[] using the adapter's
+  // shared helper. Identical schedule math; the only difference vs the
+  // adapter's per-wallet path is the SOURCE of the locks (token-side
+  // vs owner-side).
+  const streams = pinksaleLocksToStreams(locks, tokenMeta, job.chainId);
+  if (streams.length === 0) {
+    return emptyResult(job);
+  }
+
+  // Write in chunks so a single BATCH_SIZE-sized write failure (e.g.
+  // a single bad token amount triggering a Postgres numeric overflow)
+  // doesn't cost us the whole walk.
+  let streamsWritten   = 0;
+  let batchWriteErrors = 0;
+  for (const batch of chunk(streams, BATCH_SIZE)) {
+    const written = await writeToCache(batch);
+    if (written === 0) {
+      batchWriteErrors++;
+      console.error(`[seeder:${tag}] batch write failed (${batch.length} streams dropped)`);
+      continue;
+    }
+    streamsWritten += written;
+  }
+
+  // Distinct owners — used by the freshness UI and reflects "how many
+  // wallets does this protocol×chain touch right now".
+  const distinctOwners = new Set(streams.map((s) => s.recipient.toLowerCase())).size;
+  console.log(
+    `[seeder:${tag}] walker-direct: streams_fetched=${streams.length} streams_written=${streamsWritten} distinct_owners=${distinctOwners}`,
+  );
+  return {
+    adapterId:            job.adapterId,
+    chainId:              job.chainId,
+    recipientsDiscovered: distinctOwners,
+    streamsFetched:       streams.length,
+    streamsWritten,
+    batchFetchErrors:     0,
+    batchWriteErrors,
+  };
+}
+
 async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   const tag = `${job.adapterId}/${job.chainId}`;
   const adapter = ADAPTER_REGISTRY.find((a) => a.id === job.adapterId);
   if (!adapter) {
     console.error(`[seeder:${tag}] adapter not registered`);
     return emptyResult(job, "adapter not registered");
+  }
+
+  // ── PinkSale special path ──────────────────────────────────────────────────
+  // The walker enumerates locks via `getLocksForToken` (token-side data
+  // structure) — every active lock, regardless of owner. Going via the
+  // per-wallet adapter required `getUserNormalLocksLength(owner)` to be
+  // > 0 for each discovered owner, which silently failed for thousands of
+  // owners whose locks had withdrawn since discovery (May 6 2026 root
+  // cause). Walker → cache directly closes that gap entirely.
+  if (job.adapterId === "pinksale") {
+    return runPinkSaleViaWalker(job);
   }
 
   let recipients: string[];
