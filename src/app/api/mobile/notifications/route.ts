@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
       notifyCliff:        true,
       notifyStreamEnd:    true,
       notifyMonthly:      false,
+      notifyNextClaim:    true,
+      streamPrefs:        {},
     },
   });
 }
@@ -39,6 +41,8 @@ export async function POST(req: NextRequest) {
     notifyCliff       = true,
     notifyStreamEnd   = true,
     notifyMonthly     = false,
+    notifyNextClaim   = true,
+    streamPrefs       = {},
   } = body;
 
   // Validate email if provided
@@ -56,6 +60,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "hoursBeforeUnlock must be between 1 and 168" }, { status: 400 });
   }
 
+  // streamPrefs is a flexible jsonb bag (per-token alert overrides
+  // keyed by stream id). Defensively reject anything that isn't an
+  // object so a malformed request can't blow up the rest of the row.
+  const safeStreamPrefs =
+    streamPrefs && typeof streamPrefs === "object" && !Array.isArray(streamPrefs)
+      ? streamPrefs
+      : {};
+
   const [existing] = await db.select({ id: notificationPreferences.id })
     .from(notificationPreferences)
     .where(eq(notificationPreferences.userId, userId))
@@ -63,11 +75,20 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     await db.update(notificationPreferences)
-      .set({ emailEnabled, email, hoursBeforeUnlock: hours, notifyCliff, notifyStreamEnd, notifyMonthly, updatedAt: new Date() })
+      .set({
+        emailEnabled, email, hoursBeforeUnlock: hours,
+        notifyCliff, notifyStreamEnd, notifyMonthly, notifyNextClaim,
+        streamPrefs: safeStreamPrefs,
+        updatedAt: new Date(),
+      })
       .where(eq(notificationPreferences.userId, userId));
   } else {
     await db.insert(notificationPreferences)
-      .values({ userId, emailEnabled, email, hoursBeforeUnlock: hours, notifyCliff, notifyStreamEnd, notifyMonthly });
+      .values({
+        userId, emailEnabled, email, hoursBeforeUnlock: hours,
+        notifyCliff, notifyStreamEnd, notifyMonthly, notifyNextClaim,
+        streamPrefs: safeStreamPrefs,
+      });
   }
 
   return NextResponse.json({ ok: true });

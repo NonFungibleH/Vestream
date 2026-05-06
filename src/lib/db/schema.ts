@@ -291,6 +291,18 @@ export const notificationPreferences = pgTable("notification_preferences", {
   notifyCliff: boolean("notify_cliff").default(true).notNull(),
   notifyStreamEnd: boolean("notify_stream_end").default(true).notNull(),
   notifyMonthly: boolean("notify_monthly").default(false).notNull(),
+  // ── Added May 2026 (mobile UX Batch E) ────────────────────────────
+  // Per-token alert overrides ({ streamId: { enabled, alert1Enabled,
+  // hoursBeforeUnlock, pushTiming2, ... } }). Mobile app sent these
+  // in the prefs payload but the server was silently dropping them,
+  // so the per-token Switch toggles appeared to "not work" — they
+  // saved, but the next refetch returned the stripped-server-state
+  // and the toggle reverted. jsonb so adding new per-token fields
+  // doesn't require schema migrations.
+  streamPrefs:     jsonb("stream_prefs").default({}).notNull(),
+  // "Next available claim" alert — fires when tokens become claimable.
+  // Was in the mobile UI before but not in the server schema.
+  notifyNextClaim: boolean("notify_next_claim").default(true).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
