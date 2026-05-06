@@ -26,11 +26,12 @@ export interface TvlComparisonRow {
   protocol:      ProtocolMeta;
   tvl:           ProtocolTvl | null;
   /** Indexed-cache active stream count from getProtocolStats. Surfaced
-   *  beneath the protocol name as a "X active streams" sub-label so
-   *  the headline reflects scale alongside dollars — these protocols
-   *  manage hundreds of thousands of vesting positions even at modest
-   *  USD valuations. Optional so callers can omit until ready. */
+   *  beneath the protocol name as a "X active · Y total" sub-label so
+   *  the headline reflects current activity alongside historical scale. */
   activeStreams?: number | null;
+  /** Indexed-cache total stream count (active + ended/withdrawn).
+   *  Reflects the cumulative scale of the protocol's vesting history. */
+  totalStreams?:  number | null;
 }
 
 function compactUsd(n: number): string {
@@ -229,13 +230,26 @@ export function TvlComparisonBar({
           </div>
         ) : (
           <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-            {sorted.map(({ protocol, tvl, activeStreams }) => {
+            {sorted.map(({ protocol, tvl, activeStreams, totalStreams }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
-              const streams     = activeStreams ?? 0;
+              const active      = activeStreams ?? 0;
+              const total       = totalStreams  ?? 0;
+              // Show "X active · Y total" when both available and they
+              // differ; otherwise fall back to whichever single value
+              // we have, labelled accordingly.
+              let streamsLabel: string | null = null;
+              if (active > 0 && total > active) {
+                streamsLabel = `${compactCount(active)} active · ${compactCount(total)} total streams`;
+              } else if (active > 0) {
+                streamsLabel = `${compactCount(active)} active streams`;
+              } else if (total > 0) {
+                streamsLabel = `${compactCount(total)} total streams`;
+              }
+              const streams = active || total;
               // Rows where we have NO data yet (zero priced tokens, no external
               // source) get the "Indexing…" label instead of a terse "no data"
               // — makes the empty state feel intentional rather than broken.
@@ -265,13 +279,17 @@ export function TvlComparisonBar({
                       <span className="text-sm font-semibold leading-tight" style={{ color: "#1A1D20" }}>
                         {protocol.name}
                       </span>
-                      {streams > 0 && (
+                      {streamsLabel && (
                         <span
                           className="text-[10.5px] tabular-nums leading-tight mt-0.5"
                           style={{ color: "#8B8E92" }}
-                          title={`${streams.toLocaleString()} active streams indexed across all chains we cover`}
+                          title={
+                            total > 0 && active > 0 && total !== active
+                              ? `${active.toLocaleString()} currently active · ${total.toLocaleString()} indexed total (incl. ended / fully-withdrawn) across every chain we cover`
+                              : `${streams.toLocaleString()} streams indexed across every chain we cover`
+                          }
                         >
-                          {compactCount(streams)} active streams
+                          {streamsLabel}
                         </span>
                       )}
                     </div>
