@@ -298,17 +298,43 @@ export async function bumpSeedHeartbeat(
   protocol: string,
   chainId:  number,
 ): Promise<void> {
-  // Heartbeat DISABLED 2026-05-06 12:05 UTC — the UPDATE-with-subquery
-  // pattern interacted poorly with concurrent writeToCache upserts on
-  // the same rows, choking the Supabase pooler with row-lock waits and
-  // taking the /protocols and /status pages offline for several minutes
-  // during a heavy 4-group fan-out. Returning to no-op until we have a
-  // safe alternative — likely a separate `seed_heartbeats(protocol,
-  // chain_id, last_seeded_at)` table that doesn't share row locks with
-  // the main cache. The freshness UI will revert to "last data moved"
-  // semantics in the meantime.
-  void protocol; void chainId;
-  return;
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+
+  // Re-enabled 2026-05-06 with a SAFER pattern.
+  //
+  // Previous attempt (4344cae) used `UPDATE WHERE stream_id = (SELECT
+  // ... LIMIT 1)`. The subquery did a sequential scan that fought
+  // concurrent writeToCache upserts during the 4-group fan-out and
+  // choked the pool. This one is structurally different:
+  //
+  //   1. Pure WHERE clause — no subquery, just protocol + chain_id +
+  //      age filter. Index seek, not scan.
+  //   2. AND last_refreshed_at < NOW() - INTERVAL '5 minutes' — skips
+  //      rows the same seed run JUST wrote (which would be locked
+  //      momentarily by writeToCache). 5 min is a generous buffer.
+  //   3. Runs at the END of runJob, AFTER all writeToCache calls
+  //      complete in this job. Each (protocol, chain) cell is owned by
+  //      exactly one job, so no concurrent writer can be touching this
+  //      cell's rows when this fires.
+  //
+  // Effect: every row in a cell whose data didn't change in this seed
+  // run AND was last touched > 5 min ago gets its lastRefreshedAt
+  // bumped to NOW(). The cell's MAX(lastRefreshedAt) — which the
+  // freshness UI reads — therefore reflects "last seeder run" instead
+  // of the much-rarer "last data movement".
+  try {
+    await db.execute(sql`
+      UPDATE vesting_streams_cache
+      SET last_refreshed_at = NOW()
+      WHERE protocol = ${protocol}
+        AND chain_id = ${chainId}
+        AND last_refreshed_at < NOW() - INTERVAL '5 minutes'
+    `);
+  } catch (err) {
+    // Best-effort. Failing freshness signal is much better than
+    // failing the seed run.
+    console.error(`[dbcache] bumpSeedHeartbeat(${protocol}, ${chainId}):`, err);
+  }
 }
 
 /**
