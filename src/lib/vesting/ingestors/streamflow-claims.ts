@@ -21,7 +21,7 @@
 //   - Multiple withdrawals between two refreshes get bundled into one event,
 //     dated at the latest `lastWithdrawnAt`. For users who refresh frequently
 //     this is fine; for sparse refreshes it under-attributes timing precision.
-//   - Pre-Vestream-activation history materialises as a single baseline
+//   - Pre-TokenVest-activation history materialises as a single baseline
 //     event on first run (delta = current cumulative, dated at
 //     `lastWithdrawnAt`). Tax tools see one lump sum at one date instead of
 //     N discrete events at N dates. Documented in the Exports tab.

@@ -6,20 +6,20 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title:       "Early Access — Vestream Token Vesting Tracker",
-  description: "Get early access to Vestream — the free tracker for every token vesting and unlock across 9 protocols. Sign up in 30 seconds.",
+  title:       "Early Access — TokenVest Token Vesting Tracker",
+  description: "Get early access to TokenVest — the free tracker for every token vesting and unlock across 9 protocols. Sign up in 30 seconds.",
   alternates:  { canonical: "https://vestream.io/early-access" },
   openGraph: {
-    title:       "Early Access — Vestream Token Vesting Tracker",
-    description: "Get early access to Vestream — track every token unlock across 9 protocols. Free, no credit card.",
+    title:       "Early Access — TokenVest Token Vesting Tracker",
+    description: "Get early access to TokenVest — track every token unlock across 9 protocols. Free, no credit card.",
     url:         "https://vestream.io/early-access",
-    siteName:    "Vestream",
+    siteName:    "TokenVest",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Early Access — Vestream Token Vesting Tracker",
-    description: "Get early access to Vestream — track every token unlock across 9 protocols. Free, no credit card.",
+    title:       "Early Access — TokenVest Token Vesting Tracker",
+    description: "Get early access to TokenVest — track every token unlock across 9 protocols. Free, no credit card.",
   },
 };
 

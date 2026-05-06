@@ -136,11 +136,11 @@ async function sendKeyEmail(email: string, name: string, plaintext: string, pref
   await resend.emails.send({
     from:    fromAddress,
     to:      email,
-    subject: "Your Vestream API key",
+    subject: "Your TokenVest API key",
     text: [
       `Hi ${name},`,
       "",
-      "Welcome to Vestream — your free-tier API key is ready.",
+      "Welcome to TokenVest — your free-tier API key is ready.",
       "",
       `API key: ${plaintext}`,
       `Prefix:  ${prefix}`,
@@ -165,7 +165,7 @@ async function sendKeyEmail(email: string, name: string, plaintext: string, pref
       "This key is shown only once. Store it securely — losing it means",
       "requesting a new key. We can revoke any compromised key on request.",
       "",
-      "— The Vestream team (3UILD LLC)",
+      "— The TokenVest team (3UILD LLC)",
     ].join("\n"),
   });
 }

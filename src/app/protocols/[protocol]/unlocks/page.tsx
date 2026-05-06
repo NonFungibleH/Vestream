@@ -132,14 +132,14 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   } catch { /* fall through */ }
 
   return {
-    title:       `${meta.name} upcoming unlocks — full schedule | Vestream`,
+    title:       `${meta.name} upcoming unlocks — full schedule | TokenVest`,
     description: `${countLine}Live calendar of every upcoming ${meta.name} token unlock. Per-token amounts, dates, and recipient counts.`.slice(0, 160),
     alternates:  { canonical: url },
     openGraph: {
-      title:       `${meta.name} upcoming unlocks — Vestream`,
+      title:       `${meta.name} upcoming unlocks — TokenVest`,
       description: `Live calendar of every upcoming ${meta.name} token unlock.`,
       url,
-      siteName:    "Vestream",
+      siteName:    "TokenVest",
       type:        "website",
     },
   };

@@ -18,7 +18,7 @@ export async function generateMetadata(
   const article = getArticle(slug);
   if (!article) return {};
   return {
-    title: `${article.title} | Vestream`,
+    title: `${article.title} | TokenVest`,
     description: article.excerpt,
     keywords: article.tags.join(", "),
     openGraph: {
@@ -305,12 +305,12 @@ export default async function ArticlePage(
         dateModified: article.updatedAt,
         author: {
           "@type": "Organization",
-          name: "Vestream",
+          name: "TokenVest",
           url: "https://vestream.io",
         },
         publisher: {
           "@type": "Organization",
-          name: "Vestream",
+          name: "TokenVest",
           url: "https://vestream.io",
           logo: {
             "@type": "ImageObject",
@@ -357,8 +357,8 @@ export default async function ArticlePage(
           style={{ background: "rgba(248,250,252,0.85)", borderBottom: "1px solid rgba(21,23,26,0.10)", backdropFilter: "blur(12px)" }}
         >
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
-            <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
-            <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
+            <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7 flex-shrink-0" />
+            <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>TokenVest</span>
           </Link>
           {/* Mid-nav links hidden on phones — Resources/Pricing are reachable
               via the breadcrumb + footer, and the cramped row was forcing
@@ -425,8 +425,8 @@ export default async function ArticlePage(
               <span>{article.readingTime}</span>
               <span>·</span>
               <span className="flex items-center gap-1.5">
-                <img src="/logo-icon.svg" alt="Vestream" className="w-4 h-4" />
-                Vestream
+                <img src="/logo-icon.svg" alt="TokenVest" className="w-4 h-4" />
+                TokenVest
               </span>
             </div>
           </div>
@@ -458,7 +458,7 @@ export default async function ArticlePage(
                 Track every token unlock in one dashboard
               </h2>
               <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#8B8E92" }}>
-                Vestream covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across all chains — in a single real-time view. No sign-up forms.
+                TokenVest covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across all chains — in a single real-time view. No sign-up forms.
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link
@@ -483,7 +483,7 @@ export default async function ArticlePage(
         {/* ── More articles ─────────────────────────────────────────────────── */}
         {relatedArticles.length > 0 && (
           <section className="max-w-5xl mx-auto px-6 pb-20">
-            <h2 className="text-lg font-bold mb-5" style={{ color: "#1A1D20" }}>More from Vestream Resources</h2>
+            <h2 className="text-lg font-bold mb-5" style={{ color: "#1A1D20" }}>More from TokenVest Resources</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {relatedArticles.map((a) => (
                 <Link
@@ -509,8 +509,8 @@ export default async function ArticlePage(
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <footer className="border-t py-8 px-6 text-center" style={{ borderColor: "rgba(21,23,26,0.10)" }}>
           <div className="flex items-center justify-center gap-1.5 mb-3">
-            <img src="/logo-icon.svg" alt="Vestream" className="w-5 h-5" />
-            <span className="font-bold text-sm" style={{ color: "#1A1D20" }}>Vestream</span>
+            <img src="/logo-icon.svg" alt="TokenVest" className="w-5 h-5" />
+            <span className="font-bold text-sm" style={{ color: "#1A1D20" }}>TokenVest</span>
           </div>
           <div className="flex items-center justify-center gap-5 text-sm" style={{ color: "#B8BABD" }}>
             <Link href="/privacy" className="hover:text-slate-600 transition-colors">Privacy</Link>

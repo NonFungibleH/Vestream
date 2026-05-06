@@ -6,19 +6,19 @@ import { SiteFooter } from "@/components/SiteFooter";
 import PricingCta from "@/components/PricingCta";
 
 export const metadata: Metadata = {
-  title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
-  description: "Vestream is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, the Discover page, and tax-ready CSV exports + year-end PDF reports for Koinly, CoinTracker, and TurboTax. Enterprise on request.",
+  title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
+  description: "TokenVest is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, the Discover page, and tax-ready CSV exports + year-end PDF reports for Koinly, CoinTracker, and TurboTax. Enterprise on request.",
   alternates:  { canonical: "https://vestream.io/pricing" },
   openGraph: {
-    title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
+    title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
     description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
     url:         "https://vestream.io/pricing",
-    siteName:    "Vestream",
+    siteName:    "TokenVest",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Pricing — Vestream Pro from $14.99/mo, Free Forever Tier",
+    title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
     description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
   },
 };
@@ -76,16 +76,16 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 // JSON-LD Product/Offer for SERP rich pricing snippets. Google can show the
-// price + tier name directly in search results when a "Vestream pricing" /
-// "Vestream cost" query lands here. Three Offers (Free, Pro Monthly, Pro
+// price + tier name directly in search results when a "TokenVest pricing" /
+// "TokenVest cost" query lands here. Three Offers (Free, Pro Monthly, Pro
 // Annual) cover the self-serve tiers; Enterprise is intentionally excluded
 // because it has no public price.
 const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
-  name:         "Vestream",
+  name:         "TokenVest",
   description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 7 chains.",
-  brand:        { "@type": "Brand", name: "Vestream" },
+  brand:        { "@type": "Brand", name: "TokenVest" },
   url:          "https://vestream.io/pricing",
   image:        "https://vestream.io/logo.svg",
   offers: [
@@ -319,7 +319,7 @@ export default function Pricing() {
 
         {/* API nudge */}
         <p className="text-center text-sm mt-8" style={{ color: "#B8BABD" }}>
-          Building on Vestream data?{" "}
+          Building on TokenVest data?{" "}
           <Link href="/developer" className="font-semibold underline" style={{ color: "#1CB8B8" }}>
             See the Developer API →
           </Link>
@@ -441,7 +441,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="Do you have an API?"
-              a="Yes — the Vestream REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
+              a="Yes — the TokenVest REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
             />
             <FAQItem
               q="I run a fund / team / build an app — what do I do?"
@@ -463,7 +463,7 @@ export default function Pricing() {
             Never miss an unlock again.
           </h2>
           <p className="text-sm mb-8 leading-relaxed" style={{ color: "#B8BABD" }}>
-            Join investors and funds that use Vestream to stay on top of every vesting schedule.
+            Join investors and funds that use TokenVest to stay on top of every vesting schedule.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/early-access"

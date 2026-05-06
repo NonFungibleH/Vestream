@@ -5,11 +5,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /invest — Vestream Invest landing page.
+// /invest — TokenVest Invest landing page.
 //
 // Audience: token holders / investors / founders / contributors waiting on
 // vesting cliffs, TGE unlocks, linear releases. The dollar-per-event mental
-// model. Pairs with the "Vestream Invest" mode in the mobile app — same
+// model. Pairs with the "TokenVest Invest" mode in the mobile app — same
 // naming, same promise, separate funnel.
 //
 // SEO target: queries like "track token vesting", "vesting unlock alerts",
@@ -25,11 +25,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Vestream Invest — Track every token vesting unlock you're owed",
+  title:       "TokenVest Invest — Track every token vesting unlock you're owed",
   description: "Watch every token vesting unlock you're owed across 9 protocols and 7 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
   alternates:  { canonical: "/invest" },
   openGraph: {
-    title:       "Vestream Invest — Track every vesting unlock",
+    title:       "TokenVest Invest — Track every vesting unlock",
     description: "9 protocols. 7 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
     type:        "website",
     url:         "https://www.vestream.io/invest",
@@ -60,7 +60,7 @@ export default function InvestLanding() {
             style={{ background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", color: "#2563eb" }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#2563eb" }} />
-            Vestream Invest
+            TokenVest Invest
           </div>
           <h1
             className="font-bold mb-5"
@@ -77,7 +77,7 @@ export default function InvestLanding() {
             className="max-w-2xl text-base md:text-lg mb-8"
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
-            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across nine vesting protocols and seven chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
+            TokenVest tracks every cliff, TGE and linear unlock you&rsquo;re owed across nine vesting protocols and seven chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
           </p>
 
           {/* Primary funnel CTA */}

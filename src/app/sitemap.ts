@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // /payroll is the coming-soon waitlist page — kept indexable so the
     // "crypto payroll tracker" search intent finds the roadmap surface,
     // but priority dropped to 0.5 so it doesn't out-rank /invest or /
-    // for queries Vestream actually wants to convert today.
+    // for queries TokenVest actually wants to convert today.
     { url: `${SITE}/payroll`,       lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: now, changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/unlocks`,       lastModified: now, changeFrequency: "daily",   priority: 0.9 },

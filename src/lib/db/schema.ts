@@ -411,7 +411,7 @@ export const webhookSubscriptions = pgTable("webhook_subscriptions", {
    *  plaintext (must be — HMAC needs the same key on both sides). The
    *  secret is shown once on creation and we identify it in dashboards
    *  by its first 8 chars only. Receiver verifies the
-   *  X-Vestream-Signature header by recomputing
+   *  X-TokenVest-Signature header by recomputing
    *  hmacSha256(secret, rawBody). */
   secret:        text("secret").notNull(),
   /** Optional filters — null = match everything for this key. */

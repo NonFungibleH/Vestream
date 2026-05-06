@@ -117,9 +117,9 @@ async function handle(req: NextRequest) {
           method:  "POST",
           headers: {
             "Content-Type":          "application/json",
-            "X-Vestream-Signature":  `sha256=${signature}`,
-            "X-Vestream-Event":      "upcoming_unlock",
-            "User-Agent":            "Vestream-Webhook/1.0",
+            "X-TokenVest-Signature":  `sha256=${signature}`,
+            "X-TokenVest-Event":      "upcoming_unlock",
+            "User-Agent":            "TokenVest-Webhook/1.0",
           },
           body,
           signal: ctrl.signal,

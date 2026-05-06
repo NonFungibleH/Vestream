@@ -15,7 +15,7 @@
 //
 // Self-indexed via walker (added Phase 2/3 of the May 2026 TVL methodology
 // pass): Sablier, Hedgey, LlamaPay. DefiLlama globalises across every
-// chain those protocols deploy on, but Vestream only indexes a subset, so
+// chain those protocols deploy on, but TokenVest only indexes a subset, so
 // the passthrough was apples-to-oranges next to our self-indexed protocols
 // (UNCX, Unvest, etc.) which only count the chains we actually walk.
 //

@@ -13,7 +13,7 @@
 //   C. Deploy-your-own on Sepolia via Sablier (~10 min, real on-chain)
 //      Three deep-links: Sepolia ETH faucet, Circle's Sepolia USDC faucet
 //      to get a test ERC-20 in hand, then Sablier's Sepolia app to wrap
-//      the USDC in a vesting stream. Vestream auto-indexes Sablier on
+//      the USDC in a vesting stream. TokenVest auto-indexes Sablier on
 //      Sepolia, so the resulting stream lands in the dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ import { VestingDemo } from "@/components/VestingDemo";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
-  title: "Interactive + live vesting demo · Vestream",
+  title: "Interactive + live vesting demo · TokenVest",
   description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy on Sablier.",
   alternates: { canonical: "https://vestream.io/demo" },
 };
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 // External deep-links used by Demo C. Replaces the prior Team-Finance-based
 // flow, since Team Finance is paused (`disabled: true` in protocol-constants).
 // Sablier's app handles vesting creation on Sepolia and we already index
-// it there, so the stream lands in Vestream automatically. Sablier doesn't
+// it there, so the stream lands in TokenVest automatically. Sablier doesn't
 // have a token mint built in — we hand users to Circle's Sepolia USDC
 // faucet for a real ERC-20 they can vest, instead of asking them to deploy
 // their own.
@@ -65,7 +65,7 @@ export default function DemoPage() {
               border: "1px solid rgba(28,184,184,0.2)",
             }}
           >
-            3 ways to try Vestream · pick any one
+            3 ways to try TokenVest · pick any one
           </div>
 
           <h1
@@ -89,7 +89,7 @@ export default function DemoPage() {
           letter="A"
           eyebrow="Demo A · 90 seconds"
           title="Interactive walkthrough"
-          copy="A guided, 3-step tour of how Vestream finds vestings, pushes alerts to your phone, and takes you to claim. Everything is mocked so you can click through without signing anything."
+          copy="A guided, 3-step tour of how TokenVest finds vestings, pushes alerts to your phone, and takes you to claim. Everything is mocked so you can click through without signing anything."
         />
         <InteractiveDemo />
 
@@ -111,7 +111,7 @@ export default function DemoPage() {
           letter="B"
           eyebrow="Demo B · Design your vesting · See it live on the app"
           title="Spin up a sample vesting schedule"
-          copy="Pick the token name, amount, and duration below. Then download the Vestream app to watch that vesting tick down in real time on your phone &mdash; including native push notifications the moment tokens unlock. No Sepolia ETH, no wallet signature, nothing to sign up for."
+          copy="Pick the token name, amount, and duration below. Then download the TokenVest app to watch that vesting tick down in real time on your phone &mdash; including native push notifications the moment tokens unlock. No Sepolia ETH, no wallet signature, nothing to sign up for."
         />
 
         <VestingDemo />
@@ -126,7 +126,7 @@ export default function DemoPage() {
           <GuideCard
             n="2"
             title="Download the app"
-            body="Install Vestream from the App Store or Google Play. Sign in with your email and your designed vesting is ready to watch from the dashboard."
+            body="Install TokenVest from the App Store or Google Play. Sign in with your email and your designed vesting is ready to watch from the dashboard."
           />
           <GuideCard
             n="3"
@@ -169,8 +169,8 @@ export default function DemoPage() {
         <DemoIntro
           letter="C"
           eyebrow="Demo C · ~10 minutes · Real on-chain"
-          title="Create a real Sepolia vesting Vestream will index"
-          copy="If you want to see Vestream track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, claim test USDC from Circle&rsquo;s faucet, then create a vesting schedule on Sablier&rsquo;s Sepolia app, which Vestream indexes automatically."
+          title="Create a real Sepolia vesting TokenVest will index"
+          copy="If you want to see TokenVest track a real on-chain vesting end-to-end &mdash; not a simulation &mdash; the three steps below walk you from zero to an indexed Sepolia vesting in about ten minutes. Grab some Sepolia ETH for gas, claim test USDC from Circle&rsquo;s faucet, then create a vesting schedule on Sablier&rsquo;s Sepolia app, which TokenVest indexes automatically."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -199,7 +199,7 @@ export default function DemoPage() {
           <DeployStep
             n="3"
             title="Create a Sablier vesting"
-            body="Open Sablier's app, switch chain to Sepolia, and create a Lockup Linear stream with the USDC you just claimed. Pick a recipient + duration and submit. Within a minute Vestream auto-indexes the stream — scan the recipient wallet on /find-vestings to see it live."
+            body="Open Sablier's app, switch chain to Sepolia, and create a Lockup Linear stream with the USDC you just claimed. Pick a recipient + duration and submit. Within a minute TokenVest auto-indexes the stream — scan the recipient wallet on /find-vestings to see it live."
             href={SABLIER_SEPOLIA}
             cta="Open Sablier"
             accent="#2DB36A"
@@ -219,7 +219,7 @@ export default function DemoPage() {
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <p style={{ lineHeight: 1.55 }}>
-            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your Sablier stream is live on Sepolia, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>Find vestings</Link> to watch Vestream index it.
+            All three steps open in a new tab (each tool requires its own wallet connection and can&rsquo;t be iframed for security reasons). Once your Sablier stream is live on Sepolia, scan the recipient wallet on <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>Find vestings</Link> to watch TokenVest index it.
           </p>
         </div>
       </section>
@@ -231,7 +231,7 @@ export default function DemoPage() {
             What you just saw, in real life
           </h2>
           <p className="text-sm md:text-base max-w-2xl mx-auto" style={{ color: "#8B8E92" }}>
-            The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using Vestream day-to-day.
+            The demos are compressed &mdash; here&rsquo;s what each step actually looks like once you&rsquo;re using TokenVest day-to-day.
           </p>
         </div>
 
@@ -244,7 +244,7 @@ export default function DemoPage() {
               </svg>
             }
             title="Scan any wallet, across every protocol"
-            body="One address, every integrated protocol, four mainnets. Vestream pings every supported vesting platform in parallel so you never have to check them one by one."
+            body="One address, every integrated protocol, four mainnets. TokenVest pings every supported vesting platform in parallel so you never have to check them one by one."
           />
           <Step
             n="2"
@@ -265,7 +265,7 @@ export default function DemoPage() {
               </svg>
             }
             title="Claim on the source protocol"
-            body="Vestream never touches your tokens. We deep-link straight to Sablier, Hedgey, or wherever the stream lives &mdash; you claim on their audited contract."
+            body="TokenVest never touches your tokens. We deep-link straight to Sablier, Hedgey, or wherever the stream lives &mdash; you claim on their audited contract."
           />
         </div>
       </section>

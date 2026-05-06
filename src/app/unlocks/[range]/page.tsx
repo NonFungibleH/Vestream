@@ -156,8 +156,8 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   // ranks for the month-name search) and clearer for users.
   const dynLabel = def.dynamicLabel?.() ?? def.label;
   const dynDesc  = def.dynamicDescription?.() ?? def.description;
-  const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | Vestream`;
-  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 9 vesting protocols.`;
+  const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | TokenVest`;
+  const desc   = `${countLine}${dynDesc} Live data from TokenVest's index of 9 vesting protocols.`;
   const url    = `https://vestream.io/unlocks/${range}`;
 
   return {
@@ -168,7 +168,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
       title,
       description: desc.slice(0, 200),
       url,
-      siteName: "Vestream",
+      siteName: "TokenVest",
       type:     "website",
     },
     twitter: {

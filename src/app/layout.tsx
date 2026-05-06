@@ -38,7 +38,7 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // leads with payroll-as-a-product. /payroll itself is a coming-soon
 // waitlist page, linked from the footer; SEO for "crypto payroll
 // tracker" parks there until we relaunch.
-const SITE_TITLE       = "Vestream — Token Vesting Tracker · Push Alerts · Tax-ready Exports";
+const SITE_TITLE       = "TokenVest — Token Vesting Tracker · Push Alerts · Tax-ready Exports";
 const SITE_DESCRIPTION =
   "Track every token vesting unlock you're owed across 9 protocols and 7 chains. Push alerts the moment a cliff hits, one-tap claim links, tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
 
@@ -47,11 +47,11 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   metadataBase: new URL(APP_URL),
   manifest: "/manifest.json",
-  applicationName: "Vestream",
+  applicationName: "TokenVest",
   alternates: { canonical: APP_URL },
   appleWebApp: {
     capable:     true,
-    title:       "Vestream",
+    title:       "TokenVest",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: APP_URL,
-    siteName: "Vestream",
+    siteName: "TokenVest",
     locale: "en_US",
     type: "website",
   },

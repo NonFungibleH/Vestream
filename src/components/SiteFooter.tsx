@@ -90,6 +90,7 @@ const LINK_GROUPS = [
 
 // Social — real account handles. The trailing underscore on the X handle
 // is intentional (vestream/Vestream were both taken; @Vestream_ is ours).
+// Pre-rebrand handle preserved until @TokenVest is acquired.
 const SOCIAL = [
   {
     label: "X",
@@ -187,11 +188,11 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
                   the dark background. */}
               <img
                 src={theme === "light" ? "/logo-icon.svg" : "/logo-icon-dark.svg"}
-                alt="Vestream"
+                alt="TokenVest"
                 className="w-7 h-7"
               />
               <span className="font-semibold text-base" style={{ color: palette.brandName }}>
-                Vestream
+                TokenVest
               </span>
             </Link>
             <p className="text-xs max-w-[18rem] leading-relaxed" style={{ color: palette.copyright }}>
@@ -210,7 +211,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
                 without needing its own row. */}
             <div className="flex items-center gap-2 mt-2">
               <p className="text-xs" style={{ color: palette.copyright }}>
-                © {year} Vestream. All rights reserved.
+                © {year} TokenVest. All rights reserved.
               </p>
               <Link
                 href="/admin"

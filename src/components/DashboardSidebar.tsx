@@ -50,12 +50,16 @@ const NAV_ITEMS: Array<{ icon: React.ReactNode; label: string; href: string }> =
 ];
 
 interface DashboardSidebarProps {
+  /** Kept for back-compat with callers that still pass it. The sidebar
+   *  no longer branches on tier — the dashboard is Pro-only via
+   *  middleware so this prop is unused inside. Safe to drop from
+   *  callers in a future cleanup. */
   tier?:    string;
   isOpen:   boolean;
   onClose:  () => void;
 }
 
-export function DashboardSidebar({ tier = "free", isOpen, onClose }: DashboardSidebarProps) {
+export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
 
@@ -87,14 +91,13 @@ export function DashboardSidebar({ tier = "free", isOpen, onClose }: DashboardSi
 
       {/* Nav. Active state computed from pathname — Dashboard matches exact
           path; everything else uses startsWith so sub-routes (e.g.
-          /dashboard/explorer/[token]) keep the parent highlighted. */}
+          /dashboard/explorer/[token]) keep the parent highlighted.
+          Free-tier badge logic was removed because dashboard middleware
+          gates the entire `/dashboard/*` tree on the Pro iron-session
+          cookie — free-tier users never reach this component. */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
-          const isFree         = tier === "free";
-          // Discover gets a "free 3" hint on the free tier — preserves the
-          // upsell signal that lived in the old per-page sidebars.
-          const showFreeBadge  = isFree && item.href === "/dashboard/discover";
-          const isActive       = item.href === "/dashboard"
+          const isActive = item.href === "/dashboard"
             ? pathname === "/dashboard"
             : pathname.startsWith(item.href);
           return (
@@ -109,12 +112,6 @@ export function DashboardSidebar({ tier = "free", isOpen, onClose }: DashboardSi
             >
               <span className="opacity-80 flex-shrink-0">{item.icon}</span>
               {item.label}
-              {showFreeBadge && (
-                <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                  style={{ background: "rgba(28,184,184,0.1)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.2)" }}>
-                  3 free
-                </span>
-              )}
             </button>
           );
         })}
@@ -123,37 +120,21 @@ export function DashboardSidebar({ tier = "free", isOpen, onClose }: DashboardSi
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Footer — tier badge / upgrade prompt for free users. */}
+      {/* Footer — Pro tier badge. The dashboard is Pro-only (middleware
+          gates `/dashboard/*` on the iron-session cookie set by QR pair),
+          so the only tier that can ever reach this sidebar is "pro".
+          Removed the dead `tier === "free"` upgrade-prompt branch +
+          the legacy "Enterprise" label (Enterprise was dropped from
+          the homepage May 5 2026). */}
       <div className="px-3 pb-3 flex-shrink-0 space-y-2" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
-        {tier === "free" ? (
-          <div className="px-3 py-2.5 rounded-xl"
-            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Free Plan</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>FREE</span>
-            </div>
-            <p className="text-[9px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-              1 wallet · 3 lifetime push alerts
-            </p>
-            <Link href="/pricing"
-              className="block w-full text-center text-[10px] font-bold py-1.5 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: "#1CB8B8" }}>
-              Upgrade to Pro →
-            </Link>
+        <div className="px-3 py-2 rounded-xl"
+          style={{ background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.20)" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text)" }}>Pro</span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: "#1CB8B8", color: "white" }}>ACTIVE</span>
           </div>
-        ) : (
-          <div className="px-3 py-2 rounded-xl"
-            style={{ background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.20)" }}>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text)" }}>
-                {tier === "pro" ? "Pro" : "Enterprise"}
-              </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: "#1CB8B8", color: "white" }}>ACTIVE</span>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </aside>
   );

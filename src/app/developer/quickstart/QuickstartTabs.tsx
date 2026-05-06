@@ -9,7 +9,7 @@ const MCP_CONFIG_JSON = `{
     "vestream": {
       "command": "npx",
       "args": ["-y", "@vestream/mcp"],
-      "env": { "VESTREAM_API_KEY": "vstr_live_..." }
+      "env": { "TOKENVEST_API_KEY": "vstr_live_..." }
     }
   }
 }`;
@@ -60,7 +60,7 @@ function ClaudeTab() {
 
       <p className="text-xs leading-relaxed mt-4" style={{ color: "rgba(255,255,255,0.45)" }}>
         Replace <code className="font-mono" style={{ color: "#1CB8B8" }}>vstr_live_...</code> with your key, then{" "}
-        <strong style={{ color: "white" }}>fully quit and reopen</strong> Claude Desktop. The three Vestream tools
+        <strong style={{ color: "white" }}>fully quit and reopen</strong> Claude Desktop. The three TokenVest tools
         appear in the tools tray of any new chat.
       </p>
     </div>
@@ -71,7 +71,7 @@ function CursorTab() {
   return (
     <div>
       <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.65)" }}>
-        Cursor and Windsurf both speak MCP over stdio with the same JSON shape as Claude Desktop. Add Vestream via
+        Cursor and Windsurf both speak MCP over stdio with the same JSON shape as Claude Desktop. Add TokenVest via
         Settings → MCP servers (the menu path varies slightly by version).
       </p>
 
@@ -79,12 +79,12 @@ function CursorTab() {
   "vestream": {
     "command": "npx",
     "args": ["-y", "@vestream/mcp"],
-    "env": { "VESTREAM_API_KEY": "vstr_live_..." }
+    "env": { "TOKENVEST_API_KEY": "vstr_live_..." }
   }
 }`} />
 
       <p className="text-xs leading-relaxed mt-4" style={{ color: "rgba(255,255,255,0.45)" }}>
-        Restart the editor after saving. The first agent call to a Vestream tool will trigger
+        Restart the editor after saving. The first agent call to a TokenVest tool will trigger
         <code className="font-mono mx-1" style={{ color: "#1CB8B8" }}>npx</code>
         downloading the package; subsequent calls reuse the cached install (~50 ms cold start).
       </p>
@@ -111,7 +111,7 @@ function ChatGPTTab() {
           Authentication → <strong style={{ color: "white" }}>API Key</strong> → <strong style={{ color: "white" }}>Auth Type: Bearer</strong>.
           Paste your <code className="font-mono" style={{ color: "#1CB8B8" }}>vstr_live_…</code> key.
         </li>
-        <li>Save the GPT. The three Vestream endpoints show up as native tool calls.</li>
+        <li>Save the GPT. The three TokenVest endpoints show up as native tool calls.</li>
       </ol>
 
       <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>

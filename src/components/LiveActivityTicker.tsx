@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // src/components/LiveActivityTicker.tsx
 //
-// Live feed of vesting activity indexed across ALL Vestream users, shown on
+// Live feed of vesting activity indexed across ALL TokenVest users, shown on
 // /unlocks. Polls /api/unlocks/live-activity every 10 seconds and animates
 // new rows sliding in from the top.
 //

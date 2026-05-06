@@ -120,8 +120,8 @@ export default function LoginPage() {
       <nav className="flex items-center justify-between px-6 md:px-8 h-16 bg-white"
         style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
-          <span className="font-bold" style={{ color: "#1A1D20" }}>Vestream</span>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
+          <span className="font-bold" style={{ color: "#1A1D20" }}>TokenVest</span>
         </Link>
         <Link href="/" className="text-sm font-medium" style={{ color: "#8B8E92" }}>
           Back to home
@@ -138,7 +138,7 @@ export default function LoginPage() {
               Sign in to dashboard
             </h1>
             <p className="text-sm md:text-base" style={{ color: "#8B8E92" }}>
-              Scan the code below from the Vestream app on your phone.
+              Scan the code below from the TokenVest app on your phone.
             </p>
           </div>
 
@@ -235,7 +235,7 @@ export default function LoginPage() {
             <ol className="flex flex-col gap-3 text-sm" style={{ color: "#374151" }}>
               <li className="flex items-start gap-3">
                 <Step n={1} />
-                <span>Open the Vestream app on your phone (iOS / Android).</span>
+                <span>Open the TokenVest app on your phone (iOS / Android).</span>
               </li>
               <li className="flex items-start gap-3">
                 <Step n={2} />
@@ -248,10 +248,45 @@ export default function LoginPage() {
             </ol>
           </div>
 
-          {/* Pro-tier requirement explainer */}
+          {/* "I don't have the app yet" fallback — for users who hit /login
+              via search or shared link without the mobile app installed.
+              Without this they were dead-ended at the QR card. The fallback
+              card surfaces the two real paths (try the free scanner, or get
+              the app) before the smaller "see plans" footnote. */}
+          <div
+            className="rounded-2xl p-5 md:p-6 mt-5"
+            style={{
+              background: "rgba(28,184,184,0.05)",
+              border: "1px solid rgba(28,184,184,0.20)",
+            }}
+          >
+            <p className="text-sm font-semibold mb-1" style={{ color: "#1A1D20" }}>
+              Don&apos;t have the app yet?
+            </p>
+            <p className="text-xs mb-4" style={{ color: "#5C6066", lineHeight: 1.55 }}>
+              The web dashboard is part of the Pro plan. The mobile app is how you subscribe and how you sign desktop sessions in. Try the free scanner first if you want to see what TokenVest finds in your wallet — no install needed.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link
+                href="/find-vestings"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: "white", border: "1px solid rgba(28,184,184,0.25)", color: "#0F8A8A" }}
+              >
+                Try the free scanner →
+              </Link>
+              <Link
+                href="/#download"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}
+              >
+                Get the app →
+              </Link>
+            </div>
+          </div>
+
+          {/* Pricing footnote */}
           <p className="text-center text-xs mt-5" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
-            The web dashboard is included with the <strong style={{ color: "#1CB8B8" }}>Pro</strong> plan.
-            Don&apos;t have it yet? <Link href="/#pricing" className="font-semibold underline" style={{ color: "#1CB8B8" }}>See plans</Link> or <Link href="/find-vestings" className="font-semibold underline" style={{ color: "#1CB8B8" }}>search a wallet free</Link>.
+            Web dashboard is included with the <strong style={{ color: "#1CB8B8" }}>Pro</strong> plan ($14.99/mo, 14-day trial). <Link href="/#pricing" className="font-semibold underline" style={{ color: "#1CB8B8" }}>See plans</Link>.
           </p>
         </div>
       </div>

@@ -9,7 +9,7 @@
 // `?? null`d every field, which meant a follow-up POST sending just
 // { audienceCategory } would null-out userType / vestingCount / etc.
 //
-// The Vestream Invest / Payroll mode switcher (mobile) calls this with
+// The TokenVest Invest / Payroll mode switcher (mobile) calls this with
 // just { audienceCategory } when the user flips modes mid-flight, so
 // the web /dashboard/exports surface re-orders to match the new
 // audience. Without partial-update semantics, every mode switch would

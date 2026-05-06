@@ -5,9 +5,9 @@
 //
 // Positioning (important — this is NOT a full payroll setup tool):
 //
-//   Vestream does NOT create vesting contracts. Companies already create
+//   TokenVest does NOT create vesting contracts. Companies already create
 //   vestings on the protocol of their choice (Sablier, Hedgey, UNCX, Unvest,
-//   Team Finance, Superfluid, PinkSale). What Vestream provides is the
+//   Team Finance, Superfluid, PinkSale). What TokenVest provides is the
 //   EMPLOYEE-FACING LAYER — a branded mobile app their recipients use to
 //   see their salary vest live, get notifications before each unlock, and
 //   convert to their local currency anywhere in the world.
@@ -32,16 +32,16 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Live salary feed for crypto payroll · Vestream",
+  title: "Live salary feed for crypto payroll · TokenVest",
   description:
     "Give your employees, contractors, and KOLs a real-time view of their vesting salary. Live to the second, with push notifications before every unlock and local-currency conversion anywhere in the world — regardless of which protocol you used to set up the vestings.",
   alternates: { canonical: "https://vestream.io/corporate/token-payroll" },
   openGraph: {
-    title: "Live salary feed for crypto payroll · Vestream",
+    title: "Live salary feed for crypto payroll · TokenVest",
     description:
       "Branded mobile app for your team to watch their crypto salary vest in real time. 24/7, anywhere, any currency.",
     url: "https://vestream.io/corporate/token-payroll",
-    siteName: "Vestream",
+    siteName: "TokenVest",
     type: "website",
   },
 };
@@ -239,7 +239,7 @@ export default function TokenPayrollPage() {
                 className="text-[10px] font-bold uppercase tracking-widest mb-3"
                 style={{ color: THEME.accentIndigo, letterSpacing: "0.12em" }}
               >
-                What Vestream is
+                What TokenVest is
               </div>
               <h3 className="text-lg font-semibold mb-3" style={{ color: THEME.navyDeep }}>
                 The employee-facing layer for your existing payroll stack
@@ -247,7 +247,7 @@ export default function TokenPayrollPage() {
               <p className="text-sm leading-relaxed mb-4" style={{ color: THEME.slateBody }}>
                 You keep using whichever vesting protocol fits your setup —
                 Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
-                or any combination. Vestream indexes what you&rsquo;ve
+                or any combination. TokenVest indexes what you&rsquo;ve
                 already deployed and gives your team a branded mobile app to
                 live with it.
               </p>
@@ -276,7 +276,7 @@ export default function TokenPayrollPage() {
                 className="text-[10px] font-bold uppercase tracking-widest mb-3"
                 style={{ color: THEME.slateFaint, letterSpacing: "0.12em" }}
               >
-                What Vestream is not
+                What TokenVest is not
               </div>
               <h3 className="text-lg font-semibold mb-3" style={{ color: THEME.navyDeep }}>
                 A vesting-contract deployer
@@ -383,7 +383,7 @@ export default function TokenPayrollPage() {
           <StepCard
             n={4}
             title="Your team downloads and goes live"
-            body="Every recipient gets an invite to download the Vestream Corporate app. 24/7 access to their vesting live feed, push notifications before every unlock, and local-currency conversion — whether they're at their desk or on a plane."
+            body="Every recipient gets an invite to download the TokenVest Corporate app. 24/7 access to their vesting live feed, push notifications before every unlock, and local-currency conversion — whether they're at their desk or on a plane."
           />
         </div>
       </section>
@@ -562,7 +562,7 @@ export default function TokenPayrollPage() {
             Your team&rsquo;s money never passes through us
           </h2>
           <p className="text-base max-w-2xl mx-auto" style={{ color: THEME.slateBody }}>
-            Vestream is a read-only viewer sitting on top of the vesting
+            TokenVest is a read-only viewer sitting on top of the vesting
             contracts you already trust. Your security team can verify
             every claim below against the contract directly.
           </p>
@@ -618,7 +618,7 @@ export default function TokenPayrollPage() {
           />
           <RationaleCard
             title="Zero added trust"
-            body="Vestream never holds funds or custody. The on-chain vesting contract remains the source of truth. We're a read-only viewer with a great UI — not a new party between you and your team."
+            body="TokenVest never holds funds or custody. The on-chain vesting contract remains the source of truth. We're a read-only viewer with a great UI — not a new party between you and your team."
           />
         </div>
       </section>
@@ -653,12 +653,12 @@ export default function TokenPayrollPage() {
             a="Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, and PinkSale across Ethereum, Base, BSC, and Polygon, plus Streamflow + Jupiter Lock on Solana. If you're using a protocol we don't index yet, tell us — we'll quote a timeline."
           />
           <FaqItem
-            q="Can we use this without Vestream touching our payroll?"
-            a="Yes. You keep your existing process for creating vestings — legal, finance, whichever protocol fits. Vestream only reads what's already on-chain. You can stop using us at any time without touching a vesting contract."
+            q="Can we use this without TokenVest touching our payroll?"
+            a="Yes. You keep your existing process for creating vestings — legal, finance, whichever protocol fits. TokenVest only reads what's already on-chain. You can stop using us at any time without touching a vesting contract."
           />
           <FaqItem
             q="How long to go live once we sign up?"
-            a="Typical setup is 3–5 working days after we receive your wallet list and branding. Faster if you don't need custom branding — we can have the stock Vestream Corporate app active for your recipients within 24 hours."
+            a="Typical setup is 3–5 working days after we receive your wallet list and branding. Faster if you don't need custom branding — we can have the stock TokenVest Corporate app active for your recipients within 24 hours."
           />
           <FaqItem
             q="What does it cost?"
@@ -670,7 +670,7 @@ export default function TokenPayrollPage() {
           />
           <FaqItem
             q="Can we white-label the app for our company?"
-            a="Yes. Logo and brand colours on the loading screen and throughout the app's surfaces. Full custom domain for the invite link is available on the business tier. Native app stores still list it as Vestream Corporate — we're not yet shipping per-company app-store builds."
+            a="Yes. Logo and brand colours on the loading screen and throughout the app's surfaces. Full custom domain for the invite link is available on the business tier. Native app stores still list it as TokenVest Corporate — we're not yet shipping per-company app-store builds."
             isLast
           />
         </div>
@@ -765,7 +765,7 @@ function ValueCard({
     >
       {/* Icon tile — sized container gives the stroke icon visual weight
           consistent with the H3 below. Same pattern used on the /developer
-          and /ai pages so these cards feel like Vestream, not a stock
+          and /ai pages so these cards feel like TokenVest, not a stock
           template. */}
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"

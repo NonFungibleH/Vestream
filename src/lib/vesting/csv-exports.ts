@@ -120,12 +120,12 @@ function tagList(tags: TagsByStreamId | undefined, streamId: string): string {
   return t.join(" | ");
 }
 
-// ── Vestream generic format ─────────────────────────────────────────────────
+// ── TokenVest generic format ─────────────────────────────────────────────────
 // 13 columns. Designed to work as the source-of-truth dump that the user
 // can hand to any accountant — no software-specific formatting. The
 // "Description" column carries the user's custom name + notes (when set)
 // so accountants get human context alongside the machine-readable data.
-function buildVestreamGeneric(
+function buildTokenVestGeneric(
   rows:         ClaimRow[],
   annotations?: AnnotationsByStreamId,
   tags?:        TagsByStreamId,
@@ -503,7 +503,7 @@ export function buildClaimsCsv(
   tags?:        TagsByStreamId,
 ): string {
   switch (format) {
-    case "vestream-generic":    return buildVestreamGeneric(rows, annotations, tags);
+    case "vestream-generic":    return buildTokenVestGeneric(rows, annotations, tags);
     case "koinly":              return buildKoinly(rows, annotations);
     case "cointracker":         return buildCoinTracker(rows);  // no description column in CT format
     case "turbotax":            return buildTurboTax(rows, annotations);
@@ -512,7 +512,7 @@ export function buildClaimsCsv(
     case "payroll-summary-uk":  return buildPayrollSummaryUk(rows, annotations);
     default:
       // Exhaustive switch; TypeScript will catch missing branches at compile time.
-      return buildVestreamGeneric(rows, annotations);
+      return buildTokenVestGeneric(rows, annotations);
   }
 }
 

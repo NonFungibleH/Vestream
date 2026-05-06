@@ -15,7 +15,7 @@ export function buildGraphUrl(subgraphId: string): string | undefined {
   if (!key) {
     // Warn once per cold start — won't spam because Next.js caches modules
     console.warn(
-      `[Vestream] GRAPH_API_KEY is not set. ` +
+      `[TokenVest] GRAPH_API_KEY is not set. ` +
       `Subgraph ${subgraphId.slice(0, 8)}… will be skipped. ` +
       `Get a key at https://thegraph.com/studio/`
     );

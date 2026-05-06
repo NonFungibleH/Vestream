@@ -166,7 +166,7 @@ function bProtocolMix(input: BuildPulseInput): string | null {
 function buildExtended(input: BuildPulseInput): string {
   const { symbol, overview, market, upcoming, calendar } = input;
   if (!overview || overview.streamCount === 0) {
-    return `Vestream has not indexed any vesting contracts for ${symbol} on this chain yet. If you know of a team allocation, launchpad lock, or streaming grant for this token, paste the recipient wallet into Vestream's wallet tracker and it will pick up on the next cache refresh.`;
+    return `TokenVest has not indexed any vesting contracts for ${symbol} on this chain yet. If you know of a team allocation, launchpad lock, or streaming grant for this token, paste the recipient wallet into TokenVest's wallet tracker and it will pick up on the next cache refresh.`;
   }
 
   const parts: string[] = [];
@@ -176,8 +176,8 @@ function buildExtended(input: BuildPulseInput): string {
   const lockedUsd = market.priceUsd ? fmtUsd(overview.lockedTokensWhole * market.priceUsd) : null;
   parts.push(
     lockedUsd
-      ? `As of the last seed-cache run, Vestream tracks ${lockedTokens} ${symbol} worth ${lockedUsd} across ${overview.activeStreamCount.toLocaleString()} active vesting streams on this chain.`
-      : `Vestream tracks ${lockedTokens} ${symbol} across ${overview.activeStreamCount.toLocaleString()} active vesting streams on this chain.`,
+      ? `As of the last seed-cache run, TokenVest tracks ${lockedTokens} ${symbol} worth ${lockedUsd} across ${overview.activeStreamCount.toLocaleString()} active vesting streams on this chain.`
+      : `TokenVest tracks ${lockedTokens} ${symbol} across ${overview.activeStreamCount.toLocaleString()} active vesting streams on this chain.`,
   );
 
   // 30-day outlook
@@ -207,7 +207,7 @@ function buildExtended(input: BuildPulseInput): string {
   if (nonZeroMonths.length > 1) {
     const last = nonZeroMonths[nonZeroMonths.length - 1];
     parts.push(
-      `The indexed schedule runs through ${last.label}, with unlocks spread across ${nonZeroMonths.length} months in Vestream's 12-month view.`,
+      `The indexed schedule runs through ${last.label}, with unlocks spread across ${nonZeroMonths.length} months in TokenVest's 12-month view.`,
     );
   }
 

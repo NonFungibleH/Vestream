@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   // The secret itself is the HMAC key, stored as plaintext (HMAC needs the
   // same key on both sides). The receiver verifies each delivery by
   // recomputing hmacSha256(secret, rawBody) and comparing against the
-  // X-Vestream-Signature header. We show the plaintext once on create
+  // X-TokenVest-Signature header. We show the plaintext once on create
   // and refer to it via its 14-char prefix everywhere afterwards.
   const secret = `whsec_${crypto.randomBytes(24).toString("hex")}`;
 

@@ -582,10 +582,10 @@ export async function runDefiLlamaSnapshot(
   }
 
   // Intentionally NO leftover-on-Ethereum catch-all. Sablier/Hedgey deploy
-  // on 30+ chains; Vestream only indexes 6. Dumping the unaccounted USD onto
+  // on 30+ chains; TokenVest only indexes 6. Dumping the unaccounted USD onto
   // the ETH row would inflate it by ~$300M (Linea, Avalanche, Scroll, etc.)
   // and misrepresent which chains we actually cover. The headline is now
-  // explicitly "Vestream-scope TVL = sum of chains we index" — apples-to-
+  // explicitly "TokenVest-scope TVL = sum of chains we index" — apples-to-
   // apples with our self-indexed protocols (UNCX, Unvest, etc.).
   //
   // The summary.totalUsd below reflects that scoped sum, not DefiLlama's

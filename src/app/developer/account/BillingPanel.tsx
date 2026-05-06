@@ -149,7 +149,7 @@ export function BillingPanel({ tier, billingReady }: Props) {
           </ul>
         </div>
         <a
-          href="mailto:team@vestream.io?subject=Vestream%20Pro%20-%20early%20access"
+          href="mailto:team@vestream.io?subject=TokenVest%20Pro%20-%20early%20access"
           className="block w-full text-center text-sm font-bold py-3 rounded-xl transition-all hover:opacity-90"
           style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
         >
