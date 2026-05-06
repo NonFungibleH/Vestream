@@ -286,11 +286,15 @@ export async function bumpSeedHeartbeat(
 ): Promise<void> {
   if (process.env.NEXT_PHASE === "phase-production-build") return;
   try {
+    // Note: `vesting_streams_cache` has no `id` column — its primary key
+    // is `stream_id` (the composite "{protocol}-{chainId}-{nativeId}"
+    // matching VestingStream.id). Bump the lastRefreshedAt of one
+    // canonical stream_id per cell so MAX() advances.
     await db.execute(sql`
       UPDATE vesting_streams_cache
       SET last_refreshed_at = NOW()
-      WHERE id = (
-        SELECT id FROM vesting_streams_cache
+      WHERE stream_id = (
+        SELECT stream_id FROM vesting_streams_cache
         WHERE protocol = ${protocol} AND chain_id = ${chainId}
         LIMIT 1
       )
