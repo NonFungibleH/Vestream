@@ -8,6 +8,7 @@ import {
 } from "../types";
 import { createPublicClient, http } from "viem";
 import { mainnet, bsc, polygon, base } from "viem/chains";
+import { makeFallbackClient, mapBounded } from "../rpc";
 
 // ─── PinkLock V2 (PinkSale token vesting) ─────────────────────────────────────
 // PinkLock has no subgraph — data is read directly from the V2 contracts.
@@ -177,10 +178,14 @@ async function fetchTokenMeta(
   const result = new Map<string, { symbol: string; decimals: number }>();
   if (tokenAddresses.length === 0) return result;
 
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
+  // Token metadata uses the fallback transport too — same rationale as
+  // fetchForChain. Single multicall, but a dead provider was crashing the
+  // whole token-meta lookup and bubbling up to "metadata: ???" symbols.
+  const client = makeFallbackClient(chainId, { batch: true })
+    ?? createPublicClient({
+      chain:     getViemChain(chainId),
+      transport: http(getRpcUrl(chainId)),
+    });
 
   const contracts = tokenAddresses.flatMap((addr) => [
     { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   as const },
@@ -213,10 +218,18 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
   const contractAddress = PINKSALE_CONTRACTS[chainId];
   if (!contractAddress) return [];
 
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
+  // Use the fallback transport spanning ALL pool RPCs. Single-URL transport
+  // returned 0 streams for 500 owners (May 6 2026 diagnostic) because free-
+  // tier RPCs were rate-limiting the simultaneous parallel calls. Promise
+  // .allSettled swallowed the per-call errors silently → adapter returned
+  // empty without throwing → seeder logged 0 batchFetchErrors → debugging
+  // blind for days. Fallback transport rotates per-call so a throttled
+  // provider trips a sibling automatically.
+  const client = makeFallbackClient(chainId, { batch: true });
+  if (!client) {
+    console.error(`[pinksale/${chainId}] no RPC pool configured`);
+    return [];
+  }
 
   // Two-phase fetch to dodge free-RPC response-size caps:
   //   Phase 1: ask each wallet how many locks it has (cheap, fixed-size).
@@ -235,16 +248,27 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
   // of failure entirely.
   const BULK_FETCH_THRESHOLD = 50;
 
-  // Phase 1 — lengths (one cheap call per wallet, all in parallel).
-  const lengthByWallet = await Promise.allSettled(
-    wallets.map((wallet) =>
+  // Bounded concurrency — was unbounded `Promise.allSettled(wallets.map(...))`
+  // which fired ALL N calls simultaneously. With N=500 owners × 4 chains
+  // = 2000 simultaneous calls per seed run, free RPC pools throttle to
+  // hell and most calls return errors that get silently swallowed
+  // (May 6 2026 root cause for the heavy-group "0 streams fetched" bug).
+  // 8 in-flight per chain is the sweet spot for free dRPC; it gives ~95%
+  // call success in production traffic without extending walltime
+  // meaningfully.
+  const PER_WALLET_CONCURRENCY = 8;
+
+  // Phase 1 — lengths, bounded concurrency.
+  const lengthByWallet = await mapBounded(
+    wallets,
+    PER_WALLET_CONCURRENCY,
+    (wallet) =>
       client.readContract({
         address:      contractAddress,
         abi:          PINKSALE_ABI,
         functionName: "getUserNormalLocksLength",
         args:         [wallet as `0x${string}`],
-      })
-    )
+      }),
   );
 
   // Phase 2 — fetch locks per wallet, choosing path by length.
@@ -254,8 +278,11 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     cycleBps: bigint; unlockedAmount: bigint; description: string;
   }[];
 
-  const locksByWallet = await Promise.allSettled(
-    wallets.map(async (wallet, i): Promise<LockRaw> => {
+  // Phase 2 — bounded concurrency for the same reasons as Phase 1.
+  const locksByWallet = await mapBounded(
+    wallets,
+    PER_WALLET_CONCURRENCY,
+    async (wallet, i): Promise<LockRaw> => {
       const lenRes = lengthByWallet[i];
       if (lenRes.status !== "fulfilled") {
         throw lenRes.reason;
@@ -299,7 +326,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         }
       }
       return out as LockRaw;
-    })
+    },
   );
 
   const allLocks: PinkLockRaw[] = [];

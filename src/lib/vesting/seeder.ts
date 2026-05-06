@@ -1081,13 +1081,20 @@ function limitFor(mode: SeedMode): number {
  *                 of hosted endpoints. Each chain is a single GraphQL
  *                 round-trip; the whole bucket runs in well under 300s.
  */
-export type SeedGroup = "heavy" | "solana" | "subgraphs";
+export type SeedGroup = "heavy" | "solana" | "jupiter-lock" | "subgraphs";
 
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs"] as const;
+// Jupiter Lock split out from "solana" on May 6 2026 — its
+// getProgramAccounts call returns 44k+ accounts (vs Streamflow's ~3.5k),
+// and putting both in the same 300s budget meant both routinely timed
+// out together as they competed for Helius free-tier compute units.
+// Each now gets its own dedicated function invocation. The dispatcher
+// fans out 4 groups in parallel (was 3); cron config is unchanged.
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "jupiter-lock", "subgraphs"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
-  if (adapterId === "pinksale") return "heavy";
-  if (adapterId === "streamflow" || adapterId === "jupiter-lock") return "solana";
+  if (adapterId === "pinksale")     return "heavy";
+  if (adapterId === "jupiter-lock") return "jupiter-lock";
+  if (adapterId === "streamflow")   return "solana";
   return "subgraphs";
 }
 
