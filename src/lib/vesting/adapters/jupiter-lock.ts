@@ -342,3 +342,110 @@ export const jupiterLockAdapter: VestingAdapter = {
   supportedChainIds: [CHAIN_IDS.SOLANA],
   fetch:             fetchForChain,
 };
+
+/**
+ * Walker-style bulk fetch — returns every active VestingEscrow in one
+ * getProgramAccounts call. Used by the seeder to populate
+ * vesting_streams_cache directly without paying for one
+ * getProgramAccounts per wallet (44k+ wallets × 2 memcmp filters
+ * routinely overran the 300s seed budget on Helius free).
+ *
+ * Returns null on early-fail conditions (SOLANA_ENABLED off,
+ * SOLANA_RPC_URL missing, RPC dead). Caller should fall through.
+ */
+export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | null> {
+  if (process.env.SOLANA_ENABLED !== "true") return null;
+  const rpcUrl = process.env.SOLANA_RPC_URL;
+  if (!rpcUrl) {
+    console.error("[jupiter-lock] SOLANA_RPC_URL not configured — bulk fetch returning null");
+    return null;
+  }
+
+  let connection: Connection;
+  try {
+    connection = new Connection(rpcUrl, "confirmed");
+  } catch (err) {
+    console.error("[jupiter-lock] Connection construction failed:", err);
+    return null;
+  }
+
+  const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
+  // ONE getProgramAccounts with discriminator filter — no per-wallet
+  // memcmp dance. Returns ~44k accounts × ~300 bytes each ≈ 13MB
+  // payload. Slow but completes; the per-wallet path was firing 44k
+  // separate getProgramAccounts calls and timing out.
+  let accounts: Awaited<ReturnType<typeof connection.getProgramAccounts>>;
+  try {
+    accounts = await connection.getProgramAccounts(programId, {
+      commitment: "confirmed",
+      filters: [
+        { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
+      ],
+    });
+  } catch (err) {
+    console.error("[jupiter-lock] bulk getProgramAccounts failed:", err);
+    return null;
+  }
+
+  // Decode every account (skip cancelled ones — they belong in archive,
+  // not the live vesting cache).
+  const escrows: DecodedEscrow[] = [];
+  for (const { pubkey, account } of accounts) {
+    const data = account.data instanceof Buffer ? account.data : Buffer.from(account.data);
+    const decoded = decodeEscrow(pubkey.toBase58(), data);
+    if (!decoded) continue;
+    if (decoded.cancelledAt > 0) continue;
+    escrows.push(decoded);
+  }
+
+  if (escrows.length === 0) return [];
+
+  // SPL metadata via Jupiter token-list (cached for 30 min).
+  const jupiterList = await getJupiterTokenList();
+  const decimalsByMint = new Map<string, number>();
+  const symbolsByMint  = new Map<string, string>();
+  for (const e of escrows) {
+    if (decimalsByMint.has(e.tokenMint)) continue;
+    const fromJupiter = jupiterList.get(e.tokenMint);
+    decimalsByMint.set(e.tokenMint, fromJupiter?.decimals ?? 9);
+    symbolsByMint.set(e.tokenMint, fromJupiter?.symbol ?? `${e.tokenMint.slice(0, 4)}…`);
+  }
+
+  // Map decoded escrows → VestingStream. Same logic as fetchForChain's
+  // tail block, just on bulk data instead of per-wallet output.
+  const nowSec = Math.floor(Date.now() / 1000);
+  return escrows.map((e): VestingStream => {
+    const decimals = decimalsByMint.get(e.tokenMint) ?? 9;
+    const symbol   = symbolsByMint.get(e.tokenMint)  ?? `${e.tokenMint.slice(0, 4)}…`;
+    const totalAmount = e.cliffUnlockAmount + e.amountPerPeriod * e.numberOfPeriod;
+    const withdrawn   = e.totalClaimedAmount;
+    const steps = buildUnlockSteps(e);
+    const { claimableNow, lockedAmount, isFullyVested } = computeStepVesting(
+      totalAmount, withdrawn, steps, nowSec,
+    );
+    const endTime   = steps.length > 0 ? steps[steps.length - 1].timestamp : e.cliffTime;
+    const cliffTime = e.cliffTime > e.vestingStartTime ? e.cliffTime : null;
+    return {
+      id:              `jupiter-lock-${CHAIN_IDS.SOLANA}-${e.escrowPubkey}`,
+      protocol:        "jupiter-lock",
+      category:        "vesting",
+      chainId:         CHAIN_IDS.SOLANA,
+      recipient:       e.recipient,
+      tokenAddress:    e.tokenMint,
+      tokenSymbol:     symbol,
+      tokenDecimals:   decimals,
+      totalAmount:     totalAmount.toString(),
+      withdrawnAmount: withdrawn.toString(),
+      claimableNow:    claimableNow.toString(),
+      lockedAmount:    lockedAmount.toString(),
+      startTime:       e.vestingStartTime,
+      endTime,
+      cliffTime,
+      isFullyVested,
+      nextUnlockTime:  nextUnlockTimeForSteps(nowSec, steps),
+      cancelable:      true,
+      shape:           "steps",
+      unlockSteps:     steps,
+    };
+  });
+}

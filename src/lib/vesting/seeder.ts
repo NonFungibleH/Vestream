@@ -652,6 +652,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 
 import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
+import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
 import { getCachedRecipients } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
@@ -1355,6 +1356,50 @@ async function runPinkSaleViaWalker(job: SeedJob): Promise<SeedRunResult> {
   };
 }
 
+/**
+ * Jupiter Lock dedicated seed path: ONE bulk getProgramAccounts call
+ * returns every active escrow on Solana in a single ~30s round-trip.
+ * The per-wallet adapter path (44k wallets × 2-filter getProgramAccounts)
+ * timed out the 300s budget reliably; this finishes in well under it.
+ */
+async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> {
+  const tag = `jupiter-lock/${job.chainId}`;
+  const streams = await fetchAllJupiterLockEscrows().catch((err) => {
+    console.error(`[seeder:${tag}] bulk fetch threw:`, err);
+    return null;
+  });
+  if (streams === null) {
+    return emptyResult(job, "bulk fetch returned null (Solana disabled / RPC dead)");
+  }
+  console.log(`[seeder:${tag}] bulk fetch: ${streams.length} active escrows decoded`);
+  if (streams.length === 0) return emptyResult(job);
+
+  let streamsWritten   = 0;
+  let batchWriteErrors = 0;
+  for (const batch of chunk(streams, BATCH_SIZE)) {
+    const written = await writeToCache(batch);
+    if (written === 0) {
+      batchWriteErrors++;
+      console.error(`[seeder:${tag}] batch write failed (${batch.length} streams dropped)`);
+      continue;
+    }
+    streamsWritten += written;
+  }
+  const distinctOwners = new Set(streams.map((s) => s.recipient.toLowerCase())).size;
+  console.log(
+    `[seeder:${tag}] bulk: streams_fetched=${streams.length} streams_written=${streamsWritten} distinct_owners=${distinctOwners}`,
+  );
+  return {
+    adapterId:            job.adapterId,
+    chainId:              job.chainId,
+    recipientsDiscovered: distinctOwners,
+    streamsFetched:       streams.length,
+    streamsWritten,
+    batchFetchErrors:     0,
+    batchWriteErrors,
+  };
+}
+
 async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   const tag = `${job.adapterId}/${job.chainId}`;
   const adapter = ADAPTER_REGISTRY.find((a) => a.id === job.adapterId);
@@ -1372,6 +1417,15 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   // cause). Walker → cache directly closes that gap entirely.
   if (job.adapterId === "pinksale") {
     return runPinkSaleViaWalker(job);
+  }
+  // ── Jupiter Lock special path ──────────────────────────────────────────────
+  // 44k+ recipients × per-wallet getProgramAccounts (each with two memcmp
+  // filters) overran the 300s seed budget on Helius free even with the
+  // group split. Walker-style: ONE bulk getProgramAccounts call returns
+  // every active escrow in ~30s, decoded in-process, written to cache
+  // in batches.
+  if (job.adapterId === "jupiter-lock") {
+    return runJupiterLockViaBulkFetch(job);
   }
 
   let recipients: string[];
