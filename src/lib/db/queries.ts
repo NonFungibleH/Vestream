@@ -324,6 +324,17 @@ export async function deleteUser(userId: string) {
   return db.delete(users).where(eq(users.id, userId));
 }
 
+/**
+ * Users eligible for email unlock notifications.
+ *
+ * Email alerts are a Pro-tier-only feature (May 2026). Free and Mobile
+ * users may have `emailEnabled = true` in their notificationPreferences
+ * row from a prior tier (e.g. they downgraded), but the cron must not
+ * email them. The INNER JOIN against `users` filters by `tier = "pro"`
+ * so only paid Pro users get emails. This is defence-in-depth — the
+ * mobile UI also gates the toggle to Pro users only, but server-side
+ * enforcement is the truth that matters.
+ */
 export async function getAllUsersWithEmailEnabled() {
   return db
     .select({
@@ -332,10 +343,12 @@ export async function getAllUsersWithEmailEnabled() {
       hoursBeforeUnlock: notificationPreferences.hoursBeforeUnlock,
     })
     .from(notificationPreferences)
+    .innerJoin(users, eq(users.id, notificationPreferences.userId))
     .where(
       and(
-        eq(notificationPreferences.emailEnabled, true)
-      )
+        eq(notificationPreferences.emailEnabled, true),
+        eq(users.tier, "pro"),
+      ),
     );
 }
 

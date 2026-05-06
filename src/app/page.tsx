@@ -1602,7 +1602,7 @@ export default async function Home() {
             },
             {
               q: "How do unlock notifications work?",
-              a: "Push notifications are core to the mobile app — every tier gets them (Free has 3 lifetime credits; Mobile and Pro are unlimited). You configure timing per token in the Alerts tab — anything from 'live unlock' to '24 hours before'. Email alerts are a Mobile/Pro feature; enable them in Settings and enter the address you want notifications sent to.",
+              a: "Push notifications are core to the mobile app — every tier gets them (Free has 3 lifetime credits; Mobile and Pro are unlimited). You configure timing per token in the Alerts tab — anything from 'live unlock' to '24 hours before'. Email alerts are a Pro-only feature; enable them in the Alerts tab and enter the address you want notifications sent to.",
             },
             {
               q: "What is the P&L Tracker?",
@@ -1622,7 +1622,7 @@ export default async function Home() {
             },
             {
               q: "Is TokenVest free to use?",
-              a: "Yes. Free plan includes 1 wallet on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 3 lifetime push alerts (no email). Mobile ($9.99/mo, 14-day trial) adds 3 wallets, unlimited push, and email alerts. Pro ($14.99/mo, 14-day trial) adds 10 wallets, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: "Yes. Free plan includes 1 wallet on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 3 lifetime push alerts (no email). Mobile ($9.99/mo, 14-day trial) adds 3 wallets and unlimited push alerts. Pro ($14.99/mo, 14-day trial) adds 10 wallets, email unlock alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1715,7 +1715,6 @@ export default async function Home() {
               {[
                 "3 wallet addresses",
                 "Unlimited push alerts",
-                "Email unlock alerts",
                 "Live countdowns + reminders",
                 "Priority data refresh (60s)",
               ].map(f => (
@@ -1753,6 +1752,7 @@ export default async function Home() {
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {[
                 "10 wallet addresses",
+                "Email unlock alerts",
                 "Web dashboard access",
                 "Token Vesting Explorer (Discover)",
                 "Search any wallet's holdings",
@@ -1841,7 +1841,7 @@ export default async function Home() {
             ["Claimable balance tracking", true,             true,          true],
             ["Unlock calendar",            true,             true,          true],
             ["Push notifications",         "3 lifetime",     "Unlimited",   "Unlimited"],
-            ["Email alerts",               false,            true,          true],
+            ["Email alerts",               false,            false,         true],
             ["Live countdowns + reminders", false,           true,          true],
             ["Web dashboard access",       false,            false,         true],
             ["Token Vesting Explorer",     false,            false,         true],

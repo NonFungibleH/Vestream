@@ -5,6 +5,7 @@ import { extractBearerToken, validateMobileToken } from "@/lib/mobile-auth";
 import { db } from "@/lib/db";
 import { notificationPreferences, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { normaliseTier } from "@/lib/auth/tier";
 
 export async function GET(req: NextRequest) {
   const token  = extractBearerToken(req);
@@ -60,6 +61,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "hoursBeforeUnlock must be between 1 and 168" }, { status: 400 });
   }
 
+  // Email alerts are Pro-only (May 2026). Force-disable emailEnabled for
+  // non-Pro users so the toggle doesn't persist as `true` for someone who
+  // can't actually receive emails (the cron also filters by tier as
+  // defence-in-depth — see getAllUsersWithEmailEnabled). A silent coerce
+  // is preferable to a 403 here so a user who downgraded from Pro to
+  // Mobile doesn't see an angry error every time they save unrelated
+  // notification prefs; their email row just goes silent.
+  const [tierRow] = await db.select({ tier: users.tier }).from(users).where(eq(users.id, userId)).limit(1);
+  const tier = normaliseTier(tierRow?.tier ?? "free");
+  const safeEmailEnabled = tier === "pro" ? Boolean(emailEnabled) : false;
+
   // streamPrefs is a flexible jsonb bag (per-token alert overrides
   // keyed by stream id). Defensively reject anything that isn't an
   // object so a malformed request can't blow up the rest of the row.
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
   if (existing) {
     await db.update(notificationPreferences)
       .set({
-        emailEnabled, email, hoursBeforeUnlock: hours,
+        emailEnabled: safeEmailEnabled, email, hoursBeforeUnlock: hours,
         notifyCliff, notifyStreamEnd, notifyMonthly, notifyNextClaim,
         streamPrefs: safeStreamPrefs,
         updatedAt: new Date(),
@@ -85,7 +97,7 @@ export async function POST(req: NextRequest) {
   } else {
     await db.insert(notificationPreferences)
       .values({
-        userId, emailEnabled, email, hoursBeforeUnlock: hours,
+        userId, emailEnabled: safeEmailEnabled, email, hoursBeforeUnlock: hours,
         notifyCliff, notifyStreamEnd, notifyMonthly, notifyNextClaim,
         streamPrefs: safeStreamPrefs,
       });
