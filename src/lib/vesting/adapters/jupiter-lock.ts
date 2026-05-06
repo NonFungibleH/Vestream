@@ -344,14 +344,23 @@ export const jupiterLockAdapter: VestingAdapter = {
 };
 
 /**
- * Walker-style bulk fetch — returns every active VestingEscrow in one
- * getProgramAccounts call. Used by the seeder to populate
- * vesting_streams_cache directly without paying for one
- * getProgramAccounts per wallet (44k+ wallets × 2 memcmp filters
- * routinely overran the 300s seed budget on Helius free).
+ * Walker-style bulk fetch — returns every active VestingEscrow.
  *
- * Returns null on early-fail conditions (SOLANA_ENABLED off,
- * SOLANA_RPC_URL missing, RPC dead). Caller should fall through.
+ * Two-phase to fit inside Helius free tier (single full-body
+ * getProgramAccounts on 44k+ accounts × 296 bytes = 13MB payload
+ * routinely exceeded 290s):
+ *
+ *   Phase 1: getProgramAccounts with discriminator filter +
+ *            dataSlice {offset:0, length:0} → returns 44k account
+ *            pubkeys with empty data. ~30s, ~1MB response.
+ *   Phase 2: chunk-fetch full data via getMultipleAccountsInfo
+ *            (100 accounts per call, capped concurrency to stay
+ *            under Helius compute-units-per-second). ~440 calls,
+ *            ~60s wall-clock at concurrency=4.
+ *
+ * Used by the seeder to populate vesting_streams_cache directly
+ * without paying for one getProgramAccounts per wallet (44k+ wallets
+ * × 2 memcmp filters was timing out the 300s seed budget).
  */
 export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | null> {
   if (process.env.SOLANA_ENABLED !== "true") return null;
@@ -370,33 +379,64 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   }
 
   const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
-  // ONE getProgramAccounts with discriminator filter — no per-wallet
-  // memcmp dance. Returns ~44k accounts × ~300 bytes each ≈ 13MB
-  // payload. Slow but completes; the per-wallet path was firing 44k
-  // separate getProgramAccounts calls and timing out.
-  let accounts: Awaited<ReturnType<typeof connection.getProgramAccounts>>;
+
+  // Phase 1 — light enumeration: pubkeys only.
+  let pubkeys: PublicKey[];
   try {
-    accounts = await connection.getProgramAccounts(programId, {
+    const lite = await connection.getProgramAccounts(programId, {
       commitment: "confirmed",
       filters: [
         { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
       ],
+      dataSlice: { offset: 0, length: 0 },
     });
+    pubkeys = lite.map((a) => a.pubkey);
+    console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys`);
   } catch (err) {
-    console.error("[jupiter-lock] bulk getProgramAccounts failed:", err);
+    console.error("[jupiter-lock] phase 1 getProgramAccounts failed:", err);
     return null;
   }
+  if (pubkeys.length === 0) return [];
 
-  // Decode every account (skip cancelled ones — they belong in archive,
-  // not the live vesting cache).
-  const escrows: DecodedEscrow[] = [];
-  for (const { pubkey, account } of accounts) {
-    const data = account.data instanceof Buffer ? account.data : Buffer.from(account.data);
-    const decoded = decodeEscrow(pubkey.toBase58(), data);
-    if (!decoded) continue;
-    if (decoded.cancelledAt > 0) continue;
-    escrows.push(decoded);
+  // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
+  // 100-pubkey chunks × concurrency 4 keeps us under Helius free
+  // compute units/sec while still completing in ~60s for 44k accounts.
+  const CHUNK = 100;
+  const FETCH_CONCURRENCY = 4;
+  const chunks: PublicKey[][] = [];
+  for (let i = 0; i < pubkeys.length; i += CHUNK) {
+    chunks.push(pubkeys.slice(i, i + CHUNK));
   }
+
+  const escrows: DecodedEscrow[] = [];
+  let chunkErrors = 0;
+  await mapBounded(
+    chunks,
+    FETCH_CONCURRENCY,
+    async (chunk) => {
+      try {
+        const infos = await connection.getMultipleAccountsInfo(chunk, "confirmed");
+        for (let i = 0; i < infos.length; i++) {
+          const info = infos[i];
+          if (!info) continue;
+          const data = info.data instanceof Buffer ? info.data : Buffer.from(info.data);
+          const decoded = decodeEscrow(chunk[i].toBase58(), data);
+          if (!decoded) continue;
+          if (decoded.cancelledAt > 0) continue;
+          escrows.push(decoded);
+        }
+      } catch (err) {
+        chunkErrors++;
+        if (chunkErrors < 5) {
+          console.error("[jupiter-lock] phase 2 chunk failed:", err);
+        }
+      }
+    },
+    100, // 100ms inter-batch pacing — same Helius rate-limit guard as Streamflow.
+  );
+  console.log(
+    `[jupiter-lock] phase 2 decode: ${escrows.length} active escrows from ${pubkeys.length} pubkeys (${chunkErrors} chunk errors)`,
+  );
 
   if (escrows.length === 0) return [];
 

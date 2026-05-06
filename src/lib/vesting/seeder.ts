@@ -653,7 +653,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
-import { getCachedRecipients } from "./dbcache";
+import { getCachedRecipients, bumpSeedHeartbeat } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
@@ -1345,6 +1345,10 @@ async function runPinkSaleViaWalker(job: SeedJob): Promise<SeedRunResult> {
   console.log(
     `[seeder:${tag}] walker-direct: streams_fetched=${streams.length} streams_written=${streamsWritten} distinct_owners=${distinctOwners}`,
   );
+  // Heartbeat: keeps the freshness UI showing "we ran" even if no
+  // stream data moved (writeToCache's setWhere optimization skips
+  // unchanged rows so MAX(lastRefreshedAt) wouldn't otherwise advance).
+  await bumpSeedHeartbeat(job.adapterId, job.chainId);
   return {
     adapterId:            job.adapterId,
     chainId:              job.chainId,
@@ -1389,6 +1393,7 @@ async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> 
   console.log(
     `[seeder:${tag}] bulk: streams_fetched=${streams.length} streams_written=${streamsWritten} distinct_owners=${distinctOwners}`,
   );
+  await bumpSeedHeartbeat(job.adapterId, job.chainId);
   return {
     adapterId:            job.adapterId,
     chainId:              job.chainId,
@@ -1482,6 +1487,10 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   console.log(
     `[seeder:${tag}] discovered ${recipients.length} recipients → fetched ${streamsFetched} streams → wrote ${streamsWritten}${errorSuffix}`,
   );
+  // Heartbeat — see comment in runPinkSaleViaWalker.
+  if (streamsFetched > 0) {
+    await bumpSeedHeartbeat(job.adapterId, job.chainId);
+  }
   return {
     adapterId:            job.adapterId,
     chainId:              job.chainId,

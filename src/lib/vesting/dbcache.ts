@@ -263,6 +263,45 @@ export async function getCacheStats(): Promise<{ totalStreams: number; uniqueWal
 }
 
 /**
+ * Bump lastRefreshedAt on ONE canonical row for a (protocol, chainId)
+ * cell. Cheap (single-row UPDATE) and runs at the end of each seed
+ * job to keep the freshness UI showing "the seeder ran" even when
+ * stream data didn't change.
+ *
+ * Background: writeToCache's setWhere clause skips UPDATE for rows
+ * whose data is identical to what's already cached (90% IO save).
+ * Side effect: if a (protocol, chain) has no new/changed streams in
+ * a seed run, MAX(lastRefreshedAt) for that cell stays at whatever
+ * the last actual data movement was — which can be days ago for
+ * stable protocols. Users read that as "broken" even though the
+ * seeder is healthy.
+ *
+ * This heartbeat closes the gap: freshness now means "either data
+ * moved OR the seeder ran" with one tiny additional UPDATE per cell
+ * per seed run.
+ */
+export async function bumpSeedHeartbeat(
+  protocol: string,
+  chainId:  number,
+): Promise<void> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+  try {
+    await db.execute(sql`
+      UPDATE vesting_streams_cache
+      SET last_refreshed_at = NOW()
+      WHERE id = (
+        SELECT id FROM vesting_streams_cache
+        WHERE protocol = ${protocol} AND chain_id = ${chainId}
+        LIMIT 1
+      )
+    `);
+  } catch (err) {
+    // Heartbeat is best-effort — never block the seed run on it.
+    console.error(`[dbcache] bumpSeedHeartbeat(${protocol}, ${chainId}):`, err);
+  }
+}
+
+/**
  * Distinct recipients currently indexed for a given (protocol, chainId).
  *
  * Used by the seeder to re-seed previously-known owners — solves the
