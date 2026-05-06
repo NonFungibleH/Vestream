@@ -3,8 +3,8 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title:       "Terms of Service | Vestream",
-  description: "Terms governing your use of Vestream — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
+  title:       "Terms of Service | TokenVest",
+  description: "Terms governing your use of TokenVest — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
   alternates:  { canonical: "https://vestream.io/terms" },
 };
 
@@ -16,8 +16,8 @@ export default function Terms() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
+          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
+          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>TokenVest</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
           ← Back to home
@@ -29,7 +29,7 @@ export default function Terms() {
         <div className="mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Legal</p>
           <h1 className="text-4xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>Terms of Service</h1>
-          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: April 2026</p>
+          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: May 2026</p>
         </div>
 
         <div className="rounded-2xl p-8 space-y-8"
@@ -37,14 +37,14 @@ export default function Terms() {
 
           <Section title="1. Operator">
             <p>
-              The Vestream service is owned and operated by{" "}
+              The TokenVest service is owned and operated by{" "}
               <strong style={{ color: "#1A1D20" }}>3UILD LLC</strong>{" "}
-              (&quot;3UILD&quot;, &quot;Vestream&quot;, &quot;we&quot;,
+              (&quot;3UILD&quot;, &quot;TokenVest&quot;, &quot;we&quot;,
               &quot;us&quot;, &quot;our&quot;). References to &quot;the
-              Service&quot; in these Terms include the Vestream website
-              (vestream.io), the authenticated dashboard, the Vestream mobile
+              Service&quot; in these Terms include the TokenVest website
+              (vestream.io), the authenticated dashboard, the TokenVest mobile
               app (iOS and Android), the developer REST API, and the
-              Vestream Model Context Protocol (MCP) server published as
+              TokenVest Model Context Protocol (MCP) server published as
               <code style={{ fontFamily: "monospace", background: "rgba(0,0,0,0.04)", padding: "0 0.25rem", borderRadius: 4 }}>@vestream/mcp</code>.
             </p>
           </Section>
@@ -63,7 +63,7 @@ export default function Terms() {
 
           <Section title="3. Description of Service">
             <p>
-              Vestream is a read-only token-vesting tracker and developer
+              TokenVest is a read-only token-vesting tracker and developer
               data platform. We aggregate publicly available on-chain vesting
               data from supported protocols (currently Sablier, Hedgey,
               Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and
@@ -92,12 +92,19 @@ export default function Terms() {
 
           <Section title="5. Account &amp; authentication">
             <p>
-              You may create an account by signing in with your email
-              address and a one-time password (OTP) sent to that address.
-              You are responsible for keeping your email account secure and
-              for all activity that occurs through your Vestream account. We
-              never request and do not store your wallet private keys or
-              seed phrases.
+              You create an account by signing in to the TokenVest mobile
+              app with your email address; we send a one-time code to that
+              address that you enter to confirm. No password, and we never
+              request or store wallet private keys, seed phrases, or any
+              signing credentials. You are responsible for keeping your
+              email account secure and for all activity that occurs through
+              your TokenVest account.
+            </p>
+            <p>
+              The desktop dashboard (Pro tier only) is signed in by scanning
+              a QR code at vestream.io/login from inside the mobile app's
+              Settings → Connect Desktop screen. Your phone authenticates
+              the desktop session; no password is involved.
             </p>
             <p>
               For developer access, you may apply for an API key. Keys are
@@ -109,20 +116,20 @@ export default function Terms() {
           <Section title="6. Subscriptions, payments &amp; trials">
             <ul>
               <li>The Free tier requires no payment.</li>
-              <li>The Pro tier is sold on the Vestream website via Stripe and on the Vestream mobile app via Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing on each surface is shown at the point of sale.</li>
-              <li>The Enterprise tier is sold by contract; pricing and terms are provided separately.</li>
-              <li>Free trials, where offered, automatically convert to paid subscriptions at the end of the trial period unless cancelled. You may cancel at any time before trial end via your account settings (web) or Apple / Google subscription settings (mobile).</li>
-              <li>Subscriptions auto-renew at the end of each billing period unless cancelled. Refund eligibility follows the rules of the relevant payment processor (Stripe / Apple / Google).</li>
+              <li>The Mobile tier ($9.99/mo) and the Pro tier ($14.99/mo) are sold via the TokenVest mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Web checkout via Stripe is not yet available; pricing on each surface is shown at the point of sale.</li>
+              <li>Larger usage (funds, teams, agencies needing more than 10 wallets, or commercial API/MCP volume) is sold by contract; pricing and terms are provided separately. Contact us via the website to discuss.</li>
+              <li>Free trials, where offered, automatically convert to paid subscriptions at the end of the trial period unless cancelled. You may cancel at any time before trial end via your Apple / Google subscription settings (mobile).</li>
+              <li>Subscriptions auto-renew at the end of each billing period unless cancelled. Refund eligibility follows the rules of the relevant payment processor (Apple / Google).</li>
               <li>We may change subscription pricing for renewals with reasonable notice.</li>
             </ul>
           </Section>
 
           <Section title="7. Read-only nature of the Service">
             <p>
-              Vestream is read-only. We display public on-chain data and
+              TokenVest is read-only. We display public on-chain data and
               forward you to protocol UIs to claim or interact with your
               positions. We do not initiate, sign, broadcast, or relay
-              transactions on your behalf. Any link from Vestream to an
+              transactions on your behalf. Any link from TokenVest to an
               external claim flow is a convenience link to a third-party
               application, and your interaction with that third party is
               governed by their terms.
@@ -168,23 +175,23 @@ export default function Terms() {
             </ul>
           </Section>
 
-          <Section title="11. Vestream data &amp; intellectual property">
+          <Section title="11. TokenVest data &amp; intellectual property">
             <p>
-              The Vestream brand, website design, source code, and the
+              The TokenVest brand, website design, source code, and the
               aggregated, normalised, enriched index of vesting data we
-              produce (the &quot;Vestream Index&quot;) are owned by 3UILD
-              LLC. While the Vestream Index is built from publicly
+              produce (the &quot;TokenVest Index&quot;) are owned by 3UILD
+              LLC. While the TokenVest Index is built from publicly
               available on-chain and third-party data, the curation,
               normalisation, schema, and quality controls applied to that
               data are protected by applicable copyright and database
               rights.
             </p>
             <p>
-              Your tier (Free / Pro / Enterprise) grants you a personal,
+              Your tier (Free / Mobile / Pro) grants you a personal,
               non-exclusive, non-transferable, revocable licence to use the
-              Vestream Index and developer outputs solely for the use cases
+              TokenVest Index and developer outputs solely for the use cases
               permitted by your tier. Bulk extraction or commercial
-              redistribution requires an Enterprise agreement.
+              redistribution requires a separate written agreement.
             </p>
           </Section>
 
@@ -203,7 +210,7 @@ export default function Terms() {
               movements — is{" "}
               <strong style={{ color: "#1A1D20" }}>inherently public</strong> and
               not your property by virtue of you tracking a wallet on
-              Vestream.
+              TokenVest.
             </p>
           </Section>
 

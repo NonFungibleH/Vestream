@@ -1590,7 +1590,7 @@ export default async function Home() {
             },
             {
               q: "How do I get to the desktop dashboard?",
-              a: "The desktop dashboard is part of the Pro plan. Subscribe in the iOS or Android app, then visit tokenvest.app/login on your computer and scan the QR code from the app's Settings → Connect Desktop. No password, no email — your phone authenticates the desktop session.",
+              a: "The desktop dashboard is part of the Pro plan. Subscribe in the iOS or Android app, then visit vestream.io/login on your computer and scan the QR code from the app's Settings → Connect Desktop. No password, no email — your phone authenticates the desktop session.",
             },
             {
               q: "Can TokenVest access or move my funds?",
