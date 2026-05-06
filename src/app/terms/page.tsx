@@ -102,7 +102,7 @@ export default function Terms() {
             </p>
             <p>
               The desktop dashboard (Pro tier only) is signed in by scanning
-              a QR code at vestream.io/login from inside the mobile app's
+              a QR code at vestream.io/login from inside the mobile app&apos;s
               Settings → Connect Desktop screen. Your phone authenticates
               the desktop session; no password is involved.
             </p>
