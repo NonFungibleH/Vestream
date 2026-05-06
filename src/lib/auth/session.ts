@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
 export interface SessionData {
+  /** User's identifier (lowercased email or wallet address) — set by the
+   *  desktop QR-pairing flow at /api/auth/desktop-pair/poll. The only
+   *  other writer was the legacy email-OTP and SIWE endpoints which
+   *  were removed in May 2026 when QR became the sole desktop sign-in. */
   address?: string;
-  nonce?: string;
-  otp?: string;
-  otpEmail?: string;
-  otpExpiry?: number; // unix timestamp seconds
 }
 
 const sessionOptions = {

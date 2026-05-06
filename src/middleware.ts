@@ -83,11 +83,19 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── /dashboard — early access gate only ──────────────────────────────────────
-  const cookie = req.cookies.get("vestr_early_access");
+  // ── /dashboard — iron-session gate (set by QR pairing) ───────────────────────
+  // The desktop dashboard is reached only after a successful QR pair from
+  // the mobile app — see /api/auth/desktop-pair/poll which session.save()s
+  // the iron-session cookie ("vestr_session"). Existence-check here is
+  // sufficient; the cookie is encrypted so its contents can't be checked
+  // from middleware, but unauthorised visitors won't have it at all.
+  // Server components on /dashboard re-validate the session via getSession()
+  // which decrypts and reads `address`, so a stripped cookie still gets
+  // bounced.
+  const cookie = req.cookies.get("vestr_session");
   if (!cookie) {
     const url = req.nextUrl.clone();
-    url.pathname = "/early-access";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
   return NextResponse.next();

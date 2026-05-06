@@ -528,8 +528,14 @@ export default async function Home() {
           lives on your phone first" — push alerts, live countdowns,
           one-tap claim links, calendar view. Phone mockup on the right
           (or stacked below on mobile) shows a Portfolio-tab screenshot
-          mock so the visual matches the words. */}
-      <section className="px-4 md:px-8 pt-12 md:pt-20 pb-16 md:pb-24">
+          mock so the visual matches the words.
+
+          The `id="download"` anchor is the scroll target the pricing-
+          card "Get Mobile" / "Get Pro" CTAs point at — both plans
+          require the mobile app to subscribe (RevenueCat IAP), so the
+          buttons send users straight to where they can pick their
+          platform. */}
+      <section id="download" className="px-4 md:px-8 pt-12 md:pt-20 pb-16 md:pb-24">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 lg:gap-16 items-center">
 
           {/* Left: copy + features */}
@@ -1663,9 +1669,9 @@ export default async function Home() {
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
             <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$0</p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Free forever. No credit card needed.</p>
-            <Link href="/early-access" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
+            <Link href="/find-vestings" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
               style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
-              Start free →
+              Search a wallet →
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {[
@@ -1696,9 +1702,9 @@ export default async function Home() {
               14-day free trial
             </div>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Push alerts and multi-wallet on your phone.</p>
-            <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
+            <Link href="#download" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
               style={{ background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.25)", color: "#0F8A8A" }}>
-              Get Mobile →
+              Get the app →
             </Link>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
@@ -1735,9 +1741,9 @@ export default async function Home() {
               14-day free trial
             </div>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Mobile app + web dashboard. Tax exports + every Pro feature.</p>
-            <Link href="/pricing" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
+            <Link href="#download" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
               style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
-              Get Pro →
+              Get the app →
             </Link>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Mobile, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
@@ -1757,6 +1763,29 @@ export default async function Home() {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* How signup + desktop access works — explainer beneath the
+            tier cards. Subscriptions happen through the App Store /
+            Play Store (RevenueCat IAP); the web dashboard is unlocked
+            by scanning a QR from the mobile app. New tier scheme means
+            this needs to be explicit because the legacy "sign up on
+            web with email" flow has been removed. */}
+        <div
+          className="rounded-2xl p-4 md:p-5 mb-6 max-w-2xl mx-auto"
+          style={{
+            background: "rgba(28,184,184,0.04)",
+            border: "1px solid rgba(28,184,184,0.18)",
+          }}
+        >
+          <p className="text-sm text-center" style={{ color: "#374151", lineHeight: 1.55 }}>
+            <strong style={{ color: "#0F8A8A" }}>How it works:</strong>{" "}
+            Subscribe in the iOS or Android app. Pro plan also unlocks the desktop dashboard at{" "}
+            <Link href="/login" className="font-semibold underline" style={{ color: "#0F8A8A" }}>
+              vestream.io/login
+            </Link>{" "}
+            — scan a QR from your phone to sign in. No email passwords.
+          </p>
         </div>
 
         {/* B2B / developer nudge — replaces the dropped Enterprise card.
