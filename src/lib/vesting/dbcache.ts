@@ -322,17 +322,30 @@ export async function bumpSeedHeartbeat(
   // bumped to NOW(). The cell's MAX(lastRefreshedAt) — which the
   // freshness UI reads — therefore reflects "last seeder run" instead
   // of the much-rarer "last data movement".
+  // Single-row UPDATE — touches the FIRST stream_id in (protocol,
+  // chain_id) order. Cheap (one row, primary-key locked), fast (index
+  // seek), and sufficient for the freshness UI which reads MAX of the
+  // cell. Bulk-update version was correct but slow on large cells
+  // (PinkSale BSC has 14k+ rows); single-row keeps the seeder budget
+  // intact while still advancing freshestSec.
+  //
+  // Concurrency: this runs AFTER the seed job's writeToCache calls
+  // complete, AND the row we touch may have JUST been written by
+  // writeToCache (in which case its lock has been released because
+  // upserts hold row locks only for the statement duration). Even if
+  // we briefly contend, it's a single row UPDATE — completes in ms.
   try {
     await db.execute(sql`
       UPDATE vesting_streams_cache
       SET last_refreshed_at = NOW()
-      WHERE protocol = ${protocol}
-        AND chain_id = ${chainId}
-        AND last_refreshed_at < NOW() - INTERVAL '5 minutes'
+      WHERE stream_id = (
+        SELECT stream_id FROM vesting_streams_cache
+        WHERE protocol = ${protocol} AND chain_id = ${chainId}
+        ORDER BY stream_id
+        LIMIT 1
+      )
     `);
   } catch (err) {
-    // Best-effort. Failing freshness signal is much better than
-    // failing the seed run.
     console.error(`[dbcache] bumpSeedHeartbeat(${protocol}, ${chainId}):`, err);
   }
 }
