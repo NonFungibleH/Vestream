@@ -4,8 +4,8 @@
 - **Framework**: Next.js 16 App Router (TypeScript, React 19, Server Components)
 - **Styling**: Tailwind CSS v4 + inline `style={{}}` for one-off values (no separate CSS files)
 - **Database**: Postgres via Drizzle ORM + Supabase hosting
-- **Auth (web)**: Email OTP via `iron-session` cookies — user enters email, receives OTP, session cookie set
-- **Auth (mobile)**: Bearer token via `Authorization: Bearer <token>` header — issued at login
+- **Auth (web — desktop dashboard)**: QR pairing only. Pro-tier users open the mobile app → Settings → Connect Desktop → scan the QR shown at `vestream.io/login`. The poll endpoint sets an `iron-session` cookie (`vestr_session`) with the user's address. No email/password, no SIWE. See "Auth model" subsection below.
+- **Auth (mobile)**: Bearer token via `Authorization: Bearer <token>` header — issued at email-OTP login. Mobile-app email OTP routes (`/api/mobile/auth/*`) are unchanged; only the web-side OTP was removed in Phase 5 (May 2026).
 - **Wallet**: wagmi v3 + viem v2 (still used for on-chain reads; SIWE login no longer primary)
 - **Email**: Resend
 - **Rate limiting**: Upstash Redis
@@ -35,6 +35,7 @@ src/
     developer/account/    API key management (gated)
     developer/portal/     API key login page
     settings/             Tracked wallet management + notification preferences
+    login/                QR-based desktop sign-in (Pro tier only)
     api/                  All API route handlers (see API Routes section)
 
   components/
@@ -52,6 +53,7 @@ src/
     ContactModal.tsx      Contact/enquiry modal
     CookieBanner.tsx      GDPR cookie consent
     Providers.tsx         wagmi + react-query providers wrapper
+    (AuthCard.tsx removed May 2026 — old OTP login form, replaced by QR)
     ui/                   shadcn primitives (button, card, badge, input, etc.)
 
   lib/
@@ -246,28 +248,61 @@ Use real protocol names (Sablier, Hedgey, UNCX, Unvest, Team Finance) and chain 
 ### Public routes (no auth)
 `/`, `/developer`, `/ai`, `/pricing`, `/resources`, `/resources/[slug]`,
 `/early-access`, `/login`, `/privacy`, `/terms`, `/faq`, `/contact`,
-`/explore/[chainId]/[tokenAddress]`
+`/find-vestings`, `/explore/[chainId]/[tokenAddress]`
+
+`/login` renders the QR pairing page — anyone can visit it, but
+only a Pro-tier mobile app can complete the handshake.
 
 ### Gated routes (middleware in `src/middleware.ts`)
 
 | Route | Cookie required | Redirect if missing |
 |---|---|---|
-| `/dashboard/*` | `vestr_early_access` | `/early-access` |
+| `/dashboard/*` | `vestr_session` (iron-session, set by QR pair) | `/login` |
 | `/api-docs` | `vestr_early_access` OR `vestr_api_access` | `/developer/portal` |
 | `/developer/account` | `vestr_api_access` | `/developer/portal` |
 | `/admin/*` | `vestr_admin` | `/admin/login` |
 
+The dashboard middleware just checks for cookie *presence*. The
+encrypted iron-session payload is decrypted server-side in dashboard
+route handlers via `getSession()`; if `session.address` is empty, the
+handler returns 401 / redirects, so a stripped or corrupted cookie
+still bounces.
+
+### Auth model — QR pairing for desktop
+
+Web sign-in is QR-only as of Phase 5 (May 2026). The flow:
+
+1. User on desktop visits `/login`. The page calls
+   `POST /api/auth/desktop-pair/init` which mints a UUID pairing
+   code, stores `{status:"waiting"}` in Upstash Redis with a 5-min
+   TTL, and returns the code. Page renders the code as a QR
+   (`vestream://desktop-pair?code=<uuid>`) and starts polling.
+2. User opens the mobile app → Settings → "Connect Desktop". Camera
+   scans the QR. App calls `POST /api/mobile/desktop-pair/confirm`
+   with bearer token + code. Server checks `user.tier === "pro"`
+   (canAccessDashboard helper); on success writes
+   `{status:"confirmed", address}` to the same Redis key preserving
+   TTL.
+3. Desktop's poll picks up the confirmation. The poll route does
+   GETDEL on the Redis key (replay-proof), upserts the user, and
+   calls `session.save({ address })`. Desktop now has the iron-
+   session cookie and `window.location = "/dashboard"`.
+
+Removed: web-side OTP routes, SIWE nonce/verify, AuthCard component,
+mobile-handoff (which depended on the web user being pre-authenticated).
+Mobile-side OTP (`/api/mobile/auth/*`) is unchanged — that's how mobile
+users still sign into the app itself.
+
 ### Setting cookies (for local dev/testing)
 ```js
 // In browser console on localhost:3000
-document.cookie = "vestr_early_access=1; path=/";
 document.cookie = "vestr_api_access=1; path=/";
 // vestr_admin is now a derived token — set it via the login form at /admin/login
+// vestr_session is set automatically by the QR pairing flow — there's no
+// dev shortcut; either run through the mobile app, OR temporarily call
+// session.save({ address: "test@example.com" }) from a server component
+// you're hacking on.
 ```
-
-### OTP in development
-Set `DEV_OTP=123456` in `.env.local` to bypass real email sending — any email will accept that code.
-The OTP value is **never** logged in production.
 
 ---
 
@@ -295,11 +330,10 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | `/api/market` | DexScreener price data |
 | `/api/prices` | Token price cache |
 | `/api/explore` | Token explorer queries |
-| `/api/auth/nonce` | SIWE nonce generation (legacy, still present) |
-| `/api/auth/verify` | SIWE signature verification (legacy, still present) |
-| `/api/auth/logout` | Clear session |
-| `/api/auth/email` | Email OTP: send code (step 1) |
-| `/api/auth/verify-otp` | Email OTP: verify code + set session (step 2) |
+| `/api/auth/desktop-pair/init` | QR pair: mint pairing code (called by `/login`) |
+| `/api/auth/desktop-pair/poll` | QR pair: desktop polls; sets iron-session on confirmation |
+| `/api/auth/logout` | Clear iron-session cookie |
+| `/api/auth/account` | DELETE: account self-deletion |
 | `/api/waitlist` | Waitlist email signup |
 | `/api/api-access` | Submit developer API access request |
 | `/api/contact` | Contact form submission |
@@ -319,6 +353,7 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | `/api/mobile/me` | Current user profile + tier |
 | `/api/mobile/wallets` | CRUD for tracked wallets (mobile) — enforces same free-plan limits as web |
 | `/api/mobile/notifications` | Save mobile notification preferences |
+| `/api/mobile/desktop-pair/confirm` | QR pair: mobile confirms a pairing code (Pro tier required) |
 | `/api/mobile/revenuecat-webhook` | RevenueCat subscription events → update user tier in DB |
 
 ---
@@ -343,23 +378,31 @@ Tables in `src/lib/db/schema.ts`:
 `vstr_live_{32 random hex bytes}` — plaintext shown once on creation, never stored. Only SHA-256 hash + 12-char prefix kept in DB.
 
 ### User tiers
-`"free"` | `"pro"` | `"fund"` — stored on `users.tier`. No trial period — users start on free.
-The `"fund"` tier stays in the DB/webhook plumbing for existing subscribers but is
-no longer self-serve. Enterprise customers go through the contact form.
+`"free"` | `"mobile"` | `"pro"` — stored on `users.tier`. No trial period — users start on free.
+Renamed in Phase 1 (May 2026) from the legacy `"free"|"pro"|"fund"` scheme.
+`normaliseTier()` in `src/lib/auth/tier.ts` defensively coerces any unknown
+DB value (including legacy `"fund"` rows) to `"free"`.
 
-| Tier | Wallets | Token discovery | Push alerts | Discover page | Tax exports |
-|---|---|---|---|---|---|
-| Free | 1 | Auto-scan across all chains + all 9 platforms | 3 lifetime credits | Blocked (redirect to `/pricing`) | Blocked (Pro feature) |
-| Pro | 3 | Auto-scan | Unlimited | Full access | Tax-ready CSV (Koinly / CoinTracker / TurboTax) + Income Statement + Year-end PDF |
-| Fund / Enterprise | Unlimited | Auto-scan | Unlimited | Full access | All Pro tax features |
+| Tier | $ | Wallets | Push alerts | Email alerts | Web dashboard | Tax exports |
+|---|---|---|---|---|---|---|
+| Free   | $0       | 1  | 3 lifetime credits | — | — | — |
+| Mobile | $9.99/mo | 3  | Unlimited          | ✓ | — | — |
+| Pro    | $14.99/mo | 10 | Unlimited         | ✓ | ✓ (QR sign-in) | ✓ Koinly / CoinTracker / TurboTax + Income Statement + Year-end PDF |
 
-**Free plan enforcement** (both `/api/wallets` and `/api/mobile/wallets`):
-- Enforced at the API layer purely by **wallet count** — all tiers can omit `chains`/`protocols`/`tokenAddress` for auto-scan.
-- Free: hard limit of 1 wallet. Pro: 3. Fund: unlimited.
-- Push alerts are metered by `users.pushAlertsSent` (lifetime counter).
-  `checkAndConsumePushCredit(userId)` in `src/lib/db/queries.ts` is the single gate
-  — it's called by the notification scheduler before `sendExpoPush`. Paid tiers
-  are unmetered; free tier is capped at `FREE_PUSH_ALERT_LIMIT = 3`.
+The web dashboard (and Discover, saved searches, tax exports) is gated
+to `"pro"` only via `canAccessDashboard()` in `src/lib/auth/tier.ts`.
+Mobile-tier users have the app but not the desktop surface.
+
+**Wallet-count enforcement** (`src/app/api/wallets/route.ts` +
+`src/app/api/mobile/wallets/route.ts`):
+- Free: 1 · Mobile: 3 · Pro: 10. (Was: free=1 / pro=3 / fund=unlimited.)
+- Pro raised from "unlimited" to a finite 10 because the dashboard
+  renders all wallets in one view; bigger fleets route through the
+  contact form for an Enterprise plan.
+- Push alerts metered by `users.pushAlertsSent` (lifetime counter).
+  `checkAndConsumePushCredit(userId)` in `src/lib/db/queries.ts` is the
+  single gate — paid tiers (mobile + pro) are unmetered; free tier is
+  capped at `FREE_PUSH_ALERT_LIMIT = 3`.
 
 **Wallet indexes**: `wallets_user_idx` (userId) and `wallets_user_address_idx` (userId + address) are defined in schema.
 
@@ -626,24 +669,32 @@ npm publish --access public
 
 ## Pricing Tiers
 
-Prices are **live and shown publicly** on `/pricing`.
+Prices are **live and shown publicly** on `/pricing` and the homepage
+pricing section. All paid signups happen through the App Store / Play
+Store IAP via RevenueCat — there is no web checkout. The "Get the app →"
+CTAs scroll to `#download` on the homepage where iOS + Android badges
+sit side by side.
 
-| Tier | Web price | In-app (iOS/Android) | Key feature |
-|---|---|---|---|
-| Free | $0 | $0 | 1 wallet (auto-scan), 3 lifetime push alerts |
-| Pro | $14.99/mo · $119.99/yr · 14-day free trial | $17.99/mo · $144.99/yr | 3 wallets, unlimited push + email alerts, Discover page, tax-ready CSV exports + Year-end PDF + Income Statement |
-| Enterprise | Contact | — | Unlimited wallets, REST API + MCP, Slack/Telegram/WhatsApp, SSO, dedicated support |
+| Tier | Price | Key features |
+|---|---|---|
+| Free   | $0       | Public `/find-vestings` search, 1 wallet, 3 lifetime push alerts |
+| Mobile | $9.99/mo  | Mobile app: unlimited push alerts, email alerts, 3 wallets, live countdowns, priority data refresh |
+| Pro    | $14.99/mo | Everything in Mobile, plus the **web dashboard** (QR sign-in), Discover (Token Vesting Explorer), search any wallet, multi-wallet portfolio, tax-ready CSV exports (Koinly / CoinTracker / TurboTax), vesting income statement, year-end PDF. Wallet cap: 10. |
 
-In-app purchases use RevenueCat product IDs: `io.vestream.pro_monthly` ($17.99) and `io.vestream.pro_annual` ($144.99).
-Web users who subscribe directly save ~20% vs in-app pricing.
-Pro includes a 14-day free trial on new signups (web only — iOS/Android follow each store's respective trial policy).
+Mobile and Pro both come with a 14-day free trial (per RevenueCat /
+Apple / Google rules). RevenueCat entitlement IDs to set in their
+dashboard:
+- `mobile` — entitled by the $9.99 product
+- `pro`    — entitled by the $14.99 product
 
-**Email alerts stay in Pro** (deliberately — removing them to Enterprise makes
-Pro feel stingy at $14.99 and competitors all include email in mid-tiers).
-Enterprise-only: Slack/Telegram/WhatsApp alerts, REST API + MCP, team workspace,
-SSO, search-all-receivers.
+`tierFromEntitlements()` in `src/app/api/mobile/revenuecat-webhook/route.ts`
+maps these to `users.tier`. Pro is checked first so a `PRODUCT_CHANGE`
+event upgrading mobile→pro registers correctly even if both entitlements
+appear in the payload.
 
-Tier is updated in the DB by the RevenueCat webhook (`/api/mobile/revenuecat-webhook`) on purchase/renewal/expiry events.
+For larger usage (funds, teams, agencies needing > 10 wallets, REST
+API + MCP, SSO, custom alert channels) — point users at the contact
+form via the developer-page nudge at the bottom of the pricing section.
 
 ---
 
@@ -665,7 +716,7 @@ RESEND_FROM_EMAIL             Sender address for OTP/notification emails
 IRON_SESSION_SECRET           iron-session cookie encryption secret (32+ chars)
 NEXT_PUBLIC_WALLETCONNECT_ID  WalletConnect project ID
 ADMIN_PASSWORD                Admin panel password (plaintext, compared with timing-safe equal)
-DEV_OTP                       (dev only) Fixed OTP code bypassing real email send (e.g. "123456")
+DEV_OTP                       (dev only — MOBILE OTP only after Phase 5) Fixed OTP code bypassing real email send for /api/mobile/auth/email. Web-side OTP routes were removed; web sign-in is QR pairing only.
 REVENUECAT_WEBHOOK_SECRET     Secret to validate RevenueCat webhook Authorization header
 NEXT_PUBLIC_GA_ID             Google Analytics 4 Measurement ID (G-XXXXXXXXXX). Cookie-gated.
 NEXT_PUBLIC_CLARITY_ID        Microsoft Clarity Project ID (10 chars). Cookie-gated.
