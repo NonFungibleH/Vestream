@@ -261,3 +261,36 @@ export async function getCacheStats(): Promise<{ totalStreams: number; uniqueWal
     uniqueWallets: parseInt(row.unique_wallets, 10),
   };
 }
+
+/**
+ * Distinct recipients currently indexed for a given (protocol, chainId).
+ *
+ * Used by the seeder to re-seed previously-known owners — solves the
+ * PinkSale failure mode where the walker's token-side discovery
+ * returns owners whose locks have all been withdrawn (so the
+ * owner-side adapter call returns 0). Cache rows came from a prior
+ * successful seed; those owners DEFINITELY had active locks recently
+ * and are far more likely to still have something than a freshly-
+ * enumerated token-side owner. We union them with walker discovery
+ * so genuinely new owners still surface — best of both.
+ */
+export async function getCachedRecipients(
+  protocol: string,
+  chainId:  number,
+  limit:    number,
+): Promise<string[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  try {
+    const result = await db.execute(
+      sql`SELECT DISTINCT recipient
+          FROM vesting_streams_cache
+          WHERE protocol = ${protocol}
+            AND chain_id = ${chainId}
+          LIMIT ${limit}`
+    );
+    return result.map((row) => (row as { recipient: string }).recipient);
+  } catch (err) {
+    console.error(`[dbcache] getCachedRecipients(${protocol}, ${chainId}):`, err);
+    return [];
+  }
+}

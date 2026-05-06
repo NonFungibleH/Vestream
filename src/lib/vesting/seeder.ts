@@ -651,24 +651,42 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 // it's empty (the default).
 
 import { discoverPinkSaleOwners } from "./tvl-walker/pinksale";
+import { getCachedRecipients } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
   const curated = PINKSALE_SEED_WALLETS[chainId] ?? [];
 
-  let owners: string[] = [];
-  try {
-    owners = await discoverPinkSaleOwners(chainId);
-    console.log(`[seeder:${tag}] enumerated ${owners.length} owners via walker`);
-  } catch (err) {
-    console.error(`[seeder:${tag}] walker enumeration failed; falling back to curated list:`, err);
-    owners = [];
-  }
+  // Walker discovers owners via the contract's TOKEN-side data structure
+  // (every lock that ever existed). Some of those owners have had all
+  // their locks withdrawn since — `getUserNormalLocksLength` returns 0
+  // for them, so the per-wallet adapter returns 0 streams and the
+  // seeder's "0 streams fetched, 0 errors" silent failure mode kicks in.
+  // (Diagnosed May 6 2026 via the new ?sync=1 path.)
+  //
+  // Mitigation: also pull recipients from the existing cache. Anyone
+  // whose stream landed in the cache during a previous seed run had
+  // active locks recently and is far more likely to still have
+  // something than a freshly-enumerated walker owner.
+  const [walkerOwners, cachedOwners] = await Promise.all([
+    discoverPinkSaleOwners(chainId).catch((err) => {
+      console.error(`[seeder:${tag}] walker enumeration failed:`, err);
+      return [] as string[];
+    }),
+    getCachedRecipients("pinksale", chainId, limit).catch((err) => {
+      console.error(`[seeder:${tag}] cached recipient query failed:`, err);
+      return [] as string[];
+    }),
+  ]);
 
-  // Union walker output + curated safety-net list. dedupeAddresses handles
-  // case-normalisation, so overlap is harmless. Cap at `limit` so the deep
-  // cron can ask for a bigger sweep than the daily pass.
-  return dedupeAddresses([...owners, ...curated]).slice(0, limit);
+  console.log(
+    `[seeder:${tag}] discovery sources: walker=${walkerOwners.length}, ` +
+    `cached=${cachedOwners.length}, curated=${curated.length}`,
+  );
+
+  // Union all three — dedupeAddresses normalises case so overlap is
+  // harmless. Cached first so they get fetched first if `limit` truncates.
+  return dedupeAddresses([...cachedOwners, ...walkerOwners, ...curated]).slice(0, limit);
 }
 
 // ─── Streamflow discovery (Solana getProgramAccounts + dataSlice) ───────────
