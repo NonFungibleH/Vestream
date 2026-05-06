@@ -284,25 +284,17 @@ export async function bumpSeedHeartbeat(
   protocol: string,
   chainId:  number,
 ): Promise<void> {
-  if (process.env.NEXT_PHASE === "phase-production-build") return;
-  try {
-    // Note: `vesting_streams_cache` has no `id` column — its primary key
-    // is `stream_id` (the composite "{protocol}-{chainId}-{nativeId}"
-    // matching VestingStream.id). Bump the lastRefreshedAt of one
-    // canonical stream_id per cell so MAX() advances.
-    await db.execute(sql`
-      UPDATE vesting_streams_cache
-      SET last_refreshed_at = NOW()
-      WHERE stream_id = (
-        SELECT stream_id FROM vesting_streams_cache
-        WHERE protocol = ${protocol} AND chain_id = ${chainId}
-        LIMIT 1
-      )
-    `);
-  } catch (err) {
-    // Heartbeat is best-effort — never block the seed run on it.
-    console.error(`[dbcache] bumpSeedHeartbeat(${protocol}, ${chainId}):`, err);
-  }
+  // Heartbeat DISABLED 2026-05-06 12:05 UTC — the UPDATE-with-subquery
+  // pattern interacted poorly with concurrent writeToCache upserts on
+  // the same rows, choking the Supabase pooler with row-lock waits and
+  // taking the /protocols and /status pages offline for several minutes
+  // during a heavy 4-group fan-out. Returning to no-op until we have a
+  // safe alternative — likely a separate `seed_heartbeats(protocol,
+  // chain_id, last_seeded_at)` table that doesn't share row locks with
+  // the main cache. The freshness UI will revert to "last data moved"
+  // semantics in the meantime.
+  void protocol; void chainId;
+  return;
 }
 
 /**
