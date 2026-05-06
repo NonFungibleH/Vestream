@@ -188,7 +188,7 @@ const loadStatusData = unstable_cache(
   // before migration 0016 was applied to prod. Without this bump, /status
   // kept serving the cached error even after the resilience fix in e96a089
   // and the migration recovery via psql.
-  ["status-page-data-v2"],
+  ["status-page-data-v3"],
   { revalidate: 60, tags: ["status-page"] },
 );
 

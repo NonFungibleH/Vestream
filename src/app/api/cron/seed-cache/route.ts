@@ -37,6 +37,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { revalidateTag } from "next/cache";
 import {
   seedAll,
   summariseRun,
@@ -132,6 +133,16 @@ function runOneGroup(group: SeedGroup, mode: SeedMode): NextResponse {
       const summary = summariseRun(results);
       const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
       console.log(`[cron/seed-cache] group="${group}" mode="${mode}" complete in ${elapsed}s —`, summary);
+      // Fresh data landed in vesting_streams_cache. Bust the
+      // /protocols + /status page caches so users see the new freshness
+      // matrix on their next pageview instead of waiting out the 5-min
+      // unstable_cache TTL. Both pages tag this same key.
+      try {
+        revalidateTag("protocols-page", "max");
+        revalidateTag("status-page",    "max");
+      } catch (err) {
+        console.warn(`[cron/seed-cache] revalidateTag failed (non-fatal):`, err);
+      }
     } catch (err) {
       console.error(`[cron/seed-cache] group="${group}" job failed:`, err);
     }

@@ -190,7 +190,7 @@ const loadProtocolsData = unstable_cache(
   // wrongly-clamped $78M, etc.). Key bump force-flushes Vercel's Data
   // Cache so users see the new figures immediately rather than waiting
   // out the 5-min TTL. v5 lasted from the page-data-fallback work.
-  ["protocols-page-data-v9"],
+  ["protocols-page-data-v10"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
