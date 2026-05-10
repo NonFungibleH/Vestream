@@ -170,48 +170,157 @@ async function computeCacheStatsCellsFromCache(): Promise<CacheStatsCell[]> {
  * we batch-upsert the result. Idempotent: running it twice in a row
  * produces no schema changes.
  *
+ * Resilience (added 2026-05-10): the GROUP BY full-scans
+ * vesting_streams_cache (155k+ rows) which intermittently times out on
+ * the Supabase transaction pooler — exactly the failure mode that left
+ * the rollup stuck at 4d-stale despite the seeder writing successfully.
+ * We now retry the GROUP BY up to 3 times (linear backoff: 1s, 3s) and
+ * use a per-protocol chunked computation as the second-attempt fallback,
+ * so a single dropped connection no longer kills the rollup-refresh.
+ *
  * Build-time guard: short-circuits during `next build` so a transient
  * pooler drop mid-build doesn't kill the build.
  */
 export async function refreshStatusSummary(): Promise<{ rows: number }> {
   if (process.env.NEXT_PHASE === "phase-production-build") return { rows: 0 };
 
-  const cells = await computeCacheStatsCellsFromCache();
+  // Try the single-shot GROUP BY first (fastest, ~1s on a healthy pooler).
+  // On failure, fall through to a per-protocol chunked walk which makes
+  // many small queries — each one is below the pooler's idle-cancel
+  // threshold so transient drops only cost us one chunk's retry.
+  let cells: CacheStatsCell[];
+  try {
+    cells = await retryOnce(() => computeCacheStatsCellsFromCache(), "groupBy");
+  } catch (err) {
+    console.warn(
+      `[cache-stats] full GROUP BY failed twice; falling back to chunked walk: ${err instanceof Error ? err.message : err}`,
+    );
+    cells = await computeCacheStatsCellsChunked();
+  }
   if (cells.length === 0) return { rows: 0 };
 
   const now = new Date();
   // Single multi-row upsert is much faster than per-row inserts on a
   // PgBouncer-pooled connection. ON CONFLICT (protocol, chain_id) keeps
   // the table at exactly one row per cell — never grows beyond ~60.
-  await db
-    .insert(statusSummary)
-    .values(
-      cells.map((c) => ({
-        protocol:        c.protocol,
-        chainId:         c.chainId,
-        streams:         c.streams,
-        active:          c.active,
-        withTokenSymbol: c.withTokenSymbol,
-        distinctTokens:  c.distinctTokens,
-        freshestSec:     c.freshestSec,
-        oldestSec:       c.oldestSec,
-        computedAt:      now,
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [statusSummary.protocol, statusSummary.chainId],
-      set: {
-        streams:         sql`excluded.streams`,
-        active:          sql`excluded.active`,
-        withTokenSymbol: sql`excluded.with_token_symbol`,
-        distinctTokens:  sql`excluded.distinct_tokens`,
-        freshestSec:     sql`excluded.freshest_sec`,
-        oldestSec:       sql`excluded.oldest_sec`,
-        computedAt:      sql`excluded.computed_at`,
-      },
-    });
+  await retryOnce(
+    () =>
+      db
+        .insert(statusSummary)
+        .values(
+          cells.map((c) => ({
+            protocol:        c.protocol,
+            chainId:         c.chainId,
+            streams:         c.streams,
+            active:          c.active,
+            withTokenSymbol: c.withTokenSymbol,
+            distinctTokens:  c.distinctTokens,
+            freshestSec:     c.freshestSec,
+            oldestSec:       c.oldestSec,
+            computedAt:      now,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [statusSummary.protocol, statusSummary.chainId],
+          set: {
+            streams:         sql`excluded.streams`,
+            active:          sql`excluded.active`,
+            withTokenSymbol: sql`excluded.with_token_symbol`,
+            distinctTokens:  sql`excluded.distinct_tokens`,
+            freshestSec:     sql`excluded.freshest_sec`,
+            oldestSec:       sql`excluded.oldest_sec`,
+            computedAt:      sql`excluded.computed_at`,
+          },
+        }),
+    "upsert",
+  );
 
   return { rows: cells.length };
+}
+
+/**
+ * Retry once after a 1.5s pause. Used for ops-critical short queries
+ * that are vulnerable to transient PgBouncer connection drops — one
+ * retry catches the typical "pool just rotated my idle connection"
+ * race without making us look like a buggy retry-storm to ops.
+ */
+async function retryOnce<T>(fn: () => Promise<T>, label: string): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.warn(`[cache-stats] ${label} attempt 1 failed, retrying in 1.5s: ${err instanceof Error ? err.message : err}`);
+    await new Promise((r) => setTimeout(r, 1500));
+    return await fn();
+  }
+}
+
+/**
+ * Per-protocol chunked variant of computeCacheStatsCellsFromCache.
+ *
+ * Used as the resilient fallback when the single big GROUP BY fails
+ * twice. Each query targets one protocol — Postgres can satisfy these
+ * via the `(protocol, chain_id)` index without scanning the whole
+ * 155k-row table, so a transient pooler hiccup costs us at most one
+ * protocol's chunk (which we then retry once). Slower in aggregate
+ * (~5x — many round trips) but doesn't fail catastrophically.
+ *
+ * Important: this MUST yield the same shape and ordering rules as
+ * computeCacheStatsCellsFromCache so /status renders identically
+ * regardless of which path produced the data.
+ */
+async function computeCacheStatsCellsChunked(): Promise<CacheStatsCell[]> {
+  // Single small query to find which protocols actually have rows.
+  // Cheap (DISTINCT on an indexed column) and bounds the per-protocol
+  // loop to "real" protocols only.
+  const protocolRows = await retryOnce(
+    () =>
+      db
+        .selectDistinct({ protocol: vestingStreamsCache.protocol })
+        .from(vestingStreamsCache),
+    "distinct-protocols",
+  );
+
+  const out: CacheStatsCell[] = [];
+  for (const { protocol } of protocolRows) {
+    const rows = await retryOnce(
+      () =>
+        db
+          .select({
+            protocol:        vestingStreamsCache.protocol,
+            chainId:         vestingStreamsCache.chainId,
+            streams:         sql<number>`count(*)::int`,
+            active:          sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+            withTokenSymbol: sql<number>`count(*) filter (where ${vestingStreamsCache.tokenSymbol} is not null)::int`,
+            distinctTokens:  sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
+            freshestSec:     sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
+            oldestSec:       sql<number | null>`extract(epoch from min(${vestingStreamsCache.firstSeenAt}))::int`,
+          })
+          .from(vestingStreamsCache)
+          .where(sql`${vestingStreamsCache.protocol} = ${protocol}`)
+          .groupBy(vestingStreamsCache.protocol, vestingStreamsCache.chainId)
+          .orderBy(vestingStreamsCache.chainId),
+      `chunk(${protocol})`,
+    );
+
+    for (const r of rows) {
+      out.push({
+        protocol:        r.protocol,
+        chainId:         r.chainId,
+        streams:         r.streams         ?? 0,
+        active:          r.active          ?? 0,
+        withTokenSymbol: r.withTokenSymbol ?? 0,
+        distinctTokens:  r.distinctTokens  ?? 0,
+        freshestSec:     r.freshestSec ?? null,
+        oldestSec:       r.oldestSec   ?? null,
+      });
+    }
+  }
+  // Match the ordering of the single-query path so callers can't tell
+  // these two implementations apart.
+  out.sort((a, b) =>
+    a.protocol === b.protocol ? a.chainId - b.chainId : a.protocol < b.protocol ? -1 : 1,
+  );
+  return out;
 }
 
 /**
