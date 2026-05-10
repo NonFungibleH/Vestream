@@ -188,8 +188,14 @@ const loadStatusData = unstable_cache(
   // before migration 0016 was applied to prod. Without this bump, /status
   // kept serving the cached error even after the resilience fix in e96a089
   // and the migration recovery via psql.
-  ["status-page-data-v4"],
-  { revalidate: 60, tags: ["status-page"] },
+  // v5 bump on 2026-05-10 to invalidate v4 entries when we bumped the TTL
+  // 60→600 (10 min) for the egress-reduction pass. Without the v-bump,
+  // active 60s windows would have to roll over before the new TTL took
+  // effect on existing keys. /status freshness is bounded by the cron
+  // cadence regardless; the page's own re-render rate doesn't need to
+  // beat the cron's update rate.
+  ["status-page-data-v5"],
+  { revalidate: 600, tags: ["status-page"] },
 );
 
 // Column order — most-trafficked chains on the left, Solana last (Solana

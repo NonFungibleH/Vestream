@@ -145,8 +145,15 @@ export async function GET() {
         recent,
       } satisfies LiveActivityResponse,
       {
-        // Cache briefly at the edge — 10s feels live enough but spares the DB
-        headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" },
+        // 5-min edge cache (was 10s). Bumped on 2026-05-10 as part of the
+        // egress-reduction pass after Supabase Free hit 244% quota. The
+        // live-activity endpoint runs THREE full-table aggregations
+        // (per-protocol GROUP BY, recent-12-rows scan, hour-window count)
+        // per uncached hit. At the previous s-maxage=10 every page that
+        // mounts the LiveActivityTicker generated up to 6 DB hits/min/user.
+        // 5 min is still well below the daily cron cadence, so the ticker
+        // visibly moves whenever a real seed run lands new rows.
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
       },
     );
   } catch (err) {

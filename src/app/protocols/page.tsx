@@ -62,7 +62,15 @@ import {
 // Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
 // (Data Cache hit) is ~50-100ms.
 export const dynamic = "force-dynamic";
-const CACHE_TTL_SECONDS = 300;  // 5 min — marketing-page data, slow-changing
+// 1800s (30 min) — was 300s. Bumped 2026-05-10 as part of the egress-
+// reduction pass after Supabase Free's 5 GB/month quota was exceeded.
+// /protocols data (per-protocol stream counts + TVL snapshots) is updated
+// by the daily cron at 03:00/03:15 UTC; intra-day movement is bounded by
+// the cron cadence anyway, so a 30-min stale window has no real effect on
+// what the page can show. Cron-side `revalidateTag("protocols-page")` in
+// /api/cron/seed-cache + /api/cron/tvl-snapshot still busts the cache the
+// moment the cron lands, so post-cron freshness is unchanged.
+const CACHE_TTL_SECONDS = 1800;
 
 /**
  * All DB work the /protocols page needs, wrapped in Vercel Data Cache. Pure

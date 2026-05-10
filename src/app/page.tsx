@@ -9,9 +9,13 @@ import {
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 
-// ISR — re-render at most once a minute so the live freshness strip stays
-// current without hammering the DB on every hit.
-export const revalidate = 60;
+// ISR — re-render at most once every 10 minutes. Bumped 60→600 on
+// 2026-05-10 as part of the egress-reduction pass after Supabase Free
+// hit 244% of its 5 GB/month quota. Homepage live stats (total streams,
+// last-indexed timestamp) move on minute-to-hour scale; serving a 10-min-
+// old snapshot to the next visitor saves five DB aggregations per stale
+// minute without any visible UX impact.
+export const revalidate = 600;
 
 async function getHomepageLiveStats() {
   // Skip DB work during the build phase. Postgres-js hangs for 60s on

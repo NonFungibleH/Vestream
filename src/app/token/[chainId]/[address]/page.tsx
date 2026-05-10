@@ -16,7 +16,15 @@
 // Below that, a 12-month stacked-bar unlock schedule and a top-recipient
 // table. Each recipient row links back to their wallet view (future).
 //
-// Revalidates every 60s — price drift and new streams show up within a minute.
+// Revalidates every 30 minutes. Was 60s until 2026-05-10; bumped as part
+// of the egress-reduction pass after Supabase Free hit 244% of its 5 GB
+// quota. The token page is the heaviest egress source in the app — each
+// render fans out into 5 cache reads (overview, calendar, recipients,
+// upcoming, market data), each potentially returning hundreds of stream
+// rows. With 60s revalidation, popular tokens were producing thousands
+// of full-row reads per day across the long tail. 30-min revalidate
+// drops that 30×; price drift on this scale shows up in the linked
+// DexScreener data anyway.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Metadata } from "next";
@@ -43,7 +51,7 @@ import {
   type TokenMarketData,
 } from "@/lib/vesting/token-aggregates";
 
-export const revalidate = 60;
+export const revalidate = 1800;
 
 // ─── Small presentational helpers ───────────────────────────────────────────
 

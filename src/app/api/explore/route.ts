@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { streams, fetchedAt: new Date().toISOString() },
-      { headers: { "Cache-Control": "s-maxage=120, stale-while-revalidate=60" } }
+      // 15-min edge cache (was 2 min). Bumped 2026-05-10 — egress reduction.
+      { headers: { "Cache-Control": "s-maxage=900, stale-while-revalidate=300" } }
     );
   } catch (err) {
     console.error("GET /api/explore error:", err);
