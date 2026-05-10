@@ -251,8 +251,11 @@ export function TvlComparisonBar({
               // if a chain's seeder is temporarily failing.
               const chainCount = protocol.chainIds.length;
               const chainNoun  = chainCount === 1 ? "blockchain" : "blockchains";
+              // Format: "{N} active streams · {C} blockchain[s]"
+              // Bullet-separated for fast scanning vs sentence form. Easier
+              // to read at the typical 10.5px font size than a full sentence.
               const streamsLabel = active > 0
-                ? `${compactCount(active)} active streams across ${chainCount} ${chainNoun}`
+                ? `${compactCount(active)} active streams · ${chainCount} ${chainNoun}`
                 : null;
               // Rows where we have NO data yet (zero priced tokens, no external
               // source) get the "Indexing…" label instead of a terse "no data"

@@ -295,6 +295,56 @@ export async function runWalkerSnapshot(
       const COINGECKO_PER_TOKEN_CEILING      = 20_000_000;       // $20M for CG-priced tokens
       const ABSOLUTE_PER_TOKEN_CEILING_USD   = 500_000_000;      // $500M hard ceiling
 
+      // ── Band-specific per-token ceilings (May 10 2026) ────────────────
+      //
+      // Rationale: launchpad-category protocols (PinkSale, etc.) lock
+      // thousands of small-cap project tokens whose individual liquidity
+      // is in the $100-$1k DEX-pool range. Most of those tokens are real
+      // — small projects with thin pools — but the previous "exclude LOW
+      // band entirely" rule erased their value from the headline.
+      //
+      // Inverse failure mode: a single phantom dust token with massive
+      // locked-unit count × tiny price could ride the liquidity-multiplier
+      // cap up to $500M and dominate the headline. Symbol verification +
+      // absolute ceiling catch the worst cases but a quieter $50M phantom
+      // can still slip through.
+      //
+      // Both failures reduce to "one cap fits all bands"; the fix is to
+      // apply BAND-SPECIFIC ceilings so individual contributions can't
+      // dominate but aggregate small-token value still shows up:
+      //
+      //   HIGH   ($10k+ liquidity):  cap $200M per token. Real DAO/team
+      //                              allocations rarely cross this; if they
+      //                              do they're probably worth a manual
+      //                              whitelist (not silent inflation).
+      //   MEDIUM ($1k-$10k):         cap $10M per token. Genuine projects
+      //                              with $1k-$10k liquidity rarely have
+      //                              single-token locks worth more than
+      //                              this. Above this is almost certainly
+      //                              a thin-pair phantom.
+      //   LOW    ($100-$1k):         cap $500K per token. Real micro-cap
+      //                              project locks individually small;
+      //                              aggregating across hundreds of them
+      //                              still produces meaningful $millions
+      //                              of headline TVL. Phantoms get
+      //                              clipped hard.
+      //
+      // Combined with this change: LOW band now feeds headline at 100%
+      // (was 50%). The 50% discount existed because the OLD cap let
+      // single tokens contribute up to $500M to LOW, so we discounted
+      // the entire LOW pool to dampen phantom risk. With the new $500K
+      // per-token cap on LOW, the per-token risk is bounded directly,
+      // so no further discount needed.
+      //
+      // Net effect: launchpad protocols (PinkSale particularly) move from
+      // "feels too low" to "looks reasonable" without opening any path
+      // for phantom inflation. The Polygon $233M LOW pool gets sifted
+      // — real long tail of $1-$50K-each tokens contributes its true
+      // sum, the trillion-unit memecoins get clipped at $500K each.
+      const HIGH_BAND_CEILING_USD   = 200_000_000;   // $200M per HIGH-band token
+      const MEDIUM_BAND_CEILING_USD = 10_000_000;    // $10M per MEDIUM-band token
+      const LOW_BAND_CEILING_USD    = 500_000;       // $500K per LOW-band token
+
       function perTokenCeiling(p: typeof priced[number]): number {
         let cap: number;
         if (p.source === "coingecko") {
@@ -303,8 +353,16 @@ export async function runWalkerSnapshot(
           const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
           cap = Math.max(MIN_PER_TOKEN_CEILING_USD, liquidityBased);
         }
-        // Apply absolute ceiling — no token contributes more than this to
-        // any protocol's headline regardless of band or liquidity.
+        // Apply band-specific ceiling — tighter than the absolute $500M for
+        // medium and low bands. See comment block above for rationale.
+        const bandCeiling =
+          p.confidence === "high"   ? HIGH_BAND_CEILING_USD
+          : p.confidence === "medium" ? MEDIUM_BAND_CEILING_USD
+          : LOW_BAND_CEILING_USD;
+        cap = Math.min(cap, bandCeiling);
+        // Apply absolute ceiling — defence in depth in case any band
+        // ceiling is later raised above the absolute. Currently redundant
+        // with HIGH_BAND_CEILING ≤ ABSOLUTE.
         return Math.min(cap, ABSOLUTE_PER_TOKEN_CEILING_USD);
       }
 
@@ -352,22 +410,22 @@ export async function runWalkerSnapshot(
         return REAL_SYMBOL_RE.test(symbol);
       }
 
-      // ── LOW band partial credit (May 5 2026) ─────────────────────────
+      // ── LOW band headline credit (May 10 2026 update) ────────────────
       //
-      // Previously the LOW band ($100-$1k DEX liquidity, OR demoted
-      // unverified-symbol tokens) was tracked in tvl_low but completely
-      // excluded from the headline tvl_usd. That made self-indexed
-      // protocols like PinkSale, UNCX, Unvest look "extraordinarily low"
-      // because most vesting-locked project tokens live in the $100-$1k
-      // pool-depth range — they exist on DEXs, just not deep ones.
-      //
-      // The compromise: credit LOW band to headline at 50% discount.
-      // Acknowledges that the dollars aren't fully realisable at that
-      // pool depth (you'd slip the price moving 50% of pool TVL) without
-      // pretending the locked value is zero. Full value still tracked
-      // in tvl_low for audit, but the headline reflects honest "soft"
-      // dollars + full hard dollars from HIGH/MEDIUM.
-      const LOW_BAND_HEADLINE_DISCOUNT = 0.5;
+      // History:
+      //  • Originally: LOW band excluded from headline entirely.
+      //  • May 5 2026: credited at 50% discount (LOW_BAND_HEADLINE_DISCOUNT
+      //    = 0.5) so launchpad protocols stopped looking artificially small,
+      //    while damping phantom risk (one bad token couldn't fully
+      //    inflate the headline because half of its credited value was
+      //    excluded).
+      //  • May 10 2026: credited at 100% — see the band-specific per-token
+      //    ceilings above. With LOW_BAND_CEILING_USD = $500K per token,
+      //    the per-token phantom risk is bounded directly. The aggregate
+      //    discount was a coarse damping signal that no longer adds value
+      //    once the per-token cap is tight; keeping it would just
+      //    suppress real long-tail value pointlessly.
+      const LOW_BAND_HEADLINE_DISCOUNT = 1.0;
 
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
       for (const p of priced) {
