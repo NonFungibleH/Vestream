@@ -134,13 +134,44 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
  * Uses `extract(epoch from …)::int` so timestamps come back as integers
  * — sidesteps the PgBouncer-transaction-pooler Date-marshalling quirk.
  */
+// "Active" filter — must match `refreshProtocolSummaries()` in protocol-stats.ts
+// EXACTLY so /status and /protocols agree on what "active" means.
+//
+// Definition (per the May 6 2026 + May 10 2026 unification): a stream is
+// active if the recipient still has unclaimed tokens, i.e.
+//   withdrawnAmount < totalAmount
+// or, when withdrawnAmount is missing from streamData (legacy cache rows
+// pre-2025), fall back to !is_fully_vested.
+//
+// Why not the simpler `is_fully_vested = false`: that filter is time-only —
+// once endTime passes, the row drops out of "active" even if every token
+// is still sitting in the contract waiting to be withdrawn. Jupiter Lock
+// (token-launchpad-style 1-day locks) under-counted active by >90% under
+// that filter because most locks are time-expired but tokens-still-held.
+//
+// Net effect for the user: "active streams" on /status now matches "active
+// streams" on the /protocols TVL bar. Both surfaces show the same set of
+// streams that have non-zero claimable balance for some recipient.
+const activeStreamFilter = sql`count(*) filter (
+  where (
+    (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
+    and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
+    and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
+      < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
+  )
+  or (
+    (${vestingStreamsCache.streamData}->>'withdrawnAmount') is null
+    and ${vestingStreamsCache.isFullyVested} = false
+  )
+)::int`;
+
 async function computeCacheStatsCellsFromCache(): Promise<CacheStatsCell[]> {
   const rows = await db
     .select({
       protocol:        vestingStreamsCache.protocol,
       chainId:         vestingStreamsCache.chainId,
       streams:         sql<number>`count(*)::int`,
-      active:          sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+      active:          sql<number>`${activeStreamFilter}`,
       withTokenSymbol: sql<number>`count(*) filter (where ${vestingStreamsCache.tokenSymbol} is not null)::int`,
       distinctTokens:  sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
       freshestSec:     sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
@@ -289,7 +320,8 @@ async function computeCacheStatsCellsChunked(): Promise<CacheStatsCell[]> {
             protocol:        vestingStreamsCache.protocol,
             chainId:         vestingStreamsCache.chainId,
             streams:         sql<number>`count(*)::int`,
-            active:          sql<number>`count(*) filter (where ${vestingStreamsCache.isFullyVested} = false)::int`,
+            // Same activeStreamFilter as the single-shot path — see definition above.
+            active:          sql<number>`${activeStreamFilter}`,
             withTokenSymbol: sql<number>`count(*) filter (where ${vestingStreamsCache.tokenSymbol} is not null)::int`,
             distinctTokens:  sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
             freshestSec:     sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
