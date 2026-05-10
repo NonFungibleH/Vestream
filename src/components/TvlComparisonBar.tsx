@@ -25,12 +25,17 @@ import type { ProtocolTvl } from "@/lib/vesting/tvl";
 export interface TvlComparisonRow {
   protocol:      ProtocolMeta;
   tvl:           ProtocolTvl | null;
-  /** Indexed-cache active stream count from getProtocolStats. Surfaced
-   *  beneath the protocol name as a "X active · Y total" sub-label so
-   *  the headline reflects current activity alongside historical scale. */
+  /** Indexed-cache active stream count from getProtocolStats. Used in
+   *  the row's sub-label "{N} active streams across {C} blockchains".
+   *  The chain count comes from protocol.chainIds (static metadata) so
+   *  the sub-label stays correct even when a chain's seeder is failing. */
   activeStreams?: number | null;
-  /** Indexed-cache total stream count (active + ended/withdrawn).
-   *  Reflects the cumulative scale of the protocol's vesting history. */
+  /**
+   * @deprecated since 2026-05-10 — totalStreams is no longer rendered.
+   * Including ended/fully-withdrawn rows inflated the count without
+   * reflecting current activity. Kept on the type so callers can keep
+   * passing it without a TS error during the rollout; it's ignored.
+   */
   totalStreams?:  number | null;
 }
 
@@ -230,26 +235,25 @@ export function TvlComparisonBar({
           </div>
         ) : (
           <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-            {sorted.map(({ protocol, tvl, activeStreams, totalStreams }) => {
+            {sorted.map(({ protocol, tvl, activeStreams }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
               const active      = activeStreams ?? 0;
-              const total       = totalStreams  ?? 0;
-              // Show "X active · Y total" when both available and they
-              // differ; otherwise fall back to whichever single value
-              // we have, labelled accordingly.
-              let streamsLabel: string | null = null;
-              if (active > 0 && total > active) {
-                streamsLabel = `${compactCount(active)} active · ${compactCount(total)} total streams`;
-              } else if (active > 0) {
-                streamsLabel = `${compactCount(active)} active streams`;
-              } else if (total > 0) {
-                streamsLabel = `${compactCount(total)} total streams`;
-              }
-              const streams = active || total;
+              // Sub-label: "{N} active streams across {C} blockchain[s]".
+              // Dropped the "X active · Y total" form on 2026-05-10 — total
+              // streams included ended/fully-withdrawn rows, which inflated
+              // the headline without reflecting current activity. Chain
+              // count comes straight from the protocol's static metadata
+              // (chainIds), not from cache state, so it stays correct even
+              // if a chain's seeder is temporarily failing.
+              const chainCount = protocol.chainIds.length;
+              const chainNoun  = chainCount === 1 ? "blockchain" : "blockchains";
+              const streamsLabel = active > 0
+                ? `${compactCount(active)} active streams across ${chainCount} ${chainNoun}`
+                : null;
               // Rows where we have NO data yet (zero priced tokens, no external
               // source) get the "Indexing…" label instead of a terse "no data"
               // — makes the empty state feel intentional rather than broken.
@@ -283,11 +287,7 @@ export function TvlComparisonBar({
                         <span
                           className="text-[10.5px] tabular-nums leading-tight mt-0.5"
                           style={{ color: "#8B8E92" }}
-                          title={
-                            total > 0 && active > 0 && total !== active
-                              ? `${active.toLocaleString()} currently active · ${total.toLocaleString()} indexed total (incl. ended / fully-withdrawn) across every chain we cover`
-                              : `${streams.toLocaleString()} streams indexed across every chain we cover`
-                          }
+                          title={`${active.toLocaleString()} streams currently active (still have unclaimed tokens) across ${chainCount} chain${chainCount === 1 ? "" : "s"} we index for ${protocol.name}`}
                         >
                           {streamsLabel}
                         </span>
