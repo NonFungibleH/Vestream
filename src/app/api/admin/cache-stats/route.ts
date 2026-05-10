@@ -14,7 +14,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-auth";
-import { getCacheStatsCells, type CacheStatsCell } from "@/lib/vesting/cache-stats";
+import {
+  getCacheStatsCells,
+  getMaxLastRefreshedAt,
+  type CacheStatsCell,
+} from "@/lib/vesting/cache-stats";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +27,16 @@ export interface CacheStatsResponse {
   ok:        true;
   nowMs:     number;
   totalRows: number;
+  /**
+   * Set when ?live=1 is passed. The default rollup path reads from
+   * `status_summary`, which is only updated at the end of a successful
+   * seedAll() run — so a stale rollup is ambiguous between "seeder
+   * never ran" and "seeder ran but died before refreshStatusSummary".
+   * `liveMaxLastRefreshedAt` queries vesting_streams_cache directly:
+   * if this is recent but `cells[].freshestSec` is 4d-stale, the
+   * seeder IS writing and the rollup-refresh step is what's broken.
+   */
+  liveMaxLastRefreshedAtSec?: number | null;
   cells:     CacheStatsCell[];
 }
 
@@ -42,15 +56,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const live = req.nextUrl.searchParams.get("live") === "1";
+
   try {
     const cells     = await getCacheStatsCells();
     const totalRows = cells.reduce((sum, c) => sum + c.streams, 0);
+
+    // ?live=1 — bypass the status_summary rollup and read MAX(last_refreshed_at)
+    // straight from vesting_streams_cache. Used to disambiguate "seeder didn't
+    // run" from "seeder ran but the rollup-refresh step failed". Cheap (single
+    // index-only aggregate, ~10ms), but kept opt-in so the default fast path
+    // remains a single read against the small rollup table.
+    let liveMaxLastRefreshedAtSec: number | null | undefined = undefined;
+    if (live) {
+      try {
+        liveMaxLastRefreshedAtSec = await getMaxLastRefreshedAt();
+      } catch (err) {
+        console.error("[admin/cache-stats] live max query failed:", err);
+        liveMaxLastRefreshedAtSec = null;
+      }
+    }
 
     return NextResponse.json(
       {
         ok:       true,
         nowMs:    Date.now(),
         totalRows,
+        ...(live ? { liveMaxLastRefreshedAtSec } : {}),
         cells,
       } satisfies CacheStatsResponse,
     );
