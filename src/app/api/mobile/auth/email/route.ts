@@ -5,11 +5,99 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomInt } from "node:crypto";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
-import { mobileOtps } from "@/lib/db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { mobileOtps, pendingWalletLinks, wallets } from "@/lib/db/schema";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
+
+// Wallet caps mirror src/lib/db/queries.ts. Kept inline here so the claim
+// path doesn't need a second DB round-trip to read tier limits — small win
+// on a hot login path, and the values are immutable enough that
+// duplication is fine.
+const WALLET_CAP: Record<string, number> = { free: 1, mobile: 3, pro: 10 };
+
+/**
+ * Claim every unclaimed pending_wallet_links row for this email and turn
+ * each into a real row in the `wallets` table. Respects the user's tier
+ * cap — claims up to (cap - existing) and leaves the rest in place so a
+ * later tier upgrade can claim them on the user's next sign-in.
+ *
+ * Best-effort: claim failures are logged and swallowed; we never want a
+ * pending-link issue to block a successful login.
+ *
+ * Returns the count actually claimed for analytics + future toast UX.
+ */
+async function claimPendingLinksForEmail(userId: string, email: string, tier: string): Promise<number> {
+  try {
+    const pending = await db
+      .select()
+      .from(pendingWalletLinks)
+      .where(and(
+        eq(pendingWalletLinks.email, email),
+        isNull(pendingWalletLinks.claimedAt),
+        gt(pendingWalletLinks.expiresAt, new Date()),
+      ));
+    if (pending.length === 0) return 0;
+
+    // Existing wallets count — needed to enforce the cap.
+    const existing = await db.select({ address: wallets.address }).from(wallets).where(eq(wallets.userId, userId));
+    const existingAddrs = new Set(existing.map(w => w.address.toLowerCase()));
+    const cap = WALLET_CAP[tier] ?? 1;
+    const slotsLeft = Math.max(0, cap - existing.length);
+    if (slotsLeft === 0) return 0;
+
+    // Take up to `slotsLeft` pending links that aren't already in the
+    // wallets table. Address comparison is lowercase for EVM; Solana
+    // addresses stay as-is and dedupe via plain string compare.
+    let claimed = 0;
+    const claimedIds: string[] = [];
+    for (const p of pending) {
+      if (claimed >= slotsLeft) break;
+      const key = p.walletAddress.startsWith("0x") ? p.walletAddress.toLowerCase() : p.walletAddress;
+      if (existingAddrs.has(key)) {
+        // Already-tracked wallet — mark claimed but don't double-insert.
+        claimedIds.push(p.id);
+        continue;
+      }
+      try {
+        await db.insert(wallets).values({
+          userId,
+          address: p.walletAddress,
+          label:   p.label ?? undefined,
+          // pending_wallet_links stores chain_ids as JSONB number[]; wallets
+          // table stores chains as text[]. Convert numbers → strings.
+          chains:  p.chainIds && p.chainIds.length > 0 ? p.chainIds.map(String) : null,
+        });
+        existingAddrs.add(key);
+        claimedIds.push(p.id);
+        claimed++;
+      } catch (insertErr) {
+        // Could be a race condition / duplicate index violation. Log and
+        // keep going so one bad row doesn't block the rest.
+        console.error("[claim-pending] insert failed for", p.walletAddress, insertErr);
+      }
+    }
+
+    if (claimedIds.length > 0) {
+      // Mark every claimed row (including dupes) so subsequent logins
+      // don't re-attempt. Drizzle's `inArray` isn't imported here to keep
+      // the diff minimal; a per-id loop is cheap at this scale.
+      const now = new Date();
+      for (const id of claimedIds) {
+        await db
+          .update(pendingWalletLinks)
+          .set({ claimedAt: now })
+          .where(eq(pendingWalletLinks.id, id));
+      }
+    }
+
+    return claimed;
+  } catch (e) {
+    console.error("[claim-pending] failed", e);
+    return 0;
+  }
+}
 
 /**
  * Cryptographically-secure 6-digit OTP. The verify path compares against a
@@ -176,6 +264,13 @@ export async function POST(req: NextRequest) {
     const user  = await upsertUser(email);
     const token = await createMobileToken(user.id);
 
+    // Web→mobile handoff: claim any wallets the user pre-saved via
+    // /find-vestings → email-capture. Best-effort and non-blocking — a
+    // failure here never prevents the user from signing in. The mobile
+    // client's existing post-OTP wallet refetch will surface any newly
+    // claimed rows automatically.
+    const claimedWallets = await claimPendingLinksForEmail(user.id, email, user.tier ?? "free");
+
     return NextResponse.json({
       token,
       user: {
@@ -188,6 +283,10 @@ export async function POST(req: NextRequest) {
         audienceCategory:    user.audienceCategory ?? null,
         onboardingCompleted: !!user.onboardingCompletedAt,
       },
+      // Surface the count so the mobile client can optionally show a
+      // "We found N wallets from your web search" toast on first portfolio
+      // view. Field is omitted when zero so legacy clients ignore it.
+      ...(claimedWallets > 0 ? { claimedWallets } : {}),
     });
   }
 

@@ -148,6 +148,13 @@
       "when": 1778600000000,
       "tag": "0020_token_prices_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1778700000000,
+      "tag": "0021_pending_wallet_links",
+      "breakpoints": true
     }
   ]
 }

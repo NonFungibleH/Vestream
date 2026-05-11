@@ -745,6 +745,51 @@ export const demoPushSubscriptions = pgTable(
 // across 4 chains). At ~200 bytes per row that's ~6MB total — fits easily
 // in any Postgres tier. Index is on (chain_id, token_address) primary key
 // for point lookups + on fetched_at for staleness queries.
+// ─────────────────────────────────────────────────────────────────────────────
+// Pending wallet links — web→mobile handoff
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// When a user runs a /find-vestings scan on the web and submits their email
+// to "continue in the app", we store the (email, wallet) pair here. When that
+// user later signs into the mobile app with the same email via OTP, the
+// verify-otp endpoint auto-claims every unclaimed pending row matching the
+// email and inserts the wallets into the user's wallets table.
+//
+// No deferred-deep-link service required — the email is the attribution
+// vector. Returning users get the same treatment (claim is idempotent).
+//
+// Rows live for 30 days (`expiresAt`) and are swept by a daily cleanup job.
+export const pendingWalletLinks = pgTable(
+  "pending_wallet_links",
+  {
+    id:            uuid("id").primaryKey().defaultRandom(),
+    // Lowercased before insert so dedupe + claim stay case-insensitive.
+    email:         text("email").notNull(),
+    walletAddress: text("wallet_address").notNull(),
+    // Optional user-supplied label captured at search time (e.g. "vesting wallet").
+    label:         text("label"),
+    // Optional chain narrowing — when present, the wallet is added with these
+    // chains pre-selected. Null = scan all chains (matches the wallets table
+    // semantics).
+    chainIds:      jsonb("chain_ids").$type<number[] | null>(),
+    createdAt:     timestamp("created_at").defaultNow().notNull(),
+    // Set when the corresponding wallet has been added to a user's account
+    // via OTP verify. Null = still pending. Keeping the row post-claim gives
+    // us an audit trail for the analytics funnel (search → claim conversion).
+    claimedAt:     timestamp("claimed_at"),
+    // 30-day TTL. Daily cleanup cron deletes WHERE expires_at < NOW() AND
+    // claimed_at IS NULL.
+    expiresAt:     timestamp("expires_at").notNull(),
+  },
+  (t) => [
+    // Hot path: "claim every unclaimed pending row for email X" on OTP verify.
+    index("pending_wallet_links_email_idx").on(t.email),
+    // Dedup: re-searching the same wallet from the same email just updates
+    // expiresAt, doesn't pile up duplicates.
+    uniqueIndex("pending_wallet_links_email_wallet_unique").on(t.email, t.walletAddress),
+  ]
+);
+
 export const tokenPricesCache = pgTable(
   "token_prices_cache",
   {

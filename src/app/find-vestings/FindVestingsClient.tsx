@@ -362,6 +362,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
           primarySymbol={primarySymbol}
         />
       </div>
+      <SaveToAppCard walletAddress={result.address} />
       <div className="grid grid-cols-1 gap-3">
         {result.groups.map((g) => (
           <GroupCard
@@ -731,6 +732,145 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
  * "Smart App Banner"-style — a low-cost permanent affordance that the
  * user dismisses by scrolling away or acting on.
  */
+// ─────────────────────────────────────────────────────────────────────────
+// Save-to-app handoff card — captures email, persists (email, wallet) into
+// pending_wallet_links via /api/find-vestings/save-link. When the user
+// later signs into the mobile app with the same email via OTP, the verify
+// handler auto-claims every matching row and pre-loads the wallet into
+// their portfolio.
+//
+// No App Store deep link or attribution SDK needed — the email is the
+// attribution vector. The card just primes the backend; the user installs
+// from the App Store / Play Store badges further down the page.
+// ─────────────────────────────────────────────────────────────────────────
+function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
+  const [email,   setEmail]   = useState("");
+  const [busy,    setBusy]    = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
+  const [saved,   setSaved]   = useState(false);
+
+  const isValidEmail = email.includes("@") && email.length > 4;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || !isValidEmail) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/find-vestings/save-link", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim().toLowerCase(), walletAddress }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || "Couldn't save — try again");
+      }
+      setSaved(true);
+      track("cta_clicked", { cta_id: "find_vestings_save_to_app", surface: "find_vestings_results" });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Couldn't save — try again");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (saved) {
+    return (
+      <div className="rounded-2xl p-6 mb-4"
+        style={{
+          background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(28,184,184,0.04))",
+          border: "1px solid rgba(28,184,184,0.28)",
+        }}>
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(28,184,184,0.16)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+              Saved to <span style={{ color: "#0F8A8A" }}>{email}</span>
+            </h3>
+            <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
+              Install the app and sign in with the same email — your scan will be ready in the portfolio. App Store and Play Store links are further down this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl p-6 mb-4"
+      style={{
+        background: "white",
+        border: "1px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+      }}>
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: "rgba(28,184,184,0.12)" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2.5" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
+            Continue in the app
+          </h3>
+          <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
+            Drop in your email — we&rsquo;ll have this scan waiting when you sign into the mobile app. No password, just the same email and an OTP.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          disabled={busy}
+          className="flex-1 px-4 py-3 rounded-xl text-sm font-medium outline-none transition-colors"
+          style={{
+            background: "#f8fafc",
+            border: "1px solid rgba(0,0,0,0.09)",
+            color: "#0f172a",
+          }}
+          aria-label="Your email"
+        />
+        <button
+          type="submit"
+          disabled={busy || !isValidEmail}
+          className="px-5 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-opacity"
+          style={{
+            background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)",
+            color: "white",
+            boxShadow: "0 2px 12px rgba(28,184,184,0.25)",
+            opacity: busy || !isValidEmail ? 0.55 : 1,
+            cursor: busy || !isValidEmail ? "not-allowed" : "pointer",
+          }}
+        >
+          {busy ? "Saving…" : "Save my scan →"}
+        </button>
+      </form>
+
+      {error && (
+        <p className="text-xs mt-2" style={{ color: "#dc2626" }}>{error}</p>
+      )}
+      <p className="text-xs mt-3" style={{ color: "#94a3b8" }}>
+        We&rsquo;ll only use your email to link this scan to your account when you sign in. <a href="/privacy" className="underline" style={{ color: "#64748b" }}>Privacy</a>.
+      </p>
+    </div>
+  );
+}
+
 function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams: number; walletAddress: string; anchorRef: React.RefObject<HTMLDivElement | null> }) {
   const [visible, setVisible] = useState(false);
 
