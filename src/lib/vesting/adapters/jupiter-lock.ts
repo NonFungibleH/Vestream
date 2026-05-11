@@ -364,9 +364,19 @@ export const jupiterLockAdapter: VestingAdapter = {
  */
 export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | null> {
   if (process.env.SOLANA_ENABLED !== "true") return null;
-  const rpcUrl = process.env.SOLANA_RPC_URL;
+  // JUPITER_LOCK_RPC_URL is an optional override for the bulk-fetch path
+  // — used when SOLANA_RPC_URL is set to a per-recipient-tuned provider
+  // (e.g. Helius for Streamflow) and we want JL's single bulk
+  // getProgramAccounts call to hit a different provider (e.g. Alchemy
+  // Solana free tier, which throttles per-recipient fan-out but handles
+  // the single-call bulk fetch fine).
+  //
+  // Falls back to SOLANA_RPC_URL when the override isn't set, so this
+  // is a non-breaking change — existing deployments continue to work
+  // without configuring the new env var.
+  const rpcUrl = process.env.JUPITER_LOCK_RPC_URL ?? process.env.SOLANA_RPC_URL;
   if (!rpcUrl) {
-    console.error("[jupiter-lock] SOLANA_RPC_URL not configured — bulk fetch returning null");
+    console.error("[jupiter-lock] Neither JUPITER_LOCK_RPC_URL nor SOLANA_RPC_URL configured — bulk fetch returning null");
     return null;
   }
 
