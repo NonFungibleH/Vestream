@@ -29,7 +29,7 @@ export default function Privacy() {
         <div className="mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Legal</p>
           <h1 className="text-4xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>Privacy &amp; Cookie Policy</h1>
-          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: May 2026</p>
+          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: 11 May 2026</p>
         </div>
 
         <div className="rounded-2xl p-8 space-y-8"
@@ -78,10 +78,11 @@ export default function Privacy() {
               </li>
               <li>
                 <strong>Subscription &amp; billing identifiers.</strong> If you purchase
-                a paid plan, we store the corresponding RevenueCat (mobile) or
-                Stripe (web) customer/subscription ID. Card details are{" "}
+                a paid plan, we store the corresponding RevenueCat customer
+                and subscription ID. Card details are{" "}
                 <strong style={{ color: "#1A1D20" }}>never</strong> stored on our
-                infrastructure — they are handled by Stripe / Apple / Google.
+                infrastructure — they are handled by Apple App Store / Google Play
+                via RevenueCat.
               </li>
               <li>
                 <strong>Session data.</strong> A cryptographically signed,
@@ -117,7 +118,7 @@ export default function Privacy() {
               <li>To display vesting positions for the addresses you track.</li>
               <li>To authenticate your sessions across the website, mobile app, and developer API.</li>
               <li>To send you email or push notifications about upcoming unlock events, when you opt in.</li>
-              <li>To process subscription payments via Stripe (web) and RevenueCat (mobile) and to provision the corresponding service tier.</li>
+              <li>To process mobile subscription payments via RevenueCat (Apple App Store / Google Play) and to provision the corresponding service tier.</li>
               <li>To enforce rate limits and detect abuse of the Service.</li>
               <li>To analyse aggregate, anonymised usage of the Service to improve it (only when you accept analytics cookies).</li>
               <li>To respond to your support requests, legal requests, or rights requests.</li>
@@ -137,8 +138,9 @@ export default function Privacy() {
               vesting positions across the protocols and chains we support
               (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
               Streamflow, Jupiter Lock — across Ethereum, BNB Chain,
-              Polygon, Base, and Solana). This index is built from publicly
-              available on-chain data and protocol subgraphs.
+              Polygon, Base, Arbitrum, Optimism, and Solana). This index is
+              built from publicly available on-chain data and protocol
+              subgraphs.
             </p>
             <p>
               On-chain data — including wallet balances, vesting schedules,
@@ -187,7 +189,6 @@ export default function Privacy() {
               <li><strong>The Graph</strong> — protocol subgraphs (Sablier, Hedgey, UNCX, Unvest, Superfluid).</li>
               <li><strong>DefiLlama</strong> — public TVL aggregates for select protocols.</li>
               <li><strong>DexScreener</strong> and <strong>CoinGecko</strong> — token price data for USD-equivalents shown in the dashboard.</li>
-              <li><strong>Stripe</strong> — web subscription billing.</li>
               <li><strong>RevenueCat</strong> + <strong>Apple App Store / Google Play</strong> — mobile in-app purchases.</li>
               <li><strong>Google Analytics 4</strong> — anonymised analytics, only with your consent.</li>
               <li><strong>Sentry</strong> (if enabled) — error reporting; configured to scrub personal data.</li>

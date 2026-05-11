@@ -29,7 +29,7 @@ export default function Terms() {
         <div className="mb-10">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Legal</p>
           <h1 className="text-4xl font-bold mb-3" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>Terms of Service</h1>
-          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: May 2026</p>
+          <p className="text-sm" style={{ color: "#B8BABD" }}>Last updated: 11 May 2026</p>
         </div>
 
         <div className="rounded-2xl p-8 space-y-8"
@@ -68,7 +68,8 @@ export default function Terms() {
               data from supported protocols (currently Sablier, Hedgey,
               Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and
               Jupiter Lock) across supported chains (Ethereum, BNB Chain,
-              Polygon, Base, and Solana) and present it through the website,
+              Polygon, Base, Arbitrum, Optimism, and Solana) and present it
+              through the website,
               the mobile app, the developer API, and the MCP server. The
               Service does{" "}
               <strong style={{ color: "#1A1D20" }}>not</strong>{" "}
@@ -116,7 +117,7 @@ export default function Terms() {
           <Section title="6. Subscriptions, payments &amp; trials">
             <ul>
               <li>The Free tier requires no payment.</li>
-              <li>The Mobile tier ($9.99/mo) and the Pro tier ($14.99/mo) are sold via the TokenVest mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Web checkout via Stripe is not yet available; pricing on each surface is shown at the point of sale.</li>
+              <li>The Mobile tier ($9.99/mo) and the Pro tier ($14.99/mo) are sold via the TokenVest mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing is shown at the point of sale within the app.</li>
               <li>Larger usage (funds, teams, agencies needing more than 10 wallets, or commercial API/MCP volume) is sold by contract; pricing and terms are provided separately. Contact us via the website to discuss.</li>
               <li>Free trials, where offered, automatically convert to paid subscriptions at the end of the trial period unless cancelled. You may cancel at any time before trial end via your Apple / Google subscription settings (mobile).</li>
               <li>Subscriptions auto-renew at the end of each billing period unless cancelled. Refund eligibility follows the rules of the relevant payment processor (Apple / Google).</li>
@@ -219,7 +220,7 @@ export default function Terms() {
               The Service relies on third-party infrastructure and data,
               including (without limitation) Supabase, Vercel, Upstash,
               Resend, Alchemy, The Graph, DefiLlama, DexScreener,
-              CoinGecko, Stripe, RevenueCat, Apple App Store, Google Play,
+              CoinGecko, RevenueCat, Apple App Store, Google Play,
               Google Analytics, and the third-party protocol contracts
               and subgraphs we integrate. Your use of those services is
               subject to their respective terms. We are not responsible for
@@ -282,7 +283,7 @@ export default function Terms() {
           <Section title="18. Governing law &amp; disputes">
             <p>
               These Terms are governed by the laws of the State of
-              Delaware, United States, without regard to its conflict of
+              Wyoming, United States, without regard to its conflict of
               law principles. Any dispute arising out of or relating to
               these Terms or the Service shall be resolved exclusively
               by binding arbitration administered under the rules of the
