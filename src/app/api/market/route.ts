@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchWithRetry } from "@/lib/fetch-with-retry";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
+
+/** Best-available client IP (Cloudflare → Vercel → fallback). */
+function getIp(req: NextRequest): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 // DexScreener chain IDs → URL slugs
 const CHAIN_TO_DS: Record<number, string> = {
@@ -136,6 +147,17 @@ function extractInfo(pair: DexPair) {
 }
 
 export async function GET(req: NextRequest) {
+  // Rate limit: 30 requests per IP per minute. The 300s edge cache below
+  // handles most legitimate repeat traffic, but a deliberate attacker
+  // varying the `tokens` query trivially bypasses cache and would burn
+  // DexScreener's free-tier quota — degrading market data site-wide.
+  // 30/min is high enough that legitimate dashboard polling (typically
+  // one batched call per page view) never hits it.
+  const ip = getIp(req);
+  const rl = await checkRateLimit("market", ip, 30, "1 m");
+  const blocked = rateLimitResponse(rl, "Too many market requests — try again in a minute.");
+  if (blocked) return blocked;
+
   const { searchParams } = new URL(req.url);
 
   const tokensParam  = searchParams.get("tokens")  ?? "";

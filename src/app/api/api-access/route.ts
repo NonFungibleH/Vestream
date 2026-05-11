@@ -71,9 +71,11 @@ export async function POST(req: NextRequest) {
   });
 
   // ── Existing-key check ───────────────────────────────────────────────────
-  // If this email already has a non-revoked key, don't issue another. Tells
-  // the user the key is on file via the prefix; they can recover via support
-  // if they lost the plaintext.
+  // Enumeration-safe: the response shape is identical regardless of whether
+  // the email already had a key or got a fresh one. The actual key (new) or
+  // recovery info (existing) is delivered via email — the only channel the
+  // legitimate email owner can read. An attacker probing addresses gets the
+  // same generic confirmation either way.
   const existing = await db
     .select({ keyPrefix: apiKeys.keyPrefix, tier: apiKeys.tier })
     .from(apiKeys)
@@ -81,50 +83,48 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (existing.length > 0 && existing[0].keyPrefix) {
-    return NextResponse.json({
-      ok: true,
-      already_issued: true,
-      prefix: existing[0].keyPrefix,
-      tier:   existing[0].tier,
-      message: `You already have a ${existing[0].tier} key (prefix ${existing[0].keyPrefix}). Email team@vestream.io if you need to recover it.`,
+    // Existing key — email the owner a "you already have one" recovery
+    // note rather than issuing a duplicate. Same fire-and-forget pattern
+    // as the new-key path so the response timing matches.
+    void sendExistingKeyEmail(cleanEmail, name.trim(), existing[0].keyPrefix, existing[0].tier ?? "free").catch((err) => {
+      console.error("[api-access] Failed to send existing-key email:", err);
+    });
+  } else {
+    // No existing key — issue a fresh free-tier one and email the plaintext.
+    const plaintext = generateApiKey();
+    const hash      = hashApiKey(plaintext);
+    const prefix    = plaintext.slice(0, 17); // "vstr_live_" + first 7 hex chars
+
+    await db.insert(apiKeys).values({
+      keyHash:      hash,
+      keyPrefix:    prefix,
+      ownerEmail:   cleanEmail,
+      ownerName:    name.trim(),
+      tier:         "free",
+      monthlyLimit: FREE_TIER_MONTHLY_LIMIT,
+    });
+
+    // Best-effort delivery. We no longer have an in-response fallback for
+    // Resend failures (was the whole point of removing the enumeration);
+    // a delivery error here means the user has to email support. That's
+    // the trade we accept to close the leak — Resend reliability is
+    // > 99% in practice so the recovery channel is rarely needed.
+    void sendNewKeyEmail(cleanEmail, name.trim(), plaintext, prefix).catch((err) => {
+      console.error("[api-access] Failed to send new-key email:", err);
     });
   }
 
-  // ── Issue a fresh free-tier key ──────────────────────────────────────────
-  const plaintext = generateApiKey();
-  const hash      = hashApiKey(plaintext);
-  const prefix    = plaintext.slice(0, 17); // "vstr_live_" + first 7 hex chars
-
-  await db.insert(apiKeys).values({
-    keyHash:      hash,
-    keyPrefix:    prefix,
-    ownerEmail:   cleanEmail,
-    ownerName:    name.trim(),
-    tier:         "free",
-    monthlyLimit: FREE_TIER_MONTHLY_LIMIT,
-  });
-
-  // ── Email the key to the user ────────────────────────────────────────────
-  // Best-effort: a Resend failure must NOT prevent the issuance response,
-  // because the form also surfaces the plaintext once for copy-paste. The
-  // email is the recovery channel for users who close the tab.
-  void sendKeyEmail(cleanEmail, name.trim(), plaintext, prefix).catch((err) => {
-    console.error("[api-access] Failed to send key email:", err);
-  });
-
+  // Identical response for both branches. No `issued` / `already_issued`
+  // flag, no prefix, no tier — those all leak whether the email is on file.
   return NextResponse.json({
-    ok:           true,
-    issued:       true,
-    key:          plaintext,
-    prefix,
-    tier:         "free",
-    monthly_limit: FREE_TIER_MONTHLY_LIMIT,
+    ok:      true,
+    message: "If you're eligible, an API key will be emailed to you shortly. Check your inbox (and spam folder).",
   });
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-async function sendKeyEmail(email: string, name: string, plaintext: string, prefix: string): Promise<void> {
+async function sendNewKeyEmail(email: string, name: string, plaintext: string, prefix: string): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[api-access] RESEND_API_KEY missing — skipping welcome email");
     return;
@@ -136,11 +136,11 @@ async function sendKeyEmail(email: string, name: string, plaintext: string, pref
   await resend.emails.send({
     from:    fromAddress,
     to:      email,
-    subject: "Your TokenVest API key",
+    subject: "Your Vestream API key",
     text: [
       `Hi ${name},`,
       "",
-      "Welcome to TokenVest — your free-tier API key is ready.",
+      "Welcome to Vestream — your free-tier API key is ready.",
       "",
       `API key: ${plaintext}`,
       `Prefix:  ${prefix}`,
@@ -165,7 +165,46 @@ async function sendKeyEmail(email: string, name: string, plaintext: string, pref
       "This key is shown only once. Store it securely — losing it means",
       "requesting a new key. We can revoke any compromised key on request.",
       "",
-      "— The TokenVest team (3UILD LLC)",
+      "— The Vestream team (3UILD LLC)",
+    ].join("\n"),
+  });
+}
+
+/**
+ * "You already have a key" recovery email. Sent when the form was submitted
+ * for an email that already has an active key on file. Includes the prefix
+ * (which is non-secret — it's the first 17 chars of the plaintext) so the
+ * recipient can verify which key is theirs in their secret manager. The
+ * plaintext is irrecoverable (stored only as a hash) so we direct them to
+ * support if they've lost it.
+ */
+async function sendExistingKeyEmail(email: string, name: string, prefix: string, tier: string): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[api-access] RESEND_API_KEY missing — skipping existing-key email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@vestream.io";
+
+  await resend.emails.send({
+    from:    fromAddress,
+    to:      email,
+    subject: "Your Vestream API key (already on file)",
+    text: [
+      `Hi ${name},`,
+      "",
+      "You already have a Vestream API key on file for this email — we",
+      "haven't issued a new one.",
+      "",
+      `Tier:   ${tier}`,
+      `Prefix: ${prefix}`,
+      "",
+      "If you have your key stored, you can keep using it as normal. If",
+      "you've lost the plaintext, reply to this email and we'll revoke",
+      "the existing key and issue a fresh one. We can't recover lost keys",
+      "directly — only the hash is stored, never the plaintext.",
+      "",
+      "— The Vestream team (3UILD LLC)",
     ].join("\n"),
   });
 }
