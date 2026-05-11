@@ -1167,19 +1167,27 @@ const SEED_JOBS: SeedJob[] = [
   // level by SOLANA_ENABLED flag; safe to list unconditionally because
   // their discover fns return [] when the flag is off.
   { adapterId: "streamflow",    chainId: CHAIN_IDS.SOLANA,   discover: discoverStreamflowRecipients },
-  // Jupiter Lock per-stream seed REMOVED 2026-05-06 (Option 0 / $0).
-  // Helius free tier can't enumerate JL's 44k+ accounts within the 300s
-  // seed budget. The TVL walker for JL keeps running on its own daily
-  // schedule and produces a correct $1B TVL figure — that path uses the
-  // same getProgramAccounts call but doesn't materialise per-stream
-  // rows, so it fits in budget. The per-wallet adapter is also untouched
-  // (users searching their own wallet still hit the 2-memcmp-filter
-  // path which is fast for individual queries).
+  // Jupiter Lock per-stream seed — RE-ENABLED 2026-05-11 via the bulk-
+  // fetch path (runJupiterLockViaBulkFetch in this file). That path does
+  // ONE getProgramAccounts call (~30s) instead of 44k per-recipient
+  // fetches, so it fits inside the 300s seed budget even on free-tier
+  // Solana RPCs that don't disable getProgramAccounts.
   //
-  // Re-enable when we have a paid Solana RPC (Helius Growth $49/mo or
-  // GetBlock Standard $20/mo). The runJupiterLockViaBulkFetch path
-  // remains in this file dormant for that flip.
-  // { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
+  // History: this entry was commented out 2026-05-06 when SOLANA_RPC_URL
+  // pointed at Helius free tier, which rate-limited the per-recipient
+  // fan-out. The 2026-05-11 fix had two parts:
+  //   1. SOLANA_RPC_URL repointed at Alchemy Solana (free tier supports
+  //      getProgramAccounts; previously assumed Helius was the only
+  //      free option that did).
+  //   2. SEED_JOBS uncommented (this line) — runJob dispatches to
+  //      runJupiterLockViaBulkFetch for jupiter-lock and never calls
+  //      the discover function for the per-recipient path.
+  //
+  // If the bulk fetch starts failing again (Alchemy free-tier limits
+  // tightened, getProgramAccounts rate-limited, etc.), comment this
+  // single line back out — JL TVL display still works because the TVL
+  // walker uses its own separate daily cron path.
+  { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
 
   // ─── STANDARD (subgraph-based, generally fast and reliable) ───
   // Sablier — ETH, BSC, Polygon, Base + Sepolia (testnet). Single Envio
