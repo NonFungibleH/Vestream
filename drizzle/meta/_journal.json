@@ -134,6 +134,20 @@
       "when": 1778400000000,
       "tag": "0018_protocol_summaries",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778500000000,
+      "tag": "0019_notification_stream_prefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778600000000,
+      "tag": "0020_token_prices_cache",
+      "breakpoints": true
     }
   ]
 }

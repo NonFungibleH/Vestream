@@ -505,30 +505,50 @@ export async function runWalkerSnapshot(
       // First-time snapshots (no prior row) skip the guard — preserving a
       // non-existent row is meaningless. The guard kicks in once we have
       // historical data to protect.
-      const PRICING_GUARD_MIN_TOKENS = 50;
-      const PRICING_GUARD_MIN_RATIO  = 0.05;
+      const PRICING_GUARD_MIN_TOKENS    = 50;
+      const PRICING_GUARD_MIN_RATIO     = 0.05;
+      // Smarter guard tier added 2026-05-11. Catches the failure mode where
+      // 5-15% of tokens get priced (so coverage looks "ok") but they happen
+      // to be the smallest ones — headline drops dramatically vs prior row.
+      // Observed empirically: PinkSale $44.6M → $34.9M overnight when partial
+      // pricing succeeded but the largest contributors weren't among the
+      // priced subset. A "tvlUsd dropped >50% vs prior" check would have
+      // preserved the prior row and waited for the next cron to retry.
+      const PRICING_GUARD_DROP_RATIO    = 0.50;  // preserve if new < 50% of prior
+      const PRICING_GUARD_MIN_PRIOR_USD = 1_000; // skip the drop check for tiny protocols
       const tokensTotal  = walker.tokens.length;
       const tokensPriced = priced.length;
       const coverageOk =
         tokensTotal < PRICING_GUARD_MIN_TOKENS ||
         tokensPriced / tokensTotal >= PRICING_GUARD_MIN_RATIO;
 
+      // Fetch prior row once for both guard tiers (cheap; one indexed row).
+      const priorRow = await readSnapshotRow(protocol, chainId).catch(() => null);
+      const newTvl   = perChain.tvl;
+      const priorTvl = priorRow?.tvlUsd ?? 0;
+
+      // Tier 2 guard: TVL dropped >50% vs prior, and prior was meaningful.
+      // We DON'T also require low coverage here — a partial-pricing-but-
+      // looks-ok-on-coverage scenario is the exact case this catches.
+      const tvlCrashed =
+        priorTvl > PRICING_GUARD_MIN_PRIOR_USD &&
+        newTvl   < priorTvl * PRICING_GUARD_DROP_RATIO;
+
       let committed = false;
       let skipped   = false;
-      if (!coverageOk) {
-        // Check whether a prior row exists for (protocol, chainId). If yes,
-        // we keep it. If no, we still upsert the (near-zero) row so the
-        // surface isn't empty forever — a partial number beats no row at all
-        // for first-time snapshots.
-        const hasPriorRow = await readSnapshotRow(protocol, chainId).catch(() => null);
-        if (hasPriorRow) {
-          console.warn(
-            `[snapshot] ${protocol}/${chainId}: pricing coverage ${tokensPriced}/${tokensTotal} ` +
-            `(${(100 * tokensPriced / tokensTotal).toFixed(1)}%) below ${100 * PRICING_GUARD_MIN_RATIO}% threshold — ` +
-            `keeping prior row (computedAt=${hasPriorRow.computedAt.toISOString()}, tvlUsd=$${hasPriorRow.tvlUsd.toFixed(0)})`,
-          );
-          skipped = true;
-        }
+      if (priorRow && (!coverageOk || tvlCrashed)) {
+        // We keep the prior row. If no prior exists, we let the row write
+        // through — a partial number beats no row at all for first-time
+        // snapshots.
+        const reason = !coverageOk
+          ? `pricing coverage ${tokensPriced}/${tokensTotal} ` +
+            `(${(100 * tokensPriced / tokensTotal).toFixed(1)}%) below ${100 * PRICING_GUARD_MIN_RATIO}% threshold`
+          : `new TVL $${newTvl.toFixed(0)} dropped >${100 * (1 - PRICING_GUARD_DROP_RATIO)}% vs prior $${priorTvl.toFixed(0)}`;
+        console.warn(
+          `[snapshot] ${protocol}/${chainId}: ${reason} — keeping prior row ` +
+          `(computedAt=${priorRow.computedAt.toISOString()}, tvlUsd=$${priorTvl.toFixed(0)})`,
+        );
+        skipped = true;
       }
 
       // Commit IMMEDIATELY so this chain's result survives even if a sibling

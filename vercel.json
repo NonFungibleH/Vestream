@@ -10,7 +10,11 @@
     },
     {
       "path": "/api/cron/tvl-snapshot",
-      "schedule": "15 3 * * *"
+      "schedule": "15 3,9,15,21 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-prices",
+      "schedule": "20 * * * *"
     },
     {
       "path": "/api/cron/notify",

@@ -724,3 +724,46 @@ export const demoPushSubscriptions = pgTable(
     index("demo_push_endpoint_idx").on(t.endpoint),
   ]
 );
+
+// ── Token prices cache (May 11 2026) ─────────────────────────────────────────
+// Per-token last-known price + DEX liquidity, populated by both the daily TVL
+// snapshot cron AND a separate hourly refresh cron. Read-through cache: the
+// pricing pipeline checks here BEFORE calling DexScreener / CoinGecko, only
+// fetching from external APIs on cache miss or stale entries.
+//
+// Why this exists: the daily snapshot cron used to fan out thousands of
+// price lookups simultaneously, which 429-rate-limited both free pricing
+// APIs. The headline TVL would degrade overnight whenever DexScreener had
+// a bad day. With this cache, a bad pricing day means we serve yesterday's
+// (still good) cached prices instead of zeros.
+//
+// TTL semantics: callers decide what's "fresh enough" — pass a maxAgeSec
+// to readPriceCache(). The hourly refresh cron picks the stalest entries
+// (~500 per run) and re-prices them, keeping the working set warm.
+//
+// Capacity: ~30k rows expected (PinkSale dominates with ~26k token addrs
+// across 4 chains). At ~200 bytes per row that's ~6MB total — fits easily
+// in any Postgres tier. Index is on (chain_id, token_address) primary key
+// for point lookups + on fetched_at for staleness queries.
+export const tokenPricesCache = pgTable(
+  "token_prices_cache",
+  {
+    chainId:      integer("chain_id").notNull(),
+    tokenAddress: text("token_address").notNull(),
+    // USD price per whole token. NUMERIC(40,18) is wide enough for tiny
+    // memecoin prices (10^-15) AND large stablecoin-ish tokens.
+    priceUsd:     numeric("price_usd", { precision: 40, scale: 18 }).notNull(),
+    // DEX-aggregated liquidity in USD. Drives the high/medium/low confidence
+    // band assignment in tvl.ts. Null = unknown (e.g. CoinGecko-priced tokens).
+    liquidityUsd: numeric("liquidity_usd", { precision: 40, scale: 2 }),
+    // Which API the price came from. Drives confidence semantics downstream.
+    source:       text("source").notNull(),  // "dexscreener" | "coingecko"
+    // When this entry was written. The refresh cron picks the oldest first.
+    fetchedAt:    timestamp("fetched_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.chainId, t.tokenAddress] }),
+    // Hot path for the refresh cron: "give me the N stalest entries".
+    index("token_prices_fetched_at_idx").on(t.fetchedAt),
+  ]
+);

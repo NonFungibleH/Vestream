@@ -47,6 +47,13 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import { fetchWithRetry } from "../fetch-with-retry";
+import {
+  readPriceCache,
+  writePriceCache,
+  priceInfoFromCached,
+  DEFAULT_PRICE_CACHE_TTL_SEC,
+  type CachedPrice,
+} from "./token-price-cache";
 
 // ─── Chain slug maps (DexScreener + CoinGecko use different names) ───────────
 
@@ -546,6 +553,16 @@ export async function priceAggregates(
     /** Stringified bigint — raw locked token units. */
     lockedAmount:  string;
   }>,
+  opts?: {
+    /** Maximum age (sec) of a cached price still considered "fresh enough".
+     *  Tokens with cached entries within this window skip the external API
+     *  call entirely. Defaults to 6 hours. */
+    cacheMaxAgeSec?: number;
+    /** Set to true to skip the cache entirely (forces a full API fetch).
+     *  Used by the dedicated refresh cron when explicitly re-pricing stale
+     *  entries; the standard snapshot cron leaves this unset. */
+    skipCache?: boolean;
+  },
 ): Promise<PricingSummary> {
   if (aggs.length === 0) return { priced: [], tokensSkipped: 0 };
 
@@ -559,17 +576,58 @@ export async function priceAggregates(
     totalLocked:   a.lockedAmount,
   }));
 
-  // Pass A — DexScreener.
-  const dsPrices = await priceViaDexScreener(internalAggs);
-  // Pass B — CoinGecko for what DexScreener didn't price.
-  const unpriced = internalAggs.filter((a) => {
+  // ── Read-through cache (May 11 2026) ─────────────────────────────────────
+  //
+  // The snapshot cron used to call DexScreener / CoinGecko for every token
+  // on every run — thousands of requests in a few minutes, which 429-rate-
+  // limited the free APIs and tanked the headline. With token_prices_cache
+  // in front, each subsequent run serves cached prices < 6h old without
+  // touching external APIs at all. Only cache MISSES or STALE entries
+  // require an external fetch.
+  //
+  // Failure-soft by design: if the cache table is missing (pre-migration)
+  // or any DB error occurs, readPriceCache returns an empty map and the
+  // pipeline falls through to the original API-only path.
+  const cacheHits = opts?.skipCache
+    ? new Map<string, CachedPrice>()
+    : await readPriceCache(
+        internalAggs.map((a) => ({ chainId: a.chainId, tokenAddress: a.tokenAddress })),
+        opts?.cacheMaxAgeSec ?? DEFAULT_PRICE_CACHE_TTL_SEC,
+      );
+
+  // Build the `prices` map seeded with cache hits, then only ask DS/CG
+  // for the tokens we couldn't serve from cache.
+  const prices = new Map<string, PriceInfo>();
+  const cacheKey = (chainId: number, addr: string) => `${chainId}:${addr.toLowerCase()}`;
+  for (const a of internalAggs) {
+    const ck = cacheKey(a.chainId, a.tokenAddress);
+    const hit = cacheHits.get(ck);
+    if (!hit) continue;
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (!dsChain) continue;  // can't represent cached entry in DS-keyed map
+    prices.set(`${dsChain}:${a.tokenAddress}`, priceInfoFromCached(hit));
+  }
+
+  // Tokens needing an external fetch — anything not satisfied by cache.
+  const cacheMisses = internalAggs.filter(
+    (a) => !cacheHits.has(cacheKey(a.chainId, a.tokenAddress)),
+  );
+
+  // Pass A — DexScreener (only for cache misses).
+  const dsPrices = cacheMisses.length > 0
+    ? await priceViaDexScreener(cacheMisses)
+    : new Map<string, PriceInfo>();
+  // Merge DS results into the prices map.
+  for (const [k, v] of dsPrices.entries()) prices.set(k, v);
+
+  // Pass B — CoinGecko for what DexScreener also didn't price.
+  const unpriced = cacheMisses.filter((a) => {
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     return !dsChain || !dsPrices.has(`${dsChain}:${a.tokenAddress}`);
   });
-  const cgPrices = await priceViaCoinGecko(unpriced);
-
-  // Merge into one lookup map keyed by DS-style slug.
-  const prices = new Map<string, PriceInfo>(dsPrices);
+  const cgPrices = unpriced.length > 0
+    ? await priceViaCoinGecko(unpriced)
+    : new Map<string, PriceInfo>();
   for (const a of unpriced) {
     const platform = CG_PLATFORM_SLUG[a.chainId];
     if (!platform) continue;
@@ -577,6 +635,33 @@ export async function priceAggregates(
     if (!info) continue;
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
+  }
+
+  // Write back to cache: every newly-fetched price (cache MISSES only —
+  // hits already came from the cache). Fire-and-forget so a cache write
+  // blip never blocks the snapshot run.
+  const newEntries: Array<{
+    chainId:      number;
+    tokenAddress: string;
+    priceUsd:     number;
+    liquidityUsd: number | null;
+    source:       PriceSource;
+  }> = [];
+  for (const a of cacheMisses) {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (!dsChain) continue;
+    const info = prices.get(`${dsChain}:${a.tokenAddress}`);
+    if (!info) continue;  // truly unpriced — nothing to cache
+    newEntries.push({
+      chainId:      a.chainId,
+      tokenAddress: a.tokenAddress,
+      priceUsd:     info.priceUsd,
+      liquidityUsd: info.liquidityUsd,
+      source:       info.source,
+    });
+  }
+  if (newEntries.length > 0) {
+    void writePriceCache(newEntries);
   }
 
   const priced: PricedAggregate[] = [];
