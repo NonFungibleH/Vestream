@@ -484,30 +484,78 @@ export async function runWalkerSnapshot(
           source:       p.source,
         }));
 
+      // ── Pricing-failure guard (May 11 2026) ──────────────────────────
+      //
+      // When DexScreener + CoinGecko both rate-limit us (HTTP 429), priced[]
+      // comes back near-empty and perChain.tvl collapses to near-zero. If we
+      // blindly upsert that, we OVERWRITE yesterday's good row with today's
+      // broken-pricing row — the headline TVL degrades every night the
+      // pricing APIs misbehave. Observed empirically: PinkSale went from
+      // $44.6M → $34.9M overnight (May 10 → 11) because pricing rate-limited.
+      //
+      // Rule: if the walker discovered a meaningful population of tokens
+      // (>= MIN_TOKENS) but we managed to price less than MIN_RATIO of them,
+      // assume the pricing pipeline is broken and KEEP THE EXISTING ROW.
+      //
+      // We deliberately don't gate on "tvl crashed by X%" because legitimate
+      // sudden drops (a major DAO unlocked, a token went to zero) shouldn't
+      // be hidden. The pricing-coverage signal is upstream-pipeline-health,
+      // not market-data, so it's the right thing to gate on.
+      //
+      // First-time snapshots (no prior row) skip the guard — preserving a
+      // non-existent row is meaningless. The guard kicks in once we have
+      // historical data to protect.
+      const PRICING_GUARD_MIN_TOKENS = 50;
+      const PRICING_GUARD_MIN_RATIO  = 0.05;
+      const tokensTotal  = walker.tokens.length;
+      const tokensPriced = priced.length;
+      const coverageOk =
+        tokensTotal < PRICING_GUARD_MIN_TOKENS ||
+        tokensPriced / tokensTotal >= PRICING_GUARD_MIN_RATIO;
+
+      let committed = false;
+      let skipped   = false;
+      if (!coverageOk) {
+        // Check whether a prior row exists for (protocol, chainId). If yes,
+        // we keep it. If no, we still upsert the (near-zero) row so the
+        // surface isn't empty forever — a partial number beats no row at all
+        // for first-time snapshots.
+        const hasPriorRow = await readSnapshotRow(protocol, chainId).catch(() => null);
+        if (hasPriorRow) {
+          console.warn(
+            `[snapshot] ${protocol}/${chainId}: pricing coverage ${tokensPriced}/${tokensTotal} ` +
+            `(${(100 * tokensPriced / tokensTotal).toFixed(1)}%) below ${100 * PRICING_GUARD_MIN_RATIO}% threshold — ` +
+            `keeping prior row (computedAt=${hasPriorRow.computedAt.toISOString()}, tvlUsd=$${hasPriorRow.tvlUsd.toFixed(0)})`,
+          );
+          skipped = true;
+        }
+      }
+
       // Commit IMMEDIATELY so this chain's result survives even if a sibling
       // chain hangs and Vercel kills the function. See note above the
       // Promise.allSettled call.
-      let committed = false;
-      try {
-        await upsertSnapshot({
-          protocol,
-          chainId,
-          tvlUsd:          perChain.tvl,
-          tvlHigh:         perChain.high,
-          tvlMedium:       perChain.medium,
-          tvlLow:          perChain.low,
-          streamCount:     walker.streamCount,
-          tokensPriced:    priced.length,
-          tokensTotal:     walker.tokens.length,
-          methodology:     walkerMethodology(protocol),
-          topContributors,
-          notes:           walker.error
-            ? `partial walk (${walker.elapsedMs}ms): ${walker.error}`
-            : `full walk ${walker.elapsedMs}ms`,
-        });
-        committed = true;
-      } catch (dbErr) {
-        console.error(`[snapshot] upsert failed for ${protocol}/${chainId}:`, dbErr);
+      if (!skipped) {
+        try {
+          await upsertSnapshot({
+            protocol,
+            chainId,
+            tvlUsd:          perChain.tvl,
+            tvlHigh:         perChain.high,
+            tvlMedium:       perChain.medium,
+            tvlLow:          perChain.low,
+            streamCount:     walker.streamCount,
+            tokensPriced,
+            tokensTotal,
+            methodology:     walkerMethodology(protocol),
+            topContributors,
+            notes:           walker.error
+              ? `partial walk (${walker.elapsedMs}ms): ${walker.error}`
+              : `full walk ${walker.elapsedMs}ms`,
+          });
+          committed = true;
+        } catch (dbErr) {
+          console.error(`[snapshot] upsert failed for ${protocol}/${chainId}:`, dbErr);
+        }
       }
 
       return {
@@ -673,6 +721,59 @@ export interface ProtocolSnapshotRow {
 }
 
 /** Read all snapshot rows for a protocol (across every chain). */
+/**
+ * Read the single (protocol, chainId) snapshot row, if it exists.
+ *
+ * Used by the pricing-failure guard in runWalkerSnapshot — when today's
+ * pricing fetch fails too many tokens, we check whether a prior row
+ * exists for this cell; if yes, we keep it (don't overwrite with broken
+ * data). If no prior row exists, we let the partial write through so
+ * first-time snapshots aren't blocked.
+ *
+ * Build-time guard intentionally omitted — this is only called from the
+ * cron path (server-only), never during page render / build.
+ */
+async function readSnapshotRow(
+  protocol: string,
+  chainId:  number,
+): Promise<ProtocolSnapshotRow | null> {
+  const rows = await db
+    .select({
+      protocol:     protocolTvlSnapshots.protocol,
+      chainId:      protocolTvlSnapshots.chainId,
+      tvlUsd:       protocolTvlSnapshots.tvlUsd,
+      tvlHigh:      protocolTvlSnapshots.tvlHigh,
+      tvlMedium:    protocolTvlSnapshots.tvlMedium,
+      tvlLow:       protocolTvlSnapshots.tvlLow,
+      streamCount:  protocolTvlSnapshots.streamCount,
+      tokensPriced: protocolTvlSnapshots.tokensPriced,
+      tokensTotal:  protocolTvlSnapshots.tokensTotal,
+      methodology:  protocolTvlSnapshots.methodology,
+      computedAt:   protocolTvlSnapshots.computedAt,
+    })
+    .from(protocolTvlSnapshots)
+    .where(and(
+      eq(protocolTvlSnapshots.protocol, protocol),
+      eq(protocolTvlSnapshots.chainId,  chainId),
+    ))
+    .limit(1);
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    protocol:     r.protocol,
+    chainId:      r.chainId,
+    tvlUsd:       Number(r.tvlUsd),
+    tvlHigh:      Number(r.tvlHigh),
+    tvlMedium:    Number(r.tvlMedium),
+    tvlLow:       Number(r.tvlLow),
+    streamCount:  r.streamCount,
+    tokensPriced: r.tokensPriced,
+    tokensTotal:  r.tokensTotal,
+    methodology:  r.methodology,
+    computedAt:   r.computedAt,
+  };
+}
+
 export async function readProtocolSnapshot(
   protocol: string,
 ): Promise<ProtocolSnapshotRow[]> {

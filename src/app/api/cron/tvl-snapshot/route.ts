@@ -93,32 +93,55 @@ async function runAll(protocolFilter: string | null): Promise<{
     console.log(`[cron/tvl-snapshot] no enabled protocol matches "${protocolFilter}" — skipping (may be disabled in protocol-constants.ts)`);
   }
 
-  const runs = await Promise.all(
-    protocols.map(async (p) => {
-      try {
-        const result = await snapshotProtocol(p);
-        const ok = "error" in result.summary
-          ? result.summary.error === null
-          : result.summary.chainsOk > 0;
-        return { slug: result.slug, kind: result.kind, ok, summary: result.summary };
-      } catch (err) {
-        console.error(`[cron/tvl-snapshot] ${p.slug} failed:`, err);
-        return {
-          slug: p.slug,
-          kind: p.externalTvl ? "defillama" : "walker",
-          ok:   false,
-          summary: {
-            protocol:      p.slug,
-            slug:          p.externalTvl?.slug ?? "",
-            totalUsd:      0,
-            chainsWritten: 0,
-            durationMs:    0,
-            error:         err instanceof Error ? err.message : String(err),
-          } as DefiLlamaSnapshotSummary,
-        };
-      }
-    }),
-  );
+  // Serial processing with brief inter-protocol delay (added May 11 2026).
+  //
+  // Was Promise.all(protocols.map(...)) — every protocol's pricing fan-out
+  // (DexScreener + CoinGecko per-token lookups) fired at the same instant.
+  // Empirically this overwhelmed both free-tier APIs and produced cascading
+  // HTTP 429s for ~50% of tokens, which then degraded the headline (PinkSale
+  // $44.6M → $34.9M overnight May 10→11 as the failed-pricing rows landed).
+  //
+  // Serial sequencing with a INTER_PROTOCOL_DELAY_MS pause spreads the API
+  // pressure over ~minutes instead of seconds. Combined with the
+  // pricing-failure guard in runWalkerSnapshot (which preserves prior rows
+  // when coverage is poor), this should hold even when DexScreener has a
+  // bad day.
+  //
+  // Budget math: 9 protocols × (avg ~20s pricing + 5s delay) = ~225s,
+  // fits within Vercel Pro's 300s function limit with margin. If any one
+  // protocol exceeds its budget the loop continues to the next — the
+  // function only dies if total elapsed exceeds maxDuration.
+  const INTER_PROTOCOL_DELAY_MS = 5_000;
+  const runs: Array<{ slug: string; kind: string; ok: boolean; summary: Summary }> = [];
+
+  for (let i = 0; i < protocols.length; i++) {
+    const p = protocols[i];
+    if (i > 0) {
+      await new Promise((r) => setTimeout(r, INTER_PROTOCOL_DELAY_MS));
+    }
+    try {
+      const result = await snapshotProtocol(p);
+      const ok = "error" in result.summary
+        ? result.summary.error === null
+        : result.summary.chainsOk > 0;
+      runs.push({ slug: result.slug, kind: result.kind, ok, summary: result.summary });
+    } catch (err) {
+      console.error(`[cron/tvl-snapshot] ${p.slug} failed:`, err);
+      runs.push({
+        slug: p.slug,
+        kind: p.externalTvl ? "defillama" : "walker",
+        ok:   false,
+        summary: {
+          protocol:      p.slug,
+          slug:          p.externalTvl?.slug ?? "",
+          totalUsd:      0,
+          chainsWritten: 0,
+          durationMs:    0,
+          error:         err instanceof Error ? err.message : String(err),
+        } as DefiLlamaSnapshotSummary,
+      });
+    }
+  }
 
   const totalUsd = runs.reduce((s, r) => {
     const t = "totalUsd" in r.summary ? r.summary.totalUsd : 0;
