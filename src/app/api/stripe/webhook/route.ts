@@ -24,6 +24,7 @@ import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { getStripe, statusToTier, STRIPE_TIER_LIMITS } from "@/lib/stripe";
 import { trackServerEvent } from "@/lib/server-analytics";
+import { claimWebhookEvent } from "@/lib/webhook-dedup";
 
 export const runtime = "nodejs";
 
@@ -54,6 +55,18 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.warn("[stripe-webhook] signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  // Replay protection: Stripe redelivers on operator click + on retry.
+  // Stripe's signature has a timestamp (mitigates pure replay) BUT a
+  // legitimate "resend event" from the dashboard still produces a
+  // freshly-signed payload with the same event.id — which without dedup
+  // would re-run our handlers and (e.g.) re-emit subscription_started
+  // analytics on every replay. Skip on dedup hit, return 200 OK.
+  const isFirstTime = await claimWebhookEvent(event.id, "stripe");
+  if (!isFirstTime) {
+    console.log(`[stripe-webhook] dedup hit — event ${event.id} already processed`);
+    return NextResponse.json({ received: true, dedup: true });
   }
 
   try {

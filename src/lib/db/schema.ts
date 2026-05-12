@@ -746,6 +746,28 @@ export const demoPushSubscriptions = pgTable(
 // in any Postgres tier. Index is on (chain_id, token_address) primary key
 // for point lookups + on fetched_at for staleness queries.
 // ─────────────────────────────────────────────────────────────────────────────
+// Webhook event dedup — replay protection for external webhook deliveries.
+// Both RevenueCat and Stripe deliver events at-least-once; without dedup
+// a CANCELLATION-then-UNCANCELLATION sequence redelivered out of order
+// would silently downgrade a paying user. Each handler attempts an
+// INSERT … ON CONFLICT DO NOTHING keyed by (event_id, source); empty
+// RETURNING means "already processed, return 200 OK".
+// ─────────────────────────────────────────────────────────────────────────────
+export const webhookEventDedup = pgTable(
+  "webhook_event_dedup",
+  {
+    eventId:    text("event_id").notNull(),
+    source:     text("source").notNull(),  // "revenuecat" | "stripe"
+    receivedAt: timestamp("received_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.eventId, t.source] }),
+    // Hot path for the cleanup cron: "delete everything older than N days".
+    index("webhook_event_dedup_received_at_idx").on(t.receivedAt),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pending wallet links — web→mobile handoff
 // ─────────────────────────────────────────────────────────────────────────────
 //

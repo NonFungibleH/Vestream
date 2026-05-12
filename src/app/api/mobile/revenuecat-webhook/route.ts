@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "@/lib/env";
+import { claimWebhookEvent } from "@/lib/webhook-dedup";
 
 /**
  * Constant-time string equality. The Authorization header is a shared secret
@@ -57,6 +58,9 @@ function tierFromEntitlements(entitlementIds: string[]): "mobile" | "pro" {
 
 // RevenueCat event shape we care about (narrow subset; keep loose on unknown fields).
 interface RCEvent {
+  /** RevenueCat-supplied unique event ID (UUID). Used for replay protection
+   *  — see claimWebhookEvent below. */
+  id?: string;
   type?: string;
   app_user_id?: string;
   entitlement_ids?: string[];
@@ -98,6 +102,7 @@ export async function POST(req: NextRequest) {
   }
 
   const {
+    id: eventId,                  // RC-supplied unique event ID for dedup
     type,
     app_user_id: userId,          // this is the ID we set in initPurchases(user.id)
     entitlement_ids: entitlementIds = [],
@@ -117,6 +122,19 @@ export async function POST(req: NextRequest) {
   if (!UUID_RE.test(userId)) {
     console.warn(`[RC Webhook] rejected non-UUID app_user_id: ${String(userId).slice(0, 40)}`);
     return NextResponse.json({ error: "Invalid app_user_id" }, { status: 400 });
+  }
+
+  // Replay protection: claim the event ID before doing any side effects.
+  // RC redelivers on retry; without dedup, an UNCANCELLATION redelivered
+  // after a CANCELLATION would silently flip a paid user back to active
+  // (or vice versa) depending on arrival order. Idempotent 200 OK on a
+  // dedup hit so RC's retry queue drains cleanly.
+  if (eventId) {
+    const isFirstTime = await claimWebhookEvent(eventId, "revenuecat");
+    if (!isFirstTime) {
+      console.log(`[RC Webhook] dedup hit — event ${eventId} already processed`);
+      return NextResponse.json({ ok: true, dedup: true });
+    }
   }
 
   try {
