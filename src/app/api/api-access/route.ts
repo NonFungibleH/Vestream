@@ -69,6 +69,22 @@ export async function POST(req: NextRequest) {
       { error: "Disposable email addresses aren't allowed. Please use your work or personal email." },
       { status: 400 },
     );
+  // Domain-level throttle: 10 successful issuances per email domain per
+  // week. An attacker with a catch-all corp domain or gmail+plus aliasing
+  // could still bypass the per-IP and per-email checks above (an attacker
+  // can rotate IPs cheaply and `alice+1@…`, `alice+2@…` are distinct
+  // addresses). Domain rate-limiting adds an axis they can't trivially
+  // mint around without registering new domains. 10/week is generous for
+  // a real team — most company API integrations have <5 distinct keys
+  // across their dev / staging / prod environments — but blocks the
+  // farm-1000-keys-from-one-domain pattern.
+  const domain = cleanEmail.split("@")[1] ?? "unknown";
+  const domainRl = await checkRateLimit("api-access:domain", domain, 10, "7 d");
+  const domainBlocked = rateLimitResponse(
+    domainRl,
+    "We've issued enough free keys to this email domain this week. Email team@vestream.io if you need more.",
+  );
+  if (domainBlocked) return domainBlocked;
   if (!useCase || typeof useCase !== "string" || useCase.trim().length < 10)
     return NextResponse.json({ error: "Please describe your use case (min 10 characters)" }, { status: 400 });
 

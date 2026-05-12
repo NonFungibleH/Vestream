@@ -20,7 +20,12 @@
     "build": "tsc",
     "dev":   "tsx vestream.ts",
     "start": "node dist/vestream.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "publish:official": "npm publish --provenance --access public"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",

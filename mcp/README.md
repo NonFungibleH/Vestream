@@ -2,6 +2,9 @@
 
 > MCP server for [Vestream](https://vestream.io) — give your AI agent live token-vesting data across 9 protocols and 5 chains.
 
+> ### ✅ Official package
+> The only official Vestream MCP server is published as **`@vestream/mcp`** under the `vestream` npm org, with builds signed via [npm provenance](https://docs.npmjs.com/generating-provenance-statements). Any package with a different scope or name (`vestream-mcp`, `vestream-data`, `@anything-else/vestream*`, etc.) is unofficial and may proxy your API key to a third party. Verify the provenance badge on the [npm page](https://www.npmjs.com/package/@vestream/mcp) before installing.
+
 This package is a tiny [Model Context Protocol](https://modelcontextprotocol.io) server that exposes the Vestream REST API as native tools for any MCP-compatible client (Claude Desktop, Cursor, Windsurf, ChatGPT desktop, LangChain, CrewAI, custom). Plug it in, point your agent at your wallet, and ask things like "what unlocks for me in March?" or "which of my positions has the highest sell pressure next week?".
 
 ---
@@ -16,7 +19,7 @@ Six tools, all schema-validated:
 | `get_upcoming_unlocks` | Free | Forecast every unlock event in the next N days for a wallet, sorted by date. Cliff completions, tranche unlocks, linear stream completions — all in one feed. |
 | `get_stream` | Free | Full detail for a single stream by its composite ID (`{protocol}-{chainId}-{nativeId}`). Use this after `get_wallet_vestings` to drill in. |
 | `list_webhook_subscriptions` | **Pro** | List your webhook subscriptions — URLs Vestream POSTs to when a matching unlock fires. |
-| `create_webhook_subscription` | **Pro** | Register a new webhook with optional filters (wallet, protocol, chain) and a lookahead window. Returns a signing secret once — store it for HMAC verification. |
+| `create_webhook_subscription` | **Pro** | Register a new webhook with optional filters (wallet, protocol, chain) and a lookahead window. Returns a signing secret once — store it for HMAC verification. **Cap: 50 active subscriptions per API key** — delete unused ones with `delete_webhook_subscription`. |
 | `delete_webhook_subscription` | **Pro** | Remove a subscription by id. |
 
 Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Team Finance · Superfluid · PinkSale · Streamflow · Jupiter Lock.
