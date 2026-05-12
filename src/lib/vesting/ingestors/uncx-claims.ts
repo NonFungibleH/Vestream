@@ -120,7 +120,7 @@ export async function ingestUncxClaimsForUser(
           headers: {
             "Content-Type": "application/json",
             "Accept":       "application/json",
-            "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
+            "User-Agent":   "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
           },
           body: JSON.stringify({
             query:     WITHDRAW_EVENTS_QUERY,

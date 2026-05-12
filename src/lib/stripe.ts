@@ -44,7 +44,7 @@ export function getStripe(): Stripe | null {
     // string at compile time.
     apiVersion: "2026-04-22.dahlia",
     // Identify our integration in Stripe's dashboard logs.
-    appInfo: { name: "TokenVest", url: "https://vestream.io" },
+    appInfo: { name: "Vestream", url: "https://vestream.io" },
   });
 }
 

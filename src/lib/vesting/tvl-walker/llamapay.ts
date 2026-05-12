@@ -7,11 +7,11 @@
 //
 // Why self-index instead of DefiLlama:
 //   - DefiLlama sums LlamaPay TVL across EVERY chain it deploys on.
-//     TokenVest tracks 6 mainnet chains; the DefiLlama figure includes
+//     Vestream tracks 6 mainnet chains; the DefiLlama figure includes
 //     deployments we don't index, so the /protocols card has been
-//     mixing apples (other protocols' TokenVest-scope numbers) with
+//     mixing apples (other protocols' Vestream-scope numbers) with
 //     oranges (LlamaPay's global number).
-//   - Self-indexing gives us coverage transparency: "TokenVest LlamaPay TVL
+//   - Self-indexing gives us coverage transparency: "Vestream LlamaPay TVL
 //     = X across our 6 supported chains".
 //   - Removes the silent DefiLlama outage failure mode.
 //
@@ -164,7 +164,7 @@ export async function walkLlamapay(chainId: SupportedChainId): Promise<WalkerRes
         headers: {
           "Content-Type": "application/json",
           "Accept":       "application/json",
-          "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
+          "User-Agent":   "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
         },
         body: JSON.stringify({
           query:     STREAMS_QUERY,

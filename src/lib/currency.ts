@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Multi-currency display infrastructure.
 //
-// TokenVest's source of truth is USD (every token price + every locked-value
+// Vestream's source of truth is USD (every token price + every locked-value
 // calculation flows through `quick-prices.ts` in USD). For display, users
 // outside the US prefer to see their portfolio in their local currency.
 // This module provides:

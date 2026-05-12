@@ -7,7 +7,7 @@
 // Why per-protocol OG instead of a single site-wide one for these pages:
 // the share preview is the only thing many people see on Twitter/Discord
 // before deciding to click. A protocol-branded card with live numbers
-// converts measurably better than a generic TokenVest card.
+// converts measurably better than a generic Vestream card.
 
 import { ImageResponse } from "next/og";
 import { getProtocol } from "@/lib/protocol-constants";
@@ -47,7 +47,7 @@ export async function generateImageMetadata({
       id:          "og",
       contentType: "image/png",
       size,
-      alt:         meta ? `${meta.name} unlock tracker — TokenVest` : "TokenVest",
+      alt:         meta ? `${meta.name} unlock tracker — Vestream` : "Vestream",
     },
   ];
 }
@@ -58,13 +58,13 @@ export default async function OG(
   const { protocol } = await params;
   const meta = getProtocol(protocol);
   if (!meta) {
-    // Fall back to a generic TokenVest card for unknown slugs (Next.js
+    // Fall back to a generic Vestream card for unknown slugs (Next.js
     // would normally 404 the page itself; the OG fetcher might still
     // hit this for a moment during deploys).
     return new ImageResponse(
       (
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F5F3", fontSize: 64, fontWeight: 800, color: "#1A1D20", fontFamily: "system-ui" }}>
-          TokenVest
+          Vestream
         </div>
       ),
       { ...size },
@@ -109,7 +109,7 @@ export default async function OG(
           }}
         />
 
-        {/* Header — TokenVest wordmark */}
+        {/* Header — Vestream wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ width: 44, height: 6, background: "#1A1D20", opacity: 0.35, borderRadius: 2 }} />
@@ -117,7 +117,7 @@ export default async function OG(
             <div style={{ width: 44, height: 6, background: "#1CB8B8", borderRadius: 2 }} />
           </div>
           <span style={{ fontSize: 32, fontWeight: 800, color: "#1A1D20", letterSpacing: "-0.02em" }}>
-            TokenVest
+            Vestream
           </span>
           <span style={{ fontSize: 22, color: "#B8BABD", marginLeft: 8 }}>
             · Token unlock tracker

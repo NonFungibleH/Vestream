@@ -18,7 +18,7 @@
 //     claim happened, which is acceptable for tax granularity.
 //
 // Limitations honestly disclosed (same as Streamflow):
-//   - First-run baseline emits one lump-sum event for pre-TokenVest history
+//   - First-run baseline emits one lump-sum event for pre-Vestream history
 //   - Multiple withdrawals between refreshes get bundled into one event
 //   - Future Phase 4: Anchor instruction scanner via getSignaturesForAddress
 //     for true per-event granularity

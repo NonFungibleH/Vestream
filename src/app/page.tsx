@@ -77,7 +77,7 @@ const homepageJsonLd = {
     {
       "@type":   "Organization",
       "@id":     "https://vestream.io/#organization",
-      name:      "TokenVest",
+      name:      "Vestream",
       url:       "https://vestream.io",
       logo:      "https://vestream.io/logo.svg",
       sameAs:    ["https://x.com/Vestream_"],
@@ -85,7 +85,7 @@ const homepageJsonLd = {
     {
       "@type":   "WebSite",
       "@id":     "https://vestream.io/#website",
-      name:      "TokenVest",
+      name:      "Vestream",
       url:       "https://vestream.io",
       publisher: { "@id": "https://vestream.io/#organization" },
       potentialAction: {
@@ -97,7 +97,7 @@ const homepageJsonLd = {
     {
       "@type":              "WebApplication",
       "@id":                "https://vestream.io/#app",
-      name:                 "TokenVest",
+      name:                 "Vestream",
       url:                  "https://vestream.io",
       applicationCategory:  "FinanceApplication",
       operatingSystem:      "Web",
@@ -225,7 +225,7 @@ export default async function Home() {
           </div>
 
           {/* ── Right: phone mockup ─────────────────────────────────────
-              Stylized iPhone frame with a TokenVest lock-screen
+              Stylized iPhone frame with a Vestream lock-screen
               notification rendered inside. CSS-only — no image asset, so
               stays sharp at every density and tracks theme changes.
 
@@ -329,14 +329,14 @@ export default async function Home() {
 
                 {/* ── Notification stack ─────────────────────────────────
                     Three iOS lock-screen cards:
-                      1. (now)        TokenVest — NOVA unlocked just now
-                      2. (5m)         TokenVest — Unlock in 5 minutes
-                      3. (yesterday)  TokenVest Mail — Email · 24h preview sent
+                      1. (now)        Vestream — NOVA unlocked just now
+                      2. (5m)         Vestream — Unlock in 5 minutes
+                      3. (yesterday)  Vestream Mail — Email · 24h preview sent
                     Removed from the App Store ref: the 7-day heads-up and
                     the 1-hour-to-unlock email — keep the stack short
                     enough to read at hero size. */}
                 <div className="absolute left-2 right-2 flex flex-col gap-1.5" style={{ top: 168 }}>
-                  {/* Primary card — TOKENVEST · NOVA unlocked just now */}
+                  {/* Primary card — VESTREAM · NOVA unlocked just now */}
                   <div
                     style={{
                       background: "rgba(255,255,255,0.96)",
@@ -361,7 +361,7 @@ export default async function Home() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>TOKENVEST</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM</span>
                           <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>now</span>
                         </div>
                         <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
@@ -374,7 +374,7 @@ export default async function Home() {
                     </div>
                   </div>
 
-                  {/* Card 2 — TOKENVEST · Unlock in 5 minutes */}
+                  {/* Card 2 — VESTREAM · Unlock in 5 minutes */}
                   <div
                     style={{
                       background: "rgba(255,255,255,0.92)",
@@ -399,7 +399,7 @@ export default async function Home() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>TOKENVEST</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM</span>
                           <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>5m</span>
                         </div>
                         <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
@@ -412,7 +412,7 @@ export default async function Home() {
                     </div>
                   </div>
 
-                  {/* Card 3 — TOKENVEST MAIL · Email · 24h preview sent.
+                  {/* Card 3 — VESTREAM MAIL · Email · 24h preview sent.
                       Orange envelope icon distinguishes the email channel
                       from push notifications above. */}
                   <div
@@ -442,7 +442,7 @@ export default async function Home() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="flex items-center justify-between" style={{ marginBottom: 1 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>TOKENVEST MAIL</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", letterSpacing: "0.04em" }}>VESTREAM MAIL</span>
                           <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>yesterday</span>
                         </div>
                         <div style={{ fontSize: 11.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.25, letterSpacing: "-0.01em" }}>
@@ -528,7 +528,7 @@ export default async function Home() {
 
       {/* ── Mobile App section ─────────────────────────────────────────────
           The first of two surface-specific feature blocks (the second is
-          the desktop dashboard further down). Tells the user "TokenVest
+          the desktop dashboard further down). Tells the user "Vestream
           lives on your phone first" — push alerts, live countdowns,
           one-tap claim links, calendar view. Phone mockup on the right
           (or stacked below on mobile) shows a Portfolio-tab screenshot
@@ -562,7 +562,7 @@ export default async function Home() {
             </h2>
 
             <p className="text-base md:text-lg max-w-xl mb-8 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
-              TokenVest is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page — all in your pocket.
+              Vestream is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page — all in your pocket.
             </p>
 
             <ul className="space-y-3 mb-8 max-w-md mx-auto lg:mx-0 text-left">
@@ -697,7 +697,7 @@ export default async function Home() {
           dashboard mockup tells the user the web is for power-tools work
           (tax exports, Discover/explorer, multi-wallet portfolio,
           search-all-holders). Mockup itself is the existing browser-
-          chromed TokenVest dashboard render below. */}
+          chromed Vestream dashboard render below. */}
       <section className="px-4 md:px-8 pt-8 md:pt-12 pb-8 md:pb-10">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
@@ -771,7 +771,7 @@ export default async function Home() {
                 <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "#1CB8B8" }}>
                   <span className="text-white text-[9px] font-bold">T</span>
                 </div>
-                <span className="text-xs font-bold" style={{ color: "#1A1D20" }}>TokenVest</span>
+                <span className="text-xs font-bold" style={{ color: "#1A1D20" }}>Vestream</span>
               </div>
               <div className="px-2 py-3 space-y-0.5">
                 {[
@@ -1087,7 +1087,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#0369a1", bg: "rgba(3,105,161,0.07)", border: "rgba(3,105,161,0.13)",
               title: "P&L tracker",
-              body: "Log your purchase price and individual sales. TokenVest splits your P&L into realized and unrealized — all stored locally.",
+              body: "Log your purchase price and individual sales. Vestream splits your P&L into realized and unrealized — all stored locally.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
@@ -1122,7 +1122,7 @@ export default async function Home() {
               Find every vesting in one search
             </h2>
             <p className="text-base leading-relaxed mb-7" style={{ color: "#8B8E92" }}>
-              Enter any wallet address and TokenVest simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
+              Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
             {/* Protocol pill grid — explicit list of every platform we scan, each
@@ -1292,7 +1292,7 @@ export default async function Home() {
               Your vestings, in your pocket
             </h2>
             <p className="text-base leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
-              The TokenVest mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
+              The Vestream mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
             </p>
             <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
               Sign up for early access to the web dashboard — the mobile app is included with your account.
@@ -1344,7 +1344,7 @@ export default async function Home() {
               <path d="M22 57.5 L33 57.5 L35 59.5 L22 59.5 Z" fill="#1A1D20" fillOpacity="0.65"/>
               <path d="M22 62 L35 62 L37 64 L22 64 Z" fill="#1CB8B8"/>
               {/* App title — single-fill ink to match the lockup */}
-              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">TokenVest</text>
+              <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="white" stroke="rgba(28,184,184,0.32)" strokeWidth="1"/>
               {/* Bell icon background */}
@@ -1390,7 +1390,7 @@ export default async function Home() {
         <div className="text-center mb-14">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Built for</p>
           <h2 className="text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
-            Who uses TokenVest?
+            Who uses Vestream?
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
             Token vesting spans multiple protocols, chains, and wallets. We make it simple for anyone with tokens on a schedule.
@@ -1509,7 +1509,7 @@ export default async function Home() {
       </section>
 
       {/* ── Tax exports — mid-page, below hero/features/onboarding.
-            Deliberately not in the hero: the headline value of TokenVest is
+            Deliberately not in the hero: the headline value of Vestream is
             tracking, not taxes. Tax is the secondary feature that turns
             tracking users into yearly returners. Surface it where readers
             who scrolled this far are already engaged. ───────────────── */}
@@ -1589,7 +1589,7 @@ export default async function Home() {
         <div className="space-y-3">
           {[
             {
-              q: "Do I need to connect a wallet to use TokenVest?",
+              q: "Do I need to connect a wallet to use Vestream?",
               a: "No wallet connection required. Paste any address into Find My Vestings to scan it free — no signup. To save wallets and get unlock alerts, install the mobile app and sign in with email — we'll send a one-time code, no password needed. You never sign transactions or expose any keys.",
             },
             {
@@ -1597,12 +1597,12 @@ export default async function Home() {
               a: "The desktop dashboard is part of the Pro plan. Subscribe in the iOS or Android app, then visit vestream.io/login on your computer and scan the QR code from the app's Settings → Connect Desktop. No password, no email — your phone authenticates the desktop session.",
             },
             {
-              q: "Can TokenVest access or move my funds?",
-              a: "Never. TokenVest is strictly read-only. We only read publicly available on-chain data — we never request your private key, can't initiate transactions, and have no ability to move tokens. The mobile app authenticates with email; we never see your wallet's keys.",
+              q: "Can Vestream access or move my funds?",
+              a: "Never. Vestream is strictly read-only. We only read publicly available on-chain data — we never request your private key, can't initiate transactions, and have no ability to move tokens. The mobile app authenticates with email; we never see your wallet's keys.",
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "TokenVest supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
@@ -1610,7 +1610,7 @@ export default async function Home() {
             },
             {
               q: "What is the P&L Tracker?",
-              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales — date, token amount, and sell price or total USD received. TokenVest automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). Available on the mobile app's token detail screen and on the Pro web dashboard.",
+              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales — date, token amount, and sell price or total USD received. Vestream automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). Available on the mobile app's token detail screen and on the Pro web dashboard.",
             },
             {
               q: "Can I export my data?",
@@ -1625,12 +1625,12 @@ export default async function Home() {
               a: "Yes. You can add any wallet address you want to monitor — useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. Free tier: 3 wallets. Pro tier: 10 wallets.",
             },
             {
-              q: "Is TokenVest free to use?",
+              q: "Is Vestream free to use?",
               a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year — saves 37%, 14-day trial) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
-              a: "Yes. The TokenVest REST API and our MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
+              a: "Yes. The Vestream REST API and our MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
             },
           ].map((item, i) => (
             <FAQItem key={i} q={item.q} a={item.a} />

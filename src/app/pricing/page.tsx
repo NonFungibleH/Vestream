@@ -75,8 +75,8 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 // JSON-LD Product/Offer for SERP rich pricing snippets. Google can show the
-// price + tier name directly in search results when a "TokenVest pricing" /
-// "TokenVest cost" query lands here. Three Offers (Free, Pro Monthly, Pro
+// price + tier name directly in search results when a "Vestream pricing" /
+// "Vestream cost" query lands here. Three Offers (Free, Pro Monthly, Pro
 // Annual) cover the self-serve tiers; Enterprise is intentionally excluded
 // because it has no public price.
 const pricingJsonLd = {

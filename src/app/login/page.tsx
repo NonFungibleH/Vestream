@@ -120,8 +120,8 @@ export default function LoginPage() {
       <nav className="flex items-center justify-between px-6 md:px-8 h-16 bg-white"
         style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
-          <span className="font-bold" style={{ color: "#1A1D20" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <span className="font-bold" style={{ color: "#1A1D20" }}>Vestream</span>
         </Link>
         <Link href="/" className="text-sm font-medium" style={{ color: "#8B8E92" }}>
           Back to home
@@ -138,7 +138,7 @@ export default function LoginPage() {
               Sign in to dashboard
             </h1>
             <p className="text-sm md:text-base" style={{ color: "#8B8E92" }}>
-              Scan the code below from the TokenVest app on your phone.
+              Scan the code below from the Vestream app on your phone.
             </p>
           </div>
 
@@ -235,7 +235,7 @@ export default function LoginPage() {
             <ol className="flex flex-col gap-3 text-sm" style={{ color: "#374151" }}>
               <li className="flex items-start gap-3">
                 <Step n={1} />
-                <span>Open the TokenVest app on your phone (iOS / Android).</span>
+                <span>Open the Vestream app on your phone (iOS / Android).</span>
               </li>
               <li className="flex items-start gap-3">
                 <Step n={2} />
@@ -264,7 +264,7 @@ export default function LoginPage() {
               Don&apos;t have the app yet?
             </p>
             <p className="text-xs mb-4" style={{ color: "#5C6066", lineHeight: 1.55 }}>
-              The web dashboard is part of the Pro plan. The mobile app is how you subscribe and how you sign desktop sessions in. Try the free scanner first if you want to see what TokenVest finds in your wallet — no install needed.
+              The web dashboard is part of the Pro plan. The mobile app is how you subscribe and how you sign desktop sessions in. Try the free scanner first if you want to see what Vestream finds in your wallet — no install needed.
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
               <Link

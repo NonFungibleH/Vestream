@@ -2,7 +2,7 @@
 
 // /early-access
 // ─────────────────────────────────────────────────────────────────────────────
-// Sign-in / sign-up landing for TokenVest. Two steps: email → OTP.
+// Sign-in / sign-up landing for Vestream. Two steps: email → OTP.
 //
 // Previously had a third "access code" gate (a hardcoded shared password
 // during the closed beta). Removed because:
@@ -81,7 +81,7 @@ export default function EarlyAccessPage() {
 
   const stepLabels: Record<Step, string> = { email: "1", otp: "2" };
   const stepTitles: Record<Step, string> = {
-    email: "Welcome to TokenVest",
+    email: "Welcome to Vestream",
     otp:   "Check your email",
   };
   const stepSubs: Record<Step, string> = {
@@ -94,7 +94,7 @@ export default function EarlyAccessPage() {
       <div className="w-full max-w-sm rounded-3xl px-8 py-10 flex flex-col items-center text-center"
         style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 8px 40px rgba(15,23,42,0.08)" }}>
 
-        <img src="/logo-icon.svg" alt="TokenVest" className="w-10 h-10 mb-5" />
+        <img src="/logo-icon.svg" alt="Vestream" className="w-10 h-10 mb-5" />
 
         {/* Step progress dots */}
         <div className="flex items-center gap-2 mb-6">

@@ -1,6 +1,6 @@
 // src/lib/vesting/adapters/jupiter-lock.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Jupiter Lock adapter — Solana, 9th TokenVest protocol.
+// Jupiter Lock adapter — Solana, 9th Vestream protocol.
 //
 // Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem on
 // Solana. Every Solana token launch since late 2024 has standardised on it;

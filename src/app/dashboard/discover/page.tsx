@@ -596,7 +596,7 @@ export default function DiscoverPage() {
                     Auto-scan unlocks with Pro
                   </p>
                   <p className="text-xs" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
-                    Enter any wallet address and TokenVest automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
+                    Enter any wallet address and Vestream automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
                   </p>
                 </div>
               </div>

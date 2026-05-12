@@ -15,7 +15,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime  = "edge";
-export const alt      = "TokenVest — Free Token Vesting Tracker for 9 Protocols";
+export const alt      = "Vestream — Free Token Vesting Tracker for 9 Protocols";
 export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -56,7 +56,7 @@ export default async function OG() {
             <div style={{ width: 56, height: 8, background: "#1CB8B8", borderRadius: 2 }} />
           </div>
           <span style={{ fontSize: 40, fontWeight: 800, color: "#1A1D20", letterSpacing: "-0.02em" }}>
-            TokenVest
+            Vestream
           </span>
         </div>
 

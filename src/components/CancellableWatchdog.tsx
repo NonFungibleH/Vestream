@@ -106,7 +106,7 @@ export function CancellableWatchdog({ streams }: Props) {
         </div>
         <div style={{ fontSize: 11, color: "var(--preview-text-2)", lineHeight: 1.4 }}>
           The issuer can revoke your unvested tokens at any time on{" "}
-          <span style={{ fontWeight: 600 }}>{symbolLine}</span>. TokenVest alerts you the moment a cancellation hits the chain.
+          <span style={{ fontWeight: 600 }}>{symbolLine}</span>. Vestream alerts you the moment a cancellation hits the chain.
         </div>
       </div>
       <button

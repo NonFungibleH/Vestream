@@ -207,7 +207,7 @@ const articles: Article[] = [
           "<strong>Read your investment agreement:</strong> For private round participants, your SAFT (Simple Agreement for Future Tokens) or token purchase agreement specifies your exact vesting terms.",
           "<strong>Use a block explorer:</strong> If you know the vesting contract address, you can inspect it on Etherscan, BscScan, or Basescan to see your locked balance and schedule.",
           "<strong>Use a protocol-native dashboard:</strong> Platforms like Sablier, Team Finance, and Hedgey all provide dashboards where you can connect your wallet and view active positions.",
-          "<strong>Use a dedicated vesting tracker:</strong> Tools like TokenVest aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
+          "<strong>Use a dedicated vesting tracker:</strong> Tools like Vestream aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
         ],
       },
 
@@ -250,7 +250,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I know if my wallet has vested tokens waiting to be claimed?",
-            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (Sablier app, Team Finance, etc.), or you can use a cross-protocol tracker like TokenVest to see all your vested-but-unclaimed balances across every supported platform in one view.",
+            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (Sablier app, Team Finance, etc.), or you can use a cross-protocol tracker like Vestream to see all your vested-but-unclaimed balances across every supported platform in one view.",
           },
           {
             q: "Can I sell my unvested tokens?",
@@ -649,10 +649,10 @@ const articles: Article[] = [
         ],
       },
 
-      { type: "h2", text: "How to Track Your Vestings with TokenVest" },
+      { type: "h2", text: "How to Track Your Vestings with Vestream" },
       {
         type: "p",
-        html: "TokenVest is a dedicated token vesting tracker that covers all five major vesting protocols (Sablier, UNCX, Team Finance, Hedgey, and Unvest) across Ethereum, BNB Chain, Base, and Sepolia. Here is a step-by-step guide to getting set up:",
+        html: "Vestream is a dedicated token vesting tracker that covers all five major vesting protocols (Sablier, UNCX, Team Finance, Hedgey, and Unvest) across Ethereum, BNB Chain, Base, and Sepolia. Here is a step-by-step guide to getting set up:",
       },
       {
         type: "ol",
@@ -674,7 +674,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Using the Discover feature on TokenVest, you can scan any public wallet address and immediately see all active vesting positions — including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
+        html: "Using the Discover feature on Vestream, you can scan any public wallet address and immediately see all active vesting positions — including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
       },
       {
         type: "callout",
@@ -698,7 +698,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "In TokenVest, email alerts are configured in Settings → Notifications. You can set alert thresholds and choose how far in advance to be notified of upcoming unlocks.",
+        html: "In Vestream, email alerts are configured in Settings → Notifications. You can set alert thresholds and choose how far in advance to be notified of upcoming unlocks.",
       },
 
       { type: "h2", text: "Exporting Vesting Data for Tax and Accounting" },
@@ -721,7 +721,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVest's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values — or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
+        html: "Vestream's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values — or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
       },
 
       { type: "h2", text: "Best Practices for Token Vesting Management" },
@@ -743,15 +743,15 @@ const articles: Article[] = [
         items: [
           {
             q: "How do I check my token vesting balance?",
-            a: "You can check your vesting balance in several ways: connect your wallet to the protocol-native dashboard (e.g., app.sablier.com for Sablier), query the vesting contract directly on a block explorer using the 'Read Contract' function, or use a cross-protocol tracker like TokenVest to see all your vesting positions across all protocols and chains in one dashboard.",
+            a: "You can check your vesting balance in several ways: connect your wallet to the protocol-native dashboard (e.g., app.sablier.com for Sablier), query the vesting contract directly on a block explorer using the 'Read Contract' function, or use a cross-protocol tracker like Vestream to see all your vesting positions across all protocols and chains in one dashboard.",
           },
           {
             q: "What is the best tool for tracking token vesting?",
-            a: "A dedicated multi-protocol vesting tracker like TokenVest provides the most comprehensive view, covering Sablier, UNCX, Team Finance, Hedgey, and Unvest across Ethereum, BNB Chain, Base, and Sepolia in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
+            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view, covering Sablier, UNCX, Team Finance, Hedgey, and Unvest across Ethereum, BNB Chain, Base, and Sepolia in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
           },
           {
             q: "Can I track someone else's token vesting?",
-            a: "Yes. All on-chain vesting data is publicly readable. You can enter any wallet address into a vesting tracker like TokenVest's Discover feature to see all active vesting positions associated with that address across all supported protocols and chains.",
+            a: "Yes. All on-chain vesting data is publicly readable. You can enter any wallet address into a vesting tracker like Vestream's Discover feature to see all active vesting positions associated with that address across all supported protocols and chains.",
           },
           {
             q: "How often should I check my vesting dashboard?",
@@ -771,7 +771,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I track vestings across multiple blockchains?",
-            a: "Use a multi-chain vesting tracker. TokenVest supports Ethereum, BNB Chain, Base, and Sepolia simultaneously — the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
+            a: "Use a multi-chain vesting tracker. Vestream supports Ethereum, BNB Chain, Base, and Sepolia simultaneously — the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
           },
         ],
       },
@@ -864,7 +864,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Whale wallets — particularly those associated with VC firms or early investors — are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and TokenVest's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
+        html: "Whale wallets — particularly those associated with VC firms or early investors — are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and Vestream's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
       },
       {
         type: "p",
@@ -947,7 +947,7 @@ const articles: Article[] = [
           "<strong>Source the tokenomics document:</strong> Every legitimate project publishes detailed tokenomics. Map all allocation categories with their vesting terms into a spreadsheet.",
           "<strong>Convert to absolute quantities:</strong> Percentages are meaningless without the context of total supply. Calculate the token count for every monthly unlock.",
           "<strong>Identify the peak pressure months:</strong> Sum all monthly unlocks across categories. Flag any month where new supply exceeds 2% of reported circulating supply as a high-risk window.",
-          "<strong>Track known wallet addresses:</strong> For projects where team or investor wallets are known (often from DAO governance or audit reports), monitor them on-chain using tools like Arkham, Nansen, or TokenVest's Discover feature.",
+          "<strong>Track known wallet addresses:</strong> For projects where team or investor wallets are known (often from DAO governance or audit reports), monitor them on-chain using tools like Arkham, Nansen, or Vestream's Discover feature.",
           "<strong>Set calendar alerts:</strong> Mark cliff dates and major monthly tranches. Revisit your position sizing in the weeks approaching high-risk unlock windows.",
           "<strong>Cross-reference with market structure:</strong> Unlock pressure combined with bearish chart structure and declining volume is a significantly more reliable signal than either factor alone.",
         ],
@@ -989,7 +989,7 @@ const articles: Article[] = [
           },
           {
             q: "How can I track vesting calendars for tokens I hold?",
-            a: "The most reliable approach combines: (1) sourcing the tokenomics document and building a monthly unlock model in a spreadsheet, (2) tracking known team/investor wallets on-chain using tools like TokenVest's Discover feature, and (3) setting calendar alerts for major cliff dates and monthly tranches.",
+            a: "The most reliable approach combines: (1) sourcing the tokenomics document and building a monthly unlock model in a spreadsheet, (2) tracking known team/investor wallets on-chain using tools like Vestream's Discover feature, and (3) setting calendar alerts for major cliff dates and monthly tranches.",
           },
           {
             q: "What is a vesting pressure curve?",
@@ -1178,7 +1178,7 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Identify the vesting contracts:</strong> Use a protocol's documentation, deployment records, or a tool like TokenVest's Discover feature to locate active vesting positions for the token",
+          "<strong>Identify the vesting contracts:</strong> Use a protocol's documentation, deployment records, or a tool like Vestream's Discover feature to locate active vesting positions for the token",
           "<strong>Query claimed vs deposited amounts:</strong> Most vesting contracts expose a function to query total deposited and total withdrawn for each position — the delta is unclaimed vested supply",
           "<strong>Cross-reference against wallet activity:</strong> For the wallets holding unclaimed positions, check their last transaction date on a block explorer. Wallets inactive for 12+ months are strong zombie supply candidates",
           "<strong>Segment by allocation category:</strong> Airdrop and community allocation positions will typically show higher unclaim rates than team and investor positions",
@@ -1608,7 +1608,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I find upcoming unlock events for a token I hold?",
-            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like TokenVest aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
+            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like Vestream aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
           },
         ],
       },
@@ -1739,7 +1739,7 @@ const articles: Article[] = [
         items: [
           "<strong>Find the vesting contract address.</strong> The project's documentation, tokenomics page, or initial token deployment transaction should reference the vesting contract. Many projects post this on their website or GitHub.",
           "<strong>Read the contract storage.</strong> Using a block explorer (Etherscan, BscScan, etc.), navigate to the contract and call the read functions. Look for <code>cliffTime</code>, <code>cliffDate</code>, <code>vestingStart</code>, or equivalent variables.",
-          "<strong>Use a vesting aggregator.</strong> Tools like TokenVest index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
+          "<strong>Use a vesting aggregator.</strong> Tools like Vestream index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
           "<strong>Verify against tokenomics documentation.</strong> On-chain data is ground truth, but project documentation often explains the intent behind the schedule. Discrepancies between documented schedules and on-chain data are a significant red flag.",
         ],
       },
@@ -1942,7 +1942,7 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Find the total insider %.</strong> Any insider allocation above 40% of supply warrants close inspection. Above 50% is a red flag.",
-          "<strong>Map every unlock date.</strong> Use token unlock trackers (or a tool like TokenVest's explorer) to identify every date when a significant tranche of supply enters circulation. Mark these as potential selling windows.",
+          "<strong>Map every unlock date.</strong> Use token unlock trackers (or a tool like Vestream's explorer) to identify every date when a significant tranche of supply enters circulation. Mark these as potential selling windows.",
           "<strong>Check if the release is linear or tranche-based.</strong> A continuous linear release after the cliff is structurally superior to a large single unlock. Both can appear in whitepapers as '4-year vesting' — the difference is in the specifics.",
           "<strong>Compare investor and team vesting.</strong> If investors vest faster than the team, the incentive alignment is asymmetric. The team should have at least as long a lock as the capital.",
           "<strong>Check on-chain enforcement.</strong> Vesting enforced by a smart contract is independently auditable. A legal agreement with a custodian is not the same thing.",
@@ -1979,7 +1979,7 @@ const articles: Article[] = [
           },
           {
             q: "How can I find out when a token's unlock events are scheduled?",
-            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. TokenVest's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, Hedgey, and Team Finance protocols.",
+            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, Hedgey, and Team Finance protocols.",
           },
           {
             q: "What should a project team do if they already have a poorly structured vesting schedule?",
@@ -2201,7 +2201,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I find a project's token allocation?",
-            a: "Check the project's whitepaper, tokenomics page, or official documentation. On-chain vesting contracts can be verified directly via block explorers. Token unlock tracking tools like TokenVest aggregate this data across multiple vesting protocols in one view.",
+            a: "Check the project's whitepaper, tokenomics page, or official documentation. On-chain vesting contracts can be verified directly via block explorers. Token unlock tracking tools like Vestream aggregate this data across multiple vesting protocols in one view.",
           },
           {
             q: "Is a high FDV/market cap ratio always bad?",
@@ -2298,7 +2298,7 @@ const articles: Article[] = [
         items: [
           "<strong>When can the largest single group of insiders first sell?</strong> Identify the earliest unlock event that involves a significant percentage of total supply (more than 5%). This is the first moment of meaningful sell pressure.",
           "<strong>What percentage of total supply unlocks in the first six months?</strong> Add up TGE unlocks plus any cliff-free linear vesting in the first six months. If this number exceeds 15–20% of total supply, the token faces structural selling pressure during its most vulnerable price discovery phase.",
-          "<strong>Is the vesting on-chain or contractual?</strong> Check block explorers or use a tool like TokenVest to verify whether vesting contracts are actually deployed. If you cannot find on-chain contracts, the schedule is an unenforceable promise.",
+          "<strong>Is the vesting on-chain or contractual?</strong> Check block explorers or use a tool like Vestream to verify whether vesting contracts are actually deployed. If you cannot find on-chain contracts, the schedule is an unenforceable promise.",
         ],
       },
       {
@@ -2329,7 +2329,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This is the problem TokenVest was built to solve. Connect your wallet and TokenVest surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
+        html: "This is the problem Vestream was built to solve. Connect your wallet and Vestream surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
       },
 
       {
@@ -2345,7 +2345,7 @@ const articles: Article[] = [
           },
           {
             q: "Can I see another wallet's vesting schedule?",
-            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like TokenVest make this easier by normalising data across multiple protocols into a readable format.",
+            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like Vestream make this easier by normalising data across multiple protocols into a readable format.",
           },
           {
             q: "What happens to unvested tokens if a project fails?",
@@ -2446,7 +2446,7 @@ const articles: Article[] = [
         items: [
           "<strong>The project's official tokenomics documentation.</strong> Most projects publish a vesting schedule in their whitepaper or tokenomics page. This tells you the intended schedule — but does not confirm it is actually enforced on-chain.",
           "<strong>Block explorers.</strong> For any token with on-chain vesting, the vesting contract is publicly visible. Search the token's contract address on Etherscan, BscScan, or Polygonscan to find associated vesting contracts. This requires understanding how to read smart contract state, which is not beginner-friendly.",
-          "<strong>Vesting aggregator tools.</strong> Platforms like TokenVest read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
+          "<strong>Vesting aggregator tools.</strong> Platforms like Vestream read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
         ],
       },
       {
@@ -2488,7 +2488,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "If your token's vesting is managed by any of these protocols, the schedule is verifiable on-chain and trackable via aggregators like TokenVest. If your project uses a custom vesting contract, you will need to find and read that specific contract on the relevant block explorer.",
+        html: "If your token's vesting is managed by any of these protocols, the schedule is verifiable on-chain and trackable via aggregators like Vestream. If your project uses a custom vesting contract, you will need to find and read that specific contract on the relevant block explorer.",
       },
 
       {
@@ -2646,7 +2646,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">TokenVest</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
       },
 
       { type: "h2", text: "What to Know Before You Hold Any Token" },
@@ -2713,7 +2713,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This guide compares all three on the dimensions that actually drive a decision: vesting model, cliff support, claim UX, gas cost, multi-chain coverage, NFT representation, and ecosystem fit. We're protocol-neutral — TokenVest tracks vestings across all three (and six others) so we have no horse in the race. The recommendations below are what we'd tell a friend asking which one to use.",
+        html: "This guide compares all three on the dimensions that actually drive a decision: vesting model, cliff support, claim UX, gas cost, multi-chain coverage, NFT representation, and ecosystem fit. We're protocol-neutral — Vestream tracks vestings across all three (and six others) so we have no horse in the race. The recommendations below are what we'd tell a friend asking which one to use.",
       },
 
       { type: "h2", text: "TL;DR — Quick verdict" },
@@ -2758,7 +2758,7 @@ const articles: Article[] = [
           "<strong>Per-second streaming</strong> — recipients can claim any time without waiting for a calendar tick. Useful for cash-flow-sensitive recipients (advisors, contractors).",
           "<strong>Cancelable streams</strong> — projects can configure vests as cancelable (returning unvested tokens to the grantor) or non-cancelable. Both are common.",
           "<strong>Polished recipient UX</strong> — Sablier's own claim dashboard is the cleanest in the category, with clear schedules, claim history, and ENS integration.",
-          "<strong>The Graph subgraphs</strong> — every chain has a public subgraph that aggregators (like TokenVest) can read efficiently.",
+          "<strong>The Graph subgraphs</strong> — every chain has a public subgraph that aggregators (like Vestream) can read efficiently.",
         ],
       },
       { type: "h3", text: "Sablier weaknesses" },
@@ -2835,7 +2835,7 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Less polished recipient UX</strong> — the dashboard works but feels older than Sablier's. Discovering whether you have a vest with UNCX often requires the project's pointer rather than self-discovery.",
-          "<strong>Two contract variants is confusing</strong> — TokenVesting vs VestingManager means recipients sometimes claim from the wrong UI and miss positions. (TokenVest merges both behind a single 'UNCX' tracker for exactly this reason.)",
+          "<strong>Two contract variants is confusing</strong> — TokenVesting vs VestingManager means recipients sometimes claim from the wrong UI and miss positions. (Vestream merges both behind a single 'UNCX' tracker for exactly this reason.)",
           "<strong>Not associated with crypto-native DAOs</strong> — Sablier has the DAO/protocol audience; UNCX has the token-launch audience. Cultural fit matters when picking.",
         ],
       },
@@ -2873,10 +2873,10 @@ const articles: Article[] = [
         ],
       },
 
-      { type: "h2", text: "How TokenVest tracks all three" },
+      { type: "h2", text: "How Vestream tracks all three" },
       {
         type: "p",
-        html: "We built TokenVest specifically because crypto users frequently have vestings across multiple protocols and don't want to check three or four dashboards every month. Paste any wallet address and TokenVest queries Sablier's subgraph, Hedgey's subgraph, both UNCX variants, and six other protocols in parallel — returning every active vesting in under three seconds.",
+        html: "We built Vestream specifically because crypto users frequently have vestings across multiple protocols and don't want to check three or four dashboards every month. Paste any wallet address and Vestream queries Sablier's subgraph, Hedgey's subgraph, both UNCX variants, and six other protocols in parallel — returning every active vesting in under three seconds.",
       },
       {
         type: "p",
@@ -2911,7 +2911,7 @@ const articles: Article[] = [
           },
           {
             q: "Can I tell from a token address which vesting protocol holds my tokens?",
-            a: "Not directly from the token contract, no. The token doesn't 'know' it's locked — it just knows the vesting protocol's contract holds the balance. To find out which protocol, either ask the project or use an aggregator like TokenVest that scans all of them automatically.",
+            a: "Not directly from the token contract, no. The token doesn't 'know' it's locked — it just knows the vesting protocol's contract holds the balance. To find out which protocol, either ask the project or use an aggregator like Vestream that scans all of them automatically.",
           },
         ],
       },
@@ -2922,7 +2922,7 @@ const articles: Article[] = [
   {
     slug:        "sablier-token-streaming-vesting-explained",
     title:       "Sablier: Token Streaming Vesting Explained",
-    excerpt:     "Sablier pioneered real-time, per-second token streaming on Ethereum. Here is how it works, where it runs, and how to track Sablier streams on TokenVest.",
+    excerpt:     "Sablier pioneered real-time, per-second token streaming on Ethereum. Here is how it works, where it runs, and how to track Sablier streams on Vestream.",
     publishedAt: "2026-04-27",
     updatedAt:   "2026-04-27",
     readingTime: "9 min read",
@@ -2935,7 +2935,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "If you have received tokens from a project that uses Sablier, your unlock isn't a step function. It's a smooth line. Every time you load the contract, more tokens are claimable than the moment before. This article explains how Sablier works under the hood, the chains it supports, the most common use cases, and how to monitor your Sablier positions inside TokenVest.",
+        html: "If you have received tokens from a project that uses Sablier, your unlock isn't a step function. It's a smooth line. Every time you load the contract, more tokens are claimable than the moment before. This article explains how Sablier works under the hood, the chains it supports, the most common use cases, and how to monitor your Sablier positions inside Vestream.",
       },
 
       { type: "h2", text: "What Sablier Actually Does" },
@@ -2991,7 +2991,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVest's Sablier adapter covers all five of these networks, normalising every stream into the same <strong>VestingStream</strong> shape so you can view a Polygon stream and a Base stream side by side without translating fields.",
+        html: "Vestream's Sablier adapter covers all five of these networks, normalising every stream into the same <strong>VestingStream</strong> shape so you can view a Polygon stream and a Base stream side by side without translating fields.",
       },
 
       { type: "h2", text: "Common Sablier Use Cases" },
@@ -3033,10 +3033,10 @@ const articles: Article[] = [
         html: "Subtract <em>withdrawnAmount</em> from the time-prorated unlocked amount and you have the recipient's <strong>claimable balance</strong>. Sablier's frontend, block explorers, and aggregators all calculate this from the same on-chain primitives. For a wider primer on the underlying terms, see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>.",
       },
 
-      { type: "h2", text: "Tracking Sablier Streams on TokenVest" },
+      { type: "h2", text: "Tracking Sablier Streams on Vestream" },
       {
         type: "p",
-        html: "TokenVest indexes Sablier across all five supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
+        html: "Vestream indexes Sablier across all five supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
       },
       {
         type: "p",
@@ -3045,8 +3045,8 @@ const articles: Article[] = [
       {
         type: "callout",
         emoji: "📡",
-        title: "Track Sablier vesting on TokenVest",
-        body:  "Add any Ethereum, Base, BNB, Polygon or Sepolia address and TokenVest will surface every Sablier stream it owns or receives — with claimable balance updated in real time. Sign in at <a href=\"/login\">TokenVest</a> to get started.",
+        title: "Track Sablier vesting on Vestream",
+        body:  "Add any Ethereum, Base, BNB, Polygon or Sepolia address and Vestream will surface every Sablier stream it owns or receives — with claimable balance updated in real time. Sign in at <a href=\"/login\">Vestream</a> to get started.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3079,7 +3079,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "That single design decision changes everything downstream — composability, transferability, accounting, and the user experience for revoking grants. This guide unpacks how Hedgey works, why projects choose it, and how TokenVest surfaces Hedgey plans alongside streams from other protocols.",
+        html: "That single design decision changes everything downstream — composability, transferability, accounting, and the user experience for revoking grants. This guide unpacks how Hedgey works, why projects choose it, and how Vestream surfaces Hedgey plans alongside streams from other protocols.",
       },
 
       { type: "h2", text: "The NFT-as-Vesting-Plan Model" },
@@ -3130,7 +3130,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Hedgey's per-recipient NFT mint cost is non-trivial on Ethereum mainnet, which is why projects with hundreds of grantees tend to deploy on L2s. TokenVest indexes Hedgey on all four production chains via The Graph subgraph.",
+        html: "Hedgey's per-recipient NFT mint cost is non-trivial on Ethereum mainnet, which is why projects with hundreds of grantees tend to deploy on L2s. Vestream indexes Hedgey on all four production chains via The Graph subgraph.",
       },
 
       { type: "h2", text: "Reading a Hedgey Plan" },
@@ -3169,16 +3169,16 @@ const articles: Article[] = [
         html: "Hedgey's voting variants delegate the locked tokens' governance power to the recipient even before the tokens vest. This is important for projects whose token is also a governance token — without delegation, locked allocations are effectively disenfranchised, and a small number of unlocked holders dominate votes. Hedgey's voting plan calls <strong>delegate()</strong> on the underlying token in the same transaction that creates the plan.",
       },
 
-      { type: "h2", text: "Tracking Hedgey on TokenVest" },
+      { type: "h2", text: "Tracking Hedgey on Vestream" },
       {
         type: "p",
-        html: "Add any wallet to your TokenVest dashboard and the Hedgey adapter scans Ethereum, Base, BNB, and Polygon for both granted and held vesting NFTs. Each plan is normalised into a unified stream card showing claimable, withdrawn, and locked amounts, plus the next unlock event.",
+        html: "Add any wallet to your Vestream dashboard and the Hedgey adapter scans Ethereum, Base, BNB, and Polygon for both granted and held vesting NFTs. Each plan is normalised into a unified stream card showing claimable, withdrawn, and locked amounts, plus the next unlock event.",
       },
       {
         type: "callout",
         emoji: "📡",
-        title: "Track Hedgey vesting on TokenVest",
-        body:  "TokenVest surfaces every Hedgey vesting NFT in a watched wallet — across Ethereum, Base, BNB, and Polygon. Sign in at <a href=\"/login\">TokenVest</a> to monitor your plans alongside streams from Sablier, UNCX, and the rest.",
+        title: "Track Hedgey vesting on Vestream",
+        body:  "Vestream surfaces every Hedgey vesting NFT in a watched wallet — across Ethereum, Base, BNB, and Polygon. Sign in at <a href=\"/login\">Vestream</a> to monitor your plans alongside streams from Sablier, UNCX, and the rest.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3267,14 +3267,14 @@ const articles: Article[] = [
       {
         type: "callout",
         emoji: "📦",
-        title: "TokenVest merges them",
-        body:  "Inside the TokenVest UI, TokenVesting v3 and VestingManager positions are surfaced as a single <em>UNCX</em> protocol card. The underlying contract is recorded as metadata, but you don't have to think about which one your project deployed.",
+        title: "Vestream merges them",
+        body:  "Inside the Vestream UI, TokenVesting v3 and VestingManager positions are surfaced as a single <em>UNCX</em> protocol card. The underlying contract is recorded as metadata, but you don't have to think about which one your project deployed.",
       },
 
       { type: "h2", text: "Supported Chains" },
       {
         type: "p",
-        html: "UNCX deploys to most major EVM networks. The chains TokenVest indexes are:",
+        html: "UNCX deploys to most major EVM networks. The chains Vestream indexes are:",
       },
       {
         type: "ul",
@@ -3304,7 +3304,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Or just paste your address into TokenVest and skip the contract math entirely. For a deeper primer on these fields, see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>.",
+        html: "Or just paste your address into Vestream and skip the contract math entirely. For a deeper primer on these fields, see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a>.",
       },
 
       { type: "h2", text: "Why Projects Choose UNCX for Vesting" },
@@ -3318,16 +3318,16 @@ const articles: Article[] = [
         ],
       },
 
-      { type: "h2", text: "Tracking UNCX on TokenVest" },
+      { type: "h2", text: "Tracking UNCX on Vestream" },
       {
         type: "p",
-        html: "TokenVest queries both TokenVesting v3 and VestingManager subgraphs in parallel for every supported chain. Vests are merged, deduplicated, and presented as unified UNCX cards. You can compare an UNCX position to a Sablier or Hedgey position without translating between contract field names.",
+        html: "Vestream queries both TokenVesting v3 and VestingManager subgraphs in parallel for every supported chain. Vests are merged, deduplicated, and presented as unified UNCX cards. You can compare an UNCX position to a Sablier or Hedgey position without translating between contract field names.",
       },
       {
         type: "callout",
         emoji: "📡",
-        title: "Track UNCX vesting on TokenVest",
-        body:  "Add any wallet on Ethereum, BNB, Polygon, Base, or Sepolia to <a href=\"/login\">TokenVest</a> and the UNCX adapter will surface every TokenVesting v3 and VestingManager position it holds.",
+        title: "Track UNCX vesting on Vestream",
+        body:  "Add any wallet on Ethereum, BNB, Polygon, Base, or Sepolia to <a href=\"/login\">Vestream</a> and the UNCX adapter will surface every TokenVesting v3 and VestingManager position it holds.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3424,7 +3424,7 @@ const articles: Article[] = [
         items: [
           "<strong>You can verify the schedule yourself:</strong> every vest is on-chain. The project can't change the unlock dates after creation.",
           "<strong>You can verify the contract is funded:</strong> if your project says they locked 10M tokens for the team but the on-chain balance only shows 1M, that's a discrepancy you can detect immediately.",
-          "<strong>You can verify your specific allocation:</strong> TokenVest and Team Finance's own UI show your individual position, not just the aggregate lock.",
+          "<strong>You can verify your specific allocation:</strong> Vestream and Team Finance's own UI show your individual position, not just the aggregate lock.",
         ],
       },
       {
@@ -3466,12 +3466,12 @@ const articles: Article[] = [
         html: "Conversely, if you want per-second streaming, transferable governance-aware vesting NFTs, or per-recipient revocability, you'll likely look at <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier</a> or <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey</a> first.",
       },
 
-      { type: "h2", text: "Tracking Team Finance Vests on TokenVest" },
+      { type: "h2", text: "Tracking Team Finance Vests on Vestream" },
       {
         type: "callout",
         emoji: "📡",
-        title: "Track Team Finance vesting on TokenVest",
-        body:  "TokenVest's Team Finance adapter covers Ethereum, BNB Chain, Polygon, Base, and Sepolia. Add your wallet at <a href=\"/login\">TokenVest</a> and every vest you receive or grant will appear alongside positions from Sablier, Hedgey, UNCX, and the rest.",
+        title: "Track Team Finance vesting on Vestream",
+        body:  "Vestream's Team Finance adapter covers Ethereum, BNB Chain, Polygon, Base, and Sepolia. Add your wallet at <a href=\"/login\">Vestream</a> and every vest you receive or grant will appear alongside positions from Sablier, Hedgey, UNCX, and the rest.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3480,7 +3480,7 @@ const articles: Article[] = [
         items: [
           { q: "Can a Team Finance vest be cancelled by the project?", a: "Generally no, once funded — but there can be exceptions when admin keys are configured. Always read the deployment's parameters before treating any lock as truly immutable." },
           { q: "Does Team Finance support per-second streaming?", a: "No. Team Finance's vests release in scheduled tranches. If you need streaming, Sablier or Superfluid are better fits." },
-          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs. TokenVest indexes the five primary networks." },
+          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs. Vestream indexes the five primary networks." },
           { q: "Can I transfer my Team Finance vest to another wallet?", a: "Vests are tied to a recipient address. There is no NFT to transfer — moving the position requires the project to redeploy. This is one reason some teams prefer Hedgey." },
         ],
       },
@@ -3491,7 +3491,7 @@ const articles: Article[] = [
   {
     slug:        "streamflow-solana-vesting",
     title:       "Streamflow on Solana: Token Vesting in the SVM Ecosystem",
-    excerpt:     "Streamflow is the dominant vesting protocol on Solana. Here is how it differs from EVM equivalents and how TokenVest tracks SPL-token vesting.",
+    excerpt:     "Streamflow is the dominant vesting protocol on Solana. Here is how it differs from EVM equivalents and how Vestream tracks SPL-token vesting.",
     publishedAt: "2026-04-27",
     updatedAt:   "2026-04-27",
     readingTime: "9 min read",
@@ -3504,7 +3504,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This article walks through what Streamflow is, why it works the way it does, and how TokenVest surfaces Streamflow positions next to your EVM streams in a single dashboard.",
+        html: "This article walks through what Streamflow is, why it works the way it does, and how Vestream surfaces Streamflow positions next to your EVM streams in a single dashboard.",
       },
 
       { type: "h2", text: "What Streamflow Does" },
@@ -3549,7 +3549,7 @@ const articles: Article[] = [
           "<strong>Vesting Contract:</strong> the canonical schedule with start, end, optional cliff, and unlock granularity.",
           "<strong>Token Vesting (multi-recipient):</strong> bulk-create grants for a list of contributors in a single transaction.",
           "<strong>Payment streams:</strong> open-ended streams used for payroll and grants programs.",
-          "<strong>AlignedContract:</strong> a specialised variant TokenVest's adapter currently skips in favour of the standard vesting contract surface.",
+          "<strong>AlignedContract:</strong> a specialised variant Vestream's adapter currently skips in favour of the standard vesting contract surface.",
         ],
       },
 
@@ -3573,7 +3573,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Streamflow uses base58 addresses (e.g. <em>So11111111111111111111111111111111111111112</em> for wrapped SOL), unlike EVM's 0x-prefixed hex. TokenVest handles the address-format normalisation for you, but it's worth knowing if you're reading on-chain data directly.",
+        html: "Streamflow uses base58 addresses (e.g. <em>So11111111111111111111111111111111111111112</em> for wrapped SOL), unlike EVM's 0x-prefixed hex. Vestream handles the address-format normalisation for you, but it's worth knowing if you're reading on-chain data directly.",
       },
 
       { type: "h2", text: "Why Solana for Vesting at All?" },
@@ -3593,20 +3593,20 @@ const articles: Article[] = [
         body:  "Streamflow runs both vesting and payments products. When evaluating Streamflow's vesting-specific TVL, always isolate the vesting category — combined headline numbers can include open payment streams that are not strictly vesting.",
       },
 
-      { type: "h2", text: "How TokenVest Indexes Streamflow" },
+      { type: "h2", text: "How Vestream Indexes Streamflow" },
       {
         type: "p",
-        html: "TokenVest's Streamflow adapter uses the official @streamflow/stream SDK against an Alchemy Solana RPC endpoint. For every wallet you track, the adapter calls Streamflow's per-recipient query and normalises every returned stream into the same VestingStream shape used for EVM protocols. This is what lets you view a Solana SPL vest and an Ethereum Sablier stream in the same dashboard view.",
+        html: "Vestream's Streamflow adapter uses the official @streamflow/stream SDK against an Alchemy Solana RPC endpoint. For every wallet you track, the adapter calls Streamflow's per-recipient query and normalises every returned stream into the same VestingStream shape used for EVM protocols. This is what lets you view a Solana SPL vest and an Ethereum Sablier stream in the same dashboard view.",
       },
       {
         type: "p",
-        html: "The Solana ecosystem in TokenVest is feature-flagged — for environments without Solana RPC configured, the adapter is a no-op. Production users on TokenVest get Streamflow coverage by default.",
+        html: "The Solana ecosystem in Vestream is feature-flagged — for environments without Solana RPC configured, the adapter is a no-op. Production users on Vestream get Streamflow coverage by default.",
       },
       {
         type: "callout",
         emoji: "📡",
-        title: "Track Streamflow vesting on TokenVest",
-        body:  "Add any Solana wallet (base58 address) to <a href=\"/login\">TokenVest</a> and every Streamflow vesting stream it holds will appear next to your EVM positions, with claimable balance updated in real time.",
+        title: "Track Streamflow vesting on Vestream",
+        body:  "Add any Solana wallet (base58 address) to <a href=\"/login\">Vestream</a> and every Streamflow vesting stream it holds will appear next to your EVM positions, with claimable balance updated in real time.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3615,7 +3615,7 @@ const articles: Article[] = [
         items: [
           { q: "Does Streamflow support cliff schedules?", a: "Yes — every Streamflow vesting contract accepts a cliff parameter. It behaves the same as EVM cliffs: zero claimable until the cliff timestamp, then the cliff portion unlocks in one go." },
           { q: "Can a Streamflow stream be cancelled?", a: "Yes, if the stream was configured as cancelable at creation. The sender can call cancel and reclaim unvested tokens. Many vesting deployments deliberately set cancelable to false." },
-          { q: "What's the difference between Streamflow's vesting and payments products?", a: "Vesting is finite, with a defined total amount and end date. Payments streams are open-ended, designed for payroll-style ongoing flows. TokenVest surfaces the vesting category." },
+          { q: "What's the difference between Streamflow's vesting and payments products?", a: "Vesting is finite, with a defined total amount and end date. Payments streams are open-ended, designed for payroll-style ongoing flows. Vestream surfaces the vesting category." },
           { q: "Why isn't Streamflow on EVM?", a: "Streamflow is a Solana-native protocol that takes advantage of Solana's account model and low fees. The EVM equivalent for similar UX is Sablier or Superfluid." },
         ],
       },
@@ -3694,7 +3694,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVest queries Superfluid's hosted subgraphs for each chain — these don't require a Graph API key, so the adapter is unusually lightweight to operate.",
+        html: "Vestream queries Superfluid's hosted subgraphs for each chain — these don't require a Graph API key, so the adapter is unusually lightweight to operate.",
       },
 
       { type: "h2", text: "When to Choose Superfluid" },
@@ -3733,7 +3733,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Multiply <em>flowRate</em> by <em>(endDate − cliffDate)</em> and you get the total post-cliff allocation. Add <em>cliffAmount</em> for the grand total. TokenVest surfaces all five fields plus the computed claimable balance in a single card.",
+        html: "Multiply <em>flowRate</em> by <em>(endDate − cliffDate)</em> and you get the total post-cliff allocation. Add <em>cliffAmount</em> for the grand total. Vestream surfaces all five fields plus the computed claimable balance in a single card.",
       },
 
       { type: "h2", text: "Cancellability and Edge Cases" },
@@ -3748,12 +3748,12 @@ const articles: Article[] = [
         html: "This isn't a bug — it's a deliberate design choice that mirrors traditional employment vesting (where a company controls the eventual payout). For vesting that <em>must</em> be cryptographically immutable, Sablier or Hedgey lockup plans are stronger guarantees.",
       },
 
-      { type: "h2", text: "Tracking Superfluid Vesting on TokenVest" },
+      { type: "h2", text: "Tracking Superfluid Vesting on Vestream" },
       {
         type: "callout",
         emoji: "📡",
-        title: "Track Superfluid vesting on TokenVest",
-        body:  "Add any wallet on Ethereum, Base, BNB, or Polygon and TokenVest surfaces every Superfluid vesting schedule it owns or receives. Sign in at <a href=\"/login\">TokenVest</a> to view it alongside Sablier, Hedgey, UNCX, and Streamflow streams.",
+        title: "Track Superfluid vesting on Vestream",
+        body:  "Add any wallet on Ethereum, Base, BNB, or Polygon and Vestream surfaces every Superfluid vesting schedule it owns or receives. Sign in at <a href=\"/login\">Vestream</a> to view it alongside Sablier, Hedgey, UNCX, and Streamflow streams.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3903,8 +3903,8 @@ const articles: Article[] = [
       {
         type: "callout",
         emoji: "📡",
-        title: "View any cliff or linear schedule on TokenVest",
-        body:  "TokenVest normalises cliff dates, linear release rates, and tranche events into one dashboard across Sablier, Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and more. Sign in at <a href=\"/login\">TokenVest</a> to compare schedules side by side.",
+        title: "View any cliff or linear schedule on Vestream",
+        body:  "Vestream normalises cliff dates, linear release rates, and tranche events into one dashboard across Sablier, Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and more. Sign in at <a href=\"/login\">Vestream</a> to compare schedules side by side.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -4038,8 +4038,8 @@ const articles: Article[] = [
       {
         type: "callout",
         emoji: "🔬",
-        title: "Or just use TokenVest",
-        body:  "TokenVest queries every supported protocol on every supported chain and surfaces the canonical five fields on a single card per stream. No block explorer detective work required.",
+        title: "Or just use Vestream",
+        body:  "Vestream queries every supported protocol on every supported chain and surfaces the canonical five fields on a single card per stream. No block explorer detective work required.",
       },
 
       { type: "h2", text: "Common Sources of Confusion" },
@@ -4053,19 +4053,19 @@ const articles: Article[] = [
         ],
       },
 
-      { type: "h2", text: "Tracking Schedules on TokenVest" },
+      { type: "h2", text: "Tracking Schedules on Vestream" },
       {
         type: "callout",
         emoji: "📡",
         title: "Read every schedule the same way",
-        body:  "Whatever protocol holds your tokens, <a href=\"/login\">TokenVest</a> presents the same five canonical fields plus claimable now, next unlock, and full schedule chart. Sign in to view your positions.",
+        body:  "Whatever protocol holds your tokens, <a href=\"/login\">Vestream</a> presents the same five canonical fields plus claimable now, next unlock, and full schedule chart. Sign in to view your positions.",
       },
 
       { type: "h2", text: "FAQ" },
       {
         type: "faq",
         items: [
-          { q: "Why does my claimable balance never seem to update on the protocol's own page?", a: "Most UIs cache for performance. The on-chain truth always updates per block — try refreshing or query the contract directly. TokenVest re-fetches per-stream when you open the card." },
+          { q: "Why does my claimable balance never seem to update on the protocol's own page?", a: "Most UIs cache for performance. The on-chain truth always updates per block — try refreshing or query the contract directly. Vestream re-fetches per-stream when you open the card." },
           { q: "What does 'fully vested' mean?", a: "All tokens have unlocked — i.e. the current time is past the end timestamp. Fully vested doesn't mean fully claimed; you may still need to call the withdraw function to move them to your wallet." },
           { q: "What if my schedule was changed after the fact?", a: "On most protocols this is impossible — the schedule is immutable once created. If a project claims to have changed your schedule, ask them to point at the new on-chain position. There should be a fresh contract or a fresh sub-position." },
           { q: "Do I need to claim before vesting ends?", a: "No. Once vested, tokens remain claimable indefinitely. You can wait until the schedule completes and withdraw the full amount in one transaction if gas costs matter to you." },
@@ -4091,7 +4091,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This guide explains how the tax actually works across major jurisdictions (and where they meaningfully differ), what software like Koinly, CoinTracker, and TurboTax need from you, and how TokenVest collapses what is normally a 6-hour January spreadsheet into a 60-second download.",
+        html: "This guide explains how the tax actually works across major jurisdictions (and where they meaningfully differ), what software like Koinly, CoinTracker, and TurboTax need from you, and how Vestream collapses what is normally a 6-hour January spreadsheet into a 60-second download.",
       },
 
       {
@@ -4139,16 +4139,16 @@ const articles: Article[] = [
         html: "This means the <strong>value-at-receipt</strong> is the most consequential single number in your year-end vesting tax position. Get it right and everything else flows. Get it wrong — by using TGE price, year-end price, or \"I'll figure it out later\" — and you risk under- or over-paying both income tax now AND capital-gains tax later.",
       },
 
-      { type: "h2", text: "TokenVest's Data Model: We Capture Claim Events" },
+      { type: "h2", text: "Vestream's Data Model: We Capture Claim Events" },
       {
         type: "p",
-        html: "Important to understand what TokenVest tracks: <strong>we index every on-chain claim transaction</strong> — the moment tokens leave the vesting contract and arrive in your wallet. For US filers, that's exactly the right tax event. For UK / Australia filers whose receipt event is the unlock date (not the claim), our claim-date data is still useful — but you'll need to map it forward to the unlock dates yourself or with your accountant.",
+        html: "Important to understand what Vestream tracks: <strong>we index every on-chain claim transaction</strong> — the moment tokens leave the vesting contract and arrive in your wallet. For US filers, that's exactly the right tax event. For UK / Australia filers whose receipt event is the unlock date (not the claim), our claim-date data is still useful — but you'll need to map it forward to the unlock dates yourself or with your accountant.",
       },
       {
         type: "ul",
         items: [
-          "<strong>If you're in the US, Canada, Germany, most EU:</strong> TokenVest's claim-date data IS the tax event. Use the CSV exports as-is.",
-          "<strong>If you're in the UK or Australia:</strong> TokenVest's claim-date data tells your accountant <em>when you actually received the tokens</em>. Your unlock schedule (also visible per-stream on the dashboard) tells them when those tokens became beneficially owned. They reconcile both for the right tax basis.",
+          "<strong>If you're in the US, Canada, Germany, most EU:</strong> Vestream's claim-date data IS the tax event. Use the CSV exports as-is.",
+          "<strong>If you're in the UK or Australia:</strong> Vestream's claim-date data tells your accountant <em>when you actually received the tokens</em>. Your unlock schedule (also visible per-stream on the dashboard) tells them when those tokens became beneficially owned. They reconcile both for the right tax basis.",
           "<strong>Either way:</strong> the on-chain claim record is the canonical source of truth for what landed in your wallet, when, and at what price. That's the foundation every tax basis builds on.",
         ],
       },
@@ -4180,7 +4180,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The on-chain claim transaction is what TokenVest indexes. <strong>Whether the claim is also the tax event depends on your jurisdiction</strong> (see the table further up). For US/Canada/Germany filers, the claim is the tax event. For UK/Australia filers, the unlock date can be earlier — your accountant maps TokenVest's claim records back against the unlock schedule to assign income to the right tax year.",
+        html: "The on-chain claim transaction is what Vestream indexes. <strong>Whether the claim is also the tax event depends on your jurisdiction</strong> (see the table further up). For US/Canada/Germany filers, the claim is the tax event. For UK/Australia filers, the unlock date can be earlier — your accountant maps Vestream's claim records back against the unlock schedule to assign income to the right tax year.",
       },
 
       { type: "h2", text: "The Five Pieces of Information You Need Per Claim" },
@@ -4227,13 +4227,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "It's about 200 lines of code per dimension — token resolution, rate-limit-aware fetching, caching, fallback ladder. TokenVest does this once, server-side, with a 7-day fallback window and price-confidence flags so you know which numbers are exact-day vs nearest-day vs missing.",
+        html: "It's about 200 lines of code per dimension — token resolution, rate-limit-aware fetching, caching, fallback ladder. Vestream does this once, server-side, with a 7-day fallback window and price-confidence flags so you know which numbers are exact-day vs nearest-day vs missing.",
       },
 
       { type: "h2", text: "What Koinly, CoinTracker, and TurboTax Each Want" },
       {
         type: "p",
-        html: "Each tax-software platform accepts a slightly different CSV shape. TokenVest generates all three formats from the same underlying claim_events table:",
+        html: "Each tax-software platform accepts a slightly different CSV shape. Vestream generates all three formats from the same underlying claim_events table:",
       },
       {
         type: "table",
@@ -4241,22 +4241,22 @@ const articles: Article[] = [
         rows: [
           ["Koinly",             "Settings → Wallets → Add → Custom CSV", "Date, Sent Amount + Currency, Received Amount + Currency, Label, TxHash, Description"],
           ["CoinTracker",        "Add Wallet → Generic CSV upload",       "Date, Received Quantity + Currency, Sent Quantity + Currency, Fee, Tag, Tx Hash"],
-          ["TurboTax",           "Investments → Crypto → Upload CSV",     "Symbol, Quantity, Date Acquired, Date Sold, Cost Basis, Proceeds (vesting income goes in via 'other income' — TokenVest's TurboTax format flags each row appropriately)"],
+          ["TurboTax",           "Investments → Crypto → Upload CSV",     "Symbol, Quantity, Date Acquired, Date Sold, Cost Basis, Proceeds (vesting income goes in via 'other income' — Vestream's TurboTax format flags each row appropriately)"],
         ],
       },
       {
         type: "p",
-        html: "All three CSVs need the same five fields per claim — date, token, quantity, USD value, tx hash — they just label and order them differently. TokenVest's Exports tab generates each format exactly to spec.",
+        html: "All three CSVs need the same five fields per claim — date, token, quantity, USD value, tx hash — they just label and order them differently. Vestream's Exports tab generates each format exactly to spec.",
       },
 
-      { type: "h2", text: "The 60-Second Workflow on TokenVest" },
+      { type: "h2", text: "The 60-Second Workflow on Vestream" },
       {
         type: "ol",
         items: [
           "Sign in at <a href=\"/login\">vestream.io</a> and add the wallets that received your vesting tokens.",
-          "Open the <a href=\"/dashboard/exports\">Exports tab</a> and hit Refresh claims. TokenVest queries every supported protocol on every supported chain, indexes every withdrawal event since the wallet's first transaction, and computes USD-value-at-claim for each one.",
+          "Open the <a href=\"/dashboard/exports\">Exports tab</a> and hit Refresh claims. Vestream queries every supported protocol on every supported chain, indexes every withdrawal event since the wallet's first transaction, and computes USD-value-at-claim for each one.",
           "Pick a tax year from the dropdown (e.g. 2025).",
-          "Click the format your accountant uses (TokenVest generic / Koinly / CoinTracker / TurboTax). The CSV downloads instantly.",
+          "Click the format your accountant uses (Vestream generic / Koinly / CoinTracker / TurboTax). The CSV downloads instantly.",
           "Optional: open the <a href=\"/dashboard/income-statement\">Income Statement</a> for a P&amp;L-style summary, then click Year-end PDF to generate a printable report you can email to your accountant directly.",
         ],
       },
@@ -4264,7 +4264,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "⚡",
         title: "What the workflow replaces",
-        body:  "Without TokenVest, the equivalent is: open every protocol's UI, scroll back through your claim history, copy each claim into a spreadsheet, look up the historical USD price for each row by hand, paste into the right tax-software CSV format, hope you didn't miss any. We've timed it — about 6 hours for a 50-claim year, with material risk of getting the historical prices wrong.",
+        body:  "Without Vestream, the equivalent is: open every protocol's UI, scroll back through your claim history, copy each claim into a spreadsheet, look up the historical USD price for each row by hand, paste into the right tax-software CSV format, hope you didn't miss any. We've timed it — about 6 hours for a 50-claim year, with material risk of getting the historical prices wrong.",
       },
 
       { type: "h2", text: "Edge Cases Worth Knowing" },
@@ -4272,10 +4272,10 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Continuous streams (Sablier, Superfluid):</strong> when you call <code>withdraw</code>, you receive everything that has accrued since the last withdrawal. That single transaction is one tax event — you don't pro-rate it across the days the tokens were accruing. The block timestamp of the withdraw is the canonical receipt date.",
-          "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event timing depends on jurisdiction. In the US, the tax event happens when you <em>claim</em> those tokens, valued at the claim-date price. In the UK / Australia, the tax event can be the unlock date itself (day 180) regardless of when you claim. The price you use therefore differs: claim-date price for US, unlock-date price for UK/AU. TokenVest surfaces the claim record; your accountant applies the right rule.",
+          "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event timing depends on jurisdiction. In the US, the tax event happens when you <em>claim</em> those tokens, valued at the claim-date price. In the UK / Australia, the tax event can be the unlock date itself (day 180) regardless of when you claim. The price you use therefore differs: claim-date price for US, unlock-date price for UK/AU. Vestream surfaces the claim record; your accountant applies the right rule.",
           "<strong>Cancelled vests:</strong> if a stream is cancelled by the sender (cancellable vests), tokens already claimed are still income for the year they were claimed — the cancellation doesn't reverse it.",
           "<strong>Re-vesting / topped-up vests:</strong> some protocols allow the sender to add tokens to an existing vest. New tokens have their own clock; new claims against them are new tax events, valued at the new claim date.",
-          "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. TokenVest uses a snapshot-diff model — the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
+          "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. Vestream uses a snapshot-diff model — the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
         ],
       },
 
@@ -4297,7 +4297,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVest does not provide tax advice. Use the data we surface to populate forms with your accountant. The CSV exports map cleanly to the import flows of Koinly, CoinTracker, and TurboTax — which themselves map to the right line items on the relevant local return.",
+        html: "Vestream does not provide tax advice. Use the data we surface to populate forms with your accountant. The CSV exports map cleanly to the import flows of Koinly, CoinTracker, and TurboTax — which themselves map to the right line items on the relevant local return.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -4308,22 +4308,22 @@ const articles: Article[] = [
             a: "Depends on your country. In the US (and most of the EU + Canada + Germany), the answer is no — taxation triggers on the claim transaction, when tokens move into your wallet. In the UK (HMRC) and Australia (ATO), tokens that have unlocked but not yet been claimed CAN already be taxable — the test is beneficial ownership, not physical receipt. If you're a UK/AU filer with unlocked-but-unclaimed tokens at year-end, talk to a local accountant before assuming there's no liability."
           },
           { q: "What if the token had no liquid market on the claim date?",
-            a: "You'll need a manual cost basis. TokenVest flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero — talk to your accountant before settling on a method."
+            a: "You'll need a manual cost basis. Vestream flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero — talk to your accountant before settling on a method."
           },
           { q: "Can I just enter total annual income at year-end and skip the per-claim detail?",
             a: "Tax software needs per-event detail to track cost basis lots for capital-gains calculations on later sales. Lumping everything into one annual receipt loses the per-token cost-basis lots you'll need when you eventually sell. Per-claim is the right granularity."
           },
-          { q: "Does TokenVest submit my taxes for me?",
-            a: "No. TokenVest produces the data your accountant or tax software needs. The actual filing is done in Koinly / CoinTracker / TurboTax / your accountant's tool of choice — TokenVest's CSV imports cleanly into all of them."
+          { q: "Does Vestream submit my taxes for me?",
+            a: "No. Vestream produces the data your accountant or tax software needs. The actual filing is done in Koinly / CoinTracker / TurboTax / your accountant's tool of choice — Vestream's CSV imports cleanly into all of them."
           },
           { q: "What if I claimed across multiple wallets in the same year?",
-            a: "Add every receiving wallet to your TokenVest dashboard. The Exports tab aggregates across all your tracked wallets, so the year-end report covers your entire vesting income regardless of which wallet received which claim."
+            a: "Add every receiving wallet to your Vestream dashboard. The Exports tab aggregates across all your tracked wallets, so the year-end report covers your entire vesting income regardless of which wallet received which claim."
           },
           { q: "Is the price I receive at claim the same as the cost basis for capital-gains later?",
             a: "Yes — that's the whole point of the income-at-receipt rule. The USD value you report as income at the claim becomes your cost basis for that lot. When you sell, your gain/loss is (sale price − cost basis) per token."
           },
           { q: "What about staking / yield rewards on vested tokens?",
-            a: "Treated separately. If you stake tokens you've already received, the staking rewards are their own income events with their own dates and cost bases. TokenVest tracks vesting receipts; staking rewards need a separate tool or accountant entry."
+            a: "Treated separately. If you stake tokens you've already received, the staking rewards are their own income events with their own dates and cost bases. Vestream tracks vesting receipts; staking rewards need a separate tool or accountant entry."
           },
         ],
       },
@@ -4333,7 +4333,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📊",
         title: "Skip the 6-hour January reconciliation",
-        body:  "Sign in to <a href=\"/login\">TokenVest</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 9 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 9 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
       },
     ],
   },
@@ -4434,8 +4434,8 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Track every payer.</strong> Add the streaming contract addresses (or grant programme contract addresses) to TokenVest so every receipt lands in your dashboard automatically. No re-keying at year-end.",
-          "<strong>Capture FMV at the moment of each receipt.</strong> Tax software needs per-receipt USD value, not a single annual total. TokenVest pre-prices every claim using DexScreener / CoinGecko, with a confidence flag so you know which figures need a manual sanity check.",
+          "<strong>Track every payer.</strong> Add the streaming contract addresses (or grant programme contract addresses) to Vestream so every receipt lands in your dashboard automatically. No re-keying at year-end.",
+          "<strong>Capture FMV at the moment of each receipt.</strong> Tax software needs per-receipt USD value, not a single annual total. Vestream pre-prices every claim using DexScreener / CoinGecko, with a confidence flag so you know which figures need a manual sanity check.",
           "<strong>Run the year-end CSV the day after Dec 31.</strong> Drop it into Koinly / CoinTracker / your accountant's tool. The income totals slot into 1099-NEC summary boxes (US) or SA103 (UK) directly.",
         ],
       },
@@ -4482,12 +4482,12 @@ const articles: Article[] = [
             a: "You owe tax at FMV on the receipt date — same rule. The challenge is establishing FMV when there's no market. Common practice: use the most recent OTC sale, the most recent funding-round valuation, or zero. Whatever you choose, document it as your methodology and apply it consistently."
           },
           { q: "Can I deduct gas fees from my streaming salary?",
-            a: "If you're filing as self-employed (Schedule C / SA103F), gas paid to claim is a business expense — deductible. If you're treating crypto income as miscellaneous Other Income (Schedule 1) the answer is murkier; talk to your accountant. TokenVest's exports include gas USD value per claim so the totals are easy to grab."
+            a: "If you're filing as self-employed (Schedule C / SA103F), gas paid to claim is a business expense — deductible. If you're treating crypto income as miscellaneous Other Income (Schedule 1) the answer is murkier; talk to your accountant. Vestream's exports include gas USD value per claim so the totals are easy to grab."
           },
           { q: "How does this compare to an investor vesting allocation?",
-            a: "Same tax category (ordinary income) but the relationship to capital-gains is different. Worker income at receipt establishes a cost basis; investors who SAFT-purchased tokens have a cost basis from purchase, not from unlock — the unlock just removes the time-lock. TokenVest branches the income statement by audience so the framing matches: 'Vesting income' for investors, 'Crypto income' for workers, 'Token income' for those who are both."
+            a: "Same tax category (ordinary income) but the relationship to capital-gains is different. Worker income at receipt establishes a cost basis; investors who SAFT-purchased tokens have a cost basis from purchase, not from unlock — the unlock just removes the time-lock. Vestream branches the income statement by audience so the framing matches: 'Vesting income' for investors, 'Crypto income' for workers, 'Token income' for those who are both."
           },
-          { q: "Does TokenVest handle workers paid in tokens?",
+          { q: "Does Vestream handle workers paid in tokens?",
             a: "Yes — that's the worker side of the product. Add the streaming or grant contract address to your dashboard, set notifications, run the year-end Payroll Income CSV. The whole flow is symmetrical with the investor side; the difference is the tax export shape and the framing copy."
           },
         ],
@@ -4498,7 +4498,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "💸",
         title: "Set up the dashboard once, never lose track of a receipt",
-        body:  "Sign in to <a href=\"/login\">TokenVest</a>, add your wallet, and select the streaming contracts paying you. Every accrual hits your dashboard with FMV-on-receipt automatically; year-end CSV maps directly to 1099-NEC / SA103 / your local form.",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your wallet, and select the streaming contracts paying you. Every accrual hits your dashboard with FMV-on-receipt automatically; year-end CSV maps directly to 1099-NEC / SA103 / your local form.",
       },
     ],
   },

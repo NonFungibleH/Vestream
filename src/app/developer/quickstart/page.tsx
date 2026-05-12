@@ -9,7 +9,7 @@
 // OpenAPI-Action instructions for ChatGPT.
 //
 // Tabs run client-side; the page itself is a server component so SEO sees
-// every tab's content (good for "how do I add TokenVest to Claude" search
+// every tab's content (good for "how do I add Vestream to Claude" search
 // queries).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { QuickstartTabs } from "./QuickstartTabs";
 
 export const metadata: Metadata = {
-  title:       "Quickstart — TokenVest API + MCP",
+  title:       "Quickstart — Vestream API + MCP",
   description: "From zero to first vesting query in 60 seconds. Step-by-step setup for Claude Desktop, Cursor, Windsurf, and ChatGPT.",
   alternates:  { canonical: "https://vestream.io/developer/quickstart" },
 };
@@ -106,7 +106,7 @@ export default function QuickstartPage() {
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-lg mb-3">Ask your agent a question</h2>
               <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Restart the client (Claude Desktop / Cursor / Windsurf reads MCP config on launch). The TokenVest tools should
+                Restart the client (Claude Desktop / Cursor / Windsurf reads MCP config on launch). The Vestream tools should
                 appear in the tools panel. Try one of these:
               </p>
               <ul className="space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -140,7 +140,7 @@ export default function QuickstartPage() {
             </p>
             <pre className="text-[11px] font-mono p-3 rounded-lg overflow-x-auto"
               style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.75)" }}>
-{`TOKENVEST_API_KEY=vstr_live_... \\
+{`VESTREAM_API_KEY=vstr_live_... \\
   npx -y @vestream/mcp`}
             </pre>
             <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.45)" }}>

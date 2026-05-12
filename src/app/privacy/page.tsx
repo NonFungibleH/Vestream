@@ -3,8 +3,8 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title:       "Privacy & Cookie Policy | TokenVest",
-  description: "How TokenVest (operated by 3UILD LLC) handles your data across the website, dashboard, mobile app, developer API, and MCP server.",
+  title:       "Privacy & Cookie Policy | Vestream",
+  description: "How Vestream (operated by 3UILD LLC) handles your data across the website, dashboard, mobile app, developer API, and MCP server.",
   alternates:  { canonical: "https://vestream.io/privacy" },
 };
 
@@ -16,8 +16,8 @@ export default function Privacy() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
           ← Back to home
@@ -37,14 +37,14 @@ export default function Privacy() {
 
           <Section title="1. Who we are">
             <p>
-              TokenVest (&quot;TokenVest&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;)
-              is a token vesting tracking and indexing service. TokenVest is owned and
+              Vestream (&quot;Vestream&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;)
+              is a token vesting tracking and indexing service. Vestream is owned and
               operated by{" "}
               <strong style={{ color: "#1A1D20" }}>3UILD LLC</strong>, a limited liability
               company. References to &quot;the Service&quot; in this policy include the
-              TokenVest website (vestream.io), the authenticated dashboard, the
-              TokenVest mobile app (iOS / Android), the developer REST API, and
-              the TokenVest Model Context Protocol (MCP) server.
+              Vestream website (vestream.io), the authenticated dashboard, the
+              Vestream mobile app (iOS / Android), the developer REST API, and
+              the Vestream Model Context Protocol (MCP) server.
             </p>
             <p>
               For questions about this policy or to exercise any of your rights
@@ -134,7 +134,7 @@ export default function Privacy() {
 
           <Section title="4. On-chain data and aggregated index">
             <p>
-              TokenVest maintains an aggregated, anonymised index of public
+              Vestream maintains an aggregated, anonymised index of public
               vesting positions across the protocols and chains we support
               (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
               Streamflow, Jupiter Lock — across Ethereum, BNB Chain,
@@ -147,7 +147,7 @@ export default function Privacy() {
               token movements — is{" "}
               <strong style={{ color: "#1A1D20" }}>inherently public</strong> and
               does not become &quot;your data&quot; by virtue of you tracking a
-              wallet on TokenVest. We may use this aggregated, anonymised index
+              wallet on Vestream. We may use this aggregated, anonymised index
               to provide statistics, power public-facing pages (e.g. our
               /protocols and /unlocks calendar), expose it via our developer API
               and MCP server, and to operate and improve the Service. The

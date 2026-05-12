@@ -9,7 +9,7 @@
 //
 // When to add a wallet here:
 //   - You encountered a real PinkSale / UNCX-VM lock in the wild that
-//     TokenVest would otherwise miss
+//     Vestream would otherwise miss
 //   - A Team Finance customer asked for their wallet to show in our
 //     Discover page (Team Finance is normally seeded via Squid, but
 //     if the Squid ever goes down we fall back to this list)

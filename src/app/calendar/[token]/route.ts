@@ -64,8 +64,8 @@ export async function GET(
     body =
       "BEGIN:VCALENDAR\r\n" +
       "VERSION:2.0\r\n" +
-      "PRODID:-//TokenVest//Token Vesting Calendar//EN\r\n" +
-      "X-WR-CALNAME:TokenVest — Token unlocks\r\n" +
+      "PRODID:-//Vestream//Token Vesting Calendar//EN\r\n" +
+      "X-WR-CALNAME:Vestream — Token unlocks\r\n" +
       "END:VCALENDAR\r\n";
   }
 

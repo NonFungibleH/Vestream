@@ -112,7 +112,7 @@ import {
 // on www.vestream.io (Vercel + Cloudflare), so that's what we use here.
 // If the apex domain ever becomes the canonical, update both values.
 export const wagmiConfig = getDefaultConfig({
-  appName: "TokenVest",
+  appName: "Vestream",
   appDescription: "Track every token unlock across 9 vesting protocols",
   appUrl: "https://www.vestream.io",
   appIcon: "https://www.vestream.io/icons/icon-192.png",

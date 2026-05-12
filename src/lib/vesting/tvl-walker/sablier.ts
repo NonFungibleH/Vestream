@@ -7,12 +7,12 @@
 //
 // Why self-index instead of DefiLlama:
 //   - DefiLlama sums TVL across EVERY chain Sablier deploys on, including
-//     chains TokenVest doesn't index (Avalanche, Linea, Scroll, Mantle,
+//     chains Vestream doesn't index (Avalanche, Linea, Scroll, Mantle,
 //     etc). That makes our /protocols card show "global Sablier TVL"
 //     while the underlying app only watches our 7 chains — apples to
 //     oranges next to the protocols we self-index (UNCX, Unvest, etc).
-//   - Self-indexing gives us coverage transparency: "TokenVest Sablier TVL
-//     = X across {TokenVest-supported chains}" — the same figure a user
+//   - Self-indexing gives us coverage transparency: "Vestream Sablier TVL
+//     = X across {Vestream-supported chains}" — the same figure a user
 //     could derive by adding their own wallet across our app.
 //   - Removes the silent DefiLlama outage failure mode where their API
 //     drops and our headline zeroes out.
@@ -160,7 +160,7 @@ export async function walkSablier(chainId: SupportedChainId): Promise<WalkerResu
         headers: {
           "Content-Type": "application/json",
           "Accept":       "application/json",
-          "User-Agent":   "Mozilla/5.0 (compatible; TokenVest/1.0; +https://vestream.io)",
+          "User-Agent":   "Mozilla/5.0 (compatible; Vestream/1.0; +https://vestream.io)",
         },
         body: JSON.stringify({
           query:     STREAMS_QUERY,

@@ -39,11 +39,11 @@ test.describe("homepage", () => {
     await page.goto("/");
     // Title comes from layout metadata — no dependency on any API call.
     // Regex stays loose: brand name + "Tracker" anywhere with anything
-    // between. The brand is rebranding from Vestream → TokenVest as of
+    // between. The brand is rebranding from Vestream → Vestream as of
     // May 2026; accept either so the test isn't a tripwire during the
     // (multi-week) coordinated rebrand sweep across web + mobile + App
     // Store + DNS.
-    await expect(page).toHaveTitle(/(Vestream|TokenVest).*Tracker/i);
+    await expect(page).toHaveTitle(/(Vestream|Vestream).*Tracker/i);
   });
 
   test("primary nav surfaces are server-rendered", async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe("token explorer", () => {
     // Accept 200 (rendered) or 404 (no streams for this token yet). 500 fails.
     expect(resp?.status()).toBeLessThan(500);
     // Whatever path we take, the site chrome should render.
-    await expect(page).toHaveTitle(/(Vestream|TokenVest)/i);
+    await expect(page).toHaveTitle(/(Vestream|Vestream)/i);
   });
 
   test("/explore/1/<USDC> permanent-redirects to /token/1/<USDC>", async ({ page }) => {

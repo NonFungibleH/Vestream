@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Ecosystem-aware wallet/token address helpers.
 //
-// TokenVest now tracks both EVM-compatible chains (Ethereum, BSC, Polygon,
+// Vestream now tracks both EVM-compatible chains (Ethereum, BSC, Polygon,
 // Base, + testnets) and Solana. That means every place the app previously
 // called `viem.isAddress(x)` to validate a wallet address needs to accept
 // either format:

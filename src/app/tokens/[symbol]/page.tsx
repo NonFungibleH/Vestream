@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     // Build-time DB outage — return a neutral title; ISR will re-render
     // proper metadata on first runtime request.
   }
-  if (matches.length === 0) return { title: "Token not found — TokenVest" };
+  if (matches.length === 0) return { title: "Token not found — Vestream" };
 
   const display = matches[0]?.symbol ?? symbol.toUpperCase();
   const url     = `https://vestream.io/tokens/${symbol.toLowerCase()}`;
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     const m    = matches[0];
     const chain = CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`;
     return {
-      title:       `${display} unlock schedule on ${chain} — TokenVest`,
+      title:       `${display} unlock schedule on ${chain} — Vestream`,
       description: `Track ${display} vesting on ${chain} — ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
       alternates:  { canonical: `https://vestream.io/token/${m.chainId}/${m.address}` },
     };
@@ -81,14 +81,14 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   // Multi-chain — describe coverage in the snippet
   const chainList = matches.map((m) => CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`).join(", ");
   return {
-    title:       `${display} vesting & unlocks across ${matches.length} chains | TokenVest`,
+    title:       `${display} vesting & unlocks across ${matches.length} chains | Vestream`,
     description: `${display} is vesting on ${chainList}. Live unlock schedules, top recipients, and upcoming unlocks for each chain.`,
     alternates:  { canonical: url },
     openGraph: {
       title:       `${display} vesting & unlocks across ${matches.length} chains`,
       description: `Live ${display} unlock schedules across ${chainList}.`,
       url,
-      siteName:    "TokenVest",
+      siteName:    "Vestream",
       type:        "website",
     },
   };

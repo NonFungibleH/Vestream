@@ -132,7 +132,7 @@ export function WebhooksPanel({ tier }: { tier: string }) {
   }
 
   async function deleteSub(id: string) {
-    if (!confirm("Delete this subscription? TokenVest will stop calling its URL immediately.")) return;
+    if (!confirm("Delete this subscription? Vestream will stop calling its URL immediately.")) return;
     try {
       const r = await fetch(`/api/developer/webhooks/${id}`, { method: "DELETE" });
       if (!r.ok) {
@@ -178,7 +178,7 @@ export function WebhooksPanel({ tier }: { tier: string }) {
         </p>
         <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
           Online checkout for Pro is being set up — until it goes live, email{" "}
-          <a href="mailto:team@vestream.io?subject=TokenVest%20Pro%20-%20webhooks" className="underline" style={{ color: "#1CB8B8" }}>
+          <a href="mailto:team@vestream.io?subject=Vestream%20Pro%20-%20webhooks" className="underline" style={{ color: "#1CB8B8" }}>
             team@vestream.io
           </a>{" "}
           and we&rsquo;ll enable webhooks on your key manually.
@@ -205,8 +205,8 @@ export function WebhooksPanel({ tier }: { tier: string }) {
         </button>
       </div>
       <p className="text-xs leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.5)" }}>
-        TokenVest POSTs an event to the URL on each matching upcoming unlock. Verify each request via the
-        {" "}<code className="font-mono px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>X-TokenVest-Signature</code>{" "}
+        Vestream POSTs an event to the URL on each matching upcoming unlock. Verify each request via the
+        {" "}<code className="font-mono px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>X-Vestream-Signature</code>{" "}
         header (HMAC-SHA256 of the raw body using your subscription secret).
       </p>
 
@@ -225,7 +225,7 @@ export function WebhooksPanel({ tier }: { tier: string }) {
             Subscription created
           </p>
           <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Your signing secret is shown once. TokenVest will use it to sign every delivery — keep it safe.
+            Your signing secret is shown once. Vestream will use it to sign every delivery — keep it safe.
           </p>
           <div className="rounded-lg p-2 mb-2 flex items-center gap-2"
             style={{ background: "#0d0f14", border: "1px solid rgba(28,184,184,0.30)" }}>

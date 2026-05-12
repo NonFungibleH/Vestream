@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /payroll — "TokenVest Payroll" coming-soon page.
+// /payroll — "Vestream Payroll" coming-soon page.
 //
 // May 5 2026 strategy reset: investor TAM is 10x+ payroll TAM today, and
 // the dual positioning was diluting the investor messaging that's actually
@@ -30,11 +30,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "TokenVest Payroll — Coming soon",
+  title:       "Vestream Payroll — Coming soon",
   description: "Crypto payroll tracking for DAO contributors, contractors and remote workers. Sablier Flow, LlamaPay and Superfluid streams in one earnings dashboard. Coming soon — join the waitlist.",
   alternates:  { canonical: "/payroll" },
   openGraph: {
-    title:       "TokenVest Payroll — Coming soon",
+    title:       "Vestream Payroll — Coming soon",
     description: "An earnings dashboard for crypto contractors. Join the waitlist.",
     type:        "website",
     url:         "https://www.vestream.io/payroll",
@@ -74,7 +74,7 @@ export default function PayrollComingSoon() {
               color: "#0f172a",
             }}
           >
-            TokenVest Payroll <br className="hidden md:inline" />
+            Vestream Payroll <br className="hidden md:inline" />
             is coming.
           </h1>
 
@@ -95,7 +95,7 @@ export default function PayrollComingSoon() {
               Already tracking
             </div>
             <p className="text-base mb-4" style={{ color: "#0f172a", lineHeight: 1.5 }}>
-              If you receive <strong>Sablier Flow</strong>, <strong>LlamaPay</strong>, or <strong>Superfluid</strong> streams today, TokenVest already indexes them. They show up in your portfolio and calendar alongside your vesting positions.
+              If you receive <strong>Sablier Flow</strong>, <strong>LlamaPay</strong>, or <strong>Superfluid</strong> streams today, Vestream already indexes them. They show up in your portfolio and calendar alongside your vesting positions.
             </p>
             <p className="text-sm" style={{ color: "#64748b", lineHeight: 1.5 }}>
               When Payroll launches as a dedicated product, you&rsquo;ll get earnings-rate views, gas-aware claim timing, and 1099-NEC / SA103 income exports — same data, framed for how workers think about it.
@@ -132,7 +132,7 @@ export default function PayrollComingSoon() {
           <p className="text-sm" style={{ color: "#64748b" }}>
             Tracking <strong style={{ color: "#0f172a" }}>vesting</strong> instead?{" "}
             <Link href="/invest" className="underline" style={{ color: "#2563eb" }}>
-              TokenVest Invest is live →
+              Vestream Invest is live →
             </Link>
           </p>
         </section>

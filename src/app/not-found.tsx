@@ -20,7 +20,7 @@ import { listProtocols } from "@/lib/protocol-constants";
 import { getAllArticles } from "@/lib/articles";
 
 export const metadata = {
-  title: "Page not found — TokenVest",
+  title: "Page not found — Vestream",
   // Keep noindex: 404 pages should never rank.
   robots: { index: false, follow: true },
 };

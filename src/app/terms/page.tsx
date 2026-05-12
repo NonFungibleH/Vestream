@@ -3,8 +3,8 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title:       "Terms of Service | TokenVest",
-  description: "Terms governing your use of TokenVest — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
+  title:       "Terms of Service | Vestream",
+  description: "Terms governing your use of Vestream — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
   alternates:  { canonical: "https://vestream.io/terms" },
 };
 
@@ -16,8 +16,8 @@ export default function Terms() {
       <nav className="flex items-center justify-between px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo-icon.svg" alt="TokenVest" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>TokenVest</span>
+          <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />
+          <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
         </Link>
         <Link href="/" className="text-sm font-medium transition-colors" style={{ color: "#8B8E92" }}>
           ← Back to home
@@ -37,14 +37,14 @@ export default function Terms() {
 
           <Section title="1. Operator">
             <p>
-              The TokenVest service is owned and operated by{" "}
+              The Vestream service is owned and operated by{" "}
               <strong style={{ color: "#1A1D20" }}>3UILD LLC</strong>{" "}
-              (&quot;3UILD&quot;, &quot;TokenVest&quot;, &quot;we&quot;,
+              (&quot;3UILD&quot;, &quot;Vestream&quot;, &quot;we&quot;,
               &quot;us&quot;, &quot;our&quot;). References to &quot;the
-              Service&quot; in these Terms include the TokenVest website
-              (vestream.io), the authenticated dashboard, the TokenVest mobile
+              Service&quot; in these Terms include the Vestream website
+              (vestream.io), the authenticated dashboard, the Vestream mobile
               app (iOS and Android), the developer REST API, and the
-              TokenVest Model Context Protocol (MCP) server published as
+              Vestream Model Context Protocol (MCP) server published as
               <code style={{ fontFamily: "monospace", background: "rgba(0,0,0,0.04)", padding: "0 0.25rem", borderRadius: 4 }}>@vestream/mcp</code>.
             </p>
           </Section>
@@ -63,7 +63,7 @@ export default function Terms() {
 
           <Section title="3. Description of Service">
             <p>
-              TokenVest is a read-only token-vesting tracker and developer
+              Vestream is a read-only token-vesting tracker and developer
               data platform. We aggregate publicly available on-chain vesting
               data from supported protocols (currently Sablier, Hedgey,
               Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and
@@ -93,13 +93,13 @@ export default function Terms() {
 
           <Section title="5. Account &amp; authentication">
             <p>
-              You create an account by signing in to the TokenVest mobile
+              You create an account by signing in to the Vestream mobile
               app with your email address; we send a one-time code to that
               address that you enter to confirm. No password, and we never
               request or store wallet private keys, seed phrases, or any
               signing credentials. You are responsible for keeping your
               email account secure and for all activity that occurs through
-              your TokenVest account.
+              your Vestream account.
             </p>
             <p>
               The desktop dashboard (Pro tier only) is signed in by scanning
@@ -127,10 +127,10 @@ export default function Terms() {
 
           <Section title="7. Read-only nature of the Service">
             <p>
-              TokenVest is read-only. We display public on-chain data and
+              Vestream is read-only. We display public on-chain data and
               forward you to protocol UIs to claim or interact with your
               positions. We do not initiate, sign, broadcast, or relay
-              transactions on your behalf. Any link from TokenVest to an
+              transactions on your behalf. Any link from Vestream to an
               external claim flow is a convenience link to a third-party
               application, and your interaction with that third party is
               governed by their terms.
@@ -176,12 +176,12 @@ export default function Terms() {
             </ul>
           </Section>
 
-          <Section title="11. TokenVest data &amp; intellectual property">
+          <Section title="11. Vestream data &amp; intellectual property">
             <p>
-              The TokenVest brand, website design, source code, and the
+              The Vestream brand, website design, source code, and the
               aggregated, normalised, enriched index of vesting data we
-              produce (the &quot;TokenVest Index&quot;) are owned by 3UILD
-              LLC. While the TokenVest Index is built from publicly
+              produce (the &quot;Vestream Index&quot;) are owned by 3UILD
+              LLC. While the Vestream Index is built from publicly
               available on-chain and third-party data, the curation,
               normalisation, schema, and quality controls applied to that
               data are protected by applicable copyright and database
@@ -190,7 +190,7 @@ export default function Terms() {
             <p>
               Your tier (Free / Mobile / Pro) grants you a personal,
               non-exclusive, non-transferable, revocable licence to use the
-              TokenVest Index and developer outputs solely for the use cases
+              Vestream Index and developer outputs solely for the use cases
               permitted by your tier. Bulk extraction or commercial
               redistribution requires a separate written agreement.
             </p>
@@ -211,7 +211,7 @@ export default function Terms() {
               movements — is{" "}
               <strong style={{ color: "#1A1D20" }}>inherently public</strong> and
               not your property by virtue of you tracking a wallet on
-              TokenVest.
+              Vestream.
             </p>
           </Section>
 

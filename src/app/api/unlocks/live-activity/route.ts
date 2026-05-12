@@ -14,7 +14,7 @@
 //                 protocol. Powers a scrolling ticker of "just indexed" rows.
 //
 // Both views are scoped to the platform-wide `vestingStreamsCache` table,
-// so they surface activity from ALL users of TokenVest, not just the current
+// so they surface activity from ALL users of Vestream, not just the current
 // visitor.
 // ─────────────────────────────────────────────────────────────────────────────
 

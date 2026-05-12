@@ -176,7 +176,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 9 protocols and 7 chains — EVM and Solana. These same vestings will appear live in the TokenVest mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 9 protocols and 7 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the
@@ -539,7 +539,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
 
 function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { totalStreams: number; walletAddress: string; primarySymbol: string | null }) {
   // Conversion-tier action card. The previous single-row strip read as a
-  // suggestion ("Track in TokenVest") that users skimmed past once they'd
+  // suggestion ("Track in Vestream") that users skimmed past once they'd
   // visually confirmed their vestings on web. This version is built around
   // three product principles drawn from the May 2026 conversion review:
   //
@@ -548,7 +548,7 @@ function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { to
   //      direct claim path. We surface a stylised lock-screen notification
   //      preview so the value is visual, not just listed.
   //
-  //   2. Loss-framed headline. "Track in TokenVest" is benefit-positive;
+  //   2. Loss-framed headline. "Track in Vestream" is benefit-positive;
   //      "Don't miss your next NOVA unlock" is loss-framed. Same fact,
   //      ~2× conversion uplift in this kind of slot per industry data.
   //      We anchor on the user's actual primary token symbol when we have
@@ -664,7 +664,7 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
       {/* Status-bar hint */}
       <div className="flex items-center justify-between px-2 text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
         <span>9:41</span>
-        <span>● TokenVest</span>
+        <span>● Vestream</span>
       </div>
 
       {/* Notification card */}
@@ -685,7 +685,7 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#64748b" }}>
-                TokenVest
+                Vestream
               </span>
               <span className="text-[10px]" style={{ color: "#94a3b8" }}>
                 now
@@ -1056,7 +1056,7 @@ function GroupCard({ group, walletAddress }: { group: Group; walletAddress: stri
 
       {group.tokens.length > 4 && (
         <p className="text-xs mt-3" style={{ color: "#B8BABD" }}>
-          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the TokenVest app
+          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the Vestream app
         </p>
       )}
 
@@ -1151,13 +1151,13 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
         </div>
         <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
           {hasResults
-            ? "See these vestings live in the TokenVest app"
+            ? "See these vestings live in the Vestream app"
             : "Get the app and try again"}
         </h3>
         <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
           {hasResults
-            ? "Install TokenVest, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
-            : "TokenVest watches all 9 protocols across 7 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
+            ? "Install Vestream, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
+            : "Vestream watches all 9 protocols across 7 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
         </p>
 
         {/* App store badges */}

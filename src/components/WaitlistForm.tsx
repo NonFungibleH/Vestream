@@ -93,7 +93,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
         <p className="text-xs" style={{ color: "#B3322E" }}>{error}</p>
       )}
       <p className="text-xs" style={{ color: dark ? "rgba(255,255,255,0.4)" : "#B8BABD" }}>
-        Be the first to access TokenVest when we launch.
+        Be the first to access Vestream when we launch.
       </p>
     </form>
   );

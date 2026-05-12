@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CopyableCode } from "@/components/CopyableCode";
 
 export const metadata = {
-  title: "AI Agents — TokenVest",
+  title: "AI Agents — Vestream",
   description:
     "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
 };
@@ -27,7 +27,7 @@ function ShowcaseCard({ user, agent }: { user: string; agent: string }) {
       <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#1CB8B8" }}>
-          Claude · via TokenVest MCP
+          Claude · via Vestream MCP
         </p>
         <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
           {agent}
@@ -290,14 +290,14 @@ export default function AiPage() {
           {/* ── v1.2 — webhook tools (Pro tier) ────────────────────────── */}
           <ToolCard
             name="list_webhook_subscriptions"
-            description="Pro tier. List the webhook subscriptions registered to the caller's API key. Each subscription describes a URL TokenVest POSTs to when a matching upcoming-unlock fires."
+            description="Pro tier. List the webhook subscriptions registered to the caller's API key. Each subscription describes a URL Vestream POSTs to when a matching upcoming-unlock fires."
             params={[]}
             example={`list_webhook_subscriptions({})`}
           />
 
           <ToolCard
             name="create_webhook_subscription"
-            description="Pro tier. Register a new webhook subscription. Returns the signing secret ONCE — store it for HMAC verification. TokenVest POSTs to the URL with X-TokenVest-Signature on each matching event."
+            description="Pro tier. Register a new webhook subscription. Returns the signing secret ONCE — store it for HMAC verification. Vestream POSTs to the URL with X-Vestream-Signature on each matching event."
             params={[
               { name: "url",             type: "string",  required: true,  desc: "Destination URL (https in production)" },
               { name: "wallet_filter",   type: "array",   required: false, desc: "Restrict to these wallet addresses" },
@@ -340,8 +340,8 @@ export default function AiPage() {
             <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" style={{ background: "#2DB36A" }} />
             <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>
               {/* Shorter on mobile so it doesn't crowd the traffic lights. */}
-              <span className="sm:hidden">TokenVest MCP</span>
-              <span className="hidden sm:inline">Claude · TokenVest MCP connected</span>
+              <span className="sm:hidden">Vestream MCP</span>
+              <span className="hidden sm:inline">Claude · Vestream MCP connected</span>
             </span>
           </div>
 
@@ -448,7 +448,7 @@ export default function AiPage() {
       "command": "npx",
       "args": ["-y", "@vestream/mcp"],
       "env": {
-        "TOKENVEST_API_KEY": "vstr_live_..."
+        "VESTREAM_API_KEY": "vstr_live_..."
       }
     }
   }
@@ -470,7 +470,7 @@ export default function AiPage() {
       "command": "npx",
       "args": ["-y", "@vestream/mcp"],
       "env": {
-        "TOKENVEST_API_KEY": "vstr_live_..."
+        "VESTREAM_API_KEY": "vstr_live_..."
       }
     }
   }
@@ -534,7 +534,7 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>Use cases</p>
-          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with TokenVest</h2>
+          <h2 className="text-2xl md:text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>What agents build with Vestream</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -573,7 +573,7 @@ export default function AiPage() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#F0992E", bg: "rgba(240,153,46,0.1)", border: "rgba(240,153,46,0.2)",
               title: "Wallet app integrations",
-              body: "Embed TokenVest vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
+              body: "Embed Vestream vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
             },
           ].map((c) => (
             <div key={c.title} className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.06)" }}>

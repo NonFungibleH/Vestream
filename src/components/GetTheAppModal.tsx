@@ -87,7 +87,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
       >
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 id="get-app-title" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>
-            Get the TokenVest app
+            Get the Vestream app
           </h2>
           <button
             onClick={onClose}
@@ -154,7 +154,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
                   marginBottom: 12,
                 }}
               >
-                Open TokenVest →
+                Open Vestream →
               </a>
             )}
 

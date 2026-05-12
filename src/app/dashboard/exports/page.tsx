@@ -8,7 +8,7 @@
 //
 // Why this page matters:
 //   - HNW vesting recipients spend hours reconciling claim history each
-//     tax season. TokenVest pre-computes USD-value-at-claim and serves it
+//     tax season. Vestream pre-computes USD-value-at-claim and serves it
 //     in formats their accountant already uses (Koinly, CoinTracker,
 //     TurboTax).
 //   - "Once tax season uses you, churn → 0" — sticky feature. This is the
@@ -18,7 +18,7 @@
 //   - Refresh button → POST /api/claims/history?action=refresh
 //   - Year filter
 //   - Per-row table with USD value at claim + price-confidence flag
-//   - Download CSV in 4 formats (TokenVest generic / Koinly / CoinTracker / TurboTax)
+//   - Download CSV in 4 formats (Vestream generic / Koinly / CoinTracker / TurboTax)
 //   - Coverage banner (1 of 9 protocols indexed)
 //
 // Phase 3 follow-ups:
@@ -90,7 +90,7 @@ interface ExportFormat {
 const FORMATS: ExportFormat[] = [
   {
     id:       "vestream-generic",
-    name:     "TokenVest generic CSV",
+    name:     "Vestream generic CSV",
     subtitle: "Universal — works with any spreadsheet or accountant",
     audience: "any",
   },
@@ -347,7 +347,7 @@ export default function ExportsPage() {
                 </Link>
                 {" "}<strong>Superfluid</strong> captures discrete cliff and end events — continuous flow
                 accrual between them is not yet attributed. <strong>Solana protocols</strong> (Streamflow,
-                Jupiter Lock) use snapshot-diff: pre-TokenVest history shows as one baseline event per
+                Jupiter Lock) use snapshot-diff: pre-Vestream history shows as one baseline event per
                 stream; subsequent claims are tracked individually whenever you refresh.
               </p>
             </div>
@@ -622,7 +622,7 @@ function ExportFormatCard({
             </ol>
             <p className="text-[10px] mt-2.5" style={{ color: "var(--preview-text-3)" }}>
               Note: none of these platforms expose a public push API, so the CSV upload is the
-              official integration path. Your data never leaves your computer between TokenVest
+              official integration path. Your data never leaves your computer between Vestream
               and the tax tool.
             </p>
           </div>

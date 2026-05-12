@@ -16,14 +16,14 @@ import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow } from "@/lib/vesting/unl
 export const revalidate = 900;
 
 export const metadata: Metadata = {
-  title:       "Token Unlock Calendar — All Upcoming Vesting Events | TokenVest",
+  title:       "Token Unlock Calendar — All Upcoming Vesting Events | Vestream",
   description: "Live calendar of upcoming token unlocks across 9 vesting protocols and 7 chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
   alternates:  { canonical: "https://vestream.io/unlocks" },
   openGraph: {
-    title:       "Token Unlock Calendar — TokenVest",
+    title:       "Token Unlock Calendar — Vestream",
     description: "Live calendar of upcoming token unlocks across 9 vesting protocols and 7 chains.",
     url:         "https://vestream.io/unlocks",
-    siteName:    "TokenVest",
+    siteName:    "Vestream",
     type:        "website",
   },
 };
