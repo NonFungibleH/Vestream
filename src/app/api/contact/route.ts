@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { checkCors, withCorsHeaders } from "@/lib/cors";
 
 export interface ContactEnquiry {
   name:    string;
@@ -26,7 +27,22 @@ function getIp(req: NextRequest): string {
 // data-quality problem fast. Matches the /api/waitlist + /api/feedback
 // shape.
 
+// CORS preflight — same pattern as /api/waitlist. Required for the OPTIONS
+// roundtrip browsers fire before any cross-origin POST with custom headers.
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const res = new NextResponse(null, { status: 204 });
+  return withCorsHeaders(res, origin);
+}
+
 export async function POST(req: NextRequest) {
+  // Origin check — same ALLOWED_ORIGINS list as the rest of the public POST
+  // surface. Prevents a malicious site from submitting on a user's behalf
+  // via cross-origin POST. Doesn't block server-to-server callers (no
+  // Origin header) — those are out of scope for CSRF.
+  const corsError = checkCors(req);
+  if (corsError) return corsError;
+
   const ip = getIp(req);
   const rl = await checkRateLimit("contact", ip, 5, "1 h");
   if (!rl.allowed) {

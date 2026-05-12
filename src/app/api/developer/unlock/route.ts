@@ -12,8 +12,18 @@ import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { hashApiKey } from "@/lib/api-key-auth";
 import { eq } from "drizzle-orm";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 30 attempts per IP per minute. Brute-forcing the 256-bit
+  // key space is mathematically infeasible, but a limit here defends
+  // against stuffing of keys harvested from logs / screenshots / leaked
+  // dotfiles, and removes the route from "no rate limit" audit findings.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = await checkRateLimit("developer:unlock", ip, 30, "1 m");
+  const blocked = rateLimitResponse(rl, "Too many attempts. Try again in a minute.");
+  if (blocked) return blocked;
+
   let body: { key?: string };
   try {
     body = await req.json();

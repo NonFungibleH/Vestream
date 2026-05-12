@@ -72,9 +72,19 @@ export async function readPriceCache(
   // Build a UNION ALL-style WHERE: for big batches, splitting per-chain is
   // cleaner than IN (....) with a million params.
   const byChain = new Map<number, string[]>();
+  // Defensive format check — the SQL builder below interpolates each address
+  // into a literal `ARRAY['..','..']::text[]` via sql.raw. Today's callers
+  // feed on-chain data, but a future refactor could pass user input here
+  // and turn this into SQL injection. Reject anything that isn't a valid
+  // EVM hex address or a Solana base58 pubkey so the interpolation has
+  // mathematical safety regardless of upstream assumptions.
+  const EVM_RE = /^0x[0-9a-f]{40}$/i;
+  const SOL_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
   for (const k of keys) {
+    const t = k.tokenAddress;
+    if (!EVM_RE.test(t) && !SOL_RE.test(t)) continue;
     const list = byChain.get(k.chainId) ?? [];
-    list.push(k.tokenAddress.toLowerCase());
+    list.push(t.toLowerCase());
     byChain.set(k.chainId, list);
   }
 

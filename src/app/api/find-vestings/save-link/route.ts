@@ -20,6 +20,7 @@ import { pendingWalletLinks } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
+import { checkCors, withCorsHeaders } from "@/lib/cors";
 
 const PENDING_TTL_DAYS = 30;
 
@@ -182,7 +183,21 @@ async function sendSaveLinkEmail(email: string, walletAddress: string): Promise<
   }
 }
 
+// CORS preflight — required for cross-origin POSTs with custom headers.
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const res = new NextResponse(null, { status: 204 });
+  return withCorsHeaders(res, origin);
+}
+
 export async function POST(req: NextRequest) {
+  // Origin check — blocks cross-origin POSTs from non-allowlisted sites.
+  // This route writes to a per-email DB row, so a forged cross-origin POST
+  // could pollute a victim's pending_wallet_links inbox; rate limit
+  // bounds the damage but origin-gating closes the door.
+  const corsError = checkCors(req);
+  if (corsError) return corsError;
+
   const body = await req.json().catch(() => ({}));
   const rawEmail   = typeof body.email === "string" ? body.email : "";
   const rawWallet  = typeof body.walletAddress === "string" ? body.walletAddress : "";

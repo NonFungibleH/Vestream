@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { saveFeedback } from "@/lib/db/queries";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { checkCors, withCorsHeaders } from "@/lib/cors";
 
 function getIp(req: NextRequest): string {
   return (
@@ -12,7 +13,20 @@ function getIp(req: NextRequest): string {
   );
 }
 
+// CORS preflight — required for cross-origin POSTs with custom headers.
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const res = new NextResponse(null, { status: 204 });
+  return withCorsHeaders(res, origin);
+}
+
 export async function POST(req: NextRequest) {
+  // Origin check — matches /api/waitlist + /api/contact. Blocks
+  // cross-origin POSTs from non-allowlisted sites that would otherwise
+  // be able to submit on a user's behalf via a forged form.
+  const corsError = checkCors(req);
+  if (corsError) return corsError;
+
   // Rate-limit: 10/h per IP. Reachable unauthenticated and writes to the
   // DB on every call — without a cap any spammer with a loop can fill the
   // betaFeedback table. 10/hour is generous for legitimate use and tight
