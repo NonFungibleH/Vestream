@@ -31,8 +31,23 @@ function isMarketingDataPath(pathname: string): boolean {
   );
 }
 
+// Matches /token/{chainId}/{address} where the address contains uppercase
+// hex. We redirect those to the lowercase canonical form so Google
+// doesn't index two variants of the same page (soft-404 / duplicate).
+// `replace` is sufficient — the leading /token/{cid}/ prefix is always
+// lowercase and only the address segment can introduce uppercase.
+const TOKEN_PATH_UPPERCASE_RE = /^\/token\/\d+\/0x[0-9a-fA-F]*[A-F][0-9a-fA-F]*\/?$/;
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // ── Lowercase canonical for /token/{chainId}/{address} ────────────────────
+  // Runs FIRST so the redirect short-circuits any other handling.
+  if (TOKEN_PATH_UPPERCASE_RE.test(pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname.toLowerCase();
+    return NextResponse.redirect(url, 308);
+  }
 
   // ── Marketing-data SWR cache headers ──────────────────────────────────────
   // Apply BEFORE auth gates so anonymous traffic on these routes (the SEO

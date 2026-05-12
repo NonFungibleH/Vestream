@@ -238,30 +238,45 @@ export default async function WindowPage({ params }: PageParams) {
 
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
-  // upper bound for ItemList rich results).
+  // upper bound for ItemList rich results). `eventStatus` +
+  // `eventAttendanceMode` are required by Google's rich-result validator —
+  // without them the events are ignored even if `startDate` / `location`
+  // are otherwise present.
+  const itemListGroups = result.groups.slice(0, 50);
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type":    "ItemList",
     name:       `Token unlocks ${def.label.toLowerCase()}`,
     description: def.description,
-    numberOfItems: result.groups.length,
-    itemListElement: result.groups.slice(0, 50).map((g, i) => ({
-      "@type":   "ListItem",
-      position:  i + 1,
-      item: {
-        "@type":      "Event",
-        name:         `${g.tokenSymbol ?? "Unknown"} unlock — ${fmtTokenAmount(g.amount, g.tokenDecimals)} ${g.tokenSymbol ?? ""}`,
-        startDate:    g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-        location: {
-          "@type": "VirtualLocation",
-          url:     `https://vestream.io/token/${g.chainId}/${g.tokenAddress}`,
+    numberOfItems: itemListGroups.length,
+    itemListElement: itemListGroups.map((g, i) => {
+      const tokenUrl = `https://vestream.io/token/${g.chainId}/${g.tokenAddress}`;
+      const tokenStr = g.tokenSymbol ?? "Unknown";
+      const amountStr = fmtTokenAmount(g.amount, g.tokenDecimals);
+      return {
+        "@type":   "ListItem",
+        position:  i + 1,
+        item: {
+          "@type":              "Event",
+          name:                 `${tokenStr} unlock — ${amountStr} ${tokenStr}`,
+          description:          `${amountStr} ${tokenStr} unlocks on ${protocolDisplay(g.protocol).name}.`,
+          startDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
+          eventStatus:          "https://schema.org/EventScheduled",
+          eventAttendanceMode:  "https://schema.org/OnlineEventAttendanceMode",
+          url:                  tokenUrl,
+          image:                ["https://vestream.io/opengraph-image"],
+          location: {
+            "@type": "VirtualLocation",
+            url:     tokenUrl,
+          },
+          organizer: {
+            "@type": "Organization",
+            name:    protocolDisplay(g.protocol).name,
+            url:     `https://vestream.io/protocols/${g.protocol}`,
+          },
         },
-        organizer: {
-          "@type": "Organization",
-          name:    protocolDisplay(g.protocol).name,
-        },
-      },
-    })),
+      };
+    }),
   };
 
   const breadcrumbJsonLd = {

@@ -19,7 +19,7 @@ import { getAllArticles } from "@/lib/articles";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
-import { getTopSymbols } from "@/lib/vesting/token-symbols";
+import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
 
 const SITE = "https://vestream.io";
 
@@ -81,12 +81,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.85,
   }));
 
-  // Top-N symbol-routed token pages. Long-tail symbols fall through to
-  // on-demand ISR; we only sitemap the heavy hitters so crawlers focus
-  // budget on high-quality pages.
+  // Top-N symbol-routed token pages. Bumped 150 → 500 (May 2026) so the
+  // long-tail head still gets crawler priority; ultra-cold symbols fall
+  // through to on-demand ISR.
   let topSymbols: string[] = [];
   try {
-    topSymbols = await getTopSymbols(150);
+    topSymbols = await getTopSymbols(500);
   } catch {
     /* fall through with empty list */
   }
@@ -95,6 +95,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified:    now,
     changeFrequency: "weekly",
     priority:        0.7,
+  }));
+
+  // Top-N (chainId, address) token pages — the highest-volume long-tail
+  // surface (thousands of /token/{chainId}/{address} URLs). Sitemapping
+  // the top 1500 ensures Google has them in crawl budget rather than
+  // discovering them organically. Stays well under the 50k-URL/sitemap
+  // limit even combined with everything else below. Sitemap-index split
+  // is the next move when this list exceeds ~30k.
+  let topTokens: { chainId: number; address: string }[] = [];
+  try {
+    topTokens = await getTopTokens(1500);
+  } catch {
+    /* fall through with empty list */
+  }
+  const tokenAddressEntries: MetadataRoute.Sitemap = topTokens.map((t) => ({
+    url:             `${SITE}/token/${t.chainId}/${t.address}`,
+    lastModified:    now,
+    changeFrequency: "weekly",
+    priority:        0.65,
   }));
 
   const articleEntries: MetadataRoute.Sitemap = articles.map((a) => ({
@@ -121,5 +140,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...articleEntries,
     ...unlockWindowEntries,
     ...symbolEntries,
+    ...tokenAddressEntries,
   ];
 }

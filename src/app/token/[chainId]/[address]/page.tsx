@@ -130,14 +130,15 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { chainId, address } = await params;
   const cid  = Number(chainId);
+  const addr = address.toLowerCase();
   if (!CHAIN_NAMES[cid]) return { title: "Token not found — Vestream" };
 
   // Same allSettled pattern as the page render below — if metadata
   // generation throws, Next fails the whole page with a 500 instead
   // of rendering. Two fallbacks keep title/description sensible.
   const [overviewRes, marketRes] = await Promise.allSettled([
-    getTokenOverview(cid, address),
-    getTokenMarketData(cid, address),
+    getTokenOverview(cid, addr),
+    getTokenMarketData(cid, addr),
   ]);
   const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
   const market   = marketRes.status   === "fulfilled" ? marketRes.value   : {
@@ -147,7 +148,7 @@ export async function generateMetadata(
     dexScreenerUrl: null, dexToolsUrl: null,
   } as TokenMarketData;
 
-  const symbol  = market.tokenName || overview?.tokenSymbol || truncate(address);
+  const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
   const chain   = CHAIN_NAMES[cid];
   const locked  = overview ? fmtTokens(overview.lockedTokensWhole) : "0";
   const title   = `${symbol} unlocks on ${chain} — Vestream`;
@@ -155,15 +156,22 @@ export async function generateMetadata(
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
     : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
 
+  const url = `https://vestream.io/token/${cid}/${addr}`;
+
   return {
     title,
     description: desc,
-    alternates: { canonical: `https://vestream.io/token/${cid}/${address.toLowerCase()}` },
+    alternates: { canonical: url },
     openGraph: {
       title, description: desc,
-      url: `https://vestream.io/token/${cid}/${address.toLowerCase()}`,
+      url,
       siteName: "Vestream",
       type: "website",
+    },
+    twitter: {
+      card:        "summary_large_image",
+      title,
+      description: desc,
     },
   };
 }
@@ -180,6 +188,10 @@ export default async function TokenPage(
   if (!CHAIN_NAMES[cid] || !/^0x[0-9a-f]{40}$/.test(addr)) {
     notFound();
   }
+
+  // Mixed-case → canonical-lowercase redirect happens in `src/middleware.ts`
+  // (308 before this page ever renders). Anything that reaches here is
+  // already in canonical form.
 
   // Promise.allSettled (not Promise.all): each loader hits a different
   // dependency (4 × DB query, 1 × DexScreener fetch). If any one throws

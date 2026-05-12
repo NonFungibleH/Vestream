@@ -131,16 +131,32 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     }
   } catch { /* fall through */ }
 
+  const title = `${meta.name} Unlock Calendar — Upcoming Token Unlocks | Vestream`;
+  const desc  = `${countLine}Live ${meta.name} unlock calendar — every upcoming token unlock with per-token amounts, dates, and recipient counts.`.slice(0, 160);
+
   return {
-    title:       `${meta.name} upcoming unlocks — full schedule | Vestream`,
-    description: `${countLine}Live calendar of every upcoming ${meta.name} token unlock. Per-token amounts, dates, and recipient counts.`.slice(0, 160),
+    title,
+    description: desc,
+    keywords:    [
+      `${meta.name} unlock calendar`,
+      `${meta.name} upcoming unlocks`,
+      `${meta.name} vesting schedule`,
+      `${meta.name} token unlocks`,
+      "vesting calendar",
+      "token unlock tracker",
+    ].join(", "),
     alternates:  { canonical: url },
     openGraph: {
-      title:       `${meta.name} upcoming unlocks — Vestream`,
+      title,
       description: `Live calendar of every upcoming ${meta.name} token unlock.`,
       url,
       siteName:    "Vestream",
       type:        "website",
+    },
+    twitter: {
+      card:        "summary_large_image",
+      title,
+      description: `Live calendar of every upcoming ${meta.name} token unlock.`,
     },
   };
 }

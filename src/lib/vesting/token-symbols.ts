@@ -116,6 +116,44 @@ export async function getTopSymbols(limit = 200): Promise<string[]> {
   return rows.map((r) => (r.symbol ?? "").toLowerCase()).filter((s) => s.length >= 2);
 }
 
+export interface TopTokenRow {
+  chainId: number;
+  address: string;
+}
+
+/**
+ * Top-N (chainId, address) pairs ordered by total indexed stream count.
+ * Used to surface the highest-traffic /token/{chainId}/{address} pages
+ * in the sitemap — long-tail addresses fall through to on-demand ISR.
+ *
+ * Excludes testnets and rows with non-EVM-shaped addresses so we don't
+ * sitemap synthetic placeholders.
+ */
+export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
+  if (isDbUnreachable()) return [];
+
+  const rows = await db
+    .select({
+      chainId: vestingStreamsCache.chainId,
+      address: vestingStreamsCache.tokenAddress,
+      total:   count(),
+    })
+    .from(vestingStreamsCache)
+    .where(
+      and(
+        sql`${vestingStreamsCache.tokenAddress} is not null`,
+        excludeTestnets,
+      ),
+    )
+    .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress)
+    .orderBy(sql`count(*) desc`)
+    .limit(limit);
+
+  return rows
+    .filter((r) => r.address && r.address.length >= 32)
+    .map((r) => ({ chainId: r.chainId, address: r.address!.toLowerCase() }));
+}
+
 /**
  * Per-chain summary for a single (symbol, chain) — drives the disambiguation
  * page's per-chain card. Computes total locked amount + recipient count for

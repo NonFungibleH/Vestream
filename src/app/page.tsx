@@ -1553,13 +1553,13 @@ export default async function Home() {
                   <span className="text-[10px] font-mono" style={{ color: "#94A3B8" }}>VESTING_INCOME.pdf</span>
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#94A3B8" }}>Total income</p>
-                <p className="text-3xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$184,250.00</p>
+                <p className="text-3xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>$8,420.00</p>
                 <div className="space-y-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
                   {[
-                    { label: "Sablier",      value: "$98,400.00", pct: "53%" },
-                    { label: "Hedgey",       value: "$42,180.00", pct: "23%" },
-                    { label: "UNCX",         value: "$28,900.00", pct: "16%" },
-                    { label: "Streamflow",   value: "$14,770.00", pct: "8%"  },
+                    { label: "Sablier",      value: "$4,470.00", pct: "53%" },
+                    { label: "Hedgey",       value: "$1,940.00", pct: "23%" },
+                    { label: "UNCX",         value: "$1,340.00", pct: "16%" },
+                    { label: "Streamflow",   value: "$670.00",   pct: "8%"  },
                   ].map((r) => (
                     <div key={r.label} className="flex justify-between items-center text-xs">
                       <span style={{ color: "#3A3D42" }}>{r.label}</span>

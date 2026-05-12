@@ -2,6 +2,33 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
+import { linkifyProtocols } from "@/lib/article-linkify";
+
+// Reduce a block list to a single plain-text string for JSON-LD `articleBody`.
+// Strips tags, normalises whitespace, caps the length (Google ignores beyond a
+// few KB) so we don't bloat the rendered <script> payload.
+function blocksToPlainText(blocks: Block[]): string {
+  const out: string[] = [];
+  for (const b of blocks) {
+    if (b.type === "p")        out.push(b.html);
+    else if (b.type === "h2" || b.type === "h3") out.push(b.text);
+    else if (b.type === "ul" || b.type === "ol") out.push(b.items.join(" "));
+    else if (b.type === "callout") out.push(`${b.title}. ${b.body}`);
+    else if (b.type === "table") out.push(b.rows.flat().join(" "));
+    else if (b.type === "faq")   out.push(b.items.map((x) => `${x.q} ${x.a}`).join(" "));
+  }
+  return out.join(" ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 5000);
+}
 
 // ─── Static params ────────────────────────────────────────────────────────────
 
@@ -62,7 +89,7 @@ function RenderBlock({ block }: { block: Block }) {
     case "p":
       return (
         <p className="text-base leading-relaxed mb-5" style={{ color: "#334155" }}
-          dangerouslySetInnerHTML={{ __html: block.html }} />
+          dangerouslySetInnerHTML={{ __html: linkifyProtocols(block.html) }} />
       );
 
     case "ul":
@@ -72,7 +99,7 @@ function RenderBlock({ block }: { block: Block }) {
             <li key={i} className="flex gap-3 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full"
                 style={{ background: "#1CB8B8", marginTop: "9px" }} />
-              <span dangerouslySetInnerHTML={{ __html: item }} />
+              <span dangerouslySetInnerHTML={{ __html: linkifyProtocols(item) }} />
             </li>
           ))}
         </ul>
@@ -88,7 +115,7 @@ function RenderBlock({ block }: { block: Block }) {
                 style={{ background: "#1CB8B8", minWidth: "24px" }}>
                 {i + 1}
               </span>
-              <span dangerouslySetInnerHTML={{ __html: item }} />
+              <span dangerouslySetInnerHTML={{ __html: linkifyProtocols(item) }} />
             </li>
           ))}
         </ol>
@@ -294,6 +321,9 @@ export default async function ArticlePage(
   // ── FAQ items for JSON-LD ──────────────────────────────────────────────────
   const faqBlock = article.content.find((b): b is Extract<Block, { type: "faq" }> => b.type === "faq");
 
+  const articleBody = blocksToPlainText(article.content);
+  const wordCount   = articleBody ? articleBody.split(/\s+/).length : undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -301,6 +331,11 @@ export default async function ArticlePage(
         "@type": "Article",
         headline: article.title,
         description: article.excerpt,
+        articleBody,
+        articleSection: article.category,
+        inLanguage: "en-US",
+        wordCount,
+        image: [`https://vestream.io/opengraph-image`],
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
         author: {
@@ -314,7 +349,7 @@ export default async function ArticlePage(
           url: "https://vestream.io",
           logo: {
             "@type": "ImageObject",
-            url: "https://vestream.io/favicon.ico",
+            url: "https://vestream.io/logo.svg",
           },
         },
         mainEntityOfPage: {
