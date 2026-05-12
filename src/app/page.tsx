@@ -1602,7 +1602,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock V2), Streamflow (Solana), and Jupiter Lock (Solana's default token locker) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

@@ -99,7 +99,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     slug: "sablier",
     adapterIds: ["sablier"],
     name: "Sablier",
-    tagline: "Real-time streaming token vesting",
+    tagline: "Linear & tranched token vesting",
     description:
       "Sablier is the most widely-used non-custodial streaming payments protocol in crypto. DAOs, token teams and investors use it to vest tokens per-second with linear and tranched schedules. Vestream tracks every Sablier stream across Ethereum, Base, BSC and Polygon and alerts the recipient the moment a cliff or tranche unlocks.",
     color: "#F0992E",
@@ -343,13 +343,13 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     slug: "pinksale",
     adapterIds: ["pinksale"],
     name: "PinkSale",
-    tagline: "PinkLock V2 token locker",
+    tagline: "PinkLock token locker",
     // CONTRACT ADDRESSES: see PINKSALE_CONTRACT_ADDRESSES export at the
     // bottom of this file. Three downstream consumers (walker, adapter,
     // claims-ingestor) all import that single map. See its docstring
     // for the V1/V2 history and audit trail.
     description:
-      "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock V2 is its on-chain token locker for team allocations and LP proofs. Vestream reads every PinkLock V2 contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
+      "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock is its on-chain token locker for team allocations and LP proofs. Vestream reads every PinkLock contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
     color: "#E063A0",
     bg:    "rgba(224,99,160,0.08)",
     border:"rgba(224,99,160,0.22)",
@@ -365,7 +365,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     useCases: [
       { title: "Post-launch team locks",     body: "Most PinkSale launches end with the team allocation moved into PinkLock for a 6–12 month lock. Vestream tells the team when each cycle unlocks." },
       { title: "LP-lock transparency",       body: "PinkLock is commonly used for LP-token locks. Buyers verifying a project's liquidity schedule can pull live status from Vestream rather than spelunking the contract." },
-      { title: "Cycle-based schedules",      body: "PinkLock V2 supports TGE% + regular cycle unlocks. Vestream flattens that into a simple 'next unlock in Xd Yh' countdown for every recipient." },
+      { title: "Cycle-based schedules",      body: "PinkLock supports TGE% + regular cycle unlocks. Vestream flattens that into a simple 'next unlock in Xd Yh' countdown for every recipient." },
     ],
     relatedSlugs: ["uncx", "team-finance", "hedgey"],
     testimonials: [],
@@ -461,7 +461,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     slug: "jupiter-lock",
     adapterIds: ["jupiter-lock"],
     name: "Jupiter Lock",
-    tagline: "Solana's default token locker",
+    tagline: "Time-released token vesting on Solana",
     description:
       "Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem — used by JUP's own team-and-investor allocations and the majority of Solana launchpad deals since late 2024. Vestream reads every active VestingEscrow directly from the program so recipients see their cliff, periodic drip, and claimable amount in one view — no need to open the Jupiter UI.",
     color: "#F0B83D",        // Jupiter orange-gold

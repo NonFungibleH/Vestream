@@ -126,9 +126,9 @@ export default function DeveloperPage() {
               { name: "Unvest",        color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.18)",   note: "Multi-chain" },
               { name: "LlamaPay",      color: "#A26B3F", bg: "rgba(162,107,63,0.08)",  border: "rgba(162,107,63,0.18)",  note: "Streaming + payroll" },
               { name: "Superfluid",    color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.18)",   note: "Streaming vesting" },
-              { name: "PinkSale",      color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.18)",  note: "PinkLock V2" },
+              { name: "PinkSale",      color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.18)",  note: "PinkLock locker" },
               { name: "Streamflow",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)",  note: "Solana vesting" },
-              { name: "Jupiter Lock",  color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)",  note: "Solana locker" },
+              { name: "Jupiter Lock",  color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)",  note: "Solana vesting" },
             ].map(p => (
               <div key={p.name} className="rounded-2xl p-5 text-center"
                 style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>

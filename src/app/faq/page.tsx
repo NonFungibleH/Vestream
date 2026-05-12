@@ -95,7 +95,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Which vesting protocols does Vestream support?",
-        a: "Nine as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), PinkSale PinkLock V2 (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (Solana's default token locker). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
+        a: "Nine as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), PinkSale PinkLock (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (time-released token vesting on Solana). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
       },
       {
         q: "Which blockchains are supported?",
