@@ -499,10 +499,18 @@ export default function DeveloperPage() {
               </div>
               <p className="text-sm mb-7" style={{ color: "rgba(255,255,255,0.4)" }}>For builders and prototyping</p>
               <ul className="flex flex-col gap-3 mb-8">
-                {["30 req/min burst · 150/day", "All 3 endpoints", "9 protocols indexed (EVM + Solana)", "Standard JSON responses", "Community support"].map(f => (
-                  <li key={f} className="flex items-start gap-2.5">
+                {[
+                  "30 req/min burst · 150/day",
+                  "All 3 endpoints",
+                  "9 protocols indexed (EVM + Solana)",
+                  "Standard JSON responses",
+                  { html: <>Email support — <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
+                ].map((f, i) => (
+                  <li key={typeof f === "string" ? f : i} className="flex items-start gap-2.5">
                     <Check />
-                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{f}</span>
+                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+                      {typeof f === "string" ? f : f.html}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -558,6 +566,24 @@ export default function DeveloperPage() {
                 manually in the meantime.
               </p>
             </div>
+          </div>
+
+          {/* Support strip — always visible directly under the pricing grid so
+              developers stuck on a 4xx/5xx know exactly where to go without
+              having to hunt through a contact page or scroll to the footer. */}
+          <div className="mt-8 rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.18)" }}>
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="text-base">💬</span>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+                <span style={{ color: "white", fontWeight: 600 }}>Stuck?</span>{" "}
+                Email <a href="mailto:team@vestream.io?subject=API%20support" className="underline" style={{ color: "#1CB8B8" }}>team@vestream.io</a>{" "}
+                — we typically respond within a business day.
+              </p>
+            </div>
+            <Link href="/status" className="text-xs font-semibold whitespace-nowrap underline" style={{ color: "rgba(255,255,255,0.55)" }}>
+              API status →
+            </Link>
           </div>
         </div>
       </section>

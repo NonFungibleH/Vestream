@@ -176,7 +176,7 @@ export default function AiPage() {
             {[
               { value: "9",      label: "Protocols indexed" },
               { value: "5",      label: "Chains (EVM + Solana)"  },
-              { value: "6",      label: "MCP tools"         },
+              { value: "3 + 3",  label: "Tools (Free + Pro)" },
               { value: "MCP",    label: "Native support"    },
               { value: "REST",   label: "API available"     },
             ].map((s) => (
@@ -215,10 +215,10 @@ export default function AiPage() {
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="text-center mb-6">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>MCP Tools</p>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Six tools. Everything an agent needs.</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Three free tools, three Pro webhook tools.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
             Install the MCP server and your agent immediately has read access to every wallet, stream, and
-            upcoming unlock — plus webhook subscription management on Pro.
+            upcoming unlock on the free tier — plus webhook subscription management on Pro.
           </p>
         </div>
 

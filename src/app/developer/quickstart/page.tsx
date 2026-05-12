@@ -68,7 +68,7 @@ export default function QuickstartPage() {
                 The plaintext is shown once and emailed to you for backup.
               </p>
               <Link
-                href="/developer#access"
+                href="/developer#request-access"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
                 style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}
               >

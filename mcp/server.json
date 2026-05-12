@@ -1,30 +1,24 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.vestream/mcp",
-  "description": "Real-time token vesting data for AI agents. Query wallet vestings, upcoming token unlocks, and individual stream details across Sablier, UNCX, Hedgey, Unvest, and Team Finance on Ethereum, Base, and BSC.",
+  "description": "Real-time token vesting data for AI agents. Query wallet vestings, upcoming token unlocks, individual stream details, and manage unlock webhooks across 9 vesting protocols (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, Jupiter Lock) on 5 chains (Ethereum, BNB Chain, Polygon, Base, Solana).",
   "repository": {
     "url": "https://github.com/NonFungibleH/Vestream",
     "source": "github"
   },
   "version_detail": {
-    "version": "1.0.1"
+    "version": "1.3.0"
   },
   "packages": [
     {
       "registry_type": "npm",
       "name": "@vestream/mcp",
-      "version": "1.0.1",
-      "package_arguments": [
-        {
-          "type": "positional",
-          "value": "run",
-          "value_hint": "run"
-        }
-      ],
+      "version": "1.3.0",
+      "package_arguments": [],
       "environment_variables": [
         {
           "name": "VESTREAM_API_KEY",
-          "description": "Your Vestream API key — get one at vestream.io/early-access",
+          "description": "Your Vestream API key — get one at vestream.io/developer",
           "required": true
         }
       ]

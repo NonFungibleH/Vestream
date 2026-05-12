@@ -106,6 +106,8 @@ Get every vesting stream for one wallet.
 | `protocol` | no | `string` | comma-separated; e.g. `"sablier,hedgey"` |
 | `chain` | no | `string` | comma-separated chain ids; e.g. `"1,8453"` |
 | `active_only` | no | `boolean` | `true` to skip fully-vested streams |
+| `limit` | no | `integer` | page size 1–500; default 100 |
+| `offset` | no | `integer` | zero-indexed; use `pagination.next_offset` from a prior page |
 
 **Example**
 
@@ -114,6 +116,24 @@ get_wallet_vestings({
   address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
   active_only: true
 })
+```
+
+**Paginating large wallets**
+
+A wallet with hundreds of streams can blow your agent's context window in
+one shot. Page through it with `limit` + `offset` — the response includes a
+`pagination` block with `total`, `next_offset` (null when exhausted), and
+the count returned. Typical loop in agent pseudocode:
+
+```js
+let offset = 0;
+const all = [];
+while (true) {
+  const page = get_wallet_vestings({ address, limit: 100, offset });
+  all.push(...page.streams);
+  if (page.pagination.next_offset == null) break;
+  offset = page.pagination.next_offset;
+}
 ```
 
 ### `get_upcoming_unlocks`

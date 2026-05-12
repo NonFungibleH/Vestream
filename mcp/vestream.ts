@@ -30,24 +30,101 @@ if (!API_KEY) {
 }
 
 // ─── API helper ───────────────────────────────────────────────────────────────
+//
+// Wraps fetch with: 30s timeout (so a dead endpoint doesn't hang the MCP host
+// indefinitely), and a small classifier on the error path that turns raw HTTP
+// status codes into messages the agent can actually reason about ("you're
+// rate-limited, retry in 12s" beats "Vestream API error 429"). Mapped codes:
+//   401 — invalid / missing key             → tells the user how to get one
+//   402 — Pro-only endpoint                 → flags the upgrade path
+//   403 — revoked / disabled key            → distinct from typo'd 401
+//   404 — wallet/stream not indexed         → distinguishes "no data" from "bad input"
+//   429 — rate limited                      → surfaces Retry-After in seconds
+//   5xx — upstream / transient              → tells agents to back off
+//
+// `Retry-After` is parsed as either an integer (seconds) or an HTTP-date.
 
 async function vstreamFetch(path: string, init: RequestInit = {}): Promise<unknown> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      Accept:        "application/json",
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(`Vestream API error ${res.status}: ${JSON.stringify(err)}`);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...init,
+      signal: AbortSignal.timeout(30_000),
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        Accept:        "application/json",
+        "User-Agent":  "vestream-mcp/1.3.0",
+        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(init.headers ?? {}),
+      },
+    });
+  } catch (e) {
+    const err = e as Error & { name?: string };
+    if (err.name === "TimeoutError" || err.name === "AbortError") {
+      throw new Error(
+        "Vestream API did not respond within 30 seconds. The server may be slow or unreachable — try again in a moment.",
+      );
+    }
+    throw new Error(`Could not reach the Vestream API: ${err.message ?? String(e)}`);
   }
 
-  return res.json();
+  if (res.ok) return res.json();
+
+  // Parse the error body if there is one — falls through to status-only on
+  // non-JSON or empty bodies. Never re-throws the JSON parse failure as the
+  // primary error.
+  const body = await res.json().catch(() => null) as { error?: string; docs?: string } | null;
+  const docs = body?.docs ?? "https://vestream.io/api-docs";
+
+  switch (res.status) {
+    case 401:
+      throw new Error(
+        "Your VESTREAM_API_KEY is missing or invalid. Get a free key at vestream.io/developer and " +
+        "set it in your MCP client config (the `env.VESTREAM_API_KEY` field).",
+      );
+    case 402:
+      throw new Error(
+        "This endpoint is Pro tier only. Upgrade at vestream.io/pricing or contact team@vestream.io.",
+      );
+    case 403:
+      throw new Error(
+        "Your API key has been revoked. Generate a new one at vestream.io/developer.",
+      );
+    case 404:
+      throw new Error(
+        body?.error ?? "Resource not found. Check that the wallet address or stream ID is correct.",
+      );
+    case 429: {
+      const retryHdr = res.headers.get("Retry-After");
+      const retrySecs = parseRetryAfter(retryHdr);
+      const inSecs = retrySecs != null ? ` Retry in ${retrySecs}s.` : "";
+      throw new Error(
+        `Rate limited.${inSecs} Free tier: 30 req/min, 150/day. Pro: 120 req/min, 5,000/day. See ${docs}.`,
+      );
+    }
+    default: {
+      if (res.status >= 500) {
+        throw new Error(
+          `Vestream had a server error (HTTP ${res.status}). This is usually transient — try again in a few seconds.`,
+        );
+      }
+      const detail = body?.error ?? res.statusText ?? "Unknown error";
+      throw new Error(`Vestream API error ${res.status}: ${detail}`);
+    }
+  }
+}
+
+function parseRetryAfter(header: string | null): number | null {
+  if (!header) return null;
+  // RFC 7231: either seconds (integer) or an HTTP-date.
+  const asInt = Number(header);
+  if (Number.isFinite(asInt) && asInt >= 0) return Math.ceil(asInt);
+  const asDate = Date.parse(header);
+  if (!Number.isNaN(asDate)) {
+    const diff = Math.ceil((asDate - Date.now()) / 1000);
+    return diff > 0 ? diff : null;
+  }
+  return null;
 }
 
 // ─── Shared Zod primitives ───────────────────────────────────────────────────
@@ -82,7 +159,7 @@ function sanitiseProtocolFilter(raw: string | undefined): string | undefined {
 
 const server = new McpServer({
   name:    "vestream",
-  version: "1.0.1",
+  version: "1.3.0",
 });
 
 // ── Tool: get_wallet_vestings ─────────────────────────────────────────────────
