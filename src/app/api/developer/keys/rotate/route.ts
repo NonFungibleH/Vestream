@@ -75,7 +75,9 @@ export async function POST() {
   cookieStore.set("vestr_api_access", inserted[0].id, {
     httpOnly: true,
     secure:   process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // `strict` — matches /api/developer/unlock + /api/admin/login. The
+    // API-key management surface shouldn't be cross-site cookie-readable.
+    sameSite: "strict",
     path:     "/",
     maxAge:   60 * 60 * 24 * 30, // 30 days, matches the portal cookie
   });

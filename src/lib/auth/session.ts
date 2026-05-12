@@ -16,7 +16,13 @@ const sessionOptions = {
   cookieOptions: {
     secure: env.isProd,
     httpOnly: true,
-    sameSite: "lax" as const,
+    // `strict` (was `lax`) — the dashboard is a finance surface so we
+    // prefer no cross-site cookie transmission at all. Trade-off: an
+    // external link directly to /dashboard requires a re-click (cookie
+    // isn't sent on the cross-site navigation, middleware bounces to
+    // /login, the in-app navigation then carries the cookie). Acceptable
+    // for a logged-in-only surface.
+    sameSite: "strict" as const,
     maxAge: 60 * 60 * 24 * 30, // 30 days
   },
 };

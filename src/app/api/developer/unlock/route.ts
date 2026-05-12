@@ -60,7 +60,11 @@ export async function POST(req: NextRequest) {
   res.cookies.set("vestr_api_access", row.id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // `strict` matches the iron-session cookie — same reasoning. A
+    // cross-site link directly to /developer/account requires the user
+    // to re-authenticate via /developer/portal, which is the right
+    // posture for an API-key management surface.
+    sameSite: "strict",
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: "/",
   });

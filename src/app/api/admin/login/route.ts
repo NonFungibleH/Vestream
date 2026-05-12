@@ -33,7 +33,9 @@ export async function POST(req: NextRequest) {
   res.cookies.set("vestr_admin", token, {
     httpOnly: true,
     secure:   process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // `strict` — admin is the highest-value cookie surface. Cross-site
+    // navigation should never transmit it (audit hardening).
+    sameSite: "strict",
     maxAge:   60 * 60 * 8, // 8 hours
     path:     "/",
   });

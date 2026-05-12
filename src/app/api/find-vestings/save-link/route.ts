@@ -21,14 +21,9 @@ import { sql } from "drizzle-orm";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { checkCors, withCorsHeaders } from "@/lib/cors";
+import { normaliseEmail, isDisposableEmail } from "@/lib/email-validation";
 
 const PENDING_TTL_DAYS = 30;
-
-/** Match the regex used by /api/waitlist + /api/contact so all three public
- *  email-capture endpoints validate against the same shape. Catches "@",
- *  "user@", "@example.com", and other trivially-malformed addresses that
- *  the prior `.includes("@")` check let through. */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Short display form of a wallet, EVM or Solana. Used in email subject + body. */
 function truncateWalletForDisplay(addr: string): string {
@@ -210,9 +205,16 @@ export async function POST(req: NextRequest) {
   const rawLabel   = typeof body.label === "string" ? body.label.trim() : null;
   const rawChains  = Array.isArray(body.chainIds) ? body.chainIds : null;
 
-  // Lowercased everywhere so dedup works regardless of how the user typed it.
-  const email = rawEmail.toLowerCase().trim();
-  if (!email || email.length > 254 || !EMAIL_RE.test(email)) {
+  // Centralised normalise + validate. Handles lowercase, trim, trailing-dot
+  // strip, length cap, and the canonical EMAIL_RE shape check.
+  const email = normaliseEmail(rawEmail);
+  if (!email) {
+    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  }
+  // Disposable-mailbox bounce — generic "Invalid email" message so the
+  // existence of a blocklist isn't enumerable. Real cost saved: a Resend
+  // send + a 30-day-ttl pending row per submission.
+  if (isDisposableEmail(email)) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
   // Address-validation helper covers both EVM and Solana formats — same

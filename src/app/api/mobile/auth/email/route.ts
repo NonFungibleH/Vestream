@@ -193,7 +193,10 @@ export async function POST(req: NextRequest) {
     await db.insert(mobileOtps).values({ email, otpHash: hashValue(otp), expiresAt });
 
     if (process.env.NODE_ENV !== "production") {
-      console.log(`[Mobile OTP] code sent to ${email} (check email or use DEV_OTP)`);
+      // No email in the log — even though this branch is dev-only, a
+      // mis-set NODE_ENV on a staging server would have leaked PII into
+      // log aggregators. Just confirm the send happened.
+      console.log("[Mobile OTP] code dispatched (check email or use DEV_OTP)");
     }
 
     if (!process.env.RESEND_API_KEY) {
