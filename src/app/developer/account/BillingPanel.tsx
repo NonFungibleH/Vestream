@@ -207,16 +207,16 @@ export function BillingPanel({ tier, billingReady }: Props) {
           active={plan === "monthly"}
           onClick={() => setPlan("monthly")}
           label="Monthly"
-          price="$14.99"
+          price="$9.99"
           per="/mo"
         />
         <PlanButton
           active={plan === "annual"}
           onClick={() => setPlan("annual")}
           label="Annual"
-          price="$119.99"
+          price="$74.99"
           per="/yr"
-          tag="Save ~33%"
+          tag="Save ~37%"
         />
       </div>
 

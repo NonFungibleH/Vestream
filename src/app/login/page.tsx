@@ -286,7 +286,7 @@ export default function LoginPage() {
 
           {/* Pricing footnote */}
           <p className="text-center text-xs mt-5" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
-            Web dashboard is included with the <strong style={{ color: "#1CB8B8" }}>Pro</strong> plan ($14.99/mo, 14-day trial). <Link href="/#pricing" className="font-semibold underline" style={{ color: "#1CB8B8" }}>See plans</Link>.
+            Web dashboard is included with the <strong style={{ color: "#1CB8B8" }}>Pro</strong> plan ($9.99/mo or $74.99/year — 14-day trial). <Link href="/#pricing" className="font-semibold underline" style={{ color: "#1CB8B8" }}>See plans</Link>.
           </p>
         </div>
       </div>

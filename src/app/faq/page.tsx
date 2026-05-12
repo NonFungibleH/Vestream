@@ -179,16 +179,12 @@ const FAQ_DATA: FaqCategory[] = [
     summary: "Free forever for individuals, paid plans for volume users.",
     items: [
       {
-        q: "How much does TokenVest cost?",
-        a: "Free: $0, 1 wallet, unlimited email alerts on Pro and Enterprise, 3 lifetime push alerts. Pro: $14.99/month or $119.99/year on web ($17.99/$144.99 via the iOS/Android app — the Apple/Google cut is baked into the in-app price) for 3 wallets, unlimited push and email alerts, and the Discover page. Every new Pro signup on web includes a 14-day free trial. Enterprise: contact us — unlimited wallets, REST API + MCP access, Slack/Telegram/WhatsApp, SSO, dedicated support.",
+        q: "How much does Vestream cost?",
+        a: "Free: $0, 3 wallets, 10 push alerts per month (resets on the 1st), no email alerts. Pro: $9.99/month or $74.99/year (saves 37%) for 10 wallets, unlimited push + email alerts, the web dashboard, the Discover page, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement). Every new Pro signup includes a 14-day free trial. Tracking more than 10 wallets? Email team@vestream.io.",
       },
       {
         q: "Is there a free trial for Pro?",
-        a: "Yes — every new web signup to Pro includes a 14-day free trial. Add a card to start; we don't charge until day 15, and you can cancel anytime before then with one click. The Free plan is indefinite on top of that, so you can also validate the core experience (wallet tracking, email alerts, dashboard) without ever entering payment details. iOS and Android follow each store's respective trial policy.",
-      },
-      {
-        q: "Why does the mobile app price more than the web price?",
-        a: "Apple and Google take roughly 15-30% of in-app purchase revenue depending on tier and volume. Rather than eating that into operating margin, we pass it through — web subscribers pay the base price, in-app subscribers pay ~20% more to cover the store cut. Same features, different distribution cost.",
+        a: "Yes — every new Pro signup includes a 14-day free trial. Add a card to start; we don't charge until day 15, and you can cancel anytime before then with one click. The Free plan is indefinite on top of that, so you can also validate the core experience (wallet tracking, mobile app, dashboard) without ever entering payment details. iOS and Android follow each store's respective trial policy.",
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",

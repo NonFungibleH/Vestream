@@ -485,7 +485,7 @@ export default function DeveloperPage() {
 
           {/* Two tiers: Free (self-serve) + Paid (contact for pricing). The
               developer API doesn't have a public price yet — we're working
-              with early partners to shape it. The consumer-app $14.99 price
+              with early partners to shape it. The consumer-app $9.99 price
               on the homepage is for retail investors, not for API builders;
               don't conflate them. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

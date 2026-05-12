@@ -385,24 +385,26 @@ DB value (including legacy `"fund"` rows) to `"free"`.
 
 | Tier | $ | Wallets | Push alerts | Email alerts | Web dashboard | Tax exports |
 |---|---|---|---|---|---|---|
-| Free   | $0       | 1  | 3 lifetime credits | — | — | — |
-| Mobile | $9.99/mo | 3  | Unlimited          | ✓ | — | — |
-| Pro    | $14.99/mo | 10 | Unlimited         | ✓ | ✓ (QR sign-in) | ✓ Koinly / CoinTracker / TurboTax + Income Statement + Year-end PDF |
+| Free | $0                              | 3  | 10 / month (resets) | — | — | — |
+| Pro  | $9.99/mo *or* $74.99/yr (37% off) | 10 | Unlimited           | ✓ | ✓ (QR sign-in) | ✓ Koinly / CoinTracker / TurboTax + Income Statement + Year-end PDF |
 
 The web dashboard (and Discover, saved searches, tax exports) is gated
 to `"pro"` only via `canAccessDashboard()` in `src/lib/auth/tier.ts`.
-Mobile-tier users have the app but not the desktop surface.
+Legacy `tier="mobile"` rows (pre-May-2026 subscribers on the retired
+middle tier) are aliased to Pro everywhere — same wallet cap, same
+feature set — until natural renewal drains the alias.
 
 **Wallet-count enforcement** (`src/app/api/wallets/route.ts` +
 `src/app/api/mobile/wallets/route.ts`):
-- Free: 1 · Mobile: 3 · Pro: 10. (Was: free=1 / pro=3 / fund=unlimited.)
-- Pro raised from "unlimited" to a finite 10 because the dashboard
-  renders all wallets in one view; bigger fleets route through the
-  contact form for an Enterprise plan.
-- Push alerts metered by `users.pushAlertsSent` (lifetime counter).
-  `checkAndConsumePushCredit(userId)` in `src/lib/db/queries.ts` is the
-  single gate — paid tiers (mobile + pro) are unmetered; free tier is
-  capped at `FREE_PUSH_ALERT_LIMIT = 3`.
+- Free: 3 · Pro: 10. Legacy `mobile` tier kept at 10 (pro alias).
+- Pro is finite at 10 because the dashboard renders all wallets in one
+  view; bigger fleets contact us directly via team@vestream.io. No
+  self-serve enterprise tier at this stage.
+- Push alerts metered by `users.pushAlertsSent` (monthly counter, resets
+  on the 1st of each calendar month — `users.pushAlertsMonthStart`
+  tracks which month it belongs to). `checkAndConsumePushCredit(userId)`
+  in `src/lib/db/queries.ts` is the single gate — Pro is unmetered;
+  Free is capped at `FREE_PUSH_ALERT_LIMIT = 10` per month.
 
 **Wallet indexes**: `wallets_user_idx` (userId) and `wallets_user_address_idx` (userId + address) are defined in schema.
 
@@ -677,24 +679,23 @@ sit side by side.
 
 | Tier | Price | Key features |
 |---|---|---|
-| Free   | $0       | Public `/find-vestings` search, 1 wallet, 3 lifetime push alerts |
-| Mobile | $9.99/mo  | Mobile app: unlimited push alerts, email alerts, 3 wallets, live countdowns, priority data refresh |
-| Pro    | $14.99/mo | Everything in Mobile, plus the **web dashboard** (QR sign-in), Discover (Token Vesting Explorer), search any wallet, multi-wallet portfolio, tax-ready CSV exports (Koinly / CoinTracker / TurboTax), vesting income statement, year-end PDF. Wallet cap: 10. |
+| Free | $0                                | Public `/find-vestings` search, 3 wallets, 10 push alerts / month (resets on the 1st) |
+| Pro  | $9.99/mo *or* $74.99/yr (saves 37%) | Mobile app + **web dashboard** (QR sign-in): 10 wallets, unlimited push + email alerts, Discover (Token Vesting Explorer), search any wallet, tax-ready CSV exports (Koinly / CoinTracker / TurboTax), vesting income statement, year-end PDF. |
 
-Mobile and Pro both come with a 14-day free trial (per RevenueCat /
-Apple / Google rules). RevenueCat entitlement IDs to set in their
-dashboard:
-- `mobile` — entitled by the $9.99 product
-- `pro`    — entitled by the $14.99 product
+Pro comes with a 14-day free trial (per RevenueCat / Apple / Google
+rules). RevenueCat entitlement IDs to set in their dashboard:
+- `pro` — entitled by either the $9.99/mo or $74.99/yr product
 
-`tierFromEntitlements()` in `src/app/api/mobile/revenuecat-webhook/route.ts`
-maps these to `users.tier`. Pro is checked first so a `PRODUCT_CHANGE`
-event upgrading mobile→pro registers correctly even if both entitlements
-appear in the payload.
+Legacy `mobile` entitlement (pre-May-2026 retired middle tier) is still
+honoured server-side: `tierFromEntitlements()` in
+`src/app/api/mobile/revenuecat-webhook/route.ts` maps **any** active
+entitlement (`pro`, legacy `mobile`, legacy `fund`) to `tier="pro"` so
+grandfathered subscribers keep full access until their natural renewal.
 
-For larger usage (funds, teams, agencies needing > 10 wallets, REST
-API + MCP, SSO, custom alert channels) — point users at the contact
-form via the developer-page nudge at the bottom of the pricing section.
+For larger usage (funds, teams needing > 10 wallets, REST API + MCP,
+SSO, custom alert channels) — direct them to `team@vestream.io`. There
+is no self-serve Enterprise tier at this stage; we'll add one once
+demand justifies the operational overhead.
 
 ---
 

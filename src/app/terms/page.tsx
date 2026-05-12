@@ -117,7 +117,7 @@ export default function Terms() {
           <Section title="6. Subscriptions, payments &amp; trials">
             <ul>
               <li>The Free tier requires no payment.</li>
-              <li>The Mobile tier ($9.99/mo) and the Pro tier ($14.99/mo) are sold via the TokenVest mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing is shown at the point of sale within the app.</li>
+              <li>The Pro tier ($9.99/month or $74.99/year — saves 37%) is sold via the Vestream mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing is shown at the point of sale within the app.</li>
               <li>Larger usage (funds, teams, agencies needing more than 10 wallets, or commercial API/MCP volume) is sold by contract; pricing and terms are provided separately. Contact us via the website to discuss.</li>
               <li>Free trials, where offered, automatically convert to paid subscriptions at the end of the trial period unless cancelled. You may cancel at any time before trial end via your Apple / Google subscription settings (mobile).</li>
               <li>Subscriptions auto-renew at the end of each billing period unless cancelled. Refund eligibility follows the rules of the relevant payment processor (Apple / Google).</li>

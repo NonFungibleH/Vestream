@@ -1606,7 +1606,7 @@ export default async function Home() {
             },
             {
               q: "How do unlock notifications work?",
-              a: "Push notifications are core to the mobile app — every tier gets them (Free has 3 lifetime credits; Mobile and Pro are unlimited). You configure timing per token in the Alerts tab — anything from 'live unlock' to '24 hours before'. Email alerts are a Pro-only feature; enable them in the Alerts tab and enter the address you want notifications sent to.",
+              a: "Push notifications are core to the mobile app — every tier gets them (Free gets 10 per calendar month, resets on the 1st; Pro is unlimited). You configure timing per token in the Alerts tab — anything from 'live unlock' to '24 hours before'. Email alerts are a Pro-only feature; enable them in the Alerts tab and enter the address you want notifications sent to.",
             },
             {
               q: "What is the P&L Tracker?",
@@ -1614,7 +1614,7 @@ export default async function Home() {
             },
             {
               q: "Can I export my data?",
-              a: "Yes — Pro plan only. From the desktop dashboard's Tax Reports section you can download CSV files in formats ready for Koinly, CoinTracker, or TurboTax, plus a year-end PDF report and a vesting income statement. Free and Mobile tiers don't include exports — they're a Pro feature.",
+              a: "Yes — Pro plan only. From the desktop dashboard's Tax Reports section you can download CSV files in formats ready for Koinly, CoinTracker, or TurboTax, plus a year-end PDF report and a vesting income statement. Free tier doesn't include exports — they're a Pro feature.",
             },
             {
               q: "How accurate are the token prices?",
@@ -1622,11 +1622,11 @@ export default async function Home() {
             },
             {
               q: "Can I track wallets that aren't mine?",
-              a: "Yes. You can add any wallet address you want to monitor — useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. Free tier: 1 wallet. Mobile tier: 3 wallets. Pro tier: 10 wallets.",
+              a: "Yes. You can add any wallet address you want to monitor — useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. Free tier: 3 wallets. Pro tier: 10 wallets.",
             },
             {
               q: "Is TokenVest free to use?",
-              a: "Yes. Free plan includes 1 wallet on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 3 lifetime push alerts (no email). Mobile ($9.99/mo, 14-day trial) adds 3 wallets and unlimited push alerts. Pro ($14.99/mo, 14-day trial) adds 10 wallets, email unlock alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year — saves 37%, 14-day trial) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1653,25 +1653,14 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* Tier cards — Free / Mobile / Pro.
-            Enterprise dropped from the homepage on May 5 2026 — we don't
-            sell to enterprise self-serve and the dark card was confusing
-            the consumer audience. Builders interested in API access find
-            us via the /developer link below.
-            Pro reframed as "Mobile + Dashboard" — same $14.99/mo as
-            before, but the value prop is now explicit: web dashboard
-            unlocks the tax + discover + explorer features that aren't
-            in the mobile-only tier.
-            Mobile is a new in-between tier at $9.99/mo capturing users
-            who want push alerts + multi-wallet but don't need tax
-            exports.
-            Mobile responsiveness improvements:
-              - Cards stack to grid-cols-1 below md (existing) but the
-                "Most popular" badges are now position-tuned for narrow
-                widths (px-2.5 md:px-3 instead of px-3 md:px-4).
-              - Card padding tightened p-4 md:p-7 (was p-5) so the
-                cards fit comfortably on a 320pt iPhone SE column. */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
+        {/* Tier cards — Free / Pro (May 2026 pricing simplification).
+            The 3-tier Free/Mobile/Pro split was retired: the middle
+            "Mobile" tier fractured the conversion funnel for ~$5/mo
+            difference, and "3 lifetime push alerts" on the previous
+            Free tier made the app feel broken inside a week. New scheme
+            optimises for the acquisition story (MAU growth + retention
+            curves) over short-term ARPU. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mb-12 max-w-3xl mx-auto">
           {/* Free */}
           <div className="rounded-2xl p-4 md:p-7 min-w-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
@@ -1683,11 +1672,11 @@ export default async function Home() {
             </Link>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {[
-                "1 wallet on the mobile app",
+                "3 wallets on the mobile app",
                 "Free web wallet scanner — any address",
                 "All 10+ vesting protocols",
                 "Claimable balance + unlock calendar",
-                "3 free push alerts (lifetime)",
+                "10 push alerts / month (resets monthly)",
                 "No email alerts (upgrade for email)",
               ].map(f => (
                 <li key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "#374151" }}>
@@ -1698,40 +1687,7 @@ export default async function Home() {
             </ul>
           </div>
 
-          {/* Mobile — middle tier, between Free and Pro. The "Pro on your
-              phone" plan: push alerts, multi-wallet, no web dashboard. */}
-          <div className="rounded-2xl p-4 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#0F8A8A" }}>Mobile</p>
-            <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
-              $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
-            </p>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
-              style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
-              14-day free trial
-            </div>
-            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Push alerts and multi-wallet on your phone.</p>
-            <Link href="#download" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
-              style={{ background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.25)", color: "#0F8A8A" }}>
-              Get the app →
-            </Link>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
-            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              {[
-                "3 wallet addresses",
-                "Unlimited push alerts",
-                "Live countdowns + reminders",
-                "Priority data refresh (60s)",
-              ].map(f => (
-                <li key={f} className="flex items-start gap-2.5 text-sm" style={{ color: "#374151" }}>
-                  <svg className="flex-shrink-0 mt-0.5" width={14} height={14} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Pro (featured) — Mobile + Dashboard. Tax exports, Vesting
-              Explorer, search-any-wallet. The "everything" tier. */}
+          {/* Pro (featured) — single paid tier with the full feature set. */}
           <div className="relative rounded-2xl p-4 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
@@ -1739,28 +1695,31 @@ export default async function Home() {
                 Most popular
               </span>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro · Mobile + Dashboard</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro</p>
             <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
-              $14.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
+              $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
               style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
               14-day free trial
             </div>
-            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Mobile app + web dashboard. Tax exports + every Pro feature.</p>
+            <p className="text-sm mb-1" style={{ color: "#8B8E92" }}>
+              Or <span className="font-semibold" style={{ color: "#0F8A8A" }}>$74.99/year</span> — save 37%.
+            </p>
+            <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Everything you need to track every unlock.</p>
             <Link href="#download" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
               style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}>
               Get the app →
             </Link>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Mobile, plus:</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {[
                 "10 wallet addresses",
+                "Unlimited push alerts before every unlock",
                 "Email unlock alerts",
-                "Web dashboard access",
+                "Web dashboard access (QR sign-in)",
                 "Token Vesting Explorer (Discover)",
                 "Search any wallet's holdings",
-                "Multi-wallet portfolio view",
                 "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)",
                 "Vesting income statement (P&L)",
                 "Year-end PDF tax report",
@@ -1802,7 +1761,7 @@ export default async function Home() {
             via the developer page; the homepage just doesn't push
             them through a dedicated tier card. */}
         <p className="text-center text-sm mt-4 mb-8" style={{ color: "#8B8E92" }}>
-          Building on TokenVest data, or need API access?{" "}
+          Building on Vestream data, or need API access?{" "}
           <Link href="/developer" className="font-semibold" style={{ color: "#1CB8B8" }}>
             See the Developer API →
           </Link>
@@ -1815,10 +1774,9 @@ export default async function Home() {
           ← Swipe to see all tiers →
         </p>
 
-        {/* Comparison table — wrapped in overflow-x-auto so the 4-column grid
-            stays legible on mobile (375px) by scrolling horizontally rather
-            than crushing each column to ~80px. The min-w-[640px] inner
-            container preserves desktop layout unchanged. */}
+        {/* Comparison table — 3 columns (Free / Pro) after May 2026
+            pricing simplification. Horizontal scroll preserved on mobile
+            for the long feature list. */}
         <div
           className="rounded-2xl overflow-x-auto w-full"
           aria-label="Tier comparison table — scroll horizontally on mobile if needed"
@@ -1826,46 +1784,44 @@ export default async function Home() {
           style={{
             border: "1px solid rgba(21,23,26,0.10)",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-            // Smooth iOS momentum scroll (no-op on desktop / Android Chrome).
             WebkitOverflowScrolling: "touch",
           }}
         >
-          <div className="min-w-[560px]">
-          <div className="grid grid-cols-4 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+          <div className="min-w-[480px]">
+          <div className="grid grid-cols-3 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#0F8A8A" }}>Mobile</span>
             <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
           </div>
           {([
-            ["Wallet addresses",           "1",              "3",           "10"],
-            ["Auto-scan all chains",       true,             true,          true],
-            ["All 10+ vesting protocols",  true,             true,          true],
-            ["Real-time mobile app",       true,             true,          true],
-            ["Claimable balance tracking", true,             true,          true],
-            ["Unlock calendar",            true,             true,          true],
-            ["Push notifications",         "3 lifetime",     "Unlimited",   "Unlimited"],
-            ["Email alerts",               false,            false,         true],
-            ["Live countdowns + reminders", false,           true,          true],
-            ["Web dashboard access",       false,            false,         true],
-            ["Token Vesting Explorer",     false,            false,         true],
-            ["Search any wallet",          false,            false,         true],
-            ["Multi-wallet portfolio view", false,           false,         true],
-            ["Tax-ready CSV exports",      false,            false,         true],
-            ["Vesting income statement",   false,            false,         true],
-            ["Year-end PDF tax report",    false,            false,         true],
-          ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, mobile, pro], i, arr) => (
-            <div key={feature} className="grid grid-cols-4 px-4 md:px-6 py-3.5 items-center"
+            ["Wallet addresses",            "3",                  "10"],
+            ["Auto-scan all chains",        true,                 true],
+            ["All 10+ vesting protocols",   true,                 true],
+            ["Real-time mobile app",        true,                 true],
+            ["Claimable balance tracking",  true,                 true],
+            ["Unlock calendar",             true,                 true],
+            ["Push notifications",          "10 / month",         "Unlimited"],
+            ["Email alerts",                false,                true],
+            ["Live countdowns + reminders", false,                true],
+            ["Web dashboard access",        false,                true],
+            ["Token Vesting Explorer",      false,                true],
+            ["Search any wallet",           false,                true],
+            ["Multi-wallet portfolio view", false,                true],
+            ["Tax-ready CSV exports",       false,                true],
+            ["Vesting income statement",    false,                true],
+            ["Year-end PDF tax report",     false,                true],
+          ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
+            <div key={feature} className="grid grid-cols-3 px-4 md:px-6 py-3.5 items-center"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
               <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
-              {([free, mobile, pro] as (string | boolean)[]).map((val, j) => (
+              {([free, pro] as (string | boolean)[]).map((val, j) => (
                 <div key={j} className="flex justify-center">
                   {typeof val === "boolean" ? (
                     val
                       ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : j === 1 ? "#0F8A8A" : "#1CB8B8" }}>{val}</span>
+                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
                   )}
                 </div>
               ))}
@@ -1885,7 +1841,7 @@ export default async function Home() {
             style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>See every token you&rsquo;re owed.</h2>
           <p className="relative text-base mb-8 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-            Paste any wallet and TokenVest returns every active vesting across 10+ protocols in seconds. No sign-up. No KYC.
+            Paste any wallet and Vestream returns every active vesting across 10+ protocols in seconds. No sign-up. No KYC.
           </p>
           <div className="relative flex justify-center w-full">
             <Link
