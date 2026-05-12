@@ -11,11 +11,12 @@ import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
-// Wallet caps mirror src/lib/db/queries.ts. Kept inline here so the claim
-// path doesn't need a second DB round-trip to read tier limits — small win
-// on a hot login path, and the values are immutable enough that
-// duplication is fine.
-const WALLET_CAP: Record<string, number> = { free: 1, mobile: 3, pro: 10 };
+// Wallet caps. May 2026 pricing simplification — free went 1 → 3, the
+// "mobile" middle tier was retired so legacy mobile rows now get the
+// same 10-wallet cap as pro for forward-compat through the transition.
+// Kept inline here so the claim path doesn't need a second DB round-trip
+// on a hot login path.
+const WALLET_CAP: Record<string, number> = { free: 3, mobile: 10, pro: 10 };
 
 /**
  * Claim every unclaimed pending_wallet_links row for this email and turn

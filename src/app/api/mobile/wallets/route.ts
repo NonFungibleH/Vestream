@@ -7,12 +7,16 @@ import { wallets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 // Wallet limits per tier — keep in sync with src/app/api/wallets/route.ts.
-//   free   → 1   (website search + a few alerts)
-//   mobile → 3   ($9.99 plan: mobile app + alerts + multi-wallet)
-//   pro    → 10  ($14.99 plan: + web dashboard + tax exports)
+//   free   → 3   (was 1; bumped May 2026 to make the free tier usable)
+//   pro    → 10  ($9.99/mo or $74.99/yr: web dashboard + tax exports +
+//                unlimited push + email alerts, 10-wallet cap)
+//   mobile → 10  legacy tier alias — kept at 10 (same as pro) so any DB
+//                row still on "mobile" gets the new Pro experience
+//                without a manual migration. RC webhook now maps both
+//                entitlements to tier="pro" going forward.
 const WALLET_LIMITS: Record<string, number> = {
-  free:   1,
-  mobile: 3,
+  free:   3,
+  mobile: 10,
   pro:    10,
 };
 
@@ -42,11 +46,11 @@ export async function POST(req: NextRequest) {
 
   // Enforce wallet limit
   const existing = await db.select().from(wallets).where(eq(wallets.userId, userId));
-  const limit = WALLET_LIMITS[user.tier] ?? 1;
+  const limit = WALLET_LIMITS[user.tier] ?? 3;
   if (existing.length >= limit) {
+    // "Mobile" tier was retired May 2026; legacy DB rows surface as Pro.
     const planLabel =
-      user.tier === "pro"    ? "Pro"
-      : user.tier === "mobile" ? "Mobile"
+      user.tier === "pro" || user.tier === "mobile" ? "Pro"
       : "Free";
     return NextResponse.json(
       {

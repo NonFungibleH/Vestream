@@ -40,20 +40,20 @@ const INACTIVE_EVENTS = new Set(["CANCELLATION", "EXPIRATION", "BILLING_ISSUE"])
 
 // Map RevenueCat entitlement IDs → our internal tier name.
 //
-// RevenueCat entitlement IDs (configured in their dashboard, must match):
-//   "pro"    — the $14.99 plan: mobile app + web dashboard + tax exports
-//   "mobile" — the $9.99 plan: mobile app only (push + email alerts, multi-wallet)
+// As of May 2026 pricing simplification there's a single paid entitlement:
+//   "pro" — $9.99/mo or $74.99/yr, includes web dashboard + tax exports
 //
-// "Pro" is checked first so PRODUCT_CHANGE events that upgrade
-// mobile→pro register correctly even if both entitlements transit
-// through the same payload.
-function tierFromEntitlements(entitlementIds: string[]): "mobile" | "pro" {
-  if (entitlementIds.includes("pro"))    return "pro";
-  if (entitlementIds.includes("mobile")) return "mobile";
-  // Default to mobile — if RC says the user has any active entitlement
-  // but doesn't match either expected ID, treat them as the lower
-  // paid tier rather than incorrectly granting dashboard access.
-  return "mobile";
+// The legacy "mobile" entitlement ($9.99 middle tier) is still accepted
+// here for forward-compat: existing subscribers on the old SKU keep their
+// access through their billing cycle without a manual migration. Both
+// entitlements resolve to tier="pro" on every active event, so the
+// "mobile" alias drains naturally as renewals fire and as the RC
+// dashboard is reconfigured.
+function tierFromEntitlements(entitlementIds: string[]): "pro" {
+  // Any active entitlement → pro. Defence-in-depth: even an unknown
+  // entitlement ID granted by RC results in pro, not a silent free
+  // downgrade — RC would only grant an entitlement after a real payment.
+  return "pro";
 }
 
 // RevenueCat event shape we care about (narrow subset; keep loose on unknown fields).

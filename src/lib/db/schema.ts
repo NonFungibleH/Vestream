@@ -40,9 +40,14 @@ export const users = pgTable("users", {
   trialEndsAt:           timestamp("trial_ends_at"),
   stripeCustomerId:      text("stripe_customer_id"),
   stripeSubscriptionId:  text("stripe_subscription_id"),
-  // Free-tier push credits (lifetime, 3 total). Incremented when a push
-  // alert is actually delivered to a free user; Pro/Fund are unmetered.
+  // Free-tier push credits (10 per calendar month, resets on the 1st).
+  // Was originally a 3-lifetime cap — flipped to monthly reset May 2026
+  // to make the free tier actually usable. pushAlertsSent is the in-month
+  // counter; pushAlertsMonthStart records which month it belongs to.
+  // checkAndConsumePushCredit rolls the counter back to 0 + bumps this
+  // timestamp on month boundaries. Paid tiers are unmetered.
   pushAlertsSent:        integer("push_alerts_sent").default(0).notNull(),
+  pushAlertsMonthStart:  timestamp("push_alerts_month_start"),
 });
 
 // ── Claim events ────────────────────────────────────────────────────────────

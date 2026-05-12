@@ -1,25 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ContactTrigger from "@/components/ContactTrigger";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import PricingCta from "@/components/PricingCta";
 
 export const metadata: Metadata = {
-  title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
-  description: "TokenVest is free for 1 wallet and 3 push alerts. Pro at $14.99/mo unlocks unlimited alerts, 3 wallets, the Discover page, and tax-ready CSV exports + year-end PDF reports for Koinly, CoinTracker, and TurboTax. Enterprise on request.",
+  title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
+  description: "Vestream is free for 3 wallets and 10 push alerts per month. Pro at $9.99/mo ($74.99/yr — save 37%) unlocks unlimited push + email alerts, 10 wallets, the web dashboard, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax.",
   alternates:  { canonical: "https://vestream.io/pricing" },
   openGraph: {
-    title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
-    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
+    title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
+    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year — save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
     url:         "https://vestream.io/pricing",
-    siteName:    "TokenVest",
+    siteName:    "Vestream",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Pricing — TokenVest Pro from $14.99/mo, Free Forever Tier",
-    description: "Free for 1 wallet + 3 alerts. Pro $14.99/mo for unlimited alerts, 3 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax. Enterprise on request.",
+    title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
+    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year — save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
   },
 };
 
@@ -83,9 +82,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
-  name:         "TokenVest",
+  name:         "Vestream",
   description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 7 chains.",
-  brand:        { "@type": "Brand", name: "TokenVest" },
+  brand:        { "@type": "Brand", name: "Vestream" },
   url:          "https://vestream.io/pricing",
   image:        "https://vestream.io/logo.svg",
   offers: [
@@ -96,19 +95,19 @@ const pricingJsonLd = {
       priceCurrency: "USD",
       url:           "https://vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "1 wallet, auto-scan across all chains and protocols, 3 lifetime push alerts.",
+      description:   "3 wallets, auto-scan across all chains and protocols, 10 push alerts per month.",
     },
     {
       "@type":       "Offer",
       name:          "Pro Monthly",
-      price:         "14.99",
+      price:         "9.99",
       priceCurrency: "USD",
       url:           "https://vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "3 wallets, unlimited push + email alerts, Discover page, tax-ready CSV exports + year-end PDF reports for Koinly / CoinTracker / TurboTax, 14-day free trial.",
+      description:   "10 wallets, unlimited push + email alerts, web dashboard, tax-ready CSV exports for Koinly / CoinTracker / TurboTax, 14-day free trial.",
       priceSpecification: {
         "@type":            "UnitPriceSpecification",
-        price:              "14.99",
+        price:              "9.99",
         priceCurrency:      "USD",
         billingIncrement:   1,
         unitCode:           "MON",
@@ -117,14 +116,14 @@ const pricingJsonLd = {
     {
       "@type":       "Offer",
       name:          "Pro Annual",
-      price:         "119.99",
+      price:         "74.99",
       priceCurrency: "USD",
       url:           "https://vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "Pro features billed annually — saves ~33% vs monthly.",
+      description:   "Pro features billed annually — saves ~37% vs monthly.",
       priceSpecification: {
         "@type":            "UnitPriceSpecification",
-        price:              "119.99",
+        price:              "74.99",
         priceCurrency:      "USD",
         billingIncrement:   1,
         unitCode:           "ANN",
@@ -178,7 +177,7 @@ export default function Pricing() {
 
       {/* ── Pricing cards ────────────────────────────────────────────────────── */}
       <section className="relative px-6 pb-20">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
 
           {/* ── Free ── */}
           <div className="rounded-2xl p-7"
@@ -201,15 +200,15 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="1 wallet — auto-scanned across all chains" checkColor="#1CB8B8" />
+              <FeatureItem text="3 wallets — auto-scanned across all chains" checkColor="#1CB8B8" />
               <FeatureItem text="All 9 vesting platforms (EVM + Solana)" checkColor="#1CB8B8" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#1CB8B8" />
               <FeatureItem text="Claimable balance tracking" checkColor="#1CB8B8" />
               <FeatureItem text="Unlock calendar" checkColor="#1CB8B8" />
-              <FeatureItem text="Unlimited email alerts" checkColor="#1CB8B8" />
-              <FeatureItem text="3 free push alerts (lifetime)" checkColor="#1CB8B8" />
+              <FeatureItem text="10 push alerts / month (resets monthly)" checkColor="#1CB8B8" />
               <FeatureItem text="Unlimited push alerts" included={false} />
-              <FeatureItem text="Multiple wallets" included={false} />
+              <FeatureItem text="Email alerts" included={false} />
+              <FeatureItem text="Tax-ready exports + web dashboard" included={false} />
             </ul>
           </div>
 
@@ -232,7 +231,7 @@ export default function Pricing() {
             <div className="mb-5">
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro</p>
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>$14.99</span>
+                <span className="text-4xl font-bold tracking-tight" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>$9.99</span>
                 <span className="text-sm mb-1.5" style={{ color: "#B8BABD" }}>/month</span>
               </div>
               {/* Trial chip — earnest green to feel like a genuine benefit rather
@@ -244,8 +243,8 @@ export default function Pricing() {
               </div>
               <p className="text-sm" style={{ color: "#8B8E92" }}>
                 Or{" "}
-                <span className="font-semibold" style={{ color: "#1CB8B8" }}>$119.99/year</span>
-                {" "}— save 33%
+                <span className="font-semibold" style={{ color: "#1CB8B8" }}>$74.99/year</span>
+                {" "}— save 37%
               </p>
             </div>
 
@@ -258,68 +257,23 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Everything in Free, plus:</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="3 wallet addresses" checkColor="#1CB8B8" />
+              <FeatureItem text="10 wallet addresses" checkColor="#1CB8B8" />
               <FeatureItem text="Unlimited push alerts before every unlock" checkColor="#1CB8B8" />
               <FeatureItem text="Email unlock alerts" checkColor="#1CB8B8" />
+              <FeatureItem text="Web dashboard (QR sign-in from the app)" checkColor="#1CB8B8" />
               <FeatureItem text="Token Vesting Explorer — Discover any stream on-chain" checkColor="#1CB8B8" />
               <FeatureItem text="Priority data refresh (60s)" checkColor="#1CB8B8" />
               <FeatureItem text="Tax-ready CSV exports — Koinly, CoinTracker, TurboTax" checkColor="#1CB8B8" />
               <FeatureItem text="Vesting income statement (P&L view)" checkColor="#1CB8B8" />
               <FeatureItem text="Year-end PDF tax report" checkColor="#1CB8B8" />
               <FeatureItem text="Ticketing support" checkColor="#1CB8B8" />
-              <FeatureItem text="Search all receivers" included={false} />
-              <FeatureItem text="Team workspace" included={false} />
-            </ul>
-          </div>
-
-          {/* ── Enterprise ── */}
-          <div className="relative rounded-2xl p-7"
-            style={{
-              background: "#0d0f14",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.06)",
-            }}>
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white whitespace-nowrap"
-                style={{ background: "#1CB8B8", boxShadow: "0 4px 12px rgba(28,184,184,0.35)" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
-                Funds &amp; teams
-              </span>
-            </div>
-
-            <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Enterprise</p>
-              <div className="flex items-end gap-1 mb-0.5">
-                <span className="text-4xl font-bold tracking-tight" style={{ color: "white", letterSpacing: "-0.03em" }}>Custom</span>
-              </div>
-              <p className="text-sm" style={{ color: "#6b7280" }}>
-                Built around your team — pricing on request.
-              </p>
-            </div>
-
-            <ContactTrigger
-              label="Contact us →"
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
-              style={{ background: "white", color: "#1A1D20", textDecoration: "none" }}
-            />
-
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>Everything in Pro, plus:</p>
-            <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="Unlimited wallet addresses" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Full REST API + MCP server access" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Search all receivers" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Team workspace &amp; shared portfolios" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Slack webhook notifications" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Telegram &amp; WhatsApp alerts" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="SSO &amp; custom SLA" color="#e5e7eb" checkColor="#1CB8B8" />
-              <FeatureItem text="Dedicated support channel" color="#e5e7eb" checkColor="#1CB8B8" />
             </ul>
           </div>
         </div>
 
         {/* API nudge */}
         <p className="text-center text-sm mt-8" style={{ color: "#B8BABD" }}>
-          Building on TokenVest data?{" "}
+          Building on Vestream data?{" "}
           <Link href="/developer" className="font-semibold underline" style={{ color: "#1CB8B8" }}>
             See the Developer API →
           </Link>
@@ -343,31 +297,25 @@ export default function Pricing() {
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
               <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1A1D20" }}>Enterprise</span>
             </div>
 
             {([
-              ["Wallet addresses",              "1",               "3 wallets",     "Unlimited"],
-              ["Auto-scan (all chains + platforms)", true,         true,            true],
-              ["Real-time dashboard",           true,              true,            true],
-              ["Claimable balance tracking",    true,              true,            true],
-              ["Unlock calendar",               true,              true,            true],
-              ["Push notifications",            "3 (lifetime)",    "Unlimited",     "Unlimited"],
-              ["Email alerts",                  true,              true,            true],
-              ["Token Vesting Explorer",        false,             true,            true],
-              ["Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", false, true, true],
-              ["Vesting income statement (P&L view)", false,       true,            true],
-              ["Year-end PDF tax report",       false,             true,            true],
-              ["REST API + MCP server",         false,             false,           true],
-              ["Search all receivers",          false,             false,           true],
-              ["Team workspace",                false,             false,           true],
-              ["Slack webhook",                 false,             false,           true],
-              ["Telegram & WhatsApp alerts",    false,             false,           true],
-              ["SSO & custom SLA",              false,             false,           true],
-              ["Support",                       false,             "Ticketing",     "Dedicated"],
-            ] as [string, string | boolean, string | boolean, string | boolean][]).map(([feature, free, pro, fund], i, arr) => (
+              ["Wallet addresses",              "3",                "10 wallets"],
+              ["Auto-scan (all chains + platforms)", true,          true],
+              ["Real-time dashboard",           true,               true],
+              ["Claimable balance tracking",    true,               true],
+              ["Unlock calendar",               true,               true],
+              ["Push notifications",            "10 / month",       "Unlimited"],
+              ["Email alerts",                  false,              true],
+              ["Web dashboard (QR sign-in)",    false,              true],
+              ["Token Vesting Explorer",        false,              true],
+              ["Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", false, true],
+              ["Vesting income statement (P&L view)", false,        true],
+              ["Year-end PDF tax report",       false,              true],
+              ["Support",                       false,              "Ticketing"],
+            ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
               <div key={feature}
-                className="grid grid-cols-4 px-4 md:px-6 py-3.5 items-center"
+                className="grid grid-cols-3 px-4 md:px-6 py-3.5 items-center"
                 style={{
                   borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined,
                   background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)",
@@ -393,16 +341,6 @@ export default function Pricing() {
                     <span className="text-xs font-semibold text-center" style={{ color: "#1CB8B8" }}>{pro}</span>
                   )}
                 </div>
-                {/* Fund */}
-                <div className="flex justify-center">
-                  {typeof fund === "boolean" ? (
-                    fund
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.12}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: "#1CB8B8" }}>{fund}</span>
-                  )}
-                </div>
               </div>
             ))}
             </div>
@@ -421,11 +359,11 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans one wallet across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, unlimited email alerts, and 3 free push notifications (lifetime) to try mobile alerts. Pro unlocks unlimited push alerts, more wallets, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
+              a="The Free plan auto-scans up to 3 wallets across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 10 push notifications per month (resets on the 1st) so you can try mobile alerts. Pro unlocks unlimited push + email alerts, 10 wallets, the web dashboard, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
             />
             <FAQItem
-              q="How do the 3 free push alerts work?"
-              a="Every Free account gets 3 lifetime push notification credits, consumed one per unlock alert sent to your phone. They're there so you can experience how alerting actually feels on a real unlock before committing to Pro. Upgrade anytime for unlimited alerts."
+              q="How do the 10 monthly free push alerts work?"
+              a="Every Free account gets 10 push notification credits per calendar month. The counter resets to 0 on the 1st of each month. Upgrade anytime for unlimited alerts plus email alerts."
             />
             <FAQItem
               q="Can I cancel anytime?"
@@ -433,19 +371,15 @@ export default function Pricing() {
             />
             <FAQItem
               q="How does annual billing work?"
-              a="Pro annual is charged upfront for 12 months at a 33% discount — $119.99/year (~$10/mo). You can switch between monthly and annual at renewal."
+              a="Pro annual is charged upfront for 12 months at $74.99/year (~$6.25/mo) — saves 37% vs paying monthly. You can switch between monthly and annual at renewal."
             />
             <FAQItem
               q="How does the 14-day free trial work?"
               a="New Pro signups get 14 days of full Pro access before any charge. Add a card to start the trial — we won't bill until day 15, and you can cancel anytime before then with one click. If you forget and we do charge, contact support within 48 hours for a full refund, no questions asked."
             />
             <FAQItem
-              q="Do you have an API?"
-              a="Yes — the TokenVest REST API and MCP server are available on the Enterprise plan. You get typed endpoints for every supported protocol, AI-agent-ready tooling, and a developer portal. Contact us for API keys and pricing."
-            />
-            <FAQItem
-              q="I run a fund / team / build an app — what do I do?"
-              a="Get in touch via the Enterprise contact form. We scope unlimited wallets, team workspace, SSO, API access, Slack/Telegram integrations, and an SLA to your use case — then quote you accordingly."
+              q="I track more than 10 wallets — what do I do?"
+              a="The Pro plan caps at 10 wallets, which covers nearly every individual investor. If you run a fund or team with more, email team@vestream.io and we'll find the right setup for you."
             />
           </div>
         </div>
@@ -463,7 +397,7 @@ export default function Pricing() {
             Never miss an unlock again.
           </h2>
           <p className="text-sm mb-8 leading-relaxed" style={{ color: "#B8BABD" }}>
-            Join investors and funds that use TokenVest to stay on top of every vesting schedule.
+            Join investors and funds that use Vestream to stay on top of every vesting schedule.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/early-access"

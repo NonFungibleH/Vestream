@@ -284,37 +284,68 @@ export async function checkAndIncrementScanCount(
  *
  * Call this immediately BEFORE sending a push to check+consume a credit atomically.
  * Returns { allowed: true } if the push should be sent, false if the free user
- * has already burned through their 3 credits.
+ * has used their 10-per-month allocation.
+ *
+ * Free-tier semantics changed May 2026: was "3 lifetime alerts" (which
+ * made the free tier feel broken after the first week), now "10 per
+ * calendar month, resets on the 1st." pushAlertsMonthStart on the users
+ * row stores the month the counter currently belongs to; on month
+ * rollover we reset the counter to 0 in the same UPDATE that increments.
  */
-export const FREE_PUSH_ALERT_LIMIT = 3;
+export const FREE_PUSH_ALERT_LIMIT = 10;
+
+/** True if `a` and `b` fall in the same calendar month (UTC). */
+function isSameMonth(a: Date, b: Date): boolean {
+  return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth();
+}
 
 export async function checkAndConsumePushCredit(
   userId: string
 ): Promise<{ allowed: boolean; remaining: number | null }> {
   const row = await db
-    .select({ tier: users.tier, pushAlertsSent: users.pushAlertsSent })
+    .select({
+      tier:                 users.tier,
+      pushAlertsSent:       users.pushAlertsSent,
+      pushAlertsMonthStart: users.pushAlertsMonthStart,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
   if (!row[0]) return { allowed: false, remaining: 0 };
 
-  const { tier, pushAlertsSent } = row[0];
-  // Paid tiers: unlimited. Don't increment counter for them.
+  const { tier, pushAlertsSent, pushAlertsMonthStart } = row[0];
+  // Paid tiers (pro + legacy "mobile"): unlimited. Don't increment counter
+  // for them. The "mobile" branch is preserved so any DB row still on the
+  // old tier keeps unmetered access through the transition.
   if (tier && tier !== "free") {
     return { allowed: true, remaining: null };
   }
 
-  if (pushAlertsSent >= FREE_PUSH_ALERT_LIMIT) {
+  // Month rollover: if the stored month-start is null OR in a prior
+  // calendar month, the counter belongs to a past period and resets to 0
+  // before this check.
+  const now = new Date();
+  const monthRolled = !pushAlertsMonthStart || !isSameMonth(now, pushAlertsMonthStart);
+  const effectiveSent = monthRolled ? 0 : pushAlertsSent;
+
+  if (effectiveSent >= FREE_PUSH_ALERT_LIMIT) {
     return { allowed: false, remaining: 0 };
   }
 
   await db.update(users)
-    .set({ pushAlertsSent: pushAlertsSent + 1 })
+    .set({
+      pushAlertsSent:       effectiveSent + 1,
+      // Anchor to the 1st of the current month at 00:00 UTC so the boundary
+      // is unambiguous on reset. Only updates when we cross a boundary.
+      pushAlertsMonthStart: monthRolled
+        ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+        : pushAlertsMonthStart,
+    })
     .where(eq(users.id, userId));
 
   return {
     allowed:   true,
-    remaining: FREE_PUSH_ALERT_LIMIT - 1 - pushAlertsSent,
+    remaining: FREE_PUSH_ALERT_LIMIT - 1 - effectiveSent,
   };
 }
 

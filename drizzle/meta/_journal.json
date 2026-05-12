@@ -162,6 +162,13 @@
       "when": 1778800000000,
       "tag": "0022_webhook_event_dedup",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1778900000000,
+      "tag": "0023_push_alerts_monthly_reset",
+      "breakpoints": true
     }
   ]
 }

@@ -5,24 +5,26 @@ import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 
-// Wallet limits per tier (May 2026 scheme):
-//   free   → 1 wallet  (website search, basic alerts)
-//   mobile → 3 wallets ($9.99 mobile-app plan: push + email alerts)
-//   pro    → 10 wallets ($14.99 plan: mobile + web dashboard + tax exports)
+// Wallet limits per tier (May 2026 pricing simplification):
+//   free → 3 wallets  (was 1; bumped to make the free tier genuinely
+//                      usable for retention curves an acquirer cares
+//                      about)
+//   pro  → 10 wallets ($9.99/mo or $74.99/yr — web dashboard + tax
+//                      exports + unlimited push + email alerts)
 //
-// Pro-tier cap raised from "unlimited" to a finite 10 because the
-// dashboard renders all wallets in one view; allowing unbounded growth
-// would silently degrade UX (and cost) for power users with thousands.
-// 10 is generous for an individual investor; teams/funds requiring more
-// route through the contact form for an Enterprise plan.
+// "Mobile" tier retired. Legacy DB rows still on tier="mobile" surface
+// as Pro everywhere through this alias entry — the RC webhook now maps
+// both old + new entitlements to tier="pro" so the alias drains
+// naturally as subscriptions renew. 10-wallet cap is generous for any
+// individual investor; the contact form is the escape hatch for funds.
 const WALLET_LIMITS: Record<string, number> = {
-  free:   1,
-  mobile: 3,
+  free:   3,
+  mobile: 10,
   pro:    10,
 };
 
 function walletLimitForTier(tier: string): number {
-  return WALLET_LIMITS[tier] ?? 1;
+  return WALLET_LIMITS[tier] ?? 3;
 }
 
 export async function GET() {
@@ -38,7 +40,7 @@ export async function GET() {
         wallets: [],
         sessionAddress: session.address,
         tier: "free",
-        walletLimit: 1,
+        walletLimit: 3,
         pushAlertsSent: 0,
         pushAlertsLimit: FREE_PUSH_ALERT_LIMIT,
       });
@@ -128,10 +130,10 @@ export async function POST(req: NextRequest) {
     const limit = walletLimitForTier(user.tier);
     if (existingWallets.length >= limit) {
       // User-facing tier labels match the homepage pricing cards:
-      //   free → "Free" · mobile → "Mobile" · pro → "Pro"
+      //   free → "Free" · pro/mobile → "Pro"
+      // ("Mobile" tier was retired May 2026; legacy DB rows show as Pro.)
       const planName =
-        user.tier === "pro"    ? "Pro"
-        : user.tier === "mobile" ? "Mobile"
+        user.tier === "pro" || user.tier === "mobile" ? "Pro"
         : "Free";
       return NextResponse.json(
         {
