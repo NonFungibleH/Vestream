@@ -65,6 +65,14 @@ export async function POST(req: NextRequest) {
     if (!email?.trim())   return NextResponse.json({ error: "Email is required" },   { status: 400 });
     if (!message?.trim()) return NextResponse.json({ error: "Message is required" }, { status: 400 });
 
+    // Length caps — defend against multi-MB payloads chewing memory + DB
+    // bandwidth before they ever reach the CRM. Generous limits: real
+    // contact-form messages rarely exceed 1k chars.
+    if (name.length    > 200)  return NextResponse.json({ error: "Name too long (max 200 characters)" },     { status: 400 });
+    if (email.length   > 254)  return NextResponse.json({ error: "Email too long (max 254 characters)" },    { status: 400 });
+    if (company.length > 200)  return NextResponse.json({ error: "Company too long (max 200 characters)" },  { status: 400 });
+    if (message.length > 5000) return NextResponse.json({ error: "Message too long (max 5000 characters)" }, { status: 400 });
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });

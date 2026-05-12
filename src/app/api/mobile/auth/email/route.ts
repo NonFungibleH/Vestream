@@ -232,11 +232,14 @@ export async function POST(req: NextRequest) {
   if (action === "verify") {
     if (!code) return NextResponse.json({ error: "Code required" }, { status: 400 });
 
-    // Rate-limit verify attempts: 10 per IP+email per 15 min.
+    // Rate-limit verify attempts: 5 per IP+email per 15 min.
     // Without this, a 6-digit OTP has ~1M combinations — a single IP could
-    // brute-force the code space in seconds.
+    // brute-force the code space in seconds. Tightened from 10/15min
+    // (audit hardening) — botnets can split attempts across IPs, but
+    // tightening the per-IP-email cell raises the cost. The 10-min OTP
+    // TTL is the harder ceiling; this just narrows the per-cell window.
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 10, "15 m");
+    const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 5, "15 m");
     const blocked = rateLimitResponse(rlVerify, "Too many verification attempts. Try again in 15 minutes.");
     if (blocked) return blocked;
 

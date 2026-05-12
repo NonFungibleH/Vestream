@@ -24,6 +24,12 @@ import { checkCors, withCorsHeaders } from "@/lib/cors";
 
 const PENDING_TTL_DAYS = 30;
 
+/** Match the regex used by /api/waitlist + /api/contact so all three public
+ *  email-capture endpoints validate against the same shape. Catches "@",
+ *  "user@", "@example.com", and other trivially-malformed addresses that
+ *  the prior `.includes("@")` check let through. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /** Short display form of a wallet, EVM or Solana. Used in email subject + body. */
 function truncateWalletForDisplay(addr: string): string {
   if (addr.length <= 14) return addr;
@@ -206,7 +212,7 @@ export async function POST(req: NextRequest) {
 
   // Lowercased everywhere so dedup works regardless of how the user typed it.
   const email = rawEmail.toLowerCase().trim();
-  if (!email || !email.includes("@") || email.length > 254) {
+  if (!email || email.length > 254 || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
   // Address-validation helper covers both EVM and Solana formats — same

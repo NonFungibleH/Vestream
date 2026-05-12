@@ -5,6 +5,7 @@ import { getUserByAddress } from "@/lib/db/queries";
 import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 import { explorerFetch } from "@/lib/vesting/explorer";
 import { ALL_CHAIN_IDS, SupportedChainId } from "@/lib/vesting/types";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 /**
  * GET /api/explore?token=0x...&chainId=1
@@ -20,6 +21,14 @@ export async function GET(req: NextRequest) {
     if (!session.address) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Rate-limit per-session: 30/min. A logged-in Pro user can otherwise
+    // hammer the explorer endpoint to drain our subgraph credits — costs
+    // us, not them. Keyed off the session address so two users sharing
+    // a coffee-shop IP don't collide.
+    const rl = await checkRateLimit("explore", session.address, 30, "1 m");
+    const blocked = rateLimitResponse(rl, "Too many explorer requests. Try again in a minute.");
+    if (blocked) return blocked;
 
     // Server-side tier check — the explorer is Pro only (mobile tier
     // doesn't have web dashboard access). canAccessDashboard centralises

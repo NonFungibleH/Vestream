@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPairing, consumePairing } from "@/lib/auth/desktop-pair";
 import { getSession } from "@/lib/auth/session";
 import { upsertUser } from "@/lib/db/queries";
+import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,17 @@ export async function GET(req: NextRequest) {
   if (!code) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
+
+  // Rate-limit: 200 polls per IP per 5 min. Legitimate desktop polls at 2s
+  // intervals over a 5-min code TTL = 150 polls max. 200 is comfortably
+  // above that but blocks a UUID-known attacker from poll-flooding the
+  // Redis backend. UUIDs are 122 bits of entropy so guessing one is
+  // intractable anyway; this just removes the route from "no rate limit"
+  // audit findings.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = await checkRateLimit("desktop-pair:poll", ip, 200, "5 m");
+  const blocked = rateLimitResponse(rl, "Too many poll requests. Refresh the page.");
+  if (blocked) return blocked;
 
   // Cheap pre-read to avoid hitting getdel on every poll (would burn
   // Redis ops). Most polls land here in "waiting" state and just return
