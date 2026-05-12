@@ -401,12 +401,28 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
       dataSlice: { offset: 0, length: 0 },
     });
     pubkeys = lite.map((a) => a.pubkey);
-    console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys`);
+    console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${rpcUrl.split("?")[0].slice(0, 60)})`);
   } catch (err) {
     console.error("[jupiter-lock] phase 1 getProgramAccounts failed:", err);
     return null;
   }
-  if (pubkeys.length === 0) return [];
+  // Hard-fail on suspiciously-empty results. Jupiter Lock had 44k+
+  // escrows in production for months; a 0-pubkey result is almost
+  // always an RPC problem (silent rate-limit, plan downgrade, wrong
+  // endpoint URL) NOT "the program is genuinely empty." Returning []
+  // would write 0 rows to the cache and the `setWhere` in writeToCache
+  // would then silently mark the run as a no-op — exactly the failure
+  // mode that produced the "Jupiter Lock 10d ago" staleness diamond on
+  // the /protocols page. Return null instead so the seeder treats it
+  // as a hard failure + the prior row stays intact.
+  if (pubkeys.length === 0) {
+    console.error(
+      `[jupiter-lock] phase 1 returned 0 pubkeys — treating as silent RPC failure. ` +
+      `Check JUPITER_LOCK_RPC_URL env var (currently ${process.env.JUPITER_LOCK_RPC_URL ? "set" : "UNSET, falling back to SOLANA_RPC_URL"}). ` +
+      `Real production count is ~44k.`,
+    );
+    return null;
+  }
 
   // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
   // 100-pubkey chunks × concurrency 4 keeps us under Helius free

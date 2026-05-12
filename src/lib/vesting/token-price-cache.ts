@@ -170,34 +170,85 @@ export async function writePriceCache(
     });
   }
 
-  try {
-    await db
-      .insert(tokenPricesCache)
-      .values(
-        Array.from(dedup.values()).map((e) => ({
-          chainId:      e.chainId,
-          tokenAddress: e.tokenAddress,
-          // NUMERIC columns take string values via drizzle — explicit toString
-          // avoids any "1e-12 → '1e-12'" stringification surprises with very
-          // tiny memecoin prices. toFixed(18) keeps full precision.
-          priceUsd:     formatNumeric(e.priceUsd, 18),
-          liquidityUsd: e.liquidityUsd === null ? null : formatNumeric(e.liquidityUsd, 2),
-          source:       e.source,
-          fetchedAt:    now,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: [tokenPricesCache.chainId, tokenPricesCache.tokenAddress],
-        set: {
-          priceUsd:     sql`excluded.price_usd`,
-          liquidityUsd: sql`excluded.liquidity_usd`,
-          source:       sql`excluded.source`,
-          fetchedAt:    sql`excluded.fetched_at`,
-        },
-      });
-  } catch (err) {
-    console.warn("[token-price-cache] write failed (likely table missing pre-migration):", err);
+  // Per-row sanity check before INSERT. The PG side has tight NUMERIC
+  // bounds + NOT NULL constraints; one bad row in an atomic INSERT
+  // poisons the whole batch ("invalid input syntax for type numeric"
+  // → 0 rows written, every successful row in the same batch lost). We
+  // saw this in production as silent cache emptiness — every snapshot
+  // run fought CoinGecko's rate limit from scratch because nothing
+  // ever cached. Filter unsafe entries here and let the rest land.
+  const EVM_RE = /^0x[0-9a-f]{40}$/i;
+  const SOL_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  const validRows: Array<{ chainId: number; tokenAddress: string; priceUsd: string; liquidityUsd: string | null; source: PriceSource; fetchedAt: Date }> = [];
+  let droppedInvalid = 0;
+  for (const e of dedup.values()) {
+    if (!EVM_RE.test(e.tokenAddress) && !SOL_RE.test(e.tokenAddress)) { droppedInvalid++; continue; }
+    if (!Number.isFinite(e.priceUsd) || e.priceUsd <= 0) { droppedInvalid++; continue; }
+    if (e.liquidityUsd !== null && !Number.isFinite(e.liquidityUsd)) { droppedInvalid++; continue; }
+    if (e.source !== "dexscreener" && e.source !== "coingecko") { droppedInvalid++; continue; }
+    validRows.push({
+      chainId:      e.chainId,
+      tokenAddress: e.tokenAddress,
+      // NUMERIC columns take string values via drizzle — explicit toString
+      // avoids any "1e-12 → '1e-12'" stringification surprises with very
+      // tiny memecoin prices. toFixed(scale) keeps full precision.
+      priceUsd:     formatNumeric(e.priceUsd, 18),
+      liquidityUsd: e.liquidityUsd === null ? null : formatNumeric(e.liquidityUsd, 2),
+      source:       e.source,
+      fetchedAt:    now,
+    });
   }
+  if (droppedInvalid > 0) {
+    console.warn(`[token-price-cache] dropped ${droppedInvalid} malformed rows before insert (NaN price, invalid address, unknown source, etc)`);
+  }
+  if (validRows.length === 0) return;
+
+  // Chunked inserts. One huge batch was failing as an atomic unit on the
+  // ~5000-token PinkSale BSC pricing pass; smaller chunks keep most rows
+  // landing even if one chunk hits a constraint we missed in the row-level
+  // validation above. 100 rows ≈ 800 bytes per row × 100 = ~80KB payload,
+  // well under any limit. Per-chunk try/catch logs FULL error details so
+  // a future failure mode produces actionable info instead of the prior
+  // generic "table missing pre-migration" guess.
+  const CHUNK_SIZE = 100;
+  let chunkErrors = 0;
+  for (let i = 0; i < validRows.length; i += CHUNK_SIZE) {
+    const chunk = validRows.slice(i, i + CHUNK_SIZE);
+    try {
+      await db
+        .insert(tokenPricesCache)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: [tokenPricesCache.chainId, tokenPricesCache.tokenAddress],
+          set: {
+            priceUsd:     sql`excluded.price_usd`,
+            liquidityUsd: sql`excluded.liquidity_usd`,
+            source:       sql`excluded.source`,
+            fetchedAt:    sql`excluded.fetched_at`,
+          },
+        });
+    } catch (err) {
+      chunkErrors++;
+      // Log the actual error verbatim plus a small sample of what was
+      // being inserted, so we can see exactly which constraint fired.
+      const sample = chunk.slice(0, 2).map(r => ({
+        chainId: r.chainId,
+        addr:    r.tokenAddress.slice(0, 10) + "…",
+        price:   r.priceUsd,
+        liq:     r.liquidityUsd,
+        source:  r.source,
+      }));
+      console.error(
+        `[token-price-cache] chunk insert failed (rows ${i}-${i + chunk.length}):`,
+        err,
+        "sample:", JSON.stringify(sample),
+      );
+    }
+  }
+  if (chunkErrors > 0) {
+    console.warn(`[token-price-cache] ${chunkErrors}/${Math.ceil(validRows.length / CHUNK_SIZE)} chunks failed; partial cache write completed`);
+  }
+  return;
 }
 
 /**

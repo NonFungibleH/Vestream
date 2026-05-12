@@ -65,8 +65,16 @@ import {
 // The 1-2s cold renders the user reported as "painfully slow" went
 // away because no user ever hits a cold lambda — only the ISR
 // background revalidation does, and that's not on the critical path.
-export const revalidate = 60;
-export const dynamicParams = false;
+// Force dynamic rendering — the page calls Upstash Redis (no-store) via
+// getQuickUsdPrices, which Next.js 16.3.0-canary.19 hard-errors on for
+// any page also trying to ISR. Middleware-level Cache-Control header
+// (src/middleware.ts → isMarketingDataPath) supplies the SWR caching
+// previously provided by `revalidate = 60` — users still get edge-cached
+// responses, the lambda only fires once every 60s per protocol.
+//
+// Was: `revalidate = 60` + `dynamicParams = false`. Both removed; SWR
+// edge cache covers the same UX without the static-dynamic boundary error.
+export const dynamic = "force-dynamic";
 
 // Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
 // /protocols index. Without this, EVERY visit triggered live subgraph

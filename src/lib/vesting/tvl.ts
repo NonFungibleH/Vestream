@@ -638,8 +638,12 @@ export async function priceAggregates(
   }
 
   // Write back to cache: every newly-fetched price (cache MISSES only —
-  // hits already came from the cache). Fire-and-forget so a cache write
-  // blip never blocks the snapshot run.
+  // hits already came from the cache). Awaited (was fire-and-forget) —
+  // on Vercel, a `void promise` from a handler can be killed before it
+  // lands the row in Postgres, leaving the cache permanently empty.
+  // The cache emptiness was the root cause of repeated TVL-snapshot
+  // timeouts because every run fought CoinGecko's rate limit from
+  // scratch with no help from prior runs.
   const newEntries: Array<{
     chainId:      number;
     tokenAddress: string;
@@ -661,7 +665,7 @@ export async function priceAggregates(
     });
   }
   if (newEntries.length > 0) {
-    void writePriceCache(newEntries);
+    await writePriceCache(newEntries);
   }
 
   const priced: PricedAggregate[] = [];

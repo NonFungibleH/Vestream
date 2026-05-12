@@ -34,14 +34,18 @@ import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib
 // crawlers still index every event.
 const TEASER_VISIBLE_ROWS = 10;
 
-// ISR — re-render every hour. Long enough to keep DB load down, short enough
-// that "next 24h" stays accurate to the hour.
-export const revalidate = 3600;
-
-// Pre-render every window at build time so first-request latency is zero.
-export function generateStaticParams() {
-  return ALL_WINDOW_SLUGS.map((range) => ({ range }));
-}
+// Force dynamic rendering — the page calls Upstash Redis (no-store) for
+// quick-prices, which Next.js 16.3.0-canary.19 hard-errors on for any
+// page that's also trying to ISR. The 16.2.x runtime tolerated this
+// silently; the canary doesn't. SSR with a stale-while-revalidate edge
+// cache header (set in src/middleware.ts) replaces the ISR pattern —
+// users still get sub-100ms responses from the CDN, the lambda only
+// fires once per window every ~5 minutes.
+//
+// Was: `export const revalidate = 3600` + generateStaticParams. Both
+// removed; middleware Cache-Control does the equivalent work without
+// the static-vs-dynamic boundary error.
+export const dynamic = "force-dynamic";
 
 interface PageParams {
   params: Promise<{ range: string }>;
