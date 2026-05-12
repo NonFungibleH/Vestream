@@ -30,8 +30,8 @@ import { db } from "@/lib/db";
 import { apiAccessRequests, apiKeys } from "@/lib/db/schema";
 import { generateApiKey, hashApiKey } from "@/lib/api-key-auth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
+import { normaliseEmail, isDisposableEmail } from "@/lib/email-validation";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FREE_TIER_MONTHLY_LIMIT = 4500; // 150/day × 30 days
 
 export async function POST(req: NextRequest) {
@@ -53,12 +53,24 @@ export async function POST(req: NextRequest) {
 
   if (!name || typeof name !== "string" || name.trim().length < 2)
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
-  if (!email || !EMAIL_RE.test(email.trim()))
+  // Centralised email normalisation: lowercases, trims, strips trailing dot,
+  // returns null on shape failures. Single source of truth across the public
+  // email-capture endpoints (waitlist, find-vestings/save-link, contact,
+  // api-access, beta-feedback).
+  const cleanEmail = normaliseEmail(email);
+  if (!cleanEmail)
     return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+  // Closes the API-key farming abuse vector: a burner-mailbox service (e.g.
+  // mailinator, 10minutemail) lets one attacker spin up unlimited free
+  // 150/day keys. The 17-domain blocklist in lib/email-validation.ts is the
+  // same one the rest of the public email endpoints already use.
+  if (isDisposableEmail(cleanEmail))
+    return NextResponse.json(
+      { error: "Disposable email addresses aren't allowed. Please use your work or personal email." },
+      { status: 400 },
+    );
   if (!useCase || typeof useCase !== "string" || useCase.trim().length < 10)
     return NextResponse.json({ error: "Please describe your use case (min 10 characters)" }, { status: 400 });
-
-  const cleanEmail = email.trim().toLowerCase();
 
   // ── Audit row (kept regardless of issuance outcome) ──────────────────────
   await db.insert(apiAccessRequests).values({
