@@ -1,7 +1,7 @@
 # Vestream — Claude Code Reference
 
 ## Stack
-- **Framework**: Next.js 16 App Router (TypeScript, React 19, Server Components)
+- **Framework**: Next.js pinned to **`16.3.0-canary.19`** exact (no caret). Earlier 16.2.x stable is in the vulnerable range of 7 published advisories (middleware bypass, RSC cache poisoning, SSRF) — the fix only landed in `16.3.0-canary.6+`. Re-pin to 16.3.0 stable as soon as it lands. Don't drop the exact-pin without checking `npm audit` against the new version.
 - **Styling**: Tailwind CSS v4 + inline `style={{}}` for one-off values (no separate CSS files)
 - **Database**: Postgres via Drizzle ORM + Supabase hosting
 - **Auth (web — desktop dashboard)**: QR pairing only. Pro-tier users open the mobile app → Settings → Connect Desktop → scan the QR shown at `vestream.io/login`. The poll endpoint sets an `iron-session` cookie (`vestr_session`) with the user's address. No email/password, no SIWE. See "Auth model" subsection below.
@@ -338,12 +338,15 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | `/api/api-access` | Submit developer API access request |
 | `/api/contact` | Contact form submission |
 | `/api/feedback` | Beta feedback submission |
+| `/api/find-vestings/save-link` | Web→mobile handoff: persist (email, wallet) so mobile OTP-verify can auto-claim it. Fires a confirmation email via Resend with App Store badges. Rate-limited 20/hr per (IP, email). |
 | `/api/notifications/preferences` | Save notification settings |
 | `/api/cron/notify` | Cron: send unlock notification emails |
+| `/api/cron/cleanup-pending-links` | Cron (daily 04:15 UTC): sweeps expired unclaimed `pending_wallet_links` + > 30 day `webhook_event_dedup` rows |
 | `/api/admin/login` | Admin login — rate-limited, timing-safe, sets derived cookie |
 | `/api/admin/approve` | Admin: approve API access request |
 | `/api/admin/revoke` | Admin: revoke an API key |
 | `/api/developer/unlock` | Set vestr_api_access cookie |
+| `/api/stripe/webhook` | Stripe webhook (signature-verified, replay-deduped via `webhook_event_dedup`) |
 
 ### Mobile API (`/api/mobile/`)
 | Route | Purpose |
@@ -354,7 +357,7 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | `/api/mobile/wallets` | CRUD for tracked wallets (mobile) — enforces same free-plan limits as web |
 | `/api/mobile/notifications` | Save mobile notification preferences |
 | `/api/mobile/desktop-pair/confirm` | QR pair: mobile confirms a pairing code (Pro tier required) |
-| `/api/mobile/revenuecat-webhook` | RevenueCat subscription events → update user tier in DB |
+| `/api/mobile/revenuecat-webhook` | RevenueCat subscription events → update user tier in DB. Replay-deduped via `webhook_event_dedup`. On OTP verify the handler also auto-claims any `pending_wallet_links` for the same email (web→mobile handoff). |
 
 ---
 
@@ -364,7 +367,7 @@ Tables in `src/lib/db/schema.ts`:
 
 | Table | Purpose |
 |---|---|
-| `users` | Authenticated wallet users (address, tier, scan limits) |
+| `users` | Authenticated wallet users (address, tier, scan limits, monthly push counter) |
 | `wallets` | Tracked wallet addresses per user (with labels, chain/protocol filters) |
 | `notificationPreferences` | Per-user email alert settings |
 | `notificationsSent` | Dedup log — prevents re-sending the same alert |
@@ -373,6 +376,9 @@ Tables in `src/lib/db/schema.ts`:
 | `waitlist` | Email waitlist signups |
 | `betaFeedback` | In-app feedback submissions |
 | `vestingStreamsCache` | Persisted normalised VestingStream objects from subgraphs |
+| `tokenPricesCache` | Read-through cache for DexScreener / CoinGecko USD prices. Hourly refresh cron picks the stalest entries. |
+| `pendingWalletLinks` | Web→mobile handoff. (email, wallet_address) rows persisted from `/find-vestings` email-capture. Mobile OTP verify auto-claims matching rows into the `wallets` table. 30-day TTL. |
+| `webhookEventDedup` | (event_id, source) replay protection for the RevenueCat + Stripe webhooks. `claimWebhookEvent()` in `lib/webhook-dedup.ts` is the single gate; failure-open on DB outage. 30-day TTL via the cleanup cron. |
 
 ### API key format
 `vstr_live_{32 random hex bytes}` — plaintext shown once on creation, never stored. Only SHA-256 hash + 12-char prefix kept in DB.
@@ -783,6 +789,28 @@ Naming rules:
 - Vercel Analytics doesn't drop a cookie and aggregates at the edge — it runs without consent because there's nothing to consent to.
 - Server-side events use a hashed user id (sha256 of `userId + GA_API_SECRET`) so the raw user id never leaves our infrastructure.
 - Clarity auto-redacts every form field. Mark any sensitive non-form element with `data-clarity-mask="true"` to opt it out of session replay.
+
+---
+
+## Shared lib helpers (worth knowing exist)
+
+These centralise policy decisions so every endpoint stays consistent. New code that handles emails, webhooks, or wallet validation should reuse these instead of rolling its own.
+
+- **`lib/email-validation.ts`** — `EMAIL_RE`, `normaliseEmail(raw)`, `isDisposableEmail(email)`. Used by every public email-capture endpoint. Strips trailing dot, lowercases, length-caps, rejects disposable-mailbox domains (`mailinator`, `10minutemail`, etc — 17-domain blocklist).
+- **`lib/webhook-dedup.ts`** — `claimWebhookEvent(eventId, source)` for at-least-once webhook delivery protection. Used by RevenueCat + Stripe handlers. Returns true on first delivery, false on replay. Fail-open on DB outage by design (better to risk a duplicate than miss a billing event).
+- **`lib/cors.ts`** — `checkCors(req)` + `withCorsHeaders(res, origin)`. Allowed origins: `vestream.io`, `www.vestream.io`, plus `localhost:*` in dev. Wired into every unauthenticated public POST (waitlist, contact, feedback, find-vestings/save-link).
+- **`lib/auth/timing-safe-bearer.ts`** — `bearerEquals(header, secret)` for cron / webhook static-secret comparisons. Built on `crypto.timingSafeEqual`, length-mismatch short-circuits.
+- **`lib/auth/desktop-pair.ts`** — Redis-backed QR pairing flow (5-minute TTL, GETDEL on consume). Used by `/api/auth/desktop-pair/{init,poll}` + `/api/mobile/desktop-pair/confirm`.
+- **`lib/address-validation.ts`** — `isValidWalletAddress(addr)` + `normaliseAddress(addr)`. Handles both EVM hex and Solana base58.
+
+## Security posture
+
+[`SECURITY.md`](./SECURITY.md) at the repo root documents the reporting channel and the three accepted upstream risks:
+1. `bigint-buffer` chain — abandoned npm package transitively pulled by the Solana SDK. CVSS DoS-only (C:N/I:N/A:H), no RCE. Mitigated by try/catch wrappers in every Solana adapter entry point.
+2. CSP `unsafe-inline` / `unsafe-eval` — Next.js + Tailwind structural requirement. Mitigated by zero user-HTML render paths + tight `X-Frame-Options: DENY` + `frame-ancestors 'none'`.
+3. RevenueCat webhook timestamp signing — RC doesn't sign with a timestamp, so pure replay protection is via `webhook_event_dedup` instead.
+
+All other audit findings closed. See the `hardening:` commit prefix on `main` for the remediation history.
 
 ---
 
