@@ -70,19 +70,27 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // back to computing the rollup live — slow but correct, and the user
   // sees data instead of an error banner.
   try {
-    const fast = await db
-      .select({
-        protocol:        statusSummary.protocol,
-        chainId:         statusSummary.chainId,
-        streams:         statusSummary.streams,
-        active:          statusSummary.active,
-        withTokenSymbol: statusSummary.withTokenSymbol,
-        distinctTokens:  statusSummary.distinctTokens,
-        freshestSec:     statusSummary.freshestSec,
-        oldestSec:       statusSummary.oldestSec,
-      })
-      .from(statusSummary)
-      .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId));
+    // Wrapped in retryOnce: today (2026-05-13) we observed the Supabase
+    // pooler 57P01-killing even this 48-row SELECT mid-flight, which fell
+    // through to the much slower JSONB GROUP BY fallback (which then also
+    // got killed). One retry after 1.5s rides over the transient pool
+    // blip without making us look like a retry-storm.
+    const fast = await retryOnce(
+      () => db
+        .select({
+          protocol:        statusSummary.protocol,
+          chainId:         statusSummary.chainId,
+          streams:         statusSummary.streams,
+          active:          statusSummary.active,
+          withTokenSymbol: statusSummary.withTokenSymbol,
+          distinctTokens:  statusSummary.distinctTokens,
+          freshestSec:     statusSummary.freshestSec,
+          oldestSec:       statusSummary.oldestSec,
+        })
+        .from(statusSummary)
+        .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId)),
+      "status_summary-read",
+    );
 
     if (fast.length > 0) {
       return fast.map((r) => ({
@@ -386,11 +394,28 @@ async function computeCacheStatsCellsChunked(): Promise<CacheStatsCell[]> {
 export async function getMaxLastRefreshedAt(): Promise<number | null> {
   if (process.env.NEXT_PHASE === "phase-production-build") return null;
 
-  const [row] = await db
-    .select({
-      maxSec: sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
-    })
-    .from(vestingStreamsCache);
-
-  return row?.maxSec ?? null;
+  // Wrapped in try/catch + retryOnce: this is a single-row aggregate over
+  // an indexed column (last_refreshed_at), so on a healthy pooler it's
+  // sub-50ms. But on 2026-05-13 we observed even tiny SELECTs getting
+  // 57P01-killed mid-flight by Supabase's pooler. Callers (notably
+  // loadStatusData via Promise.all) treat a rejection as catastrophic and
+  // poison their 10-min unstable_cache window. Better to return null and
+  // let the hero render "live data unavailable" than to break the whole
+  // page rendering.
+  try {
+    const [row] = await retryOnce(
+      () => db
+        .select({
+          maxSec: sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
+        })
+        .from(vestingStreamsCache),
+      "max-last-refreshed",
+    );
+    return row?.maxSec ?? null;
+  } catch (err) {
+    console.warn(
+      `[cache-stats] getMaxLastRefreshedAt failed (returning null): ${err instanceof Error ? err.message : err}`,
+    );
+    return null;
+  }
 }

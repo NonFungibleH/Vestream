@@ -194,7 +194,13 @@ const loadStatusData = unstable_cache(
   // effect on existing keys. /status freshness is bounded by the cron
   // cadence regardless; the page's own re-render rate doesn't need to
   // beat the cron's update rate.
-  ["status-page-data-v5"],
+  // v6 bump on 2026-05-13 paired with the pooler-resilience pass:
+  // getCacheStatsCells / getMaxLastRefreshedAt / readAllSnapshots all
+  // now swallow inner rejections and return empty fallbacks. Without
+  // the v-bump, any unstable_cache window that captured the previous
+  // catch-block error payload would keep serving it for up to 10 min
+  // even with the underlying fix deployed.
+  ["status-page-data-v6"],
   { revalidate: 600, tags: ["status-page"] },
 );
 

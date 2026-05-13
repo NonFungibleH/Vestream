@@ -842,33 +842,45 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
   // first runtime request.
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
 
-  const rows = await db
-    .select({
-      protocol:     protocolTvlSnapshots.protocol,
-      chainId:      protocolTvlSnapshots.chainId,
-      tvlUsd:       protocolTvlSnapshots.tvlUsd,
-      tvlHigh:      protocolTvlSnapshots.tvlHigh,
-      tvlMedium:    protocolTvlSnapshots.tvlMedium,
-      tvlLow:       protocolTvlSnapshots.tvlLow,
-      streamCount:  protocolTvlSnapshots.streamCount,
-      tokensPriced: protocolTvlSnapshots.tokensPriced,
-      tokensTotal:  protocolTvlSnapshots.tokensTotal,
-      methodology:  protocolTvlSnapshots.methodology,
-      computedAt:   protocolTvlSnapshots.computedAt,
-    })
-    .from(protocolTvlSnapshots);
+  // Wrapped in try/catch: small SELECT (~50 rows) but the Supabase pooler
+  // killed it 57P01 mid-flight on 2026-05-13. Caller (loadStatusData)
+  // uses Promise.all; rejection here would poison the unstable_cache.
+  // Returning [] keeps the page rendering with empty TVL columns rather
+  // than blanking the whole status matrix.
+  try {
+    const rows = await db
+      .select({
+        protocol:     protocolTvlSnapshots.protocol,
+        chainId:      protocolTvlSnapshots.chainId,
+        tvlUsd:       protocolTvlSnapshots.tvlUsd,
+        tvlHigh:      protocolTvlSnapshots.tvlHigh,
+        tvlMedium:    protocolTvlSnapshots.tvlMedium,
+        tvlLow:       protocolTvlSnapshots.tvlLow,
+        streamCount:  protocolTvlSnapshots.streamCount,
+        tokensPriced: protocolTvlSnapshots.tokensPriced,
+        tokensTotal:  protocolTvlSnapshots.tokensTotal,
+        methodology:  protocolTvlSnapshots.methodology,
+        computedAt:   protocolTvlSnapshots.computedAt,
+      })
+      .from(protocolTvlSnapshots);
 
-  return rows.map((r) => ({
-    protocol:     r.protocol,
-    chainId:      r.chainId,
-    tvlUsd:       Number(r.tvlUsd),
-    tvlHigh:      Number(r.tvlHigh),
-    tvlMedium:    Number(r.tvlMedium),
-    tvlLow:       Number(r.tvlLow),
-    streamCount:  r.streamCount,
-    tokensPriced: r.tokensPriced,
-    tokensTotal:  r.tokensTotal,
-    methodology:  r.methodology,
-    computedAt:   r.computedAt,
-  }));
+    return rows.map((r) => ({
+      protocol:     r.protocol,
+      chainId:      r.chainId,
+      tvlUsd:       Number(r.tvlUsd),
+      tvlHigh:      Number(r.tvlHigh),
+      tvlMedium:    Number(r.tvlMedium),
+      tvlLow:       Number(r.tvlLow),
+      streamCount:  r.streamCount,
+      tokensPriced: r.tokensPriced,
+      tokensTotal:  r.tokensTotal,
+      methodology:  r.methodology,
+      computedAt:   r.computedAt,
+    }));
+  } catch (err) {
+    console.warn(
+      `[tvl-snapshot] readAllSnapshots failed (returning []): ${err instanceof Error ? err.message : err}`,
+    );
+    return [];
+  }
 }
