@@ -32,18 +32,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const protocols = listProtocols();
   const articles = getAllArticles();
 
+  // Build-time guard. During `next build` the sitemap generates statically
+  // (revalidate=3600 thereafter via ISR). If we hit the DB here, a single
+  // hung pooler connection means the whole Promise.all sits until Vercel's
+  // 60s static-generation timeout kills it, the build retries 2× more,
+  // then fails — blocking EVERY deploy until the pool recovers. Today
+  // (2026-05-13) this exact pattern blocked the resilience-hardening
+  // deploy from landing. `now` as lastModified is a fine default — first
+  // runtime hit refreshes via ISR with real per-protocol timestamps.
+  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+
   // Fetch last-indexed timestamp per protocol in parallel. Failures degrade
   // gracefully to `now` — never let a DB outage break the sitemap.
-  const protocolLastModified = await Promise.all(
-    protocols.map(async (p) => {
-      try {
-        const stats = await getProtocolStats(p.adapterIds);
-        return toDateSafe(stats.lastIndexedAt) ?? now;
-      } catch {
-        return now;
-      }
-    }),
-  );
+  const protocolLastModified = isBuild
+    ? protocols.map(() => now)
+    : await Promise.all(
+        protocols.map(async (p) => {
+          try {
+            const stats = await getProtocolStats(p.adapterIds);
+            return toDateSafe(stats.lastIndexedAt) ?? now;
+          } catch {
+            return now;
+          }
+        }),
+      );
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE}/`,              lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
@@ -84,11 +96,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Top-N symbol-routed token pages. Bumped 150 → 500 (May 2026) so the
   // long-tail head still gets crawler priority; ultra-cold symbols fall
   // through to on-demand ISR.
+  // Same build-time guard — see protocolLastModified above. Empty list
+  // during build; ISR populates with the real top-N on first hit.
   let topSymbols: string[] = [];
-  try {
-    topSymbols = await getTopSymbols(500);
-  } catch {
-    /* fall through with empty list */
+  if (!isBuild) {
+    try {
+      topSymbols = await getTopSymbols(500);
+    } catch {
+      /* fall through with empty list */
+    }
   }
   const symbolEntries: MetadataRoute.Sitemap = topSymbols.map((s) => ({
     url:             `${SITE}/tokens/${s}`,
@@ -104,10 +120,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // limit even combined with everything else below. Sitemap-index split
   // is the next move when this list exceeds ~30k.
   let topTokens: { chainId: number; address: string }[] = [];
-  try {
-    topTokens = await getTopTokens(1500);
-  } catch {
-    /* fall through with empty list */
+  if (!isBuild) {
+    try {
+      topTokens = await getTopTokens(1500);
+    } catch {
+      /* fall through with empty list */
+    }
   }
   const tokenAddressEntries: MetadataRoute.Sitemap = topTokens.map((t) => ({
     url:             `${SITE}/token/${t.chainId}/${t.address}`,
