@@ -1,38 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/cron/seed-cache?group=subgraphs",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=sablier",
-      "schedule": "3 3 * * *"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=solana",
-      "schedule": "8 3 * * *"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=heavy",
-      "schedule": "13 3 * * *"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=subgraphs&mode=deep",
-      "schedule": "0 4 * * 0"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=sablier&mode=deep",
-      "schedule": "8 4 * * 0"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=solana&mode=deep",
-      "schedule": "16 4 * * 0"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=heavy&mode=deep",
-      "schedule": "24 4 * * 0"
-    },
-    {
       "path": "/api/cron/tvl-snapshot",
       "schedule": "15 3,9,15,21 * * *"
     },
