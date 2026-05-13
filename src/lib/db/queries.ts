@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
+import { eq, and, or, gte, lte, sql, inArray, isNotNull } from "drizzle-orm";
 import { db } from "./index";
 import {
   users,
@@ -356,29 +356,39 @@ export async function deleteUser(userId: string) {
 }
 
 /**
- * Users eligible for email unlock notifications.
+ * Users eligible for ANY unlock notification (email OR push).
  *
- * Email alerts are a Pro-tier-only feature (May 2026). Free and Mobile
- * users may have `emailEnabled = true` in their notificationPreferences
- * row from a prior tier (e.g. they downgraded), but the cron must not
- * email them. The INNER JOIN against `users` filters by `tier = "pro"`
- * so only paid Pro users get emails. This is defence-in-depth — the
- * mobile UI also gates the toggle to Pro users only, but server-side
- * enforcement is the truth that matters.
+ * Renamed from getAllUsersWithEmailEnabled 2026-05-13. The previous version
+ * required `emailEnabled = true` AND `tier = "pro"`, which meant a Free
+ * user with push alerts enabled but no email never entered the cron loop —
+ * they got zero of the 10/month push alerts we'd promised them.
+ *
+ * New shape: returns every user with EITHER an email opt-in OR a registered
+ * Expo push token. The per-channel gating (email is Pro-only; push has a
+ * monthly credit budget on Free) moves into the scheduler so each channel
+ * fires independently for the same user when both are configured.
+ *
+ * Returns the fields needed by the scheduler to decide what to fire:
+ *   - emailEnabled + email + tier → email send gate
+ *   - expoPushToken               → push send gate
+ *   - hoursBeforeUnlock           → window calculation (shared by both)
  */
-export async function getAllUsersWithEmailEnabled() {
+export async function getAllUsersWithAnyAlertEnabled() {
   return db
     .select({
-      userId: notificationPreferences.userId,
-      email: notificationPreferences.email,
+      userId:            notificationPreferences.userId,
+      email:             notificationPreferences.email,
       hoursBeforeUnlock: notificationPreferences.hoursBeforeUnlock,
+      emailEnabled:      notificationPreferences.emailEnabled,
+      tier:              users.tier,
+      expoPushToken:     users.expoPushToken,
     })
     .from(notificationPreferences)
     .innerJoin(users, eq(users.id, notificationPreferences.userId))
     .where(
-      and(
+      or(
         eq(notificationPreferences.emailEnabled, true),
-        eq(users.tier, "pro"),
+        isNotNull(users.expoPushToken),
       ),
     );
 }
