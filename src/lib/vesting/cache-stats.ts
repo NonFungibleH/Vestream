@@ -61,92 +61,79 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // before. ISR fills with real data on the first runtime request.
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
 
-  // ── Fast path: read the materialised rollup ────────────────────────────────
+  // ── 2026-05-13 rewrite: hard-timeout, no retries ───────────────────────────
   //
-  // Wrapped in try/catch because the table can be MISSING (migration 0016
-  // not yet applied — happens on first deploy after introducing the table,
-  // and notably happened in prod when drizzle-kit migrate silently failed
-  // against the Supabase transaction pooler). On any failure here, fall
-  // back to computing the rollup live — slow but correct, and the user
-  // sees data instead of an error banner.
-  try {
-    // Wrapped in retryOnce: today (2026-05-13) we observed the Supabase
-    // pooler 57P01-killing even this 48-row SELECT mid-flight, which fell
-    // through to the much slower JSONB GROUP BY fallback (which then also
-    // got killed). One retry after 1.5s rides over the transient pool
-    // blip without making us look like a retry-storm.
-    const fast = await retryOnce(
-      () => db
-        .select({
-          protocol:        statusSummary.protocol,
-          chainId:         statusSummary.chainId,
-          streams:         statusSummary.streams,
-          active:          statusSummary.active,
-          withTokenSymbol: statusSummary.withTokenSymbol,
-          distinctTokens:  statusSummary.distinctTokens,
-          freshestSec:     statusSummary.freshestSec,
-          oldestSec:       statusSummary.oldestSec,
-        })
-        .from(statusSummary)
-        .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId)),
-      "status_summary-read",
-    );
+  // The previous resilience pass wrapped this in retryOnce + Promise.race +
+  // try/catch. Combined latency on a slow pool: 1.5s wait + 2× query time +
+  // 5s GROUP BY timeout = potentially 30+ seconds. The page was hitting
+  // Cloudflare's ~100s gateway timeout, returning 504. Worse than the
+  // original "throw and let Redis fallback render last-known-good".
+  //
+  // This version: race each call against a hard timeout. Worst case for
+  // both paths combined: 3s. Page renders in 3s max with `[]` if pool is
+  // sick. loadStatusData's Promise.all isn't poisoned because we resolve
+  // (never reject) on timeout.
+  const fastPromise = db
+    .select({
+      protocol:        statusSummary.protocol,
+      chainId:         statusSummary.chainId,
+      streams:         statusSummary.streams,
+      active:          statusSummary.active,
+      withTokenSymbol: statusSummary.withTokenSymbol,
+      distinctTokens:  statusSummary.distinctTokens,
+      freshestSec:     statusSummary.freshestSec,
+      oldestSec:       statusSummary.oldestSec,
+    })
+    .from(statusSummary)
+    .orderBy(asc(statusSummary.protocol), asc(statusSummary.chainId))
+    .then((rows): CacheStatsCell[] => rows.map((r) => ({
+      protocol:        r.protocol,
+      chainId:         r.chainId,
+      streams:         r.streams,
+      active:          r.active,
+      withTokenSymbol: r.withTokenSymbol,
+      distinctTokens:  r.distinctTokens,
+      freshestSec:     r.freshestSec,
+      oldestSec:       r.oldestSec,
+    })))
+    .catch((err): CacheStatsCell[] | null => {
+      console.warn(
+        `[cache-stats] status_summary fast path failed: ${err instanceof Error ? err.message : err}`,
+      );
+      return null;
+    });
 
-    if (fast.length > 0) {
-      return fast.map((r) => ({
-        protocol:        r.protocol,
-        chainId:         r.chainId,
-        streams:         r.streams,
-        active:          r.active,
-        withTokenSymbol: r.withTokenSymbol,
-        distinctTokens:  r.distinctTokens,
-        freshestSec:     r.freshestSec,
-        oldestSec:       r.oldestSec,
-      }));
-    }
-    // Empty rollup → fall through to bootstrap path.
-  } catch (err) {
-    // Most common cause: table not present in the deployed DB. Log loudly
-    // (one-line so the line shows up in Vercel without scrollback) and
-    // serve the GROUP BY answer.
-    console.warn(
-      `[cache-stats] status_summary fast path failed (likely table missing); falling back to GROUP BY: ${err instanceof Error ? err.message : err}`,
-    );
-  }
+  const fast = await Promise.race([
+    fastPromise,
+    new Promise<null>((resolve) =>
+      setTimeout(() => {
+        console.warn("[cache-stats] status_summary fast path exceeded 2s — giving up");
+        resolve(null);
+      }, 2000),
+    ),
+  ]);
 
-  // ── Bootstrap fallback: legacy GROUP BY ────────────────────────────────────
-  // Fires on (a) fresh deploys before the first cron run after migration
-  // 0016 has populated the rollup, and (b) any error path above.
-  //
-  // Hard-capped at 5s so it can NEVER hang the freshness UI when the
-  // GROUP BY hits a slow plan or the pooler is congested. If it doesn't
-  // come back fast, we return empty cells and the page surfaces a
-  // Redis last-known-good (its existing fallback path).
-  //
-  // BUG FIX 2026-05-13: previously this was a bare Promise.race — when
-  // Supabase's pooler killed the JSONB-scan GROUP BY fast (~800ms) with
-  // `57P01 terminating connection due to administrator command`, the
-  // inner rejection beat the 5s timer, the race rejected, and the
-  // caller in cache-stats/route.ts surfaced a 500 to ops. The race
-  // pattern only behaves as a hedge if the slow path can't reject
-  // before the timer — wrapping in try/catch so a fast reject still
-  // resolves to [] like a slow timeout would.
-  try {
-    return await Promise.race([
-      computeCacheStatsCellsFromCache(),
-      new Promise<CacheStatsCell[]>((resolve) =>
-        setTimeout(() => {
-          console.warn("[cache-stats] GROUP BY fallback exceeded 5s timeout — returning empty");
-          resolve([]);
-        }, 5000),
-      ),
-    ]);
-  } catch (err) {
-    console.warn(
-      `[cache-stats] GROUP BY fallback rejected (returning empty so /status renders): ${err instanceof Error ? err.message : err}`,
-    );
-    return [];
-  }
+  if (fast && fast.length > 0) return fast;
+
+  // ── Bootstrap fallback: legacy GROUP BY ──
+  // Reached only when fast path returned null/empty. Hard 2s budget so the
+  // overall function can never block the page beyond ~4s total.
+  const slow = await Promise.race([
+    computeCacheStatsCellsFromCache().catch((err) => {
+      console.warn(
+        `[cache-stats] GROUP BY fallback failed: ${err instanceof Error ? err.message : err}`,
+      );
+      return [] as CacheStatsCell[];
+    }),
+    new Promise<CacheStatsCell[]>((resolve) =>
+      setTimeout(() => {
+        console.warn("[cache-stats] GROUP BY fallback exceeded 2s — returning empty");
+        resolve([]);
+      }, 2000),
+    ),
+  ]);
+
+  return slow;
 }
 
 /**
@@ -394,28 +381,30 @@ async function computeCacheStatsCellsChunked(): Promise<CacheStatsCell[]> {
 export async function getMaxLastRefreshedAt(): Promise<number | null> {
   if (process.env.NEXT_PHASE === "phase-production-build") return null;
 
-  // Wrapped in try/catch + retryOnce: this is a single-row aggregate over
-  // an indexed column (last_refreshed_at), so on a healthy pooler it's
-  // sub-50ms. But on 2026-05-13 we observed even tiny SELECTs getting
-  // 57P01-killed mid-flight by Supabase's pooler. Callers (notably
-  // loadStatusData via Promise.all) treat a rejection as catastrophic and
-  // poison their 10-min unstable_cache window. Better to return null and
-  // let the hero render "live data unavailable" than to break the whole
-  // page rendering.
-  try {
-    const [row] = await retryOnce(
-      () => db
-        .select({
-          maxSec: sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
-        })
-        .from(vestingStreamsCache),
-      "max-last-refreshed",
-    );
-    return row?.maxSec ?? null;
-  } catch (err) {
-    console.warn(
-      `[cache-stats] getMaxLastRefreshedAt failed (returning null): ${err instanceof Error ? err.message : err}`,
-    );
-    return null;
-  }
+  // 2026-05-13: replaced retryOnce with a hard 2s timeout. Same reasoning
+  // as getCacheStatsCells above — retries on a slow pool push past Cloudflare's
+  // ~100s ceiling; better to fail fast and let the hero render
+  // "freshness unavailable" than to hang the entire page.
+  const queryPromise = db
+    .select({
+      maxSec: sql<number | null>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
+    })
+    .from(vestingStreamsCache)
+    .then((rows): number | null => rows[0]?.maxSec ?? null)
+    .catch((err): number | null => {
+      console.warn(
+        `[cache-stats] getMaxLastRefreshedAt failed: ${err instanceof Error ? err.message : err}`,
+      );
+      return null;
+    });
+
+  return Promise.race([
+    queryPromise,
+    new Promise<null>((resolve) =>
+      setTimeout(() => {
+        console.warn("[cache-stats] getMaxLastRefreshedAt exceeded 2s — returning null");
+        resolve(null);
+      }, 2000),
+    ),
+  ]);
 }

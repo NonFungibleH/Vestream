@@ -200,7 +200,12 @@ const loadStatusData = unstable_cache(
   // the v-bump, any unstable_cache window that captured the previous
   // catch-block error payload would keep serving it for up to 10 min
   // even with the underlying fix deployed.
-  ["status-page-data-v6"],
+  // v7 bump on 2026-05-13 (later in same day as v6): replaced retryOnce
+  // wrappers in cache-stats with hard 2s timeouts because the retries
+  // were stacking latency on a slow pool and pushing /status past
+  // Cloudflare's gateway timeout (504). v7 forces any cache entry that
+  // captured a 504 timeout / hung promise to invalidate immediately.
+  ["status-page-data-v7"],
   { revalidate: 600, tags: ["status-page"] },
 );
 

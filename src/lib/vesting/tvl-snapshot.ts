@@ -842,29 +842,26 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
   // first runtime request.
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
 
-  // Wrapped in try/catch: small SELECT (~50 rows) but the Supabase pooler
-  // killed it 57P01 mid-flight on 2026-05-13. Caller (loadStatusData)
-  // uses Promise.all; rejection here would poison the unstable_cache.
-  // Returning [] keeps the page rendering with empty TVL columns rather
-  // than blanking the whole status matrix.
-  try {
-    const rows = await db
-      .select({
-        protocol:     protocolTvlSnapshots.protocol,
-        chainId:      protocolTvlSnapshots.chainId,
-        tvlUsd:       protocolTvlSnapshots.tvlUsd,
-        tvlHigh:      protocolTvlSnapshots.tvlHigh,
-        tvlMedium:    protocolTvlSnapshots.tvlMedium,
-        tvlLow:       protocolTvlSnapshots.tvlLow,
-        streamCount:  protocolTvlSnapshots.streamCount,
-        tokensPriced: protocolTvlSnapshots.tokensPriced,
-        tokensTotal:  protocolTvlSnapshots.tokensTotal,
-        methodology:  protocolTvlSnapshots.methodology,
-        computedAt:   protocolTvlSnapshots.computedAt,
-      })
-      .from(protocolTvlSnapshots);
-
-    return rows.map((r) => ({
+  // 2026-05-13: hard 2s timeout. Caller is loadStatusData via Promise.all;
+  // a hang here would block the page past Cloudflare's gateway timeout.
+  // Empty array on either timeout or query rejection — TVL columns blank
+  // out while the rest of the matrix renders.
+  const queryPromise = db
+    .select({
+      protocol:     protocolTvlSnapshots.protocol,
+      chainId:      protocolTvlSnapshots.chainId,
+      tvlUsd:       protocolTvlSnapshots.tvlUsd,
+      tvlHigh:      protocolTvlSnapshots.tvlHigh,
+      tvlMedium:    protocolTvlSnapshots.tvlMedium,
+      tvlLow:       protocolTvlSnapshots.tvlLow,
+      streamCount:  protocolTvlSnapshots.streamCount,
+      tokensPriced: protocolTvlSnapshots.tokensPriced,
+      tokensTotal:  protocolTvlSnapshots.tokensTotal,
+      methodology:  protocolTvlSnapshots.methodology,
+      computedAt:   protocolTvlSnapshots.computedAt,
+    })
+    .from(protocolTvlSnapshots)
+    .then((rows): ProtocolSnapshotRow[] => rows.map((r) => ({
       protocol:     r.protocol,
       chainId:      r.chainId,
       tvlUsd:       Number(r.tvlUsd),
@@ -876,11 +873,21 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
       tokensTotal:  r.tokensTotal,
       methodology:  r.methodology,
       computedAt:   r.computedAt,
-    }));
-  } catch (err) {
-    console.warn(
-      `[tvl-snapshot] readAllSnapshots failed (returning []): ${err instanceof Error ? err.message : err}`,
-    );
-    return [];
-  }
+    })))
+    .catch((err): ProtocolSnapshotRow[] => {
+      console.warn(
+        `[tvl-snapshot] readAllSnapshots failed: ${err instanceof Error ? err.message : err}`,
+      );
+      return [];
+    });
+
+  return Promise.race([
+    queryPromise,
+    new Promise<ProtocolSnapshotRow[]>((resolve) =>
+      setTimeout(() => {
+        console.warn("[tvl-snapshot] readAllSnapshots exceeded 2s — returning []");
+        resolve([]);
+      }, 2000),
+    ),
+  ]);
 }
