@@ -76,30 +76,52 @@ function maybeRedis(): Redis | null {
   }
 }
 
+// 2026-05-13: both Redis helpers wrapped with a hard 1.5s timeout. Upstash
+// going slow (not failing — just slow) was hanging the /status page past
+// Cloudflare's gateway timeout. The page already has a catch path; we'd
+// rather miss the last-known-good fallback than serve a 504.
+function withRedisTimeout<T>(
+  promise: Promise<T>,
+  fallback: T,
+  label: string,
+  ms = 1500,
+): Promise<T> {
+  return Promise.race([
+    promise.catch((err) => {
+      console.warn(`[/status] ${label} failed:`, err);
+      return fallback;
+    }),
+    new Promise<T>((resolve) =>
+      setTimeout(() => {
+        console.warn(`[/status] ${label} exceeded ${ms}ms — using fallback`);
+        resolve(fallback);
+      }, ms),
+    ),
+  ]);
+}
+
 async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) | null> {
   const redis = maybeRedis();
   if (!redis) return null;
-  try {
-    return await redis.get<StatusPayload & { capturedAt: number }>(STATUS_CACHE_KEY);
-  } catch (err) {
-    console.warn("[/status] redis read failed:", err);
-    return null;
-  }
+  return withRedisTimeout(
+    redis.get<StatusPayload & { capturedAt: number }>(STATUS_CACHE_KEY),
+    null,
+    "redis read",
+  );
 }
 
 async function writeLastGood(payload: StatusPayload): Promise<void> {
   const redis = maybeRedis();
   if (!redis) return;
-  try {
-    await redis.set(
+  await withRedisTimeout(
+    redis.set(
       STATUS_CACHE_KEY,
       { ...payload, capturedAt: Math.floor(Date.now() / 1000) },
       { ex: STATUS_CACHE_TTL_SEC },
-    );
-  } catch (err) {
-    // Best-effort. Failing to persist a fallback shouldn't break the page.
-    console.warn("[/status] redis write failed:", err);
-  }
+    ),
+    null,
+    "redis write",
+  );
 }
 
 export const metadata: Metadata = {
@@ -147,12 +169,12 @@ const loadStatusData = unstable_cache(
         getMaxLastRefreshedAt(),
       ]);
       const payload: StatusPayload = { cells, tvlRows, maxLastRefreshedSec };
-      // Persist successful payload as the last-known-good fallback for
-      // the next time the DB hiccups. Awaited (not fire-and-forget) so
-      // the unstable_cache doesn't consider the request done before the
-      // write lands — but writeLastGood swallows its own errors, so a
-      // Redis outage never bubbles up here.
-      await writeLastGood(payload);
+      // 2026-05-13: switched from awaited to fire-and-forget. Even with the
+      // 1.5s timeout inside writeLastGood, awaiting it added avoidable
+      // latency to every successful render. Redis writes don't have to be
+      // synchronous — if the write loses, the next render captures fresh
+      // data anyway. The internal timeout still bounds total work.
+      writeLastGood(payload).catch(() => {});
       return { ...payload, error: null, stale: false, capturedAt: Math.floor(Date.now() / 1000) };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
