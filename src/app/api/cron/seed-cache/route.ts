@@ -15,24 +15,40 @@
 //     per job via subgraph skip pagination. Used to backfill historical
 //     coverage after a schema change, a coverage audit, or an initial deploy.
 //
-// ── Fan-out pattern (May 2026) ─────────────────────────────────────────────
-// One Vercel function invocation only gets 300s. The previous "run all jobs
-// in this single invocation" pattern timed out reliably whenever PinkSale's
-// 4-chain multicall walk landed at the front of the queue — every protocol
-// after PinkSale never refreshed.
+// ── Per-group cron pattern (May 2026 — refactor v2) ─────────────────────────
+// One Vercel function invocation only gets 300s. Running every adapter in
+// one invocation reliably timed out whenever PinkSale's 4-chain multicall
+// walk landed at the front — every protocol after PinkSale never refreshed.
 //
-// Fix: when the route is hit WITHOUT a `?group=` param, it acts as a
-// dispatcher. It fires three self-fetches in parallel — one per SEED_GROUPS
-// entry — and returns 202 immediately. Each of those self-fetches is its
-// own independent function invocation, so each gets a fresh 300s budget.
-// Same single Vercel cron entry, three independent runtimes.
+// The earlier fix (v1, abandoned May 2026) had a single cron dispatch a
+// background fan-out via `after()` + three self-`fetch()` calls. Vercel
+// strips the `Authorization` header on internal function-to-function
+// fetches, so the three children every 401'd in 0.1s and zero data ever
+// refreshed. Logs:
+//   group="heavy"     finished status=401 (+0.1s)
+//   group="subgraphs" finished status=401 (+0.1s)
+//   group="solana"    finished status=401 (+0.1s)
 //
-// When the route is hit WITH `?group=heavy|solana|subgraphs`, it runs only
-// that group inline. This is the "leaf" path that the dispatcher's fetches
-// hit; it's also useful for ad-hoc terminal reruns.
+// v2 fix: kill the self-fanout entirely. Each of the three SeedGroups gets
+// its own cron entry in vercel.json that calls this route with an explicit
+// `?group=heavy|subgraphs|solana` param. Vercel's scheduler injects the
+// Authorization header on every cron call — never gets stripped because
+// those are inbound calls, not internal self-fetches. Each cron call is
+// its own function invocation with its own 300s budget. Same total runtime
+// as v1; one fewer hop; no auth fragility.
 //
-// Auth: `Authorization: Bearer ${CRON_SECRET}` — same pattern as demo-push.
-//       The fan-out forwards the same Bearer header to each child fetch.
+// When the route is hit WITH `?group=…`, it runs that group via `after()`
+// in the background. Hit without `?group=` returns 400 with a helpful
+// message — bare `/api/cron/seed-cache` is no longer a valid cron target.
+//
+// For ad-hoc manual deep seeds (rare), curl all three paths in parallel:
+//   for g in heavy subgraphs solana; do
+//     curl -s -X POST -H "Authorization: Bearer $CRON_SECRET" \
+//       "https://www.vestream.io/api/cron/seed-cache?group=$g&mode=deep" &
+//   done; wait
+//
+// Auth: `Authorization: Bearer ${CRON_SECRET}` — Vercel cron sets this
+//       automatically when CRON_SECRET is set as a Vercel env var.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
@@ -49,67 +65,14 @@ import {
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
-// Each group fits inside 300s. The dispatcher path returns 202 in <1s.
+// Each group fits inside 300s. Per-group paths schedule via `after()` so
+// the response returns 202 in <1s even while the work runs in background.
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
 
 function parseMode(req: NextRequest): SeedMode {
   const raw = req.nextUrl.searchParams.get("mode");
   return raw === "deep" ? "deep" : "incremental";
-}
-
-/** Build the absolute URL of this same route for self-fan-out fetches. */
-function selfUrl(req: NextRequest, group: SeedGroup, mode: SeedMode): string {
-  const base = req.nextUrl.origin;
-  return `${base}/api/cron/seed-cache?group=${group}&mode=${mode}`;
-}
-
-/**
- * Dispatcher path — fires one background fetch per group, returns 202.
- *
- * Each child fetch is its own Vercel function invocation with its own 300s
- * budget. Failures are swallowed per-child so a single group hitting an
- * adapter exception doesn't kill the others.
- *
- * We use `after()` to schedule the fan-out so the response goes out
- * immediately (<1s) even though the children take minutes — the cron
- * caller doesn't need to wait for them.
- */
-async function dispatchFanOut(
-  req:        NextRequest,
-  mode:       SeedMode,
-  authHeader: string,
-): Promise<NextResponse> {
-  after(async () => {
-    const startedAt = Date.now();
-    const children = SEED_GROUPS.map(async (group) => {
-      const url = selfUrl(req, group, mode);
-      try {
-        const res = await fetch(url, {
-          method:  "POST",
-          headers: { authorization: authHeader },
-          // Don't cache fan-out fetches — every cron tick should fire fresh.
-          cache:   "no-store",
-        });
-        const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
-        console.log(`[cron/seed-cache] group="${group}" finished status=${res.status} (+${elapsed}s)`);
-      } catch (err) {
-        console.error(`[cron/seed-cache] group="${group}" fetch failed:`, err);
-      }
-    });
-    await Promise.allSettled(children);
-    const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
-    console.log(`[cron/seed-cache] fan-out complete in ${elapsed}s — ${SEED_GROUPS.length} groups dispatched`);
-  });
-
-  return NextResponse.json({
-    ok:        true,
-    mode,
-    accepted:  true,
-    fanOut:    SEED_GROUPS,
-    message:   `Dispatched ${SEED_GROUPS.length} background seed groups in parallel. Each group has its own 300s budget. Poll /api/admin/cache-stats in 5–10 min.`,
-    startedAt: new Date().toISOString(),
-  }, { status: 202 });
 }
 
 /**
@@ -206,22 +169,25 @@ async function handle(req: NextRequest) {
     }
   }
 
-  // Leaf path — caller (or dispatcher) asked for a specific group. Run inline.
+  // Per-group path — Vercel cron / curl asked for a specific group. Run inline.
   if (group) {
     return runOneGroup(group, mode);
   }
 
-  // Dispatcher path — fan out into 3 background self-fetches and return 202.
-  // authHeader is non-null here — bearerEquals() above returns false on null
-  // and we'd have returned 401 already. The explicit `?? ""` keeps TS happy
-  // without weakening any runtime invariant.
-  return dispatchFanOut(req, mode, authHeader ?? "");
+  // No `?group=` provided — return 400 with a usage hint. The fan-out
+  // dispatcher used to live here; killed in v2 (May 2026) after Vercel's
+  // internal auth-header stripping made it unworkable. Each SeedGroup now
+  // has its own cron entry in vercel.json. See the file header for the
+  // history + the recommended manual-trigger curl loop.
+  return NextResponse.json(
+    {
+      error: `Missing 'group' param. Use one of: ${SEED_GROUPS.join(", ")}.`,
+      example: `/api/cron/seed-cache?group=heavy&mode=incremental`,
+      docs: "https://github.com/NonFungibleH/Vestream/tree/main/src/app/api/cron/seed-cache",
+    },
+    { status: 400 },
+  );
 }
 
-export async function GET(req: NextRequest) {
-  return handle(req);
-}
-
-export async function POST(req: NextRequest) {
-  return handle(req);
-}
+export async function GET(req: NextRequest)  { return handle(req); }
+export async function POST(req: NextRequest) { return handle(req); }
