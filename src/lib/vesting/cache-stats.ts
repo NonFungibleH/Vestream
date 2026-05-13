@@ -114,15 +114,31 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
   // GROUP BY hits a slow plan or the pooler is congested. If it doesn't
   // come back fast, we return empty cells and the page surfaces a
   // Redis last-known-good (its existing fallback path).
-  return Promise.race([
-    computeCacheStatsCellsFromCache(),
-    new Promise<CacheStatsCell[]>((resolve) =>
-      setTimeout(() => {
-        console.warn("[cache-stats] GROUP BY fallback exceeded 5s timeout — returning empty");
-        resolve([]);
-      }, 5000),
-    ),
-  ]);
+  //
+  // BUG FIX 2026-05-13: previously this was a bare Promise.race — when
+  // Supabase's pooler killed the JSONB-scan GROUP BY fast (~800ms) with
+  // `57P01 terminating connection due to administrator command`, the
+  // inner rejection beat the 5s timer, the race rejected, and the
+  // caller in cache-stats/route.ts surfaced a 500 to ops. The race
+  // pattern only behaves as a hedge if the slow path can't reject
+  // before the timer — wrapping in try/catch so a fast reject still
+  // resolves to [] like a slow timeout would.
+  try {
+    return await Promise.race([
+      computeCacheStatsCellsFromCache(),
+      new Promise<CacheStatsCell[]>((resolve) =>
+        setTimeout(() => {
+          console.warn("[cache-stats] GROUP BY fallback exceeded 5s timeout — returning empty");
+          resolve([]);
+        }, 5000),
+      ),
+    ]);
+  } catch (err) {
+    console.warn(
+      `[cache-stats] GROUP BY fallback rejected (returning empty so /status renders): ${err instanceof Error ? err.message : err}`,
+    );
+    return [];
+  }
 }
 
 /**
