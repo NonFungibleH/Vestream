@@ -5,24 +5,32 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/seed-cache?group=sablier",
+      "schedule": "3 3 * * *"
+    },
+    {
       "path": "/api/cron/seed-cache?group=solana",
-      "schedule": "5 3 * * *"
+      "schedule": "8 3 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=heavy",
-      "schedule": "10 3 * * *"
+      "schedule": "13 3 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=subgraphs&mode=deep",
       "schedule": "0 4 * * 0"
     },
     {
+      "path": "/api/cron/seed-cache?group=sablier&mode=deep",
+      "schedule": "8 4 * * 0"
+    },
+    {
       "path": "/api/cron/seed-cache?group=solana&mode=deep",
-      "schedule": "10 4 * * 0"
+      "schedule": "16 4 * * 0"
     },
     {
       "path": "/api/cron/seed-cache?group=heavy&mode=deep",
-      "schedule": "20 4 * * 0"
+      "schedule": "24 4 * * 0"
     },
     {
       "path": "/api/cron/tvl-snapshot",

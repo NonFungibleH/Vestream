@@ -147,6 +147,25 @@ const LLAMAPAY_URLS: Partial<Record<SupportedChainId, string>> = {
 const SEED_LIMIT      = 500;
 const DEEP_SEED_LIMIT = 5000;
 
+// Streamflow-specific caps. Solana free-tier RPCs (Alchemy / Helius) burn
+// compute units faster than they replenish once you push past a couple of
+// hundred per-wallet `client.get()` calls in quick succession — the
+// 2026-05-13 03:00 UTC solana group log shows 49,579 recipients discovered
+// but the resulting per-recipient fan-out 429'd within ~30s of starting,
+// landing zero enriched streams in the cache.
+//
+// The Streamflow adapter throttles via mapBounded(concurrency=4,
+// batchDelay=100ms) which is ~40 calls/sec sustained. The Alchemy free
+// CU/s ceiling lets ~150-200 of those land before back-pressure kicks in.
+// Capping the per-run recipient list to those sustainable numbers means
+// we always hydrate SOMETHING, even if a full deep walk would 429 out.
+//
+// Re-raise these when SOLANA_RPC_URL is repointed at a paid tier — the
+// limits exist because the free tier is the bottleneck, not the discovery
+// path (which is one cheap getProgramAccounts call).
+const STREAMFLOW_INCREMENTAL_LIMIT = 200;
+const STREAMFLOW_DEEP_LIMIT        = 500;
+
 // Subgraph single-query cap. Most The Graph deployments enforce
 // first ≤ 1000; Envio (Sablier) supports higher but 1000 is a safe universal.
 const PAGE_SIZE = 1000;
@@ -831,11 +850,21 @@ export async function discoverStreamflowRecipients(
     }
   }
 
-  console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} Contract accounts → ${recipients.length} recipients`);
+  // Streamflow-specific cap. The seeder's generic SEED_LIMIT / DEEP_SEED_LIMIT
+  // are tuned for subgraph adapters where 500-5000 recipients is one cheap
+  // GraphQL page. Solana's free-tier RPCs throttle hard on per-wallet
+  // `client.get()` fan-out (see STREAMFLOW_*_LIMIT comments). Cap the
+  // returned set so the downstream hydration actually completes instead of
+  // 429-ing into zero writes. `limit` (the generic incremental/deep number)
+  // is the upper bound — we only ever go lower, never higher.
+  const isDeep         = limit > SEED_LIMIT;
+  const streamflowCap  = isDeep ? STREAMFLOW_DEEP_LIMIT : STREAMFLOW_INCREMENTAL_LIMIT;
+  const effectiveLimit = Math.min(limit, streamflowCap);
+
+  console.log(`[seeder:${tag}] getProgramAccounts returned ${accounts.length} Contract accounts → ${recipients.length} recipients (capped to ${effectiveLimit} for free-tier Solana RPC)`);
 
   // dedupeAddresses now preserves Solana base58 casing (ecosystem-aware).
-  // Slice to `limit` so deep-mode can ask for more than incremental.
-  return dedupeAddresses(recipients).slice(0, limit);
+  return dedupeAddresses(recipients).slice(0, effectiveLimit);
 }
 
 // ─── Jupiter Lock discovery (Solana getProgramAccounts + dataSlice) ────────
@@ -1101,15 +1130,24 @@ function limitFor(mode: SeedMode): number {
  *                 of hosted endpoints. Each chain is a single GraphQL
  *                 round-trip; the whole bucket runs in well under 300s.
  */
-export type SeedGroup = "heavy" | "solana" | "subgraphs";
+export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier";
 
 // jupiter-lock group removed 2026-05-06 — JL per-stream seed disabled
 // while we're on Helius free tier (see SEED_JOBS for rationale).
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs"] as const;
+//
+// sablier extracted from subgraphs 2026-05-13 — Sablier alone eats 80–90s
+// of the 300s budget across 4 chains. With 45 other jobs in the same
+// group the subgraphs run was timing out at Vercel's hard limit. Splitting
+// Sablier into its own group lets the remaining ~35 lighter subgraph jobs
+// fit inside their 300s window comfortably while Sablier gets the full
+// budget for its slow chains. Net: one more cron entry, no extra total
+// runtime, no risk of timeout cascading from Sablier into the others.
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")   return "heavy";
   if (adapterId === "streamflow") return "solana";
+  if (adapterId === "sablier")    return "sablier";
   return "subgraphs";
 }
 
@@ -1207,11 +1245,13 @@ const SEED_JOBS: SeedJob[] = [
   // single-endpoint subgraph queries (fast — ~1-2s per chain), so
   // putting them up front costs the run almost nothing if they were
   // previously fitting inside the budget.
+  // LlamaPay: BSC / Polygon / Base / Arbitrum subgraphs dropped May 5 2026
+  // — "subgraph not found: no allocations" / "bad indexers" on The Graph
+  // network. Adapter's SUPPORTED_CHAINS in llamapay.ts is the source of
+  // truth — these SEED_JOBS must match. Adding chains back here without
+  // re-enabling SUBGRAPH_IDS in the adapter produces noisy 0-result jobs
+  // every run (logs from 2026-05-13 03:00 UTC cron showed this).
   { adapterId: "llamapay",     chainId: CHAIN_IDS.ETHEREUM, discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.BSC,      discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.POLYGON,  discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.BASE,     discover: discoverLlamapayRecipients },
-  { adapterId: "llamapay",     chainId: CHAIN_IDS.ARBITRUM, discover: discoverLlamapayRecipients },
   { adapterId: "llamapay",     chainId: CHAIN_IDS.OPTIMISM, discover: discoverLlamapayRecipients },
   { adapterId: "sablier-flow", chainId: CHAIN_IDS.ETHEREUM, discover: discoverSablierFlowRecipients },
   { adapterId: "sablier-flow", chainId: CHAIN_IDS.BSC,      discover: discoverSablierFlowRecipients },

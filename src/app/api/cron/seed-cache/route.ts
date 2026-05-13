@@ -29,20 +29,25 @@
 //   group="subgraphs" finished status=401 (+0.1s)
 //   group="solana"    finished status=401 (+0.1s)
 //
-// v2 fix: kill the self-fanout entirely. Each of the three SeedGroups gets
+// v2 fix: kill the self-fanout entirely. Each of the four SeedGroups gets
 // its own cron entry in vercel.json that calls this route with an explicit
-// `?group=heavy|subgraphs|solana` param. Vercel's scheduler injects the
-// Authorization header on every cron call — never gets stripped because
-// those are inbound calls, not internal self-fetches. Each cron call is
-// its own function invocation with its own 300s budget. Same total runtime
-// as v1; one fewer hop; no auth fragility.
+// `?group=heavy|subgraphs|sablier|solana` param. Vercel's scheduler injects
+// the Authorization header on every cron call — never gets stripped
+// because those are inbound calls, not internal self-fetches. Each cron
+// call is its own function invocation with its own 300s budget. Same
+// total runtime as v1; one fewer hop; no auth fragility.
+//
+// `sablier` extracted from `subgraphs` 2026-05-13 — Sablier alone takes
+// 80-90s × 4 chains and was monopolising the subgraphs slot, leaving the
+// other ~35 subgraph jobs timing out at Vercel's 300s limit. Splitting
+// gives each lane its own runway.
 //
 // When the route is hit WITH `?group=…`, it runs that group via `after()`
 // in the background. Hit without `?group=` returns 400 with a helpful
 // message — bare `/api/cron/seed-cache` is no longer a valid cron target.
 //
-// For ad-hoc manual deep seeds (rare), curl all three paths in parallel:
-//   for g in heavy subgraphs solana; do
+// For ad-hoc manual deep seeds (rare), curl all four paths in parallel:
+//   for g in heavy subgraphs sablier solana; do
 //     curl -s -X POST -H "Authorization: Bearer $CRON_SECRET" \
 //       "https://www.vestream.io/api/cron/seed-cache?group=$g&mode=deep" &
 //   done; wait
