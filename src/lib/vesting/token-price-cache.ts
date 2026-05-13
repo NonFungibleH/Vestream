@@ -185,7 +185,7 @@ export async function writePriceCache(
     if (!EVM_RE.test(e.tokenAddress) && !SOL_RE.test(e.tokenAddress)) { droppedInvalid++; continue; }
     if (!Number.isFinite(e.priceUsd) || e.priceUsd <= 0) { droppedInvalid++; continue; }
     if (e.liquidityUsd !== null && !Number.isFinite(e.liquidityUsd)) { droppedInvalid++; continue; }
-    if (e.source !== "dexscreener" && e.source !== "coingecko") { droppedInvalid++; continue; }
+    if (e.source !== "dexscreener" && e.source !== "coingecko" && e.source !== "defillama") { droppedInvalid++; continue; }
     validRows.push({
       chainId:      e.chainId,
       tokenAddress: e.tokenAddress,

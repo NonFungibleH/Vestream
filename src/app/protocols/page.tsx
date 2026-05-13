@@ -168,7 +168,7 @@ const loadProtocolsData = unstable_cache(
           adapterIds:      p.adapterIds,
           tvlUsd,
           tvlByBand:       { high: tvlHigh, medium: tvlMedium, low: tvlLow },
-          pricingSources:  { dexscreener: 0, coingecko: 0 }, // aggregate-level — per-token not stored
+          pricingSources:  { dexscreener: 0, defillama: 0, coingecko: 0 }, // aggregate-level — per-token not stored
           perChain:        Array.from(perChainMap.entries())
             .map(([chainId, usd]) => ({ chainId, tvlUsd: usd }))
             .sort((a, b) => b.tvlUsd - a.tvlUsd),

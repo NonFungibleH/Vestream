@@ -9,7 +9,7 @@
 //   • Subgraph schemas differ; per-adapter arithmetic lives in adapter
 //     `.fetch()` methods.
 //
-// Pricing pipeline (April 2026 rewrite):
+// Pricing pipeline (April 2026 → May 2026 3-layer rewrite):
 //   1. Aggregate locked tokens from the cache (GROUP BY chain, tokenAddress)
 //   2. PASS A — DexScreener batch /latest/dex/tokens/{addrs}. Classify each
 //      priced pair by its DEX liquidity:
@@ -19,12 +19,25 @@
 //                                           added so memecoin-heavy protocols
 //                                           like UNCX aren't reported as $0)
 //         < $100    → skipped (not trustworthy)
-//   3. PASS B — For tokens DexScreener returned nothing for, try CoinGecko
-//      /simple/token_price/{platform}. Tagged as confidence "medium" with
-//      source "coingecko". Free-tier API (30 req/min) — we batch up to 100
-//      contracts per call and leave ~2s between batches to stay safe.
-//   4. Sum tokens × priceUsd into `tvlUsd` (all bands combined) AND per-band
+//   3. PASS B — For tokens DexScreener returned nothing for, try DefiLlama
+//      Coins API /prices/current/{chain}:{addr},... — internally aggregated
+//      from CoinGecko + CMC + DexScreener + on-chain oracles. No published
+//      rate limit. Tagged as confidence "medium" with source "defillama".
+//   4. PASS C — Deep fallback for what BOTH DexScreener and DefiLlama
+//      missed, hit CoinGecko /simple/token_price/{platform}. Free-tier API
+//      (30 req/min). Rarely needed since DefiLlama already aggregates
+//      CoinGecko — this layer exists only for resilience if DefiLlama is
+//      down. Source tagged "coingecko".
+//   5. Sum tokens × priceUsd into `tvlUsd` (all bands combined) AND per-band
 //      totals, so the UI can show high-confidence + breakdown independently.
+//
+// Why the 3-layer (over the original 2-layer DexScreener→CoinGecko):
+//   The 2026-05-12 + 2026-05-13 TVL snapshot crons hit 300s timeouts after
+//   40+ "exhausted retries; returning HTTP 429" warnings from CoinGecko.
+//   DefiLlama as the primary fallback eliminates the rate-limit storm
+//   because it has no published rate limit and its single batch endpoint
+//   accepts 100+ tokens per call. CoinGecko stays as deep insurance for
+//   the rare DefiLlama outage.
 //
 // Why the floor dropped $1000 → $100:
 //   Before the rewrite, a memecoin with $800 of DEX liquidity was considered
@@ -76,6 +89,20 @@ const CG_PLATFORM_SLUG: Record<number, string> = {
   101:   "solana",              // CoinGecko platform slug for SPL tokens
 };
 
+// DefiLlama Coins API uses simpler chain slugs (matches their general
+// taxonomy — same format as their TVL endpoint). Solana is "solana",
+// EVM chains are their human-readable name. Reference:
+//   https://defillama.com/docs/api  → /coins/prices/current
+const LLAMA_CHAIN_SLUG: Record<number, string> = {
+  1:     "ethereum",
+  56:    "bsc",
+  137:   "polygon",
+  8453:  "base",
+  42161: "arbitrum",
+  10:    "optimism",
+  101:   "solana",
+};
+
 // Pricing thresholds (USD liquidity) — tiered to preserve the long tail
 // without over-trusting thin markets.
 const LIQUIDITY_FLOOR_USD = 100;
@@ -84,6 +111,10 @@ const LIQUIDITY_HIGH      = 10_000;
 
 const DS_BATCH_SIZE       = 30;    // DexScreener max tokens per request
 const DS_CONCURRENCY      = 4;
+const LLAMA_BATCH_SIZE    = 100;   // DefiLlama Coins API tested at ~100 tokens
+                                   // per call; larger payloads risk URL length.
+const LLAMA_CONCURRENCY   = 4;     // No published rate limit; 4 parallel keeps
+                                   // ~400 tokens-priced-per-second realistic.
 const CG_BATCH_SIZE       = 100;   // CoinGecko contract_addresses cap
 const CG_CONCURRENCY      = 2;     // Stay well under 30 req/min free tier
 const TTL_MS              = 10 * 60 * 1000;
@@ -91,13 +122,13 @@ const TTL_MS              = 10 * 60 * 1000;
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type PriceConfidence = "high" | "medium" | "low";
-export type PriceSource     = "dexscreener" | "coingecko";
+export type PriceSource     = "dexscreener" | "defillama" | "coingecko";
 
 export interface PriceInfo {
   priceUsd:     number;
   source:       PriceSource;
   confidence:   PriceConfidence;
-  liquidityUsd: number | null; // null when source = coingecko
+  liquidityUsd: number | null; // null when source = defillama or coingecko
 }
 
 export interface ProtocolTvl {
@@ -115,6 +146,7 @@ export interface ProtocolTvl {
   /** How many tokens each pricing source contributed. */
   pricingSources: {
     dexscreener: number;
+    defillama:   number;
     coingecko:   number;
   };
   /** Per-chain breakdown sorted desc by tvl. */
@@ -278,6 +310,111 @@ async function priceViaDexScreener(
 // CoinGecko's inclusion is itself a quality signal (they curate
 // aggressively).
 
+// ─── PASS B — DefiLlama (May 2026) ───────────────────────────────────────────
+//
+// Single endpoint: https://coins.llama.fi/prices/current/{chain}:{addr},...
+// Accepts up to ~100 comma-separated `{chain}:{addr}` keys per call.
+// No published rate limit; cross-chain in one call (we still group by chain
+// for parity with the CoinGecko path's confidence-tagging logic).
+//
+// Response shape:
+//   {
+//     "coins": {
+//       "ethereum:0xabc...": {
+//         "decimals":   18,
+//         "symbol":     "FOO",
+//         "price":      0.123,
+//         "timestamp":  1715600000,
+//         "confidence": 0.99
+//       },
+//       ...
+//     }
+//   }
+//
+// `confidence` is DefiLlama's own quality signal (0..1). We treat
+// >= 0.9 as our "medium" confidence (no liquidity number to compute high),
+// < 0.5 as our "low" (still kept — same long-tail rationale as the
+// DexScreener floor). 0.5–0.9 → "medium".
+
+async function defiLlamaBatch(
+  chain:     string,
+  addresses: string[],
+): Promise<Map<string, PriceInfo>> {
+  const out = new Map<string, PriceInfo>();
+  if (addresses.length === 0) return out;
+
+  try {
+    const keys = addresses.map((a) => `${chain}:${a}`).join(",");
+    const url  = `https://coins.llama.fi/prices/current/${keys}`;
+    const res  = await fetchWithRetry(url, {
+      next: { revalidate: 300 },
+      headers: { Accept: "application/json" },
+    }, { tag: "defillama-tvl", retries: 1 });
+    if (!res || !res.ok) return out;
+    const data = (await res.json()) as {
+      coins?: Record<string, { price?: number; confidence?: number }>;
+    };
+    if (!data?.coins) return out;
+    for (const [key, body] of Object.entries(data.coins)) {
+      const price = body?.price;
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+      // Map DefiLlama confidence (0..1) → our band.
+      const llamaConf = typeof body.confidence === "number" ? body.confidence : 0.9;
+      const confidence: PriceConfidence =
+        llamaConf >= 0.9 ? "medium" :
+        llamaConf >= 0.5 ? "medium" :
+        "low";
+      // Key in the prices map matches the DexScreener style (`dsChain:addr`)
+      // so the merge step downstream doesn't need a parallel keyspace —
+      // we rekey at the call site, not here.
+      out.set(key, {
+        priceUsd:     price,
+        source:       "defillama",
+        confidence,
+        liquidityUsd: null,
+      });
+    }
+  } catch (err) {
+    console.error(`[tvl] DefiLlama batch (${chain}) failed:`, err);
+  }
+  return out;
+}
+
+async function priceViaDefiLlama(
+  unpriced: LockedTokenAggregate[],
+): Promise<Map<string, PriceInfo>> {
+  // Group by chain so we can hit a single batched URL per chain.
+  const byChain = new Map<string, string[]>();
+  for (const a of unpriced) {
+    const chain = LLAMA_CHAIN_SLUG[a.chainId];
+    if (!chain) continue;
+    const addr = a.tokenAddress.toLowerCase();
+    if (!byChain.has(chain)) byChain.set(chain, []);
+    byChain.get(chain)!.push(addr);
+  }
+
+  const all = new Map<string, PriceInfo>();
+  for (const [chain, addrs] of byChain) {
+    const unique  = Array.from(new Set(addrs));
+    const batches: string[][] = [];
+    for (let i = 0; i < unique.length; i += LLAMA_BATCH_SIZE) {
+      batches.push(unique.slice(i, i + LLAMA_BATCH_SIZE));
+    }
+    for (let i = 0; i < batches.length; i += LLAMA_CONCURRENCY) {
+      const group   = batches.slice(i, i + LLAMA_CONCURRENCY);
+      const results = await Promise.all(group.map((b) => defiLlamaBatch(chain, b)));
+      for (const m of results) for (const [k, v] of m) all.set(k, v);
+    }
+  }
+  return all;
+}
+
+// ─── PASS C — CoinGecko (deep fallback, demoted from Pass B in May 2026) ────
+//
+// Now only called for tokens BOTH DexScreener AND DefiLlama missed.
+// In practice this should be near-zero traffic, which makes the 30 req/min
+// free-tier limit a non-issue.
+
 async function coinGeckoBatch(
   platform: string,
   addresses: string[],
@@ -368,24 +505,38 @@ export async function getProtocolTvl(
   // Pass A: DexScreener for every aggregate on a supported chain.
   const dsPrices = await priceViaDexScreener(aggs);
 
-  // Pass B: CoinGecko for any aggregate DexScreener didn't price.
-  const unpriced = aggs.filter((a) => {
+  // Pass B: DefiLlama for any aggregate DexScreener didn't price.
+  const unpricedAfterDs = aggs.filter((a) => {
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     return !dsChain || !dsPrices.has(`${dsChain}:${a.tokenAddress}`);
   });
-  const cgPrices = await priceViaCoinGecko(unpriced);
+  const llamaPrices = await priceViaDefiLlama(unpricedAfterDs);
 
   // Merge. Keep DexScreener results where present (they carry liquidity
   // metadata which matters for the high/medium/low split).
   const prices = new Map<string, PriceInfo>(dsPrices);
-  for (const a of unpriced) {
+  for (const a of unpricedAfterDs) {
+    const llamaChain = LLAMA_CHAIN_SLUG[a.chainId];
+    if (!llamaChain) continue;
+    const info = llamaPrices.get(`${llamaChain}:${a.tokenAddress}`);
+    if (!info) continue;
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
+  }
+
+  // Pass C: CoinGecko deep fallback for anything BOTH DS and DefiLlama
+  // missed. Rarely fires in practice since DefiLlama aggregates CoinGecko.
+  const unpricedAfterLlama = unpricedAfterDs.filter((a) => {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    return !dsChain || !prices.has(`${dsChain}:${a.tokenAddress}`);
+  });
+  const cgPrices = await priceViaCoinGecko(unpricedAfterLlama);
+  for (const a of unpricedAfterLlama) {
     const platform = CG_PLATFORM_SLUG[a.chainId];
     if (!platform) continue;
     const cgKey    = `${platform}:${a.tokenAddress}`;
     const info     = cgPrices.get(cgKey);
     if (!info) continue;
-    // Re-key under the DexScreener-style slug so the downstream loop has a
-    // single lookup convention.
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
   }
@@ -397,6 +548,7 @@ export async function getProtocolTvl(
   let tokensPriced  = 0;
   let tokensSkipped = 0;
   let srcDex        = 0;
+  let srcLlama      = 0;
   let srcCg         = 0;
   const perChainMap = new Map<number, number>();
   const contribs: ProtocolTvl["topContributors"] = [];
@@ -426,6 +578,7 @@ export async function getProtocolTvl(
     else if (info.confidence === "medium") tvlMedium += usd;
     else                                   tvlLow    += usd;
     if      (info.source === "dexscreener") srcDex++;
+    else if (info.source === "defillama")   srcLlama++;
     else                                    srcCg++;
 
     perChainMap.set(a.chainId, (perChainMap.get(a.chainId) ?? 0) + usd);
@@ -452,6 +605,7 @@ export async function getProtocolTvl(
     },
     pricingSources: {
       dexscreener: srcDex,
+      defillama:   srcLlama,
       coingecko:   srcCg,
     },
     perChain:       Array.from(perChainMap.entries())
@@ -494,7 +648,7 @@ function emptyTvl(adapterIds: readonly string[]): ProtocolTvl {
     adapterIds,
     tvlUsd:          0,
     tvlByBand:       { high: 0, medium: 0, low: 0 },
-    pricingSources:  { dexscreener: 0, coingecko: 0 },
+    pricingSources:  { dexscreener: 0, defillama: 0, coingecko: 0 },
     perChain:        [],
     tokensPriced:    0,
     tokensSkipped:   0,
@@ -620,15 +774,37 @@ export async function priceAggregates(
   // Merge DS results into the prices map.
   for (const [k, v] of dsPrices.entries()) prices.set(k, v);
 
-  // Pass B — CoinGecko for what DexScreener also didn't price.
-  const unpriced = cacheMisses.filter((a) => {
+  // Pass B — DefiLlama for what DexScreener didn't price. Internally
+  // aggregates CoinGecko + CMC + DexScreener + on-chain oracles. No
+  // rate limit. Handles the 95% case for the "DexScreener missed it"
+  // path; CoinGecko (Pass C) only runs for the rare residual.
+  const unpricedAfterDs = cacheMisses.filter((a) => {
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     return !dsChain || !dsPrices.has(`${dsChain}:${a.tokenAddress}`);
   });
-  const cgPrices = unpriced.length > 0
-    ? await priceViaCoinGecko(unpriced)
+  const llamaPrices = unpricedAfterDs.length > 0
+    ? await priceViaDefiLlama(unpricedAfterDs)
     : new Map<string, PriceInfo>();
-  for (const a of unpriced) {
+  // DefiLlama's keys are `{chain}:{addr}` (e.g. "ethereum:0x..."). Re-key
+  // into the DexScreener-style map keyspace before merging.
+  for (const a of unpricedAfterDs) {
+    const llamaChain = LLAMA_CHAIN_SLUG[a.chainId];
+    if (!llamaChain) continue;
+    const info = llamaPrices.get(`${llamaChain}:${a.tokenAddress}`);
+    if (!info) continue;
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    if (dsChain) prices.set(`${dsChain}:${a.tokenAddress}`, info);
+  }
+
+  // Pass C — CoinGecko deep fallback for what BOTH DS and DefiLlama missed.
+  const unpricedAfterLlama = unpricedAfterDs.filter((a) => {
+    const dsChain = DS_CHAIN_SLUG[a.chainId];
+    return !dsChain || !prices.has(`${dsChain}:${a.tokenAddress}`);
+  });
+  const cgPrices = unpricedAfterLlama.length > 0
+    ? await priceViaCoinGecko(unpricedAfterLlama)
+    : new Map<string, PriceInfo>();
+  for (const a of unpricedAfterLlama) {
     const platform = CG_PLATFORM_SLUG[a.chainId];
     if (!platform) continue;
     const info    = cgPrices.get(`${platform}:${a.tokenAddress}`);

@@ -203,7 +203,7 @@ export async function runWalkerSnapshot(
     usdRaw:       number;
     usdCredited:  number;
     confidence:   "high" | "medium" | "low";
-    source:       "dexscreener" | "coingecko";
+    source:       "dexscreener" | "defillama" | "coingecko";
   }
 
   const chainSettled = await Promise.allSettled(
@@ -347,7 +347,12 @@ export async function runWalkerSnapshot(
 
       function perTokenCeiling(p: typeof priced[number]): number {
         let cap: number;
-        if (p.source === "coingecko") {
+        // CoinGecko + DefiLlama both expose price WITHOUT liquidity, so the
+        // liquidity-multiplier-based cap can't apply. Use the CoinGecko
+        // ceiling for both — same conservative band, same defence against
+        // memecoin price-times-quantity inflation when we can't verify
+        // depth on a DEX.
+        if (p.source === "coingecko" || p.source === "defillama") {
           cap = COINGECKO_PER_TOKEN_CEILING;
         } else {
           const liquidityBased = (p.liquidityUsd ?? 0) * LIQUIDITY_MULTIPLIER;
@@ -376,7 +381,7 @@ export async function runWalkerSnapshot(
         usdRaw:       number;   // pre-cap value (kept for forensic audit)
         usdCredited:  number;   // post-cap value (what fed the headline)
         confidence:   "high" | "medium" | "low";
-        source:       "dexscreener" | "coingecko";
+        source:       "dexscreener" | "defillama" | "coingecko";
       }> = [];
 
       // ── Symbol-verification guard (May 5 2026) ────────────────────────
