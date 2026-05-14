@@ -174,6 +174,87 @@ const POOL: Record<SupportedChainId, Provider[]> = {
 // want — round-robin within one seed run, but no cross-request memory).
 const counters = new Map<SupportedChainId, number>();
 
+// ─── Per-URL health tracker (Phase 2 — in-memory quarantine) ─────────────────
+//
+// The fallback transport already retries down the URL list on any single
+// failure, but it RETRIES the bad URL every call until you restart the
+// lambda. On a sustained provider outage we burn the retry budget on a
+// dead endpoint over and over. The health tracker fixes that:
+//
+//   - count consecutive failures per URL
+//   - after N in a row, quarantine for Q minutes (skip the URL entirely)
+//   - any successful request clears the failure count
+//
+// Quarantine state lives in-memory — same lifetime as a single lambda. We
+// DON'T persist it because (a) it's only useful within a single run and
+// (b) cross-lambda sync would need Redis, which is overkill for a
+// best-effort optimisation. Worst case after a cold start: one wasted call
+// against a dead provider before quarantine kicks in. Vastly better than
+// wasting one call per fetch for the rest of the invocation.
+
+interface HealthState {
+  consecutiveFailures: number;
+  quarantinedUntil:    number; // ms epoch
+}
+
+const QUARANTINE_FAIL_THRESHOLD = 3;
+const QUARANTINE_MS             = 60_000; // 1 minute — short enough that a recovering provider rejoins fast
+const health = new Map<string, HealthState>();
+
+function recordSuccess(url: string): void {
+  // Clear all state on success — single success is enough to rehabilitate.
+  health.delete(url);
+}
+
+function recordFailure(url: string): void {
+  const s = health.get(url) ?? { consecutiveFailures: 0, quarantinedUntil: 0 };
+  s.consecutiveFailures += 1;
+  if (s.consecutiveFailures >= QUARANTINE_FAIL_THRESHOLD) {
+    s.quarantinedUntil    = Date.now() + QUARANTINE_MS;
+    s.consecutiveFailures = 0;
+  }
+  health.set(url, s);
+}
+
+function isHealthy(url: string): boolean {
+  const s = health.get(url);
+  if (!s) return true;
+  return s.quarantinedUntil <= Date.now();
+}
+
+/**
+ * Wraps the global `fetch` so every request through this transport feeds
+ * the health tracker. Counts non-2xx + thrown errors as failures.
+ */
+function makeTrackingFetch(url: string): typeof fetch {
+  return async (input, init) => {
+    try {
+      const res = await fetch(input, init);
+      if (res.ok) recordSuccess(url);
+      else        recordFailure(url);
+      return res;
+    } catch (err) {
+      recordFailure(url);
+      throw err;
+    }
+  };
+}
+
+/**
+ * Diagnostic snapshot — list every URL currently quarantined and its
+ * remaining quarantine window. Wire to /api/admin/rpc-health if useful.
+ */
+export function getRpcHealthSnapshot(): Array<{ url: string; quarantinedFor: number }> {
+  const now = Date.now();
+  const out: Array<{ url: string; quarantinedFor: number }> = [];
+  for (const [url, state] of health) {
+    if (state.quarantinedUntil > now) {
+      out.push({ url, quarantinedFor: state.quarantinedUntil - now });
+    }
+  }
+  return out;
+}
+
 /**
  * Returns the next RPC URL in rotation for the given chain.
  *
@@ -282,11 +363,19 @@ export function makeFallbackClient(
   const chain = VIEM_CHAINS[chainId];
   if (!chain) return undefined;
 
-  const urls = getAllRpcUrls(chainId, { forLogs: opts.forLogs });
-  if (urls.length === 0) return undefined;
+  const allUrls = getAllRpcUrls(chainId, { forLogs: opts.forLogs });
+  if (allUrls.length === 0) return undefined;
+
+  // Prefer healthy URLs; fall back to the full list if every URL is
+  // quarantined (better to retry a dead provider than refuse to try).
+  const healthyUrls = allUrls.filter(isHealthy);
+  const urls        = healthyUrls.length > 0 ? healthyUrls : allUrls;
 
   const transports = urls.map((url) =>
-    http(url, { batch: opts.batch ?? true }),
+    http(url, {
+      batch:   opts.batch ?? true,
+      fetchFn: makeTrackingFetch(url),
+    }),
   );
 
   return createPublicClient({
