@@ -29,6 +29,8 @@ import {
   chainLabel,
   formatAmountCompact,
   getLatestUnlock,
+  getProtocolFunStats,
+  type ProtocolFunStats,
   getNextUpcomingUnlock,
   getProtocolStats,
   getUpcomingUnlocksForProtocol,
@@ -100,6 +102,9 @@ interface ProtocolPageData {
   latest:       UnlockSummary | null;
   upcoming:     UnlockSummary | null;
   upcomingList: UnlockGroupSummary[];
+  /** 2026-05-14: fun-fact stats — biggest active stream, most popular
+   *  token on this protocol, new-streams count for the past 24h. */
+  funStats:     ProtocolFunStats | null;
 }
 
 // Empty-shape default. Returned during the build phase (no DB access)
@@ -111,6 +116,7 @@ const EMPTY_PROTOCOL_DATA: ProtocolPageData = {
   latest:       null,
   upcoming:     null,
   upcomingList: [],
+  funStats:     null,
 };
 
 const loadProtocolData = unstable_cache(
@@ -138,15 +144,17 @@ const loadProtocolData = unstable_cache(
       getLatestUnlock(adapterIds),
       getNextUpcomingUnlock(adapterIds),
       getUpcomingUnlocksForProtocol(adapterIds, 6),
+      getProtocolFunStats(adapterIds),
     ]);
     const stats        = settled[0].status === "fulfilled" ? settled[0].value : null;
     const latest       = settled[1].status === "fulfilled" ? settled[1].value : null;
     const upcoming     = settled[2].status === "fulfilled" ? settled[2].value : null;
     const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
+    const funStats     = settled[4].status === "fulfilled" ? settled[4].value : null;
     for (let i = 0; i < settled.length; i++) {
       const r = settled[i];
       if (r.status === "rejected") {
-        const queryName = ["getProtocolStats", "getLatestUnlock", "getNextUpcomingUnlock", "getUpcomingUnlocksForProtocol"][i];
+        const queryName = ["getProtocolStats", "getLatestUnlock", "getNextUpcomingUnlock", "getUpcomingUnlocksForProtocol", "getProtocolFunStats"][i];
         console.warn(`[protocol-page] ${queryName} failed for ${adapterIds.join(",")}:`, r.reason);
       }
     }
@@ -214,13 +222,14 @@ const loadProtocolData = unstable_cache(
       latest:   enrich(latest),
       upcoming: enrich(upcoming),
       upcomingList: upcomingList.map((g) => enrich(g)!),
+      funStats,
     };
   },
-  // v5 = bump after 8ddabb7 (Promise.allSettled). Bumping the cache key
-  // invalidates every poisoned-empty entry from before that fix and forces
-  // a fresh render. Cheap operation — at most 9 protocols × N chains worth
-  // of cold renders, all of which fall under the new resilient code path.
-  ["protocol-page-data-v5"],
+  // v6 = bump after the funStats addition. Without bumping, the
+  // unstable_cache layer would serve old payloads missing the funStats
+  // field for up to CACHE_TTL_SECONDS, causing the new UI block to flicker
+  // empty for an hour after deploy.
+  ["protocol-page-data-v6"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -299,7 +308,7 @@ export default async function ProtocolLandingPage(
     const lastGood = await getLastGoodProtocolData<ProtocolPageData>(meta.slug);
     pageData = lastGood ?? EMPTY_PROTOCOL_DATA;
   }
-  const { stats, latest, upcoming, upcomingList } = pageData;
+  const { stats, latest, upcoming, upcomingList, funStats } = pageData;
 
   // Stream counts now come from cache only (getGlobalStats was dropped —
   // see the loadProtocolData comment for the why).
@@ -505,6 +514,61 @@ export default async function ProtocolLandingPage(
           </p>
         )}
       </section>
+
+      {/* ── Spotlight stats (fun-fact row) ──────────────────────────────────
+          2026-05-14: surfaces three "interesting things" beyond the raw
+          stream counts above — biggest active stream, most-streamed
+          token on this protocol, recent indexer pulse. Designed to make
+          the protocol page feel ALIVE for retail visitors who arrived
+          from /find-vestings or organic search. Hidden entirely when
+          the protocol has no active streams (don't show "—" stats). */}
+      {funStats && (funStats.biggestStream || funStats.mostPopularToken || funStats.newStreamsLast24h > 0) && (
+        <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            {funStats.biggestStream && (
+              <SpotlightCard
+                eyebrow="Biggest active stream"
+                value={formatBigTokenAmount(funStats.biggestStream.totalAmount, funStats.biggestStream.decimals, funStats.biggestStream.tokenSymbol)}
+                sub={
+                  funStats.biggestStream.tokenAddress
+                    ? `${chainLabel(funStats.biggestStream.chainId)} · view holders`
+                    : chainLabel(funStats.biggestStream.chainId)
+                }
+                href={
+                  funStats.biggestStream.tokenAddress
+                    ? `/token/${funStats.biggestStream.chainId}/${funStats.biggestStream.tokenAddress}`
+                    : undefined
+                }
+                accent={meta.color}
+                wash={accentWash}
+              />
+            )}
+            {funStats.mostPopularToken && (
+              <SpotlightCard
+                eyebrow="Most-streamed token"
+                value={funStats.mostPopularToken.tokenSymbol}
+                sub={`${funStats.mostPopularToken.streamCount.toLocaleString()} active stream${funStats.mostPopularToken.streamCount === 1 ? "" : "s"} on ${chainLabel(funStats.mostPopularToken.chainId)}`}
+                href={
+                  funStats.mostPopularToken.tokenAddress
+                    ? `/token/${funStats.mostPopularToken.chainId}/${funStats.mostPopularToken.tokenAddress}`
+                    : undefined
+                }
+                accent={meta.color}
+                wash={accentWash}
+              />
+            )}
+            {funStats.newStreamsLast24h > 0 && (
+              <SpotlightCard
+                eyebrow="Indexed in the last 24h"
+                value={`${funStats.newStreamsLast24h.toLocaleString()} new`}
+                sub={funStats.newStreamsLast24h === 1 ? "vesting added" : "vestings added"}
+                accent={meta.color}
+                wash={accentWash}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── Latest + upcoming unlock row ─────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto">
@@ -789,6 +853,74 @@ export default async function ProtocolLandingPage(
 }
 
 // ─── Small sub-components ────────────────────────────────────────────────────
+
+// 2026-05-14: bigger card pattern for the new "spotlight" stats row.
+// Different layout from `Stat` — meant to sit one-per-row at md+ rather
+// than packing 6 into a strip. Optional href converts the card into a
+// link to the token page (or wherever else the caller passes).
+function SpotlightCard({
+  eyebrow, value, sub, href, accent, wash,
+}: {
+  eyebrow: string;
+  value:   string;
+  sub:     string;
+  href?:   string;
+  accent:  string;
+  wash:    string;
+}) {
+  const inner = (
+    <div
+      className="rounded-2xl px-5 py-4 transition-all duration-150 h-full"
+      style={{
+        background: "white",
+        border: `1px solid ${wash || "rgba(0,0,0,0.06)"}`,
+        boxShadow: `0 2px 10px ${wash}`,
+      }}
+    >
+      <div className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: "#B8BABD" }}>
+        {eyebrow}
+      </div>
+      <div className="font-bold text-lg md:text-xl tabular-nums truncate" style={{ letterSpacing: "-0.02em", color: accent }}>
+        {value}
+      </div>
+      <div className="text-xs mt-1" style={{ color: "#8B8E92" }}>
+        {sub}
+      </div>
+    </div>
+  );
+  if (href) {
+    return (
+      <Link href={href} className="block hover:scale-[1.01] transition-transform">
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
+}
+
+// Compact whole-token formatter for the spotlight cards. Inputs come
+// from streamData as a stringified bigint + decimals — the page already
+// has `formatTokenAmount` elsewhere but it lives in dashboard-land and
+// imports react. This trimmed-down version is server-safe.
+function formatBigTokenAmount(rawAmount: string, decimals: number, symbol: string): string {
+  let n: number;
+  try {
+    const bi = BigInt(rawAmount);
+    // Scale down to whole-token units. Use Number for the divide because
+    // a) the magnitudes here are display values not financial math, and
+    // b) BigInt-divided-by-BigInt loses fractional precision anyway.
+    n = Number(bi) / Math.pow(10, decimals);
+  } catch {
+    return `— ${symbol}`;
+  }
+  if (!Number.isFinite(n)) return `— ${symbol}`;
+  let display: string;
+  if (n >= 1_000_000_000)      display = `${(n / 1_000_000_000).toFixed(2)}B`;
+  else if (n >= 1_000_000)     display = `${(n / 1_000_000).toFixed(2)}M`;
+  else if (n >= 1_000)         display = `${(n / 1_000).toFixed(1)}K`;
+  else                         display = n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return `${display} ${symbol}`;
+}
 
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (

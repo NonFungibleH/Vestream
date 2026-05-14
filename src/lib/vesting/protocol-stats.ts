@@ -833,6 +833,161 @@ export async function getUpcomingUnlocksForProtocol(
   });
 }
 
+// ─── Fun-fact stats (protocol landing page extras) ──────────────────────────
+//
+// Surfaces "interesting things to know about this protocol" alongside the
+// hard numbers in getProtocolStats. Adopted 2026-05-14 for the protocol
+// landing page polish pass — a Carta-style data card that gives retail
+// visitors a sense of scale + activity beyond the raw stream count.
+//
+// All three queries hit the same vesting_streams_cache table that already
+// powers the rest of the page. No new tables, no new crons.
+
+export interface ProtocolFunStats {
+  /** Largest active stream on this protocol (by raw token amount —
+   *  cross-token USD comparisons would need a per-token price join here
+   *  which is more than the existing infra has cheaply available).
+   *  Null when the protocol has no active streams. */
+  biggestStream: {
+    streamId:     string;
+    tokenSymbol:  string;
+    tokenAddress: string;
+    chainId:      number;
+    recipient:    string;
+    /** Stringified bigint — whole-token math happens in the UI layer. */
+    totalAmount:  string;
+    decimals:     number;
+  } | null;
+  /** Token with the most active streams on this protocol. */
+  mostPopularToken: {
+    tokenSymbol:  string;
+    tokenAddress: string | null;
+    chainId:      number;
+    streamCount:  number;
+  } | null;
+  /** Streams whose first_seen_at is within the past 24h — the indexer's
+   *  pulse, basically. "N new streams indexed today." */
+  newStreamsLast24h: number;
+}
+
+const EMPTY_FUN_STATS: ProtocolFunStats = {
+  biggestStream:     null,
+  mostPopularToken:  null,
+  newStreamsLast24h: 0,
+};
+
+export async function getProtocolFunStats(
+  adapterIds: readonly string[],
+): Promise<ProtocolFunStats> {
+  if (shouldSkipDbAtBuildTime()) return EMPTY_FUN_STATS;
+  if (adapterIds.length === 0)   return EMPTY_FUN_STATS;
+
+  const ids = Array.from(adapterIds);
+
+  // All three queries fan out in parallel. PromiseAllSettled so any single
+  // failure (transient DB blip, missing column on a stale deploy) degrades
+  // to that field being empty instead of taking the whole protocol page
+  // down — same defensive shape as the surrounding queries in this file.
+  const settled = await Promise.allSettled([
+    // Biggest by raw token amount. We can't trivially convert to USD
+    // server-side without joining tokenPricesCache, so we sort by token
+    // count and let the page surface "10M FOO" — still useful, and the
+    // page already prices on render.
+    db
+      .select({
+        streamId:      vestingStreamsCache.streamId,
+        tokenSymbol:   vestingStreamsCache.tokenSymbol,
+        tokenAddress:  vestingStreamsCache.tokenAddress,
+        chainId:       vestingStreamsCache.chainId,
+        recipient:     vestingStreamsCache.recipient,
+        streamData:    vestingStreamsCache.streamData,
+      })
+      .from(vestingStreamsCache)
+      .where(
+        and(
+          inArray(vestingStreamsCache.protocol, ids),
+          eq(vestingStreamsCache.isFullyVested, false),
+        ),
+      )
+      // Sort BY ::numeric on the stringified bigint inside streamData so
+      // small-decimals tokens don't beat big tokens just because their
+      // raw integer count is larger. The streamData jsonb path
+      // (->>'totalAmount') is text; cast to numeric for sort.
+      .orderBy(sql`(${vestingStreamsCache.streamData}->>'totalAmount')::numeric DESC NULLS LAST`)
+      .limit(1),
+
+    // Most popular = token with most active streams.
+    db
+      .select({
+        tokenSymbol:  vestingStreamsCache.tokenSymbol,
+        tokenAddress: vestingStreamsCache.tokenAddress,
+        chainId:      vestingStreamsCache.chainId,
+        streamCount:  sql<number>`count(*)::int`.as("stream_count"),
+      })
+      .from(vestingStreamsCache)
+      .where(
+        and(
+          inArray(vestingStreamsCache.protocol, ids),
+          eq(vestingStreamsCache.isFullyVested, false),
+        ),
+      )
+      .groupBy(
+        vestingStreamsCache.tokenSymbol,
+        vestingStreamsCache.tokenAddress,
+        vestingStreamsCache.chainId,
+      )
+      .orderBy(sql`count(*) DESC`)
+      .limit(1),
+
+    // New streams indexed in last 24h. The setWhere clause on writeToCache
+    // means lastRefreshedAt is "data moved" rather than "row touched", so
+    // we use firstSeenAt explicitly for the discovery count.
+    db
+      .select({ count: sql<number>`count(*)::int`.as("count") })
+      .from(vestingStreamsCache)
+      .where(
+        and(
+          inArray(vestingStreamsCache.protocol, ids),
+          gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`),
+        ),
+      ),
+  ]);
+
+  // Decode each result independently so a failure on one doesn't poison others.
+  let biggestStream: ProtocolFunStats["biggestStream"] = null;
+  if (settled[0].status === "fulfilled" && settled[0].value.length > 0) {
+    const r = settled[0].value[0];
+    const sd = r.streamData as { totalAmount?: string; tokenDecimals?: number };
+    biggestStream = {
+      streamId:     r.streamId,
+      tokenSymbol:  r.tokenSymbol ?? "—",
+      tokenAddress: r.tokenAddress ?? "",
+      chainId:      r.chainId,
+      recipient:    r.recipient,
+      totalAmount:  sd.totalAmount ?? "0",
+      decimals:     sd.tokenDecimals ?? 18,
+    };
+  }
+
+  let mostPopularToken: ProtocolFunStats["mostPopularToken"] = null;
+  if (settled[1].status === "fulfilled" && settled[1].value.length > 0) {
+    const r = settled[1].value[0];
+    mostPopularToken = {
+      tokenSymbol:  r.tokenSymbol ?? "—",
+      tokenAddress: r.tokenAddress ?? null,
+      chainId:      r.chainId,
+      streamCount:  Number(r.streamCount ?? 0),
+    };
+  }
+
+  const newStreamsLast24h =
+    settled[2].status === "fulfilled" && settled[2].value.length > 0
+      ? Number(settled[2].value[0].count ?? 0)
+      : 0;
+
+  return { biggestStream, mostPopularToken, newStreamsLast24h };
+}
+
 // ─── formatting helpers (pure — safe to import from Server Components) ───────
 
 /** Truncate a wallet / contract address for public display: `0x3f5C…8b2e`. */

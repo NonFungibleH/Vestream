@@ -111,7 +111,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
         topics:    [VESTING_CREATED_TOPIC],
         fromBlock,
         toBlock,
-      }) as { topics: readonly (Hex | null | undefined)[] }[];
+      }) as { topics: readonly (Hex | null | undefined)[]; transactionHash?: Hex }[];
 
       const valid = logs.filter(
         (log) =>
@@ -124,9 +124,12 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       if (valid.length === 0) return { eventCount: 0 };
 
       // topic[1] = vestingId, topic[2] = beneficiary (both indexed, padded).
+      // 2026-05-14: carry transactionHash through so the stream-detail
+      // page can render a tap-to-explorer link back to the creation tx.
       const entries = valid.map((log) => ({
         vestingId: BigInt(log.topics[1] as Hex),
         recipient: `0x${(log.topics[2] as Hex).slice(26)}`,
+        lockTxHash: log.transactionHash ?? null,
       }));
 
       // 2. Multicall every schedule for this batch.
@@ -198,6 +201,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           shape:           "steps",
           unlockSteps,
           cancelable:      schedule.isSoft,
+          lockTxHash:      entries[i].lockTxHash,
         });
       }
 

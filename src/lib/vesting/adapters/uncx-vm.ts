@@ -117,7 +117,7 @@ async function fetchForChain(
 
     // Fetch all chunks in parallel batches of 10 (fast but rate-limit friendly)
     const BATCH = 10;
-    const rawLogs: { topics: readonly (Hex | null | undefined)[] }[] = [];
+    const rawLogs: { topics: readonly (Hex | null | undefined)[]; transactionHash?: Hex }[] = [];
     for (let i = 0; i < chunks.length; i += BATCH) {
       const batch = chunks.slice(i, i + BATCH);
       const results = await Promise.allSettled(
@@ -152,11 +152,14 @@ async function fetchForChain(
     if (allLogs.length === 0) return streams;
 
     // topic[1] = vestingId, topic[2] = beneficiary (both indexed, padded to 32 bytes)
-    type LogEntry = { vestingId: bigint; recipient: string };
+    // 2026-05-14: carry transactionHash through so the cache row links
+    // back to the originating creation tx (same plumbing as the indexer).
+    type LogEntry = { vestingId: bigint; recipient: string; lockTxHash: string | null };
     const entries: LogEntry[] = allLogs.map((log) => ({
       vestingId: BigInt(log.topics[1] as Hex),
       // strip 12-byte padding → lowercase address
       recipient: `0x${(log.topics[2] as Hex).slice(26)}`,
+      lockTxHash: log.transactionHash ?? null,
     }));
 
     // Batch-read all vesting schedules via multicall
@@ -227,6 +230,7 @@ async function fetchForChain(
         shape:           "steps",
         unlockSteps,
         cancelable:      schedule.isSoft,
+        lockTxHash:      entries[i].lockTxHash,
       });
     }
   } catch (err) {

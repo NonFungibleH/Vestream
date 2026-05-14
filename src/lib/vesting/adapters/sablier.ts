@@ -45,6 +45,13 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
 // clarity. Asset.decimals and all timestamps come back as strings
 // (Hasura's default for numeric), so every consumer coerces with Number().
 
+// 2026-05-14: added `creationActions` sub-query — same `actions`
+// relation filtered on the "Create" category. Sablier streams don't
+// expose a top-level `transactionHash` on the LockupStream entity,
+// but each stream has an associated Action of category=Create whose
+// `hash` field is the originating tx. `limit: 1 order_by: timestamp asc`
+// picks the earliest such action (the actual creation, not any later
+// renounce/extend). Falls back gracefully when the field is null.
 const STREAMS_QUERY = /* GraphQL */ `
   query GetStreams($recipients: [String!]!, $chainId: numeric!) {
     LockupStream(
@@ -81,6 +88,13 @@ const STREAMS_QUERY = /* GraphQL */ `
         amountB
         timestamp
       }
+      creationActions: actions(
+        where: { category: { _eq: "Create" } }
+        limit: 1
+        order_by: { timestamp: asc }
+      ) {
+        hash
+      }
     }
   }
 `;
@@ -101,7 +115,12 @@ interface RawLockupStream {
   category:        string | null;     // "LockupLinear" | "LockupTranched" | "LockupDynamic"
   tranches:        Array<{ amount: string; endTime: string }> | null;
   // LockupAction is polymorphic — Withdraw actions keep the amount in `amountB`.
-  actions?:        Array<{ amountB: string | null; timestamp: string }> | null;
+  actions?:         Array<{ amountB: string | null; timestamp: string }> | null;
+  // Create action (filtered to category=Create above) — single-element
+  // array carrying the originating tx hash. Empty when the upstream
+  // index didn't track the create event (very old streams from before
+  // Envio added the field).
+  creationActions?: Array<{ hash: string | null }> | null;
 }
 
 // ─── Fetch ─────────────────────────────────────────────────────────────────────
@@ -202,6 +221,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
             .filter((a) => a.amountB != null)
             .map((a) => ({ timestamp: Number(a.timestamp), amount: a.amountB! }))
         : undefined,
+      lockTxHash:      raw.creationActions?.[0]?.hash ?? null,
     };
   });
 }

@@ -82,6 +82,12 @@ export interface TokenUpcomingEvent {
   recipient:          string;
   timestamp:          number;     // unix seconds
   tokensWhole:        number;     // amount unlocking at this event
+  /** Originating on-chain tx hash for the stream this event belongs to.
+   *  Null when the adapter couldn't surface it (PinkSale, Solana
+   *  adapters). Surfaced as a tap-to-explorer link next to each event.
+   *  Added 2026-05-14 for the public-transparency push. */
+  lockTxHash?:        string | null;
+  chainId?:           number;     // duplicated from query context so consumers can build explorer URLs without re-passing chainId
 }
 
 // ─── Internal: fetch all active streams for a token ─────────────────────────
@@ -469,6 +475,8 @@ export async function getTokenUpcomingEvents(
         recipient:   r.recipient.toLowerCase(),
         timestamp:   ev.timestamp,
         tokensWhole: ev.tokensWhole,
+        lockTxHash:  (sd.lockTxHash as string | null | undefined) ?? null,
+        chainId,
       });
     }
   }

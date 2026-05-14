@@ -118,7 +118,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
         topics:    [TRANSFER_TOPIC],
         fromBlock,
         toBlock,
-      }) as { topics: readonly (Hex | null | undefined)[] }[];
+      }) as { topics: readonly (Hex | null | undefined)[]; transactionHash?: Hex }[];
 
       // ERC721 Transfer has all three params indexed → topic[3] is tokenId.
       const valid = logs.filter(
@@ -129,9 +129,28 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       );
       if (valid.length === 0) return { eventCount: 0 };
 
-      // De-dupe — a plan may be transferred multiple times within one window.
-      // We only need to materialise the FINAL state, which is the latest
-      // ownerOf + plans() reading. Set keyed on tokenId.
+      // De-dupe by tokenId — a plan may be transferred multiple times
+      // within one window. For each unique tokenId track the MINT-event
+      // tx hash specifically (topic[1] zero-address from). That's the
+      // tx the user wants to see ("when was this plan created?") rather
+      // than any subsequent owner-transfer tx. Falls back to the first
+      // Transfer we saw if no mint landed in this window (the plan
+      // existed before the indexer's genesis block — common during the
+      // initial backfill).
+      const ZERO_TOPIC = "0x0000000000000000000000000000000000000000000000000000000000000000";
+      const mintTxByTokenId    = new Map<string, Hex>();
+      const fallbackTxByTokenId = new Map<string, Hex>();
+      for (const log of valid) {
+        const tokenIdKey = BigInt(log.topics[3] as Hex).toString();
+        if (!log.transactionHash) continue;
+        if (log.topics[1] === ZERO_TOPIC && !mintTxByTokenId.has(tokenIdKey)) {
+          mintTxByTokenId.set(tokenIdKey, log.transactionHash);
+        }
+        if (!fallbackTxByTokenId.has(tokenIdKey)) {
+          fallbackTxByTokenId.set(tokenIdKey, log.transactionHash);
+        }
+      }
+
       const tokenIds = [
         ...new Set(valid.map((log) => BigInt(log.topics[3] as Hex).toString())),
       ].map(BigInt);
@@ -215,8 +234,11 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           else                                 nextUnlock = endTime;
         }
 
+        const tokenIdKey = tokenIds[i].toString();
+        const lockTxHash = mintTxByTokenId.get(tokenIdKey) ?? fallbackTxByTokenId.get(tokenIdKey) ?? null;
+
         streams.push({
-          id:              `hedgey-${chainId}-${tokenIds[i].toString()}`,
+          id:              `hedgey-${chainId}-${tokenIdKey}`,
           protocol:        "hedgey",
           category:        "vesting",
           chainId,
@@ -234,6 +256,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           isFullyVested,
           nextUnlockTime:  nextUnlock,
           cancelable:      plan.vestingAdmin.toLowerCase() !== ZERO_ADDRESS,
+          lockTxHash,
         });
       }
 

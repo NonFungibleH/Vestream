@@ -199,6 +199,16 @@ export interface VestingStream {
   unlockSteps?: { timestamp: number; amount: string }[];
   /** Individual withdrawal/claim events — populated when the adapter can fetch them. */
   claimEvents?: { timestamp: number; amount: string }[];
+  /** Originating on-chain transaction hash (the tx that minted/created
+   *  this vesting). EVM: 0x-prefixed 32-byte hash. Solana: base58
+   *  signature (different shape but same semantic role). Null when the
+   *  adapter can't surface it cheaply — PinkSale relies on contract
+   *  enumeration with no per-stream tx context, and Solana program
+   *  accounts don't include the originating signature in their data.
+   *  Tap-to-open routes through the chain's block explorer. Added
+   *  2026-05-14 for the retail-transparency push: a verifiable on-chain
+   *  link from each vesting back to its creation event. */
+  lockTxHash?: string | null;
 }
 
 // ── Shared math helpers ─────────────────────────────────────────────────────

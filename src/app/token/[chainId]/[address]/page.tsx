@@ -64,6 +64,21 @@ const CHAIN_NAMES: Record<number, string> = {
   10: "Optimism",
 };
 
+// Per-chain block-explorer hosts for the public token page. Same convention
+// as the dashboard's BLOCK_EXPLORERS — duplicated here because the public
+// page is a Server Component that doesn't import the dashboard module.
+// 2026-05-14: shipped alongside lockTxHash plumbing so the upcoming-events
+// list can link each event to its originating creation tx.
+const BLOCK_EXPLORERS_PUBLIC: Record<number, string> = {
+  1:     "https://etherscan.io",
+  56:    "https://bscscan.com",
+  137:   "https://polygonscan.com",
+  8453:  "https://basescan.org",
+  42161: "https://arbiscan.io",
+  10:    "https://optimistic.etherscan.io",
+  101:   "https://solscan.io",
+};
+
 function truncate(a: string, n = 4): string {
   return a.length < 10 ? a : `${a.slice(0, 6)}…${a.slice(-n)}`;
 }
@@ -1236,8 +1251,25 @@ function UpcomingEvents({
                   {fmtTokens(e.tokensWhole)} {symbol}
                   {usd && <span className="ml-1.5 text-xs font-normal" style={{ color: "#8B8E92" }}>({fmtUsd(usd)})</span>}
                 </div>
-                <div className="text-[10.5px] mt-0.5 font-mono" style={{ color: "#B8BABD" }}>
-                  {protocolName(e.protocol)} · {truncate(e.recipient)}
+                <div className="text-[10.5px] mt-0.5 font-mono flex items-center gap-1.5" style={{ color: "#B8BABD" }}>
+                  <span>{protocolName(e.protocol)} · {truncate(e.recipient)}</span>
+                  {/* 2026-05-14: per-event "tx ↗" pill. Links straight to the
+                      originating lock transaction on the chain's block
+                      explorer — the on-chain anchor a retail buyer can
+                      verify themselves. Hidden when adapter didn't expose
+                      the hash (PinkSale + Solana adapters currently). */}
+                  {e.lockTxHash && e.chainId && (
+                    <a
+                      href={`${BLOCK_EXPLORERS_PUBLIC[e.chainId] ?? "https://etherscan.io"}/tx/${e.lockTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      title={`View lock transaction · ${e.lockTxHash.slice(0, 10)}…`}
+                      className="inline-flex items-center px-1 rounded text-[9px] font-bold tracking-wider hover:opacity-80 transition-opacity"
+                      style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 16 }}
+                    >
+                      TX ↗
+                    </a>
+                  )}
                 </div>
               </div>
               <div
