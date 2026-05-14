@@ -53,44 +53,75 @@ const SOLANA_CONCURRENCY = 4;
 const SOLANA_BATCH_DELAY_MS = 100;
 
 // ─── Jupiter token list (symbol fallback) ───────────────────────────────────
+//
+// 2026-05-14: Migrated from the deprecated `https://token.jup.ag/all` (host
+// no longer resolves — `ENOTFOUND token.jup.ag` in production logs) to
+// Jupiter's Tokens API V2 search endpoint via the no-API-key `lite-api`
+// host. The V2 API doesn't expose a single "all tokens" dump without an
+// API key, so we batch-lookup the exact mints we need (comma-separated
+// `query` param accepts multiple mints per call). 50 mints per request
+// keeps URL length well under the typical 2KB limit.
+//
+// Per-mint cache survives across calls in the same Vercel instance, with
+// a 30-minute TTL — symbols rarely change so this is generous.
 
-const JUPITER_TOKEN_LIST_URL = "https://token.jup.ag/all";
+const JUPITER_SEARCH_URL = "https://lite-api.jup.ag/tokens/v2/search";
 const JUPITER_TTL_MS = 30 * 60 * 1000;
+const JUPITER_BATCH_SIZE = 50;
 
-interface JupiterTokenEntry {
-  address:  string;
+interface JupiterTokenV2 {
+  id:       string;  // mint address
   symbol:   string;
   decimals: number;
 }
 
-let jupiterCache: Map<string, { symbol: string; decimals: number }> | null = null;
-let jupiterCacheFetchedAt = 0;
+type JupiterCacheEntry = { symbol: string; decimals: number; fetchedAt: number };
+const jupiterCache = new Map<string, JupiterCacheEntry>();
 
-async function getJupiterTokenList(): Promise<Map<string, { symbol: string; decimals: number }>> {
-  const now = Date.now();
-  if (jupiterCache && now - jupiterCacheFetchedAt < JUPITER_TTL_MS) {
-    return jupiterCache;
-  }
-  try {
-    const res = await fetch(JUPITER_TOKEN_LIST_URL, {
-      next: { revalidate: 1800 },
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return jupiterCache ?? new Map();
-    const tokens = (await res.json()) as JupiterTokenEntry[];
-    const map = new Map<string, { symbol: string; decimals: number }>();
-    for (const t of tokens) {
-      if (t.address && t.symbol) {
-        map.set(t.address, { symbol: t.symbol, decimals: t.decimals });
-      }
+async function lookupJupiterTokens(
+  mints: string[],
+): Promise<Map<string, { symbol: string; decimals: number }>> {
+  const now    = Date.now();
+  const result = new Map<string, { symbol: string; decimals: number }>();
+  const todo:    string[] = [];
+
+  // Partition into cached (fresh) vs missing/stale
+  for (const mint of mints) {
+    const hit = jupiterCache.get(mint);
+    if (hit && now - hit.fetchedAt < JUPITER_TTL_MS) {
+      result.set(mint, { symbol: hit.symbol, decimals: hit.decimals });
+    } else {
+      todo.push(mint);
     }
-    jupiterCache = map;
-    jupiterCacheFetchedAt = now;
-    return map;
-  } catch (err) {
-    console.error("[streamflow] Jupiter token list fetch failed:", err);
-    return jupiterCache ?? new Map();
   }
+
+  if (todo.length === 0) return result;
+
+  // Batch the misses — Jupiter V2 search accepts comma-separated mints in `query`.
+  for (let i = 0; i < todo.length; i += JUPITER_BATCH_SIZE) {
+    const batch = todo.slice(i, i + JUPITER_BATCH_SIZE);
+    const url   = `${JUPITER_SEARCH_URL}?query=${batch.join(",")}`;
+    try {
+      const res = await fetch(url, {
+        next: { revalidate: 1800 },
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) continue;
+      const tokens = (await res.json()) as JupiterTokenV2[];
+      for (const t of tokens) {
+        if (t.id && t.symbol) {
+          const entry = { symbol: t.symbol, decimals: t.decimals, fetchedAt: now };
+          jupiterCache.set(t.id, entry);
+          result.set(t.id, { symbol: t.symbol, decimals: t.decimals });
+        }
+      }
+    } catch (err) {
+      console.error("[streamflow] Jupiter token V2 batch lookup failed:", err);
+      // Don't abort — partial coverage beats none.
+    }
+  }
+
+  return result;
 }
 
 // ─── Stream schedule → discrete unlock steps ────────────────────────────────
@@ -219,7 +250,7 @@ async function fetchForChain(
   // try Jupiter's token list first, fall back to a 4-char mint slug.
   const uniqueMints  = [...new Set(allStreams.map(([, s]) => s.mint))];
   const connection   = new Connection(rpcUrl);
-  const jupiterList  = await getJupiterTokenList();
+  const jupiterList  = await lookupJupiterTokens(uniqueMints);
 
   const decimalsByMint = new Map<string, number>();
   const symbolsByMint  = new Map<string, string>();

@@ -65,35 +65,63 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
   return out;
 }
 
+// ── Pool expansion notes (2026-05-14) ──────────────────────────────────────
+// Free-tier pools widened so a paid-RPC-free deploy can ride out individual
+// provider outages. ORDERING MATTERS — fallback transport tries top-down.
+// Provider tier order: dRPC (most reliable + supports logs) → 1RPC →
+// chain-native official RPC → blockpi → blastapi → meowrpc → publicnode
+// (excludeForLogs) → ankr (excludeForLogs — historically log-pruned).
+//
+// eth.llamarpc.com WAS in the ETH pool but is now removed — Cloudflare
+// bot-blocking returns HTML to viem and burns the retry budget. Same with
+// any *.llamarpc.com endpoint; do NOT re-add without proof Cloudflare has
+// stopped fingerprinting node-fetch.
 const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ETHEREUM]: buildPool(process.env.ALCHEMY_RPC_URL_ETH, [
     { url: "https://eth.drpc.org" },
-    { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://1rpc.io/eth" },
-    { url: "https://eth.llamarpc.com" },
+    { url: "https://ethereum.blockpi.network/v1/rpc/public" },
+    { url: "https://eth-mainnet.public.blastapi.io" },
+    { url: "https://eth.meowrpc.com" },
+    { url: "https://eth.api.onfinality.io/public" },
+    { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
+    { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },
+    { url: "https://cloudflare-eth.com",           excludeForLogs: true },
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
-    { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
     { url: "https://1rpc.io/bnb" },
-    // Binance's official public RPC — historically unrestricted.
+    // Binance's official public RPCs — historically unrestricted.
     { url: "https://bsc-dataseed.binance.org" },
     { url: "https://bsc-dataseed1.defibit.io" },
     { url: "https://bsc-dataseed1.ninicoin.io" },
+    { url: "https://bsc.blockpi.network/v1/rpc/public" },
+    { url: "https://bsc-mainnet.public.blastapi.io" },
+    { url: "https://bsc.meowrpc.com" },
+    { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
+    { url: "https://rpc.ankr.com/bsc",             excludeForLogs: true },
   ]),
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
-    { url: "https://polygon-rpc.publicnode.com",   excludeForLogs: true },
     { url: "https://1rpc.io/matic" },
-    { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://polygon-rpc.com" },
+    { url: "https://polygon.blockpi.network/v1/rpc/public" },
+    { url: "https://polygon-mainnet.public.blastapi.io" },
+    { url: "https://polygon.meowrpc.com" },
+    { url: "https://polygon-rpc.publicnode.com",     excludeForLogs: true },
+    { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/polygon",           excludeForLogs: true },
   ]),
   [CHAIN_IDS.BASE]: buildPool(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL, [
     { url: "https://base.drpc.org" },
-    { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
     { url: "https://1rpc.io/base" },
-    { url: "https://base.meowrpc.com" },
     { url: "https://mainnet.base.org" },
+    { url: "https://base.blockpi.network/v1/rpc/public" },
+    { url: "https://base-mainnet.public.blastapi.io" },
+    { url: "https://base.meowrpc.com" },
+    { url: "https://base.api.onfinality.io/public" },
+    { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
+    { url: "https://rpc.ankr.com/base",            excludeForLogs: true },
   ]),
   // Arbitrum One. Free pool drawn from the same provider universe as our
   // other EVM chains. publicnode is `excludeForLogs: true` because they
@@ -103,18 +131,26 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   // log-safe fallbacks.
   [CHAIN_IDS.ARBITRUM]: buildPool(process.env.ARBITRUM_RPC_URL, [
     { url: "https://arbitrum.drpc.org" },
-    { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
+    { url: "https://arbitrum.blockpi.network/v1/rpc/public" },
+    { url: "https://arbitrum-one.public.blastapi.io" },
+    { url: "https://arbitrum.meowrpc.com" },
+    { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/arbitrum",           excludeForLogs: true },
   ]),
   // OP Mainnet (Optimism). Same provider universe as Arbitrum: dRPC + 1RPC
   // free tiers, publicnode (logs-pruned), Optimism's own public RPC as
   // the log-safe fallback.
   [CHAIN_IDS.OPTIMISM]: buildPool(process.env.OPTIMISM_RPC_URL, [
     { url: "https://optimism.drpc.org" },
-    { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://1rpc.io/op" },
     { url: "https://mainnet.optimism.io" },
+    { url: "https://optimism.blockpi.network/v1/rpc/public" },
+    { url: "https://optimism-mainnet.public.blastapi.io" },
+    { url: "https://optimism.meowrpc.com" },
+    { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/optimism",       excludeForLogs: true },
   ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
@@ -137,6 +173,87 @@ const POOL: Record<SupportedChainId, Provider[]> = {
 // lifetime of a single lambda invocation (which is exactly the scope we
 // want — round-robin within one seed run, but no cross-request memory).
 const counters = new Map<SupportedChainId, number>();
+
+// ─── Per-URL health tracker (Phase 2 — in-memory quarantine) ─────────────────
+//
+// The fallback transport already retries down the URL list on any single
+// failure, but it RETRIES the bad URL every call until you restart the
+// lambda. On a sustained provider outage we burn the retry budget on a
+// dead endpoint over and over. The health tracker fixes that:
+//
+//   - count consecutive failures per URL
+//   - after N in a row, quarantine for Q minutes (skip the URL entirely)
+//   - any successful request clears the failure count
+//
+// Quarantine state lives in-memory — same lifetime as a single lambda. We
+// DON'T persist it because (a) it's only useful within a single run and
+// (b) cross-lambda sync would need Redis, which is overkill for a
+// best-effort optimisation. Worst case after a cold start: one wasted call
+// against a dead provider before quarantine kicks in. Vastly better than
+// wasting one call per fetch for the rest of the invocation.
+
+interface HealthState {
+  consecutiveFailures: number;
+  quarantinedUntil:    number; // ms epoch
+}
+
+const QUARANTINE_FAIL_THRESHOLD = 3;
+const QUARANTINE_MS             = 60_000; // 1 minute — short enough that a recovering provider rejoins fast
+const health = new Map<string, HealthState>();
+
+function recordSuccess(url: string): void {
+  // Clear all state on success — single success is enough to rehabilitate.
+  health.delete(url);
+}
+
+function recordFailure(url: string): void {
+  const s = health.get(url) ?? { consecutiveFailures: 0, quarantinedUntil: 0 };
+  s.consecutiveFailures += 1;
+  if (s.consecutiveFailures >= QUARANTINE_FAIL_THRESHOLD) {
+    s.quarantinedUntil    = Date.now() + QUARANTINE_MS;
+    s.consecutiveFailures = 0;
+  }
+  health.set(url, s);
+}
+
+function isHealthy(url: string): boolean {
+  const s = health.get(url);
+  if (!s) return true;
+  return s.quarantinedUntil <= Date.now();
+}
+
+/**
+ * Wraps the global `fetch` so every request through this transport feeds
+ * the health tracker. Counts non-2xx + thrown errors as failures.
+ */
+function makeTrackingFetch(url: string): typeof fetch {
+  return async (input, init) => {
+    try {
+      const res = await fetch(input, init);
+      if (res.ok) recordSuccess(url);
+      else        recordFailure(url);
+      return res;
+    } catch (err) {
+      recordFailure(url);
+      throw err;
+    }
+  };
+}
+
+/**
+ * Diagnostic snapshot — list every URL currently quarantined and its
+ * remaining quarantine window. Wire to /api/admin/rpc-health if useful.
+ */
+export function getRpcHealthSnapshot(): Array<{ url: string; quarantinedFor: number }> {
+  const now = Date.now();
+  const out: Array<{ url: string; quarantinedFor: number }> = [];
+  for (const [url, state] of health) {
+    if (state.quarantinedUntil > now) {
+      out.push({ url, quarantinedFor: state.quarantinedUntil - now });
+    }
+  }
+  return out;
+}
 
 /**
  * Returns the next RPC URL in rotation for the given chain.
@@ -246,11 +363,19 @@ export function makeFallbackClient(
   const chain = VIEM_CHAINS[chainId];
   if (!chain) return undefined;
 
-  const urls = getAllRpcUrls(chainId, { forLogs: opts.forLogs });
-  if (urls.length === 0) return undefined;
+  const allUrls = getAllRpcUrls(chainId, { forLogs: opts.forLogs });
+  if (allUrls.length === 0) return undefined;
+
+  // Prefer healthy URLs; fall back to the full list if every URL is
+  // quarantined (better to retry a dead provider than refuse to try).
+  const healthyUrls = allUrls.filter(isHealthy);
+  const urls        = healthyUrls.length > 0 ? healthyUrls : allUrls;
 
   const transports = urls.map((url) =>
-    http(url, { batch: opts.batch ?? true }),
+    http(url, {
+      batch:   opts.batch ?? true,
+      fetchFn: makeTrackingFetch(url),
+    }),
   );
 
   return createPublicClient({

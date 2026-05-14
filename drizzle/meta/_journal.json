@@ -169,6 +169,13 @@
       "when": 1778900000000,
       "tag": "0023_push_alerts_monthly_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0024_indexer_state",
+      "breakpoints": true
     }
   ]
 }

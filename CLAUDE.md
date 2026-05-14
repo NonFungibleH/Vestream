@@ -614,6 +614,45 @@ curl -s -H "Authorization: Bearer $CRON_SECRET" \
 jq -r '.nowMs as $now | .cells[] | ((($now/1000) - .freshestSec) / 60 | floor) as $m | "\(.protocol)  chain \(.chainId)  streams=\(.streams)  fresh=\($m)m ago"' | sort
 ```
 
+### Event-driven indexer (May 2026 onwards)
+
+The seed-cache cron above re-walks every recipient every day. For free-tier RPCs that's the dominant rate-limit consumer and it can't catch new plans between runs. The event-driven indexer (commits `4e3e6e2 → 8aca56f` on `feature/event-driven-indexer`) is the replacement: each protocol gets a `*/5 * * * *` cron that scans a bounded block window of logs and writes only the new/changed streams.
+
+**Migrated protocols** (no longer rely on seed-cache for discovery):
+- **UNCX-VM** — ETH / Base / BSC. Watches `VestingCreated` events; 5000-block window.
+- **Hedgey** — ETH / BSC / Polygon / Base / Arbitrum / Optimism. Watches ERC721 `Transfer` events; 2000-block window. Covers both mints (new plans) and transfers (ownership changes).
+
+The seed-cache job still discovers + fetches everything else (Sablier, UNCX V3, Unvest, Superfluid, PinkSale, Streamflow, Jupiter Lock). Migrated protocols are kept in `SEED_JOBS` in parallel during the cutover so cache backfill is preserved — once a protocol's indexer-managed rows are verified equivalent for 7+ days, the corresponding entry can be removed from `seeder.ts:SEED_JOBS` and its discovery helper deleted.
+
+**Adding a new indexer:**
+1. Implement the `Indexer` interface in `src/lib/vesting/indexer/<protocol>.ts` (see `uncx-vm.ts` for the reference shape — `genesisBlock`, `maxBlocksPerScan`, `reorgLag`, `scanWindow(client, from, to)`).
+2. Register it in `src/lib/vesting/indexer/index.ts` (`INDEXERS` array).
+3. Add a `vercel.json` cron entry per chain: `/api/cron/indexer?protocol=X&chainId=Y` on `*/5 * * * *`.
+4. No route changes — the cron route is generic and dispatches via `findIndexer()`.
+
+**State persistence:** the `indexer_state` table tracks `lastScannedBlock` / `lastConfirmedBlock` per `(protocol, chainId)`. Each tick resumes from `lastConfirmedBlock + 1`. A 12-block reorg lag re-scans the trailing window; `writeToCache`'s `setWhere` clause makes the upserts idempotent.
+
+```bash
+# Manual single-tick (forces an immediate scan for one protocol/chain)
+curl -X POST "https://www.vestream.io/api/cron/indexer?protocol=uncx-vm&chainId=1" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Indexer health — per-(protocol, chainId) lastRunAt + lastError + RPC quarantine snapshot
+curl -s -H "Authorization: Bearer $CRON_SECRET" \
+  "https://www.vestream.io/api/admin/indexer-status" | jq
+
+# One-line freshness scan
+curl -s -H "Authorization: Bearer $CRON_SECRET" \
+  "https://www.vestream.io/api/admin/indexer-status" | \
+jq -r '.indexers[] | "\(.protocol)/\(.chainId) lastRun=\(.minutesSinceLastRun // "never")m  events=\(.lastEventCount // 0)  err=\(.lastError // "ok")"'
+
+# Force a cold restart for ONE indexer (deletes its state row → next tick starts from genesisBlock)
+# Use sparingly — backfills the full window again.
+psql "$DATABASE_URL" -c "DELETE FROM indexer_state WHERE protocol='uncx-vm' AND chain_id=1;"
+```
+
+**RPC pool health:** the indexer runs on the shared multi-RPC pool with per-URL quarantine. 3 consecutive failures → 60s skip. `getRpcHealthSnapshot()` is surfaced via `/api/admin/indexer-status` so a single endpoint covers both indexer staleness AND provider quarantine state.
+
 ### Headline-confidence rules (defends against dust pricing)
 
 The `tvlUsd` column in `protocolTvlSnapshots` is the **headline** TVL the
