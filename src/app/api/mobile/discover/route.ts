@@ -24,10 +24,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+import { desc, eq, gt, sql } from "drizzle-orm";
 import { extractBearerToken, validateMobileToken } from "@/lib/mobile-auth";
 import { db } from "@/lib/db";
-import { vestingStreamsCache } from "@/lib/db/schema";
+import { vestingStreamsCache, protocolSummaries } from "@/lib/db/schema";
 import {
   getUpcomingUnlockGroupsAcross,
   chainLabel,
@@ -159,61 +160,82 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function loadDiscoverStats(events: DiscoverEvent[]): Promise<DiscoverStats> {
-  // Cross-protocol stats live under different queries. Promise.allSettled
-  // so any individual hiccup leaves the rest of the page intact.
-  const settled = await Promise.allSettled([
-    // Newly indexed in last 24h — firstSeenAt only counts true creation,
-    // matching the same convention used by getProtocolFunStats.
-    db
-      .select({ count: sql<number>`count(*)::int`.as("count") })
-      .from(vestingStreamsCache)
-      .where(gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`)),
+// 2026-05-14 hotfix: cross-protocol aggregate stats are wrapped in
+// unstable_cache(5min). The original implementation did three separate
+// COUNT/GROUP BY queries against the 130K-row vesting_streams_cache on
+// EVERY request — `count(distinct token_address)` alone scan-scanned
+// the full table and pushed the mobile request past its 45s timeout.
+// The cache key has no parameters because these stats are global;
+// every user gets the same numbers.
+//
+// We also dropped the `distinctTokens` query entirely and derive it
+// from the protocol_summaries rollup table (≤10 rows). The remaining
+// scalar counts are cheap enough that one slow lambda per 5min is
+// acceptable.
+const loadCachedDiscoverStats = unstable_cache(
+  async (): Promise<{
+    newStreamsLast24h:  number;
+    totalActiveStreams: number;
+    distinctTokens:     number;
+    mostActiveProtocol: { protocol: string; count: number } | null;
+  }> => {
+    const settled = await Promise.allSettled([
+      // Newly indexed in last 24h — firstSeenAt only counts true creation,
+      // matching the same convention used by getProtocolFunStats.
+      // (vesting_streams_cache.first_seen_at has no dedicated index, but
+      // this is a one-pass scan that completes in ~500ms even at 130K
+      // rows; acceptable now that it's cache-amortised.)
+      db
+        .select({ count: sql<number>`count(*)::int`.as("count") })
+        .from(vestingStreamsCache)
+        .where(gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`)),
 
-    // Total active streams (not fully vested). One row.
-    db
-      .select({ count: sql<number>`count(*)::int`.as("count") })
-      .from(vestingStreamsCache)
-      .where(eq(vestingStreamsCache.isFullyVested, false)),
+      // Protocol summaries — pre-aggregated rollup table (≤10 rows).
+      // SUM activeStreams + tokensTracked across rows. UNCX-VM rolls into
+      // UNCX so total counts are approximate (small overlap) but the
+      // numbers shown on Discover are decorative, not financial.
+      db
+        .select({
+          protocol:      protocolSummaries.protocol,
+          activeStreams: protocolSummaries.activeStreams,
+          tokensTracked: protocolSummaries.tokensTracked,
+        })
+        .from(protocolSummaries),
+    ]);
 
-    // Distinct tokens being tracked overall.
-    db
-      .select({ count: sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`.as("count") })
-      .from(vestingStreamsCache)
-      .where(eq(vestingStreamsCache.isFullyVested, false)),
+    const newStreamsLast24h =
+      settled[0].status === "fulfilled" && settled[0].value.length > 0
+        ? Number(settled[0].value[0].count ?? 0)
+        : 0;
 
-    // Most-active protocol — highest active-stream count.
-    db
-      .select({
-        protocol: vestingStreamsCache.protocol,
-        count:    sql<number>`count(*)::int`.as("count"),
-      })
-      .from(vestingStreamsCache)
-      .where(eq(vestingStreamsCache.isFullyVested, false))
-      .groupBy(vestingStreamsCache.protocol)
-      .orderBy(desc(sql`count(*)`))
-      .limit(1),
-  ]);
-
-  const newStreamsLast24h =
-    settled[0].status === "fulfilled" && settled[0].value.length > 0
-      ? Number(settled[0].value[0].count ?? 0)
-      : 0;
-  const totalActiveStreams =
-    settled[1].status === "fulfilled" && settled[1].value.length > 0
-      ? Number(settled[1].value[0].count ?? 0)
-      : 0;
-  const distinctTokens =
-    settled[2].status === "fulfilled" && settled[2].value.length > 0
-      ? Number(settled[2].value[0].count ?? 0)
-      : 0;
-  const mostActiveProtocol =
-    settled[3].status === "fulfilled" && settled[3].value.length > 0
-      ? {
-          protocol: settled[3].value[0].protocol ?? "—",
-          count:    Number(settled[3].value[0].count ?? 0),
+    let totalActiveStreams = 0;
+    let distinctTokens = 0;
+    let mostActiveProtocol: { protocol: string; count: number } | null = null;
+    if (settled[1].status === "fulfilled") {
+      for (const r of settled[1].value) {
+        totalActiveStreams += Number(r.activeStreams ?? 0);
+        distinctTokens     += Number(r.tokensTracked ?? 0);
+        if (
+          !mostActiveProtocol ||
+          Number(r.activeStreams ?? 0) > mostActiveProtocol.count
+        ) {
+          mostActiveProtocol = {
+            protocol: r.protocol,
+            count:    Number(r.activeStreams ?? 0),
+          };
         }
-      : null;
+      }
+    }
+
+    return { newStreamsLast24h, totalActiveStreams, distinctTokens, mostActiveProtocol };
+  },
+  ["discover-stats-v1"],
+  { revalidate: 300, tags: ["discover-page"] },
+);
+
+async function loadDiscoverStats(events: DiscoverEvent[]): Promise<DiscoverStats> {
+  const { newStreamsLast24h, totalActiveStreams, distinctTokens, mostActiveProtocol } =
+    await loadCachedDiscoverStats();
 
   // Biggest USD in next 7 days derived from the events list we already
   // priced — saves an additional pricing roundtrip.
