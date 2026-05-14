@@ -1,6 +1,6 @@
-import { createPublicClient, http, erc20Abi, type Hex } from "viem";
-import { mainnet, bsc, base } from "viem/chains";
+import { erc20Abi, type Hex } from "viem";
 import { VestingAdapter } from "./index";
+import { makeFallbackClient } from "../rpc";
 import {
   VestingStream,
   SupportedChainId,
@@ -10,30 +10,30 @@ import {
 } from "../types";
 
 // ─── Per-chain contract config ─────────────────────────────────────────────────
-// UNCX VestingManager — each chain has its own contract deployment
+// UNCX VestingManager — each chain has its own contract deployment.
+//
+// 2026-05-14: RPC URL resolution moved to the shared multi-RPC pool
+// (src/lib/vesting/rpc.ts). Previously this file hardcoded per-chain env-var
+// reads (ALCHEMY_RPC_URL_ETH, BSC_RPC_URL, ALCHEMY_RPC_URL_BASE) which were
+// NEVER SET — silently returning empty results for BSC/Base, and slamming
+// Alchemy free-tier's 10-block eth_getLogs cap on ETH. The shared pool gives
+// us proper fallback-over-all-providers via viem's fallback transport, so a
+// single provider 401/429/timeout no longer kills the whole chunk scan.
 const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
   contractAddress: `0x${string}`;
   fromBlock:       bigint;
-  chain:           typeof mainnet | typeof bsc | typeof base;
-  getRpcUrl:       () => string | undefined;
 }>> = {
   [CHAIN_IDS.ETHEREUM]: {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n, // deployed 2025-08-15
-    chain:           mainnet,
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH,
   },
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     fromBlock:       43_187_425n,
-    chain:           base,
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL,
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     fromBlock:       85_818_300n,
-    chain:           bsc,
-    getRpcUrl:       () => process.env.BSC_RPC_URL,
   },
 };
 
@@ -87,11 +87,14 @@ async function fetchForChain(
   const config = CHAIN_CONFIG[chainId];
   if (!config) return [];
 
-  const rpcUrl = config.getRpcUrl();
-  if (!rpcUrl) return [];
+  // Use the shared pool's fallback client: viem's fallback transport will
+  // try each RPC in order, moving to the next on any failure (429, 401,
+  // 404, timeout). `forLogs: true` skips publicnode (logs-pruned). Much
+  // more resilient than picking ONE URL via round-robin and praying.
+  const client = makeFallbackClient(chainId, { forLogs: true });
+  if (!client) return [];
 
-  const { contractAddress, fromBlock, chain } = config;
-  const client  = createPublicClient({ chain, transport: http(rpcUrl) });
+  const { contractAddress, fromBlock } = config;
   const nowSec  = Math.floor(Date.now() / 1000);
   const streams: VestingStream[] = [];
   const tokenCache = new Map<string, { symbol: string; decimals: number }>();

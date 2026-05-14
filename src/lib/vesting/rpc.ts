@@ -65,35 +65,63 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
   return out;
 }
 
+// ── Pool expansion notes (2026-05-14) ──────────────────────────────────────
+// Free-tier pools widened so a paid-RPC-free deploy can ride out individual
+// provider outages. ORDERING MATTERS — fallback transport tries top-down.
+// Provider tier order: dRPC (most reliable + supports logs) → 1RPC →
+// chain-native official RPC → blockpi → blastapi → meowrpc → publicnode
+// (excludeForLogs) → ankr (excludeForLogs — historically log-pruned).
+//
+// eth.llamarpc.com WAS in the ETH pool but is now removed — Cloudflare
+// bot-blocking returns HTML to viem and burns the retry budget. Same with
+// any *.llamarpc.com endpoint; do NOT re-add without proof Cloudflare has
+// stopped fingerprinting node-fetch.
 const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ETHEREUM]: buildPool(process.env.ALCHEMY_RPC_URL_ETH, [
     { url: "https://eth.drpc.org" },
-    { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://1rpc.io/eth" },
-    { url: "https://eth.llamarpc.com" },
+    { url: "https://ethereum.blockpi.network/v1/rpc/public" },
+    { url: "https://eth-mainnet.public.blastapi.io" },
+    { url: "https://eth.meowrpc.com" },
+    { url: "https://eth.api.onfinality.io/public" },
+    { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
+    { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },
+    { url: "https://cloudflare-eth.com",           excludeForLogs: true },
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
-    { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
     { url: "https://1rpc.io/bnb" },
-    // Binance's official public RPC — historically unrestricted.
+    // Binance's official public RPCs — historically unrestricted.
     { url: "https://bsc-dataseed.binance.org" },
     { url: "https://bsc-dataseed1.defibit.io" },
     { url: "https://bsc-dataseed1.ninicoin.io" },
+    { url: "https://bsc.blockpi.network/v1/rpc/public" },
+    { url: "https://bsc-mainnet.public.blastapi.io" },
+    { url: "https://bsc.meowrpc.com" },
+    { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
+    { url: "https://rpc.ankr.com/bsc",             excludeForLogs: true },
   ]),
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
-    { url: "https://polygon-rpc.publicnode.com",   excludeForLogs: true },
     { url: "https://1rpc.io/matic" },
-    { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://polygon-rpc.com" },
+    { url: "https://polygon.blockpi.network/v1/rpc/public" },
+    { url: "https://polygon-mainnet.public.blastapi.io" },
+    { url: "https://polygon.meowrpc.com" },
+    { url: "https://polygon-rpc.publicnode.com",     excludeForLogs: true },
+    { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/polygon",           excludeForLogs: true },
   ]),
   [CHAIN_IDS.BASE]: buildPool(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL, [
     { url: "https://base.drpc.org" },
-    { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
     { url: "https://1rpc.io/base" },
-    { url: "https://base.meowrpc.com" },
     { url: "https://mainnet.base.org" },
+    { url: "https://base.blockpi.network/v1/rpc/public" },
+    { url: "https://base-mainnet.public.blastapi.io" },
+    { url: "https://base.meowrpc.com" },
+    { url: "https://base.api.onfinality.io/public" },
+    { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
+    { url: "https://rpc.ankr.com/base",            excludeForLogs: true },
   ]),
   // Arbitrum One. Free pool drawn from the same provider universe as our
   // other EVM chains. publicnode is `excludeForLogs: true` because they
@@ -103,18 +131,26 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   // log-safe fallbacks.
   [CHAIN_IDS.ARBITRUM]: buildPool(process.env.ARBITRUM_RPC_URL, [
     { url: "https://arbitrum.drpc.org" },
-    { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
+    { url: "https://arbitrum.blockpi.network/v1/rpc/public" },
+    { url: "https://arbitrum-one.public.blastapi.io" },
+    { url: "https://arbitrum.meowrpc.com" },
+    { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/arbitrum",           excludeForLogs: true },
   ]),
   // OP Mainnet (Optimism). Same provider universe as Arbitrum: dRPC + 1RPC
   // free tiers, publicnode (logs-pruned), Optimism's own public RPC as
   // the log-safe fallback.
   [CHAIN_IDS.OPTIMISM]: buildPool(process.env.OPTIMISM_RPC_URL, [
     { url: "https://optimism.drpc.org" },
-    { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://1rpc.io/op" },
     { url: "https://mainnet.optimism.io" },
+    { url: "https://optimism.blockpi.network/v1/rpc/public" },
+    { url: "https://optimism-mainnet.public.blastapi.io" },
+    { url: "https://optimism.meowrpc.com" },
+    { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/optimism",       excludeForLogs: true },
   ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
