@@ -839,3 +839,55 @@ export const tokenPricesCache = pgTable(
     index("token_prices_fetched_at_idx").on(t.fetchedAt),
   ]
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event-driven indexer state (May 2026 — migration off daily polling)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Each (protocol, chainId) cron resumes its log scan from the block last
+// committed here. This is the single source of truth that lets a 5-min
+// cron walk 100-block windows in bounded time, instead of every cron
+// re-scanning from contract genesis.
+//
+// Bookkeeping fields (lastRunAt / lastError / lastEventCount) feed an
+// /api/admin/indexer-status diagnostic so we can spot stuck indexers
+// without grepping Vercel logs.
+//
+// Why both lastScannedBlock AND lastConfirmedBlock:
+//   - lastScannedBlock = highest block we've seen logs from
+//   - lastConfirmedBlock = highest block we trust isn't reorg-fragile
+//     (lastScannedBlock - REORG_LAG, typically 12 blocks)
+// The next scan starts from lastConfirmedBlock + 1, so a reorg in the
+// last 12 blocks just gets re-scanned; idempotent upserts on the cache
+// table dedupe the data.
+export const indexerState = pgTable(
+  "indexer_state",
+  {
+    /** Protocol slug — matches vestingStreamsCache.protocol (e.g. "uncx-vm"). */
+    protocol:           text("protocol").notNull(),
+    chainId:            integer("chain_id").notNull(),
+
+    /** Highest block we've scanned logs from (regardless of confirmation). */
+    lastScannedBlock:   bigint("last_scanned_block",   { mode: "number" }).notNull().default(0),
+    /** Highest block we trust isn't reorg-fragile (scanned - REORG_LAG). */
+    lastConfirmedBlock: bigint("last_confirmed_block", { mode: "number" }).notNull().default(0),
+
+    /** Wall-clock time of the last successful indexer run. */
+    lastRunAt:          timestamp("last_run_at"),
+    /** Wall-clock time of the last attempt (success OR failure). */
+    lastAttemptAt:      timestamp("last_attempt_at"),
+    /** Last error message, if the last run failed. NULL on success. */
+    lastError:          text("last_error"),
+    /** How many events the last run produced — diagnostic only. */
+    lastEventCount:     integer("last_event_count").default(0),
+
+    createdAt:          timestamp("created_at").defaultNow().notNull(),
+    updatedAt:          timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.protocol, t.chainId] }),
+    // Cheap lookup for "show me every indexer that hasn't run in N min" —
+    // powers the staleness diagnostic + future alerting.
+    index("indexer_state_last_run_idx").on(t.lastRunAt),
+  ]
+);
