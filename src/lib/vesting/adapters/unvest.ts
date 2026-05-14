@@ -73,6 +73,7 @@ const MAINNET_QUERY = `
           timestamp
           percentage
         }
+        transactionHash
       }
     }
   }
@@ -89,6 +90,12 @@ interface RawHolderBalance {
     id: string;
     underlyingToken: { id: string; symbol: string; decimals: number };
     milestones: Array<{ timestamp: string; percentage: string }>;
+    // 2026-05-14: deployment tx of the vesting token contract. Confirmed
+    // via subgraph introspection. Closest analogue to a "lock creation
+    // tx" in Unvest's data model — each holder belongs to a vesting
+    // token, and the token's deployment is the on-chain anchor a retail
+    // buyer can verify.
+    transactionHash: string;
   };
 }
 
@@ -237,6 +244,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
           : nextUnlockTime(isFullyVested, nowSec, null, endTime),
         shape:       milestones.length > 0 ? "steps" : "linear",
         unlockSteps: milestones.length > 0 ? unlockSteps : undefined,
+        lockTxHash:  raw.vestingToken?.transactionHash ?? null,
       };
     });
   }

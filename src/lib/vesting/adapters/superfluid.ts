@@ -100,6 +100,14 @@ async function fetchTokenMeta(
 
 // ─── GraphQL query ─────────────────────────────────────────────────────────────
 
+// 2026-05-14: added `events(first: 8)` so we can scan for the
+// VestingScheduleCreatedEvent and surface its transactionHash. The
+// VestingSchedule entity itself doesn't carry the originating tx
+// directly — it's available via the polymorphic `events` relation.
+// 8 is generous; most schedules have ≤3 events total (Created +
+// CliffAndFlowExecuted + EndExecuted). Filtering on __typename
+// isn't supported in `where`, so we pull the small batch and pick
+// the Created one client-side.
 const VESTING_SCHEDULES_QUERY = `
   query GetVestingSchedules($receivers: [String!]!) {
     vestingSchedules(
@@ -120,6 +128,10 @@ const VESTING_SCHEDULES_QUERY = `
       cliffAndFlowExecutedAt
       endExecutedAt
       deletedAt
+      events(first: 8) {
+        __typename
+        transactionHash
+      }
     }
   }
 `;
@@ -139,6 +151,7 @@ interface RawVestingSchedule {
   cliffAndFlowExecutedAt:  string | null;
   endExecutedAt:           string | null;
   deletedAt:               string | null;
+  events?:                 Array<{ __typename: string; transactionHash: string }>;
 }
 
 // ─── Vesting math ──────────────────────────────────────────────────────────────
@@ -233,6 +246,12 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     // cliffTime = cliffAndFlowDate when there's a non-trivial cliff amount
     const cliffTime = cliffAmount > 0n ? cliffAndFlowDate : null;
 
+    // Pull the originating tx hash from the polymorphic events array.
+    // Filtering on __typename in GraphQL isn't supported in `where`, so
+    // we fetch a small batch and pick the create event client-side.
+    const createEvent = raw.events?.find((e) => e.__typename === "VestingScheduleCreatedEvent");
+    const lockTxHash  = createEvent?.transactionHash ?? null;
+
     return {
       id:              `superfluid-${chainId}-${raw.id}`,
       protocol:        "superfluid",
@@ -256,6 +275,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
       nextUnlockTime:  nextUnlockTime(isFullyVested, nowSec, cliffTime ?? cliffAndFlowDate, endDate),
       cancelable:      true,   // Superfluid VestingScheduler supports cancellation
       shape:           "linear",
+      lockTxHash,
     };
   });
 }
