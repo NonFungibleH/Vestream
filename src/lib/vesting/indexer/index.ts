@@ -16,9 +16,11 @@
 
 import type { Indexer } from "./types";
 import { uncxVmIndexers } from "./uncx-vm";
+import { hedgeyIndexers } from "./hedgey";
 
 export const INDEXERS: Indexer[] = [
   ...uncxVmIndexers,
+  ...hedgeyIndexers,
 ];
 
 /**
@@ -31,3 +33,6 @@ export function findIndexer(protocol: string, chainId: number): Indexer | undefi
 
 export type { Indexer } from "./types";
 export { runIndexer, type RunResult } from "./runner";
+// Re-export the per-URL health snapshot so /api/admin/indexer-status can
+// surface RPC quarantine state alongside per-indexer staleness.
+export { getRpcHealthSnapshot } from "../rpc";
