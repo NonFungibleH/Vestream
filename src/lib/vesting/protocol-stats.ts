@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
@@ -555,10 +556,39 @@ export async function getNextUpcomingUnlock(
  *      collapses to one group, so the raw multiplier needs to be larger
  *      than the old 15× to keep enough material around after collapse.
  */
+// Cached entry point — every public consumer (homepage upcoming card,
+// /protocols upcoming list, /api/unlocks/upcoming, mobile Discover)
+// pulls through this. 60s revalidate is short enough that fresh
+// indexer writes show up quickly but long enough that the slow
+// SELECT (no covering index on is_fully_vested + end_time over a
+// 130K-row table) fires at most once a minute per Vercel region.
+//
+// 2026-05-14 hotfix: introduced when the protocol page + mobile
+// Discover both started timing out on cold renders. Underlying
+// `getUpcomingUnlockGroupsAcrossUncached` was previously direct-call
+// from API routes — every cold lambda did a fresh ~10-30s seq-scan
+// during the cache repopulate after I bumped the v6 protocol-page
+// cache key. Wrapping at this lower level means EVERY consumer
+// benefits, including future ones I haven't thought of yet.
+//
+// Cache key is parameterised on `limit` so the 30-row Discover pull
+// doesn't share cache slots with the 10-row protocols-page pull.
 export async function getUpcomingUnlockGroupsAcross(
   limit = 10,
 ): Promise<UnlockGroupSummary[]> {
   if (shouldSkipDbAtBuildTime()) return [];
+  return getUpcomingUnlockGroupsAcrossCached(limit);
+}
+
+const getUpcomingUnlockGroupsAcrossCached = unstable_cache(
+  async (limit: number) => getUpcomingUnlockGroupsAcrossUncached(limit),
+  ["upcoming-unlock-groups-across-v1"],
+  { revalidate: 60, tags: ["upcoming-unlocks"] },
+);
+
+async function getUpcomingUnlockGroupsAcrossUncached(
+  limit: number,
+): Promise<UnlockGroupSummary[]> {
 
   const nowSec = Math.floor(Date.now() / 1000);
   // Fetch a generous raw row pool. A single mass distribution can collapse
