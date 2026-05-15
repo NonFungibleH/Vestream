@@ -11,9 +11,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, taxReportFiles } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { getClaimHistoryForUser } from "@/lib/vesting/ingestors";
 import { buildClaimsCsv, csvFilename, type ExportFormat } from "@/lib/vesting/csv-exports";
@@ -82,6 +83,28 @@ export async function GET(req: NextRequest) {
   const sinceYear = since ? new Date(since).getUTCFullYear() : undefined;
   const untilYear = until ? new Date(until).getUTCFullYear() : undefined;
   const filename  = csvFilename(format, sinceYear, untilYear);
+
+  // 2026-05-15: persist a copy to tax_report_files so the mobile Tax
+  // Reports screen can list + re-download. Runs via `after()` so the
+  // download response isn't blocked by the INSERT. Failures here
+  // shouldn't fail the download — log + continue.
+  const csvBytes = Buffer.byteLength(csv, "utf8");
+  after(async () => {
+    try {
+      await db.insert(taxReportFiles).values({
+        userId:    u.id,
+        format,
+        filename,
+        sizeBytes: csvBytes,
+        rowCount:  events.length,
+        content:   csv,
+        sinceDate: since ? new Date(since) : null,
+        untilDate: until ? new Date(until) : null,
+      });
+    } catch (err) {
+      console.error("[claims/export] failed to persist tax report file:", err);
+    }
+  });
 
   return new NextResponse(csv, {
     headers: {

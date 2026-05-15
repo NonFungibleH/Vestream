@@ -841,6 +841,57 @@ export const tokenPricesCache = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tax report files — persisted exports for cross-surface visibility (May 2026)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// When a Pro user clicks "Download CSV" on /dashboard/exports, we now ALSO
+// save a copy of the generated file here. The mobile app's Tax Reports
+// screen lists them with format / size / generated-at metadata; tap a row
+// to re-download. Lets a user generate on desktop and forward from their
+// phone (the typical "email to accountant" workflow).
+//
+// Content is stored inline as `text` (CSVs are pure UTF-8, no need for
+// BYTEA). Average export is ~50KB; even 100 stored reports per user is
+// ~5MB of DB which is fine. Cleanup cron prunes anything older than
+// 365d so the table doesn't grow unbounded.
+export const taxReportFiles = pgTable(
+  "tax_report_files",
+  {
+    id:        uuid("id").primaryKey().defaultRandom(),
+    userId:    uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    /** Format slug — matches ExportFormat in csv-exports.ts.
+     *  e.g. "koinly", "cointracker", "turbotax", "vestream-generic",
+     *  "payroll-income", "payroll-summary-us", "payroll-summary-uk". */
+    format:    text("format").notNull(),
+    /** Display filename — e.g. "vestream-koinly-2026.csv". Mirrors what
+     *  the dashboard download presented to the user so the mobile screen
+     *  shows the same name they recognise. */
+    filename:  text("filename").notNull(),
+    /** Byte-length of `content`. Stored separately so the list query
+     *  can show "23 KB" without materialising the full CSV blob. */
+    sizeBytes: integer("size_bytes").notNull(),
+    /** Number of claim rows in the export — surfaces as "12 claims" on
+     *  the mobile list so the user has a glanceable preview of scope. */
+    rowCount:  integer("row_count").notNull().default(0),
+    /** The CSV body itself. UTF-8 text. Average ~50KB. */
+    content:   text("content").notNull(),
+    /** Optional date-range tags persisted from the export query string —
+     *  let the mobile list show "2024 tax year" or similar context. */
+    sinceDate: timestamp("since_date"),
+    untilDate: timestamp("until_date"),
+
+    generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    // Hot path for the mobile list endpoint: "give me the N most-recent
+    // reports for this user, newest first".
+    index("tax_report_files_user_generated_idx").on(t.userId, t.generatedAt),
+    // Cleanup cron: "delete everything older than N days".
+    index("tax_report_files_generated_at_idx").on(t.generatedAt),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Event-driven indexer state (May 2026 — migration off daily polling)
 // ─────────────────────────────────────────────────────────────────────────────
 //
