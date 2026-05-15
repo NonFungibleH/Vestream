@@ -25,15 +25,18 @@ export const metadata: Metadata = {
 // visual would be nice but for now consistent literal lists keep the two
 // pages tightly aligned.
 const PROTOCOLS_ROW_1 = [
+  // 2026-05-15: aligned to canonical palette in protocol-constants.ts.
+  // Previous values had Hedgey #3b82f6 (collided with Base chain) and
+  // UNCX #F0992E (collided with Sablier). Both fixed.
   { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
-  { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
-  { name: "UNCX",         color: "#F0992E", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
+  { name: "Hedgey",       color: "#8169E0", bg: "rgba(129,105,224,0.07)", border: "rgba(129,105,224,0.15)" },
+  { name: "UNCX",         color: "#3D7FD0", bg: "rgba(61,127,208,0.07)",  border: "rgba(61,127,208,0.15)"  },
   { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
 ] as const;
 
 const PROTOCOLS_ROW_2 = [
-  { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
-  { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",   border: "rgba(40,184,149,0.15)"   },
+  { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
+  { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",  border: "rgba(40,184,149,0.15)"  },
   { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
   { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
   { name: "Jupiter Lock", color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)"  },

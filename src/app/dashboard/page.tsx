@@ -67,25 +67,46 @@ function getTokenColor(symbol: string): string {
   return HASH_PALETTE[Math.abs(h) % HASH_PALETTE.length];
 }
 
-// Block-explorer base URLs per chain ID
+// Block-explorer base URLs per chain ID. Token contracts live at
+// `${base}/token/{address}`; transactions at `${base}/tx/{hash}` —
+// same convention across every EVM explorer we support.
+// 2026-05-14: added Arbitrum, Optimism, Solana so the lockTxHash row
+// resolves on those chains too.
 const BLOCK_EXPLORERS: Record<number, string> = {
   1:        "https://etherscan.io",
   56:       "https://bscscan.com",
   137:      "https://polygonscan.com",
   8453:     "https://basescan.org",
+  42161:    "https://arbiscan.io",
+  10:       "https://optimistic.etherscan.io",
   11155111: "https://sepolia.etherscan.io",
   84532:    "https://sepolia.basescan.org",
+  // Solana uses /tx for signatures and /address (not /token) for mints,
+  // but Solscan accepts /token/{mint} as an alias. Same base; consumers
+  // append `/tx/<sig>` or `/token/<mint>` as usual.
+  101:      "https://solscan.io",
 };
 
+// 2026-05-15: aligned to the canonical palette in src/lib/protocol-constants.ts
+// (which mobile + /protocols pages already use). Previous local map had
+// Hedgey collide with brand-teal and UNCX collide with Sablier — both
+// real design-bug-level palette collisions in the dashboard streams
+// table. Streamflow / Jupiter Lock / LlamaPay / Sablier-Flow added for
+// completeness so the fallback "#B8BABD grey" never fires on supported
+// protocols.
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.1)",   border: "rgba(240,153,46,0.2)"  },
-  hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.1)",    border: "rgba(28,184,184,0.2)"   },
-  "team-finance": { text: "#2563EB", bg: "rgba(37,99,235,0.1)",   border: "rgba(37,99,235,0.2)"  },
-  uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
-  "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.2)"  },
-  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.1)",    border: "rgba(11,160,203,0.2)"   },
-  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.1)",    border: "rgba(40,184,149,0.2)"   },
-  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.1)",   border: "rgba(224,99,160,0.2)"  },
+  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.10)",  border: "rgba(240,153,46,0.20)"  },
+  "sablier-flow": { text: "#E07B1A", bg: "rgba(224,123,26,0.10)",  border: "rgba(224,123,26,0.20)"  },
+  hedgey:         { text: "#8169E0", bg: "rgba(129,105,224,0.10)", border: "rgba(129,105,224,0.20)" },
+  "team-finance": { text: "#2563EB", bg: "rgba(37,99,235,0.10)",   border: "rgba(37,99,235,0.20)"   },
+  uncx:           { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
+  "uncx-vm":      { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
+  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.10)",  border: "rgba(11,160,203,0.20)"  },
+  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.10)",  border: "rgba(40,184,149,0.20)"  },
+  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.10)",  border: "rgba(224,99,160,0.20)"  },
+  streamflow:     { text: "#5DCE9D", bg: "rgba(93,206,157,0.10)",  border: "rgba(93,206,157,0.20)"  },
+  "jupiter-lock": { text: "#F0B83D", bg: "rgba(240,184,61,0.10)",  border: "rgba(240,184,61,0.20)"  },
+  llamapay:       { text: "#A26B3F", bg: "rgba(162,107,63,0.10)",  border: "rgba(162,107,63,0.20)"  },
 };
 
 const CLAIM_LINKS: Record<string, string> = {
@@ -1684,14 +1705,20 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                     )}
                   </div>
 
-                  {/* 11. Contract (token address + copy + explorer) */}
+                  {/* 11. Contract (token address + copy + token-explorer + tx-explorer).
+                      2026-05-14: added the optional "tx" pill next to the
+                      contract explorer icon. Renders only when the adapter
+                      surfaced a lockTxHash (UNCX-VM, Hedgey, Sablier).
+                      One click opens the originating creation tx on the
+                      chain's block explorer — the verifiable on-chain
+                      anchor backing every claim in the row. */}
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] font-mono" style={{ color: "var(--preview-text-3)" }}>
                       {s.tokenAddress.slice(0, 4)}…{s.tokenAddress.slice(-3)}
                     </span>
                     <CopyButton text={s.tokenAddress} />
                     <a href={`${explorerBase}/token/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
-                      title="View on block explorer"
+                      title="View token contract on block explorer"
                       className="inline-flex items-center justify-center w-5 h-5 rounded transition-all duration-150"
                       style={{ color: "var(--preview-text-3)" }}
                       onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--preview-muted)")}
@@ -1702,6 +1729,15 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                         <line x1="10" y1="14" x2="21" y2="3"/>
                       </svg>
                     </a>
+                    {s.lockTxHash && (
+                      <a href={`${explorerBase}/tx/${s.lockTxHash}`} target="_blank" rel="noopener noreferrer"
+                        title={`View originating lock transaction · ${s.lockTxHash.slice(0, 10)}…`}
+                        className="inline-flex items-center justify-center px-1 rounded text-[9px] font-bold tracking-wider transition-all duration-150"
+                        style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 18 }}
+                        onClick={(e) => e.stopPropagation()}>
+                        TX
+                      </a>
+                    )}
                   </div>
 
                   {/* 12. Claim / View CTA + All holders explorer link + expand chevron.
@@ -1807,6 +1843,202 @@ function countdownStr(seconds: number): string {
   if (totalDays > 0) return `${totalDays}d ${h}h`;
   if (h > 0) return `${h}h ${m}m ${s}s`;
   return `${m}m ${s}s`;
+}
+
+// ─── UpcomingOutlook ──────────────────────────────────────────────────────────
+//
+// Ported from mobile app's UpcomingOutlook.tsx (May 2026 polish pass).
+// The Tokenomist / Carta mental model applied to a single user's portfolio:
+// how much $ is unlocking in the next 30 / 90 / 365 days across every
+// tracked stream? Tokenomist / CryptoRank / DefiLlama know per-TOKEN unlock
+// projections but they can't apply them to "your" portfolio — only we do.
+// This card is the one chart a user can ONLY get here.
+//
+// 2026-05-13.
+
+type OutlookWindow = "30d" | "90d" | "1y";
+const OUTLOOK_WINDOW_DAYS: Record<OutlookWindow, number> = { "30d": 30, "90d": 90, "1y": 365 };
+const OUTLOOK_WINDOW_LABEL: Record<OutlookWindow, string> = {
+  "30d": "Next 30 days", "90d": "Next 90 days", "1y": "Next year",
+};
+
+function outlookTotal(streams: VestingStream[], prices: Record<string, number>, days: number): { totalUsd: number; eventCount: number } {
+  const now = Math.floor(Date.now() / 1000);
+  const horizon = now + days * 86_400;
+  let totalUsd = 0;
+  let eventCount = 0;
+  for (const s of streams) {
+    if (s.isFullyVested) continue;
+    const price = prices[s.tokenAddress];
+    if (!price) continue;
+    const decimals = s.tokenDecimals;
+    const steps = s.unlockSteps ?? [];
+    if (steps.length === 0) {
+      if (s.nextUnlockTime && s.nextUnlockTime >= now && s.nextUnlockTime <= horizon) {
+        const tokens = Number(BigInt(s.lockedAmount)) / 10 ** decimals;
+        totalUsd += tokens * price;
+        eventCount += 1;
+      }
+      continue;
+    }
+    for (const step of steps) {
+      if (step.timestamp < now || step.timestamp > horizon) continue;
+      const tokens = Number(BigInt(step.amount)) / 10 ** decimals;
+      totalUsd += tokens * price;
+      eventCount += 1;
+    }
+  }
+  return { totalUsd, eventCount };
+}
+
+function outlookProjection(streams: VestingStream[], prices: Record<string, number>, days: number): number[] {
+  const now = Math.floor(Date.now() / 1000);
+  const buckets = days <= 30 ? 15 : days <= 90 ? 18 : 12;
+  const bucketSec = (days * 86_400) / buckets;
+  const out = new Array(buckets).fill(0);
+  for (const s of streams) {
+    if (s.isFullyVested) continue;
+    const price = prices[s.tokenAddress];
+    if (!price) continue;
+    const decimals = s.tokenDecimals;
+    const steps = s.unlockSteps ?? [];
+    if (steps.length === 0) {
+      if (s.nextUnlockTime && s.nextUnlockTime >= now && s.nextUnlockTime <= now + days * 86_400) {
+        const offset = s.nextUnlockTime - now;
+        const idx = Math.min(buckets - 1, Math.max(0, Math.floor(offset / bucketSec)));
+        out[idx] += (Number(BigInt(s.lockedAmount)) / 10 ** decimals) * price;
+      }
+      continue;
+    }
+    for (const step of steps) {
+      if (step.timestamp < now || step.timestamp > now + days * 86_400) continue;
+      const offset = step.timestamp - now;
+      const idx = Math.min(buckets - 1, Math.max(0, Math.floor(offset / bucketSec)));
+      out[idx] += (Number(BigInt(step.amount)) / 10 ** decimals) * price;
+    }
+  }
+  return out;
+}
+
+function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices: Record<string, number> }) {
+  const [window, setWindow] = useState<OutlookWindow>("90d");
+  const { totalUsd, eventCount } = useMemo(
+    () => outlookTotal(streams, prices, OUTLOOK_WINDOW_DAYS[window]),
+    [streams, prices, window],
+  );
+  const values = useMemo(
+    () => outlookProjection(streams, prices, OUTLOOK_WINDOW_DAYS[window]),
+    [streams, prices, window],
+  );
+
+  // No upcoming priced events — hide rather than show a $0 placeholder.
+  if (totalUsd === 0 && eventCount === 0) return null;
+
+  // Build cumulative running-total curve — Apple-tier "outlook" charts use
+  // cumulative because users care about WHEN they hit $X total.
+  const cum: number[] = [];
+  let running = 0;
+  for (const v of values) { running += v; cum.push(running); }
+  const max = cum[cum.length - 1] || 1;
+
+  const W = 640;
+  const H = 56;
+  const inset = 3;
+  const innerH = H - inset * 2;
+  const points = cum.map((y, i) => {
+    const x = (i / Math.max(1, cum.length - 1)) * W;
+    const yPx = inset + (1 - y / max) * innerH;
+    return [x, yPx] as const;
+  });
+  const lineD = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
+  const areaD = lineD + ` L${W.toFixed(2)} ${(H - inset).toFixed(2)} L0 ${(H - inset).toFixed(2)} Z`;
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden mb-5 relative"
+      style={{
+        background: "var(--preview-card)",
+        border: "1px solid var(--preview-border-2)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+      }}
+      role="region"
+      aria-label={`${OUTLOOK_WINDOW_LABEL[window]}: ${fmtUSDFull(totalUsd)} unlocking across ${eventCount} event${eventCount !== 1 ? "s" : ""}`}
+    >
+      {/* Brand-teal hairline — matches mobile UpcomingOutlook visual continuity */}
+      <div
+        className="h-[2px] pointer-events-none"
+        style={{ background: "linear-gradient(90deg, rgba(28,184,184,0.55), rgba(28,184,184,0))" }}
+        aria-hidden
+      />
+      <div className="px-5 py-4">
+        {/* Header — eyebrow + window selector */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1CB8B8" }} />
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--preview-text-3)" }}>
+              Upcoming Unlocks
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            {(["30d", "90d", "1y"] as OutlookWindow[]).map((w) => {
+              const isActive = window === w;
+              return (
+                <button
+                  key={w}
+                  onClick={() => setWindow(w)}
+                  aria-pressed={isActive}
+                  aria-label={OUTLOOK_WINDOW_LABEL[w]}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+                  style={{
+                    background: isActive ? "rgba(28,184,184,0.14)" : "transparent",
+                    border: `1px solid ${isActive ? "rgba(28,184,184,0.30)" : "var(--preview-border-2)"}`,
+                    color: isActive ? "#1CB8B8" : "var(--preview-text-3)",
+                    fontWeight: isActive ? 700 : 600,
+                  }}
+                >
+                  {w}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Hero metric — total USD unlocking in the chosen window */}
+        <p
+          className="text-3xl md:text-4xl font-extrabold tabular-nums leading-none"
+          style={{
+            color: "var(--preview-text)",
+            letterSpacing: "-0.02em",
+            textShadow: "0 2px 10px rgba(28,184,184,0.18)",
+          }}
+        >
+          {fmtUSDFull(totalUsd)}
+        </p>
+        <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>
+          across <span className="font-semibold" style={{ color: "var(--preview-text)" }}>{eventCount}</span> event
+          {eventCount !== 1 ? "s" : ""} · {OUTLOOK_WINDOW_LABEL[window].toLowerCase()}
+        </p>
+
+        {/* Cumulative projection sparkline — shape of unlock pressure */}
+        <div className="mt-3">
+          <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
+            <defs>
+              <linearGradient id="outlook-area-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1CB8B8" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="#1CB8B8" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <path d={areaD} fill="url(#outlook-area-grad)" />
+            <path d={lineD} stroke="#1CB8B8" strokeWidth={1.8} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Today</span>
+            <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>{OUTLOOK_WINDOW_LABEL[window]}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
@@ -4633,6 +4865,7 @@ export default function Dashboard() {
               <MobileAppBanner />
               <CancellableWatchdog streams={filteredStreams} />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
+              <UpcomingOutlook streams={filteredStreams} prices={prices} />
               <NextClaimCountdown streams={filteredStreams} />
               <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />
               <SnapshotPanel

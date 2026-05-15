@@ -471,9 +471,10 @@ export default async function Home() {
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
+              // Canonical palette — matches protocol-constants.ts.
               { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
-              { name: "Hedgey",       color: "#3b82f6", bg: "rgba(59,130,246,0.07)",  border: "rgba(59,130,246,0.15)"  },
-              { name: "UNCX",         color: "#F0992E", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)"  },
+              { name: "Hedgey",       color: "#8169E0", bg: "rgba(129,105,224,0.07)", border: "rgba(129,105,224,0.15)" },
+              { name: "UNCX",         color: "#3D7FD0", bg: "rgba(61,127,208,0.07)",  border: "rgba(61,127,208,0.15)"  },
               { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
@@ -491,7 +492,7 @@ export default async function Home() {
               coverage at a glance. */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
-              { name: "Unvest",       color: "#06b6d4", bg: "rgba(6,182,212,0.07)",   border: "rgba(6,182,212,0.15)"   },
+              { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
               { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",   border: "rgba(40,184,149,0.15)"   },
               { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
               { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
@@ -663,8 +664,8 @@ export default async function Home() {
                   </p>
                   {[
                     { sym: "NOVA", protocol: "Sablier",  pct: 45, pctColor: "#F0992E", value: "$1,920" },
-                    { sym: "OP",   protocol: "Hedgey",   pct: 60, pctColor: "#3b82f6", value: "$1,270" },
-                    { sym: "LAYER", protocol: "Unvest",  pct: 25, pctColor: "#06b6d4", value: "$1,050" },
+                    { sym: "OP",   protocol: "Hedgey",   pct: 60, pctColor: "#8169E0", value: "$1,270" },
+                    { sym: "LAYER", protocol: "Unvest",  pct: 25, pctColor: "#0BA0CB", value: "$1,050" },
                   ].map((s) => (
                     <div key={s.sym} className="rounded-lg mb-1.5 p-2"
                       style={{ background: "#f8fafc", border: "1px solid rgba(15,23,42,0.06)" }}>
@@ -852,9 +853,11 @@ export default async function Home() {
                     <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(15,138,74,0.12)", color: "#0F8A4A" }}>4 streams</span>
                   </div>
                   {[
+                    // `color` is the TOKEN avatar tint (free pick per token),
+                    // `proto` is the PROTOCOL badge — must match canonical palette.
                     { token: "NOVA",  protocol: "Sablier",  claimable: "$162", locked: "$1,758", color: "#F0992E", proto: "#F0992E", prog: 15 },
-                    { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#3b82f6", prog: 35 },
-                    { token: "LAYER", protocol: "Unvest",   claimable: "—",    locked: "$1,050", color: "#0F8A8A", proto: "#06b6d4", prog: 5  },
+                    { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#8169E0", prog: 35 },
+                    { token: "LAYER", protocol: "Unvest",   claimable: "—",    locked: "$1,050", color: "#0F8A8A", proto: "#0BA0CB", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid rgba(21,23,26,0.06)" : undefined }}>
@@ -1135,9 +1138,9 @@ export default async function Home() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { name: "Sablier",      color: "#F0992E" },
-                  { name: "Hedgey",       color: "#3b82f6" },
-                  { name: "UNCX",         color: "#F0992E" },
-                  { name: "Unvest",       color: "#06b6d4" },
+                  { name: "Hedgey",       color: "#8169E0" },
+                  { name: "UNCX",         color: "#3D7FD0" },
+                  { name: "Unvest",       color: "#0BA0CB" },
                   { name: "LlamaPay",     color: "#A26B3F" },
                   { name: "Superfluid",   color: "#28B895" },
                   { name: "PinkSale",     color: "#E063A0" },
@@ -1187,10 +1190,16 @@ export default async function Home() {
             {/* Result rows — one per supported protocol so a visitor sees all 7
                 integrations represented, not just a convenient subset. */}
             {[
+              // 2026-05-15: aligned to the canonical palette in
+              // src/lib/protocol-constants.ts. Previous mock had Hedgey
+              // as blue (#3b82f6) and UNCX as orange (same as Sablier),
+              // both collisions that contradicted what the actual app
+              // renders. Marketing visuals must match in-app reality
+              // or the screenshot fails the "same product?" sniff test.
               { protocol: "Sablier",      chain: "Base",       token: "NOVA",  amount: "1,250", color: "#F0992E" },
-              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#3b82f6" },
-              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#F0992E" },
-              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#06b6d4" },
+              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#8169E0" },
+              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#3D7FD0" },
+              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#0BA0CB" },
               { protocol: "LlamaPay",     chain: "Arbitrum",   token: "NOVA",  amount: "630",   color: "#A26B3F" },
               { protocol: "Superfluid",   chain: "Optimism",   token: "VEST",  amount: "310",   color: "#28B895" },
               { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX",  amount: "500",   color: "#E063A0" },
