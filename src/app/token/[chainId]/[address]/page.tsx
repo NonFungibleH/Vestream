@@ -718,9 +718,22 @@ function UnlockCalendar({
   // Share of currently-locked supply unlocking in the forward window.
   // A reading of "90%+ in 12mo" means vesting is nearly over; "30%" means
   // most unlocks are further out.
-  const unlockShareOfLocked = lockedTotal > 0
-    ? Math.min(100, (grandTotal / lockedTotal) * 100)
+  //
+  // 2026-05-15: track the RAW ratio separately so we can detect anomalous
+  // cases where the per-step amount sum exceeds the parent stream's
+  // lockedAmount (e.g. PinkSale cycle-based vesting producing overlapping
+  // step events in token-aggregates expandUnlockEvents — investigated
+  // separately). When the ratio is suspiciously high (>105%) we render
+  // the stat as "—" rather than clamp to a confident-looking 100% with
+  // a negative "still locked beyond" subtitle.
+  const unlockRatioRaw = lockedTotal > 0
+    ? (grandTotal / lockedTotal) * 100
     : 0;
+  const unlockShareOfLocked = Math.min(100, unlockRatioRaw);
+  const isAnomalous         = unlockRatioRaw > 105;
+  // True ↔ the next 12 months cover the full locked supply (within 1%).
+  const fullyVestedIn12mo   = !isAnomalous && unlockRatioRaw >= 99;
+  const remainingBeyond     = Math.max(0, lockedTotal - grandTotal);
 
   // Last non-empty forward bucket — drives "Last unlock ahead".
   const lastActiveForwardIdx = (() => {
@@ -1027,12 +1040,27 @@ function UnlockCalendar({
           value={fmtTokens(grandTotal)}
           sub={priceUsd ? fmtUsd(grandTotal * priceUsd) : `${symbol}`}
         />
+        {/* 2026-05-15: re-worked from "100% — — MOONMOON still locked beyond"
+            into three explicit states:
+              - anomalous (step amounts sum > locked total): "—" + diagnostic copy
+              - fully vested in 12mo: 100% + "vesting complete within 12mo"
+              - partial: percentage + "X still locked beyond 12mo"
+            Last case is the common one; the first two were rendering
+            as a confusing "100% / — MOONMOON still locked beyond" combo
+            for low-circulation tokens with step-vested PinkSale schedules. */}
         <CalendarStat
           label="of locked supply"
-          value={lockedTotal > 0 ? `${unlockShareOfLocked.toFixed(1)}%` : "—"}
-          sub={lockedTotal > 0
-            ? `${fmtTokens(lockedTotal - grandTotal)} ${symbol} still locked beyond`
-            : ""}
+          value={
+            lockedTotal === 0    ? "—" :
+            isAnomalous          ? "—" :
+            `${unlockShareOfLocked.toFixed(1)}%`
+          }
+          sub={
+            lockedTotal === 0    ? "" :
+            isAnomalous          ? "schedule data overlapping — see chart" :
+            fullyVestedIn12mo    ? `vesting complete within 12mo` :
+            `${fmtTokens(remainingBeyond)} ${symbol} still locked beyond`
+          }
         />
         <CalendarStat
           label="Last unlock ahead"
