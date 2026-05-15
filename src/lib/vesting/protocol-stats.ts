@@ -563,21 +563,37 @@ export async function getNextUpcomingUnlock(
 // SELECT (no covering index on is_fully_vested + end_time over a
 // 130K-row table) fires at most once a minute per Vercel region.
 //
-// 2026-05-14 hotfix: introduced when the protocol page + mobile
-// Discover both started timing out on cold renders. Underlying
-// `getUpcomingUnlockGroupsAcrossUncached` was previously direct-call
-// from API routes — every cold lambda did a fresh ~10-30s seq-scan
-// during the cache repopulate after I bumped the v6 protocol-page
-// cache key. Wrapping at this lower level means EVERY consumer
-// benefits, including future ones I haven't thought of yet.
+// 2026-05-14: introduced when the protocol page + mobile Discover
+// both started timing out on cold renders after the v6 cache-key
+// bump invalidated every protocol's payload.
 //
-// Cache key is parameterised on `limit` so the 30-row Discover pull
-// doesn't share cache slots with the 10-row protocols-page pull.
+// 2026-05-15 follow-up: post-filter against the current nowSec so
+// events whose endTime has elapsed during the cache window get
+// dropped. Without this, a stream that was "in 5s" when the cache
+// populated stays in the cached array for the full 60s as "in 0s" /
+// "now", which the protocol page rendered as a permanent-feeling
+// stale row at the top of the upcoming list. We fetch MORE than
+// `limit` from the cache (limit * 3, capped at 60) so the
+// post-filter still leaves enough rows to fill the requested limit
+// after dropping passed events.
+//
+// Cache key is parameterised on `cacheLimit` (the inner over-fetch),
+// NOT the outer `limit`, so every caller asking for ≤20 events
+// shares the same cache slot.
 export async function getUpcomingUnlockGroupsAcross(
   limit = 10,
 ): Promise<UnlockGroupSummary[]> {
   if (shouldSkipDbAtBuildTime()) return [];
-  return getUpcomingUnlockGroupsAcrossCached(limit);
+  const cacheLimit = Math.min(60, Math.max(30, limit * 3));
+  const cached     = await getUpcomingUnlockGroupsAcrossCached(cacheLimit);
+  const nowSec     = Math.floor(Date.now() / 1000);
+  // Drop anything whose endTime has now passed. The cached payload
+  // was filtered against an older nowSec (up to 60s ago) so events
+  // that were "in 5s" when the cache populated leak through; this
+  // pass removes them.
+  return cached
+    .filter((g) => g.endTime != null && g.endTime > nowSec)
+    .slice(0, limit);
 }
 
 const getUpcomingUnlockGroupsAcrossCached = unstable_cache(
