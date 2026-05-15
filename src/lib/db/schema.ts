@@ -48,6 +48,11 @@ export const users = pgTable("users", {
   // timestamp on month boundaries. Paid tiers are unmetered.
   pushAlertsSent:        integer("push_alerts_sent").default(0).notNull(),
   pushAlertsMonthStart:  timestamp("push_alerts_month_start"),
+  // Last-seen timestamp — touched by `touchLastActive(userId)` on every
+  // authenticated mobile API call (see `lib/auth/touch-last-active.ts`).
+  // Drives DAU / WAU / MAU on /admin/growth. Cheap signal that doesn't
+  // depend on a third-party analytics provider being live.
+  lastActiveAt:          timestamp("last_active_at"),
 });
 
 // ── Claim events ────────────────────────────────────────────────────────────
@@ -940,5 +945,59 @@ export const indexerState = pgTable(
     // Cheap lookup for "show me every indexer that hasn't run in N min" —
     // powers the staleness diagnostic + future alerting.
     index("indexer_state_last_run_idx").on(t.lastRunAt),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet searches  (May 15 2026)
+// ─────────────────────────────────────────────────────────────────────────────
+// Every time someone searches a wallet — via the public /find-vestings page,
+// the authenticated mobile portfolio search, or the dashboard's Token Vesting
+// Explorer — we log one row. Drives the "top searched wallets" + "search
+// activity" panels on /admin/growth, and gives us a primary-source signal
+// for marketing/SEO (which wallets are people actually curious about?).
+//
+// PII posture:
+//   - walletAddress is public on-chain data, stored plaintext.
+//   - userId nullable: only set when an authenticated user did the search.
+//     /find-vestings is mostly anonymous.
+//   - ipHash + emailHash are sha256("ip"|"email" + APP_SECRET) so dedup
+//     across sessions works without storing raw PII.
+//
+// Retention: auto-purge after 90 days via a daily cron. The signal value
+// of a 6-month-old search is near-zero and the table would balloon.
+export const walletSearches = pgTable(
+  "wallet_searches",
+  {
+    id:            uuid("id").primaryKey().defaultRandom(),
+    walletAddress: text("wallet_address").notNull(),
+    /** Null when the search was multi-chain (typical for /find-vestings
+     *  scans, which fan out across every supported chain). Set when the
+     *  user specifically searched one chain. */
+    chainId:       integer("chain_id"),
+    /** Set only when an authenticated user did the search. */
+    userId:        uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    /** Which surface the search came from. Drives source breakdown on the
+     *  admin dashboard. Values: "find_vestings" | "mobile_search" |
+     *  "dashboard_discover" | "mobile_track" (= the user actually added
+     *  the wallet to their portfolio). */
+    source:        text("source").notNull(),
+    /** sha256(ip + APP_SECRET). Lets us dedup anonymous searchers without
+     *  storing raw IPs. NULL when not available (server-internal calls). */
+    ipHash:        text("ip_hash"),
+    /** sha256(lower(email) + APP_SECRET). Set when /find-vestings saved
+     *  the search against an email (web→mobile handoff). Lets us tie
+     *  pre-signup search behaviour to post-signup users without joining
+     *  on plaintext PII. */
+    emailHash:     text("email_hash"),
+    createdAt:     timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    // Top-searched wallets: GROUP BY wallet_address — index covers it.
+    index("wallet_searches_wallet_idx").on(t.walletAddress),
+    // Recent searches + time-window aggregates (7d, 30d) — created_at.
+    index("wallet_searches_created_idx").on(t.createdAt),
+    // Per-user search history (rare but useful for power-user diagnostics).
+    index("wallet_searches_user_idx").on(t.userId),
   ]
 );
