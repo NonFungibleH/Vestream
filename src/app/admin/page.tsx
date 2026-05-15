@@ -278,7 +278,15 @@ export default async function AdminPage() {
               style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>Admin</span>
           </div>
         </div>
-        <Link href="/" className="text-xs" style={{ color: "#4b5563" }}>← Back to site</Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/growth" className="text-xs font-semibold" style={{ color: "#60a5fa" }}>
+            Growth dashboard →
+          </Link>
+          <Link href="/admin/cache-stats" className="text-xs" style={{ color: "#4b5563" }}>
+            Cache stats
+          </Link>
+          <Link href="/" className="text-xs" style={{ color: "#4b5563" }}>← Back to site</Link>
+        </div>
       </header>
 
       <div className="px-8 py-8 max-w-6xl mx-auto">
