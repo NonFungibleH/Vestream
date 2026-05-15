@@ -696,8 +696,16 @@ function UnlockCalendar({
   const maxBucket  = Math.max(1, ...visible.map((b) => b.totalTokensWhole));
   // Forward-only totals power the stats strip — we care about "what's
   // coming" not "what already released" for the KPI readout.
+  //
+  // 2026-05-15: switched from .totalTokensWhole to .futureTokensWhole.
+  // The current-month bucket can include events that already fired
+  // earlier in the month (e.g. May 1 → May 15 today). totalTokensWhole
+  // counts those for the bar-chart visual; futureTokensWhole excludes
+  // them so the "12-mo total" KPI shows only what's actually still to
+  // unlock. This is the fix for the "12-MO TOTAL 393M vs LOCKED 278M"
+  // anomaly user spotted.
   const forward    = visible.filter((b) => !b.isPast);
-  const grandTotal = forward.reduce((s, b) => s + b.totalTokensWhole, 0);
+  const grandTotal = forward.reduce((s, b) => s + b.futureTokensWhole, 0);
 
   // Cumulative running total across the visible window (past + future).
   // Drives the overlay curve — turns the chart from independent months
@@ -710,8 +718,12 @@ function UnlockCalendar({
   const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1;
 
   // Peak FUTURE month — stats strip asks "biggest unlock ahead".
+  // Peak month — uses futureTokensWhole for the same reason as grandTotal.
+  // A bucket whose past-this-month portion would have been the largest is
+  // no longer falsely crowned "peak month" when its future-this-month
+  // portion is actually small.
   const peak = forward.reduce<UnlockCalendarBucket | null>((acc, b) => {
-    if (!acc || b.totalTokensWhole > acc.totalTokensWhole) return b;
+    if (!acc || b.futureTokensWhole > acc.futureTokensWhole) return b;
     return acc;
   }, null);
 
@@ -735,10 +747,13 @@ function UnlockCalendar({
   const fullyVestedIn12mo   = !isAnomalous && unlockRatioRaw >= 99;
   const remainingBeyond     = Math.max(0, lockedTotal - grandTotal);
 
-  // Last non-empty forward bucket — drives "Last unlock ahead".
+  // Last non-empty forward bucket — drives "Last unlock ahead". Uses
+  // futureTokensWhole for consistency with grandTotal/peak — a current-
+  // month bucket whose only events already fired this month doesn't
+  // qualify as a "future unlock".
   const lastActiveForwardIdx = (() => {
     for (let i = visible.length - 1; i >= firstFutureIdx; i--) {
-      if (visible[i].totalTokensWhole > 0) return i;
+      if (visible[i].futureTokensWhole > 0) return i;
     }
     return -1;
   })();
@@ -1032,8 +1047,8 @@ function UnlockCalendar({
       >
         <CalendarStat
           label="Peak month"
-          value={peak && peak.totalTokensWhole > 0 ? peak.label : "—"}
-          sub={peak && peak.totalTokensWhole > 0 ? `${fmtTokens(peak.totalTokensWhole)} ${symbol}` : ""}
+          value={peak && peak.futureTokensWhole > 0 ? peak.label : "—"}
+          sub={peak && peak.futureTokensWhole > 0 ? `${fmtTokens(peak.futureTokensWhole)} ${symbol}` : ""}
         />
         <CalendarStat
           label="12-mo total"

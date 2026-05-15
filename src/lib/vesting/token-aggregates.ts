@@ -60,8 +60,19 @@ export interface UnlockCalendarBucket {
     protocol:         string;
     tokensWhole:      number;
   }>;
-  /** Sum of all protocols for this bucket. */
+  /** Sum of all protocols for this bucket — INCLUDES events that already
+   *  fired earlier in this calendar month. The chart renders this so
+   *  monthly bar heights reflect the actual schedule. */
   totalTokensWhole:  number;
+  /** Sum of events whose individual timestamp is in the future (>nowSec).
+   *  Equal to `totalTokensWhole` for past + future-only buckets; LESS
+   *  than `totalTokensWhole` for the current-month bucket when any of
+   *  its tranches have already fired earlier in the month. KPIs that
+   *  measure "what's still to come" (12-mo total, peak month, % of
+   *  locked supply hitting market) should sum THIS, not totalTokensWhole.
+   *  Added 2026-05-15 to fix the "12-MO TOTAL 393M > LOCKED 278M"
+   *  presentation bug. */
+  futureTokensWhole: number;
   /** True when this bucket's month is strictly before the current month.
    *  The UI uses this to render past unlocks in a muted style while keeping
    *  future unlocks in full protocol colours. */
@@ -335,6 +346,7 @@ export async function getTokenUnlockCalendar(
     label:     string;
     byProtocol: Map<string, number>;
     total:     number;
+    futureTotal: number;
     isPast:    boolean;
   }> = [];
   for (let i = -monthsBack; i < monthsForward; i++) {
@@ -345,6 +357,7 @@ export async function getTokenUnlockCalendar(
       label:       d.toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
       byProtocol:  new Map(),
       total:       0,
+      futureTotal: 0,
       isPast:      ts < currentMonthStart,
     });
   }
@@ -375,17 +388,25 @@ export async function getTokenUnlockCalendar(
       if (!bkt) continue;
       bkt.byProtocol.set(r.protocol, (bkt.byProtocol.get(r.protocol) ?? 0) + ev.tokensWhole);
       bkt.total += ev.tokensWhole;
+      // Track future-only sum separately so KPIs that measure "what's
+      // still to come" don't accidentally count earlier-this-month
+      // events that have already fired. See UnlockCalendarBucket
+      // docstring for the bug this fixes.
+      if (ev.timestamp > nowSec) {
+        bkt.futureTotal += ev.tokensWhole;
+      }
     }
   }
 
   return buckets.map((b) => ({
-    timestamp:       b.timestamp,
-    label:           b.label,
-    byProtocol:      Array.from(b.byProtocol.entries())
+    timestamp:         b.timestamp,
+    label:             b.label,
+    byProtocol:        Array.from(b.byProtocol.entries())
       .map(([protocol, tokensWhole]) => ({ protocol, tokensWhole }))
       .sort((a, b2) => b2.tokensWhole - a.tokensWhole),
-    totalTokensWhole: b.total,
-    isPast:          b.isPast,
+    totalTokensWhole:  b.total,
+    futureTokensWhole: b.futureTotal,
+    isPast:            b.isPast,
   }));
 }
 
