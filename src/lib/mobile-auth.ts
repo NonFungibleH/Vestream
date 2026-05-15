@@ -40,10 +40,18 @@ export async function validateMobileToken(token: string): Promise<string | null>
     ))
     .limit(1);
   if (!row) return null;
-  // Update lastUsedAt (fire-and-forget)
+  // Update lastUsedAt on the token (fire-and-forget) AND lastActiveAt on
+  // the user. The user-level timestamp powers DAU/WAU/MAU on the admin
+  // growth dashboard — touching it here means every authenticated mobile
+  // API call updates it automatically, no per-route wiring.
+  const now = new Date();
   db.update(mobileTokens)
-    .set({ lastUsedAt: new Date() })
+    .set({ lastUsedAt: now })
     .where(eq(mobileTokens.id, row.id))
+    .catch(() => {});
+  db.update(users)
+    .set({ lastActiveAt: now })
+    .where(eq(users.id, row.userId))
     .catch(() => {});
   return row.userId;
 }

@@ -5,6 +5,7 @@ import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation
 import { db } from "@/lib/db";
 import { wallets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { logWalletSearch } from "@/lib/search-log";
 
 // Wallet limits per tier — keep in sync with src/app/api/wallets/route.ts.
 //   free   → 3   (was 1; bumped May 2026 to make the free tier usable)
@@ -74,6 +75,16 @@ export async function POST(req: NextRequest) {
   const [wallet] = await db.insert(wallets)
     .values({ userId, address: normaliseAddress(address), label, chains: chainFilter, protocols: protocolFilter, tokenAddress })
     .returning();
+
+  // Log every newly-tracked wallet as a "search" — it represents intent
+  // to discover this address's vestings. Fire-and-forget; ignored on
+  // failure (the wallet add itself already succeeded). source=mobile_track
+  // distinguishes these from search-only events on the admin dashboard.
+  logWalletSearch({
+    walletAddress: address,
+    source:        "mobile_track",
+    userId,
+  });
 
   return NextResponse.json({ wallet });
 }

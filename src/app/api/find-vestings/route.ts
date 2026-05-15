@@ -14,6 +14,7 @@ import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
+import { logWalletSearch } from "@/lib/search-log";
 
 // Chains the scanner fans out to. Mainnets are the primary signal; Sepolia is
 // included so the dev team can paste a test wallet with freshly-minted
@@ -73,6 +74,15 @@ export async function GET(req: NextRequest) {
   if (!address || !isValidWalletAddress(address)) {
     return NextResponse.json({ error: "Invalid wallet address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
+
+  // Log every search before any work happens — even searches that error
+  // out are interesting signal (which wallets are people trying to scan?).
+  // Fire-and-forget; never blocks the response.
+  logWalletSearch({
+    walletAddress: address,
+    source:        "find_vestings",
+    ip,
+  });
 
   try {
     const streams = await aggregateVestingStreams([normaliseAddress(address)], SCAN_CHAINS);

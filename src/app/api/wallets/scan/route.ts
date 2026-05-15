@@ -16,6 +16,7 @@ import { getSession } from "@/lib/auth/session";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { getUserByAddress, checkAndIncrementScanCount } from "@/lib/db/queries";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
+import { logWalletSearch } from "@/lib/search-log";
 import { ALL_CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { ADAPTER_REGISTRY } from "@/lib/vesting/adapters/index";
 
@@ -86,6 +87,14 @@ export async function GET(req: NextRequest) {
     if (!address || !isValidWalletAddress(address)) {
       return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
+
+    // Log every dashboard scan — these are Pro-tier users using the
+    // Token Vesting Explorer. Tied to the user record (userId set).
+    logWalletSearch({
+      walletAddress: address,
+      source:        "dashboard_discover",
+      userId:        user?.id ?? null,
+    });
 
     // Optional chain/protocol filters — narrows the scan for speed
     const chainsParam    = searchParams.get("chains");
