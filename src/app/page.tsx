@@ -1270,6 +1270,103 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Income mode — stablecoin payroll tracking ────────────────────────
+          Pitches the new Investment vs Income segmentation. Targets the
+          freelancer / DAO contributor / remote-worker segment who get
+          paid in USDC and need to track salary for taxes. Same product,
+          different lens — one toggle switches the whole app.
+          2026-05-15 */}
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+          {/* Text */}
+          <div className="flex-1 md:max-w-[420px]">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"
+              style={{ background: "rgba(45,179,106,0.08)", color: "#2DB36A", border: "1px solid rgba(45,179,106,0.18)" }}>
+              New · For stablecoin earners
+            </div>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
+              Get paid in stablecoins? Track it like a salary.
+            </h2>
+            <p className="text-base leading-relaxed mb-6" style={{ color: "#8B8E92" }}>
+              Flip Vestream into <span className="font-semibold" style={{ color: "#1A1D20" }}>Income mode</span> with one tap. Sablier, Superfluid, LlamaPay streams paying USDC, USDT, DAI — all filtered into one view. Monthly income, 30-day forecast, year-to-date totals. Tag each source — Salary, Contract, Bonus, Grant — and the breakdown surfaces automatically.
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
+              Tax-ready CSV when filing time comes. Switch back to Investment mode any time — same wallets, different lens.
+            </p>
+          </div>
+          {/* Mockup */}
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
+            {/* Segmented toggle */}
+            <div className="flex rounded-full p-1 mb-5" style={{ background: "rgba(21,23,26,0.04)", border: "1px solid rgba(21,23,26,0.06)" }}>
+              <div className="flex-1 text-center py-1.5 rounded-full text-xs font-semibold" style={{ color: "#8B8E92" }}>
+                Investment
+              </div>
+              <div className="flex-1 text-center py-1.5 rounded-full text-xs font-bold text-white" style={{ background: "#1CB8B8" }}>
+                Income
+              </div>
+            </div>
+            {/* Income totals */}
+            <div className="rounded-2xl p-5 mb-4" style={{ background: "linear-gradient(135deg, rgba(45,179,106,0.10), rgba(28,184,184,0.08))", border: "1px solid rgba(45,179,106,0.18)" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#2DB36A" }}>
+                Income · 2026
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "This month", value: "$5,200", sub: "received" },
+                  { label: "Next 30 days", value: "$5,800", sub: "forecast", highlight: true },
+                  { label: "Year to date", value: "$42,500", sub: "2026 so far" },
+                ].map(s => (
+                  <div key={s.label}>
+                    <p style={{ color: "#8B8E92", fontSize: 10, fontWeight: 600, marginBottom: 4 }}>{s.label}</p>
+                    <p style={{ color: s.highlight ? "#2DB36A" : "#1A1D20", fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>{s.value}</p>
+                    <p style={{ color: "#B8BABD", fontSize: 9, marginTop: 1 }}>{s.sub}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Source breakdown bar */}
+              <div className="mt-4 mb-3 flex h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(21,23,26,0.06)" }}>
+                <div style={{ flex: 65, background: "#1CB8B8" }} />
+                <div style={{ flex: 22, background: "#7c3aed" }} />
+                <div style={{ flex: 13, background: "#F0992E" }} />
+              </div>
+              <div className="flex gap-3 flex-wrap text-[10px]">
+                <span style={{ color: "#0F8A8A", fontWeight: 600 }}>● Salary 65%</span>
+                <span style={{ color: "#7c3aed", fontWeight: 600 }}>● Contract 22%</span>
+                <span style={{ color: "#F0992E", fontWeight: 600 }}>● Bonus 13%</span>
+              </div>
+            </div>
+            {/* Stablecoin stream rows */}
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>
+              Active income streams
+            </p>
+            {[
+              { source: "Acme DAO", protocol: "Sablier",    token: "USDC", monthly: "$4,000/mo",  tag: "Salary",   tagColor: "#1CB8B8" },
+              { source: "0xClient", protocol: "Superfluid", token: "USDT", monthly: "$1,200/mo",  tag: "Contract", tagColor: "#7c3aed" },
+              { source: "Grant",    protocol: "LlamaPay",   token: "DAI",  monthly: "$600/mo",    tag: "Grant",    tagColor: "#28B895" },
+            ].map(r => (
+              <div key={r.source} className="flex items-center justify-between py-2 px-3 rounded-xl mb-1.5"
+                style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.05)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center text-white font-bold" style={{ background: "#2DB36A", fontSize: 9 }}>
+                    {r.token[0]}
+                  </div>
+                  <div>
+                    <p style={{ color: "#1A1D20", fontSize: 11, fontWeight: 700 }}>{r.source} · {r.token}</p>
+                    <p style={{ color: "#8B8E92", fontSize: 9 }}>{r.protocol}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: r.tagColor + "1A", color: r.tagColor }}>
+                    {r.tag}
+                  </span>
+                  <span style={{ color: "#0F8A4A", fontSize: 11, fontWeight: 700 }}>{r.monthly}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Mobile app ──────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
         <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
@@ -1639,7 +1736,7 @@ export default async function Home() {
       </section>
 
       {/* ── Pricing ─────────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto w-full overflow-hidden">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6"
             style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
@@ -1720,6 +1817,7 @@ export default async function Home() {
                 "Web dashboard access (QR sign-in)",
                 "Token Vesting Explorer (Discover)",
                 "Search any wallet's holdings",
+                "Income mode — track stablecoin salary, contracts, grants",
                 "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)",
                 "Vesting income statement (P&L)",
                 "Year-end PDF tax report",
@@ -1767,31 +1865,27 @@ export default async function Home() {
           </Link>
         </p>
 
-        {/* Mobile scroll hint — only renders below the md breakpoint so
-            users on phones see the swipe affordance before they hit the
-            edge of the visible table. Desktop hides it entirely. */}
-        <p className="md:hidden text-center text-[11px] mb-3" style={{ color: "#94a3b8" }}>
-          ← Swipe to see all tiers →
-        </p>
-
-        {/* Comparison table — 3 columns (Free / Pro) after May 2026
-            pricing simplification. Horizontal scroll preserved on mobile
-            for the long feature list. */}
+        {/* Comparison table — 3 columns (Feature / Free / Pro) after May 2026
+            pricing simplification. Fully responsive at 375px viewport — no
+            horizontal scroll, no min-width. The wider "Feature" column
+            gets ~50% of width on mobile so multi-word labels wrap cleanly;
+            tier columns hold short text or icon checks. The previous
+            `min-w-[480px]` was forcing the parent section (and all
+            its siblings — pricing cards, headings) to render at 514px
+            on a 375px viewport, breaking the whole pricing block. */}
         <div
-          className="rounded-2xl overflow-x-auto w-full"
-          aria-label="Tier comparison table — scroll horizontally on mobile if needed"
+          className="rounded-2xl w-full overflow-hidden"
+          aria-label="Tier comparison table"
           role="region"
           style={{
             border: "1px solid rgba(21,23,26,0.10)",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-            WebkitOverflowScrolling: "touch",
           }}
         >
-          <div className="min-w-[480px]">
-          <div className="grid grid-cols-3 px-4 md:px-6 py-4" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
+          <div className="grid grid-cols-[1.6fr_1fr_1fr] sm:grid-cols-3 px-3 md:px-6 py-4 gap-2" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
           </div>
           {([
             ["Wallet addresses",            "3",                  "10"],
@@ -1811,9 +1905,9 @@ export default async function Home() {
             ["Vesting income statement",    false,                true],
             ["Year-end PDF tax report",     false,                true],
           ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
-            <div key={feature} className="grid grid-cols-3 px-4 md:px-6 py-3.5 items-center"
+            <div key={feature} className="grid grid-cols-[1.6fr_1fr_1fr] sm:grid-cols-3 px-3 md:px-6 py-3.5 items-center gap-2"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
-              <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
+              <span className="text-[13px] md:text-sm leading-snug" style={{ color: "#374151" }}>{feature}</span>
               {([free, pro] as (string | boolean)[]).map((val, j) => (
                 <div key={j} className="flex justify-center">
                   {typeof val === "boolean" ? (
@@ -1821,13 +1915,12 @@ export default async function Home() {
                       ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
+                    <span className="text-[11px] md:text-xs font-semibold text-center leading-tight" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
                   )}
                 </div>
               ))}
             </div>
           ))}
-          </div>
         </div>
       </section>
 
