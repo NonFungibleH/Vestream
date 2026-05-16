@@ -1,8 +1,26 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AdminLogin() {
+// Outer default export wraps the form in a Suspense boundary. Required
+// because `useSearchParams()` is a CSR-bailout hook — without a Suspense
+// boundary, Next.js refuses to prerender the page and the build fails
+// with "missing-suspense-with-csr-bailout". The fallback renders a no-
+// op skeleton at the same size so there's no layout shift while the
+// real form hydrates.
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0d0f14" }}>
+        <div className="w-full max-w-sm rounded-2xl p-8" style={{ background: "#141720", border: "1px solid #1e2330" }} />
+      </div>
+    }>
+      <AdminLoginForm />
+    </Suspense>
+  );
+}
+
+function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
