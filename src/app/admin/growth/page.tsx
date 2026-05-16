@@ -23,7 +23,12 @@
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 
-export const dynamic = "force-dynamic";
+export const dynamic    = "force-dynamic";
+// Raise the function timeout above the default 10s so a cold lambda
+// hitting Supabase for the first time + ~19 sequential queries via the
+// max:1 pool doesn't get killed mid-render. Vercel Pro allows up to
+// 60s on `nodejs` runtime — we ask for 30 which is plenty.
+export const maxDuration = 30;
 
 // Drizzle's db.execute<T> requires T extends Record<string, unknown>, so
 // each row type carries an open index signature alongside its known keys.
@@ -49,9 +54,34 @@ type RecentUserRow    = Row<{
 }>;
 type SourceRow        = Row<{ source: string; n: number }>;
 
+/** Run a query and return [] on failure rather than rejecting the
+ *  whole Promise.all. Logs the error + timing to the Vercel function
+ *  log so we can see which query (if any) is the slow one in prod.
+ *  Without this, one transient Supabase blip nukes the entire page. */
+async function safeExec<T extends Record<string, unknown>>(
+  label: string,
+  query: Promise<T[]>,
+): Promise<T[]> {
+  const t0 = Date.now();
+  try {
+    const result = await query;
+    const elapsed = Date.now() - t0;
+    // Surface slow queries in the Vercel log without spamming for fast ones.
+    if (elapsed > 500) {
+      console.log(`[admin/growth] SLOW ${label}: ${elapsed}ms (${result.length} rows)`);
+    }
+    return result;
+  } catch (err) {
+    console.error(`[admin/growth] FAIL ${label} after ${Date.now() - t0}ms:`, err);
+    return [];
+  }
+}
+
 export default async function GrowthDashboard() {
+  const pageStart = Date.now();
   // Promise.all over every query — total page time = max query time, not
-  // sum of query times. ~50ms-100ms on a warm cache.
+  // sum of query times. Each query is wrapped in safeExec so one slow /
+  // broken query falls back to [] instead of killing the page.
   const [
     totalUsers,
     mobileUsers,
@@ -74,71 +104,74 @@ export default async function GrowthDashboard() {
     recentUsers,
   ] = await Promise.all([
     // ── User counts ──────────────────────────────────────────────────────
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE address LIKE '%@%'`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE address NOT LIKE '%@%'`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE created_at > NOW() - INTERVAL '30 days'`),
-    db.execute<SignupsByDayRow>(sql`
+    safeExec<CountRow>("totalUsers",    db.execute(sql`SELECT COUNT(*)::int AS count FROM users`)),
+    safeExec<CountRow>("mobileUsers",   db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE address LIKE '%@%'`)),
+    safeExec<CountRow>("webUsers",      db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE address NOT LIKE '%@%'`)),
+    safeExec<CountRow>("signups7d",     db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`)),
+    safeExec<CountRow>("signups30d",    db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE created_at > NOW() - INTERVAL '30 days'`)),
+    safeExec<SignupsByDayRow>("signupsByDay", db.execute(sql`
       SELECT TO_CHAR(DATE(created_at), 'YYYY-MM-DD') AS day, COUNT(*)::int AS n
       FROM users
       WHERE created_at > NOW() - INTERVAL '30 days'
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) DESC
-    `),
+    `)),
 
     // ── Active users (drives DAU/WAU/MAU) ────────────────────────────────
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '1 day'`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '7 days'`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '30 days'`),
+    safeExec<CountRow>("dau", db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '1 day'`)),
+    safeExec<CountRow>("wau", db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '7 days'`)),
+    safeExec<CountRow>("mau", db.execute(sql`SELECT COUNT(*)::int AS count FROM users WHERE last_active_at > NOW() - INTERVAL '30 days'`)),
 
     // ── Tier breakdown ───────────────────────────────────────────────────
-    db.execute<TierRow>(sql`SELECT tier, COUNT(*)::int AS n FROM users GROUP BY tier`),
+    safeExec<TierRow>("tierBreakdown", db.execute(sql`SELECT tier, COUNT(*)::int AS n FROM users GROUP BY tier`)),
 
     // ── Searches ─────────────────────────────────────────────────────────
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM wallet_searches`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM wallet_searches WHERE created_at > NOW() - INTERVAL '7 days'`),
-    db.execute<CountRow>(sql`
+    safeExec<CountRow>("totalSearches", db.execute(sql`SELECT COUNT(*)::int AS count FROM wallet_searches`)),
+    safeExec<CountRow>("searches7d",    db.execute(sql`SELECT COUNT(*)::int AS count FROM wallet_searches WHERE created_at > NOW() - INTERVAL '7 days'`)),
+    safeExec<CountRow>("uniqueSearchers7d", db.execute(sql`
       SELECT COUNT(*)::int AS count FROM (
         SELECT DISTINCT COALESCE(user_id::text, ip_hash, 'unknown') AS searcher
         FROM wallet_searches
         WHERE created_at > NOW() - INTERVAL '7 days'
       ) sub
-    `),
-    db.execute<SourceRow>(sql`
+    `)),
+    safeExec<SourceRow>("sourceBreakdown", db.execute(sql`
       SELECT source, COUNT(*)::int AS n
       FROM wallet_searches
       WHERE created_at > NOW() - INTERVAL '30 days'
       GROUP BY source
       ORDER BY n DESC
-    `),
-    db.execute<TopSearchRow>(sql`
+    `)),
+    safeExec<TopSearchRow>("topSearchedWallets", db.execute(sql`
       SELECT wallet_address, COUNT(*)::int AS n
       FROM wallet_searches
       WHERE created_at > NOW() - INTERVAL '30 days'
       GROUP BY wallet_address
       ORDER BY n DESC
       LIMIT 20
-    `),
-    db.execute<RecentSearchRow>(sql`
+    `)),
+    safeExec<RecentSearchRow>("recentSearches", db.execute(sql`
       SELECT wallet_address, source, chain_id, user_id, email_hash, created_at
       FROM wallet_searches
       ORDER BY created_at DESC
       LIMIT 50
-    `),
+    `)),
 
     // ── Tracked wallets ──────────────────────────────────────────────────
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM wallets`),
-    db.execute<CountRow>(sql`SELECT COUNT(*)::int AS count FROM wallets WHERE added_at > NOW() - INTERVAL '7 days'`),
+    safeExec<CountRow>("totalTrackedWallets",   db.execute(sql`SELECT COUNT(*)::int AS count FROM wallets`)),
+    safeExec<CountRow>("newTrackedWallets7d",   db.execute(sql`SELECT COUNT(*)::int AS count FROM wallets WHERE added_at > NOW() - INTERVAL '7 days'`)),
 
     // ── Recent signups (audit feed) ──────────────────────────────────────
-    db.execute<RecentUserRow>(sql`
+    safeExec<RecentUserRow>("recentUsers", db.execute(sql`
       SELECT id, address, tier, created_at
       FROM users
       ORDER BY created_at DESC
       LIMIT 30
-    `),
+    `)),
   ]);
+
+  // Final timing line so we can see total page render in Vercel logs.
+  console.log(`[admin/growth] total query time: ${Date.now() - pageStart}ms`);
 
   // Drizzle + postgres-js returns rows as a direct array, not wrapped in
   // `{ rows: [...] }` (that's the node-postgres / Drizzle-Neon shape).
