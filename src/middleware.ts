@@ -70,6 +70,14 @@ export function middleware(req: NextRequest) {
     if (!isAdminAuthorized(req)) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
+      // Preserve the original path as ?next=… so the login page can send
+      // the user back where they were trying to go after auth succeeds.
+      // Includes the original querystring so deep-links to filtered admin
+      // views survive the round-trip. Skip for the bare /admin path —
+      // landing on /admin after login is the default behaviour.
+      if (pathname !== "/admin") {
+        url.searchParams.set("next", pathname + req.nextUrl.search);
+      }
       return NextResponse.redirect(url);
     }
     return NextResponse.next();

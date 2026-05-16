@@ -1,12 +1,23 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Honour the ?next= param set by middleware when the user was
+  // redirected here from a protected admin URL. Validate it strictly to
+  // avoid an open-redirect — only paths that stay inside /admin are
+  // accepted. Anything else (external URLs, javascript: scheme, etc)
+  // falls back to /admin.
+  const rawNext = searchParams.get("next");
+  const nextUrl = rawNext && rawNext.startsWith("/admin") && !rawNext.startsWith("//")
+    ? rawNext
+    : "/admin";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,7 +29,7 @@ export default function AdminLogin() {
       body: JSON.stringify({ password }),
     });
     if (res.ok) {
-      router.push("/admin");
+      router.push(nextUrl);
     } else {
       setError("Incorrect password.");
       setLoading(false);
