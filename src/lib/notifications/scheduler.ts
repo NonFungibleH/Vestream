@@ -83,7 +83,21 @@ export async function runNotificationJob(): Promise<number> {
     for (const stream of streams) {
       if (!stream.nextUnlockTime) continue;
       const timeUntil = stream.nextUnlockTime - nowSec;
-      if (timeUntil <= 0) continue;
+      // 2026-05-20: grace window on the past side. The previous guard
+      // `timeUntil <= 0 → continue` skipped any unlock that had already
+      // happened, which meant `hoursBeforeUnlock: 0` ("at unlock"
+      // timing in the mobile UI) NEVER fired — by definition the cron
+      // tick lands either just-before (timeUntil > 0, skipped by the
+      // window check) or just-after (timeUntil <= 0, skipped here).
+      //
+      // Allow up to PAST_GRACE_SEC of "we just missed it by one cron
+      // tick" — the dedup table (notifications_sent) prevents a second
+      // fire, and 1 hour is generous enough to cover any reasonable
+      // cron cadence + Vercel function startup variance without
+      // becoming a spam vector (we won't suddenly push about an unlock
+      // that happened yesterday).
+      const PAST_GRACE_SEC = 3600;
+      if (timeUntil < -PAST_GRACE_SEC) continue;
 
       // 2026-05-20: per-stream opt-in is now REQUIRED. Previously the
       // scheduler treated the global `notify_next_claim` flag as a
@@ -108,7 +122,16 @@ export async function runNotificationJob(): Promise<number> {
         ? perStream.hoursBeforeUnlock
         : hoursBeforeUnlock;
       const windowSec = effectiveHours * 60 * 60;
-      if (timeUntil > windowSec) continue;
+      // 2026-05-20: future-side slop. With 5-minute cron cadence the
+      // tick that lands closest to the unlock can be up to 5 minutes
+      // before it. For `windowSec = 0` ("at unlock") that means we'd
+      // need a slop of at least 300s to ever fire at all. Apply a
+      // 300s slop on the future side unconditionally — for non-zero
+      // windows it's a no-op (a 24h window with 5min extra is still
+      // a 24h window), for the 0 case it lets the just-before tick
+      // catch the unlock.
+      const FUTURE_SLOP_SEC = 300;
+      if (timeUntil > windowSec + FUTURE_SLOP_SEC) continue;
 
       const unlockDate = new Date(stream.nextUnlockTime * 1000);
 
