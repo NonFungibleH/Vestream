@@ -25,6 +25,10 @@ interface PerStreamPref {
   pushTiming2?: number | null;
   alert2Enabled?: boolean;
   alert2TriggerType?: AlertTriggerType;
+  // 2026-05-20: Alert 3 slot added.
+  alert3Enabled?: boolean;
+  alert3TriggerType?: AlertTriggerType;
+  pushTiming3?: number | null;
 }
 
 /**
@@ -36,7 +40,7 @@ interface PerStreamPref {
  * `eventTime` ("unlocks in 2h", "cliff reached", etc.).
  */
 interface AlertSpec {
-  slot: 1 | 2;
+  slot: 1 | 2 | 3;
   triggerType: AlertTriggerType;
   /** When in real time the push should sound (unix seconds). */
   firingTime: number;
@@ -157,6 +161,22 @@ export async function runNotificationJob(): Promise<number> {
         if (spec) alertSpecs.push(spec);
       }
 
+      // ── Alert 3 ──
+      // 2026-05-20: new slot. Always uses the explicit alert3Enabled
+      // flag — no legacy fallback (the slot didn't exist before this
+      // commit, so no older mobile builds can be writing pushTiming3
+      // without alert3Enabled).
+      if (perStream.alert3Enabled === true) {
+        const triggerType: AlertTriggerType =
+          perStream.alert3TriggerType ?? "before-unlock";
+        const hoursBefore =
+          triggerType === "before-unlock"
+            ? (perStream.pushTiming3 ?? 0)
+            : 0;
+        const spec = resolveAlertSpec(3, triggerType, hoursBefore, stream);
+        if (spec) alertSpecs.push(spec);
+      }
+
       if (alertSpecs.length === 0) continue;
 
       // Evaluate each alert independently. One slot firing doesn't
@@ -228,7 +248,7 @@ export async function runNotificationJob(): Promise<number> {
  * for a stream that has no cliff defined).
  */
 function resolveAlertSpec(
-  slot: 1 | 2,
+  slot: 1 | 2 | 3,
   triggerType: AlertTriggerType,
   hoursBefore: number,
   stream: VestingStream,
