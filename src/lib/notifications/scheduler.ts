@@ -36,7 +36,7 @@ export async function runNotificationJob(): Promise<number> {
 
   for (const {
     userId, email, hoursBeforeUnlock,
-    emailEnabled, tier, expoPushToken,
+    emailEnabled, streamPrefs, tier, expoPushToken,
   } of usersToNotify) {
     const walletRows = await getWalletsForUser(userId);
     if (walletRows.length === 0) continue;
@@ -51,8 +51,6 @@ export async function runNotificationJob(): Promise<number> {
       continue;
     }
 
-    const windowSec = hoursBeforeUnlock * 60 * 60;
-
     // Channel pre-gates — evaluated once per user, not per stream, so we
     // don't re-check tier / token presence for every loop iteration.
     const canEmail = emailEnabled && tier === "pro" && !!email;
@@ -60,10 +58,41 @@ export async function runNotificationJob(): Promise<number> {
 
     if (!canEmail && !canPush) continue;
 
+    // 2026-05-20: per-stream timing overrides. streamPrefs is a jsonb
+    // map { streamId: { alert1Enabled, hoursBeforeUnlock, pushTiming2,
+    // enabled } } set by the mobile Alerts tab. Each stream resolves to
+    // an effective window via:
+    //   1. If streamPrefs[id]?.hoursBeforeUnlock is a number → use it
+    //      (a user who set "live unlock" gets timing=0, the cron fires
+    //      in the cron tick AT or just AFTER the unlock minute).
+    //   2. Otherwise → fall back to the global hoursBeforeUnlock from
+    //      notification_preferences (default 24).
+    //
+    // Pre-this-fix the scheduler only ever read the global value, so
+    // every per-stream timing chip the mobile UI exposed was silently
+    // ignored server-side. Symptoms: user sets "live unlock" on a
+    // token, expects push at unlock minute, gets it at T-24h (or
+    // nothing if the unlock has already passed by the next cron tick).
+    const prefsMap = (streamPrefs ?? {}) as Record<string, {
+      enabled?: boolean;
+      alert1Enabled?: boolean;
+      hoursBeforeUnlock?: number | null;
+      pushTiming2?: number | null;
+    }>;
+
     for (const stream of streams) {
       if (!stream.nextUnlockTime) continue;
       const timeUntil = stream.nextUnlockTime - nowSec;
-      if (timeUntil <= 0 || timeUntil > windowSec) continue;
+      if (timeUntil <= 0) continue;
+
+      // Resolve effective alert window for THIS stream — per-stream
+      // override wins, global fallback otherwise.
+      const perStream = prefsMap[stream.id];
+      const effectiveHours = typeof perStream?.hoursBeforeUnlock === "number"
+        ? perStream.hoursBeforeUnlock
+        : hoursBeforeUnlock;
+      const windowSec = effectiveHours * 60 * 60;
+      if (timeUntil > windowSec) continue;
 
       const unlockDate = new Date(stream.nextUnlockTime * 1000);
 

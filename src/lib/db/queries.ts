@@ -380,6 +380,13 @@ export async function getAllUsersWithAnyAlertEnabled() {
       email:             notificationPreferences.email,
       hoursBeforeUnlock: notificationPreferences.hoursBeforeUnlock,
       emailEnabled:      notificationPreferences.emailEnabled,
+      // 2026-05-20: surface streamPrefs to the scheduler so per-stream
+      // hoursBeforeUnlock overrides (set via the mobile Alerts tab's
+      // Alert 1 timing chips) actually take effect. Previously the
+      // scheduler only saw the global hoursBeforeUnlock, so a user
+      // who set "live unlock" on one token got the global default
+      // (24h) silently. See src/lib/notifications/scheduler.ts.
+      streamPrefs:       notificationPreferences.streamPrefs,
       tier:              users.tier,
       expoPushToken:     users.expoPushToken,
     })
