@@ -3,6 +3,7 @@ import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia } from "viem/c
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
 import { getRpcUrl as getRpcUrlPool } from "../rpc";
+import { resolveTokenMeta } from "../token-resolver";
 
 // Module-level token metadata cache — survives within the same serverless instance
 // Key: `${chainId}:${tokenAddress}`, Value: { symbol, decimals }
@@ -168,10 +169,23 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
           }),
         ]);
 
+        // 2026-05-20: bytes32-symbol fallback via the shared resolver.
+        // Hedgey's multicall reads `symbol() returns (string)`. Tokens
+        // that implement `symbol()` as bytes32 (older ERC-20 convention)
+        // fail this call silently and used to land here as the literal
+        // string "UNKNOWN". The resolver re-tries with the bytes32 ABI
+        // and only falls back to a truncated address as a last resort.
+        // The string-symbol multicall result is passed in as a hint, so
+        // when it succeeded the resolver is a fast cache hit; only the
+        // failures actually do follow-up chain calls.
         for (let j = 0; j < uncached.length; j++) {
-          const sym = symResults[j].status === "success" ? (symResults[j].result as string) : "UNKNOWN";
-          const dec = decResults[j].status === "success" ? (decResults[j].result as number) : 18;
-          TOKEN_META_CACHE.set(`${chainId}:${uncached[j]}`, { symbol: sym, decimals: dec });
+          const symHint  = symResults[j].status === "success" ? (symResults[j].result as string) : null;
+          const decHint  = decResults[j].status === "success" ? (decResults[j].result as number) : null;
+          const meta = await resolveTokenMeta(chainId, uncached[j], {
+            existingSymbol:   symHint,
+            existingDecimals: decHint,
+          });
+          TOKEN_META_CACHE.set(`${chainId}:${uncached[j]}`, meta);
         }
       }
 

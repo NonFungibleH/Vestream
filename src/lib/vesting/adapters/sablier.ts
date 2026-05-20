@@ -1,5 +1,6 @@
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS, computeLinearVesting, computeStepVesting, nextUnlockTime, nextUnlockTimeForSteps } from "../types";
+import { resolveTokenMeta } from "../token-resolver";
 
 // ─── Envio endpoint (replaces the old per-chain The Graph subgraphs) ─────────
 //
@@ -164,6 +165,27 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
   const nowSec     = Math.floor(Date.now() / 1000);
   const rawStreams = json.data?.LockupStream ?? [];
 
+  // 2026-05-20: resolve any UNKNOWN/empty symbols via on-chain fallback
+  // BEFORE constructing the stream objects. Envio's `asset.symbol` field
+  // can be null for tokens whose `symbol()` returns bytes32 instead of
+  // string (common older-ERC-20 launchpad-token convention). Process the
+  // raw rows async-batched first so each unique (chainId, address) only
+  // hits chain once even when a wallet has many streams of the same token
+  // — the resolver has an internal 24h cache that dedupes within this
+  // adapter run.
+  const resolutions = await Promise.all(
+    rawStreams.map(async (raw) => {
+      const subgraphSymbol = raw.asset?.symbol;
+      const subgraphDecimals = raw.asset?.decimals != null ? Number(raw.asset.decimals) : null;
+      const meta = await resolveTokenMeta(chainId, raw.asset.address, {
+        existingSymbol:   subgraphSymbol,
+        existingDecimals: subgraphDecimals,
+      });
+      return { subgraphId: raw.subgraphId, meta };
+    }),
+  );
+  const metaById = new Map(resolutions.map((r) => [r.subgraphId, r.meta]));
+
   return rawStreams.map((raw): VestingStream => {
     const startTime = Number(raw.startTime);
     const endTime   = Number(raw.endTime);
@@ -200,8 +222,12 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
       chainId,
       recipient:       raw.recipient,
       tokenAddress:    raw.asset.address,
-      tokenSymbol:     raw.asset.symbol,
-      tokenDecimals:   Number(raw.asset.decimals),
+      // 2026-05-20: read from the resolver's metaById map rather than the
+      // raw subgraph fields. Resolver handles the empty-symbol /
+      // bytes32-symbol cascade so we never store literal "UNKNOWN" or
+      // null for a token that exists on chain.
+      tokenSymbol:     metaById.get(raw.subgraphId)?.symbol   ?? raw.asset.symbol,
+      tokenDecimals:   metaById.get(raw.subgraphId)?.decimals ?? Number(raw.asset.decimals),
       totalAmount:     total.toString(),
       withdrawnAmount: withdrawn.toString(),
       claimableNow:    claimableNow.toString(),
