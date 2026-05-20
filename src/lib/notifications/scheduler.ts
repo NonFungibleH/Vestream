@@ -10,7 +10,12 @@ import {
 } from "@/lib/db/queries";
 import type { VestingStream } from "@/lib/vesting/types";
 
-type AlertTriggerType = "before-unlock" | "cliff" | "stream-end" | "claim-ready";
+type AlertTriggerType =
+  | "before-unlock"
+  | "vesting-start"
+  | "cliff"
+  | "stream-end"
+  | "claim-ready";  // legacy; functionally same as before-unlock @ 0h
 
 interface PerStreamPref {
   enabled?: boolean;
@@ -261,13 +266,32 @@ function resolveAlertSpec(
       // "Claim ready" = the moment the next unlock fires + makes
       // tokens claimable. Implemented as "fire AT nextUnlockTime"
       // (zero lead-time). Distinct from "before-unlock at 0h" only
-      // in the user-facing copy.
+      // in the user-facing copy. Legacy — current mobile UI doesn't
+      // write this value (the "Live unlock" timing chip covers
+      // the same event), but we keep handling it for any prefs
+      // stored by older builds.
       if (!stream.nextUnlockTime) return null;
       return {
         slot,
         triggerType,
         eventTime:  stream.nextUnlockTime,
         firingTime: stream.nextUnlockTime,
+      };
+    }
+    case "vesting-start": {
+      // Fires at stream.startTime — useful for pre-TGE allocations
+      // where the user knows a token's schedule begins but hasn't
+      // seen any tokens yet. By default streams added AFTER they
+      // start (the common case) have startTime in the past, so the
+      // grace window in the caller would mostly skip these — that's
+      // correct: we don't want to spam "your vesting started 6
+      // months ago" on a token a user just added.
+      if (!stream.startTime) return null;
+      return {
+        slot,
+        triggerType,
+        eventTime:  stream.startTime,
+        firingTime: stream.startTime,
       };
     }
   }
@@ -308,6 +332,11 @@ function renderAlertCopy(
       return {
         title: `${sym} is now claimable`,
         body:  `${sym} on chain ${stream.chainId} — tap to view.`,
+      };
+    case "vesting-start":
+      return {
+        title: `${sym} vesting has started`,
+        body:  `${sym} on chain ${stream.chainId} — tap to view your schedule.`,
       };
   }
 }
