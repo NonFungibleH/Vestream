@@ -102,7 +102,7 @@ export async function runNotificationJob(): Promise<number> {
 
   for (const {
     userId, email, hoursBeforeUnlock,
-    emailEnabled, streamPrefs, tier, expoPushToken,
+    emailEnabled, streamPrefs, tier, expoPushToken, timezone,
   } of usersToNotify) {
     const walletRows = await getWalletsForUser(userId);
     if (walletRows.length === 0) continue;
@@ -135,13 +135,15 @@ export async function runNotificationJob(): Promise<number> {
 
       // ── Alert 1 ──
       if (perStream.alert1Enabled === true) {
-        const spec = resolveAlertSpec(
-          1,
-          perStream.alert1TriggerType ?? "before-unlock",
-          perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
-          stream,
+        alertSpecs.push(
+          ...resolveAlertSpecs(
+            1,
+            perStream.alert1TriggerType ?? "before-unlock",
+            perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
+            stream,
+            nowSec,
+          ),
         );
-        if (spec) alertSpecs.push(spec);
       }
 
       // ── Alert 2 ──
@@ -157,15 +159,10 @@ export async function runNotificationJob(): Promise<number> {
           triggerType === "before-unlock"
             ? (perStream.pushTiming2 ?? 1)
             : 0;
-        const spec = resolveAlertSpec(2, triggerType, hoursBefore, stream);
-        if (spec) alertSpecs.push(spec);
+        alertSpecs.push(...resolveAlertSpecs(2, triggerType, hoursBefore, stream, nowSec));
       }
 
       // ── Alert 3 ──
-      // 2026-05-20: new slot. Always uses the explicit alert3Enabled
-      // flag — no legacy fallback (the slot didn't exist before this
-      // commit, so no older mobile builds can be writing pushTiming3
-      // without alert3Enabled).
       if (perStream.alert3Enabled === true) {
         const triggerType: AlertTriggerType =
           perStream.alert3TriggerType ?? "before-unlock";
@@ -173,8 +170,7 @@ export async function runNotificationJob(): Promise<number> {
           triggerType === "before-unlock"
             ? (perStream.pushTiming3 ?? 0)
             : 0;
-        const spec = resolveAlertSpec(3, triggerType, hoursBefore, stream);
-        if (spec) alertSpecs.push(spec);
+        alertSpecs.push(...resolveAlertSpecs(3, triggerType, hoursBefore, stream, nowSec));
       }
 
       if (alertSpecs.length === 0) continue;
@@ -199,7 +195,12 @@ export async function runNotificationJob(): Promise<number> {
           // ── Email channel ──
           if (canEmail && email) {
             try {
-              await sendEmailNotification(email, stream, new Date(spec.eventTime * 1000));
+              await sendEmailNotification(
+                email,
+                stream,
+                new Date(spec.eventTime * 1000),
+                { trigger: spec.triggerType, timezone },
+              );
               sentSomething = true;
             } catch (err) {
               console.error(`Email send failed for user ${userId}:`, err);
@@ -242,61 +243,117 @@ export async function runNotificationJob(): Promise<number> {
 }
 
 /**
- * Build a concrete firing spec for one alert slot, given the trigger
- * type the user picked and the stream's lifecycle timestamps. Returns
- * null when the trigger has no event to fire against (e.g. "cliff"
- * for a stream that has no cliff defined).
+ * Build the concrete firing specs for one alert slot, given the
+ * trigger type the user picked and the stream's lifecycle timestamps.
+ *
+ * Returns an ARRAY (not a single spec) because the "before-unlock"
+ * trigger can fan out across multiple upcoming unlock steps for a
+ * stream with a discrete unlock schedule (tranched / cycle vesting).
+ * Event-type triggers always return a 0- or 1-element array.
+ *
+ * 2026-05-20 recurring/multi-unlock change:
+ *   - For "before-unlock" triggers, when `stream.unlockSteps[]` is
+ *     present we emit one spec per upcoming step within a horizon
+ *     of `LOOKAHEAD_SEC` from now. Combined with the caller's
+ *     per-spec dedup check, this means a user who set "24h before
+ *     unlock" on a monthly-tranche stream will get one push per
+ *     month for the duration of the schedule — without having to
+ *     touch the Alerts tab again.
+ *   - For linear streams (no unlockSteps), we fall back to the
+ *     single `stream.nextUnlockTime`, matching the pre-recurring
+ *     behaviour exactly.
+ *
+ * LOOKAHEAD_SEC bounds how far forward we project. A horizon of
+ * 14 days covers the most common cron cadence (5 min ticks) with
+ * room to absorb a few skipped runs without missing imminent unlocks.
+ * A longer horizon doesn't gain us anything — the per-tick dedup
+ * check already prevents re-firing, and the per-step grace window
+ * stays the same regardless of horizon.
  */
-function resolveAlertSpec(
+const LOOKAHEAD_SEC = 14 * 24 * 60 * 60;
+
+function resolveAlertSpecs(
   slot: 1 | 2 | 3,
   triggerType: AlertTriggerType,
   hoursBefore: number,
   stream: VestingStream,
-): AlertSpec | null {
+  nowSec: number,
+): AlertSpec[] {
   switch (triggerType) {
     case "before-unlock": {
-      if (!stream.nextUnlockTime) return null;
-      return {
+      // Multi-step branch: discrete unlock schedule. Fan out across
+      // each upcoming step within the lookahead window.
+      const steps = stream.unlockSteps ?? [];
+      if (steps.length > 0) {
+        const horizon = nowSec + LOOKAHEAD_SEC + 3600; // +1h grace
+        return steps
+          .filter(s => {
+            // Only future-ish steps (allow PAST_GRACE_SEC slack so a
+            // freshly-passed step still gets a chance to fire).
+            const firingTime = s.timestamp - Math.max(0, hoursBefore) * 3600;
+            return firingTime <= horizon && firingTime >= nowSec - 3600;
+          })
+          .map(s => ({
+            slot,
+            triggerType: triggerType as AlertTriggerType,
+            eventTime:  s.timestamp,
+            firingTime: s.timestamp - Math.max(0, hoursBefore) * 3600,
+            hoursBefore,
+          }));
+      }
+      // Linear-stream branch: single nextUnlockTime.
+      if (!stream.nextUnlockTime) return [];
+      return [{
         slot,
         triggerType,
         eventTime:  stream.nextUnlockTime,
         firingTime: stream.nextUnlockTime - Math.max(0, hoursBefore) * 3600,
         hoursBefore,
-      };
+      }];
     }
     case "cliff": {
-      if (!stream.cliffTime) return null;
-      return {
+      if (!stream.cliffTime) return [];
+      return [{
         slot,
         triggerType,
         eventTime:  stream.cliffTime,
         firingTime: stream.cliffTime,
-      };
+      }];
     }
     case "stream-end": {
-      if (!stream.endTime) return null;
-      return {
+      if (!stream.endTime) return [];
+      return [{
         slot,
         triggerType,
         eventTime:  stream.endTime,
         firingTime: stream.endTime,
-      };
+      }];
     }
     case "claim-ready": {
-      // "Claim ready" = the moment the next unlock fires + makes
-      // tokens claimable. Implemented as "fire AT nextUnlockTime"
-      // (zero lead-time). Distinct from "before-unlock at 0h" only
-      // in the user-facing copy. Legacy — current mobile UI doesn't
-      // write this value (the "Live unlock" timing chip covers
-      // the same event), but we keep handling it for any prefs
-      // stored by older builds.
-      if (!stream.nextUnlockTime) return null;
-      return {
+      // Legacy trigger — current mobile UI doesn't write this value
+      // (the "Live unlock" timing chip covers the same event). Kept
+      // for prefs stored by older builds. Recurring/multi-unlock
+      // branch also applies here so legacy claim-ready alerts on a
+      // tranched stream fire at every unlock.
+      const steps = stream.unlockSteps ?? [];
+      if (steps.length > 0) {
+        const horizon = nowSec + LOOKAHEAD_SEC + 3600;
+        return steps
+          .filter(s => s.timestamp <= horizon && s.timestamp >= nowSec - 3600)
+          .map(s => ({
+            slot,
+            triggerType,
+            eventTime:  s.timestamp,
+            firingTime: s.timestamp,
+          }));
+      }
+      if (!stream.nextUnlockTime) return [];
+      return [{
         slot,
         triggerType,
         eventTime:  stream.nextUnlockTime,
         firingTime: stream.nextUnlockTime,
-      };
+      }];
     }
     case "vesting-start": {
       // Fires at stream.startTime — useful for pre-TGE allocations
@@ -306,13 +363,13 @@ function resolveAlertSpec(
       // grace window in the caller would mostly skip these — that's
       // correct: we don't want to spam "your vesting started 6
       // months ago" on a token a user just added.
-      if (!stream.startTime) return null;
-      return {
+      if (!stream.startTime) return [];
+      return [{
         slot,
         triggerType,
         eventTime:  stream.startTime,
         firingTime: stream.startTime,
-      };
+      }];
     }
   }
 }

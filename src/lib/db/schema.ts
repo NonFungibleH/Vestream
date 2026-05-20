@@ -53,6 +53,17 @@ export const users = pgTable("users", {
   // Drives DAU / WAU / MAU on /admin/growth. Cheap signal that doesn't
   // depend on a third-party analytics provider being live.
   lastActiveAt:          timestamp("last_active_at"),
+  // 2026-05-20: user's IANA timezone (e.g. "Europe/London",
+  // "America/New_York"). Detected client-side via
+  // Intl.DateTimeFormat().resolvedOptions().timeZone and POSTed to
+  // /api/mobile/me/timezone on first launch + whenever the device's
+  // TZ changes. Null = unknown — formatters fall back to UTC. Used by:
+  //   - email body (formats unlock dates in user's local time)
+  //   - future daily-digest scheduler (fires at user's 9am local)
+  //   - future quiet-hours filter (suppresses pushes in user-local
+  //     overnight band)
+  // Never used for relative-time copy ("in 2h") which is TZ-agnostic.
+  timezone:              text("timezone"),
 });
 
 // ── Claim events ────────────────────────────────────────────────────────────

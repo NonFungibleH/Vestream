@@ -389,6 +389,10 @@ export async function getAllUsersWithAnyAlertEnabled() {
       streamPrefs:       notificationPreferences.streamPrefs,
       tier:              users.tier,
       expoPushToken:     users.expoPushToken,
+      // 2026-05-20: surface the user's IANA timezone to the scheduler
+      // so email body dates render in their local time. Null = unknown,
+      // formatters fall back to UTC.
+      timezone:          users.timezone,
     })
     .from(notificationPreferences)
     .innerJoin(users, eq(users.id, notificationPreferences.userId))
