@@ -47,8 +47,56 @@ export default function ResourcesPage() {
     byCategory[article.category].push(article);
   }
 
+  // 2026-05-17 SEO/AI-search pass: JSON-LD for the resources hub.
+  // CollectionPage tells Google + AI crawlers "this is a curated content
+  // surface, not a one-off article" and the embedded ItemList tags each
+  // entry with its url + position so the catalog can be surfaced as a
+  // related-content cluster in AI Overviews. The previous version of this
+  // page had no structured data at all — only the article detail pages
+  // did — which meant the hub didn't appear in rich results even though
+  // the individual articles did.
+  const resourcesJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://vestream.io/resources#collection",
+        name: "Vestream Resources — Token Vesting Guides & Insights",
+        description: "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics.",
+        url: "https://vestream.io/resources",
+        inLanguage: "en-US",
+        isPartOf: { "@id": "https://vestream.io/#website" },
+        publisher: { "@id": "https://vestream.io/#organization" },
+      },
+      {
+        "@type": "ItemList",
+        itemListOrder: "https://schema.org/ItemListOrderDescending",
+        numberOfItems: articles.length,
+        itemListElement: articles.map((a, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          url: `https://vestream.io/resources/${a.slug}`,
+          name: a.title,
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home",      item: "https://vestream.io" },
+          { "@type": "ListItem", position: 2, name: "Resources", item: "https://vestream.io/resources" },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+
+      {/* JSON-LD structured data — CollectionPage + ItemList of all articles */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(resourcesJsonLd) }}
+      />
 
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <SiteNav />

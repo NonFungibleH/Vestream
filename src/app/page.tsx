@@ -62,15 +62,25 @@ async function getHomepageLiveStats() {
   }
 }
 
-// JSON-LD entity graph for the homepage. Three sub-schemas linked via @id:
-//   - Organization      → entity recognition + sitelinks logo
-//   - WebSite           → enables Google sitelinks search box (the search
-//                         action targets /find-vestings, our actual scan flow)
-//   - WebApplication    → describes the dashboard product itself; powers app
-//                         cards in SERPs and feeds Google's app-graph
-// Mobile app gets its own SoftwareApplication once the App Store IDs are
-// known (this is intentionally web-only until then — pointing schema at a
-// non-existent app id silently 404s).
+// JSON-LD entity graph for the homepage. Linked sub-schemas via @id:
+//   - Organization        → entity recognition + sitelinks logo
+//   - WebSite             → enables Google sitelinks search box (the search
+//                           action targets /find-vestings, our actual scan flow)
+//   - WebApplication      → describes the dashboard product itself; powers app
+//                           cards in SERPs and feeds Google's app-graph
+//   - MobileApplication   → iOS app card in SERPs. Conditionally rendered:
+//                           the App Store Connect ID is known (eas.json
+//                           ascAppId 6769799911) but the public App Store
+//                           URL only resolves once the app passes review.
+//                           Schema activates when NEXT_PUBLIC_IOS_APP_URL
+//                           is set — pre-launch absence keeps Google from
+//                           seeing a 404 install link, post-launch presence
+//                           ships the rich SERP card without a code change.
+//                           Set it to "https://apps.apple.com/app/id6769799911"
+//                           in Vercel the day the app goes public on iOS.
+const iosAppUrl = process.env.NEXT_PUBLIC_IOS_APP_URL;
+const androidAppUrl = process.env.NEXT_PUBLIC_ANDROID_APP_URL;
+
 const homepageJsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -115,6 +125,33 @@ const homepageJsonLd = {
         "Protocol-by-protocol TVL transparency",
       ],
     },
+    ...(iosAppUrl
+      ? [{
+          "@type":             "MobileApplication",
+          "@id":               "https://vestream.io/#ios-app",
+          name:                "Vestream — Token Vesting Tracker",
+          url:                 iosAppUrl,
+          installUrl:          iosAppUrl,
+          applicationCategory: "FinanceApplication",
+          operatingSystem:     "iOS 16.0",
+          // Free download; in-app subscription via RevenueCat (Apple billing).
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          publisher: { "@id": "https://vestream.io/#organization" },
+        }]
+      : []),
+    ...(androidAppUrl
+      ? [{
+          "@type":             "MobileApplication",
+          "@id":               "https://vestream.io/#android-app",
+          name:                "Vestream — Token Vesting Tracker",
+          url:                 androidAppUrl,
+          installUrl:          androidAppUrl,
+          applicationCategory: "FinanceApplication",
+          operatingSystem:     "Android",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          publisher: { "@id": "https://vestream.io/#organization" },
+        }]
+      : []),
   ],
 };
 

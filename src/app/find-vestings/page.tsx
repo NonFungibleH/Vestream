@@ -52,9 +52,67 @@ const CHAINS = [
   { name: "Solana",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",   border: "rgba(93,206,157,0.22)"   },
 ] as const;
 
+// 2026-05-17 SEO/AI-search pass: HowTo + BreadcrumbList JSON-LD.
+// This page is the canonical landing target for "how do I find my vesting
+// unlocks" / "scan wallet for token unlocks" style AI-search queries.
+// HowTo schema signals that the page IS the step-by-step procedure
+// (paste address → click scan → review results), which Google's AI
+// Overviews surface preferentially over generic landing pages. Without
+// it the AI tends to summarise from third-party tutorials that talk
+// ABOUT scanning instead of pointing the user AT the scanner.
+const findVestingsJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "HowTo",
+      "@id":   "https://vestream.io/find-vestings#howto",
+      name:    "How to find every token vesting unlock for a wallet",
+      description:
+        "Scan any wallet address across 9 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule — cliffs, linear streams, step releases, claimable balances.",
+      totalTime: "PT30S",
+      supply:    { "@type": "HowToSupply", name: "An EVM or Solana wallet address" },
+      tool:      { "@type": "HowToTool",   name: "A web browser" },
+      step: [
+        {
+          "@type": "HowToStep",
+          position: 1,
+          name: "Paste a wallet address",
+          text: "Paste any public EVM (0x…) or Solana wallet address into the scanner.",
+          url: "https://vestream.io/find-vestings#step-1",
+        },
+        {
+          "@type": "HowToStep",
+          position: 2,
+          name: "Run the scan",
+          text: "Vestream queries Sablier, Hedgey, UNCX, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
+          url: "https://vestream.io/find-vestings#step-2",
+        },
+        {
+          "@type": "HowToStep",
+          position: 3,
+          name: "Review every unlock",
+          text: "See a grouped summary by protocol × chain × token. Each row shows total amount locked, amount claimable now, and the next unlock date.",
+          url: "https://vestream.io/find-vestings#step-3",
+        },
+      ],
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home",           item: "https://vestream.io" },
+        { "@type": "ListItem", position: 2, name: "Find vestings",  item: "https://vestream.io/find-vestings" },
+      ],
+    },
+  ],
+};
+
 export default function FindVestingsPage() {
   return (
     <main className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(findVestingsJsonLd) }}
+      />
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}

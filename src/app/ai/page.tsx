@@ -3,10 +3,29 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CopyableCode } from "@/components/CopyableCode";
 
+// 2026-05-17 SEO/AI-search pass: previously this page only exported title +
+// description, missing OG/Twitter cards + canonical. That meant share links
+// rendered with the root-layout fallback (generic homepage card) and search
+// engines had no per-page canonical, which can dilute /ai's ranking signal
+// into the homepage's. Aligned with /developer's metadata shape — same
+// pattern, theme-specific copy.
 export const metadata = {
   title: "AI Agents — Vestream",
   description:
     "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+  alternates: { canonical: "https://vestream.io/ai" },
+  openGraph: {
+    title:       "AI Agents — Vestream",
+    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+    url:         "https://vestream.io/ai",
+    siteName:    "Vestream",
+    type:        "website",
+  },
+  twitter: {
+    card:        "summary_large_image" as const,
+    title:       "AI Agents — Vestream",
+    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+  },
 };
 
 // ── Showcase card: a single "user → agent" conversation snippet ─────────────

@@ -324,6 +324,11 @@ export default async function ArticlePage(
   const articleBody = blocksToPlainText(article.content);
   const wordCount   = articleBody ? articleBody.split(/\s+/).length : undefined;
 
+  // 2026-05-17 SEO: graph now includes BreadcrumbList alongside Article +
+  // (optional) FAQPage. The visible breadcrumb already lives in the page
+  // header but Google's rich-result eligibility checker needs the
+  // structured form too — without it Search shows the bare URL in the
+  // SERP instead of the "Home › Resources › Tokenomics" trail. Cheap win.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -357,6 +362,15 @@ export default async function ArticlePage(
           "@id": `https://vestream.io/resources/${article.slug}`,
         },
         keywords: article.tags.join(", "),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home",      item: "https://vestream.io" },
+          { "@type": "ListItem", position: 2, name: "Resources", item: "https://vestream.io/resources" },
+          { "@type": "ListItem", position: 3, name: article.category },
+          { "@type": "ListItem", position: 4, name: article.title, item: `https://vestream.io/resources/${article.slug}` },
+        ],
       },
       ...(faqBlock
         ? [

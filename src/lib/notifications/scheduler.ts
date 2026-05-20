@@ -85,9 +85,25 @@ export async function runNotificationJob(): Promise<number> {
       const timeUntil = stream.nextUnlockTime - nowSec;
       if (timeUntil <= 0) continue;
 
+      // 2026-05-20: per-stream opt-in is now REQUIRED. Previously the
+      // scheduler treated the global `notify_next_claim` flag as a
+      // blanket "send me alerts for every tracked stream" — but the
+      // mobile Alerts tab UI presents Alert 1 as an opt-in PER TOKEN.
+      // A user who'd added a wallet without touching the Alerts tab
+      // got pushes for tokens they'd never explicitly armed alerts
+      // for, which read as a privacy/spam issue ("Vestream sent me a
+      // push about a token I didn't know was being watched").
+      //
+      // New rule: streamPrefs[stream.id]?.alert1Enabled must be true.
+      // Brand-new users get zero pushes until they configure at least
+      // one token. The Alerts tab's permission banner + on-toggle
+      // prompt path on the mobile side surfaces this so users
+      // discover the opt-in flow.
+      const perStream = prefsMap[stream.id];
+      if (!perStream?.alert1Enabled) continue;
+
       // Resolve effective alert window for THIS stream — per-stream
       // override wins, global fallback otherwise.
-      const perStream = prefsMap[stream.id];
       const effectiveHours = typeof perStream?.hoursBeforeUnlock === "number"
         ? perStream.hoursBeforeUnlock
         : hoursBeforeUnlock;

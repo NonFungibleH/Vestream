@@ -218,6 +218,14 @@ export const metadata: Metadata = {
     siteName: "Vestream",
     type: "website",
   },
+  // 2026-05-17: added Twitter card for parity with per-protocol pages.
+  // Without this, Twitter falls back to the root-layout fallback card —
+  // generic homepage hero instead of the protocols-index branding.
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Token unlock trackers — Vestream",
+    description: "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
+  },
 };
 
 export default async function UnlocksIndexPage() {
