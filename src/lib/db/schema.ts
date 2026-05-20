@@ -360,6 +360,62 @@ export const savedSearches = pgTable("saved_searches", {
   index("saved_searches_user_idx").on(t.userId),
 ]);
 
+/**
+ * 2026-05-20: P&L cross-device sync.
+ *
+ * Previously the mobile app stored entry price and the sales ledger
+ * in per-token AsyncStorage keys (`pl_<addr>`, `sales_<addr>`), and
+ * the web dashboard stored an equivalent set in localStorage. Both
+ * surfaces computed P&L from the same formulas but the underlying
+ * data NEVER crossed devices — sell on mobile, the web dashboard
+ * showed nothing; configure entry price on web, mobile didn't see
+ * it. Reported by user as a clear data-ownership issue.
+ *
+ * Two tables (entry-price + sales ledger separately because they're
+ * 1:1 vs 1:N respectively). Both keyed on (userId, tokenAddress)
+ * since P&L for a token aggregates across all of that user's
+ * streams holding it — entry-price is a property of the user's
+ * position in the TOKEN, not in a single stream.
+ *
+ * `chainId` is optional in v1 (a token symbol on Ethereum and the
+ * same symbol on Base are different P&L positions, but most users
+ * track one chain per token and including chain in the key would
+ * complicate the "what's my $NOVA P&L" query). Future migration
+ * may strengthen this to a composite key once cross-chain
+ * positions become common.
+ */
+export const streamPnl = pgTable("stream_pnl", {
+  id:           uuid("id").primaryKey().defaultRandom(),
+  userId:       uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Lowercased token contract address. Composite key with userId. */
+  tokenAddress: text("token_address").notNull(),
+  /** Entry price in USD per whole token (not per atomic unit). */
+  entryPrice:   text("entry_price").notNull(), // stored as text for arbitrary precision
+  updatedAt:    timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  // Composite uniqueness: one entry-price row per (user, token).
+  uniqueIndex("stream_pnl_user_token_unique").on(t.userId, t.tokenAddress),
+]);
+
+export const streamSales = pgTable("stream_sales", {
+  id:           uuid("id").primaryKey().defaultRandom(),
+  userId:       uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenAddress: text("token_address").notNull(),
+  /** ISO date string of the sale (YYYY-MM-DD or full ISO timestamp). */
+  saleDate:     text("sale_date").notNull(),
+  /** Token amount sold (decimal, in whole token units). */
+  amount:       text("amount").notNull(),
+  /** Sale price in USD per whole token. */
+  price:        text("price").notNull(),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("stream_sales_user_token_idx").on(t.userId, t.tokenAddress),
+]);
+
 export const notificationsSent = pgTable("notifications_sent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
