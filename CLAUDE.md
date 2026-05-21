@@ -574,27 +574,33 @@ Two daily crons:
 | `/api/cron/seed-cache?mode=deep` | 04:00 UTC Sundays | Weekly deep seed (DEEP_SEED_LIMIT=5000 vs 500 incremental). |
 | `/api/cron/tvl-snapshot` | 03:15 UTC daily | Writes `protocolTvlSnapshots` rows powering /protocols TVL numbers. |
 
-#### Seed-cache fan-out pattern
+#### Seed-cache group pattern
 
-Single Vercel function gets 300s. PinkSale × 4 chains alone can exhaust that, leaving every later protocol stale. Since commit `4924c63` the `/api/cron/seed-cache` route is a *dispatcher*: when hit without a `?group=` param it fires three background self-fetches in parallel — one per `SeedGroup` — and returns 202 immediately. Each child fetch is its own function invocation with its own fresh 300s budget.
+Single Vercel function gets 300s. PinkSale × 4 chains alone can exhaust that, leaving every later protocol stale. The `/api/cron/seed-cache` route requires an explicit `?group=` param and runs ONE group's protocols inline — no dispatcher / fan-out anymore. Call each group separately (the daily cron config in `vercel.json` does the same, one entry per group).
 
-The three groups (defined in `seeder.ts:groupFor`):
+2026-05-20: the dispatcher mode (commit `4924c63`) was removed because Vercel's background-fetch throttling on the Hobby tier was causing only 2/3 child invocations to actually run. Calling groups explicitly is more predictable.
+
+The four groups (defined in `seeder.ts:groupFor`):
 - `heavy` — PinkSale × 4 chains. Slowest workload.
 - `solana` — Streamflow + Jupiter Lock. Helius-throttled.
-- `subgraphs` — everything else (Sablier, Hedgey, UNCX, UNCX-VM, Unvest, Superfluid, plus paused adapters).
+- `subgraphs` — Hedgey, UNCX, UNCX-VM, Unvest, Superfluid, plus paused adapters.
+- `sablier` — Sablier on its own group (split out from `subgraphs` because the Envio Hasura endpoint can chew the full 300s on a deep seed).
+
+Calling the endpoint WITHOUT a `group=` param returns a `400` with the helpful list of acceptable values — don't be surprised by it, it's the route telling you to be explicit.
 
 ```bash
-# Full refresh (all 9 protocols, fan-out into 3 background invocations)
-curl -X POST https://vestream.io/api/cron/seed-cache \
-  -H "Authorization: Bearer $CRON_SECRET"
-
-# Just one group (skips the dispatcher, runs inline up to 300s)
+# One group, incremental mode (matches the daily cron)
 curl -X POST "https://vestream.io/api/cron/seed-cache?group=heavy" \
   -H "Authorization: Bearer $CRON_SECRET"
 
-# Deep seed via fan-out — each group gets 300s
-curl -X POST "https://vestream.io/api/cron/seed-cache?mode=deep" \
-  -H "Authorization: Bearer $CRON_SECRET"
+# Full deep refresh — fire each group sequentially
+for g in heavy solana subgraphs sablier; do
+  echo "Seeding $g..."
+  curl -X POST "https://vestream.io/api/cron/seed-cache?group=$g&mode=deep" \
+    -H "Authorization: Bearer $CRON_SECRET"
+  echo ""
+done
+# Total wall time ~15–20 min across all four groups.
 
 # TVL snapshot — full refresh
 curl -X POST https://vestream.io/api/cron/tvl-snapshot \
