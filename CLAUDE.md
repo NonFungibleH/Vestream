@@ -1,5 +1,43 @@
 # Vestream — Claude Code Reference
 
+## Operating principles
+
+These four rules guide every change in this codebase. Read them once,
+then internalise. Everything below is project-specific context; these
+four are the lens through which to read the rest.
+
+### 1. Think before coding
+State your assumptions about the change before writing it. If a
+requirement is ambiguous, ask — don't guess. If the path forward is
+unclear, propose two or three options with trade-offs rather than
+picking one silently and shipping it. A 30-second clarifying question
+saves an hour of unwinding the wrong solution.
+
+### 2. Simplicity first
+Write the minimum code that solves the actual problem in front of you.
+No premature abstractions, no "I'll add a config option for that
+future case" — that future rarely arrives, and the abstraction always
+costs reading time. If you find yourself building a class hierarchy
+or plugin system for a 10-line change, stop. The native primitives
+are almost always enough.
+
+### 3. Surgical changes
+Don't touch code unrelated to the request. Every changed line should
+trace back to what was asked. "While I'm here, let me also refactor X"
+is how PRs become unreviewable and unrelated bugs slip in. If you
+spot something off in a different file, surface it as a follow-up
+task or TODO comment — don't roll the cleanup into this commit.
+
+### 4. Goal-driven execution
+Turn vague instructions into verifiable success criteria BEFORE
+writing code. "Make the dashboard load faster" is unworkable; "the
+/dashboard route should TTFB under 500ms on a cold Vercel edge cache"
+is workable. Restate the goal in concrete terms first, then build.
+Aim for changes where you can say afterwards: "I'll know I'm done
+when X is true."
+
+---
+
 ## Stack
 - **Framework**: Next.js pinned to **`16.3.0-canary.19`** exact (no caret). Earlier 16.2.x stable is in the vulnerable range of 7 published advisories (middleware bypass, RSC cache poisoning, SSRF) — the fix only landed in `16.3.0-canary.6+`. Re-pin to 16.3.0 stable as soon as it lands. Don't drop the exact-pin without checking `npm audit` against the new version.
 - **Styling**: Tailwind CSS v4 + inline `style={{}}` for one-off values (no separate CSS files)
@@ -351,11 +389,16 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 ### Mobile API (`/api/mobile/`)
 | Route | Purpose |
 |---|---|
-| `/api/mobile/auth/email` | Mobile OTP: send code |
-| `/api/mobile/auth/verify-otp` | Mobile OTP: verify + return bearer token |
+| `/api/mobile/auth/email` | Mobile OTP: send + verify (both actions on one route). Honours `REVIEWER_EMAIL` + `REVIEWER_OTP` env-var bypass for App Store / Play Store reviewers. |
 | `/api/mobile/me` | Current user profile + tier |
+| `/api/mobile/me/timezone` | POST IANA timezone string. Mobile detects via `Intl.DateTimeFormat().resolvedOptions().timeZone` on launch and POSTs here so emails render dates in local time. |
 | `/api/mobile/wallets` | CRUD for tracked wallets (mobile) — enforces same free-plan limits as web |
 | `/api/mobile/notifications` | Save mobile notification preferences |
+| `/api/mobile/notifications/test` | POST → fire a sample push to the user's `expoPushToken`. Doesn't consume the monthly push budget. |
+| `/api/mobile/notifications/log` | GET last N (default 30, max 100) rows from `notifications_sent` for the requesting user, joined with vesting cache for token symbols. |
+| `/api/mobile/pnl/[token]` | GET (entry price + sales), POST (upsert entry price), DELETE (clear both). Per-token P&L cross-device sync — see "P&L sales ledger" cross-ref below. |
+| `/api/mobile/pnl/[token]/sales` | POST → add a sale row |
+| `/api/mobile/pnl/[token]/sales/[saleId]` | DELETE → remove one sale, scoped to requesting user |
 | `/api/mobile/desktop-pair/confirm` | QR pair: mobile confirms a pairing code (Pro tier required) |
 | `/api/mobile/revenuecat-webhook` | RevenueCat subscription events → update user tier in DB. Replay-deduped via `webhook_event_dedup`. On OTP verify the handler also auto-claims any `pending_wallet_links` for the same email (web→mobile handoff). |
 
@@ -379,6 +422,10 @@ Tables in `src/lib/db/schema.ts`:
 | `tokenPricesCache` | Read-through cache for DexScreener / CoinGecko USD prices. Hourly refresh cron picks the stalest entries. |
 | `pendingWalletLinks` | Web→mobile handoff. (email, wallet_address) rows persisted from `/find-vestings` email-capture. Mobile OTP verify auto-claims matching rows into the `wallets` table. 30-day TTL. |
 | `webhookEventDedup` | (event_id, source) replay protection for the RevenueCat + Stripe webhooks. `claimWebhookEvent()` in `lib/webhook-dedup.ts` is the single gate; failure-open on DB outage. 30-day TTL via the cleanup cron. |
+| `streamPnl` | 1:1 entry-price row per `(userId, tokenAddress)`. Powers the cross-device P&L sync at `/api/mobile/pnl/[token]`. Unique index enforces one entry-price per user-per-token. |
+| `streamSales` | 1:N sales-ledger rows per `(userId, tokenAddress)`. Each row = `{saleDate, amount, price}`. Indexed on `(userId, tokenAddress)` for fast per-token reads. |
+
+`users.timezone` (IANA string, nullable) — added 2026-05-20. Mobile detects via `Intl.DateTimeFormat` and POSTs to `/api/mobile/me/timezone`. Used by the email scheduler to render dates in user-local time. Future quiet-hours / daily-digest features will consume the same column.
 
 ### API key format
 `vstr_live_{32 random hex bytes}` — plaintext shown once on creation, never stored. Only SHA-256 hash + 12-char prefix kept in DB.
@@ -769,6 +816,8 @@ IRON_SESSION_SECRET           iron-session cookie encryption secret (32+ chars)
 NEXT_PUBLIC_WALLETCONNECT_ID  WalletConnect project ID
 ADMIN_PASSWORD                Admin panel password (plaintext, compared with timing-safe equal)
 DEV_OTP                       (dev only — MOBILE OTP only after Phase 5) Fixed OTP code bypassing real email send for /api/mobile/auth/email. Web-side OTP routes were removed; web sign-in is QR pairing only.
+REVIEWER_EMAIL                (production) Specific email address that App Store / Play Store reviewers use to sign in. Combined with REVIEWER_OTP, lets reviewers bypass the real email-OTP flow without ever receiving an email. Activates ONLY when both env vars are set AND the incoming request matches both exactly. Other users unaffected. See src/app/api/mobile/auth/email/route.ts.
+REVIEWER_OTP                  (production) Fixed 6-digit code that pairs with REVIEWER_EMAIL. Never use 123456 (Apple flags as test data). Suggested format: 424242, 808080, 271828 — memorable but non-obvious.
 REVENUECAT_WEBHOOK_SECRET     Secret to validate RevenueCat webhook Authorization header
 NEXT_PUBLIC_GA_ID             Google Analytics 4 Measurement ID (G-XXXXXXXXXX). Cookie-gated.
 NEXT_PUBLIC_CLARITY_ID        Microsoft Clarity Project ID (10 chars). Cookie-gated.
