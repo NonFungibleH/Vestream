@@ -180,6 +180,34 @@ export async function POST(req: NextRequest) {
 
   // ── SEND ────────────────────────────────────────────────────────────────────
   if (action === "send") {
+    // 2026-05-22: reviewer bypass. Apple App Review (and Google Play
+    // pre-launch review) tests sign-in flows with whatever credentials
+    // we provide in App Store Connect → App Review Information →
+    // Demo Account. Reviewers don't have access to the demo email's
+    // inbox, so a real email-OTP flow blocks them and the app gets
+    // rejected for "App Completeness" (Guideline 2.1).
+    //
+    // The bypass: when env vars REVIEWER_EMAIL + REVIEWER_OTP are
+    // BOTH set AND the incoming email matches REVIEWER_EMAIL, we
+    // skip the Resend send (no real email goes out, no rate-limit
+    // counter touched, no mobileOtps row inserted) and return 200.
+    // The verify branch below independently accepts the matching
+    // REVIEWER_OTP code for the same email.
+    //
+    // Safety:
+    //   - Activates ONLY when both env vars are set. Misconfigure
+    //     either and the bypass silently doesn't fire — real users
+    //     still go through real OTP.
+    //   - Tied to ONE specific email. Other addresses see no change.
+    //   - Email comparison is lowercased + trimmed on both sides.
+    const reviewerEmail = process.env.REVIEWER_EMAIL?.toLowerCase().trim();
+    if (reviewerEmail && process.env.REVIEWER_OTP && email === reviewerEmail) {
+      // No console log of the email — keeps reviewer's identity out of
+      // log aggregators if the env var ever points at a real address.
+      console.log("[Mobile OTP] reviewer send bypass — no email dispatched");
+      return NextResponse.json({ ok: true });
+    }
+
     // Rate limit: 5 OTP requests per email per hour
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = await checkRateLimit("mobile:otp:send", `${ip}:${email}`, 5, "1 h");
@@ -247,7 +275,20 @@ export async function POST(req: NextRequest) {
     const blocked = rateLimitResponse(rlVerify, "Too many verification attempts. Try again in 15 minutes.");
     if (blocked) return blocked;
 
-    const [row] = await db
+    // 2026-05-22: reviewer bypass — matches the send-branch bypass
+    // above. When env vars REVIEWER_EMAIL + REVIEWER_OTP are BOTH set
+    // AND the incoming (email, code) matches both exactly, we skip the
+    // DB OTP lookup and fall straight through to user creation. The
+    // send branch already returned 200 without inserting a mobileOtps
+    // row, so the regular lookup below would always miss anyway.
+    //
+    // Activates in production (intentional — Apple/Google reviewers
+    // test the live binary). Confined to the one email by exact match.
+    const reviewerEmail = process.env.REVIEWER_EMAIL?.toLowerCase().trim();
+    const reviewerOtp   = process.env.REVIEWER_OTP;
+    const isReviewer    = !!(reviewerEmail && reviewerOtp && email === reviewerEmail && code === reviewerOtp);
+
+    const [row] = isReviewer ? [null] : await db
       .select()
       .from(mobileOtps)
       .where(and(
@@ -260,7 +301,7 @@ export async function POST(req: NextRequest) {
 
     // DEV_OTP bypass — development builds only, never active in production
     const devOtp = process.env.NODE_ENV !== "production" ? process.env.DEV_OTP : undefined;
-    if (!row && !(devOtp && code === devOtp)) {
+    if (!isReviewer && !row && !(devOtp && code === devOtp)) {
       return NextResponse.json({ error: "Invalid or expired code" }, { status: 422 });
     }
 
