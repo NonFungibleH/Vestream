@@ -22,6 +22,7 @@ import { isValidWalletAddress } from "@/lib/address-validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { checkCors, withCorsHeaders } from "@/lib/cors";
 import { normaliseEmail, isDisposableEmail } from "@/lib/email-validation";
+import { sendLoopsEvent } from "@/lib/loops";
 
 const PENDING_TTL_DAYS = 30;
 
@@ -204,6 +205,27 @@ export async function POST(req: NextRequest) {
   const rawWallet  = typeof body.walletAddress === "string" ? body.walletAddress : "";
   const rawLabel   = typeof body.label === "string" ? body.label.trim() : null;
   const rawChains  = Array.isArray(body.chainIds) ? body.chainIds : null;
+  // 2026-05-22: vesting snapshot from the frontend. The /find-vestings
+  // page has just rendered the scan results, so it has the numbers
+  // already — passing them in saves us a redundant re-scan + lets the
+  // Loops welcome email reference real numbers ("3 vestings found",
+  // "$12,847 locked"). All fields are optional: if absent we fire a
+  // generic event without the personalised summary strings.
+  const rawSnapshot = (body.vestingsSnapshot && typeof body.vestingsSnapshot === "object")
+    ? body.vestingsSnapshot as Record<string, unknown>
+    : null;
+  const vestingsCount = rawSnapshot && typeof rawSnapshot.count === "number"
+    ? rawSnapshot.count
+    : null;
+  const totalLockedUsd = rawSnapshot && typeof rawSnapshot.totalLockedUsd === "number"
+    ? rawSnapshot.totalLockedUsd
+    : null;
+  const nextUnlockDate = rawSnapshot && typeof rawSnapshot.nextUnlockDate === "string"
+    ? rawSnapshot.nextUnlockDate
+    : null;
+  const nextTokenSymbol = rawSnapshot && typeof rawSnapshot.nextTokenSymbol === "string"
+    ? rawSnapshot.nextTokenSymbol
+    : null;
 
   // Centralised normalise + validate. Handles lowercase, trim, trailing-dot
   // strip, length cap, and the canonical EMAIL_RE shape check.
@@ -274,10 +296,65 @@ export async function POST(req: NextRequest) {
       setWhere: sql`${pendingWalletLinks.claimedAt} IS NOT NULL`,
     });
 
-  // Fire-and-forget confirmation email so the user has an install link in
-  // their inbox even if they close the browser tab. void wrapper makes the
-  // promise unhandled-by-design — the helper swallows internally.
-  void sendSaveLinkEmail(email, walletAddress);
+  // 2026-05-22: email channel switch.
+  //
+  // When LOOPS_API_KEY is set, fire the find_vestings_saved event into
+  // Loops — the Workflow we built there handles the email delivery
+  // (download-the-app welcome + 24h follow-up nudge if app_first_open
+  // hasn't fired). When LOOPS_API_KEY is absent (e.g. local dev, or
+  // before Vercel env vars propagate), fall back to the legacy Resend
+  // confirmation so the user still receives SOMETHING. Single source
+  // of truth at runtime — never both.
+  if (process.env.LOOPS_API_KEY) {
+    const shortAddr = truncateWalletForDisplay(walletAddress);
+    // Build email-ready summary strings here in the route rather than
+    // in the template — keeps Loops dumb (just renders strings) and
+    // lets us handle edge cases (no prices, no upcoming unlocks)
+    // centrally. See lib/loops.ts comment block for the broader
+    // Resend-vs-Loops responsibility split.
+    const lockedSummary = totalLockedUsd != null && totalLockedUsd > 1
+      ? `Total locked: $${formatUsdCompact(totalLockedUsd)}.`
+      : vestingsCount != null && vestingsCount > 0
+        ? `Tracking ${vestingsCount} ${vestingsCount === 1 ? "stream" : "streams"} — USD values appear once tokens have public pricing.`
+        : "";
+
+    const nextUnlockSummary = nextUnlockDate && nextTokenSymbol
+      ? `Next unlock: ${nextUnlockDate} — ${nextTokenSymbol}.`
+      : vestingsCount != null && vestingsCount > 0
+        ? "Open the Calendar tab in the app for the full schedule."
+        : "";
+
+    const preheaderSummary = lockedSummary
+      ? `${lockedSummary} Set alerts in the app to never miss an unlock.`
+      : "Install the app to set push alerts on these vestings.";
+
+    void sendLoopsEvent({
+      email,
+      eventName: "find_vestings_saved",
+      eventProperties: {
+        walletAddressTruncated: shortAddr,
+        vestingsFound:          vestingsCount ?? 0,
+        lockedSummary,
+        nextUnlockSummary,
+        preheaderSummary,
+      },
+    });
+  } else {
+    // Fire-and-forget legacy Resend confirmation email. Kept as fallback
+    // so a missing/typo'd LOOPS_API_KEY doesn't silently drop the email
+    // entirely. Remove once Loops is fully verified end-to-end (track in
+    // CLAUDE.md → Known issues).
+    void sendSaveLinkEmail(email, walletAddress);
+  }
 
   return NextResponse.json({ ok: true, expiresAt: expiresAt.toISOString() });
+}
+
+/** Compact USD formatter — "12.8K" / "1.2M" / "47" — for use inside
+ *  email summary strings where character budget matters. */
+function formatUsdCompact(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)         return `${(n / 1_000).toFixed(1)}K`;
+  return Math.round(n).toLocaleString("en-US");
 }

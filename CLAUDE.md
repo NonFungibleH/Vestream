@@ -818,6 +818,7 @@ ADMIN_PASSWORD                Admin panel password (plaintext, compared with tim
 DEV_OTP                       (dev only — MOBILE OTP only after Phase 5) Fixed OTP code bypassing real email send for /api/mobile/auth/email. Web-side OTP routes were removed; web sign-in is QR pairing only.
 REVIEWER_EMAIL                (production) Specific email address that App Store / Play Store reviewers use to sign in. Combined with REVIEWER_OTP, lets reviewers bypass the real email-OTP flow without ever receiving an email. Activates ONLY when both env vars are set AND the incoming request matches both exactly. Other users unaffected. See src/app/api/mobile/auth/email/route.ts.
 REVIEWER_OTP                  (production) Fixed 6-digit code that pairs with REVIEWER_EMAIL. Never use 123456 (Apple flags as test data). Suggested format: 424242, 808080, 271828 — memorable but non-obvious.
+LOOPS_API_KEY                 Loops (loops.so) API key for lifecycle emails. When set, /api/find-vestings/save-link (and future signup/wallet events) fire Loops events instead of the legacy Resend HTML emails. Missing key = automatic fallback to Resend. See src/lib/loops.ts for the email-channel responsibility split.
 REVENUECAT_WEBHOOK_SECRET     Secret to validate RevenueCat webhook Authorization header
 NEXT_PUBLIC_GA_ID             Google Analytics 4 Measurement ID (G-XXXXXXXXXX). Cookie-gated.
 NEXT_PUBLIC_CLARITY_ID        Microsoft Clarity Project ID (10 chars). Cookie-gated.
