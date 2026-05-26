@@ -117,13 +117,18 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
     { url: "https://1rpc.io/matic" },
-    { url: "https://polygon-rpc.com" },
+    // 2026-05-26: tagged excludeForLogs — polygon-rpc.com went paid (API key
+    // required); returns 401 "tenant disabled" for unauthenticated eth_getLogs.
+    // Confirmed in hedgey/137 indexer failures. Keeping in pool for eth_call
+    // (non-logs) which may still work on the free tier; excluding from logs
+    // to stop burning a fallback slot on a known-broken endpoint.
+    { url: "https://polygon-rpc.com", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — was hitting Cloudflare 521 globally;
     // blocked Hedgey/137 indexer from progressing past lastRun=never.
     { url: "https://polygon.blockpi.network/v1/rpc/public", excludeForLogs: true },
-    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction
-    // as BSC. Pre-emptive on Polygon based on the confirmed BSC behaviour.
-    { url: "https://polygon-mainnet.public.blastapi.io", excludeForLogs: true },
+    // 2026-05-26: blastapi Polygon REMOVED — endpoint completely dead, returns
+    // "Blast API is no longer available" for ALL methods (ETH/Base/Arb still
+    // work but Polygon shut down). Leaving it in wastes a connection slot.
     // 2026-05-26: tagged excludeForLogs — meowrpc Polygon free tier times
     // out on the indexer's eth_getLogs windows. Kept for contract reads.
     { url: "https://polygon.meowrpc.com",            excludeForLogs: true },
@@ -176,8 +181,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://mainnet.optimism.io" },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://optimism.blockpi.network/v1/rpc/public", excludeForLogs: true },
-    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
-    { url: "https://optimism-mainnet.public.blastapi.io", excludeForLogs: true },
+    // 2026-05-26: blastapi Optimism REMOVED — same shutdown as Polygon (returns
+    // "Blast API is no longer available"). ETH/Base/Arb still alive.
     // 2026-05-26: tagged excludeForLogs — matches sibling chains, pre-emptive.
     { url: "https://optimism.meowrpc.com",        excludeForLogs: true },
     { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
