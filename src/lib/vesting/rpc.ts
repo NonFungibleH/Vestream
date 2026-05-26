@@ -96,7 +96,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://bsc-dataseed1.defibit.io" },
     { url: "https://bsc-dataseed1.ninicoin.io" },
     { url: "https://bsc.blockpi.network/v1/rpc/public" },
-    { url: "https://bsc-mainnet.public.blastapi.io" },
+    // 2026-05-26: tagged excludeForLogs — blastapi BSC also caps eth_getLogs
+    // at 10 blocks (same family of free-tier restriction as meowrpc).
+    // Confirmed via indexer-status error after the meowrpc fix landed.
+    { url: "https://bsc-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — meowrpc BSC caps eth_getLogs at
     // 10 blocks, which the event-driven indexer (2000-5000 block windows)
     // can't use. Still kept in the pool for eth_call / contract-read workloads.
@@ -109,7 +112,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/matic" },
     { url: "https://polygon-rpc.com" },
     { url: "https://polygon.blockpi.network/v1/rpc/public" },
-    { url: "https://polygon-mainnet.public.blastapi.io" },
+    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction
+    // as BSC. Pre-emptive on Polygon based on the confirmed BSC behaviour.
+    { url: "https://polygon-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — meowrpc Polygon free tier times
     // out on the indexer's eth_getLogs windows. Kept for contract reads.
     { url: "https://polygon.meowrpc.com",            excludeForLogs: true },
@@ -122,7 +127,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/base" },
     { url: "https://mainnet.base.org" },
     { url: "https://base.blockpi.network/v1/rpc/public" },
-    { url: "https://base-mainnet.public.blastapi.io" },
+    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
+    { url: "https://base-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same family of free-tier log
     // restrictions as the BSC/Polygon meowrpc endpoints. Kept for non-logs work.
     { url: "https://base.meowrpc.com",             excludeForLogs: true },
@@ -141,7 +147,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
     { url: "https://arbitrum.blockpi.network/v1/rpc/public" },
-    { url: "https://arbitrum-one.public.blastapi.io" },
+    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
+    { url: "https://arbitrum-one.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — matches sibling chains. Pre-emptive
     // (no live error yet) — the indexer doesn't currently scan Arbitrum logs
     // via meowrpc, but if it ever rotates here it would hit the same caps.
@@ -157,7 +164,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/op" },
     { url: "https://mainnet.optimism.io" },
     { url: "https://optimism.blockpi.network/v1/rpc/public" },
-    { url: "https://optimism-mainnet.public.blastapi.io" },
+    // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
+    { url: "https://optimism-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — matches sibling chains, pre-emptive.
     { url: "https://optimism.meowrpc.com",        excludeForLogs: true },
     { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
