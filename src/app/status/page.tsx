@@ -168,13 +168,50 @@ const loadStatusData = unstable_cache(
         readAllSnapshots(),
         getMaxLastRefreshedAt(),
       ]);
+
+      // Empty-result trap (added 2026-05-26): when the seed-cache cron is
+      // mid-refreshStatusSummary, the status_summary table is briefly empty.
+      // If this query catches that window, the live result is { cells: [] }.
+      // Without this guard the empty payload was being:
+      //   1. Committed to unstable_cache (10-min TTL) → page renders
+      //      "Pending" for every cell for the next 10 minutes
+      //   2. Written to Redis via writeLastGood → poisons the catch-block
+      //      fallback path too, so the next error also returns empty
+      // The fix: when cells comes back empty, prefer the last-known-good
+      // Redis payload instead. We don't poison Redis with empty cells
+      // either — the writeLastGood call below is gated on cells.length > 0.
+      if (cells.length === 0) {
+        const fallback = await readLastGood();
+        if (fallback && fallback.cells.length > 0) {
+          console.warn(
+            `[/status] live query returned 0 cells (likely status_summary mid-rewrite) — ` +
+            `serving Redis last-good from ${new Date(fallback.capturedAt * 1000).toISOString()}`,
+          );
+          return {
+            cells:               fallback.cells,
+            tvlRows:             fallback.tvlRows,
+            maxLastRefreshedSec: fallback.maxLastRefreshedSec,
+            error:               null,
+            stale:               true,
+            capturedAt:          fallback.capturedAt,
+          };
+        }
+        // Truly cold (no cells in DB, no Redis fallback) — let the empty
+        // payload through. First-time deploy / freshly-truncated DB. The
+        // hero will read this correctly and show "0 operational, X pending".
+      }
+
       const payload: StatusPayload = { cells, tvlRows, maxLastRefreshedSec };
       // 2026-05-13: switched from awaited to fire-and-forget. Even with the
       // 1.5s timeout inside writeLastGood, awaiting it added avoidable
       // latency to every successful render. Redis writes don't have to be
       // synchronous — if the write loses, the next render captures fresh
       // data anyway. The internal timeout still bounds total work.
-      writeLastGood(payload).catch(() => {});
+      // 2026-05-26: gated on cells.length > 0 — never poison Redis with an
+      // empty payload (catch-block fallback would then serve forever-empty).
+      if (cells.length > 0) {
+        writeLastGood(payload).catch(() => {});
+      }
       return { ...payload, error: null, stale: false, capturedAt: Math.floor(Date.now() / 1000) };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -227,13 +264,13 @@ const loadStatusData = unstable_cache(
   // were stacking latency on a slow pool and pushing /status past
   // Cloudflare's gateway timeout (504). v7 forces any cache entry that
   // captured a 504 timeout / hung promise to invalidate immediately.
-  // v8 bump on 2026-05-26: previous v7 entry captured an empty cells[]
-  // payload during a Vercel deploy window (transient DB unavailability)
-  // and was then serving it for up to 10 min, making the entire /status
-  // matrix render as "Pending" even though the underlying DB had healthy
-  // data. Cache-stats endpoint confirmed 48 fresh cells but the cached
-  // page didn't know. v-bump forces immediate invalidation.
-  ["status-page-data-v8"],
+  // v9 bump on 2026-05-26: the v8 cache captured ANOTHER empty payload
+  // when the seed-cache cron was mid-refreshStatusSummary. v9 forces
+  // invalidation, and the empty-result trap above (added the same day)
+  // makes this self-healing — future empty queries fall back to Redis
+  // instead of poisoning the cache. So v9 should be the last v-bump
+  // we need for this class of bug.
+  ["status-page-data-v9"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
