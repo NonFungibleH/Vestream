@@ -24,6 +24,9 @@ import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
 import { getCacheStatsCells, getMaxLastRefreshedAt } from "@/lib/vesting/cache-stats";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
+import { db } from "@/lib/db";
+import { indexerState } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 import { StatusAutoRefresh } from "./StatusAutoRefresh";
 
 // ── Last-known-good persistence ───────────────────────────────────────────────
@@ -52,10 +55,31 @@ import { StatusAutoRefresh } from "./StatusAutoRefresh";
 const STATUS_CACHE_KEY = "status:last-good-v1";
 const STATUS_CACHE_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
 
+// Rows from indexer_state that ran successfully within the last 20 minutes.
+// Used by the status page to distinguish "stale because low activity" from
+// "stale because broken" — a chain with a healthy active indexer should show
+// amber at worst, not red, even if lastRefreshedAt is old.
+async function getActiveIndexers(): Promise<Array<{ protocol: string; chainId: number }>> {
+  try {
+    const cutoff = new Date(Date.now() - 20 * 60 * 1000); // 20 min ago
+    return await db
+      .select({ protocol: indexerState.protocol, chainId: indexerState.chainId })
+      .from(indexerState)
+      .where(
+        sql`${indexerState.lastError} is null and ${indexerState.lastRunAt} >= ${cutoff}`
+      );
+  } catch {
+    return [];
+  }
+}
+
 interface StatusPayload {
   cells:                Awaited<ReturnType<typeof getCacheStatsCells>>;
   tvlRows:              Awaited<ReturnType<typeof readAllSnapshots>>;
   maxLastRefreshedSec:  number | null;
+  /** Indexer rows that ran cleanly within the last 20 minutes — used to
+   *  downgrade "stuck" cells to "stale" when the indexer is healthy. */
+  activeIndexers:       Array<{ protocol: string; chainId: number }>;
 }
 interface StatusResult extends StatusPayload {
   error: string | null;
@@ -163,10 +187,11 @@ export const maxDuration = 30;
 const loadStatusData = unstable_cache(
   async (): Promise<StatusResult> => {
     try {
-      const [cells, tvlRows, maxLastRefreshedSec] = await Promise.all([
+      const [cells, tvlRows, maxLastRefreshedSec, activeIndexers] = await Promise.all([
         getCacheStatsCells(),
         readAllSnapshots(),
         getMaxLastRefreshedAt(),
+        getActiveIndexers(),
       ]);
 
       // Empty-result trap (added 2026-05-26): when the seed-cache cron is
@@ -191,6 +216,7 @@ const loadStatusData = unstable_cache(
             cells:               fallback.cells,
             tvlRows:             fallback.tvlRows,
             maxLastRefreshedSec: fallback.maxLastRefreshedSec,
+            activeIndexers:      fallback.activeIndexers ?? [],
             error:               null,
             stale:               true,
             capturedAt:          fallback.capturedAt,
@@ -201,7 +227,7 @@ const loadStatusData = unstable_cache(
         // hero will read this correctly and show "0 operational, X pending".
       }
 
-      const payload: StatusPayload = { cells, tvlRows, maxLastRefreshedSec };
+      const payload: StatusPayload = { cells, tvlRows, maxLastRefreshedSec, activeIndexers };
       // 2026-05-13: switched from awaited to fire-and-forget. Even with the
       // 1.5s timeout inside writeLastGood, awaiting it added avoidable
       // latency to every successful render. Redis writes don't have to be
@@ -225,6 +251,7 @@ const loadStatusData = unstable_cache(
           cells:               fallback.cells,
           tvlRows:             fallback.tvlRows,
           maxLastRefreshedSec: fallback.maxLastRefreshedSec,
+          activeIndexers:      fallback.activeIndexers ?? [],
           error:               null,
           stale:               true,
           capturedAt:          fallback.capturedAt,
@@ -236,6 +263,7 @@ const loadStatusData = unstable_cache(
         cells:               [],
         tvlRows:             [],
         maxLastRefreshedSec: null,
+        activeIndexers:      [],
         error:               message,
         stale:               false,
         capturedAt:          null,
@@ -270,7 +298,10 @@ const loadStatusData = unstable_cache(
   // makes this self-healing — future empty queries fall back to Redis
   // instead of poisoning the cache. So v9 should be the last v-bump
   // we need for this class of bug.
-  ["status-page-data-v9"],
+  // v10 bump on 2026-05-26: added activeIndexers to payload (indexer health
+  // cross-reference). Forces invalidation of cached v9 payloads that lack
+  // the new field — avoids "activeIndexers undefined" on the first render.
+  ["status-page-data-v10"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
@@ -359,6 +390,7 @@ export default async function StatusPage() {
     cells,
     tvlRows,
     maxLastRefreshedSec,
+    activeIndexers,
     error:      queryError,
     stale:      isStale,
     capturedAt: cachedAtSec,
@@ -405,6 +437,14 @@ export default async function StatusPage() {
     });
   }
 
+  // Build a Set of "protocol|chainId" keys for indexers that are actively
+  // running (last successful run within 20 minutes, no error). These chains
+  // may have stale lastRefreshedAt simply because no new vesting events were
+  // created — the indexer IS healthy, there's just nothing to write.
+  const activeIndexerSet = new Set(
+    activeIndexers.map((r) => `${r.protocol}|${r.chainId}`)
+  );
+
   // Binary health signal — green if no cell has crossed the "stuck"
   // threshold, red if any has. The matrix below shows which cells.
   // Amber/stale (between cron runs) is expected behaviour and does NOT
@@ -425,11 +465,13 @@ export default async function StatusPage() {
         continue;
       }
       const b = bucket(freshestSec, nowSec);
-      if (b.kind === "stuck") {
+      const indexerKey = `${proto.adapterIds[0]}|${chainId}`;
+      if (b.kind === "stuck" && !activeIndexerSet.has(indexerKey)) {
         stuckCells.push({ protocol: proto.name, chainId, label: b.label });
       } else {
-        // fresh + stale both count as operational — stale is normal
-        // behaviour between cron runs.
+        // fresh + stale both count as operational — stale is normal between
+        // cron runs. "stuck" with a healthy active indexer also counts as
+        // operational (the data is current, just no new events to write).
         operationalCount++;
       }
     }
@@ -623,8 +665,15 @@ export default async function StatusPage() {
                         </td>
                       );
                     }
-                    const b    = bucket(freshestSec, nowSec);
-                    const meta = metaMap.get(`${proto.adapterIds[0]}|${chainId}`);
+                    const rawBucket = bucket(freshestSec, nowSec);
+                    // If the indexer ran successfully within 20 min, the data
+                    // is current — there just weren't any new events to write.
+                    // Cap at "stale" (amber) instead of showing false red.
+                    const cellKey = `${proto.adapterIds[0]}|${chainId}`;
+                    const b = rawBucket.kind === "stuck" && activeIndexerSet.has(cellKey)
+                      ? { ...rawBucket, kind: "stale" as const, color: "#d97706" }
+                      : rawBucket;
+                    const meta = metaMap.get(cellKey);
                     return (
                       <td key={chainId} className="px-3 py-3 text-xs align-top">
                         <div className="flex flex-col gap-1">
@@ -686,13 +735,13 @@ export default async function StatusPage() {
           </p>
           <ul className="space-y-1" style={{ lineHeight: 1.7 }}>
             <li>
-              <span style={{ color: "#10b981", fontWeight: 600 }}>Green</span> = data refreshed in the last 2 hours.
+              <span style={{ color: "#10b981", fontWeight: 600 }}>Green</span> = data refreshed in the last 24 hours.
             </li>
             <li>
-              <span style={{ color: "#d97706", fontWeight: 600 }}>Amber</span> = 2 hours to 30 hours since last refresh — normal between daily cron runs.
+              <span style={{ color: "#d97706", fontWeight: 600 }}>Amber</span> = 24–36 hours since last write, OR over 36 hours but the on-chain indexer is actively running with no errors (low-activity chain — data is current, no new events to write).
             </li>
             <li>
-              <span style={{ color: "#dc2626", fontWeight: 600 }}>Red</span> = more than 30 hours stale; the indexer for that cell may be broken.
+              <span style={{ color: "#dc2626", fontWeight: 600 }}>Red</span> = more than 36 hours stale and the indexer is not actively running — needs attention.
             </li>
             <li>
               <span style={{ color: "#64748b", fontWeight: 600 }}>Pending</span> = chain we support but the cache is empty (newly added adapter, awaiting first seed run).
