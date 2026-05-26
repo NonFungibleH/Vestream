@@ -408,7 +408,17 @@ export function makeFallbackClient(
 
   const transports = urls.map((url) =>
     http(url, {
-      batch:   opts.batch ?? true,
+      // 2026-05-26: forLogs callers default to batch:false. BSC chain-
+      // native RPCs (ninicoin/defibit/binance dataseeds) heavily rate-
+      // limit BATCHED eth_getLogs even when individual calls would
+      // succeed — observed today as a flood of "method eth_getLogs in
+      // batch triggered rate limit" errors on the Hedgey/UNCX-VM
+      // indexer for BSC. The indexer makes few requests per tick
+      // (one eth_getLogs + a couple of multicalls); turning off batch
+      // costs almost nothing on throughput while completely sidesteps
+      // the batch-specific rate limit. Walkers explicitly pass
+      // batch:true and are unaffected.
+      batch:   opts.batch ?? !opts.forLogs,
       fetchFn: makeTrackingFetch(url),
     }),
   );
