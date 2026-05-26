@@ -227,7 +227,13 @@ const loadStatusData = unstable_cache(
   // were stacking latency on a slow pool and pushing /status past
   // Cloudflare's gateway timeout (504). v7 forces any cache entry that
   // captured a 504 timeout / hung promise to invalidate immediately.
-  ["status-page-data-v7"],
+  // v8 bump on 2026-05-26: previous v7 entry captured an empty cells[]
+  // payload during a Vercel deploy window (transient DB unavailability)
+  // and was then serving it for up to 10 min, making the entire /status
+  // matrix render as "Pending" even though the underlying DB had healthy
+  // data. Cache-stats endpoint confirmed 48 fresh cells but the cached
+  // page didn't know. v-bump forces immediate invalidation.
+  ["status-page-data-v8"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
