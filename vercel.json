@@ -63,6 +63,22 @@
     {
       "path": "/api/cron/seed-cache?group=superfluid",
       "schedule": "35 * * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=subgraphs",
+      "schedule": "5 */2 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=sablier",
+      "schedule": "45 */2 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=heavy",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=solana",
+      "schedule": "15 */6 * * *"
     }
   ],
   "headers": [
