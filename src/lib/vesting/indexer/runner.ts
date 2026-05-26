@@ -63,8 +63,16 @@ export async function runIndexer(indexer: Indexer): Promise<RunResult> {
     ))
     .limit(1);
 
-  const lastConfirmed = existing[0]?.lastConfirmedBlock != null
-    ? BigInt(existing[0].lastConfirmedBlock)
+  // A `lastConfirmedBlock` of 0 means this row was inserted by touchAttempt()
+  // (failed-first-tick stub) — the schema defaults the column to 0 notNull,
+  // so a row created with only `lastAttemptAt`/`lastError` ends up with
+  // confirmedBlock=0. Treat that as uninitialised and fall back to
+  // genesisBlock - 1n. Without this guard an indexer that fails its first
+  // tick gets stuck scanning from block 1 forever — Hedgey/137 was hitting
+  // this (2026-05-26): fromBlock=0x1 instead of the configured 71_700_000.
+  const existingBlock = existing[0]?.lastConfirmedBlock ?? 0;
+  const lastConfirmed = existingBlock > 0
+    ? BigInt(existingBlock)
     : genesisBlock - 1n;
 
   // 2. Get chain head.
