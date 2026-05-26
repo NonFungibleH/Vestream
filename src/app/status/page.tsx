@@ -352,9 +352,13 @@ export default async function StatusPage() {
   // Then overlay TVL snapshot $ values + the computed_at timestamp.
   for (const r of tvlRows) {
     const k = `${r.protocol}|${r.chainId}`;
+    // r.computedAt is typed as Date but arrives as an ISO string when the
+    // payload was rehydrated from Redis / unstable_cache (both JSON-serialise
+    // the wrapper). new Date() handles both Date and string inputs, so this
+    // normalises across the live-DB and cache-hit paths.
     metaMap.set(k, {
       tvlUsd:           r.tvlUsd,
-      tvlComputedAtSec: Math.floor(r.computedAt.getTime() / 1000),
+      tvlComputedAtSec: Math.floor(new Date(r.computedAt).getTime() / 1000),
     });
   }
 
