@@ -539,12 +539,32 @@ export async function runWalkerSnapshot(
         priorTvl > PRICING_GUARD_MIN_PRIOR_USD &&
         newTvl   < priorTvl * PRICING_GUARD_DROP_RATIO;
 
+      // Stale-prior override (added 2026-05-26): the guards above preserve
+      // the prior row when pricing looks unreliable. That's correct for
+      // transient failures, but it ALSO masks a permanent failure mode where
+      // a protocol's token universe is structurally un-priceable (mostly
+      // meme/launchpad tokens with no DexScreener/CoinGecko coverage). The
+      // guard fires every day, the row stays frozen indefinitely.
+      // Worked example: PinkSale snapshot stuck at 2026-05-11 03:17 for 15
+      // straight days because its 5000 BSC tokens have ~3% pricing coverage
+      // (below the 5% MIN_RATIO threshold) on every run.
+      // Fix: if the prior row is older than STALE_PRIOR_DAYS, let the new
+      // row commit regardless of the guards. Partial-coverage fresh data
+      // beats permanently-frozen historical data — users see "$X · prices
+      // recent" instead of "$X · prices 15d ago" on /status, and the
+      // headline can move with reality.
+      const STALE_PRIOR_DAYS = 7;
+      const priorAgeMs = priorRow
+        ? Date.now() - priorRow.computedAt.getTime()
+        : 0;
+      const priorIsStale = priorRow != null && priorAgeMs > STALE_PRIOR_DAYS * 24 * 60 * 60 * 1000;
+
       let committed = false;
       let skipped   = false;
-      if (priorRow && (!coverageOk || tvlCrashed)) {
-        // We keep the prior row. If no prior exists, we let the row write
-        // through — a partial number beats no row at all for first-time
-        // snapshots.
+      if (priorRow && !priorIsStale && (!coverageOk || tvlCrashed)) {
+        // We keep the prior row. If no prior exists OR prior is stale, we
+        // let the row write through — a partial number beats indefinite
+        // staleness, and beats no row at all for first-time snapshots.
         const reason = !coverageOk
           ? `pricing coverage ${tokensPriced}/${tokensTotal} ` +
             `(${(100 * tokensPriced / tokensTotal).toFixed(1)}%) below ${100 * PRICING_GUARD_MIN_RATIO}% threshold`
@@ -554,6 +574,16 @@ export async function runWalkerSnapshot(
           `(computedAt=${priorRow.computedAt.toISOString()}, tvlUsd=$${priorTvl.toFixed(0)})`,
         );
         skipped = true;
+      } else if (priorRow && priorIsStale && (!coverageOk || tvlCrashed)) {
+        // Loud log so we can see when the stale-prior override kicks in.
+        // This is the "guard would have preserved but prior is too old"
+        // path — useful signal that a protocol's pricing pipeline needs
+        // attention (e.g. add more upstream price sources for meme tokens).
+        const priorDays = (priorAgeMs / (24 * 60 * 60 * 1000)).toFixed(1);
+        console.warn(
+          `[snapshot] ${protocol}/${chainId}: guard would preserve but prior ` +
+          `is ${priorDays}d old (>${STALE_PRIOR_DAYS}d) — overriding, writing partial row`,
+        );
       }
 
       // Commit IMMEDIATELY so this chain's result survives even if a sibling
