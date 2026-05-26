@@ -259,6 +259,14 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
   const PER_WALLET_CONCURRENCY = 8;
 
   // Phase 1 — lengths, bounded concurrency.
+  // 2026-05-26: getUserNormalLocksLength REVERTS (with "execution reverted")
+  // when a wallet has never created a PinkSale lock — semantically equivalent
+  // to "0 locks" but surfaced as an Error from viem. Previously bubbled all
+  // the way through Phase 2 + the lockByWallet iteration to a console.error
+  // per wallet per chain, which dominated Vercel logs for the demo wallets
+  // (every wallet × every chain × ~hourly == hundreds of "errors" that are
+  // actually just "this user has no locks here"). Catch the revert at the
+  // source and return 0n — keeps the logs honest, behaviour unchanged.
   const lengthByWallet = await mapBounded(
     wallets,
     PER_WALLET_CONCURRENCY,
@@ -268,6 +276,13 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         abi:          PINKSALE_ABI,
         functionName: "getUserNormalLocksLength",
         args:         [wallet as `0x${string}`],
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        // "execution reverted" with no reason string = no-locks. Anything
+        // else (HTTP, decode, rate limit, etc) is a real failure we want to
+        // propagate so the caller's outer error handler sees it.
+        if (msg.includes("execution reverted")) return 0n;
+        throw err;
       }),
   );
 
