@@ -384,9 +384,14 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
 
   // Phase 1 — light enumeration: pubkeys only. Try each URL in turn.
+  // IMPORTANT: we break ONLY when we get a non-empty result. A 0-pubkey
+  // response without an error is treated as a silent provider failure
+  // (Alchemy, for example, returns [] for programs it doesn't fully index
+  // rather than throwing). We fall through to the next URL in that case.
   let pubkeys: PublicKey[] | null = null;
   let usedUrl = candidateUrls[0];
   for (const url of candidateUrls) {
+    const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").split("?")[0].slice(0, 60);
     try {
       const conn = new Connection(url, "confirmed");
       const lite = await conn.getProgramAccounts(programId, {
@@ -396,37 +401,25 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
         ],
         dataSlice: { offset: 0, length: 0 },
       });
-      pubkeys = lite.map((a) => a.pubkey);
+      const result = lite.map((a) => a.pubkey);
+      if (result.length === 0) {
+        // Silent empty response — some providers (e.g. Alchemy) return []
+        // for programs they don't fully index instead of throwing. Try next.
+        console.warn(`[jupiter-lock] phase 1: ${urlShort} returned 0 pubkeys (silent provider failure) — trying next`);
+        continue;
+      }
+      pubkeys = result;
       usedUrl = url;
-      console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").split("?")[0].slice(0, 60)})`);
+      console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${urlShort})`);
       break;
     } catch (err) {
-      const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").slice(0, 60);
       console.warn(`[jupiter-lock] phase 1 failed on ${urlShort}: ${err instanceof Error ? err.message.slice(0, 100) : err}`);
     }
   }
   if (pubkeys === null) {
-    console.error("[jupiter-lock] phase 1 getProgramAccounts failed on all configured URLs");
+    console.error("[jupiter-lock] phase 1 getProgramAccounts failed (or returned 0) on all configured URLs");
     return null;
   }
-  // Hard-fail on suspiciously-empty results. Jupiter Lock had 44k+
-  // escrows in production for months; a 0-pubkey result is almost
-  // always an RPC problem (silent rate-limit, plan downgrade, wrong
-  // endpoint URL) NOT "the program is genuinely empty." Returning []
-  // would write 0 rows to the cache and the `setWhere` in writeToCache
-  // would then silently mark the run as a no-op — exactly the failure
-  // mode that produced the "Jupiter Lock 10d ago" staleness diamond on
-  // the /protocols page. Return null instead so the seeder treats it
-  // as a hard failure + the prior row stays intact.
-  if (pubkeys.length === 0) {
-    console.error(
-      `[jupiter-lock] phase 1 returned 0 pubkeys — treating as silent RPC failure ` +
-      `(tried ${candidateUrls.length} URL(s); succeeded on ${usedUrl.replace(/api[-_]?key=[^&?]+/i, "api-key=***").slice(0, 60)}). ` +
-      `Real production count is ~44k.`,
-    );
-    return null;
-  }
-
   // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
   // Reuse the URL that succeeded in phase 1 (already proven it's alive).
   // 100-pubkey chunks × concurrency 4 keeps us under Helius free
