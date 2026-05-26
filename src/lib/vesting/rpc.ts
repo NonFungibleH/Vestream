@@ -80,7 +80,13 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ETHEREUM]: buildPool(process.env.ALCHEMY_RPC_URL_ETH, [
     { url: "https://eth.drpc.org" },
     { url: "https://1rpc.io/eth" },
-    { url: "https://ethereum.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — BlockPI's free tier had a multi-
+    // hour global Cloudflare 521 outage today (also hit polygon + bsc).
+    // Unlike meowrpc/blastapi (hard block-range cap), BlockPI usually serves
+    // logs fine — this is a reliability tag, not a capability one. Revisit
+    // when they have a more reliable free tier or once we move to paid
+    // providers across the board.
+    { url: "https://ethereum.blockpi.network/v1/rpc/public", excludeForLogs: true },
     { url: "https://eth-mainnet.public.blastapi.io" },
     { url: "https://eth.meowrpc.com" },
     { url: "https://eth.api.onfinality.io/public" },
@@ -95,7 +101,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://bsc-dataseed.binance.org" },
     { url: "https://bsc-dataseed1.defibit.io" },
     { url: "https://bsc-dataseed1.ninicoin.io" },
-    { url: "https://bsc.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
+    { url: "https://bsc.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — blastapi BSC also caps eth_getLogs
     // at 10 blocks (same family of free-tier restriction as meowrpc).
     // Confirmed via indexer-status error after the meowrpc fix landed.
@@ -111,7 +118,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://polygon.drpc.org" },
     { url: "https://1rpc.io/matic" },
     { url: "https://polygon-rpc.com" },
-    { url: "https://polygon.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — was hitting Cloudflare 521 globally;
+    // blocked Hedgey/137 indexer from progressing past lastRun=never.
+    { url: "https://polygon.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction
     // as BSC. Pre-emptive on Polygon based on the confirmed BSC behaviour.
     { url: "https://polygon-mainnet.public.blastapi.io", excludeForLogs: true },
@@ -126,7 +135,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://base.drpc.org" },
     { url: "https://1rpc.io/base" },
     { url: "https://mainnet.base.org" },
-    { url: "https://base.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
+    { url: "https://base.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
     { url: "https://base-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same family of free-tier log
@@ -146,7 +156,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://arbitrum.drpc.org" },
     { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
-    { url: "https://arbitrum.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
+    { url: "https://arbitrum.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
     { url: "https://arbitrum-one.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — matches sibling chains. Pre-emptive
@@ -163,7 +174,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://optimism.drpc.org" },
     { url: "https://1rpc.io/op" },
     { url: "https://mainnet.optimism.io" },
-    { url: "https://optimism.blockpi.network/v1/rpc/public" },
+    // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
+    { url: "https://optimism.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — same blastapi family-restriction.
     { url: "https://optimism-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — matches sibling chains, pre-emptive.
