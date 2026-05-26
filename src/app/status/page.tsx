@@ -599,14 +599,33 @@ export default async function StatusPage() {
                             />
                             {b.label}
                           </span>
-                          {meta && (
-                            <span
-                              className="font-mono text-[10px] leading-tight pl-1"
-                              style={{ color: "#94a3b8" }}
-                            >
-                              {formatCompactUsd(meta.tvlUsd)} · prices {meta.tvlComputedAtSec !== null ? relativeAge(meta.tvlComputedAtSec, nowSec) : "—"}
-                            </span>
-                          )}
+                          {meta && (() => {
+                            // Price freshness shares the same daily-cron
+                            // bucket thresholds as the cache freshness pill
+                            // above (TVL snapshot runs 03:15 UTC daily).
+                            // Colour the time portion using bucket() so the
+                            // eye can scan stale-price cells without reading
+                            // every value — "prices 15d ago" lights up red
+                            // even when the cache row above is green.
+                            const priceBucket = meta.tvlComputedAtSec !== null
+                              ? bucket(meta.tvlComputedAtSec, nowSec)
+                              : null;
+                            return (
+                              <span
+                                className="font-mono text-[10px] leading-tight pl-1"
+                                style={{ color: "#94a3b8" }}
+                              >
+                                {formatCompactUsd(meta.tvlUsd)} · prices{" "}
+                                {priceBucket ? (
+                                  <span style={{ color: priceBucket.color, fontWeight: 700 }}>
+                                    {priceBucket.label}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: "#94a3b8" }}>—</span>
+                                )}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </td>
                     );
