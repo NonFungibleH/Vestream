@@ -44,7 +44,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { fallback, http, createPublicClient, type Chain, type PublicClient } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum, optimism } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia, baseSepolia } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 
 interface Provider {
@@ -362,12 +362,16 @@ export function getRpcPoolSize(chainId: SupportedChainId, opts: { forLogs?: bool
 // during the daily cron.
 
 const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
-  [CHAIN_IDS.ETHEREUM]: mainnet,
-  [CHAIN_IDS.BSC]:      bsc,
-  [CHAIN_IDS.POLYGON]:  polygon,
-  [CHAIN_IDS.BASE]:     base,
-  [CHAIN_IDS.ARBITRUM]: arbitrum,
-  [CHAIN_IDS.OPTIMISM]: optimism,
+  [CHAIN_IDS.ETHEREUM]:     mainnet,
+  [CHAIN_IDS.BSC]:          bsc,
+  [CHAIN_IDS.POLYGON]:      polygon,
+  [CHAIN_IDS.BASE]:         base,
+  [CHAIN_IDS.ARBITRUM]:     arbitrum,
+  [CHAIN_IDS.OPTIMISM]:     optimism,
+  // Testnets added 2026-05-26 so makeFallbackClient can serve adapters
+  // that need them (Hedgey/Sepolia, future Base-Sepolia paths).
+  [CHAIN_IDS.SEPOLIA]:      sepolia,
+  [CHAIN_IDS.BASE_SEPOLIA]: baseSepolia,
 };
 
 /**

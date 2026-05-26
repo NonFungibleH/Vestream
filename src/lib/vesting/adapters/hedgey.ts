@@ -1,8 +1,7 @@
-import { createPublicClient, http, erc20Abi } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia } from "viem/chains";
+import { erc20Abi } from "viem";
 import { VestingAdapter } from "./index";
 import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
-import { getRpcUrl as getRpcUrlPool } from "../rpc";
+import { makeFallbackClient } from "../rpc";
 import { resolveTokenMeta } from "../token-resolver";
 
 // Module-level token metadata cache — survives within the same serverless instance
@@ -25,15 +24,8 @@ const CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.SEPOLIA]:  "0x68b6986416c7A38F630cBc644a2833A0b78b3631",
 };
 
-const VIEM_CHAINS: Partial<Record<SupportedChainId, typeof mainnet | typeof bsc | typeof polygon | typeof base | typeof arbitrum | typeof optimism | typeof sepolia>> = {
-  [CHAIN_IDS.ETHEREUM]: mainnet,
-  [CHAIN_IDS.BSC]:      bsc,
-  [CHAIN_IDS.POLYGON]:  polygon,
-  [CHAIN_IDS.BASE]:     base,
-  [CHAIN_IDS.ARBITRUM]: arbitrum,
-  [CHAIN_IDS.OPTIMISM]: optimism,
-  [CHAIN_IDS.SEPOLIA]:  sepolia,
-};
+// VIEM_CHAINS removed 2026-05-26: makeFallbackClient now owns the chain
+// → viem-chain mapping centrally in rpc.ts.
 
 const HEDGEY_ABI = [
   { name: "balanceOf",          type: "function", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ type: "uint256" }] },
@@ -57,32 +49,22 @@ type HedgeyPlan = {
   rate: bigint; period: bigint; vestingAdmin: `0x${string}`; adminTransferOBO: boolean;
 };
 
-// Delegate to the shared multi-RPC pool (lib/vesting/rpc.ts) so missing
-// per-chain env vars (BSC_RPC_URL / POLYGON_RPC_URL / ALCHEMY_RPC_URL_BASE
-// — INTENTIONALLY OPTIONAL per CLAUDE.md landmine) fall through to dRPC
-// rather than returning undefined and silently bailing.
-//
-// Pre-fix bug: the local resolver returned undefined for BSC/Polygon/Base
-// when those env vars weren't set, the adapter short-circuited to [] with
-// no error logged, and Hedgey on those three chains stayed silently broken
-// for 8+ days (May 2 2026 cache-stats audit). Same shape as the seeder fix
-// in `bec6fc9` and the PinkSale walker fix in `tvl-walker/pinksale.ts`.
-function getRpcUrl(chainId: SupportedChainId): string | undefined {
-  return getRpcUrlPool(chainId);
-}
+// 2026-05-26: migrated from single-URL http() transport to the shared
+// fallback client. Previous pattern picked ONE URL via getRpcUrl() and
+// pinned the entire wallet scan to it — if that URL happened to be
+// ankr.com (now requires API key), meowrpc.com (rejects eth_call on some
+// endpoints), publicnode.com (returning 404 today), or onfinality.io
+// (rate-limited), every scan hitting that rotation failed loudly even
+// though other URLs in the pool were healthy. makeFallbackClient hands
+// viem a `fallback` transport over the whole pool with per-call
+// failover + quarantine — same pattern PinkSale's walker uses.
 
 async function fetchForChain(wallets: string[], chainId: SupportedChainId): Promise<VestingStream[]> {
   const contractAddress = CONTRACTS[chainId];
-  const rpcUrl = getRpcUrl(chainId);
-  if (!contractAddress || !rpcUrl) return [];
+  if (!contractAddress) return [];
 
-  const chain = VIEM_CHAINS[chainId];
-  if (!chain) return [];
-
-  const client = createPublicClient({
-    chain,
-    transport: http(rpcUrl),
-  });
+  const client = makeFallbackClient(chainId, { batch: true });
+  if (!client) return [];
 
   const nowSec = Math.floor(Date.now() / 1000);
   const streams: VestingStream[] = [];
