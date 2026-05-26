@@ -422,6 +422,18 @@ async function discoverSuperfluidRecipients(chainId: SupportedChainId, limit: nu
 // and extract claimant addresses, which is a decent proxy for "wallets with
 // active Team Finance vestings". Misses wallets with vestings they've never
 // claimed from, but those would appear via organic user traffic.
+//
+// 2026-05-26: Added cached-recipients fallback (same pattern as PinkSale).
+// Root cause of 600h staleness: `vestingClaims` returns wallets that recently
+// CLAIMED — but a wallet that just claimed its ENTIRE allocation now has
+// `userTotal: 0` in the REST API, which the adapter filters out. So every
+// seed run discovers valid claimants, fetches 0 streams, and the heartbeat
+// never fires. Old cached rows (from wallets that claimed long ago) never
+// get re-fetched because those wallets don't appear in recent claims.
+//
+// The fix: union Squid claimants with wallets already in cache. This
+// re-fetches existing records every run, updating their balances (or marking
+// them fully vested if the REST API now returns userTotal = 0).
 
 const TEAM_FINANCE_SQUID = "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
 
@@ -438,25 +450,40 @@ async function discoverTeamFinanceRecipients(chainId: SupportedChainId, limit: n
       ) { account }
     }
   `;
-  const all = await paginateDiscover(limit, async (first, skip) => {
-    const data = await postGraph<{ vestingClaims?: Array<{ account: string }> }>(
-      TEAM_FINANCE_SQUID, query, { chainId, first, skip }, `team-finance/${chainId}`,
-    );
-    return (data?.vestingClaims ?? []).map((v) => v.account);
-  });
-  const recipients = dedupeAddresses(all);
+
+  // Run Squid discovery and cached-recipient lookup in parallel.
+  const [squidRecipients, cachedRecipients] = await Promise.all([
+    paginateDiscover(limit, async (first, skip) => {
+      const data = await postGraph<{ vestingClaims?: Array<{ account: string }> }>(
+        TEAM_FINANCE_SQUID, query, { chainId, first, skip }, `team-finance/${chainId}`,
+      );
+      return (data?.vestingClaims ?? []).map((v) => v.account);
+    }),
+    getCachedRecipients("team-finance", chainId, limit).catch((err) => {
+      console.error(`[seeder:team-finance/${chainId}] cached recipient query failed:`, err);
+      return [] as string[];
+    }),
+  ]);
+
+  // Cached first so re-refreshes of existing records take priority over
+  // brand-new claimants when `limit` truncates. Mirrored from PinkSale.
+  const recipients = dedupeAddresses([...cachedRecipients, ...squidRecipients]);
+
+  console.log(
+    `[seeder:team-finance/${chainId}] discovery: squid=${squidRecipients.length}, cached=${cachedRecipients.length}, combined=${recipients.length}`,
+  );
 
   // Team Finance's Squid indexer has no Base data as of writing — verified
   // directly against the endpoint. ETH/BSC/Polygon have tens of thousands
   // of claims each; Base has zero. Not our bug — upstream. Log this
   // distinctly so the next time someone sees "team-finance/8453: 0" they
   // don't waste an hour debugging the query.
-  if (recipients.length === 0 && chainId === CHAIN_IDS.BASE) {
+  if (squidRecipients.length === 0 && chainId === CHAIN_IDS.BASE) {
     console.log(
       `[seeder:team-finance/${CHAIN_IDS.BASE}] upstream Squid has no indexed claims or vestings for Base; nothing to seed — this will fix itself when Team Finance starts indexing Base`,
     );
   }
-  return recipients;
+  return recipients.slice(0, limit);
 }
 
 // ─── Hedgey discovery (on-chain ERC721Enumerable reads) ─────────────────────
@@ -1584,10 +1611,15 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   console.log(
     `[seeder:${tag}] discovered ${recipients.length} recipients → fetched ${streamsFetched} streams → wrote ${streamsWritten}${errorSuffix}`,
   );
-  // Heartbeat — see comment in runPinkSaleViaWalker.
-  if (streamsFetched > 0) {
-    await bumpSeedHeartbeat(job.adapterId, job.chainId);
-  }
+  // Heartbeat — keeps freshestSec advancing even when stream data hasn't
+  // changed (or when the adapter correctly returns 0 streams because all
+  // discovered wallets have fully claimed their allocation). Fires whenever
+  // we had recipients to try; skipped only when discovery itself returned 0.
+  // 2026-05-26: Widened from `streamsFetched > 0` to always-when-recipients.
+  // Root cause: team-finance claimants (and similar) often have userTotal=0
+  // after claiming, so the adapter returns 0 streams and the heartbeat never
+  // fired — making the status page show 25d stale even though the seeder ran.
+  await bumpSeedHeartbeat(job.adapterId, job.chainId);
   return {
     adapterId:            job.adapterId,
     chainId:              job.chainId,
