@@ -52,7 +52,7 @@ import {
 } from "../types";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
-import { mapBounded } from "../rpc";
+import { mapBounded, getSolanaRpcUrls } from "../rpc";
 
 // Helius free-tier CU/s ceiling — see streamflow.ts for the same constants.
 const SOLANA_CONCURRENCY = 4;
@@ -364,46 +364,49 @@ export const jupiterLockAdapter: VestingAdapter = {
  */
 export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | null> {
   if (process.env.SOLANA_ENABLED !== "true") return null;
-  // JUPITER_LOCK_RPC_URL is an optional override for the bulk-fetch path
-  // — used when SOLANA_RPC_URL is set to a per-recipient-tuned provider
-  // (e.g. Helius for Streamflow) and we want JL's single bulk
-  // getProgramAccounts call to hit a different provider (e.g. Alchemy
-  // Solana free tier, which throttles per-recipient fan-out but handles
-  // the single-call bulk fetch fine).
-  //
-  // Falls back to SOLANA_RPC_URL when the override isn't set, so this
-  // is a non-breaking change — existing deployments continue to work
-  // without configuring the new env var.
-  const rpcUrl = process.env.JUPITER_LOCK_RPC_URL ?? process.env.SOLANA_RPC_URL;
-  if (!rpcUrl) {
-    console.error("[jupiter-lock] Neither JUPITER_LOCK_RPC_URL nor SOLANA_RPC_URL configured — bulk fetch returning null");
-    return null;
-  }
+  // URL priority: JUPITER_LOCK_RPC_URL (explicit override) → getSolanaRpcUrls()
+  // (SOLANA_RPC_URL then SOLANA_RPC_URL_2). We try each in sequence so a
+  // quota-exhausted primary (e.g. Helius) automatically falls through to the
+  // next configured provider without manual intervention.
+  const bulkUrls = [
+    process.env.JUPITER_LOCK_RPC_URL,
+    ...getSolanaRpcUrls(),
+  ].filter((u): u is string => typeof u === "string" && u.length > 0);
+  // Deduplicate: if JUPITER_LOCK_RPC_URL === SOLANA_RPC_URL, avoid trying same URL twice.
+  const seenUrls = new Set<string>();
+  const candidateUrls = bulkUrls.filter((u) => !seenUrls.has(u) && seenUrls.add(u));
 
-  let connection: Connection;
-  try {
-    connection = new Connection(rpcUrl, "confirmed");
-  } catch (err) {
-    console.error("[jupiter-lock] Connection construction failed:", err);
+  if (candidateUrls.length === 0) {
+    console.error("[jupiter-lock] No Solana RPC URLs configured — bulk fetch returning null");
     return null;
   }
 
   const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
 
-  // Phase 1 — light enumeration: pubkeys only.
-  let pubkeys: PublicKey[];
-  try {
-    const lite = await connection.getProgramAccounts(programId, {
-      commitment: "confirmed",
-      filters: [
-        { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
-      ],
-      dataSlice: { offset: 0, length: 0 },
-    });
-    pubkeys = lite.map((a) => a.pubkey);
-    console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${rpcUrl.split("?")[0].slice(0, 60)})`);
-  } catch (err) {
-    console.error("[jupiter-lock] phase 1 getProgramAccounts failed:", err);
+  // Phase 1 — light enumeration: pubkeys only. Try each URL in turn.
+  let pubkeys: PublicKey[] | null = null;
+  let usedUrl = candidateUrls[0];
+  for (const url of candidateUrls) {
+    try {
+      const conn = new Connection(url, "confirmed");
+      const lite = await conn.getProgramAccounts(programId, {
+        commitment: "confirmed",
+        filters: [
+          { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
+        ],
+        dataSlice: { offset: 0, length: 0 },
+      });
+      pubkeys = lite.map((a) => a.pubkey);
+      usedUrl = url;
+      console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").split("?")[0].slice(0, 60)})`);
+      break;
+    } catch (err) {
+      const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").slice(0, 60);
+      console.warn(`[jupiter-lock] phase 1 failed on ${urlShort}: ${err instanceof Error ? err.message.slice(0, 100) : err}`);
+    }
+  }
+  if (pubkeys === null) {
+    console.error("[jupiter-lock] phase 1 getProgramAccounts failed on all configured URLs");
     return null;
   }
   // Hard-fail on suspiciously-empty results. Jupiter Lock had 44k+
@@ -417,16 +420,18 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   // as a hard failure + the prior row stays intact.
   if (pubkeys.length === 0) {
     console.error(
-      `[jupiter-lock] phase 1 returned 0 pubkeys — treating as silent RPC failure. ` +
-      `Check JUPITER_LOCK_RPC_URL env var (currently ${process.env.JUPITER_LOCK_RPC_URL ? "set" : "UNSET, falling back to SOLANA_RPC_URL"}). ` +
+      `[jupiter-lock] phase 1 returned 0 pubkeys — treating as silent RPC failure ` +
+      `(tried ${candidateUrls.length} URL(s); succeeded on ${usedUrl.replace(/api[-_]?key=[^&?]+/i, "api-key=***").slice(0, 60)}). ` +
       `Real production count is ~44k.`,
     );
     return null;
   }
 
   // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
+  // Reuse the URL that succeeded in phase 1 (already proven it's alive).
   // 100-pubkey chunks × concurrency 4 keeps us under Helius free
   // compute units/sec while still completing in ~60s for 44k accounts.
+  const connection = new Connection(usedUrl, "confirmed");
   const CHUNK = 100;
   const FETCH_CONCURRENCY = 4;
   const chunks: PublicKey[][] = [];

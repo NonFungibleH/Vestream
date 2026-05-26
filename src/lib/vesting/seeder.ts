@@ -515,7 +515,7 @@ const VIEM_CHAIN_MAP = {
 // Polygon ~10 days). The shared pool tags publicnode entries with
 // `excludeForLogs: true` and we pass `{ forLogs: true }` here so the seeder
 // only ever gets pool members that retain historical logs.
-import { getRpcUrl as getRpcUrlPool } from "./rpc";
+import { getRpcUrl as getRpcUrlPool, getSolanaRpcUrls } from "./rpc";
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
   return getRpcUrlPool(chainId, { forLogs: true });
 }
@@ -777,6 +777,39 @@ async function withSolanaRetry<T>(
   throw lastErr;
 }
 
+// URL-level Solana fallback. Tries each configured Solana RPC in order.
+// Rate limits (429) are retried on the same URL via withSolanaRetry;
+// quota exhaustion or other hard errors immediately advance to the next URL.
+// This means a Helius-quota-exhausted run automatically falls through to
+// SOLANA_RPC_URL_2 (e.g. Alchemy Solana) without manual intervention.
+async function withSolanaFallback<T>(
+  label: string,
+  fn: (connection: Connection) => Promise<T>,
+): Promise<T> {
+  const urls = getSolanaRpcUrls();
+  if (urls.length === 0) {
+    throw new Error(`[${label}] No Solana RPC URLs configured — set SOLANA_RPC_URL`);
+  }
+  let lastErr: unknown;
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    try {
+      const connection = new Connection(url, "confirmed");
+      return await withSolanaRetry(label, () => fn(connection));
+    } catch (err) {
+      const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").slice(0, 60);
+      if (i < urls.length - 1) {
+        console.warn(
+          `[${label}] ${urlShort} failed (${err instanceof Error ? err.message.slice(0, 80) : err}) ` +
+          `— falling back to SOLANA_RPC_URL_${i + 2}`
+        );
+      }
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
 // Streamflow mainnet-beta vesting program. Matches the SDK's
 // PROGRAM_ID.mainnet constant so we don't hard-code it twice.
 const STREAMFLOW_MAINNET_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
@@ -806,8 +839,7 @@ export async function discoverStreamflowRecipients(
     console.log("[seeder:streamflow] SOLANA_ENABLED flag off — skipping discovery");
     return [];
   }
-  const rpcUrl = process.env.SOLANA_RPC_URL;
-  if (!rpcUrl) {
+  if (getSolanaRpcUrls().length === 0) {
     console.error("[seeder:streamflow] SOLANA_RPC_URL not configured");
     return [];
   }
@@ -819,10 +851,12 @@ export async function discoverStreamflowRecipients(
   // Previously this catch returned [] silently — useful in production but
   // catastrophic for debugging, because a misconfigured RPC looked
   // identical to "0 recipients legitimately found".
-  const connection = new Connection(rpcUrl, "confirmed");
-  const programId  = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
+  //
+  // withSolanaFallback tries SOLANA_RPC_URL first, then SOLANA_RPC_URL_2 if
+  // the first fails (quota exhausted, 429 after all retries, etc.).
+  const programId = new PublicKey(STREAMFLOW_MAINNET_PROGRAM_ID);
 
-  const accounts = await withSolanaRetry(`seeder:${tag}`, () =>
+  const accounts = await withSolanaFallback(`seeder:${tag}`, (connection) =>
     connection.getProgramAccounts(programId, {
       commitment: "confirmed",
       filters: [
@@ -899,18 +933,17 @@ export async function discoverJupiterLockRecipients(
     console.log("[seeder:jupiter-lock] SOLANA_ENABLED flag off — skipping discovery");
     return [];
   }
-  const rpcUrl = process.env.SOLANA_RPC_URL;
-  if (!rpcUrl) {
+  if (getSolanaRpcUrls().length === 0) {
     console.error("[seeder:jupiter-lock] SOLANA_RPC_URL not configured");
     return [];
   }
 
   const tag = `jupiter-lock/${chainId}`;
   // Same no-swallow rationale as discoverStreamflowRecipients above.
-  const connection = new Connection(rpcUrl, "confirmed");
-  const programId  = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
+  // withSolanaFallback tries SOLANA_RPC_URL first, then SOLANA_RPC_URL_2.
+  const programId = new PublicKey(JUPITER_LOCK_PROGRAM_ID);
 
-  const accounts = await withSolanaRetry(`seeder:${tag}`, () =>
+  const accounts = await withSolanaFallback(`seeder:${tag}`, (connection) =>
     connection.getProgramAccounts(programId, {
       commitment: "confirmed",
       filters: [

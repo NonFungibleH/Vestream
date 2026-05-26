@@ -194,13 +194,17 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://base-sepolia-rpc.publicnode.com" },
     { url: "https://sepolia.base.org" },
   ]),
-  [CHAIN_IDS.SOLANA]: buildPool(process.env.SOLANA_RPC_URL, [
-    // Most free Solana RPCs disable getProgramAccounts (the workhorse for
-    // our Solana adapters). SOLANA_RPC_URL is expected to be set to a
-    // Helius / dRPC / Alchemy URL that supports it. We DON'T add free
-    // fallbacks here because they'd just fail silently — better to error
-    // loudly if the env var is missing.
-  ]),
+  // Solana pool: up to two keyed URLs (SOLANA_RPC_URL + SOLANA_RPC_URL_2).
+  // Most free Solana RPCs disable getProgramAccounts; only add URLs from
+  // providers that explicitly support it (Helius, Alchemy Solana, dRPC).
+  // SOLANA_RPC_URL_2 is the hot-standby: used by withSolanaFallback() when
+  // the primary quota-exhausts (Helius free tier burns through 5M credits
+  // quickly on a full-program getProgramAccounts scan).
+  [CHAIN_IDS.SOLANA]: (
+    [process.env.SOLANA_RPC_URL, process.env.SOLANA_RPC_URL_2]
+      .filter((u): u is string => typeof u === "string" && u.length > 0)
+      .map((url) => ({ url }))
+  ),
 };
 
 // Per-chain round-robin counter. Module-level so it persists for the
@@ -483,4 +487,18 @@ export async function mapBounded<T, U>(
   const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
   await Promise.all(workers);
   return out;
+}
+
+/**
+ * Ordered list of configured Solana RPC URLs.
+ * SOLANA_RPC_URL is the primary; SOLANA_RPC_URL_2 is the hot-standby.
+ * Only providers that support getProgramAccounts should be configured here
+ * (Helius, Alchemy Solana, dRPC). withSolanaFallback() in seeder.ts
+ * iterates this list when the primary quota-exhausts.
+ */
+export function getSolanaRpcUrls(): string[] {
+  return [
+    process.env.SOLANA_RPC_URL,
+    process.env.SOLANA_RPC_URL_2,
+  ].filter((u): u is string => typeof u === "string" && u.length > 0);
 }
