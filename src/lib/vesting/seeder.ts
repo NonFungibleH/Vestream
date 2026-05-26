@@ -1130,7 +1130,7 @@ function limitFor(mode: SeedMode): number {
  *                 of hosted endpoints. Each chain is a single GraphQL
  *                 round-trip; the whole bucket runs in well under 300s.
  */
-export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier";
+export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superfluid";
 
 // jupiter-lock group removed 2026-05-06 — JL per-stream seed disabled
 // while we're on Helius free tier (see SEED_JOBS for rationale).
@@ -1142,12 +1142,21 @@ export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier";
 // fit inside their 300s window comfortably while Sablier gets the full
 // budget for its slow chains. Net: one more cron entry, no extra total
 // runtime, no risk of timeout cascading from Sablier into the others.
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier", "superfluid"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")   return "heavy";
   if (adapterId === "streamflow") return "solana";
   if (adapterId === "sablier")    return "sablier";
+  // 2026-05-26: Superfluid split out of "subgraphs" into its own group.
+  // Reason: Superfluid runs across 6 chains (ETH/BSC/Polygon/Base/Arb/Op),
+  // each calling its own hosted subgraph endpoint. When sharing the
+  // 300s "subgraphs" budget with Hedgey + UNCX + UNCX-VM + Unvest,
+  // Superfluid's last 3 chains (Base/Arbitrum/Optimism) consistently
+  // got starved out — observed 2026-05-26 with those 3 chains stuck
+  // at 10d stale while ETH/BSC/Polygon refreshed normally. Own group
+  // gives Superfluid a full 300s for all 6 chains.
+  if (adapterId === "superfluid") return "superfluid";
   return "subgraphs";
 }
 
