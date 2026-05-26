@@ -117,12 +117,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
     { url: "https://1rpc.io/matic" },
-    // 2026-05-26: tagged excludeForLogs — polygon-rpc.com went paid (API key
-    // required); returns 401 "tenant disabled" for unauthenticated eth_getLogs.
-    // Confirmed in hedgey/137 indexer failures. Keeping in pool for eth_call
-    // (non-logs) which may still work on the free tier; excluding from logs
-    // to stop burning a fallback slot on a known-broken endpoint.
-    { url: "https://polygon-rpc.com", excludeForLogs: true },
+    // 2026-05-26: polygon-rpc.com REMOVED — returns HTTP 401 "tenant disabled"
+    // for ALL methods including eth_blockNumber (not just eth_getLogs). It is
+    // a dead endpoint, not a restricted one. Keeping it wastes a fallback slot
+    // and guarantees a 401 on every call for this chain.
     // 2026-05-26: tagged excludeForLogs — was hitting Cloudflare 521 globally;
     // blocked Hedgey/137 indexer from progressing past lastRun=never.
     { url: "https://polygon.blockpi.network/v1/rpc/public", excludeForLogs: true },
