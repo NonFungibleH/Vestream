@@ -97,7 +97,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://bsc-dataseed1.ninicoin.io" },
     { url: "https://bsc.blockpi.network/v1/rpc/public" },
     { url: "https://bsc-mainnet.public.blastapi.io" },
-    { url: "https://bsc.meowrpc.com" },
+    // 2026-05-26: tagged excludeForLogs — meowrpc BSC caps eth_getLogs at
+    // 10 blocks, which the event-driven indexer (2000-5000 block windows)
+    // can't use. Still kept in the pool for eth_call / contract-read workloads.
+    { url: "https://bsc.meowrpc.com",              excludeForLogs: true },
     { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
     { url: "https://rpc.ankr.com/bsc",             excludeForLogs: true },
   ]),
@@ -107,7 +110,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://polygon-rpc.com" },
     { url: "https://polygon.blockpi.network/v1/rpc/public" },
     { url: "https://polygon-mainnet.public.blastapi.io" },
-    { url: "https://polygon.meowrpc.com" },
+    // 2026-05-26: tagged excludeForLogs — meowrpc Polygon free tier times
+    // out on the indexer's eth_getLogs windows. Kept for contract reads.
+    { url: "https://polygon.meowrpc.com",            excludeForLogs: true },
     { url: "https://polygon-rpc.publicnode.com",     excludeForLogs: true },
     { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/polygon",           excludeForLogs: true },
@@ -118,7 +123,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://mainnet.base.org" },
     { url: "https://base.blockpi.network/v1/rpc/public" },
     { url: "https://base-mainnet.public.blastapi.io" },
-    { url: "https://base.meowrpc.com" },
+    // 2026-05-26: tagged excludeForLogs — same family of free-tier log
+    // restrictions as the BSC/Polygon meowrpc endpoints. Kept for non-logs work.
+    { url: "https://base.meowrpc.com",             excludeForLogs: true },
     { url: "https://base.api.onfinality.io/public" },
     { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
     { url: "https://rpc.ankr.com/base",            excludeForLogs: true },
@@ -135,7 +142,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://arb1.arbitrum.io/rpc" },
     { url: "https://arbitrum.blockpi.network/v1/rpc/public" },
     { url: "https://arbitrum-one.public.blastapi.io" },
-    { url: "https://arbitrum.meowrpc.com" },
+    // 2026-05-26: tagged excludeForLogs — matches sibling chains. Pre-emptive
+    // (no live error yet) — the indexer doesn't currently scan Arbitrum logs
+    // via meowrpc, but if it ever rotates here it would hit the same caps.
+    { url: "https://arbitrum.meowrpc.com",            excludeForLogs: true },
     { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/arbitrum",           excludeForLogs: true },
   ]),
@@ -148,7 +158,8 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://mainnet.optimism.io" },
     { url: "https://optimism.blockpi.network/v1/rpc/public" },
     { url: "https://optimism-mainnet.public.blastapi.io" },
-    { url: "https://optimism.meowrpc.com" },
+    // 2026-05-26: tagged excludeForLogs — matches sibling chains, pre-emptive.
+    { url: "https://optimism.meowrpc.com",        excludeForLogs: true },
     { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/optimism",       excludeForLogs: true },
   ]),
