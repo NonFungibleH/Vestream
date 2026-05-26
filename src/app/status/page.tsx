@@ -330,32 +330,31 @@ export default async function StatusPage() {
     cellMap.set(`${c.protocol}|${c.chainId}`, c.freshestSec ?? null);
   }
   // Per-cell metadata: TVL from snapshot (DefiLlama or self-indexed),
-  // stream count from cache-stats (the real number of indexed streams
-  // for that protocol×chain in vesting_streams_cache).
+  // and the timestamp of that snapshot. We surface "prices X ago" in the
+  // cell footer because operational triage cares about WHEN the priced TVL
+  // was last computed — stale prices are a silent-trust risk (false zeros,
+  // outdated USD numbers), whereas the stream count rarely moves day to
+  // day and is already implied by the indexer-status endpoint.
   //
-  // We deliberately prefer cells.streams over r.streamCount because
-  // DefiLlama-sourced TVL snapshots write streamCount=0 (DefiLlama's
-  // API doesn't expose a stream count). Reading from cache-stats
-  // gives us the real per-chain count regardless of TVL source.
-  const metaMap = new Map<string, { tvlUsd: number; streams: number }>();
-  // Seed from cache-stats first so cells.streams is the default
-  // stream count for every (protocol, chain) we've indexed.
+  // 2026-05-26: replaced the per-cell stream count with `tvlComputedAtSec`.
+  // The cache-stats endpoint still carries stream counts for callers that
+  // need them; this surface intentionally tightens to the freshness signal.
+  const metaMap = new Map<string, { tvlUsd: number; tvlComputedAtSec: number | null }>();
+  // Seed every (protocol, chain) cell we have a cache-stats row for so the
+  // metaMap is non-null for any cell the matrix renders. tvlComputedAtSec
+  // stays null until the TVL snapshot overlay fills it in.
   for (const c of cells) {
     metaMap.set(`${c.protocol}|${c.chainId}`, {
-      tvlUsd:  0,
-      streams: c.streams,
+      tvlUsd:           0,
+      tvlComputedAtSec: null,
     });
   }
-  // Then overlay TVL snapshot $ values, preserving the cache-side
-  // stream count. If a TVL row exists for a cell with no cache data
-  // (rare — DefiLlama-only protocol with no per-wallet adapter yet),
-  // fall back to the snapshot's streamCount.
+  // Then overlay TVL snapshot $ values + the computed_at timestamp.
   for (const r of tvlRows) {
     const k = `${r.protocol}|${r.chainId}`;
-    const existing = metaMap.get(k);
     metaMap.set(k, {
-      tvlUsd:  r.tvlUsd,
-      streams: existing?.streams ?? r.streamCount,
+      tvlUsd:           r.tvlUsd,
+      tvlComputedAtSec: Math.floor(r.computedAt.getTime() / 1000),
     });
   }
 
@@ -601,7 +600,7 @@ export default async function StatusPage() {
                               className="font-mono text-[10px] leading-tight pl-1"
                               style={{ color: "#94a3b8" }}
                             >
-                              {formatCompactUsd(meta.tvlUsd)} · {meta.streams.toLocaleString()} stream{meta.streams === 1 ? "" : "s"}
+                              {formatCompactUsd(meta.tvlUsd)} · prices {meta.tvlComputedAtSec !== null ? relativeAge(meta.tvlComputedAtSec, nowSec) : "—"}
                             </span>
                           )}
                         </div>
