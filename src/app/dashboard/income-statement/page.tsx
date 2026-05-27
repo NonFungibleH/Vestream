@@ -164,20 +164,18 @@ export default function IncomeStatementPage() {
       <main className="flex-1 px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
 
         {/* Hero */}
-        <div className="mb-6">
+        <div className="mb-5">
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Income statement</span>
+            <Link href="/dashboard/exports" className="hover:underline">Tax</Link>
+            <span>/</span>
+            <span>Income Statement</span>
           </div>
           {(() => {
             const copy = copyForAudience(data?.audienceCategory);
             return (
               <>
-                <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                  style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-                  {copy.eyebrow}
-                </div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
                   {copy.title}
                 </h1>
@@ -187,27 +185,42 @@ export default function IncomeStatementPage() {
               </>
             );
           })()}
-          {/* Jurisdiction caveat — UK / AU users may need to map claim-date data
-              to unlock-date tax events. Surfaced inline so it's not buried at
-              the bottom of the page where the user might miss it. */}
-          <div className="mt-3 rounded-lg p-3 text-[11px] flex gap-2.5 items-start"
-            style={{
-              background: "rgba(245,158,11,0.06)",
-              border: "1px solid rgba(245,158,11,0.20)",
-              color: "var(--preview-text-2)",
-            }}>
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span>
-              <strong>Tax basis note:</strong> we capture <em>claim-date</em> events. That&apos;s the
-              correct receipt event for US, Canada, Germany, and most of the EU. UK (HMRC) and
-              Australia (ATO) filers may owe income tax at the <em>unlock</em> date instead — your
-              accountant can map claim records to unlock dates using the per-stream schedules on
-              the <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>main dashboard</Link>.{" "}
-              <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>Read the full guide →</Link>
-            </span>
-          </div>
+        </div>
+
+        {/* Sub-tab nav — matches the Tax Exports tab */}
+        <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
+          style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)" }}>
+          <Link href="/dashboard/exports"
+            className="px-4 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: "var(--preview-text-3)" }}>
+            Tax Exports
+          </Link>
+          <span className="px-4 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ background: "var(--preview-card)", color: "#1CB8B8", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+            Income Statement
+          </span>
+        </div>
+
+        {/* Jurisdiction caveat — UK / AU users may need to map claim-date data
+            to unlock-date tax events. Surfaced inline so it's not buried at
+            the bottom of the page where the user might miss it. */}
+        <div className="mb-6 rounded-lg p-3 text-[11px] flex gap-2.5 items-start"
+          style={{
+            background: "rgba(245,158,11,0.06)",
+            border: "1px solid rgba(245,158,11,0.20)",
+            color: "var(--preview-text-2)",
+          }}>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>
+            <strong>Tax basis note:</strong> we capture <em>claim-date</em> events. That&apos;s the
+            correct receipt event for US, Canada, Germany, and most of the EU. UK (HMRC) and
+            Australia (ATO) filers may owe income tax at the <em>unlock</em> date instead — your
+            accountant can map claim records to unlock dates using the per-stream schedules on
+            the <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>main dashboard</Link>.{" "}
+            <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>Read the full guide →</Link>
+          </span>
         </div>
 
         {/* Year filter */}
@@ -288,15 +301,27 @@ export default function IncomeStatementPage() {
         {!loading && data && data.totals.rows === 0 && (
           <div className="rounded-2xl p-8 text-center mb-6"
             style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border)", color: "var(--preview-text-2)" }}>
-            <p className="text-sm mb-2">No claim history indexed yet.</p>
+            <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
+              style={{ background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)" }}>
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No claim history indexed yet</p>
+            <p className="text-xs mb-1" style={{ color: "var(--preview-text-3)" }}>
+              This page shows income once your on-chain claim history has been indexed.
+            </p>
             <p className="text-xs mb-4" style={{ color: "var(--preview-text-3)" }}>
-              Head to the Exports tab and hit &quot;Refresh claims&quot; to pull every vesting payout you&apos;ve
-              received from any of the 9 supported protocols.
+              Head to Tax Reports and hit <strong>&ldquo;Refresh claims&rdquo;</strong> — Vestream will pull your
+              Sablier claim history automatically. Income + totals populate immediately after.
             </p>
             <Link href="/dashboard/exports"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white" }}>
-              Go to Exports
+              style={{ background: "#1CB8B8", color: "white", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+              Go to Tax Reports →
             </Link>
           </div>
         )}

@@ -9,7 +9,8 @@ import { isValidWalletAddress } from "@/lib/address-validation";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
 import { UpsellModal } from "@/components/UpsellModal";
-import { MobileAppBanner } from "@/components/MobileAppBanner";
+// MobileAppBanner removed — dashboard users have demonstrably already paired
+// via QR code, so "Get the app" prompts are noise for this audience.
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { useDashboardChrome } from "@/components/DashboardChrome";
 import { StreamAnnotationEditor } from "@/components/StreamAnnotationEditor";
@@ -1539,6 +1540,17 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                             <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</p>
                             <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
                             <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
+                            {s.tokenAddress && (
+                              <a href={`/token/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-0.5 mt-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                                style={{ color: "#1CB8B8" }}>
+                                <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                All holders ↗
+                              </a>
+                            )}
                           </>
                         );
                       })()}
@@ -1740,18 +1752,13 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                     )}
                   </div>
 
-                  {/* 12. Claim / View CTA + All holders explorer link + expand chevron.
+                  {/* 12. Claim / View CTA + expand chevron.
+                      "All holders" link promoted to column 1 (token info cell)
+                      where it has room to breathe and is more discoverable.
                       Link points at /token/* (the canonical token page) directly
                       instead of /explore/* which 308-redirects there — saves a
                       round trip and means clicks feel instant. */}
                   <div className="flex items-center justify-end gap-1.5">
-                    <a href={`/token/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      title="See all vesting holders for this token"
-                      className="text-[9px] font-semibold px-2 py-0.5 rounded-md transition-all duration-150 hover:brightness-125 flex-shrink-0"
-                      style={{ color: "#1CB8B8", background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)" }}>
-                      All holders ↗
-                    </a>
                     {claimableAmt > 0 ? (
                       <a href={claimUrl} target="_blank" rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -4862,7 +4869,6 @@ export default function Dashboard() {
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : (
             <>
-              <MobileAppBanner />
               <CancellableWatchdog streams={filteredStreams} />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
               <UpcomingOutlook streams={filteredStreams} prices={prices} />

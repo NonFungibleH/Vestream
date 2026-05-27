@@ -29,7 +29,7 @@
 //   - Direct accountant email
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
@@ -224,6 +224,10 @@ export default function ExportsPage() {
   // and which errored out — instead of having to deduce coverage from the
   // single aggregate totalInserted figure the previous flow showed.
   const [perProtocol, setPerProtocol] = useState<IngestResult[]>([]);
+  // Auto-refresh guard — fire once on first mount if no claims are indexed yet.
+  // The ref ensures we only auto-trigger once per page visit even if the
+  // yearFilter changes and load() re-runs.
+  const autoRefreshed = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -246,6 +250,19 @@ export default function ExportsPage() {
   }, [yearFilter, router]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Auto-index on first visit if the user has never refreshed before.
+  // Saves the "why is this page empty?" confusion — on mount, if the
+  // initial load completes with zero events and we haven't auto-refreshed
+  // yet this session, kick off the indexer automatically.
+  useEffect(() => {
+    if (!loading && events.length === 0 && !autoRefreshed.current && !refreshing) {
+      autoRefreshed.current = true;
+      refresh();
+    }
+    // refresh is defined below but stable across renders (no deps change it)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, events.length]);
 
   async function refresh() {
     setRefreshing(true);
@@ -295,39 +312,43 @@ export default function ExportsPage() {
       <main className="flex-1 px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
 
         {/* Hero */}
-        <div className="mb-6">
+        <div className="mb-5">
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Tax Reports</span>
-          </div>
-          <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Tax Reports
+            <span>Tax</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Tax reports & exports
+            Tax &amp; Income
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
-            Every vesting claim, with USD value at the moment of claim. Download as CSV for your accountant or import directly into Koinly, CoinTracker, or TurboTax.
+            Every vesting claim priced at the moment of receipt. Export to your accountant or import directly into Koinly, CoinTracker, or TurboTax.
           </p>
-          <p className="text-xs mt-2" style={{ color: "var(--preview-text-3)" }}>
-            Want a P&amp;L-style summary?{" "}
-            <Link href="/dashboard/income-statement" className="font-semibold" style={{ color: "#0F8A8A" }}>
-              View your income statement →
-            </Link>
-          </p>
+        </div>
+
+        {/* Sub-tab nav — Tax Exports | Income Statement */}
+        <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
+          style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)" }}>
+          <span className="px-4 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ background: "var(--preview-card)", color: "#1CB8B8", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+            Tax Exports
+          </span>
+          <Link href="/dashboard/income-statement"
+            className="px-4 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: "var(--preview-text-3)" }}>
+            Income Statement
+          </Link>
         </div>
 
         {/* Coverage banner — honest about what's indexed */}
         <div className="rounded-2xl p-4 mb-5"
           style={{
-            background: "rgba(245,158,11,0.06)",
-            border: "1px solid rgba(245,158,11,0.20)",
+            background: "rgba(28,184,184,0.05)",
+            border: "1px solid rgba(28,184,184,0.18)",
           }}>
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#0F8A8A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -335,20 +356,18 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Indexed: <span style={{ color: "#0F8A8A" }}>all 9 protocols</span> · Sablier, Hedgey, Superfluid, LlamaPay, PinkSale, UNCX, Unvest, Streamflow, Jupiter Lock
+                Live:{" "}
+                <span style={{ color: "#0F8A8A" }}>Sablier</span>
+                <span style={{ color: "var(--preview-text-3)" }}> · Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Streamflow, PinkSale, Jupiter Lock coming soon</span>
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Hit refresh below to index your claims. Three caveats: <strong>tax basis</strong> — we
-                index on-chain claim transactions, which is the right receipt event for US/Canada/EU/
-                Germany. UK (HMRC) and Australia (ATO) filers may need to re-attribute to unlock dates
-                with their accountant.{" "}
+                Hit refresh to index your Sablier claim history. Each claim is priced at the date of
+                receipt — the right figure for US / Canada / EU / Germany tax purposes.{" "}
+                <strong>UK (HMRC)</strong> and <strong>Australia (ATO)</strong> filers may need to
+                re-attribute to unlock dates with their accountant.{" "}
                 <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>
                   Tax guide →
                 </Link>
-                {" "}<strong>Superfluid</strong> captures discrete cliff and end events — continuous flow
-                accrual between them is not yet attributed. <strong>Solana protocols</strong> (Streamflow,
-                Jupiter Lock) use snapshot-diff: pre-Vestream history shows as one baseline event per
-                stream; subsequent claims are tracked individually whenever you refresh.
               </p>
             </div>
           </div>
@@ -452,10 +471,19 @@ export default function ExportsPage() {
         {loading ? (
           <div className="text-sm" style={{ color: "var(--preview-text-3)" }}>Loading…</div>
         ) : events.length === 0 ? (
-          <div className="rounded-2xl p-10 text-center"
+          <div className="rounded-2xl p-8 text-center mb-6"
             style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border)", color: "var(--preview-text-3)" }}>
-            <p className="text-sm mb-1">No claim history indexed yet.</p>
-            <p className="text-xs">Hit &quot;Refresh claims&quot; above to pull your Sablier claim history.</p>
+            <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
+              style={{ background: "rgba(28,184,184,0.1)", border: "1px solid rgba(28,184,184,0.2)" }}>
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#1CB8B8" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No claim history indexed yet</p>
+            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
+              Hit <strong>&ldquo;↻ Refresh claims&rdquo;</strong> above — Vestream will index your Sablier
+              vesting payouts and price each one at the date of receipt.
+            </p>
           </div>
         ) : (
           <div className="rounded-2xl overflow-hidden mb-6"
@@ -507,27 +535,34 @@ export default function ExportsPage() {
           </div>
         )}
 
-        {/* Download formats */}
-        {events.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>Download formats</h2>
-            <div className="grid gap-3">
-              {sortFormatsForAudience(FORMATS, audienceCategory).map((f) => (
-                <ExportFormatCard
-                  key={f.id}
-                  format={f}
-                  onDownload={() => downloadCsv(f.id)}
-                />
-              ))}
-            </div>
-            <p className="text-[11px] mt-4" style={{ color: "var(--preview-text-3)" }}>
-              ✦ The CSV exports cost basis values at the date of claim — Koinly / CoinTracker /
-              TurboTax use these as the income amount and as cost basis for future capital-gains calculations.
-              Rows where price was approximate carry a ~ marker; rows with no price found carry a ! marker
-              and need a manual cost basis entered in your tax software.
-            </p>
+        {/* Download formats — always visible so users understand what's available
+            before they hit refresh. Cards are slightly muted when no data exists
+            yet; downloads still work (they produce an empty CSV). */}
+        <div>
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Download formats</h2>
+            {events.length === 0 && !loading && (
+              <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                Refresh claims above to populate data
+              </span>
+            )}
           </div>
-        )}
+          <div className="grid gap-3" style={{ opacity: events.length === 0 ? 0.65 : 1 }}>
+            {sortFormatsForAudience(FORMATS, audienceCategory).map((f) => (
+              <ExportFormatCard
+                key={f.id}
+                format={f}
+                onDownload={() => downloadCsv(f.id)}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] mt-4" style={{ color: "var(--preview-text-3)" }}>
+            ✦ The CSV exports cost basis values at the date of claim — Koinly / CoinTracker /
+            TurboTax use these as the income amount and as cost basis for future capital-gains calculations.
+            Rows where price was approximate carry a ~ marker; rows with no price found carry a ! marker
+            and need a manual cost basis entered in your tax software.
+          </p>
+        </div>
       </main>
     </div>
   );

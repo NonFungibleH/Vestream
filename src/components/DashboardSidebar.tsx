@@ -39,13 +39,25 @@ function IconSettings(){ return <svg width={16} height={16} viewBox="0 0 24 24" 
 
 // ─── Nav items ──────────────────────────────────────────────────────────────
 
-const NAV_ITEMS: Array<{ icon: React.ReactNode; label: string; href: string }> = [
+// "activePaths" lets one nav item highlight for multiple routes — used for
+// the merged "Tax" item which covers both /exports and /income-statement.
+const NAV_ITEMS: Array<{
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  /** Additional path prefixes that should also trigger the active state. */
+  activePaths?: string[];
+}> = [
   { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"                  },
   { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer"         },
   { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover"         },
   { icon: <IconBookmark />, label: "Watchlist", href: "/dashboard/watchlist"        },
-  { icon: <IconBars />,     label: "Income",    href: "/dashboard/income-statement" },
-  { icon: <IconExport />,   label: "Tax Reports", href: "/dashboard/exports"        },
+  {
+    icon:        <IconExport />,
+    label:       "Tax",
+    href:        "/dashboard/exports",
+    activePaths: ["/dashboard/income-statement"],
+  },
   { icon: <IconSettings />, label: "Settings",  href: "/settings"                   },
 ];
 
@@ -99,7 +111,8 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
         {NAV_ITEMS.map((item) => {
           const isActive = item.href === "/dashboard"
             ? pathname === "/dashboard"
-            : pathname.startsWith(item.href);
+            : pathname.startsWith(item.href) ||
+              (item.activePaths ?? []).some((p) => pathname.startsWith(p));
           return (
             <button key={item.label}
               onClick={() => handleNav(item.href)}
