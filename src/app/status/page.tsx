@@ -60,17 +60,30 @@ const STATUS_CACHE_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
 // "stale because broken" — a chain with a healthy active indexer should show
 // amber at worst, not red, even if lastRefreshedAt is old.
 async function getActiveIndexers(): Promise<Array<{ protocol: string; chainId: number }>> {
-  try {
-    const cutoff = new Date(Date.now() - 20 * 60 * 1000); // 20 min ago
-    return await db
+  // Hard 2s timeout — same pattern as getCacheStatsCells / getMaxLastRefreshedAt.
+  // Without this, a hanging DB connection (not failing, just stalled) would
+  // block the entire Promise.all in loadStatusData until Vercel's maxDuration=30
+  // fires, returning a 504 to every visitor. The try/catch alone doesn't help
+  // because a hung promise never rejects.
+  const cutoff = new Date(Date.now() - 20 * 60 * 1000); // 20 min ago
+  return Promise.race([
+    db
       .select({ protocol: indexerState.protocol, chainId: indexerState.chainId })
       .from(indexerState)
       .where(
         sql`${indexerState.lastError} is null and ${indexerState.lastRunAt} >= ${cutoff}`
-      );
-  } catch {
-    return [];
-  }
+      )
+      .catch((err) => {
+        console.warn("[/status] getActiveIndexers DB error:", err);
+        return [] as Array<{ protocol: string; chainId: number }>;
+      }),
+    new Promise<Array<{ protocol: string; chainId: number }>>((resolve) =>
+      setTimeout(() => {
+        console.warn("[/status] getActiveIndexers exceeded 2s — returning []");
+        resolve([]);
+      }, 2000),
+    ),
+  ]);
 }
 
 interface StatusPayload {
