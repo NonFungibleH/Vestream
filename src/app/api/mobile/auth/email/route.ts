@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomInt } from "node:crypto";
 import { Resend } from "resend";
 import { db } from "@/lib/db";
-import { mobileOtps, pendingWalletLinks, wallets } from "@/lib/db/schema";
+import { mobileOtps, pendingWalletLinks, wallets, users } from "@/lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
 import { createMobileToken, hashValue } from "@/lib/mobile-auth";
 import { upsertUser } from "@/lib/db/queries";
@@ -310,6 +310,16 @@ export async function POST(req: NextRequest) {
     }
 
     const user  = await upsertUser(email);
+
+    // Reviewer accounts always get Pro tier so Apple/Google reviewers
+    // can exercise the full feature set without hitting IAP prompts or
+    // free-tier wallet/alert caps. Runs as a simple UPDATE so it heals
+    // on every sign-in — no one-time setup or manual DB intervention.
+    if (isReviewer && user.tier !== "pro") {
+      await db.update(users).set({ tier: "pro" }).where(eq(users.id, user.id));
+      user.tier = "pro";
+    }
+
     const token = await createMobileToken(user.id);
 
     // Web→mobile handoff: claim any wallets the user pre-saved via
