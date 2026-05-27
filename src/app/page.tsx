@@ -1150,7 +1150,7 @@ export default async function Home() {
       </section>
 
       {/* ── Search feature ──────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto overflow-hidden">
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
           {/* Text */}
           <div className="flex-1 md:max-w-[420px]">
@@ -1262,7 +1262,7 @@ export default async function Home() {
       </section>
 
       {/* ── Token Vesting Explorer ───────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto overflow-hidden">
         <div className="flex flex-col md:flex-row-reverse items-center gap-10 md:gap-16">
           {/* Text */}
           <div className="flex-1 md:max-w-[420px]">
@@ -1322,7 +1322,7 @@ export default async function Home() {
           paid in USDC and need to track salary for taxes. Same product,
           different lens — one toggle switches the whole app.
           2026-05-15 */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto overflow-hidden">
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
           {/* Text */}
           <div className="flex-1 md:max-w-[420px]">
@@ -1928,7 +1928,7 @@ export default async function Home() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
           }}
         >
-          <div className="grid grid-cols-[1.6fr_1fr_1fr] sm:grid-cols-3 px-3 md:px-6 py-4 gap-2" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+          <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] px-3 md:px-6 py-4 gap-2" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
             <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
             <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
             <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
@@ -1951,7 +1951,7 @@ export default async function Home() {
             ["Vesting income statement",    false,                true],
             ["Year-end PDF tax report",     false,                true],
           ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
-            <div key={feature} className="grid grid-cols-[1.6fr_1fr_1fr] sm:grid-cols-3 px-3 md:px-6 py-3.5 items-center gap-2"
+            <div key={feature} className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] px-3 md:px-6 py-3.5 items-center gap-2"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
               <span className="text-[13px] md:text-sm leading-snug" style={{ color: "#374151" }}>{feature}</span>
               {([free, pro] as (string | boolean)[]).map((val, j) => (

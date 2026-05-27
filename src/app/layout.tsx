@@ -103,7 +103,7 @@ export default function RootLayout({
         </head>
       )}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground overflow-x-hidden`}
       >
         <Providers>{children}</Providers>
         <CookieBanner />

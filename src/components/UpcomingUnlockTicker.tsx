@@ -78,10 +78,9 @@ const POLL_MS     = 30_000;
 // Matches the number of protocol rows rendered on the sibling
 // TvlComparisonBar (9: one per supported protocol). Keeping the two
 // columns on /protocols at equal row counts so they line up visually.
-// API is still queried with limit=10 — we ignore the 10th if all 9
-// protocols are represented in the result; the slice+cap makes this a
-// no-op when the set is smaller.
-const MAX_VISIBLE = 9;
+// API is still queried with limit=12 — we cap at MAX_VISIBLE; the
+// slice+cap makes this a no-op when the set is smaller.
+const MAX_VISIBLE = 12;
 
 // Protocol colour map matches LiveActivityTicker — keep them in sync or extract.
 const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
@@ -169,7 +168,7 @@ export function UpcomingUnlockTicker() {
         // observed 2026-05-03). Default fetch caching pairs with the
         // server-side header so the CDN serves repeated calls and origin
         // sees ~one hit per 5min instead of N×visitors per minute.
-        const res = await fetch("/api/unlocks/upcoming?limit=10");
+        const res = await fetch("/api/unlocks/upcoming?limit=12");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const body = (await res.json()) as UpcomingResponse;
         if (!cancelled) { setData(body); setErr(null); }
