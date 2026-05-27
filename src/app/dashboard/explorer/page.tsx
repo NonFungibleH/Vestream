@@ -23,7 +23,6 @@
 // Upgrade prompts appear inline when caps bite.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
@@ -103,12 +102,12 @@ interface PageProps {
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default async function ExplorerPage({ searchParams }: PageProps) {
-  // Auth gate — middleware already enforces vestr_early_access for /dashboard,
-  // we additionally need a session for tier resolution.
+  // Auth gate — middleware enforces vestr_session for all /dashboard/* routes
+  // (see src/middleware.ts). No additional cookie check needed here — any
+  // authenticated dashboard user (free or pro) can access the explorer.
+  // Tier-based caps (FREE_TIER_ROW_CAP, FREE_TIER_FILTER_CAP) are applied
+  // below via isFree so free users still see a limited but functional view.
   const cookieStore = await cookies();
-  if (!cookieStore.get("vestr_early_access")) {
-    redirect("/early-access");
-  }
   // Inherit dark-mode preference from any prior dashboard surface. The
   // /dashboard and /dashboard/discover client toggles set both localStorage
   // and a cookie via setDarkModePreference(); this read picks up the
