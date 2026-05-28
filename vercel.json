@@ -26,39 +26,39 @@
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=1",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=8453",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=56",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=1",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=56",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=137",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=8453",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=42161",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=10",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=superfluid",
