@@ -26,11 +26,20 @@ type Status = "loading" | "waiting" | "confirmed" | "expired" | "error";
 const POLL_INTERVAL_MS = 2_000;
 const PAIRING_TTL_MS   = 5 * 60 * 1000;
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+  }, []);
+  return isMobile;
+}
+
 export default function LoginPage() {
   const [status,   setStatus]   = useState<Status>("loading");
   const [code,     setCode]     = useState<string | null>(null);
   const [error,    setError]    = useState<string | null>(null);
   const [secsLeft, setSecsLeft] = useState<number>(300);
+  const isMobile = useIsMobile();
 
   // useRef so the interval handles survive re-renders without spawning
   // duplicate timers.
@@ -142,7 +151,39 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* QR card */}
+          {/* Mobile: deep link card instead of QR (can't scan your own screen) */}
+          {isMobile && code && status === "waiting" && (
+            <div className="rounded-2xl p-6 mb-5 text-center"
+              style={{ background: "white", border: "1px solid rgba(28,184,184,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
+                style={{ background: "rgba(28,184,184,0.1)" }}>
+                📱
+              </div>
+              <h2 className="text-base font-bold mb-1" style={{ color: "#1A1D20" }}>
+                Open in Vestream app
+              </h2>
+              <p className="text-sm mb-4" style={{ color: "#5C6066", lineHeight: 1.5 }}>
+                Tap the button below to open the Vestream app. It will automatically confirm this session and log you in here.
+              </p>
+              <a
+                href={`vestream://desktop-pair?code=${code}`}
+                className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+                Open in Vestream →
+              </a>
+              <p className="text-xs mt-3" style={{ color: "#B8BABD" }}>
+                Code expires in <span className="font-mono font-semibold">{`${Math.floor(secsLeft / 60)}:${String(secsLeft % 60).padStart(2, "0")}`}</span>
+                {" · "}
+                <button onClick={startPairing} className="underline">refresh</button>
+              </p>
+              <p className="text-xs mt-2" style={{ color: "#B8BABD" }}>
+                Waiting for confirmation… This page will redirect automatically when you open the app.
+              </p>
+            </div>
+          )}
+
+          {/* QR card — shown on desktop, or mobile when no code yet */}
+          {(!isMobile || !code || status !== "waiting") && (
           <div
             className="rounded-2xl p-6 md:p-8 mb-5"
             style={{
@@ -220,6 +261,7 @@ export default function LoginPage() {
               </button>
             )}
           </div>
+          )} {/* end desktop QR card */}
 
           {/* Step-by-step instructions */}
           <div

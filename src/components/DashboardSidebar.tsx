@@ -24,7 +24,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 // ─── Icons (match the existing dashboard set; kept inline to avoid adding
 // an icon library) ──────────────────────────────────────────────────────────
@@ -48,17 +48,17 @@ const NAV_ITEMS: Array<{
   /** Additional path prefixes that should also trigger the active state. */
   activePaths?: string[];
 }> = [
-  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"                  },
-  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer"         },
-  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover"         },
-  { icon: <IconBookmark />, label: "Watchlist", href: "/dashboard/watchlist"        },
+  { icon: <IconGrid />,     label: "Dashboard",       href: "/dashboard"                    },
+  { icon: <IconCompass />,  label: "Vesting Index",   href: "/dashboard/explorer"           },
+  { icon: <IconSearch />,   label: "Wallet Scanner",  href: "/dashboard/discover"           },
+  { icon: <IconBookmark />, label: "Token Watchlist", href: "/dashboard/watchlist"          },
+  { icon: <IconBars />,     label: "Income",          href: "/dashboard/income-statement"   },
   {
     icon:        <IconExport />,
-    label:       "Tax",
+    label:       "Tax Reports",
     href:        "/dashboard/exports",
-    activePaths: ["/dashboard/income-statement"],
   },
-  { icon: <IconSettings />, label: "Settings",  href: "/settings"                   },
+  { icon: <IconSettings />, label: "Settings",        href: "/settings"                     },
 ];
 
 interface DashboardSidebarProps {
@@ -74,6 +74,23 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
+  const [dark, setDark] = useState(false);
+
+  // Sync dark mode from localStorage (set by the main dashboard page)
+  useEffect(() => {
+    const stored = localStorage.getItem("vestr-dark");
+    setDark(stored === "true");
+  }, []);
+
+  function toggleDark() {
+    setDark((v) => {
+      const next = !v;
+      localStorage.setItem("vestr-dark", String(next));
+      // Toggle .dark on <html> so CSS vars + Tailwind dark: classes apply
+      document.documentElement.classList.toggle("dark", next);
+      return next;
+    });
+  }
 
   const handleNav = useCallback((href: string) => {
     router.push(href);
@@ -148,6 +165,21 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
               style={{ background: "#1CB8B8", color: "white" }}>ACTIVE</span>
           </div>
         </div>
+
+        {/* Dark / light mode toggle — applies across all dashboard routes */}
+        <button
+          onClick={toggleDark}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all"
+          style={{ color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--preview-muted)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        >
+          <span>{dark ? "☀ Light mode" : "☽ Dark mode"}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+            style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
+            {dark ? "ON" : "OFF"}
+          </span>
+        </button>
       </div>
     </aside>
   );

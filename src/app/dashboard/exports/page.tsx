@@ -535,6 +535,29 @@ export default function ExportsPage() {
           </div>
         )}
 
+        {/* Strong coverage warning — shown whenever there is data to download.
+            Users must not mistake a partial export for a complete tax record. */}
+        {events.length > 0 && (
+          <div className="rounded-2xl px-4 py-3 mb-5 flex items-start gap-3"
+            style={{
+              background: "rgba(240,153,46,0.07)",
+              border: "1px solid rgba(240,153,46,0.35)",
+            }}>
+            <span className="flex-shrink-0 mt-0.5 text-sm">⚠️</span>
+            <div>
+              <p className="text-xs font-semibold mb-0.5" style={{ color: "rgba(200,130,30,1)" }}>
+                Incomplete data — do not use as a complete tax record
+              </p>
+              <p className="text-[11px]" style={{ color: "var(--preview-text-2)" }}>
+                This export only includes claims from <strong>Sablier</strong>.
+                Claims from <strong>Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Streamflow, PinkSale,</strong> and{" "}
+                <strong>Jupiter Lock</strong> are not yet indexed and will be missing.
+                Submit to your accountant or tax software only after confirming all your protocols are covered.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Download formats — always visible so users understand what's available
             before they hit refresh. Cards are slightly muted when no data exists
             yet; downloads still work (they produce an empty CSV). */}

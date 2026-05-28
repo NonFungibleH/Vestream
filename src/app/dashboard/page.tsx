@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -66,6 +66,40 @@ function getTokenColor(symbol: string): string {
     h = Math.imul(31, h) + symbol.charCodeAt(i) | 0;
   }
   return HASH_PALETTE[Math.abs(h) % HASH_PALETTE.length];
+}
+
+// ─── TokenIcon — image with text-initials fallback ───────────────────────────
+// Used by VestingTable rows, NextClaimCountdown cards, SnapshotPanel token
+// rows, and PnLPanel. Renders the DexScreener logo when available; falls back
+// to the coloured initials circle when the URL is missing or fails to load.
+function TokenIcon({
+  symbol, imageUrl, size = 32,
+}: { symbol: string; imageUrl?: string | null; size?: number }) {
+  const [imgOk, setImgOk] = useState(!!imageUrl);
+  useEffect(() => { setImgOk(!!imageUrl); }, [imageUrl]);
+  const color = getTokenColor(symbol);
+  const r = size / 2;
+  if (imgOk && imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={symbol}
+        width={size}
+        height={size}
+        onError={() => setImgOk(false)}
+        className="rounded-xl object-cover flex-shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
+    <div className="rounded-xl border flex items-center justify-center flex-shrink-0"
+      style={{ width: size, height: size, background: color + "18", borderColor: color + "30" }}>
+      <span style={{ color, fontSize: Math.max(9, size * 0.32), fontWeight: 700, letterSpacing: "-0.02em" }}>
+        {symbol.slice(0, 3)}
+      </span>
+    </div>
+  );
 }
 
 // Block-explorer base URLs per chain ID. Token contracts live at
@@ -1223,6 +1257,15 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
             <span className="text-[11px] font-semibold" style={{ color: "rgba(63,165,104,0.9)" }}>Live</span>
           </div>
         </div>
+
+        {/* Unpriced token footnote — only shown when some tokens lack a live price */}
+        {hasPrice && tokens.some((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)) && (
+          <p className="mt-3 text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+            * Portfolio total excludes{" "}
+            {tokens.filter((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)).map((t) => t.symbol).join(", ")}{" "}
+            — no live price available for {tokens.filter((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)).length === 1 ? "this token" : "these tokens"}.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1376,18 +1419,235 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+// ─── StreamDetailSheet ────────────────────────────────────────────────────────
+// Mobile bottom-sheet for per-position drill-down. Slides up from the bottom
+// when a user taps a row in the mobile condensed VestingTable view. Shows the
+// full position breakdown: claimable/locked, progress, claim CTA, emission
+// chart, claim history, and annotation/tag editors.
+
+function StreamDetailSheet({
+  stream: s,
+  prices,
+  imageUrls = {},
+  onClose,
+  onClaim,
+}: {
+  stream:     VestingStream;
+  prices:     Record<string, number>;
+  imageUrls?: Record<string, string>;
+  onClose:    () => void;
+  onClaim?:   () => void;
+}) {
+  const nowSec = useNowSec();
+  const [claimedId, setClaimedId] = useState(false);
+
+  const price        = prices[s.tokenSymbol] ?? 0;
+  const claimableAmt = toFloat(s.claimableNow, s.tokenDecimals);
+  const lockedAmt    = toFloat(s.lockedAmount, s.tokenDecimals);
+  const withdrawnAmt = toFloat(s.withdrawnAmount, s.tokenDecimals);
+  const totalAmt     = toFloat(s.totalAmount, s.tokenDecimals);
+  const tokenColor   = getTokenColor(s.tokenSymbol);
+  const chainName    = CHAIN_NAMES[s.chainId as SupportedChainId] ?? `Chain ${s.chainId}`;
+  const claimUrl     = CLAIM_LINKS[s.protocol] ?? "#";
+  const proto        = PROTOCOL_COLORS[s.protocol] ?? { text: "#B8BABD", bg: "rgba(184,186,189,0.1)", border: "rgba(184,186,189,0.2)" };
+  const vestedPct    = totalAmt > 0 ? Math.min(100, ((withdrawnAmt + claimableAmt) / totalAmt) * 100) : 0;
+  const claimedPct   = totalAmt > 0 ? Math.min(100, (withdrawnAmt / totalAmt) * 100) : 0;
+  const claimablePct = totalAmt > 0 ? Math.min(100, (claimableAmt / totalAmt) * 100) : 0;
+  const hasCliff     = s.cliffTime && s.cliffTime > nowSec;
+
+  // Close on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: "rgba(0,0,0,0.60)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Sheet panel — slides up from bottom on mobile */}
+      <div
+        className="w-full rounded-t-3xl overflow-y-auto"
+        style={{
+          background: "var(--preview-card)",
+          maxHeight: "90dvh",
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
+        }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full" style={{ background: "var(--preview-border)" }} />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-3">
+            <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={40} />
+            <div>
+              <p className="text-base font-bold" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</p>
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold"
+                  style={{ background: proto.bg, color: proto.text }}>
+                  {protocolDisplay(s.protocol)}
+                </span>
+                <span className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>{chainName}</span>
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl transition-colors hover:opacity-70" style={{ color: "var(--preview-text-3)" }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-5 pb-8 space-y-4">
+          {/* Claimable + Locked cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl p-4" style={{ background: tokenColor + "10", border: `1px solid ${tokenColor}25` }}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: tokenColor }}>Claimable now</p>
+              <p className="text-xl font-bold tabular-nums" style={{ color: claimableAmt > 0 ? tokenColor : "var(--preview-text-3)" }}>
+                {claimableAmt.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: tokenColor + "99" }}>{s.tokenSymbol}</p>
+              {price > 0 && claimableAmt > 0 && (
+                <p className="text-xs tabular-nums mt-1" style={{ color: "var(--preview-text-3)" }}>{fmtUSDFull(claimableAmt * price)}</p>
+              )}
+            </div>
+            <div className="rounded-2xl p-4" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--preview-text-3)" }}>Locked</p>
+              <p className="text-xl font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
+                {lockedAmt.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: "var(--preview-text-3)" }}>{s.tokenSymbol}</p>
+              {price > 0 && lockedAmt > 0 && (
+                <p className="text-xs tabular-nums mt-1" style={{ color: "var(--preview-text-3)" }}>{fmtUSDFull(lockedAmt * price)}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div>
+            <div className="flex justify-between text-[11px] mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+              <span>{withdrawnAmt > 0 ? `${withdrawnAmt.toLocaleString("en-US", { maximumFractionDigits: 2 })} claimed` : "0 claimed"}</span>
+              <span>{vestedPct.toFixed(1)}% vested</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--preview-muted)" }}>
+              <div className="h-full flex rounded-full overflow-hidden" style={{ width: `${Math.min(vestedPct, 100)}%` }}>
+                <div style={{ width: `${claimedPct > 0 ? (claimedPct / vestedPct) * 100 : 0}%`, background: "rgba(63,165,104,0.7)" }} />
+                <div style={{ flex: 1, background: tokenColor }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Claim CTA */}
+          {claimedId ? (
+            <div className="flex items-center justify-center gap-2 py-3 rounded-2xl"
+              style={{ background: "rgba(63,165,104,0.08)", border: "1px solid rgba(63,165,104,0.2)" }}>
+              <span className="animate-spin text-sm">↻</span>
+              <span className="text-sm font-semibold" style={{ color: "#3FA568" }}>Updating on-chain…</span>
+            </div>
+          ) : claimableAmt > 0 ? (
+            <a
+              href={claimUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                setClaimedId(true);
+                onClaim?.();
+                setTimeout(() => setClaimedId(false), 18_000);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-bold text-white"
+              style={{ background: `linear-gradient(135deg, ${tokenColor}, ${tokenColor}cc)`, boxShadow: `0 4px 16px ${tokenColor}40` }}
+            >
+              Claim {claimableAmt.toLocaleString("en-US", { maximumFractionDigits: 2 })} {s.tokenSymbol} ↗
+            </a>
+          ) : (
+            <a
+              href={claimUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold"
+              style={{ color: "var(--preview-text-2)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+            >
+              View on {protocolDisplay(s.protocol)} ↗
+            </a>
+          )}
+
+          {/* Schedule info */}
+          <div className="rounded-2xl p-4 space-y-2" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--preview-text-3)" }}>Schedule</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div>
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Start</p>
+                <p className="font-medium" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.startTime)}</p>
+              </div>
+              <div>
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>End</p>
+                <p className="font-medium" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.endTime)}</p>
+              </div>
+              {s.cancelable !== undefined && (
+                <div>
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Cancelable</p>
+                  <p className="font-semibold" style={{ color: s.cancelable ? "#B3322E" : "#3FA568" }}>{s.cancelable ? "⚠ Yes" : "✓ Fixed"}</p>
+                </div>
+              )}
+              {hasCliff && s.cliffTime && (
+                <div>
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Cliff ends</p>
+                  <p className="font-medium" style={{ color: "#F0992E" }}>in {timeUntil(s.cliffTime)}</p>
+                </div>
+              )}
+              {s.nextUnlockTime && !s.isFullyVested && !hasCliff && (
+                <div>
+                  <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Next unlock</p>
+                  <p className="font-medium" style={{ color: "var(--preview-text-2)" }}>in {timeUntil(s.nextUnlockTime)}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>Recipient</p>
+                <p className="font-mono text-[10px]" style={{ color: "var(--preview-text-3)" }}>{shortAddr(s.recipient)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Emission chart */}
+          <EmissionChart stream={s} />
+
+          {/* Claim history */}
+          <ClaimHistory stream={s} />
+
+          {/* Annotations + tags */}
+          <div className="space-y-2">
+            <StreamAnnotationEditor streamId={s.id} />
+            <StreamTagsEditor streamId={s.id} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── VestingTable ─────────────────────────────────────────────────────────────
 
 // Columns: Asset | Protocol | Locked | Start | End | Progress | Claimable | Schedule | Cancellable | Contract | Action
 // Chain name is shown under the token symbol in the Asset column — no separate column needed
 const COL = "grid-cols-[160px_88px_98px_80px_80px_108px_98px_118px_80px_90px_130px]";
 
-function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: Record<string, number> }) {
+function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: VestingStream[]; prices: Record<string, number>; imageUrls?: Record<string, string>; onClaim?: () => void }) {
   // Single source of truth for "now" inside this table — used by the cliff /
   // monthly-rate derivations below. Replaces inline Date.now() calls flagged
   // by react-hooks/purity (Date.now isn't pure for React 19's strict-mode
   // analysis). Re-renders every 30s so cliff-active flags stay accurate.
   const nowSec = useNowSec();
+  // Track stream IDs where user clicked "Claim ↗" — shows a "refreshing…"
+  // indicator for 15s until the parent triggers a data refresh.
+  const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
+  // Mobile drill-down: which stream is currently open in the detail sheet
+  const [sheetStreamId, setSheetStreamId] = useState<string | null>(null);
 
   // Bulk-fetch the user's stream annotations once. We expose a Map<streamId,
   // annotation> for O(1) row-level lookup. Cheap because annotations are
@@ -1442,6 +1702,8 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
       return true; // if we can't parse, show rather than hide
     }
   });
+  // Mobile detail sheet stream — resolved after `active` to avoid temporal dead zone
+  const sheetStream = active.find(s => s.id === sheetStreamId) ?? null;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const COLS = ["Asset", "Protocol", "Locked", "Start", "End", "Progress", "Claimable", "Schedule", "Cancellable", "Contract", ""];
 
@@ -1463,8 +1725,121 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
         </div>
       </div>
 
-      {/* Scrollable table area */}
-      <div className="overflow-x-auto">
+      {/* ── Mobile condensed list (hidden on md+) ──────────────────────────── */}
+      <div className="md:hidden">
+        {active.length === 0 ? (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm font-medium" style={{ color: "var(--preview-text-3)" }}>No active streams found.</p>
+          </div>
+        ) : (
+          <div>
+            {active.map((s, idx) => {
+              const price        = prices[s.tokenSymbol] ?? 0;
+              const claimableAmt = toFloat(s.claimableNow, s.tokenDecimals);
+              const lockedAmt    = toFloat(s.lockedAmount,  s.tokenDecimals);
+              const tokenColor   = getTokenColor(s.tokenSymbol);
+              const proto        = PROTOCOL_COLORS[s.protocol] ?? { text: "#B8BABD", bg: "rgba(184,186,189,0.1)", border: "rgba(184,186,189,0.2)" };
+              const chainName    = CHAIN_NAMES[s.chainId as SupportedChainId] ?? `Chain ${s.chainId}`;
+              const claimUrl     = CLAIM_LINKS[s.protocol] ?? "#";
+              const isExpanded   = expandedId === s.id;
+              const total        = BigInt(s.totalAmount);
+              const withdrawn    = BigInt(s.withdrawnAmount);
+              const claimedPct   = total > 0n ? Number((withdrawn * 10000n) / total) / 100 : 0;
+              const claimablePct = total > 0n ? Number((BigInt(s.claimableNow) * 10000n) / total) / 100 : 0;
+
+              return (
+                <div key={s.id} style={{ borderTop: idx > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+                  {/* Main row — 4 columns: tap = open detail sheet */}
+                  <div
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
+                    onClick={() => setSheetStreamId(s.id)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {/* Col 1: token icon + symbol + protocol */}
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={36} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className="text-[9px] inline-flex items-center px-1 py-px rounded" style={{ background: proto.bg, color: proto.text }}>
+                            {protocolDisplay(s.protocol)}
+                          </span>
+                          <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>{chainName}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Col 2: Claimable */}
+                    <div className="flex-shrink-0 text-right w-20">
+                      <p className="text-xs font-semibold tabular-nums" style={{ color: claimableAmt > 0 ? tokenColor : "var(--preview-text-3)" }}>
+                        {claimableAmt > 0 ? claimableAmt.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "0"}
+                      </p>
+                      <p className="text-[9px] tabular-nums mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                        {price > 0 && claimableAmt > 0 ? fmtUSD(claimableAmt * price) : "claimable"}
+                      </p>
+                    </div>
+
+                    {/* Col 3: Locked */}
+                    <div className="flex-shrink-0 text-right w-20">
+                      <p className="text-xs tabular-nums font-medium" style={{ color: "var(--preview-text)" }}>
+                        {lockedAmt.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-[9px] tabular-nums mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                        {price > 0 && lockedAmt > 0 ? fmtUSD(lockedAmt * price) : "locked"}
+                      </p>
+                    </div>
+
+                    {/* Col 4: CTA + chevron */}
+                    <div className="flex-shrink-0 flex items-center gap-1.5 ml-1">
+                      {claimedIds.has(s.id) ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1.5 rounded-lg"
+                          style={{ background: "rgba(63,165,104,0.1)", color: "#3FA568", border: "1px solid rgba(63,165,104,0.2)" }}>
+                          <span className="animate-spin text-[8px]">↻</span>
+                        </span>
+                      ) : claimableAmt > 0 ? (
+                        <a href={claimUrl} target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setClaimedIds(prev => new Set([...prev, s.id]));
+                            onClaim?.();
+                            setTimeout(() => setClaimedIds(prev => { const next = new Set(prev); next.delete(s.id); return next; }), 18_000);
+                          }}
+                          className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1.5 rounded-lg text-white"
+                          style={{ background: `linear-gradient(135deg, ${tokenColor}, ${tokenColor}cc)`, boxShadow: `0 2px 8px ${tokenColor}30` }}>
+                          Claim
+                        </a>
+                      ) : (
+                        <a href={claimUrl} target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg"
+                          style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>
+                          View
+                        </a>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSheetStreamId(s.id); }}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors"
+                        style={{ color: "var(--preview-text-3)" }}
+                        aria-label="Open details"
+                      >
+                        <svg width={10} height={10} viewBox="0 0 10 10" fill="none">
+                          <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mobile rows open the full-screen detail sheet on tap — no inline expansion */}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop scrollable table (hidden on mobile) ─────────────────────── */}
+      <div className="hidden md:block overflow-x-auto">
         <div className="min-w-[1360px]">
 
           {/* Column headers */}
@@ -1519,10 +1894,7 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                       tagged this stream — small, colour-coded, max 2 visible
                       with overflow indicator. */}
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0"
-                      style={{ background: tokenColor + "18", borderColor: tokenColor + "30" }}>
-                      <span className="text-[10px] font-bold" style={{ color: tokenColor }}>{s.tokenSymbol.slice(0, 3)}</span>
-                    </div>
+                    <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={32} />
                     <div className="min-w-0 flex-1">
                       {(() => {
                         const customName = annotationByStreamId.get(s.id)?.customName;
@@ -1759,9 +2131,20 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
                       instead of /explore/* which 308-redirects there — saves a
                       round trip and means clicks feel instant. */}
                   <div className="flex items-center justify-end gap-1.5">
-                    {claimableAmt > 0 ? (
+                    {claimedIds.has(s.id) ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg"
+                        style={{ background: "rgba(63,165,104,0.1)", color: "#3FA568", border: "1px solid rgba(63,165,104,0.2)" }}>
+                        <span className="animate-spin text-[8px]">↻</span> Updating…
+                      </span>
+                    ) : claimableAmt > 0 ? (
                       <a href={claimUrl} target="_blank" rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setClaimedIds(prev => new Set([...prev, s.id]));
+                          onClaim?.();
+                          // Clear the "updating" indicator after the refresh window
+                          setTimeout(() => setClaimedIds(prev => { const next = new Set(prev); next.delete(s.id); return next; }), 18_000);
+                        }}
                         className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-all duration-150 hover:scale-105"
                         style={{ background: `linear-gradient(135deg, ${tokenColor}, ${tokenColor}cc)`, boxShadow: `0 2px 8px ${tokenColor}40` }}>
                         Claim ↗
@@ -1814,7 +2197,18 @@ function VestingTable({ streams, prices }: { streams: VestingStream[]; prices: R
           </div>
 
         </div>{/* /min-w */}
-      </div>{/* /overflow-x-auto */}
+      </div>{/* /hidden md:block overflow-x-auto */}
+
+      {/* Mobile detail sheet — rendered as portal-like fixed overlay */}
+      {sheetStream && (
+        <StreamDetailSheet
+          stream={sheetStream}
+          prices={prices}
+          imageUrls={imageUrls}
+          onClose={() => setSheetStreamId(null)}
+          onClaim={onClaim}
+        />
+      )}
     </div>
   );
 }
@@ -2048,7 +2442,7 @@ function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices
   );
 }
 
-function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
+function NextClaimCountdown({ streams, prices = {}, imageUrls = {} }: { streams: VestingStream[]; prices?: Record<string, number>; imageUrls?: Record<string, string> }) {
   const nowSec = useCountdown();
 
   // ── Section A: tokens currently streaming (continuous, past cliff/start, claimable > 0) ──
@@ -2148,10 +2542,7 @@ function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
               {/* Token header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0"
-                    style={{ background: color + "18", borderColor: color + "30" }}>
-                    <span className="text-[9px] font-bold" style={{ color }}>{s.tokenSymbol.slice(0, 3)}</span>
-                  </div>
+                  <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={28} />
                   <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</span>
                 </div>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
@@ -2170,11 +2561,18 @@ function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
                   Continuous · claim any time
                 </p>
               </div>
-              {/* Claimable amount */}
+              {/* Claimable amount + USD value */}
               {totalAmt > 0 && (
-                <p className="text-[11px] font-semibold text-center tabular-nums" style={{ color }}>
-                  {totalAmt.toLocaleString("en-US", { maximumFractionDigits: 4 })} {s.tokenSymbol} claimable
-                </p>
+                <div className="text-center">
+                  <p className="text-[11px] font-semibold tabular-nums" style={{ color }}>
+                    {totalAmt.toLocaleString("en-US", { maximumFractionDigits: 4 })} {s.tokenSymbol} claimable
+                  </p>
+                  {prices[s.tokenSymbol] > 0 && (
+                    <p className="text-[10px] tabular-nums mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+                      ≈ {fmtUSDFull(totalAmt * prices[s.tokenSymbol])}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           );
@@ -2193,10 +2591,7 @@ function NextClaimCountdown({ streams }: { streams: VestingStream[] }) {
               {/* Token header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0"
-                    style={{ background: color + "18", borderColor: color + "30" }}>
-                    <span className="text-[9px] font-bold" style={{ color }}>{s.tokenSymbol.slice(0, 3)}</span>
-                  </div>
+                  <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={28} />
                   <span className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{s.tokenSymbol}</span>
                 </div>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
@@ -2388,7 +2783,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
                   </div>
                 </div>
                 {/* Bell: filled + coloured when email alerts are on */}
-                <a href="/settings"
+                <a href="/settings#notifications"
                   title={emailAlerts ? "Email alerts on · manage in Settings" : "Enable alerts in Settings"}
                   className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg transition-colors"
                   style={{ color: emailAlerts ? color : "var(--preview-text-3)" }}
@@ -3066,6 +3461,7 @@ type BuyTx  = { id: string; date: string; amount: number; pricePer: number };
 function PnLPanel({
   streams,
   prices,
+  imageUrls = {},
   costBasis,
   onUpdateCostBasis,
   sells,
@@ -3077,6 +3473,7 @@ function PnLPanel({
 }: {
   streams:          VestingStream[];
   prices:           Record<string, number>;
+  imageUrls?:       Record<string, string>;
   costBasis:        Record<string, number>;
   onUpdateCostBasis:(symbol: string, price: number) => void;
   sells:            Record<string, SellTx[]>;
@@ -3236,6 +3633,16 @@ function PnLPanel({
         )}
       </div>
 
+      {/* Cloud sync notice */}
+      <div className="px-6 py-2.5 flex items-center gap-2.5 text-[11px]"
+        style={{ background: "rgba(28,184,184,0.05)", borderBottom: "1px solid rgba(28,184,184,0.12)" }}>
+        <span style={{ fontSize: 12, color: "#0F8A8A" }}>☁</span>
+        <span style={{ color: "var(--preview-text-3)" }}>
+          P&amp;L data syncs to your account — available on any device.
+          Local data from this browser is migrated automatically on first load.
+        </span>
+      </div>
+
       {/* Token sections */}
       <div className="divide-y" style={{ borderColor: "var(--preview-border-2)" }}>
         {tokens.map((t) => {
@@ -3263,10 +3670,7 @@ function PnLPanel({
               <div className="flex items-center gap-4 mb-3 flex-wrap">
                 {/* Badge */}
                 <div className="flex items-center gap-2.5 w-32 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0"
-                    style={{ background: t.color + "18", borderColor: t.color + "30" }}>
-                    <span className="text-[10px] font-bold" style={{ color: t.color }}>{t.symbol.slice(0, 3)}</span>
-                  </div>
+                  <TokenIcon symbol={t.symbol} imageUrl={imageUrls[t.symbol]} size={32} />
                   <div>
                     <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{t.symbol}</p>
                     <p className="text-[10px] tabular-nums" style={{ color: "var(--preview-text-3)" }}>
@@ -3670,179 +4074,191 @@ function WalletChip({ address, open, onToggle, onDisconnect }: {
   );
 }
 
-// ─── AddWalletBar ─────────────────────────────────────────────────────────────
+// ─── Chain / protocol label maps (used by WalletRow badges + loading skeleton) ─
+const CHAIN_LABELS: Record<string, string> = {
+  "1": "ETH", "56": "BSC", "137": "Polygon", "8453": "Base",
+  "42161": "Arbitrum", "101": "SOL", "11155111": "Sepolia",
+};
+const PROTOCOL_LABELS: Record<string, string> = {
+  "sablier": "Sablier", "uncx": "UNCX", "team-finance": "Team Finance",
+  "hedgey": "Hedgey", "unvest": "Unvest", "superfluid": "Superfluid",
+  "pinksale": "PinkSale", "streamflow": "Streamflow", "jupiter-lock": "Jupiter",
+};
 
-const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum",  short: "ETH"     },
-  { id: "56",       label: "BNB Chain", short: "BSC"     },
-  { id: "137",      label: "Polygon",   short: "Polygon" },
-  { id: "8453",     label: "Base",      short: "Base"    },
-  { id: "101",      label: "Solana",    short: "SOL"     },
-  { id: "11155111", label: "Sepolia",   short: "Sepolia" },
-];
+// ─── AddWalletModal ───────────────────────────────────────────────────────────
+// Simplified: just enter an address. We scan all chains × all protocols
+// automatically — no chain/protocol dropdowns needed.
 
-const PROTOCOL_OPTIONS = [
-  { id: "sablier",      label: "Sablier"       },
-  { id: "uncx",         label: "UNCX"          },
-  { id: "team-finance", label: "Team Finance"  },
-  { id: "hedgey",       label: "Hedgey"        },
-  { id: "unvest",       label: "Unvest"        },
-  { id: "superfluid",   label: "Superfluid"    },
-  { id: "pinksale",     label: "PinkSale"      },
-];
-
-function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; onCancel: () => void; tier?: string }) {
+function AddWalletModal({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const [address, setAddress] = useState("");
-  const [label, setLabel]     = useState("");
-  const [error, setError]     = useState<string | null>(null);
+  const [label,   setLabel]   = useState("");
+  const [error,   setError]   = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Required single chain + single platform selection
-  const [selChain,    setSelChain]    = useState<string>("");
-  const [selProtocol, setSelProtocol] = useState<string>("");
-  const [selTokenAddr, setSelTokenAddr] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { address: wagmiAddress } = useAccount();
   const { connect } = useConnect();
 
-  // Auto-fill when a wallet connects
-  useEffect(() => {
-    if (wagmiAddress && !address) setAddress(wagmiAddress);
-  }, [wagmiAddress, address]);
+  // Focus the address field on mount
+  useEffect(() => { inputRef.current?.focus(); }, []);
+  // Auto-fill connected wallet address
+  useEffect(() => { if (wagmiAddress && !address) setAddress(wagmiAddress); }, [wagmiAddress, address]);
 
   async function handleAdd() {
     setError(null);
-    if (!isValidWalletAddress(address)) { setError("Invalid address — expected EVM 0x… or Solana pubkey"); return; }
-    if (!selChain || !selProtocol) { setError("Select a chain and platform"); return; }
+    const trimmed = address.trim();
+    if (!isValidWalletAddress(trimmed)) {
+      setError("Invalid address — expected EVM 0x… or Solana pubkey");
+      return;
+    }
     setLoading(true);
     try {
-      const chains    = [parseInt(selChain)];
-      // UNCX UI option covers both UNCX v1 and UNCX VestingManager (uncx-vm)
-      const protocols = selProtocol === "uncx" ? ["uncx", "uncx-vm"] : [selProtocol];
-      const tokenAddress = selTokenAddr.trim() && isValidWalletAddress(selTokenAddr.trim()) ? selTokenAddr.trim() : undefined;
-
+      // POST with empty chains + protocols → server scans all automatically
       const res = await fetch("/api/wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, label: label || undefined, chains, protocols, tokenAddress }),
+        body: JSON.stringify({ address: trimmed, label: label.trim() || undefined }),
       });
-      if (res.status === 409) { setError("Already added"); return; }
+      if (res.status === 409) { setError("Wallet already tracked"); return; }
       if (res.status === 402) {
         const j = await res.json();
-        // Internal tier name "fund" surfaces as "Enterprise" in all UI.
         const nextPlan = j.tier === "free" ? "Pro" : "Enterprise";
         setError(`${j.error ?? "Plan limit reached"} — upgrade to ${nextPlan} to add more wallets.`);
         return;
       }
-      if (!res.ok) { const j = await res.json(); setError(j.error ?? "Failed"); return; }
+      if (!res.ok) { const j = await res.json().catch(() => ({})); setError((j as {error?:string}).error ?? "Failed to add wallet"); return; }
       onAdd();
-    } catch { setError("Network error"); }
+    } catch { setError("Network error — please try again"); }
     finally { setLoading(false); }
   }
 
-  return (
-    <div className="px-6 py-4 flex-shrink-0 space-y-3"
-      style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
+  // Close on backdrop click or Escape
+  function handleBackdrop(e: React.MouseEvent) {
+    if (e.target === e.currentTarget) onCancel();
+  }
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onCancel(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
 
-      {/* Row 1: address + label */}
-      <div className="flex items-center gap-3 flex-wrap">
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.55)" }}
+      onClick={handleBackdrop}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-bold" style={{ color: "var(--preview-text)" }}>Track a wallet</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+              We'll scan all chains &amp; protocols automatically.
+            </p>
+          </div>
+          <button onClick={onCancel} className="p-1.5 rounded-lg transition-colors hover:opacity-70" style={{ color: "var(--preview-text-3)" }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Address input */}
+        <label className="block mb-1 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--preview-text-3)" }}>
+          Wallet address
+        </label>
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            ref={inputRef}
+            placeholder="0x… or Solana pubkey"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+            className="flex-1 rounded-xl px-3 py-2.5 text-sm font-mono outline-none"
+            style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
+          />
+          <button
+            type="button"
+            onClick={() => connect({ connector: injected() })}
+            title="Auto-fill from connected wallet"
+            className="flex-shrink-0 flex items-center gap-1 px-3 py-2.5 rounded-xl text-xs font-medium transition-colors"
+            style={{
+              color: wagmiAddress ? "#3FA568" : "var(--preview-text-3)",
+              background: "var(--preview-muted-2)",
+              border: "1px solid var(--preview-border)",
+            }}
+          >
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+            {wagmiAddress ? "✓" : "Detect"}
+          </button>
+        </div>
+
+        {/* Label input */}
+        <label className="block mb-1 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--preview-text-3)" }}>
+          Label <span className="font-normal normal-case tracking-normal">(optional)</span>
+        </label>
         <input
-          placeholder="Wallet address (0x… or Solana pubkey)"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
-          className="flex-1 min-w-[180px] rounded-xl px-3 py-2 text-sm font-mono outline-none"
-          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
-        />
-        <button
-          type="button"
-          onClick={() => connect({ connector: injected() })}
-          title="Connect a wallet to auto-fill address"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex-shrink-0"
-          style={{
-            color: wagmiAddress ? "#3FA568" : "var(--preview-text-3)",
-            background: "var(--preview-muted-2)",
-            border: "1px solid var(--preview-border-2)",
-          }}
-        >
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          </svg>
-          {wagmiAddress ? "Detected" : "Detect"}
-        </button>
-        <input
-          placeholder="Label (optional)"
+          placeholder="e.g. My main wallet"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="w-32 rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
+          onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none mb-5"
           style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
         />
-      </div>
 
-      {/* Row 2: required chain + platform dropdowns */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Chain</span>
-        <select
-          value={selChain}
-          onChange={(e) => setSelChain(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
-          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
-        >
-          <option value="">Select chain…</option>
-          {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-        </select>
-        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Platform</span>
-        <select
-          value={selProtocol}
-          onChange={(e) => setSelProtocol(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none flex-shrink-0"
-          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
-        >
-          <option value="">Select platform…</option>
-          {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-        </select>
-        {error && <span className="text-xs text-red-400 truncate">{error}</span>}
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+        {error && (
+          <div className="mb-4 px-3 py-2.5 rounded-xl text-xs" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
+            {error}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
           <button
             onClick={handleAdd}
-            disabled={loading || !address || !selChain || !selProtocol}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-colors"
+            disabled={loading || !address.trim()}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: loading ? "none" : "0 4px 16px rgba(28,184,184,0.3)" }}
           >
-            <IconPlus /> {loading ? "Adding…" : "Track wallet"}
+            {loading ? (
+              <>
+                <Spinner16 /> Scanning &amp; adding…
+              </>
+            ) : (
+              <>
+                <IconPlus /> Scan &amp; track wallet
+              </>
+            )}
           </button>
           <button
             onClick={onCancel}
-            className="text-xs font-medium transition-colors"
-            style={{ color: "var(--preview-text-3)" }}
+            className="px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            style={{ color: "var(--preview-text-3)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
           >
             Cancel
           </button>
         </div>
-      </div>
 
-      {/* Row 3: optional token contract address */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-[10px] font-bold tracking-widest uppercase flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>Token</span>
-        <input
-          placeholder="Token contract address (optional)"
-          value={selTokenAddr}
-          onChange={(e) => setSelTokenAddr(e.target.value)}
-          className="flex-1 min-w-[200px] rounded-xl px-3 py-2 text-sm font-mono outline-none"
-          style={{ color: "var(--preview-text)", background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)" }}
-        />
-        <span className="text-[9px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>narrows to one token</span>
-      </div>
-
-      {/* Discover hint — Pro only */}
-      {tier !== "free" && (
-        <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-          Not sure which platform holds your vesting?{" "}
-          <a href="/dashboard/discover" className="underline" style={{ color: "#1CB8B8" }}>
-            Search all platforms →
-          </a>
+        <p className="text-[10px] mt-3 text-center" style={{ color: "var(--preview-text-3)" }}>
+          Searches Sablier, Hedgey, UNCX, Unvest, Superfluid, PinkSale, Streamflow &amp; more
         </p>
-      )}
+      </div>
     </div>
+  );
+}
+
+function Spinner16() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" className="animate-spin flex-shrink-0">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.2" strokeWidth="3"/>
+      <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
   );
 }
 
@@ -3853,13 +4269,13 @@ function AddWalletBar({ onAdd, onCancel, tier = "free" }: { onAdd: () => void; o
 // Dashboard pill stayed highlighted regardless of which sub-route the user
 // was viewing, and the Explorer pill never lit up.
 const NAV_ITEMS = [
-  { icon: <IconGrid />,     label: "Dashboard", href: "/dashboard"          },
-  { icon: <IconCompass />,  label: "Explorer",  href: "/dashboard/explorer" },
-  { icon: <IconSearch />,   label: "Discover",  href: "/dashboard/discover" },
-  { icon: <IconBookmark />, label: "Watchlist",   href: "/dashboard/watchlist"        },
-  { icon: <IconIncomeStatement />, label: "Income", href: "/dashboard/income-statement" },
-  { icon: <IconExport />,   label: "Tax Reports", href: "/dashboard/exports"          },
-  { icon: <IconSettings />, label: "Settings",    href: "/settings"                   },
+  { icon: <IconGrid />,     label: "Dashboard",      href: "/dashboard"                    },
+  { icon: <IconCompass />,  label: "Vesting Index",  href: "/dashboard/explorer"           },
+  { icon: <IconSearch />,   label: "Wallet Scanner", href: "/dashboard/discover"           },
+  { icon: <IconBookmark />, label: "Token Watchlist", href: "/dashboard/watchlist"         },
+  { icon: <IconIncomeStatement />, label: "Income",  href: "/dashboard/income-statement"  },
+  { icon: <IconExport />,   label: "Tax Reports",    href: "/dashboard/exports"            },
+  { icon: <IconSettings />, label: "Settings",       href: "/settings"                    },
 ];
 
 // ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
@@ -3872,16 +4288,21 @@ function WalletRow({
 }) {
   const cfgChains    = wallet.chains    && wallet.chains.length    > 0 ? wallet.chains    : null;
   const cfgProtocols = wallet.protocols && wallet.protocols.length > 0 ? wallet.protocols : null;
+  const hasConfig    = !!(cfgChains || cfgProtocols || wallet.tokenAddress);
 
   return (
-    <div className="rounded-xl mb-0.5">
-      <div className="group flex items-center gap-2 px-3 py-2 text-xs transition-all duration-150 cursor-default rounded-xl"
+    <div className="rounded-xl mb-0.5 relative group">
+      <div className="flex items-center gap-2 px-3 py-2 text-xs transition-all duration-150 cursor-default rounded-xl"
         style={{ color: "var(--preview-text-2)" }}
         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-muted)")}
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
         <span className="flex-1 truncate font-medium">{wallet.label ?? shortAddr(wallet.address)}</span>
+        {/* Config filter dot — visible only when filters are set */}
+        {hasConfig && (
+          <span className="flex-shrink-0 w-1 h-1 rounded-full" style={{ background: "#1CB8B8" }} title="Custom filters applied" />
+        )}
         <button
           onClick={onRemove}
           className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded hover:bg-red-500/10"
@@ -3889,31 +4310,26 @@ function WalletRow({
         >×</button>
       </div>
 
-      {/* Active config badges */}
-      {(cfgChains || cfgProtocols || wallet.tokenAddress) && (
-        <div className="px-3 pb-1.5 flex flex-wrap gap-1">
-          {cfgChains?.map((c) => {
-            const ch = CHAIN_OPTIONS.find(x => x.id === c);
-            return (
-              <span key={c} className="text-[9px] px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(59,130,246,0.10)", color: "#1CB8B8" }}>
-                {ch?.short ?? c}
-              </span>
-            );
-          })}
-          {cfgProtocols?.filter(p => p !== "uncx-vm").map((p) => {
-            const pr = PROTOCOL_OPTIONS.find(x => x.id === p);
-            return (
-              <span key={p} className="text-[9px] px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(15,138,138,0.10)", color: "#0F8A8A" }}>
-                {pr?.label ?? p}
-              </span>
-            );
-          })}
+      {/* Config badge tooltip — appears above the row on hover */}
+      {hasConfig && (
+        <div className="absolute left-0 right-0 bottom-full mb-1.5 hidden group-hover:flex flex-wrap gap-1 px-2.5 py-2 rounded-xl z-50 pointer-events-none"
+          style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", boxShadow: "0 4px 16px rgba(0,0,0,0.18)" }}>
+          {cfgChains?.map((c) => (
+            <span key={c} className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+              style={{ background: "rgba(59,130,246,0.10)", color: "#1CB8B8" }}>
+              {CHAIN_LABELS[c] ?? c}
+            </span>
+          ))}
+          {cfgProtocols?.filter(p => p !== "uncx-vm").map((p) => (
+            <span key={p} className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+              style={{ background: "rgba(15,138,138,0.10)", color: "#0F8A8A" }}>
+              {PROTOCOL_LABELS[p] ?? p}
+            </span>
+          ))}
           {wallet.tokenAddress && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded"
+            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium"
               style={{ background: "rgba(63,165,104,0.10)", color: "#3FA568" }}>
-              🎯 {wallet.tokenAddress.slice(0, 6)}…{wallet.tokenAddress.slice(-4)}
+              Token: {wallet.tokenAddress.slice(0, 6)}…{wallet.tokenAddress.slice(-4)}
             </span>
           )}
         </div>
@@ -3923,6 +4339,92 @@ function WalletRow({
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+// ─── OnboardingModal ──────────────────────────────────────────────────────────
+// First-visit welcome modal. Shown once (localStorage flag prevents repeat).
+// Warm tone — these users are arriving from the mobile app so they already
+// trust Vestream. Goal: orient them quickly and surface the Pro features.
+
+function OnboardingModal({ onClose }: { onClose: () => void }) {
+  const features = [
+    { icon: "📊", title: "Portfolio overview", desc: "See all your vesting streams, claimable amounts, and total portfolio value in one place." },
+    { icon: "📅", title: "Vesting schedule", desc: "Visual unlock timeline so you always know what's coming and when." },
+    { icon: "💸", title: "Monthly cashflow", desc: "Month-by-month view of tokens unlocking — plan your treasury or personal finances ahead." },
+    { icon: "🔍", title: "Wallet Scanner", desc: "Scan any wallet to discover vesting streams across all major protocols instantly." },
+    { icon: "📈", title: "P&L Tracker", desc: "Log your entry price and sales to track realized and unrealized profit across your vested tokens." },
+    { icon: "🧾", title: "Tax exports", desc: "One-click CSV exports compatible with Koinly, CoinTracker, and TurboTax." },
+  ];
+
+  const proFeatures = [
+    "Unlimited wallet tracking",
+    "Real-time price alerts",
+    "Multi-wallet portfolio view",
+    "Priority support",
+  ];
+
+  function handleClose() {
+    try { localStorage.setItem("vestr-onboarding-seen", "1"); } catch { /* ignore */ }
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.6)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="w-full max-w-lg rounded-2xl overflow-hidden"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", boxShadow: "0 24px 80px rgba(0,0,0,0.25)", maxHeight: "90vh", overflowY: "auto" }}>
+
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 text-center"
+          style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(37,99,235,0.06))", borderBottom: "1px solid var(--preview-border-2)" }}>
+          <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-2xl"
+            style={{ background: "rgba(28,184,184,0.12)" }}>🌊</div>
+          <h2 className="text-base font-bold mb-1" style={{ color: "var(--preview-text)" }}>
+            Welcome to the Vestream Dashboard
+          </h2>
+          <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
+            Your vesting portfolio, all in one place. Here&apos;s what you can do.
+          </p>
+        </div>
+
+        {/* Feature grid */}
+        <div className="px-6 py-4 grid grid-cols-2 gap-3">
+          {features.map((f) => (
+            <div key={f.title} className="rounded-xl p-3"
+              style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
+              <div className="text-lg mb-1">{f.icon}</div>
+              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{f.title}</p>
+              <p className="text-[10px] leading-relaxed" style={{ color: "var(--preview-text-3)" }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Pro callout */}
+        <div className="mx-6 mb-4 rounded-xl p-3"
+          style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)" }}>
+          <p className="text-[11px] font-semibold mb-2" style={{ color: "#0F8A8A" }}>⚡ Pro features</p>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+            {proFeatures.map(f => (
+              <li key={f} className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--preview-text-2)" }}>
+                <span className="text-[8px]" style={{ color: "#1CB8B8" }}>✦</span>{f}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* CTA */}
+        <div className="px-6 pb-6">
+          <button
+            onClick={handleClose}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", boxShadow: "0 4px 16px rgba(28,184,184,0.3)" }}>
+            Let&apos;s go →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── FeedbackModal ────────────────────────────────────────────────────────────
 
@@ -3954,13 +4456,13 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
       style={{ background: "rgba(0,0,0,0.5)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         {done ? (
           <div className="flex flex-col items-center text-center py-4 gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
               style={{ background: "rgba(37,99,235,0.1)" }}>✓</div>
-            <p className="font-semibold text-sm" style={{ color: "#1A1D20" }}>Thanks for the feedback!</p>
-            <p className="text-xs" style={{ color: "#8B8E92" }}>We read every response and use it to make Vestream better.</p>
+            <p className="font-semibold text-sm" style={{ color: "var(--preview-text)" }}>Thanks for the feedback!</p>
+            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>We read every response and use it to make Vestream better.</p>
             <button onClick={onClose}
               className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold text-white"
               style={{ background: "#1CB8B8" }}>
@@ -3971,10 +4473,10 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
           <>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="font-bold text-sm" style={{ color: "#1A1D20" }}>Share feedback</p>
-                <p className="text-xs mt-0.5" style={{ color: "#8B8E92" }}>Help us build a better product</p>
+                <p className="font-bold text-sm" style={{ color: "var(--preview-text)" }}>Share feedback</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>Help us build a better product</p>
               </div>
-              <button onClick={onClose} className="text-lg leading-none" style={{ color: "#B8BABD" }}>×</button>
+              <button onClick={onClose} className="text-lg leading-none" style={{ color: "var(--preview-text-3)" }}>×</button>
             </div>
 
             {/* Star rating */}
@@ -3982,12 +4484,12 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               {[1, 2, 3, 4, 5].map((n) => (
                 <button key={n} onClick={() => setRating(n)}
                   className="text-2xl transition-transform hover:scale-110"
-                  style={{ color: rating !== null && n <= rating ? "#F0992E" : "#e2e8f0" }}>
+                  style={{ color: rating !== null && n <= rating ? "#F0992E" : "var(--preview-border)" }}>
                   ★
                 </button>
               ))}
               {rating && (
-                <span className="text-xs self-center ml-1" style={{ color: "#8B8E92" }}>
+                <span className="text-xs self-center ml-1" style={{ color: "var(--preview-text-3)" }}>
                   {["", "Poor", "Fair", "Good", "Great", "Excellent"][rating]}
                 </span>
               )}
@@ -4001,7 +4503,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 rows={4}
                 maxLength={2000}
                 className="w-full text-sm px-4 py-3 rounded-xl resize-none outline-none"
-                style={{ background: "#F5F5F3", border: "1px solid rgba(0,0,0,0.1)", color: "#1A1D20", lineHeight: 1.5 }}
+                style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)", color: "var(--preview-text)", lineHeight: 1.5 }}
               />
               <button type="submit"
                 disabled={!message.trim() || submitting}
@@ -4019,7 +4521,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onRemoveWallet, onFeedback }: {
+function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onRemoveWallet, onFeedback, dark, onToggleDark }: {
   wallets: Wallet[];
   tier: string;
   walletLimit: number | null;
@@ -4028,6 +4530,8 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
   onAddWallet: () => void;
   onRemoveWallet: (address: string) => void;
   onFeedback: () => void;
+  dark: boolean;
+  onToggleDark: () => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -4061,7 +4565,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
           const isFree         = tier === "free";
-          const showFreeBadge  = isFree && (item.href === "/dashboard/discover");
+          const showFreeBadge  = isFree && (item.href === "/dashboard/discover"); // "Wallet Scanner"
           // Dynamic active — Dashboard matches exact path; everything else
           // matches when pathname starts with item.href so sub-routes
           // (e.g. /dashboard/explorer/[token]) keep the parent highlighted.
@@ -4200,6 +4704,21 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           </div>
         )}
 
+        {/* Dark mode toggle */}
+        <button
+          onClick={onToggleDark}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all"
+          style={{ color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--preview-muted)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        >
+          <span>{dark ? "☀ Light mode" : "☽ Dark mode"}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+            style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
+            {dark ? "ON" : "OFF"}
+          </span>
+        </button>
+
         <p className="text-[8px] text-center" style={{ color: "var(--preview-text-3)" }}>
           Read-only · No funds access
         </p>
@@ -4239,12 +4758,12 @@ function LoadingSkeleton({ walletCount, chainUnion, protocolUnion }: {
             </span>
             {chainUnion && chainUnion.length > 0 && (
               <>{" on "}<span style={{ color: "var(--preview-text-2)" }}>
-                {chainUnion.map(id => CHAIN_OPTIONS.find(c => c.id === id)?.label ?? `Chain ${id}`).join(", ")}
+                {chainUnion.map(id => CHAIN_LABELS[id] ?? `Chain ${id}`).join(", ")}
               </span></>
             )}
             {protocolUnion && protocolUnion.length > 0 && (
               <>{" via "}<span style={{ color: "var(--preview-text-2)" }}>
-                {protocolUnion.map(id => PROTOCOL_OPTIONS.find(p => p.id === id)?.label ?? id).join(", ")}
+                {protocolUnion.map(id => PROTOCOL_LABELS[id] ?? id).join(", ")}
               </span></>
             )}
             {!chainUnion && !protocolUnion && <>{" across all configured platforms and chains"}</>}
@@ -4290,15 +4809,26 @@ export default function Dashboard() {
   // dashboard sub-route now shares the same drawer state via context.
   const { toggleSidebar }                 = useDashboardChrome();
   const [showFeedback, setShowFeedback]   = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab]         = useState<"schedule" | "cashflow" | "pnl" | "market" | "gantt">("schedule");
   const [costBasis, setCostBasis]         = useState<Record<string, number>>({});
   const [sells, setSells]                 = useState<Record<string, SellTx[]>>({});
   const [buys,  setBuys]                  = useState<Record<string, BuyTx[]>>({});
+  // symbolToAddress: token symbol → first contract address seen in streams.
+  // Used to key Supabase API calls (which require a tokenAddress, not a symbol).
+  const symbolToAddress = useRef<Record<string, string>>({});
+  // Track whether we have merged cloud P&L into state (so we only do it once).
+  const pnlCloudLoaded = useRef(false);
 
-  // Persist dark mode + cost basis + sells across page navigations via localStorage.
-  // Dark mode also writes a cookie so server-rendered pages (Explorer)
-  // pick it up on first byte.
+  // ── Phase 1: load localStorage immediately on mount ──────────────────────
+  // Gives instant population without waiting for the network. Cloud data
+  // loaded in Phase 2 below will override any matching entries.
   useEffect(() => {
     setDark(getDarkModePreference());
+    // Show onboarding modal on first visit (never seen the dashboard before)
+    if (!localStorage.getItem("vestr-onboarding-seen")) {
+      setShowOnboarding(true);
+    }
     try {
       const stored = localStorage.getItem("vestr-cost-basis");
       if (stored) setCostBasis(JSON.parse(stored));
@@ -4315,7 +4845,6 @@ export default function Dashboard() {
           // else: old {amount, avgPrice} object — silently discard
         }
         setSells(migrated);
-        // Persist migrated data so old format is fully removed
         localStorage.setItem("vestr-sells", JSON.stringify(migrated));
       }
     } catch { /* ignore */ }
@@ -4346,9 +4875,41 @@ export default function Dashboard() {
       try { localStorage.setItem("vestr-cost-basis", JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
+    // Persist to Supabase (fire-and-forget)
+    const addr = symbolToAddress.current[symbol];
+    if (addr) {
+      fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryPrice: price }),
+      }).catch(() => {});
+    }
   }
 
   function addSellTx(symbol: string, tx: SellTx) {
+    const addr = symbolToAddress.current[symbol];
+    if (addr) {
+      // Persist to Supabase first to get the canonical UUID, then update state
+      fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}/sales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: tx.date, amount: tx.amount, price: tx.pricePer }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then((json: { sale: { id: string; date: string; amount: number; price: number } } | null) => {
+          if (!json?.sale) return;
+          // Replace the temp-ID tx with the Supabase UUID
+          setSells((prev) => {
+            const existing = prev[symbol] ?? [];
+            const replaced = existing.map(t => t.id === tx.id ? { ...t, id: json.sale.id } : t);
+            const next = { ...prev, [symbol]: replaced };
+            try { localStorage.setItem("vestr-sells", JSON.stringify(next)); } catch { /* ignore */ }
+            return next;
+          });
+        })
+        .catch(() => {});
+    }
+    // Optimistic local update (instant UI feedback)
     setSells((prev) => {
       const next = { ...prev, [symbol]: [...(prev[symbol] ?? []), tx] };
       try { localStorage.setItem("vestr-sells", JSON.stringify(next)); } catch { /* ignore */ }
@@ -4362,9 +4923,36 @@ export default function Dashboard() {
       try { localStorage.setItem("vestr-sells", JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
+    // Delete from Supabase (fire-and-forget — ID is either Supabase UUID or temp)
+    const addr = symbolToAddress.current[symbol];
+    if (addr) {
+      fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}/sales/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }).catch(() => {});
+    }
   }
 
   function addBuyTx(symbol: string, tx: BuyTx) {
+    const addr = symbolToAddress.current[symbol];
+    if (addr) {
+      fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}/purchases`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: tx.date, amount: tx.amount, price: tx.pricePer }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then((json: { purchase: { id: string; date: string; amount: number; price: number } } | null) => {
+          if (!json?.purchase) return;
+          setBuys((prev) => {
+            const existing = prev[symbol] ?? [];
+            const replaced = existing.map(t => t.id === tx.id ? { ...t, id: json.purchase.id } : t);
+            const next = { ...prev, [symbol]: replaced };
+            try { localStorage.setItem("vestr-buys", JSON.stringify(next)); } catch { /* ignore */ }
+            return next;
+          });
+        })
+        .catch(() => {});
+    }
     setBuys((prev) => {
       const next = { ...prev, [symbol]: [...(prev[symbol] ?? []), tx] };
       try { localStorage.setItem("vestr-buys", JSON.stringify(next)); } catch { /* ignore */ }
@@ -4378,6 +4966,12 @@ export default function Dashboard() {
       try { localStorage.setItem("vestr-buys", JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
+    const addr = symbolToAddress.current[symbol];
+    if (addr) {
+      fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}/purchases/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }).catch(() => {});
+    }
   }
 
   const loadWallets = useCallback(async () => {
@@ -4421,7 +5015,7 @@ export default function Dashboard() {
     ? `/api/vesting?wallets=${walletAddresses}${chainsQs}${protocolsQs}${tokenFiltersQs}`
     : null;
 
-  const { data, isLoading } = useSWR<{ streams: VestingStream[] }>(
+  const { data, isLoading, mutate: mutateStreams } = useSWR<{ streams: VestingStream[] }>(
     vestingUrl, fetcher, { refreshInterval: 60_000, revalidateOnFocus: true }
   );
 
@@ -4438,6 +5032,65 @@ export default function Dashboard() {
     () => data?.streams ?? [],
     [data?.streams],
   );
+
+  // ── Phase 2: merge cloud P&L once streams are known ──────────────────────
+  // Runs after the streams SWR fetch resolves. Builds symbolToAddress from
+  // streams, then fetches /api/dashboard/pnl and overlays results.
+  // Cloud data wins for any symbol that has a Supabase entry — otherwise
+  // the localStorage data from Phase 1 is kept as-is (works offline too).
+  useEffect(() => {
+    if (pnlCloudLoaded.current) return;  // only load once per session
+    if (streams.length === 0) return;    // wait until we know the token addresses
+
+    // Build symbol → address map from streams
+    const s2a: Record<string, string> = {};
+    for (const s of streams) {
+      if (!s2a[s.tokenSymbol] && s.tokenAddress) {
+        s2a[s.tokenSymbol] = s.tokenAddress.toLowerCase();
+      }
+    }
+    symbolToAddress.current = s2a;
+
+    // Build reverse: address → symbol (for mapping API response back to state keys)
+    const a2s: Record<string, string> = {};
+    for (const [sym, addr] of Object.entries(s2a)) a2s[addr] = sym;
+
+    fetch("/api/dashboard/pnl")
+      .then(r => r.ok ? r.json() : null)
+      .then((json: { byToken: Record<string, { entryPrice: number | null; sales: { id: string; date: string; amount: number; price: number }[]; purchases: { id: string; date: string; amount: number; price: number }[] }> } | null) => {
+        if (!json?.byToken) return;
+        pnlCloudLoaded.current = true;
+
+        const newCostBasis: Record<string, number> = {};
+        const newSells: Record<string, SellTx[]> = {};
+        const newBuys: Record<string, BuyTx[]> = {};
+
+        for (const [addr, pnlData] of Object.entries(json.byToken)) {
+          const sym = a2s[addr];
+          if (!sym) continue;  // address not in this user's streams — skip
+          if (pnlData.entryPrice !== null) newCostBasis[sym] = pnlData.entryPrice;
+          if (pnlData.sales.length > 0) {
+            newSells[sym] = pnlData.sales.map(s => ({ id: s.id, date: s.date, amount: s.amount, pricePer: s.price }));
+          }
+          if (pnlData.purchases.length > 0) {
+            newBuys[sym] = pnlData.purchases.map(p => ({ id: p.id, date: p.date, amount: p.amount, pricePer: p.price }));
+          }
+        }
+
+        // Only update state if the cloud actually has data — don't wipe localStorage
+        // for tokens that aren't in Supabase yet (those stay as-is).
+        if (Object.keys(newCostBasis).length > 0) {
+          setCostBasis(prev => ({ ...prev, ...newCostBasis }));
+        }
+        if (Object.keys(newSells).length > 0) {
+          setSells(prev => ({ ...prev, ...newSells }));
+        }
+        if (Object.keys(newBuys).length > 0) {
+          setBuys(prev => ({ ...prev, ...newBuys }));
+        }
+      })
+      .catch(() => { /* cloud unavailable — localStorage data stays */ });
+  }, [streams]);
 
   useEffect(() => {
     if (streams.length === 0) return;
@@ -4482,6 +5135,11 @@ export default function Dashboard() {
     {} as Record<string, number>
   );
   const prices = { ...FALLBACK_PRICES, ...livePrices, ...marketPrices };
+  // Token logo URLs from DexScreener, keyed by symbol. Used by TokenIcon component.
+  const imageUrls = (marketData?.market ?? []).reduce(
+    (acc, m) => m.imageUrl ? { ...acc, [m.symbol]: m.imageUrl } : acc,
+    {} as Record<string, string>
+  );
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -4841,9 +5499,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {showAddWallet && (
-          <AddWalletBar tier={tier} onAdd={() => { loadWallets(); setShowAddWallet(false); }} onCancel={() => setShowAddWallet(false)} />
-        )}
+        {/* AddWalletModal is rendered as a portal-like fixed overlay below */}
 
         {/* Content. px-4 on mobile (16px) drops to px-6 (24px) on tablet+
             so the dashboard cards have breathing room on phones without
@@ -4869,11 +5525,13 @@ export default function Dashboard() {
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : (
             <>
+              {/* ── Above the fold ─────────────────────────────────────── */}
               <CancellableWatchdog streams={filteredStreams} />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
+              {/* Token Unlock Status moved immediately below PortfolioHero for
+                  at-a-glance live status without scrolling */}
+              <NextClaimCountdown streams={filteredStreams} prices={prices} imageUrls={imageUrls} />
               <UpcomingOutlook streams={filteredStreams} prices={prices} />
-              <NextClaimCountdown streams={filteredStreams} />
-              <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />
               <SnapshotPanel
                 streams={filteredStreams}
                 allStreams={streams}
@@ -4881,26 +5539,69 @@ export default function Dashboard() {
                 onToggleToken={toggleToken}
                 prices={prices}
               />
-              <VestingTable streams={filteredStreams} prices={prices} />
-              <PnLPanel
-                streams={filteredStreams}
-                prices={prices}
-                costBasis={costBasis}
-                onUpdateCostBasis={updateCostBasis}
-                sells={sells}
-                onAddSellTx={addSellTx}
-                onRemoveSellTx={removeSellTx}
-                buys={buys}
-                onAddBuyTx={addBuyTx}
-                onRemoveBuyTx={removeBuyTx}
-              />
-              <TokenMarketPanel tokens={(() => {
-                const seen = new Set<string>();
-                return filteredStreams
-                  .filter(s => s.tokenAddress && s.chainId && seen.has(s.tokenSymbol) === false && !!seen.add(s.tokenSymbol))
-                  .map(s => ({ symbol: s.tokenSymbol, address: s.tokenAddress, chainId: s.chainId }));
-              })()} />
-              <UnlockTimeline streams={filteredStreams} dark={dark} />
+
+              {/* ── Tab strip for below-fold panels ───────────────────── */}
+              {/* Floating pill tabs — each panel keeps its own card wrapper below */}
+              <div className="flex gap-1 mb-3 overflow-x-auto">
+                {(["schedule", "cashflow", "pnl", "market", "gantt"] as const).map((tab) => {
+                  const labels: Record<string, string> = {
+                    schedule: "📅 Schedule",
+                    cashflow: "💸 Cash Flow",
+                    pnl:      "📈 P&L",
+                    market:   "🏷 Market",
+                    gantt:    "📊 Gantt",
+                  };
+                  const isActive = activeTab === tab;
+                  return (
+                    <button key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                      style={isActive
+                        ? { background: "rgba(28,184,184,0.12)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }
+                        : { background: "var(--preview-card)", color: "var(--preview-text-3)", border: "1px solid var(--preview-border)" }}>
+                      {labels[tab]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active panel — each renders its own full card */}
+              {activeTab === "schedule" && (
+                <VestingTable streams={filteredStreams} prices={prices} imageUrls={imageUrls} onClaim={() => {
+                  // Auto-refresh stream data 15s after a claim action
+                  // (time for the on-chain tx to settle + indexer to pick it up)
+                  setTimeout(() => mutateStreams(), 15_000);
+                }} />
+              )}
+              {activeTab === "cashflow" && (
+                <MonthlyCashFlow streams={filteredStreams} prices={prices} costBasis={costBasis} buys={buys} />
+              )}
+              {activeTab === "pnl" && (
+                <PnLPanel
+                  streams={filteredStreams}
+                  prices={prices}
+                  imageUrls={imageUrls}
+                  costBasis={costBasis}
+                  onUpdateCostBasis={updateCostBasis}
+                  sells={sells}
+                  onAddSellTx={addSellTx}
+                  onRemoveSellTx={removeSellTx}
+                  buys={buys}
+                  onAddBuyTx={addBuyTx}
+                  onRemoveBuyTx={removeBuyTx}
+                />
+              )}
+              {activeTab === "market" && (
+                <TokenMarketPanel tokens={(() => {
+                  const seen = new Set<string>();
+                  return filteredStreams
+                    .filter(s => s.tokenAddress && s.chainId && seen.has(s.tokenSymbol) === false && !!seen.add(s.tokenSymbol))
+                    .map(s => ({ symbol: s.tokenSymbol, address: s.tokenAddress, chainId: s.chainId }));
+                })()} />
+              )}
+              {activeTab === "gantt" && (
+                <UnlockTimeline streams={filteredStreams} dark={dark} />
+              )}
 
               {/* Footer — stacks on mobile (links above copyright) so the
                   links stay tap-friendly on phones, side-by-side on md+. */}
@@ -4925,6 +5626,17 @@ export default function Dashboard() {
           onClose={() => setUpsell(null)}
         />
       )}
+
+      {/* Add wallet modal — simple address-only form, scans all chains+protocols */}
+      {showAddWallet && (
+        <AddWalletModal
+          onAdd={() => { loadWallets(); setShowAddWallet(false); }}
+          onCancel={() => setShowAddWallet(false)}
+        />
+      )}
+
+      {/* Onboarding welcome modal — first visit only */}
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
       {/* Beta feedback modal */}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}

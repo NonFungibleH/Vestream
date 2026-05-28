@@ -131,17 +131,21 @@ export default function WatchlistPage() {
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Watchlist</span>
+            <span>Token Watchlist</span>
           </div>
           <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
             style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Watchlist
+            Token Watchlist
           </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
             Tokens you&apos;re watching
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
-            Track unlock pressure for tokens you don&apos;t hold — projects you&apos;re considering, jobs you might take, or competitors you&apos;re watching.
+            Track unlock pressure for specific tokens — projects you&apos;re considering, jobs you might take, or competitors you&apos;re watching.
+            <span className="ml-1" style={{ color: "var(--preview-text-3)" }}>
+              To track wallets &amp; discover streams, use{" "}
+              <Link href="/dashboard/discover" className="underline" style={{ color: "#0F8A8A" }}>Wallet Scanner</Link>.
+            </span>
           </p>
         </div>
 

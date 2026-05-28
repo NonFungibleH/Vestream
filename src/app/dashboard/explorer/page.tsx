@@ -47,6 +47,7 @@ import { ExplorerSearchInput } from "./SearchInput";
 // import { ExplorerSidebar } from "./Sidebar";
 import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
+import { WatchButton } from "./WatchButton";
 
 export const dynamic = "force-dynamic";
 
@@ -236,7 +237,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Explorer</span>
+            <span>Vesting Index</span>
           </div>
           {/* Hero positioned as the indexed-universe SEARCH surface — distinct
               from /dashboard/discover which is the live wallet SCANNER. The
@@ -473,43 +474,52 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
   const ttl       = relativeUntil(group.eventTime);
 
   return (
-    <Link
-      href={`/token/${group.chainId}/${group.tokenAddress}`}
-      className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors"
-      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}
-      onMouseEnter={undefined}
-    >
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-        style={{ background: accent }}>
-        {tokenInitial(group.tokenSymbol, group.tokenAddress)}
+    <div className="flex items-center"
+      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
+      <Link
+        href={`/token/${group.chainId}/${group.tokenAddress}`}
+        className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+      >
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+          style={{ background: accent }}>
+          {tokenInitial(group.tokenSymbol, group.tokenAddress)}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+            {fmtAmount(group.amount, group.tokenDecimals)} {group.tokenSymbol ?? shortAddr(group.tokenAddress)}
+          </p>
+          <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
+            <span style={{ color: accent }}>{meta?.name ?? group.protocol}</span>
+            <span> · </span>
+            {chainName}
+            {group.walletCount > 1 && (
+              <>
+                <span> · </span>
+                {group.walletCount} wallets
+              </>
+            )}
+          </p>
+        </div>
+        <div className="text-right hidden md:block">
+          <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
+            {fmtDate(group.eventTime)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+            in {ttl}
+          </p>
+        </div>
+      </Link>
+      {/* Watch button — adds token to Token Watchlist without navigating */}
+      <div className="pr-3 pl-1">
+        <WatchButton
+          tokenAddress={group.tokenAddress}
+          chainId={group.chainId}
+          tokenSymbol={group.tokenSymbol}
+        />
       </div>
-      <div className="min-w-0">
-        <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
-          {fmtAmount(group.amount, group.tokenDecimals)} {group.tokenSymbol ?? shortAddr(group.tokenAddress)}
-        </p>
-        <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
-          <span style={{ color: accent }}>{meta?.name ?? group.protocol}</span>
-          <span> · </span>
-          {chainName}
-          {group.walletCount > 1 && (
-            <>
-              <span> · </span>
-              {group.walletCount} wallets
-            </>
-          )}
-        </p>
-      </div>
-      <div className="text-right hidden md:block">
-        <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
-          {fmtDate(group.eventTime)}
-        </p>
-      </div>
-      <div className="text-right">
-        <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
-          in {ttl}
-        </p>
-      </div>
-    </Link>
+    </div>
   );
 }
 
@@ -580,44 +590,54 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
   const chain  = CHAIN_NAMES[row.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${row.chainId}`;
   const eventTime = row.nextUnlockTime ?? row.endTime;
   return (
-    <Link
-      href={`/token/${row.chainId}/${row.tokenAddress}`}
-      className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors"
-      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}
-    >
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-        style={{ background: accent }}>
-        {tokenInitial(row.tokenSymbol, row.tokenAddress)}
+    <div className="flex items-center"
+      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
+      <Link
+        href={`/token/${row.chainId}/${row.tokenAddress}`}
+        className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+      >
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+          style={{ background: accent }}>
+          {tokenInitial(row.tokenSymbol, row.tokenAddress)}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+            {fmtAmount(row.amount, row.tokenDecimals)} {row.tokenSymbol ?? shortAddr(row.tokenAddress)}
+          </p>
+          <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
+            <span style={{ color: accent }}>{meta?.name ?? row.protocol}</span>
+            <span> · </span>
+            {chain}
+            <span> · </span>
+            <span className="font-mono">{shortAddr(row.recipient)}</span>
+          </p>
+        </div>
+        <div className="text-right hidden md:block">
+          <p className="text-[10px] uppercase tracking-wider font-bold"
+            style={{ color: row.status === "active" ? "#0F8A8A" : "var(--preview-text-3)" }}>
+            {row.status}
+          </p>
+        </div>
+        <div className="text-right hidden md:block">
+          <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
+            {fmtDate(row.endTime)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+            in {relativeUntil(eventTime)}
+          </p>
+        </div>
+      </Link>
+      {/* Watch button — adds token to Token Watchlist without navigating */}
+      <div className="pr-3 pl-1">
+        <WatchButton
+          tokenAddress={row.tokenAddress}
+          chainId={row.chainId}
+          tokenSymbol={row.tokenSymbol}
+        />
       </div>
-      <div className="min-w-0">
-        <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
-          {fmtAmount(row.amount, row.tokenDecimals)} {row.tokenSymbol ?? shortAddr(row.tokenAddress)}
-        </p>
-        <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
-          <span style={{ color: accent }}>{meta?.name ?? row.protocol}</span>
-          <span> · </span>
-          {chain}
-          <span> · </span>
-          <span className="font-mono">{shortAddr(row.recipient)}</span>
-        </p>
-      </div>
-      <div className="text-right hidden md:block">
-        <p className="text-[10px] uppercase tracking-wider font-bold"
-          style={{ color: row.status === "active" ? "#0F8A8A" : "var(--preview-text-3)" }}>
-          {row.status}
-        </p>
-      </div>
-      <div className="text-right hidden md:block">
-        <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
-          {fmtDate(row.endTime)}
-        </p>
-      </div>
-      <div className="text-right">
-        <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
-          in {relativeUntil(eventTime)}
-        </p>
-      </div>
-    </Link>
+    </div>
   );
 }
 

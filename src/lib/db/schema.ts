@@ -416,6 +416,23 @@ export const streamSales = pgTable("stream_sales", {
   index("stream_sales_user_token_idx").on(t.userId, t.tokenAddress),
 ]);
 
+export const streamPurchases = pgTable("stream_purchases", {
+  id:           uuid("id").primaryKey().defaultRandom(),
+  userId:       uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenAddress: text("token_address").notNull(),
+  /** ISO date string of the purchase (YYYY-MM-DD or full ISO timestamp). */
+  purchaseDate: text("purchase_date").notNull(),
+  /** Token amount bought (decimal, in whole token units). */
+  amount:       text("amount").notNull(),
+  /** Purchase price in USD per whole token. */
+  price:        text("price").notNull(),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("stream_purchases_user_token_idx").on(t.userId, t.tokenAddress),
+]);
+
 export const notificationsSent = pgTable("notifications_sent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")

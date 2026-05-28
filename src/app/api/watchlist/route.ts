@@ -142,16 +142,38 @@ export async function POST(req: NextRequest) {
 }
 
 // ── DELETE — remove an entry ────────────────────────────────────────────────
+// Accepts either:
+//   ?id=<uuid>                      — remove by row ID (original behaviour)
+//   ?tokenAddress=...&chainId=...   — remove by token+chain (added for WatchButton in Explorer)
 export async function DELETE(req: NextRequest) {
   const auth = await getAuthedUserId();
   if (!auth) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const id           = req.nextUrl.searchParams.get("id");
+  const tokenAddress = req.nextUrl.searchParams.get("tokenAddress");
+  const chainIdRaw   = req.nextUrl.searchParams.get("chainId");
 
-  await db
-    .delete(watchlist)
-    .where(and(eq(watchlist.id, id), eq(watchlist.userId, auth.userId)));
+  if (id) {
+    await db
+      .delete(watchlist)
+      .where(and(eq(watchlist.id, id), eq(watchlist.userId, auth.userId)));
+    return NextResponse.json({ ok: true });
+  }
 
-  return NextResponse.json({ ok: true });
+  if (tokenAddress && chainIdRaw) {
+    const chainId = Number.parseInt(chainIdRaw, 10);
+    if (!Number.isFinite(chainId)) {
+      return NextResponse.json({ error: "Invalid chainId" }, { status: 400 });
+    }
+    await db
+      .delete(watchlist)
+      .where(and(
+        eq(watchlist.userId, auth.userId),
+        eq(watchlist.chainId, chainId),
+        eq(watchlist.tokenAddress, tokenAddress.trim().toLowerCase()),
+      ));
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "id or tokenAddress+chainId required" }, { status: 400 });
 }

@@ -552,7 +552,7 @@ export default function DiscoverPage() {
         <header className="h-14 px-6 flex items-center justify-between flex-shrink-0"
           style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
           <div>
-            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Discover Vestings</h1>
+            <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Wallet Scanner</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
               Scan 9 protocols × 7 chains to find every active vesting for a wallet
             </p>
