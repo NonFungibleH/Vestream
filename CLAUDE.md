@@ -522,6 +522,15 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 | LlamaPay | `llamapay` | ETH, BSC, Polygon, Base, Arbitrum (TVL only) | DefiLlama passthrough (`chainTvls.vesting`) | TVL-only — no per-wallet adapter yet. Extends the recipient-side TAM toward streamed payroll. Future work: build a real adapter for per-wallet stream tracking. |
 
 ### Adding a new adapter
+
+> ⚠️ **ARCHITECTURAL RULE — read before adding any new protocol:**
+>
+> **Every new EVM protocol MUST have an event-driven indexer. It must NEVER be added only to `SEED_JOBS`.**
+>
+> The batch seeder (`seed-cache` cron) runs on Vercel with a hard 300s ceiling. Every new protocol added to `SEED_JOBS` makes the timeout problem worse. The seeder is being migrated away from, not grown. New EVM protocols go event-driven from day one — write the indexer first, then the adapter. Non-EVM protocols (Solana) are the only exception; they stay in `SEED_JOBS` because Solana has no EVM-style event logs.
+>
+> See the "Event-driven indexer" section below for the full migration strategy and adding-a-new-indexer steps.
+
 Create `src/lib/vesting/adapters/{protocol}.ts` — must export a `VestingAdapter` object with `id`, `name`, `supportedChainIds`, and `fetch(wallets, chainId)`. Register it in `adapters/index.ts`.
 
 **Subgraph-based adapters** (most protocols): use `resolveSubgraphUrl()` from `graph.ts` with the GRAPH_API_KEY.
@@ -669,18 +678,25 @@ jq -r '.nowMs as $now | .cells[] | ((($now/1000) - .freshestSec) / 60 | floor) a
 
 ### Event-driven indexer (May 2026 onwards)
 
-The seed-cache cron above re-walks every recipient every day. For free-tier RPCs that's the dominant rate-limit consumer and it can't catch new plans between runs. The event-driven indexer (commits `4e3e6e2 → 8aca56f` on `feature/event-driven-indexer`) is the replacement: each protocol gets a `*/5 * * * *` cron that scans a bounded block window of logs and writes only the new/changed streams.
+The seed-cache cron re-walks every recipient every N hours. The event-driven indexer is the replacement: each protocol gets a `*/30 * * * *` cron that scans a bounded block window of logs and writes only new/changed streams. Work is proportional to events since the last tick — fast, bounded, and scales to any number of chains without hitting the 300s ceiling.
 
-**Migrated protocols** (no longer rely on seed-cache for discovery):
+**The migration strategy (2026):**
+The batch seeder (`SEED_JOBS`) is being migrated away from for all EVM protocols. The goal is for the seeder to handle only Solana protocols (Streamflow, Jupiter Lock), which have no EVM-style event logs. Every EVM protocol that gets migrated reduces load on the seeder groups and eliminates one more potential group-split incident.
+
+Migration order (easiest first): UNCX V3 → Unvest → Superfluid → Sablier → PinkSale.
+
+**Migrated protocols** (indexer handles discovery; seeder kept in parallel during cutover):
 - **UNCX-VM** — ETH / Base / BSC. Watches `VestingCreated` events; 5000-block window.
 - **Hedgey** — ETH / BSC / Polygon / Base / Arbitrum / Optimism. Watches ERC721 `Transfer` events; 2000-block window. Covers both mints (new plans) and transfers (ownership changes).
 
-The seed-cache job still discovers + fetches everything else (Sablier, UNCX V3, Unvest, Superfluid, PinkSale, Streamflow, Jupiter Lock). Migrated protocols are kept in `SEED_JOBS` in parallel during the cutover so cache backfill is preserved — once a protocol's indexer-managed rows are verified equivalent for 7+ days, the corresponding entry can be removed from `seeder.ts:SEED_JOBS` and its discovery helper deleted.
+Migrated protocols are kept in `SEED_JOBS` in parallel during cutover so cache backfill is preserved. Once a protocol's indexer-managed rows are verified equivalent for 7+ days AND claim events are also being indexed (so `withdrawnAmount` stays fresh), the corresponding entry can be removed from `seeder.ts:SEED_JOBS`.
+
+**The claim-event requirement:** Before removing a protocol from `SEED_JOBS`, its indexer must also watch the protocol's claim/withdrawal event (not just the creation event). Otherwise `withdrawnAmount` goes stale between seeder runs. Each protocol's plan doc specifies which claim event to watch.
 
 **Adding a new indexer:**
 1. Implement the `Indexer` interface in `src/lib/vesting/indexer/<protocol>.ts` (see `uncx-vm.ts` for the reference shape — `genesisBlock`, `maxBlocksPerScan`, `reorgLag`, `scanWindow(client, from, to)`).
 2. Register it in `src/lib/vesting/indexer/index.ts` (`INDEXERS` array).
-3. Add a `vercel.json` cron entry per chain: `/api/cron/indexer?protocol=X&chainId=Y` on `*/5 * * * *`.
+3. Add a `vercel.json` cron entry per chain: `/api/cron/indexer?protocol=X&chainId=Y` on `*/30 * * * *`.
 4. No route changes — the cron route is generic and dispatches via `findIndexer()`.
 
 **State persistence:** the `indexer_state` table tracks `lastScannedBlock` / `lastConfirmedBlock` per `(protocol, chainId)`. Each tick resumes from `lastConfirmedBlock + 1`. A 12-block reorg lag re-scans the trailing window; `writeToCache`'s `setWhere` clause makes the upserts idempotent.
