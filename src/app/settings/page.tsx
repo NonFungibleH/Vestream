@@ -1089,7 +1089,7 @@ export default function Settings() {
                       </svg>
                       App Store
                     </a>
-                    <a href="https://play.google.com/store/apps/details?id=io.vestream" target="_blank" rel="noopener noreferrer"
+                    <a href="https://play.google.com/store/apps/details?id=io.vestream.app" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
                       style={{ background: "linear-gradient(135deg, #2DB36A, #059669)", color: "#fff" }}>
                       {/* Google Play triangle glyph */}

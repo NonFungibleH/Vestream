@@ -1201,11 +1201,13 @@ function AppStoreBadge() {
   );
 }
 
-/** Google Play badge — visual placeholder linking to early access. */
+/** Google Play badge — links to the live listing. */
 function PlayStoreBadge() {
   return (
-    <Link
-      href="/early-access"
+    <a
+      href="https://play.google.com/store/apps/details?id=io.vestream.app"
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all hover:opacity-85"
       style={{
         background: "black",
@@ -1233,6 +1235,6 @@ function PlayStoreBadge() {
         </div>
         <div className="text-base font-semibold">Google Play</div>
       </div>
-    </Link>
+    </a>
   );
 }

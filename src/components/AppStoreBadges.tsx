@@ -8,12 +8,14 @@
 // These are NOT the official trademark badge files. Apple provides SVG
 // badges at https://developer.apple.com/app-store/marketing/guidelines/
 // and Google at https://play.google.com/intl/en_us/badges/ — when the real
-// app-store listings go live, download those .svg files into public/badges/
-// and swap the inline SVG in this component for <img> tags. Keeping this as
-// code until then avoids a placeholder-asset round-trip.
+// App Store listing goes live, download the .svg into public/badges/
+// and swap the inline SVG for an <img> tag.
 //
-// Placeholder hrefs are in the constants below; once the live App Store and
-// Google Play URLs exist, edit APP_STORE_URL and GOOGLE_PLAY_URL.
+// Status (2026-05-28):
+//   Google Play — LIVE at GOOGLE_PLAY_URL below. comingSoon never shown.
+//   App Store   — Pending review. comingSoon badge shown when caller passes
+//                 comingSoon={true}. Update APP_STORE_URL + flip callers to
+//                 comingSoon={false} once it goes live.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const APP_STORE_URL    = "https://apps.apple.com/app/vestream/id0000000000";
@@ -45,7 +47,7 @@ export function AppStoreBadges({ align = "center", comingSoon = false }: Props) 
         caption="GET IT ON"
         wordmark="Google Play"
         icon={<PlayLogo />}
-        comingSoon={comingSoon}
+        comingSoon={false}
       />
     </div>
   );
