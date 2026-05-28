@@ -69,6 +69,10 @@
       "schedule": "5 */2 * * *"
     },
     {
+      "path": "/api/cron/seed-cache?group=hedgey",
+      "schedule": "25 */2 * * *"
+    },
+    {
       "path": "/api/cron/seed-cache?group=sablier",
       "schedule": "45 */2 * * *"
     },

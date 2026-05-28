@@ -1185,12 +1185,13 @@ function limitFor(mode: SeedMode): number {
  *   - "solana"    Streamflow + Jupiter Lock. Throttled to 4 concurrent
  *                 calls vs Helius free CU/s — predictable but not fast.
  *                 Isolated so a Helius rate-limit can't starve EVM jobs.
- *   - "subgraphs" Sablier / Hedgey / UNCX / UNCX-VM / Unvest / Superfluid /
- *                 Team Finance (when enabled). Mostly The Graph + a couple
- *                 of hosted endpoints. Each chain is a single GraphQL
- *                 round-trip; the whole bucket runs in well under 300s.
+ *   - "subgraphs" UNCX / UNCX-VM / Unvest / LlamaPay. Mostly The Graph
+ *                 subgraph queries; 14 jobs, well under 300s.
+ *   - "hedgey"   Hedgey × 7 chains. ERC721Enumerable multicall discovery
+ *                 is slow and was reliably starving the tail of "subgraphs".
+ *                 Own group gives Hedgey a full 300s budget.
  */
-export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superfluid";
+export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superfluid" | "hedgey";
 
 // jupiter-lock group removed 2026-05-06 — JL per-stream seed disabled
 // while we're on Helius free tier (see SEED_JOBS for rationale).
@@ -1202,7 +1203,7 @@ export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superflu
 // fit inside their 300s window comfortably while Sablier gets the full
 // budget for its slow chains. Net: one more cron entry, no extra total
 // runtime, no risk of timeout cascading from Sablier into the others.
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier", "superfluid"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier", "superfluid", "hedgey"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
@@ -1225,6 +1226,14 @@ function groupFor(adapterId: string): SeedGroup {
   // at 10d stale while ETH/BSC/Polygon refreshed normally. Own group
   // gives Superfluid a full 300s for all 6 chains.
   if (adapterId === "superfluid") return "superfluid";
+  // 2026-05-28: Hedgey split out of "subgraphs" into its own group.
+  // Hedgey discovery uses ERC721Enumerable multicall reads (HEDGEY_PAGE_SIZE=100)
+  // which are significantly slower than pure subgraph queries. With 7 chains
+  // (ETH/BSC/Polygon/Base/Arbitrum/Optimism/Sepolia) at the tail of the 21-job
+  // "subgraphs" run, Hedgey was consistently getting cut off at the 300s limit.
+  // Moving here gives Hedgey its own full 300s budget and drops "subgraphs"
+  // from 21 → 14 jobs — comfortable headroom for UNCX/Unvest/LlamaPay.
+  if (adapterId === "hedgey") return "hedgey";
   return "subgraphs";
 }
 
