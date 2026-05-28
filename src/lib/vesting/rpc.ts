@@ -65,12 +65,21 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
   return out;
 }
 
-// ── Pool expansion notes (2026-05-14) ──────────────────────────────────────
+// ── Pool expansion notes (2026-05-14, updated 2026-05-28) ─────────────────
 // Free-tier pools widened so a paid-RPC-free deploy can ride out individual
 // provider outages. ORDERING MATTERS — fallback transport tries top-down.
-// Provider tier order: dRPC (most reliable + supports logs) → 1RPC →
+// Provider tier order: dRPC (most reliable + supports logs) →
 // chain-native official RPC → blockpi → blastapi → meowrpc → publicnode
-// (excludeForLogs) → ankr (excludeForLogs — historically log-pruned).
+// (excludeForLogs) → ankr (excludeForLogs — historically log-pruned) →
+// 1RPC (last resort — see note below).
+//
+// 2026-05-28: 1RPC demoted to LAST in each pool. Vercel flagged it as
+// "consistently failing with connection errors" in the /api/cron/notify
+// alert (96% CPU, 75% 504s). When 1RPC was second in the pool, viem's
+// fallback transport burned the retry timeout waiting for it on every
+// adapter call — accounting for most of the notify cron's wall time.
+// Kept in the pool as a last resort (better than nothing if dRPC + natives
+// are all down simultaneously), but it should never be the first fallback.
 //
 // eth.llamarpc.com WAS in the ETH pool but is now removed — Cloudflare
 // bot-blocking returns HTML to viem and burns the retry budget. Same with
@@ -79,7 +88,6 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
 const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ETHEREUM]: buildPool(process.env.ALCHEMY_RPC_URL_ETH, [
     { url: "https://eth.drpc.org" },
-    { url: "https://1rpc.io/eth" },
     // 2026-05-26: tagged excludeForLogs — BlockPI's free tier had a multi-
     // hour global Cloudflare 521 outage today (also hit polygon + bsc).
     // Unlike meowrpc/blastapi (hard block-range cap), BlockPI usually serves
@@ -93,10 +101,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },
     { url: "https://cloudflare-eth.com",           excludeForLogs: true },
+    { url: "https://1rpc.io/eth" },                // last resort — see pool notes above
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
-    { url: "https://1rpc.io/bnb" },
     // Binance's official public RPCs — historically unrestricted.
     { url: "https://bsc-dataseed.binance.org" },
     { url: "https://bsc-dataseed1.defibit.io" },
@@ -113,10 +121,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://bsc.meowrpc.com",              excludeForLogs: true },
     { url: "https://bsc-rpc.publicnode.com",       excludeForLogs: true },
     { url: "https://rpc.ankr.com/bsc",             excludeForLogs: true },
+    { url: "https://1rpc.io/bnb" },                // last resort
   ]),
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
-    { url: "https://1rpc.io/matic" },
     // 2026-05-26: polygon-rpc.com REMOVED — returns HTTP 401 "tenant disabled"
     // for ALL methods including eth_blockNumber (not just eth_getLogs). It is
     // a dead endpoint, not a restricted one. Keeping it wastes a fallback slot
@@ -133,10 +141,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://polygon-rpc.publicnode.com",     excludeForLogs: true },
     { url: "https://polygon-bor-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/polygon",           excludeForLogs: true },
+    { url: "https://1rpc.io/matic" },              // last resort
   ]),
   [CHAIN_IDS.BASE]: buildPool(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL, [
     { url: "https://base.drpc.org" },
-    { url: "https://1rpc.io/base" },
     { url: "https://mainnet.base.org" },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://base.blockpi.network/v1/rpc/public", excludeForLogs: true },
@@ -148,16 +156,15 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://base.api.onfinality.io/public" },
     { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
     { url: "https://rpc.ankr.com/base",            excludeForLogs: true },
+    { url: "https://1rpc.io/base" },               // last resort
   ]),
   // Arbitrum One. Free pool drawn from the same provider universe as our
   // other EVM chains. publicnode is `excludeForLogs: true` because they
   // historically prune logs aggressively (matches BSC/Polygon/Base
   // behaviour — see header comment). Arbitrum's own public RPC
-  // (arb1.arbitrum.io/rpc) and Arbitrum-native dRPC/1RPC are the
-  // log-safe fallbacks.
+  // (arb1.arbitrum.io/rpc) is the preferred log-safe native fallback.
   [CHAIN_IDS.ARBITRUM]: buildPool(process.env.ARBITRUM_RPC_URL, [
     { url: "https://arbitrum.drpc.org" },
-    { url: "https://1rpc.io/arb" },
     { url: "https://arb1.arbitrum.io/rpc" },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://arbitrum.blockpi.network/v1/rpc/public", excludeForLogs: true },
@@ -169,13 +176,12 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://arbitrum.meowrpc.com",            excludeForLogs: true },
     { url: "https://arbitrum-one-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/arbitrum",           excludeForLogs: true },
+    { url: "https://1rpc.io/arb" },                // last resort
   ]),
-  // OP Mainnet (Optimism). Same provider universe as Arbitrum: dRPC + 1RPC
-  // free tiers, publicnode (logs-pruned), Optimism's own public RPC as
-  // the log-safe fallback.
+  // OP Mainnet (Optimism). dRPC first, then Optimism's own public RPC
+  // as the primary log-safe fallback. 1RPC demoted to last resort.
   [CHAIN_IDS.OPTIMISM]: buildPool(process.env.OPTIMISM_RPC_URL, [
     { url: "https://optimism.drpc.org" },
-    { url: "https://1rpc.io/op" },
     { url: "https://mainnet.optimism.io" },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://optimism.blockpi.network/v1/rpc/public", excludeForLogs: true },
@@ -185,6 +191,7 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://optimism.meowrpc.com",        excludeForLogs: true },
     { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/optimism",       excludeForLogs: true },
+    { url: "https://1rpc.io/op" },                 // last resort
   ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },

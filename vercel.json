@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/notify",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/saved-search-alerts",

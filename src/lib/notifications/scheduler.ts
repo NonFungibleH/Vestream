@@ -1,4 +1,4 @@
-import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
+import { readFromCache } from "@/lib/vesting/dbcache";
 import { sendEmailNotification } from "./email";
 import { sendExpoPush } from "./push";
 import {
@@ -8,6 +8,7 @@ import {
   recordNotificationSent,
   checkAndConsumePushCredit,
 } from "@/lib/db/queries";
+import { mapBounded } from "@/lib/vesting/rpc";
 import type { VestingStream } from "@/lib/vesting/types";
 
 type AlertTriggerType =
@@ -85,161 +86,179 @@ interface AlertSpec {
  * behaviour. Same for `alert2TriggerType`.
  */
 export async function runNotificationJob(): Promise<number> {
-  let notifiedCount = 0;
   const nowSec = Math.floor(Date.now() / 1000);
 
-  // Slop windows. Tuned for a 5-minute cron cadence.
-  // - PAST_GRACE_SEC=3600 lets a cron tick a few minutes after the
-  //   event still fire (the dedup table prevents a third tick from
-  //   re-firing).
-  // - FUTURE_SLOP_SEC=300 lets "fire at event" (e.g. claim-ready or
-  //   live-unlock) catch the just-before tick that lands within 5
-  //   minutes of the event.
-  const PAST_GRACE_SEC = 3600;
+  // Slop windows. Tuned for the 15-minute cron cadence.
+  // - PAST_GRACE_SEC=3600 lets a cron tick that fires up to 1h after
+  //   an event still send (the dedup table prevents re-firing).
+  // - FUTURE_SLOP_SEC=300 lets the "fire at event" triggers (claim-ready,
+  //   live-unlock) catch the tick that lands within 5 minutes of the event.
+  const PAST_GRACE_SEC  = 3600;
   const FUTURE_SLOP_SEC = 300;
 
   const usersToNotify = await getAllUsersWithAnyAlertEnabled();
 
-  for (const {
-    userId, email, hoursBeforeUnlock,
-    emailEnabled, streamPrefs, tier, expoPushToken, timezone,
-  } of usersToNotify) {
-    const walletRows = await getWalletsForUser(userId);
-    if (walletRows.length === 0) continue;
+  // Process up to 8 users in parallel. Each user's work is:
+  //   1 DB query (readFromCache) + dedup checks + email/push sends.
+  // Previously this was a serial for-loop calling aggregateVestingStreams()
+  // (20+ external API calls per user). readFromCache is a single SQL query,
+  // so the bottleneck is now push/email I/O — safe to fan out.
+  const notifiedCounts = await mapBounded(
+    usersToNotify,
+    8,
+    async ({
+      userId, email, hoursBeforeUnlock,
+      emailEnabled, streamPrefs, tier, expoPushToken, timezone,
+    }) => {
+      let userNotifiedCount = 0;
 
-    const addresses = walletRows.map((w) => w.address);
+      const walletRows = await getWalletsForUser(userId);
+      if (walletRows.length === 0) return 0;
 
-    let streams: VestingStream[];
-    try {
-      streams = await aggregateVestingStreams(addresses);
-    } catch (err) {
-      console.error(`Failed to fetch vesting data for user ${userId}:`, err);
-      continue;
-    }
+      const addresses = walletRows.map((w) => w.address);
 
-    const canEmail = emailEnabled && tier === "pro" && !!email;
-    const canPush  = !!expoPushToken;
-    if (!canEmail && !canPush) continue;
-
-    const prefsMap = (streamPrefs ?? {}) as Record<string, PerStreamPref>;
-
-    for (const stream of streams) {
-      // Per-stream opt-in is REQUIRED. A user who never visited the
-      // Alerts tab for this token gets nothing — see the 2026-05-20
-      // privacy fix comment in the earlier scheduler version.
-      const perStream = prefsMap[stream.id];
-      if (!perStream) continue;
-
-      // Gather the alert specs for this stream — up to 2 per stream.
-      const alertSpecs: AlertSpec[] = [];
-
-      // ── Alert 1 ──
-      if (perStream.alert1Enabled === true) {
-        alertSpecs.push(
-          ...resolveAlertSpecs(
-            1,
-            perStream.alert1TriggerType ?? "before-unlock",
-            perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
-            stream,
-            nowSec,
-          ),
-        );
+      // Read from the pre-seeded DB cache (updated every 2h by the
+      // seed-cache cron). Avoids 20+ live adapter calls per user that
+      // previously caused the notify cron to hit the 300s Vercel limit.
+      // 2h-stale stream data is accurate enough for unlock notifications.
+      let streams: VestingStream[];
+      try {
+        const cacheResult = await readFromCache(addresses);
+        streams = cacheResult.streams;
+      } catch (err) {
+        console.error(`Failed to read cache for user ${userId}:`, err);
+        return 0;
       }
 
-      // ── Alert 2 ──
-      // Two paths to "on": new explicit alert2Enabled flag (event-type
-      // Alert 2 — no timing number) OR legacy pushTiming2 != null
-      // (countdown Alert 2 written by older mobile clients).
-      const alert2On =
-        perStream.alert2Enabled === true || perStream.pushTiming2 != null;
-      if (alert2On) {
-        const triggerType: AlertTriggerType =
-          perStream.alert2TriggerType ?? "before-unlock";
-        const hoursBefore =
-          triggerType === "before-unlock"
-            ? (perStream.pushTiming2 ?? 1)
-            : 0;
-        alertSpecs.push(...resolveAlertSpecs(2, triggerType, hoursBefore, stream, nowSec));
-      }
+      const canEmail = emailEnabled && tier === "pro" && !!email;
+      const canPush  = !!expoPushToken;
+      if (!canEmail && !canPush) return 0;
 
-      // ── Alert 3 ──
-      if (perStream.alert3Enabled === true) {
-        const triggerType: AlertTriggerType =
-          perStream.alert3TriggerType ?? "before-unlock";
-        const hoursBefore =
-          triggerType === "before-unlock"
-            ? (perStream.pushTiming3 ?? 0)
-            : 0;
-        alertSpecs.push(...resolveAlertSpecs(3, triggerType, hoursBefore, stream, nowSec));
-      }
+      const prefsMap = (streamPrefs ?? {}) as Record<string, PerStreamPref>;
 
-      if (alertSpecs.length === 0) continue;
+      for (const stream of streams) {
+        // Per-stream opt-in is REQUIRED. A user who never visited the
+        // Alerts tab for this token gets nothing — see the 2026-05-20
+        // privacy fix comment in the earlier scheduler version.
+        const perStream = prefsMap[stream.id];
+        if (!perStream) continue;
 
-      // Evaluate each alert independently. One slot firing doesn't
-      // block the other — they have different firingTimes and
-      // independent dedup rows.
-      for (const spec of alertSpecs) {
-        const delta = spec.firingTime - nowSec;
-        if (delta > FUTURE_SLOP_SEC) continue;        // too early
-        if (delta < -PAST_GRACE_SEC) continue;        // too late
+        // Gather the alert specs for this stream — up to 3 per stream.
+        const alertSpecs: AlertSpec[] = [];
 
-        const dedupDate = new Date(spec.firingTime * 1000);
-        const alreadySent = await hasNotificationBeenSent(userId, stream.id, dedupDate);
-        if (alreadySent) continue;
+        // ── Alert 1 ──
+        if (perStream.alert1Enabled === true) {
+          alertSpecs.push(
+            ...resolveAlertSpecs(
+              1,
+              perStream.alert1TriggerType ?? "before-unlock",
+              perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
+              stream,
+              nowSec,
+            ),
+          );
+        }
 
-        // Copy varies by trigger type so the push body reads correctly.
-        const { title, body } = renderAlertCopy(spec, stream, nowSec);
+        // ── Alert 2 ──
+        // Two paths to "on": new explicit alert2Enabled flag (event-type
+        // Alert 2 — no timing number) OR legacy pushTiming2 != null
+        // (countdown Alert 2 written by older mobile clients).
+        const alert2On =
+          perStream.alert2Enabled === true || perStream.pushTiming2 != null;
+        if (alert2On) {
+          const triggerType: AlertTriggerType =
+            perStream.alert2TriggerType ?? "before-unlock";
+          const hoursBefore =
+            triggerType === "before-unlock"
+              ? (perStream.pushTiming2 ?? 1)
+              : 0;
+          alertSpecs.push(...resolveAlertSpecs(2, triggerType, hoursBefore, stream, nowSec));
+        }
 
-        let sentSomething = false;
-        try {
-          // ── Email channel ──
-          if (canEmail && email) {
-            try {
-              await sendEmailNotification(
-                email,
-                stream,
-                new Date(spec.eventTime * 1000),
-                { trigger: spec.triggerType, timezone },
-              );
-              sentSomething = true;
-            } catch (err) {
-              console.error(`Email send failed for user ${userId}:`, err);
+        // ── Alert 3 ──
+        if (perStream.alert3Enabled === true) {
+          const triggerType: AlertTriggerType =
+            perStream.alert3TriggerType ?? "before-unlock";
+          const hoursBefore =
+            triggerType === "before-unlock"
+              ? (perStream.pushTiming3 ?? 0)
+              : 0;
+          alertSpecs.push(...resolveAlertSpecs(3, triggerType, hoursBefore, stream, nowSec));
+        }
+
+        if (alertSpecs.length === 0) continue;
+
+        // Evaluate each alert independently. One slot firing doesn't
+        // block the other — they have different firingTimes and
+        // independent dedup rows.
+        for (const spec of alertSpecs) {
+          const delta = spec.firingTime - nowSec;
+          if (delta > FUTURE_SLOP_SEC) continue;        // too early
+          if (delta < -PAST_GRACE_SEC) continue;        // too late
+
+          const dedupDate = new Date(spec.firingTime * 1000);
+          const alreadySent = await hasNotificationBeenSent(userId, stream.id, dedupDate);
+          if (alreadySent) continue;
+
+          // Copy varies by trigger type so the push body reads correctly.
+          const { title, body } = renderAlertCopy(spec, stream, nowSec);
+
+          let sentSomething = false;
+          try {
+            // ── Email channel ──
+            if (canEmail && email) {
+              try {
+                await sendEmailNotification(
+                  email,
+                  stream,
+                  new Date(spec.eventTime * 1000),
+                  { trigger: spec.triggerType, timezone },
+                );
+                sentSomething = true;
+              } catch (err) {
+                console.error(`Email send failed for user ${userId}:`, err);
+              }
             }
-          }
 
-          // ── Push channel ──
-          // Free tier metered (10/month); Pro unmetered.
-          if (canPush && expoPushToken) {
-            const credit = await checkAndConsumePushCredit(userId);
-            if (credit.allowed) {
-              const result = await sendExpoPush({
-                to:    expoPushToken,
-                title,
-                body,
-                data:  { streamId: stream.id, url: `/stream/${stream.id}` },
-              }).catch((err) => {
-                console.error(`Push send failed for user ${userId}:`, err);
-                return { ok: false, error: "send failed" } as const;
-              });
-              if (result.ok) sentSomething = true;
+            // ── Push channel ──
+            // Free tier metered (10/month); Pro unmetered.
+            if (canPush && expoPushToken) {
+              const credit = await checkAndConsumePushCredit(userId);
+              if (credit.allowed) {
+                const result = await sendExpoPush({
+                  to:    expoPushToken,
+                  title,
+                  body,
+                  data:  { streamId: stream.id, url: `/stream/${stream.id}` },
+                }).catch((err) => {
+                  console.error(`Push send failed for user ${userId}:`, err);
+                  return { ok: false, error: "send failed" } as const;
+                });
+                if (result.ok) sentSomething = true;
+              }
             }
-          }
 
-          // Only record if at least one channel actually fired —
-          // otherwise a transient email outage that left push for
-          // retry next hour would prematurely dedupe.
-          if (sentSomething) {
-            await recordNotificationSent(userId, stream.id, dedupDate);
-            notifiedCount++;
+            // Only record if at least one channel actually fired —
+            // otherwise a transient email outage that left push for
+            // retry next tick would prematurely dedupe.
+            if (sentSomething) {
+              await recordNotificationSent(userId, stream.id, dedupDate);
+              userNotifiedCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to send notification for stream ${stream.id} slot ${spec.slot}:`, err);
           }
-        } catch (err) {
-          console.error(`Failed to send notification for stream ${stream.id} slot ${spec.slot}:`, err);
         }
       }
-    }
-  }
 
-  return notifiedCount;
+      return userNotifiedCount;
+    },
+  );
+
+  return notifiedCounts.reduce(
+    (sum, r) => sum + (r.status === "fulfilled" ? r.value : 0),
+    0,
+  );
 }
 
 /**

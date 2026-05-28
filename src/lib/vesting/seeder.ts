@@ -1205,9 +1205,17 @@ export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superflu
 export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier", "superfluid"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
-  if (adapterId === "pinksale")   return "heavy";
-  if (adapterId === "streamflow") return "solana";
-  if (adapterId === "sablier")    return "sablier";
+  if (adapterId === "pinksale")      return "heavy";
+  if (adapterId === "streamflow")    return "solana";
+  if (adapterId === "sablier")       return "sablier";
+  // 2026-05-28: sablier-flow moved from "subgraphs" to "sablier" group.
+  // Both adapters use the same Envio Hasura endpoint and have comparable
+  // runtime profiles. With sablier-flow × 6 chains in "subgraphs", that
+  // group had 27 jobs — enough to reliably time out at Vercel's 300s hard
+  // limit, leaving UNCX/Unvest with stale data. Moving here costs the
+  // sablier group ~10–15s extra and drops subgraphs from 27 to 21 jobs,
+  // giving UNCX/Unvest/Hedgey comfortable headroom.
+  if (adapterId === "sablier-flow")  return "sablier";
   // 2026-05-26: Superfluid split out of "subgraphs" into its own group.
   // Reason: Superfluid runs across 6 chains (ETH/BSC/Polygon/Base/Arb/Op),
   // each calling its own hosted subgraph endpoint. When sharing the
@@ -1497,10 +1505,23 @@ async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> 
     return null;
   });
   if (streams === null) {
+    // Bump the heartbeat even on failure so the protocols-page freshness
+    // UI shows "the seeder ran (and got nothing)" rather than a 26d-old
+    // timestamp. The root cause here is usually the Solana RPC provider
+    // returning 0 pubkeys for the Jupiter Lock program — see the comment
+    // in fetchAllJupiterLockEscrows about Alchemy silently returning [].
+    // FIX: set JUPITER_LOCK_RPC_URL to a provider that fully indexes the
+    // program (e.g. Helius free tier — the original provider before the
+    // May 2026 Alchemy migration). Until then, the heartbeat keeps the
+    // staleness display honest ("cron ran, RPC returned nothing").
+    await bumpSeedHeartbeat(job.adapterId, job.chainId);
     return emptyResult(job, "bulk fetch returned null (Solana disabled / RPC dead)");
   }
   console.log(`[seeder:${tag}] bulk fetch: ${streams.length} active escrows decoded`);
-  if (streams.length === 0) return emptyResult(job);
+  if (streams.length === 0) {
+    await bumpSeedHeartbeat(job.adapterId, job.chainId);
+    return emptyResult(job);
+  }
 
   let streamsWritten   = 0;
   let batchWriteErrors = 0;

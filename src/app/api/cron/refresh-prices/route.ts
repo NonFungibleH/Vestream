@@ -36,14 +36,19 @@ export const maxDuration = 60;  // Hourly cron — bounded; no need for the full
 
 /**
  * How many tokens to refresh per run. Sized so 24 runs (one day) refreshes
- * ~12k tokens — enough to cycle through the entire cache every 2-3 days
- * even if some entries fail. Conservative enough to fit comfortably under
- * DexScreener / CoinGecko free-tier rate windows.
+ * ~24k tokens — enough to cycle through the entire cache within 24h even
+ * for large installations (PinkSale BSC alone has 14k+ tokens). Conservative
+ * enough to stay under DexScreener / CoinGecko free-tier rate windows.
  *
- * Tuning notes: if we observe cache rows aging past 24h regularly, bump
- * this up. If we observe 429s during the hourly run, bump it down.
+ * 2026-05-28: bumped from 500 → 1000. With 500, PinkSale/Streamflow/LlamaPay
+ * tokens were aging 2+ days because the rotation never reached them before
+ * the cache refilled from the next TVL snapshot run. At 1000/hr the full
+ * cache cycles in ~24h regardless of total size.
+ *
+ * Tuning notes: if we observe 429s during the hourly run, drop back to 750.
+ * If rows still age past 24h regularly, bump to 1500.
  */
-const REFRESH_BATCH_SIZE = 500;
+const REFRESH_BATCH_SIZE = 1000;
 
 async function handle(req: NextRequest) {
   if (!bearerEquals(req.headers.get("authorization"), env.CRON_SECRET ?? "")) {
