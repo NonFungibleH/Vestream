@@ -78,7 +78,6 @@ function TokenIcon({
   const [imgOk, setImgOk] = useState(!!imageUrl);
   useEffect(() => { setImgOk(!!imageUrl); }, [imageUrl]);
   const color = getTokenColor(symbol);
-  const r = size / 2;
   if (imgOk && imageUrl) {
     return (
       <img
@@ -1452,7 +1451,6 @@ function StreamDetailSheet({
   const proto        = PROTOCOL_COLORS[s.protocol] ?? { text: "#B8BABD", bg: "rgba(184,186,189,0.1)", border: "rgba(184,186,189,0.2)" };
   const vestedPct    = totalAmt > 0 ? Math.min(100, ((withdrawnAmt + claimableAmt) / totalAmt) * 100) : 0;
   const claimedPct   = totalAmt > 0 ? Math.min(100, (withdrawnAmt / totalAmt) * 100) : 0;
-  const claimablePct = totalAmt > 0 ? Math.min(100, (claimableAmt / totalAmt) * 100) : 0;
   const hasCliff     = s.cliffTime && s.cliffTime > nowSec;
 
   // Close on Escape
@@ -4157,7 +4155,7 @@ function AddWalletModal({ onAdd, onCancel }: { onAdd: () => void; onCancel: () =
           <div>
             <h2 className="text-base font-bold" style={{ color: "var(--preview-text)" }}>Track a wallet</h2>
             <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-              We'll scan all chains &amp; protocols automatically.
+              We&apos;ll scan all chains &amp; protocols automatically.
             </p>
           </div>
           <button onClick={onCancel} className="p-1.5 rounded-lg transition-colors hover:opacity-70" style={{ color: "var(--preview-text-3)" }}>
