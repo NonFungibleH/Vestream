@@ -116,9 +116,17 @@ function pickBestPair(pairs: DexPair[], preferChain: string | null): DexPair | n
   const withPrice = pairs.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0);
   if (withPrice.length === 0) return null;
 
-  // Prefer correct chain, fall back to all
-  const onChain = preferChain ? withPrice.filter((p) => p.chainId === preferChain) : [];
-  const pool    = onChain.length > 0 ? onChain : withPrice;
+  // When we know the chain, only use pairs on that exact chain — no cross-chain
+  // fallback. DexScreener's address-lookup returns pairs from ALL chains where
+  // the address appears (same address can be deployed on multiple EVM chains),
+  // and a fallback to "any chain" would give us the price of a completely
+  // different token. If there are no same-chain pairs, the token has no
+  // DEX trading on the relevant network and the price is unavailable.
+  const pool = preferChain
+    ? withPrice.filter((p) => p.chainId === preferChain)
+    : withPrice;
+
+  if (pool.length === 0) return null;
 
   // Sort by 24h volume — matches DexScreener's own ranking, giving the primary pair
   // whose marketCap / FDV / price align with what DexScreener displays on the token page.
