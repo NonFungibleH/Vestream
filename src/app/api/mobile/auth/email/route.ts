@@ -264,29 +264,39 @@ export async function POST(req: NextRequest) {
   if (action === "verify") {
     if (!code) return NextResponse.json({ error: "Code required" }, { status: 400 });
 
+    // 2026-05-22: reviewer bypass — matches the send-branch bypass above.
+    // When env vars REVIEWER_EMAIL + REVIEWER_OTP are BOTH set AND the
+    // incoming (email, code) matches both exactly, we skip the rate-limit
+    // check AND the DB OTP lookup and fall straight through to user creation.
+    // The send branch already returned 200 without inserting a mobileOtps
+    // row, so the regular lookup below would always miss anyway.
+    //
+    // IMPORTANT: This check must fire BEFORE the rate-limit, not after it.
+    // Reviewers share IPs and test the same flow multiple times across
+    // review sessions — they will exhaust a 5/15min bucket quickly. Putting
+    // the rate-limit first means a 429 blocks them even with valid credentials
+    // (exactly what happened in the 2026-05 App Store rejection / Guideline
+    // 2.1 failure). The send path already follows this pattern (bypass first).
+    //
+    // Activates in production (intentional — Apple/Google reviewers test
+    // the live binary). Confined to the one email by exact match.
+    const reviewerEmail = process.env.REVIEWER_EMAIL?.toLowerCase().trim();
+    const reviewerOtp   = process.env.REVIEWER_OTP;
+    const isReviewer    = !!(reviewerEmail && reviewerOtp && email === reviewerEmail && code === reviewerOtp);
+
     // Rate-limit verify attempts: 5 per IP+email per 15 min.
     // Without this, a 6-digit OTP has ~1M combinations — a single IP could
     // brute-force the code space in seconds. Tightened from 10/15min
     // (audit hardening) — botnets can split attempts across IPs, but
     // tightening the per-IP-email cell raises the cost. The 10-min OTP
     // TTL is the harder ceiling; this just narrows the per-cell window.
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 5, "15 m");
-    const blocked = rateLimitResponse(rlVerify, "Too many verification attempts. Try again in 15 minutes.");
-    if (blocked) return blocked;
-
-    // 2026-05-22: reviewer bypass — matches the send-branch bypass
-    // above. When env vars REVIEWER_EMAIL + REVIEWER_OTP are BOTH set
-    // AND the incoming (email, code) matches both exactly, we skip the
-    // DB OTP lookup and fall straight through to user creation. The
-    // send branch already returned 200 without inserting a mobileOtps
-    // row, so the regular lookup below would always miss anyway.
-    //
-    // Activates in production (intentional — Apple/Google reviewers
-    // test the live binary). Confined to the one email by exact match.
-    const reviewerEmail = process.env.REVIEWER_EMAIL?.toLowerCase().trim();
-    const reviewerOtp   = process.env.REVIEWER_OTP;
-    const isReviewer    = !!(reviewerEmail && reviewerOtp && email === reviewerEmail && code === reviewerOtp);
+    // Skipped entirely for reviewer credentials (see above).
+    if (!isReviewer) {
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+      const rlVerify = await checkRateLimit("mobile:otp:verify", `${ip}:${email}`, 5, "15 m");
+      const blocked = rateLimitResponse(rlVerify, "Too many verification attempts. Try again in 15 minutes.");
+      if (blocked) return blocked;
+    }
 
     const [row] = isReviewer ? [null] : await db
       .select()
