@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/refresh-prices",
-      "schedule": "20 * * * *"
+      "schedule": "20 8,20 * * *"
     },
     {
       "path": "/api/cron/notify",
@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/refresh-rollups",
-      "schedule": "40 * * * *"
+      "schedule": "40 */4 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=1",
@@ -62,7 +62,7 @@
     },
     {
       "path": "/api/cron/seed-cache?group=superfluid",
-      "schedule": "35 * * * *"
+      "schedule": "35 */2 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=subgraphs",
