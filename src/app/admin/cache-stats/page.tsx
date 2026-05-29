@@ -14,6 +14,9 @@
 
 import Link from "next/link";
 import { getCacheStatsCells, type CacheStatsCell } from "@/lib/vesting/cache-stats";
+import { db } from "@/lib/db";
+import { indexerState } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -70,18 +73,26 @@ interface GridCell {
   withTokenSymbol: number;
   distinctTokens:  number;
   freshestSec:     number | null;
+  /** When the indexer last attempted a run for this cell (success or fail).
+   *  Null for seeder-managed protocols that have no indexer_state row. */
+  lastCheckedSec:  number | null;
 }
 
-function buildGrid(cells: CacheStatsCell[]): Map<string, Map<number, GridCell>> {
+function buildGrid(
+  cells: CacheStatsCell[],
+  checkedMap: Map<string, number | null>,
+): Map<string, Map<number, GridCell>> {
   const grid = new Map<string, Map<number, GridCell>>();
   for (const c of cells) {
     if (!grid.has(c.protocol)) grid.set(c.protocol, new Map());
+    const key = `${c.protocol}:${c.chainId}`;
     grid.get(c.protocol)!.set(c.chainId, {
       streams:         c.streams,
       active:          c.active,
       withTokenSymbol: c.withTokenSymbol,
       distinctTokens:  c.distinctTokens,
       freshestSec:     c.freshestSec,
+      lastCheckedSec:  checkedMap.get(key) ?? null,
     });
   }
   return grid;
@@ -89,8 +100,29 @@ function buildGrid(cells: CacheStatsCell[]): Map<string, Map<number, GridCell>> 
 
 export default async function CacheStatsPage() {
   const nowMs = Date.now();
-  const cells = await getCacheStatsCells();
-  const grid  = buildGrid(cells);
+
+  // Fetch indexer_state alongside cache stats — tells us when each
+  // event-driven indexer last attempted a run, independent of whether
+  // any data changed. Lets us distinguish "no new events" from "broken".
+  const [cells, indexerRows] = await Promise.all([
+    getCacheStatsCells(),
+    db
+      .select({
+        protocol:       indexerState.protocol,
+        chainId:        indexerState.chainId,
+        lastAttemptSec: sql<number | null>`extract(epoch from ${indexerState.lastAttemptAt})::int`,
+      })
+      .from(indexerState)
+      .catch(() => [] as { protocol: string; chainId: number; lastAttemptSec: number | null }[]),
+  ]);
+
+  // Build a lookup map keyed by "protocol:chainId"
+  const checkedMap = new Map<string, number | null>();
+  for (const r of indexerRows) {
+    checkedMap.set(`${r.protocol}:${r.chainId}`, r.lastAttemptSec);
+  }
+
+  const grid = buildGrid(cells, checkedMap);
 
   // Build the full protocol list: the canonical ordered set, plus any extras
   // the DB returned that we haven't enumerated yet (future-proof).
@@ -188,7 +220,7 @@ export default async function CacheStatsPage() {
                       const cell = rowMap.get(c.id);
                       return (
                         <td key={c.id} className="text-right px-3 py-3 tabular-nums whitespace-nowrap">
-                          {cell ? <CellContent cell={cell} /> : <span style={{ color: "#cbd5e1" }}>—</span>}
+                          {cell ? <CellContent cell={cell} nowMs={nowMs} /> : <span style={{ color: "#cbd5e1" }}>—</span>}
                         </td>
                       );
                     })}
@@ -240,6 +272,11 @@ export default async function CacheStatsPage() {
             {" "}<strong>Tokens:</strong> distinct token contracts seen.
           </div>
           <div className="mt-2">
+            <strong>changed X ago:</strong> when stream data last actually moved (the <code>lastRefreshedAt</code> semantic — unchanged rows don't update this timestamp).
+            {" "}<strong>checked X ago</strong> <span style={{ color: "#2DB36A" }}>(green)</span>: when the event-driven indexer last attempted a scan — only shown for Hedgey and UNCX-VM which have per-run state. Green = recent ({"<"}1h). <span style={{ color: "#B3322E" }}>Red</span> = indexer hasn&apos;t run in over an hour — investigate.
+            {" "}<em>changed old + checked recent = healthy</em> (no new events on that chain). <em>changed old + no checked = seeder-only protocol</em> (Sablier, PinkSale etc.), check seed-cache Vercel logs instead.
+          </div>
+          <div className="mt-2">
             A cell showing <span style={{ color: "#cbd5e1" }}>—</span> means <em>zero rows cached</em>. If you expected data on that chain, check the seed-cache per-job results in Vercel logs for that (protocol, chain) pair.
           </div>
         </div>
@@ -264,7 +301,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CellContent({ cell }: { cell: GridCell }) {
+function CellContent({ cell, nowMs }: { cell: GridCell; nowMs: number }) {
   const symbolPct = cell.streams > 0
     ? Math.round((cell.withTokenSymbol / cell.streams) * 100)
     : 0;
@@ -273,6 +310,15 @@ function CellContent({ cell }: { cell: GridCell }) {
   const symbolColor = symbolPct >= 90 ? "#2DB36A"
     : symbolPct >= 70 ? "#F0992E"
     : "#B3322E";
+
+  const changed  = relSince(cell.freshestSec,    nowMs);
+  const checked  = relSince(cell.lastCheckedSec, nowMs);
+
+  // Flag cells where "checked" is recent but "changed" is old — the normal
+  // "indexer is healthy, no new events" pattern. Flag cells where "checked"
+  // itself is old — that's a broken indexer.
+  const checkedStale = cell.lastCheckedSec !== null
+    && (nowMs / 1000 - cell.lastCheckedSec) > 3600; // >1h since last attempt
 
   return (
     <div>
@@ -285,6 +331,18 @@ function CellContent({ cell }: { cell: GridCell }) {
       <div className="text-[10px] leading-tight mt-0.5" style={{ color: symbolColor }}>
         {symbolPct}% symbol · {cell.distinctTokens} tokens
       </div>
+      {/* Timestamp pair: changed (data freshness) + checked (indexer health) */}
+      <div className="text-[10px] leading-tight mt-1" style={{ color: "#B8BABD" }}>
+        changed {changed}
+      </div>
+      {cell.lastCheckedSec !== null && (
+        <div
+          className="text-[10px] leading-tight"
+          style={{ color: checkedStale ? "#B3322E" : "#2DB36A" }}
+        >
+          checked {checked}
+        </div>
+      )}
     </div>
   );
 }
