@@ -10,7 +10,7 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, inArray, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lte, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
@@ -258,16 +258,24 @@ export interface WindowResult {
  * active streams (capped at poolLimit), compute eventTime per row in JS
  * (= streamData.nextUnlockTime ?? endTime), and filter by that.
  *
- * `poolLimit` defaults to 5000. The previous 2000 ceiling was saturating
- * for 60- and 90-day windows: ordering by endTime ASC meant the top-2000
- * rows had endTimes ≤ ~60 days out, so streams with far-future endTimes
- * but a near-term `nextUnlockTime` (typical of multi-year monthly-drip
- * vests) never made it into the JS filter. Symptom: Next 60 days and
- * Next 90 days returned identical group counts (~1242 each) because we
- * had no candidates beyond ~day 60 in the pool. 5000 doubles the headroom
- * without significantly increasing query cost — postgres serves these
- * from an indexed range scan and ships ~25 MB of JSON, well within
- * Vercel's gateway tolerance for these landing-page queries.
+ * **Two-pass pool (fix for 60-day = 90-day identical counts):**
+ * A single `ORDER BY endTime ASC LIMIT N` always saturates with the
+ * soonest-expiring streams. When >N streams expire within 60 days, the
+ * pool fills entirely with ≤60-day endTimes — multi-year vesting contracts
+ * with monthly drips (endTime years out, nextUnlockTime ≤ 90 days) never
+ * enter the pool, so 60-day and 90-day windows return identical results.
+ *
+ * The two-pass fix runs two queries in parallel:
+ *   Pass A — streams whose endTime falls *inside* the window
+ *             (endTime > startSec AND endTime ≤ endSec)
+ *   Pass B — long-lived streams ending *after* the window
+ *             (endTime > endSec), ordered by endTime ASC so the ones
+ *             soonest-to-expire come first — best proxy for near-term
+ *             nextUnlockTime without reading JSONB in SQL
+ *
+ * Both passes apply the same protocol/chain filters. Results are merged
+ * before the JS eventTime filter, so each pass is bounded by `poolLimit`
+ * (default 5000), giving up to 10 000 candidate rows total.
  */
 const EMPTY_WINDOW_RESULT: WindowResult = {
   groups: [],
@@ -314,40 +322,68 @@ export async function getUnlocksInWindow(
     ? inArray(vestingStreamsCache.chainId, [...chainIds])
     : undefined;
 
-  // Pull ACTIVE streams (isFullyVested = false) for the protocol(s),
-  // ordered by endTime ASC so the soonest-ending streams come first.
-  // Critical for Sablier-scale protocols: without ORDER BY + the
-  // `endTime > startSec` SQL pre-filter, postgres returned random
-  // rows and the streamData JSON transfer (5000 × ~5KB = ~25MB)
-  // blew past Vercel's gateway timeout. We still JS-filter by
-  // eventTime afterward (eventTime = nextUnlockTime ?? endTime),
-  // which can only be ≤ endTime — so a SQL-level `endTime > startSec`
-  // is safe (it never excludes a row that the JS filter would have
-  // accepted; eventTime ≤ endTime, so endTime ≤ startSec implies
-  // eventTime ≤ startSec, which JS would have dropped anyway).
-  const rows = await db
-    .select({
-      streamId:     vestingStreamsCache.streamId,
-      protocol:     vestingStreamsCache.protocol,
-      chainId:      vestingStreamsCache.chainId,
-      tokenSymbol:  vestingStreamsCache.tokenSymbol,
-      tokenAddress: vestingStreamsCache.tokenAddress,
-      endTime:      vestingStreamsCache.endTime,
-      recipient:    vestingStreamsCache.recipient,
-      streamData:   vestingStreamsCache.streamData,
-    })
-    .from(vestingStreamsCache)
-    .where(
-      and(
-        eq(vestingStreamsCache.isFullyVested, false),
-        gt(vestingStreamsCache.endTime, startSec),
-        excludeTestnets,
-        ...(protocolFilter ? [protocolFilter] : []),
-        ...(chainFilter ? [chainFilter] : []),
-      ),
-    )
-    .orderBy(asc(vestingStreamsCache.endTime))
-    .limit(poolLimit);
+  // Two-pass pool — see JSDoc above for the full rationale.
+  //
+  // Pass A: streams whose endTime falls inside the window.
+  //   `endTime > startSec AND endTime ≤ endSec` — eventTime ≤ endTime,
+  //   and endTime ≤ endSec, so every row here is a candidate.
+  //
+  // Pass B: long-lived streams ending after the window.
+  //   `endTime > endSec` — their endTime alone would disqualify them,
+  //   but nextUnlockTime (in JSONB) can be ≤ endSec. Ordering by
+  //   endTime ASC gets the ones soonest-to-expire first — a reliable
+  //   proxy for near-term nextUnlockTime without JSONB SQL access.
+  //   The JS filter discards any whose nextUnlockTime is outside the window.
+  //
+  // No overlap: a row can't have endTime both ≤ endSec and > endSec.
+  const selectFields = {
+    streamId:     vestingStreamsCache.streamId,
+    protocol:     vestingStreamsCache.protocol,
+    chainId:      vestingStreamsCache.chainId,
+    tokenSymbol:  vestingStreamsCache.tokenSymbol,
+    tokenAddress: vestingStreamsCache.tokenAddress,
+    endTime:      vestingStreamsCache.endTime,
+    recipient:    vestingStreamsCache.recipient,
+    streamData:   vestingStreamsCache.streamData,
+  } as const;
+
+  const sharedWhere = [
+    eq(vestingStreamsCache.isFullyVested, false),
+    excludeTestnets,
+    ...(protocolFilter ? [protocolFilter] : []),
+    ...(chainFilter ? [chainFilter] : []),
+  ] as const;
+
+  const [rowsA, rowsB] = await Promise.all([
+    // Pass A — streams ending within the window
+    db
+      .select(selectFields)
+      .from(vestingStreamsCache)
+      .where(
+        and(
+          ...sharedWhere,
+          gt(vestingStreamsCache.endTime, startSec),
+          lte(vestingStreamsCache.endTime, endSec),
+        ),
+      )
+      .orderBy(asc(vestingStreamsCache.endTime))
+      .limit(poolLimit),
+
+    // Pass B — long-lived streams ending after the window
+    db
+      .select(selectFields)
+      .from(vestingStreamsCache)
+      .where(
+        and(
+          ...sharedWhere,
+          gt(vestingStreamsCache.endTime, endSec),
+        ),
+      )
+      .orderBy(asc(vestingStreamsCache.endTime))
+      .limit(poolLimit),
+  ]);
+
+  const rows = [...rowsA, ...rowsB];
 
   // ── Compute per-row eventTime + filter by window ───────────────────────
   // eventTime = nextUnlockTime if positive, else endTime. Streams without
