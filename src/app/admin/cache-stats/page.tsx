@@ -272,7 +272,7 @@ export default async function CacheStatsPage() {
             {" "}<strong>Tokens:</strong> distinct token contracts seen.
           </div>
           <div className="mt-2">
-            <strong>changed X ago:</strong> when stream data last actually moved (the <code>lastRefreshedAt</code> semantic — unchanged rows don't update this timestamp).
+            <strong>changed X ago:</strong> when stream data last actually moved (the <code>lastRefreshedAt</code> semantic — unchanged rows do not update this timestamp).
             {" "}<strong>checked X ago</strong> <span style={{ color: "#2DB36A" }}>(green)</span>: when the event-driven indexer last attempted a scan — only shown for Hedgey and UNCX-VM which have per-run state. Green = recent ({"<"}1h). <span style={{ color: "#B3322E" }}>Red</span> = indexer hasn&apos;t run in over an hour — investigate.
             {" "}<em>changed old + checked recent = healthy</em> (no new events on that chain). <em>changed old + no checked = seeder-only protocol</em> (Sablier, PinkSale etc.), check seed-cache Vercel logs instead.
           </div>
