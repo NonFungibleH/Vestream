@@ -19,6 +19,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 import {
   getProtocol,
   listProtocols,
@@ -438,7 +439,7 @@ export default async function ProtocolLandingPage(
           <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
             {/* Primary CTA uses the protocol's brand colour — strongest brand nod */}
             <Link
-              href="/early-access"
+              href="/find-vestings"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
               style={{ background: meta.color, color: "white", boxShadow: `0 6px 20px ${meta.color}55` }}
             >
@@ -824,22 +825,21 @@ export default async function ProtocolLandingPage(
             <p className="text-sm md:text-base mb-8 max-w-xl mx-auto" style={{ color: "#475569" }}>
               Add your wallet to Vestream and get a push notification the moment any {meta.name} tranche becomes claimable — across every chain you hold on. No checking dashboards. No missed deadlines.
             </p>
-            <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-              <Link
-                href="/early-access"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{ background: meta.color, color: "white", boxShadow: `0 4px 20px ${meta.color}55` }}
-              >
-                Get the app →
-              </Link>
+
+            {/* Store badges — primary CTA */}
+            <AppStoreBadges align="center" comingSoon={false} />
+
+            {/* Secondary: web scanner */}
+            <div className="mt-5">
               <Link
                 href="/find-vestings"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:bg-slate-50"
-                style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", color: "#1A1D20" }}
+                className="inline-flex items-center gap-1.5 text-sm font-medium transition-all hover:opacity-70"
+                style={{ color: "#475569" }}
               >
-                Scan a wallet now →
+                Or scan a wallet on the web →
               </Link>
             </div>
+
             <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#B8BABD" }}>
               Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We&apos;re the alert layer above it.
             </p>

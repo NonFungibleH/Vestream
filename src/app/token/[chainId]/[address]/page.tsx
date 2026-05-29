@@ -32,6 +32,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
@@ -612,28 +613,14 @@ export default async function TokenPage(
               are ready to claim — plus coverage for every other wallet you
               track, across all 9 protocols and 7 chains — EVM and Solana.
             </p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link
-                href="/early-access"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{
-                  background: "#1CB8B8",
-                  color: "white",
-                  boxShadow: "0 4px 24px rgba(15,138,138,0.4)",
-                }}
-              >
-                Get early access →
-              </Link>
+            <AppStoreBadges align="center" comingSoon={false} />
+            <div className="mt-5">
               <Link
                 href="/find-vestings"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border:     "1px solid rgba(255,255,255,0.15)",
-                  color:      "white",
-                }}
+                className="inline-flex items-center gap-1.5 text-sm font-medium transition-all hover:opacity-70"
+                style={{ color: "rgba(255,255,255,0.55)" }}
               >
-                Scan a wallet first
+                Or scan a wallet on the web →
               </Link>
             </div>
           </div>

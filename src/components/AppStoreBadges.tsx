@@ -18,7 +18,7 @@
 //                 comingSoon={false} once it goes live.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const APP_STORE_URL    = "https://apps.apple.com/app/vestream/id0000000000";
+const APP_STORE_URL    = "https://apps.apple.com/app/id6769799911";
 const GOOGLE_PLAY_URL  = "https://play.google.com/store/apps/details?id=io.vestream.app";
 
 interface Props {
