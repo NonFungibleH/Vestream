@@ -248,7 +248,19 @@ export async function GET(req: NextRequest) {
       const liqUsd  = best.liquidity?.usd ?? null;
       const info    = extractInfo(best);
 
-      result[idx].price                 = price > 0 ? price : null;
+      // Reject ghost prices — DexScreener can return a non-zero priceUsd for
+      // tokens that have no real DEX pairs (e.g. a test LP created once and
+      // never traded). If liquidity is below $100 (same floor as the TVL
+      // snapshot pipeline) or unknown, the price is unreliable and we return
+      // null so callers show "Price unavailable" rather than a billion-dollar
+      // portfolio value. Real traded tokens always have at least ~$100 in the
+      // pool to sustain meaningful price discovery.
+      const MIN_LIQUIDITY_USD = 100;
+      const reliablePrice = price > 0 && liqUsd !== null && liqUsd >= MIN_LIQUIDITY_USD
+        ? price
+        : null;
+
+      result[idx].price                 = reliablePrice;
       result[idx].change1h              = best.priceChange?.h1  ?? null;
       result[idx].change6h              = best.priceChange?.h6  ?? null;
       result[idx].change24h             = best.priceChange?.h24 ?? null;
