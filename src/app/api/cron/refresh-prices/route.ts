@@ -32,7 +32,7 @@ import {
 import { priceAggregates } from "@/lib/vesting/tvl";
 
 export const dynamic     = "force-dynamic";
-export const maxDuration = 60;  // Hourly cron — bounded; no need for the full 300s.
+export const maxDuration = 300; // Needs headroom — 1000 tokens × live API calls can exceed 60s.
 
 /**
  * How many tokens to refresh per run. Sized so 24 runs (one day) refreshes
