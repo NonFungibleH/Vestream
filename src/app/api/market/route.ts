@@ -219,26 +219,31 @@ export async function GET(req: NextRequest) {
       // 1. Try address lookup first (most accurate)
       let pairs: DexPair[] = token.address ? await fetchByAddress(token.address) : [];
 
-      // 2. Symbol-search fallback when address lookup returns nothing.
-      //    Rules:
-      //    • Token on a supported mainnet (dsChain is set): search by symbol but only
-      //      keep results on the same chain — prevents a Sepolia "TEST" token from
-      //      matching a random mainnet token called TEST.
-      //    • Token with no chainId at all: accept any exact-symbol match (legacy).
-      //    • Token with a chainId that has no DexScreener mapping (testnet): skip —
-      //      any symbol result would be a completely different mainnet token.
-      if (pairs.length === 0) {
+      // 2. Symbol-search fallback — only when NO address was supplied.
+      //
+      //    If the caller gave us a contract address and DexScreener returned no
+      //    pairs for it, the token simply has no DEX trading. Falling back to a
+      //    symbol search would match a completely different contract that happens
+      //    to share the same ticker (e.g. a real "LMTS" or "XYZ" on another
+      //    chain), producing a wildly wrong price. "Price unavailable" is always
+      //    safer than a billion-dollar valuation on a test token.
+      //
+      //    Symbol-only path (no address): still useful for the web dashboard's
+      //    ad-hoc token lookups, but restricted to same-chain results only — no
+      //    cross-chain fallback, which was the source of the PulseChain-XYZ price
+      //    leaking into a Base portfolio.
+      if (pairs.length === 0 && !token.address) {
         if (dsChain) {
-          // Mainnet token: symbol search filtered strictly to the same chain
+          // No address, known mainnet: symbol search restricted to same chain only.
+          // No further fallback to other chains — a symbol match on a different
+          // chain is never the right token.
           const symbolPairs = await fetchBySymbol(token.symbol);
-          const sameChain   = symbolPairs.filter((p) => p.chainId === dsChain);
-          // Use same-chain results; fall back to all results only if nothing on-chain
-          pairs = sameChain.length > 0 ? sameChain : symbolPairs;
+          pairs = symbolPairs.filter((p) => p.chainId === dsChain);
         } else if (!token.chainId) {
-          // No chain info — accept any symbol match (symbol-only query path)
+          // No address, no chain — accept any exact-symbol match (legacy / web path)
           pairs = await fetchBySymbol(token.symbol);
         }
-        // else: known chainId with no DexScreener mapping (e.g. Sepolia) → no fallback
+        // else: no address but known chainId with no DexScreener mapping → no fallback
       }
 
       const best = pickBestPair(pairs, dsChain);
