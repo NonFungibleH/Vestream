@@ -1,6 +1,6 @@
 // src/app/api/cron/cleanup-pending-links/route.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Daily cron — sweeps short-lived rows from two tables in one pass:
+// Daily cron — sweeps short-lived rows from three tables in one pass:
 //
 //   pending_wallet_links   — expired unclaimed rows
 //                            (expires_at < NOW() AND claimed_at IS NULL)
@@ -13,9 +13,15 @@
 //                            replay window is ≤3 days, RC's is similar.
 //                            Keeping rows beyond that is pure storage tax.
 //
-// Both sweeps live in the same cron because they have identical traits:
+//   mobile_otps            — expired or used OTPs (expires_at < NOW() OR used=true)
+//                            OTPs are single-use 10-min codes. Without cleanup,
+//                            failed auth attempts pile up as dead tuples and
+//                            inflate table bloat. Keeping them 0 days past
+//                            expiry is safe — a used/expired OTP has no value.
+//
+// All three sweeps live in the same cron because they have identical traits:
 // daily, deterministic WHERE clause, no external API calls, small write
-// volume. Easier to operate than two separate routes.
+// volume. Easier to operate than separate routes.
 //
 // Auth: same Bearer-token pattern as the other crons.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,8 +30,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { db } from "@/lib/db";
-import { pendingWalletLinks, webhookEventDedup } from "@/lib/db/schema";
-import { and, isNull, lt } from "drizzle-orm";
+import { mobileOtps, pendingWalletLinks, webhookEventDedup } from "@/lib/db/schema";
+import { and, isNull, lt, or, eq } from "drizzle-orm";
 
 const WEBHOOK_DEDUP_TTL_DAYS = 30;
 
@@ -64,10 +70,23 @@ async function handle(req: NextRequest) {
     .where(lt(webhookEventDedup.receivedAt, dedupCutoff))
     .returning({ eventId: webhookEventDedup.eventId });
 
+  // 3. mobile_otps — expired or already used.
+  // OTPs are 10-minute single-use codes. Without cleanup the table accumulates
+  // dead rows on every failed auth attempt, inflating bloat and slowing the
+  // `db.delete(mobileOtps).where(eq(email))` call that runs on every OTP send.
+  const deletedOtps = await db
+    .delete(mobileOtps)
+    .where(or(
+      lt(mobileOtps.expiresAt, now),
+      eq(mobileOtps.used, true),
+    ))
+    .returning({ id: mobileOtps.id });
+
   return NextResponse.json({
     ok: true,
     pending_wallet_links_deleted: deletedPending.length,
     webhook_event_dedup_deleted:  deletedDedup.length,
+    mobile_otps_deleted:          deletedOtps.length,
     sweptAt: now.toISOString(),
   });
 }
