@@ -5,7 +5,7 @@
 > not including review/testing/marketing follow-up. Re-rank when priorities
 > change. **This is for internal planning — not a public commitment.**
 >
-> _Last updated: 2026-05-02_
+> _Last updated: 2026-05-30_
 
 ---
 
@@ -112,6 +112,41 @@ After these land, the personal-context trifecta is complete: what (notes), how o
 ---
 
 ## Soon (1–3 months)
+
+### In-app claiming (connect wallet → claim direct from smart contracts)
+
+- **What** — Instead of linking users out to Sablier/Hedgey/etc to claim, surface a "Claim" button in the dashboard and mobile app. User connects their wallet, we call the protocol's release function directly. No protocol page needed.
+- **Why** — Every "Go to Sablier" tap is a moment we lose the user. In-app claiming closes the loop: track → notify → claim, all inside Vestream. Strongest retention mechanic we could add.
+- **Infrastructure already in place** — wagmi v3 + RainbowKit v2 + viem + WalletConnect are already installed and configured. ETH, Base, BSC, Polygon chains wired. The UI wallet-connect layer is free.
+- **Size** — `M` per protocol group (see below). Total ~`L` for the first 3 easy protocols; `XL` for full coverage.
+- **Web only initially** — wagmi is browser-based. Mobile in-app claiming needs a separate wallet approach (WalletConnect mobile or embedded wallet like Privy/Dynamic).
+
+**Protocol breakdown (assessed 2026-05-30):**
+
+| Protocol | Difficulty | Why | Contract data we already have |
+|---|---|---|---|
+| Hedgey | 🟢 Easy (~2–3h) | Contract address hardcoded in adapter, have plan IDs. Call: `redeemPlans([planId])` | ✅ contract address, ✅ plan ID |
+| UNCX-VM | 🟢 Easy (~2–3h) | Contract addresses per chain in adapter, have vesting IDs. Call: `release(vestingId)` | ✅ contract address, ✅ vesting ID |
+| PinkSale | 🟢 Easy (~2–3h) | Contract addresses in adapter, have lock IDs. Call: `unlock(lockId)` | ✅ contract address, ✅ lock ID |
+| Sablier Lockup | 🟡 Medium (~4–6h) | Have stream IDs + claimable amounts; contract address per stream not stored yet — in subgraph but not persisted. Call: `withdraw(streamId, to, amount)` | ✅ stream ID, ✅ claimable amount, ❌ contract address (needs storing in streamData) |
+| Sablier Flow | 🟡 Medium (~4–6h) | Same gap as Sablier Lockup | ✅ stream ID, ❌ contract address |
+| Team Finance | 🟡 Medium (~4–6h) | Per-vesting contract address is in API response; need to confirm V3 claim ABI from docs/Etherscan | ✅ contract address in TFVesting, ❌ write ABI unconfirmed |
+| LlamaPay | 🟡 Medium (~4–6h) | No numeric stream ID — identified by (payer, token, amountPerSec). Factory deploys one contract per payer. Different calling convention from all others. | ✅ payer, token, amountPerSec — ❌ contract address needs resolving per stream |
+| Unvest | 🟡 Medium (~4–6h) | Per-project vesting token contract. ABI may vary between deployments. | ✅ contract address in subgraph, ❌ ABI consistency unconfirmed |
+| UNCX V2 | 🟡 Medium (~1 day) | Contract address not stored per lock. Also: access control unclear — may be owner-only not recipient-callable. Needs research. | ❌ contract address not stored, ❌ access control unknown |
+| Superfluid | 🔴 Hard (~2–3 days) | Push-based streaming, not pull. Tokens flow as SuperTokens automatically. "Claiming" means calling `downgrade()` to convert SuperTokens → underlying ERC20. Different mental model and UX from everything else. | ✅ superToken address, ❌ fundamentally different flow |
+| Streamflow | 🔴 Hard (~3–5 days) | Solana — outside the EVM/wagmi stack entirely. Needs `@solana/wallet-adapter` + Phantom/Backpack support. SDK has a `withdraw()` method so contract side is solved once infra is in place. | N/A (Solana) |
+| Jupiter Lock | 🔴 Hard (~1–2 days on top of Streamflow) | Solana — same infra dependency as Streamflow. | N/A (Solana) |
+
+**Recommended order:**
+1. Hedgey + UNCX-VM + PinkSale — ship all three together in one PR (~1 day total). Covers a large portion of EVM users.
+2. Sablier Lockup + Flow — store contract address in streamData during seeding, then ~half a day for claim buttons.
+3. Solana (Streamflow + Jupiter) — separate workstream. Needs Solana wallet infrastructure first.
+4. Superfluid — defer. Different claiming model warrants its own design pass.
+
+**Note:** Arbitrum and Optimism need to be added to the wagmi chain config before Hedgey claiming works on those chains (30 min).
+
+---
 
 ### More chains
 Priority order based on TVL/protocol overlap:
