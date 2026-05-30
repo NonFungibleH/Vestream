@@ -26,63 +26,63 @@
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=1",
-      "schedule": "0 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=8453",
-      "schedule": "7 * * * *"
+      "schedule": "7 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=56",
-      "schedule": "14 * * * *"
+      "schedule": "14 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=1",
-      "schedule": "21 * * * *"
+      "schedule": "21 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=56",
-      "schedule": "28 * * * *"
+      "schedule": "28 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=137",
-      "schedule": "35 * * * *"
+      "schedule": "35 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=8453",
-      "schedule": "42 * * * *"
+      "schedule": "42 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=42161",
-      "schedule": "49 * * * *"
+      "schedule": "49 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=10",
-      "schedule": "56 * * * *"
-    },
-    {
-      "path": "/api/cron/seed-cache?group=superfluid",
-      "schedule": "35 */6 * * *"
+      "schedule": "56 5 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=subgraphs",
-      "schedule": "5 */6 * * *"
+      "schedule": "5 6 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=hedgey",
-      "schedule": "25 */6 * * *"
+      "schedule": "25 6 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=superfluid",
+      "schedule": "35 6 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=sablier",
-      "schedule": "45 */6 * * *"
+      "schedule": "45 6 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=heavy",
-      "schedule": "0 */12 * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=solana",
-      "schedule": "15 */12 * * *"
+      "schedule": "15 7 * * *"
     }
   ],
   "headers": [
