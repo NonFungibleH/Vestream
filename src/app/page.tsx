@@ -619,12 +619,6 @@ export default async function Home() {
               ))}
             </ul>
 
-            <div className="flex flex-col items-center lg:items-start gap-2">
-              <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
-                Get the app
-              </p>
-              <AppStoreBadges align="start" comingSoon />
-            </div>
           </div>
 
           {/* Right: phone mockup — Portfolio-tab snapshot, distinct from
