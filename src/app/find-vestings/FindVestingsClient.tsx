@@ -364,7 +364,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
       <SaveToAppCard walletAddress={result.address} />
       <div className="grid grid-cols-1 gap-3">
         {result.groups.map((g) => (
-          <GroupCard
+          <TeaserCard
             key={`${g.protocolId}-${g.chainId}`}
             group={g}
             walletAddress={result.address}
@@ -989,105 +989,144 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
   );
 }
 
-function GroupCard({ group, walletAddress }: { group: Group; walletAddress: string }) {
+function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: string }) {
   const colour = PROTOCOL_COLOURS[group.protocolId] ?? "#8B8E92";
 
-  // Surface any "claimable now" presence at the card level — anything that
-  // could be claimed right now is the highest-conversion-signal moment. If
-  // we know there's a live claim window, the per-card footer becomes much
-  // more pointed ("Claim {SYMBOL} now in app →") instead of generic.
-  let liveClaimableSymbol: string | null = null;
-  for (const tok of group.tokens) {
-    if (BigInt(tok.claimableNowRaw || "0") > 0n) {
-      liveClaimableSymbol = tok.symbol || null;
-      break;
+  // Determine if any token in this group has a claimable balance.
+  // Used to choose between "Claim in app →" and "See amounts →".
+  const liveClaimableSymbol: string | null = (() => {
+    for (const tok of group.tokens) {
+      if (BigInt(tok.claimableNowRaw || "0") > 0n) return tok.symbol || null;
     }
-  }
+    return null;
+  })();
 
   return (
     <div
       className="rounded-2xl p-5 md:p-6"
       style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
     >
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: colour }} />
-          <div>
-            <div className="text-base font-bold" style={{ color: "#1A1D20" }}>
-              {group.protocolName}
-            </div>
-            <div className="text-xs" style={{ color: "#8B8E92" }}>
-              {group.chainName} · {group.streamCount} stream{group.streamCount === 1 ? "" : "s"}
-            </div>
+      {/* ── Card header — always visible ─────────────────────────── */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colour }} />
+        <div>
+          <div className="text-base font-bold" style={{ color: "#1A1D20" }}>
+            {group.protocolName}
+          </div>
+          <div className="text-xs" style={{ color: "#8B8E92" }}>
+            {group.chainName} · {group.streamCount} stream{group.streamCount === 1 ? "" : "s"}
           </div>
         </div>
       </div>
 
+      {/* ── Token rows — amounts blurred, CTA overlay ────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {group.tokens.slice(0, 4).map((tok) => (
-          <div
-            key={tok.address || tok.symbol}
-            className="rounded-xl p-3"
-            style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                {tok.symbol || "—"}
-              </span>
-              <span className="text-[11px]" style={{ color: "#B8BABD" }}>
-                {tok.streamCount} stream{tok.streamCount === 1 ? "" : "s"}
-              </span>
-            </div>
-            <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
-              Total
-            </div>
-            <div className="font-mono text-sm font-semibold break-all" style={{ color: "#1A1D20" }}>
-              {fmtAmount(tok.totalAmountRaw, tok.decimals)}
-            </div>
-            {BigInt(tok.claimableNowRaw) > 0n && (
-              <div className="text-[11px] font-mono mt-1" style={{ color: "#2DB36A" }}>
-                {fmtAmount(tok.claimableNowRaw, tok.decimals)} claimable now
+        {group.tokens.slice(0, 4).map((tok) => {
+          const tokClaimable = BigInt(tok.claimableNowRaw || "0") > 0n;
+          return (
+            <div
+              key={tok.address || tok.symbol}
+              className="rounded-xl overflow-hidden relative"
+              style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}
+            >
+              {/* Symbol row — always visible */}
+              <div className="flex items-center justify-between px-3 pt-3 pb-1">
+                <span className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
+                  {tok.symbol || "—"}
+                </span>
+                <span className="text-[11px]" style={{ color: "#B8BABD" }}>
+                  {tok.streamCount} stream{tok.streamCount === 1 ? "" : "s"}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Amount block — blurred */}
+              <div className="relative">
+                {/* Actual numbers, blurred so they are unreadable */}
+                <div
+                  className="px-3 pb-3"
+                  style={{
+                    filter: "blur(5px)",
+                    userSelect: "none",
+                    pointerEvents: "none",
+                  }}
+                  aria-hidden="true"
+                >
+                  <div className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: "#B8BABD" }}>
+                    Total
+                  </div>
+                  <div className="font-mono text-sm font-semibold" style={{ color: "#1A1D20" }}>
+                    {fmtAmount(tok.totalAmountRaw, tok.decimals)}
+                  </div>
+                  {tokClaimable && (
+                    <div className="text-[11px] font-mono mt-0.5" style={{ color: "#2DB36A" }}>
+                      {fmtAmount(tok.claimableNowRaw, tok.decimals)} claimable
+                    </div>
+                  )}
+                </div>
+
+                {/* CTA overlay — sits above the blurred amounts */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ background: "rgba(248,250,252,0.55)" }}
+                >
+                  <TrackInAppCTA
+                    walletAddress={walletAddress}
+                    tokenSymbol={tok.symbol}
+                    surface={`find_vestings_teaser_${group.protocolId}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap"
+                    style={
+                      tokClaimable
+                        ? { background: "#2DB36A", color: "white" }
+                        : { background: "rgba(28,184,184,0.12)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }
+                    }
+                  >
+                    {tokClaimable ? "Claim in app →" : "See amounts →"}
+                  </TrackInAppCTA>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {group.tokens.length > 4 && (
         <p className="text-xs mt-3" style={{ color: "#B8BABD" }}>
-          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} — see full detail in the Vestream app
+          + {group.tokens.length - 4} more token{group.tokens.length - 4 === 1 ? "" : "s"} in app
         </p>
       )}
 
-      {/* Per-card conversion footer. Reinforces that THIS card is the
-          static web view of a stream the app would show live. When there's
-          claimable-now value the copy gets pointed ("Claim now"); otherwise
-          we surface the persistent "track live" framing. Each card thus
-          has its own micro-CTA — every protocol/chain section is its own
-          conversion surface, not just one big strip up top. */}
-      <div className="mt-4 pt-3 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <div className="text-[11px] md:text-xs flex items-center gap-1.5 min-w-0" style={{ color: "#64748b" }}>
+      {/* ── Card footer ──────────────────────────────────────────── */}
+      <div
+        className="mt-4 pt-3 flex items-center justify-between gap-3"
+        style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
+      >
+        <div
+          className="text-[11px] md:text-xs flex items-center gap-1.5 min-w-0"
+          style={{ color: "#64748b" }}
+        >
           <span
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{ background: liveClaimableSymbol ? "#2DB36A" : "#cbd5e1" }}
           />
           <span className="truncate">
-            {liveClaimableSymbol
-              ? <><strong style={{ color: "#0f172a" }}>{liveClaimableSymbol}</strong> ready to claim — open in app to do it</>
-              : <>Live progress &amp; alerts available in the app</>}
+            {liveClaimableSymbol ? (
+              <><strong style={{ color: "#0f172a" }}>{liveClaimableSymbol}</strong> ready to claim — open in app</>
+            ) : (
+              <>Live progress &amp; alerts in app</>
+            )}
           </span>
         </div>
         <TrackInAppCTA
           walletAddress={walletAddress}
-          surface={`find_vestings_group_${group.protocolId}`}
+          surface={`find_vestings_teaser_footer_${group.protocolId}`}
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap flex-shrink-0"
-          style={{
-            background: liveClaimableSymbol ? "#2DB36A" : "rgba(28,184,184,0.10)",
-            color: liveClaimableSymbol ? "white" : "#1CB8B8",
-            border: liveClaimableSymbol ? "none" : "1px solid rgba(28,184,184,0.25)",
-          }}
+          style={
+            liveClaimableSymbol
+              ? { background: "#2DB36A", color: "white" }
+              : { background: "rgba(28,184,184,0.10)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }
+          }
         >
-          {liveClaimableSymbol ? "Claim now →" : "Track in app →"}
+          {liveClaimableSymbol ? "Claim now →" : "Open app →"}
         </TrackInAppCTA>
       </div>
     </div>
