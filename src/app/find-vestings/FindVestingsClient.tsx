@@ -5,9 +5,9 @@
 // Client island for the /find-vestings page.
 //
 // Primary flow: user connects their wallet → we auto-scan the connected
-// address → show results + strong mobile app CTA with App Store / Play
-// Store badges. Connecting a wallet sets the expectation that these streams
-// are theirs and will appear live in the mobile app.
+// address → show results + prominent DownloadGate (teal card with direct store badges)
+// and a sticky app bar as the conversion path. Connecting a wallet sets the
+// expectation that these streams are theirs and will appear live in the mobile app.
 //
 // Fallback: "Scan a different address instead" reveals a text input for
 // power users checking other wallets (e.g. a cold wallet they don't want
@@ -301,14 +301,11 @@ export default function FindVestingsClient() {
 
       {/* ── RESULTS ────────────────────────────────────────────────────── */}
       {result && !loading && (
-        <>
-          {result.totalStreams === 0 ? (
-            <NoResults address={result.address} />
-          ) : (
-            <ResultsBlock result={result} />
-          )}
-
-        </>
+        result.totalStreams === 0 ? (
+          <NoResults address={result.address} />
+        ) : (
+          <ResultsBlock result={result} />
+        )
       )}
     </div>
   );
@@ -355,6 +352,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
       <div ref={stripRef}>
         <DownloadGate
           totalStreams={result.totalStreams}
+          walletAddress={result.address}
           primarySymbol={primarySymbol}
         />
       </div>
@@ -541,9 +539,11 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
  */
 function DownloadGate({
   totalStreams,
+  walletAddress,
   primarySymbol,
 }: {
   totalStreams: number;
+  walletAddress: string;
   primarySymbol: string | null;
 }) {
   return (
@@ -607,6 +607,7 @@ function DownloadGate({
                 track("cta_clicked", {
                   cta_id: "app_store_download",
                   surface: "find_vestings_gate",
+                  wallet: walletAddress,
                 })
               }
               className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
@@ -640,6 +641,7 @@ function DownloadGate({
                 track("cta_clicked", {
                   cta_id: "play_store_download",
                   surface: "find_vestings_gate",
+                  wallet: walletAddress,
                 })
               }
               className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
