@@ -105,7 +105,7 @@ function ChatGPTTab() {
         <li>In the <strong style={{ color: "white" }}>Configure</strong> tab, scroll to <strong style={{ color: "white" }}>Actions</strong> → <strong style={{ color: "white" }}>Create new action</strong>.</li>
         <li>
           Click <strong style={{ color: "white" }}>Import from URL</strong> and paste:
-          <CodeBlock label="OpenAPI URL" code="https://vestream.io/openapi.json" inline />
+          <CodeBlock label="OpenAPI URL" code="https://www.vestream.io/openapi.json" inline />
         </li>
         <li>
           Authentication → <strong style={{ color: "white" }}>API Key</strong> → <strong style={{ color: "white" }}>Auth Type: Bearer</strong>.

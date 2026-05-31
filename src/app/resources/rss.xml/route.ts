@@ -12,7 +12,7 @@
 
 import { getAllArticles } from "@/lib/articles";
 
-const SITE = "https://vestream.io";
+const SITE = "https://www.vestream.io";
 
 export const revalidate = 21600; // 6 hours
 

@@ -118,7 +118,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const meta = getProtocol(protocol);
   if (!meta || meta.disabled) return { title: "Not found" };
 
-  const url = `https://vestream.io/protocols/${meta.slug}/unlocks`;
+  const url = `https://www.vestream.io/protocols/${meta.slug}/unlocks`;
 
   // Live count for the description so SERPs show fresh numbers.
   // 5y window matches the page-render query — see comment there.
@@ -211,7 +211,7 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
         "@type":   "Event",
         name:      `${tokenLabel(g.tokenSymbol, g.tokenAddress)} unlock`,
         startDate: g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-        location:  { "@type": "VirtualLocation", url: `https://vestream.io/token/${g.chainId}/${g.tokenAddress}` },
+        location:  { "@type": "VirtualLocation", url: `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}` },
         organizer: { "@type": "Organization", name: meta.name },
       },
     })),
@@ -221,10 +221,10 @@ export default async function ProtocolUnlocksPage({ params, searchParams }: Page
     "@context": "https://schema.org",
     "@type":    "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home",      item: "https://vestream.io/" },
-      { "@type": "ListItem", position: 2, name: "Protocols", item: "https://vestream.io/protocols" },
-      { "@type": "ListItem", position: 3, name: meta.name,   item: `https://vestream.io/protocols/${meta.slug}` },
-      { "@type": "ListItem", position: 4, name: "Unlocks",   item: `https://vestream.io/protocols/${meta.slug}/unlocks` },
+      { "@type": "ListItem", position: 1, name: "Home",      item: "https://www.vestream.io/" },
+      { "@type": "ListItem", position: 2, name: "Protocols", item: "https://www.vestream.io/protocols" },
+      { "@type": "ListItem", position: 3, name: meta.name,   item: `https://www.vestream.io/protocols/${meta.slug}` },
+      { "@type": "ListItem", position: 4, name: "Unlocks",   item: `https://www.vestream.io/protocols/${meta.slug}/unlocks` },
     ],
   };
 

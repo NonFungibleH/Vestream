@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestream.io";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
 
 // iOS App Store ID — populated AFTER first eas submit when Apple assigns
 // the 10-digit ID. Until set, the Smart App Banner meta tag is omitted
@@ -38,7 +38,7 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // leads with payroll-as-a-product. /payroll itself is a coming-soon
 // waitlist page, linked from the footer; SEO for "crypto payroll
 // tracker" parks there until we relaunch.
-const SITE_TITLE       = "Vestream — Token Vesting Tracker · Push Alerts · Tax-ready Exports";
+const SITE_TITLE       = "Vestream — Token Vesting Tracker & Unlock Alerts";
 const SITE_DESCRIPTION =
   "Track every token vesting unlock you're owed across 9 protocols and 7 chains. Push alerts the moment a cliff hits, one-tap claim links, tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
 

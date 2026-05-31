@@ -155,7 +155,7 @@ export async function authenticateApiKey(
 /** Wraps an auth error into a standard NextResponse. */
 export function authErrorResponse(err: AuthError): NextResponse {
   return NextResponse.json(
-    { error: err.message, docs: "https://vestream.io/api-docs" },
+    { error: err.message, docs: "https://www.vestream.io/api-docs" },
     { status: err.status }
   );
 }

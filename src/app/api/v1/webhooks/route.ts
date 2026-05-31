@@ -144,7 +144,7 @@ function tierGate() {
   return NextResponse.json(
     {
       error: "Webhook subscriptions are a Pro-tier feature.",
-      docs:  "https://vestream.io/pricing",
+      docs:  "https://www.vestream.io/pricing",
     },
     { status: 402 },
   );

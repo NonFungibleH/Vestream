@@ -28,7 +28,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 export const metadata: Metadata = {
   title: "Interactive + live vesting demo · Vestream",
   description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy on Sablier.",
-  alternates: { canonical: "https://vestream.io/demo" },
+  alternates: { canonical: "https://www.vestream.io/demo" },
 };
 
 // External deep-links used by Demo C. Replaces the prior Team-Finance-based

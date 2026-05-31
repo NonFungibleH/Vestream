@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   title: "Contact — Vestream",
   description:
     "Get in touch with Vestream. Questions about the product, API access, Enterprise pricing, partnerships, or anything else — we reply within one business day.",
-  alternates: { canonical: "https://vestream.io/contact" },
+  alternates: { canonical: "https://www.vestream.io/contact" },
   openGraph: {
     title: "Contact Vestream",
     description:
       "Send us a message about the product, developer API, Enterprise pricing, or partnerships. We reply within one business day.",
-    url: "https://vestream.io/contact",
+    url: "https://www.vestream.io/contact",
     siteName: "Vestream",
     type: "website",
   },
@@ -38,12 +38,12 @@ const CONTACT_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Vestream",
-  url: "https://vestream.io",
+  url: "https://www.vestream.io",
   contactPoint: [
     {
       "@type": "ContactPoint",
       contactType: "Customer support",
-      url: "https://vestream.io/contact",
+      url: "https://www.vestream.io/contact",
       availableLanguage: ["English"],
     },
   ],

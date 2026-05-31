@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   title: "Developer API — Vestream",
   description:
     "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana. Normalised JSON, agent-native, ready in minutes.",
-  alternates: { canonical: "https://vestream.io/developer" },
+  alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API — Vestream",
     description:
       "REST + MCP for 9 vesting protocols across 7 chains — EVM and Solana. Normalised JSON, agent-native.",
-    url: "https://vestream.io/developer",
+    url: "https://www.vestream.io/developer",
     siteName: "Vestream",
     type: "website",
   },

@@ -6,7 +6,7 @@
 
 import type { MetadataRoute } from "next";
 
-const SITE = "https://vestream.io";
+const SITE = "https://www.vestream.io";
 
 export default function robots(): MetadataRoute.Robots {
   return {

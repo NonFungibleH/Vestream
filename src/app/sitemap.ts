@@ -21,7 +21,7 @@ import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
 
-const SITE = "https://vestream.io";
+const SITE = "https://www.vestream.io";
 
 // Regenerate once per hour — sitemap freshness matters for crawlers but
 // there's no need to hit the DB on every robot hit.
@@ -64,7 +64,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // "crypto payroll tracker" search intent finds the roadmap surface,
     // but priority dropped to 0.5 so it doesn't out-rank /invest or /
     // for queries Vestream actually wants to convert today.
-    { url: `${SITE}/payroll`,       lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/payroll`,           lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/corporate/token-payroll`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: now, changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/unlocks`,       lastModified: now, changeFrequency: "daily",   priority: 0.9 },
     { url: `${SITE}/demo`,          lastModified: now, changeFrequency: "monthly", priority: 0.85 },

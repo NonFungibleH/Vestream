@@ -8,19 +8,19 @@ export const metadata: Metadata = {
   description:
     "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics. Written for investors, project teams, and Web3 professionals.",
   alternates: {
-    canonical: "https://vestream.io/resources",
+    canonical: "https://www.vestream.io/resources",
     types: {
       // RSS feed auto-discovery — feed readers (Inoreader, Feedly), the
       // many crypto-Twitter feed-to-tweet bots, and Slack/Discord webhooks
       // pick this up from the <head> link tag.
-      "application/rss+xml": "https://vestream.io/resources/rss.xml",
+      "application/rss+xml": "https://www.vestream.io/resources/rss.xml",
     },
   },
   openGraph: {
     title: "Resources – Token Vesting Guides & Insights | Vestream",
     description:
       "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics.",
-    url: "https://vestream.io/resources",
+    url: "https://www.vestream.io/resources",
     type: "website",
   },
 };
@@ -60,13 +60,13 @@ export default function ResourcesPage() {
     "@graph": [
       {
         "@type": "CollectionPage",
-        "@id": "https://vestream.io/resources#collection",
+        "@id": "https://www.vestream.io/resources#collection",
         name: "Vestream Resources — Token Vesting Guides & Insights",
         description: "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics.",
-        url: "https://vestream.io/resources",
+        url: "https://www.vestream.io/resources",
         inLanguage: "en-US",
-        isPartOf: { "@id": "https://vestream.io/#website" },
-        publisher: { "@id": "https://vestream.io/#organization" },
+        isPartOf: { "@id": "https://www.vestream.io/#website" },
+        publisher: { "@id": "https://www.vestream.io/#organization" },
       },
       {
         "@type": "ItemList",
@@ -75,15 +75,15 @@ export default function ResourcesPage() {
         itemListElement: articles.map((a, i) => ({
           "@type": "ListItem",
           position: i + 1,
-          url: `https://vestream.io/resources/${a.slug}`,
+          url: `https://www.vestream.io/resources/${a.slug}`,
           name: a.title,
         })),
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home",      item: "https://vestream.io" },
-          { "@type": "ListItem", position: 2, name: "Resources", item: "https://vestream.io/resources" },
+          { "@type": "ListItem", position: 1, name: "Home",      item: "https://www.vestream.io" },
+          { "@type": "ListItem", position: 2, name: "Resources", item: "https://www.vestream.io/resources" },
         ],
       },
     ],

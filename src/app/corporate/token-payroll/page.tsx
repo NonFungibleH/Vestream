@@ -35,12 +35,12 @@ export const metadata: Metadata = {
   title: "Live salary feed for crypto payroll · Vestream",
   description:
     "Give your employees, contractors, and KOLs a real-time view of their vesting salary. Live to the second, with push notifications before every unlock and local-currency conversion anywhere in the world — regardless of which protocol you used to set up the vestings.",
-  alternates: { canonical: "https://vestream.io/corporate/token-payroll" },
+  alternates: { canonical: "https://www.vestream.io/corporate/token-payroll" },
   openGraph: {
     title: "Live salary feed for crypto payroll · Vestream",
     description:
       "Branded mobile app for your team to watch their crypto salary vest in real time. 24/7, anywhere, any currency.",
-    url: "https://vestream.io/corporate/token-payroll",
+    url: "https://www.vestream.io/corporate/token-payroll",
     siteName: "Vestream",
     type: "website",
   },

@@ -32,7 +32,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title:       "Vestream Payroll — Coming soon",
   description: "Crypto payroll tracking for DAO contributors, contractors and remote workers. Sablier Flow, LlamaPay and Superfluid streams in one earnings dashboard. Coming soon — join the waitlist.",
-  alternates:  { canonical: "/payroll" },
+  alternates:  { canonical: "https://www.vestream.io/payroll" },
   openGraph: {
     title:       "Vestream Payroll — Coming soon",
     description: "An earnings dashboard for crypto contractors. Join the waitlist.",

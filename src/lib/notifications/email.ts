@@ -164,7 +164,7 @@ export async function sendEmailNotification(
 ) {
   const trigger  = options?.trigger  ?? "before-unlock";
   const timezone = options?.timezone ?? null;
-  const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestream.io";
+  const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
   const fromAddr = process.env.RESEND_FROM_EMAIL  ?? "notifications@vestream.io";
 
   const { subject, body } = renderEmail(trigger, stream, eventTime, timezone, appUrl);

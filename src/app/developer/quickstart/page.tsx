@@ -22,7 +22,7 @@ import { QuickstartTabs } from "./QuickstartTabs";
 export const metadata: Metadata = {
   title:       "Quickstart — Vestream API + MCP",
   description: "From zero to first vesting query in 60 seconds. Step-by-step setup for Claude Desktop, Cursor, Windsurf, and ChatGPT.",
-  alternates:  { canonical: "https://vestream.io/developer/quickstart" },
+  alternates:  { canonical: "https://www.vestream.io/developer/quickstart" },
 };
 
 export default function QuickstartPage() {
@@ -156,7 +156,7 @@ export default function QuickstartPage() {
                 — Try every endpoint live
               </li>
               <li>
-                <a href="https://vestream.io/openapi.json" className="underline" style={{ color: "#1CB8B8" }}>OpenAPI spec</a>{" "}
+                <a href="https://www.vestream.io/openapi.json" className="underline" style={{ color: "#1CB8B8" }}>OpenAPI spec</a>{" "}
                 — Drop into ChatGPT Actions
               </li>
               <li>

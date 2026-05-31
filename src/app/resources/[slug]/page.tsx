@@ -51,7 +51,7 @@ export async function generateMetadata(
     openGraph: {
       title: article.title,
       description: article.excerpt,
-      url: `https://vestream.io/resources/${article.slug}`,
+      url: `https://www.vestream.io/resources/${article.slug}`,
       type: "article",
       publishedTime: article.publishedAt,
       modifiedTime:  article.updatedAt,
@@ -340,36 +340,36 @@ export default async function ArticlePage(
         articleSection: article.category,
         inLanguage: "en-US",
         wordCount,
-        image: [`https://vestream.io/opengraph-image`],
+        image: [`https://www.vestream.io/opengraph-image`],
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
         author: {
           "@type": "Organization",
           name: "Vestream",
-          url: "https://vestream.io",
+          url: "https://www.vestream.io",
         },
         publisher: {
           "@type": "Organization",
           name: "Vestream",
-          url: "https://vestream.io",
+          url: "https://www.vestream.io",
           logo: {
             "@type": "ImageObject",
-            url: "https://vestream.io/logo.svg",
+            url: "https://www.vestream.io/logo.svg",
           },
         },
         mainEntityOfPage: {
           "@type": "WebPage",
-          "@id": `https://vestream.io/resources/${article.slug}`,
+          "@id": `https://www.vestream.io/resources/${article.slug}`,
         },
         keywords: article.tags.join(", "),
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home",      item: "https://vestream.io" },
-          { "@type": "ListItem", position: 2, name: "Resources", item: "https://vestream.io/resources" },
+          { "@type": "ListItem", position: 1, name: "Home",      item: "https://www.vestream.io" },
+          { "@type": "ListItem", position: 2, name: "Resources", item: "https://www.vestream.io/resources" },
           { "@type": "ListItem", position: 3, name: article.category },
-          { "@type": "ListItem", position: 4, name: article.title, item: `https://vestream.io/resources/${article.slug}` },
+          { "@type": "ListItem", position: 4, name: article.title, item: `https://www.vestream.io/resources/${article.slug}` },
         ],
       },
       ...(faqBlock

@@ -18,11 +18,11 @@ export const revalidate = 900;
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar — All Upcoming Vesting Events | Vestream",
   description: "Live calendar of upcoming token unlocks across 9 vesting protocols and 7 chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
-  alternates:  { canonical: "https://vestream.io/unlocks" },
+  alternates:  { canonical: "https://www.vestream.io/unlocks" },
   openGraph: {
     title:       "Token Unlock Calendar — Vestream",
     description: "Live calendar of upcoming token unlocks across 9 vesting protocols and 7 chains.",
-    url:         "https://vestream.io/unlocks",
+    url:         "https://www.vestream.io/unlocks",
     siteName:    "Vestream",
     type:        "website",
   },
@@ -61,12 +61,12 @@ export default async function UnlocksIndex() {
     "@context": "https://schema.org",
     "@type":    "CollectionPage",
     name:       "Token Unlock Calendar",
-    url:        "https://vestream.io/unlocks",
+    url:        "https://www.vestream.io/unlocks",
     description: "Live calendar of upcoming token unlocks across vesting protocols and chains.",
     hasPart: ALL_WINDOW_SLUGS.map((slug) => ({
       "@type": "WebPage",
       name:    WINDOWS[slug].label,
-      url:     `https://vestream.io/unlocks/${slug}`,
+      url:     `https://www.vestream.io/unlocks/${slug}`,
     })),
   };
 

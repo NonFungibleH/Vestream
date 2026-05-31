@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title:       "Terms of Service | Vestream",
   description: "Terms governing your use of Vestream — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
-  alternates:  { canonical: "https://vestream.io/terms" },
+  alternates:  { canonical: "https://www.vestream.io/terms" },
 };
 
 export default function Terms() {

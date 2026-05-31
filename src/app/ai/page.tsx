@@ -13,11 +13,11 @@ export const metadata = {
   title: "AI Agents — Vestream",
   description:
     "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
-  alternates: { canonical: "https://vestream.io/ai" },
+  alternates: { canonical: "https://www.vestream.io/ai" },
   openGraph: {
     title:       "AI Agents — Vestream",
     description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
-    url:         "https://vestream.io/ai",
+    url:         "https://www.vestream.io/ai",
     siteName:    "Vestream",
     type:        "website",
   },

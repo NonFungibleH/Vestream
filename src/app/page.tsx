@@ -81,29 +81,29 @@ const homepageJsonLd = {
   "@graph": [
     {
       "@type":   "Organization",
-      "@id":     "https://vestream.io/#organization",
+      "@id":     "https://www.vestream.io/#organization",
       name:      "Vestream",
-      url:       "https://vestream.io",
-      logo:      "https://vestream.io/logo.svg",
+      url:       "https://www.vestream.io",
+      logo:      "https://www.vestream.io/logo.svg",
       sameAs:    ["https://x.com/Vestream_"],
     },
     {
       "@type":   "WebSite",
-      "@id":     "https://vestream.io/#website",
+      "@id":     "https://www.vestream.io/#website",
       name:      "Vestream",
-      url:       "https://vestream.io",
-      publisher: { "@id": "https://vestream.io/#organization" },
+      url:       "https://www.vestream.io",
+      publisher: { "@id": "https://www.vestream.io/#organization" },
       potentialAction: {
         "@type":       "SearchAction",
-        target:        "https://vestream.io/find-vestings?address={search_term_string}",
+        target:        "https://www.vestream.io/find-vestings?address={search_term_string}",
         "query-input": "required name=search_term_string",
       },
     },
     {
       "@type":              "WebApplication",
-      "@id":                "https://vestream.io/#app",
+      "@id":                "https://www.vestream.io/#app",
       name:                 "Vestream",
-      url:                  "https://vestream.io",
+      url:                  "https://www.vestream.io",
       applicationCategory:  "FinanceApplication",
       operatingSystem:      "Web",
       browserRequirements:  "Requires JavaScript and modern browser",
@@ -123,7 +123,7 @@ const homepageJsonLd = {
     ...(iosAppUrl
       ? [{
           "@type":             "MobileApplication",
-          "@id":               "https://vestream.io/#ios-app",
+          "@id":               "https://www.vestream.io/#ios-app",
           name:                "Vestream — Token Vesting Tracker",
           url:                 iosAppUrl,
           installUrl:          iosAppUrl,
@@ -131,20 +131,20 @@ const homepageJsonLd = {
           operatingSystem:     "iOS 16.0",
           // Free download; in-app subscription via RevenueCat (Apple billing).
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          publisher: { "@id": "https://vestream.io/#organization" },
+          publisher: { "@id": "https://www.vestream.io/#organization" },
         }]
       : []),
     ...(androidAppUrl
       ? [{
           "@type":             "MobileApplication",
-          "@id":               "https://vestream.io/#android-app",
+          "@id":               "https://www.vestream.io/#android-app",
           name:                "Vestream — Token Vesting Tracker",
           url:                 androidAppUrl,
           installUrl:          androidAppUrl,
           applicationCategory: "FinanceApplication",
           operatingSystem:     "Android",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          publisher: { "@id": "https://vestream.io/#organization" },
+          publisher: { "@id": "https://www.vestream.io/#organization" },
         }]
       : []),
   ],

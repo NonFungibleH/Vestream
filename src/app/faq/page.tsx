@@ -29,12 +29,12 @@ export const metadata: Metadata = {
   title: "FAQ — Vestream | Token vesting, unlock alerts, developer API",
   description:
     "Answers to every common question about Vestream: supported protocols and chains, how unlock alerts work, pricing, security, the developer REST API and MCP server, mobile app, account management, and more.",
-  alternates: { canonical: "https://vestream.io/faq" },
+  alternates: { canonical: "https://www.vestream.io/faq" },
   openGraph: {
     title: "Vestream FAQ",
     description:
       "Everything you need to know about tracking token vesting with Vestream — supported protocols, unlock alerts, pricing, developer API, and more.",
-    url: "https://vestream.io/faq",
+    url: "https://www.vestream.io/faq",
     siteName: "Vestream",
     type: "website",
   },
@@ -339,7 +339,7 @@ function buildFaqJsonLd(data: FaqCategory[]): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    url: "https://vestream.io/faq",
+    url: "https://www.vestream.io/faq",
     mainEntity,
   });
 }

@@ -153,8 +153,8 @@ const raw = {
 
   NEXT_PUBLIC_APP_URL: readEnv("NEXT_PUBLIC_APP_URL", {
     presence: "optional",
-    description: "absolute base URL — falls back to https://vestream.io",
-    fallback: "https://vestream.io",
+    description: "absolute base URL — falls back to https://www.vestream.io",
+    fallback: "https://www.vestream.io",
   }, problems),
 };
 
@@ -204,7 +204,7 @@ export const env = {
 
   // Misc
   DEV_OTP: raw.DEV_OTP,
-  NEXT_PUBLIC_APP_URL: (raw.NEXT_PUBLIC_APP_URL ?? "https://vestream.io") as string,
+  NEXT_PUBLIC_APP_URL: (raw.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io") as string,
 
   // Runtime phase — handy for guarding "dev-only" paths like DEV_OTP bypass.
   isProd: IS_PROD,

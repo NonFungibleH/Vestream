@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       .where(eq(apiKeys.id, key.id));
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vestream.io";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
 
   const session = await stripe.checkout.sessions.create({
     mode:                  "subscription",

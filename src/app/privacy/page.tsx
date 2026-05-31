@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title:       "Privacy & Cookie Policy | Vestream",
   description: "How Vestream (operated by 3UILD LLC) handles your data across the website, dashboard, mobile app, developer API, and MCP server.",
-  alternates:  { canonical: "https://vestream.io/privacy" },
+  alternates:  { canonical: "https://www.vestream.io/privacy" },
 };
 
 export default function Privacy() {

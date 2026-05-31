@@ -257,7 +257,7 @@ export async function generateMetadata(
   const title = `${meta.name} unlock tracker & alerts — Vestream`;
   const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
   const keywords = meta.searchKeywords;
-  const url = `https://vestream.io/protocols/${meta.slug}`;
+  const url = `https://www.vestream.io/protocols/${meta.slug}`;
 
   return {
     title,
@@ -329,19 +329,19 @@ export default async function ProtocolLandingPage(
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": `https://vestream.io/protocols/${meta.slug}`,
+        "@id": `https://www.vestream.io/protocols/${meta.slug}`,
         name: `${meta.name} unlock tracker & alerts`,
         description: meta.description,
-        url: `https://vestream.io/protocols/${meta.slug}`,
-        isPartOf: { "@id": "https://vestream.io/#website" },
+        url: `https://www.vestream.io/protocols/${meta.slug}`,
+        isPartOf: { "@id": "https://www.vestream.io/#website" },
         dateModified: (toDateSafe(stats?.lastIndexedAt ?? null) ?? new Date()).toISOString(),
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: "https://vestream.io/" },
-          { "@type": "ListItem", position: 2, name: "Protocols", item: "https://vestream.io/protocols" },
-          { "@type": "ListItem", position: 3, name: meta.name, item: `https://vestream.io/protocols/${meta.slug}` },
+          { "@type": "ListItem", position: 1, name: "Home", item: "https://www.vestream.io/" },
+          { "@type": "ListItem", position: 2, name: "Protocols", item: "https://www.vestream.io/protocols" },
+          { "@type": "ListItem", position: 3, name: meta.name, item: `https://www.vestream.io/protocols/${meta.slug}` },
         ],
       },
     ],

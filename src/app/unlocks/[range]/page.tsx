@@ -162,7 +162,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const dynDesc  = def.dynamicDescription?.() ?? def.description;
   const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | Vestream`;
   const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 9 vesting protocols.`;
-  const url    = `https://vestream.io/unlocks/${range}`;
+  const url    = `https://www.vestream.io/unlocks/${range}`;
 
   return {
     title,
@@ -250,7 +250,7 @@ export default async function WindowPage({ params }: PageParams) {
     description: def.description,
     numberOfItems: itemListGroups.length,
     itemListElement: itemListGroups.map((g, i) => {
-      const tokenUrl = `https://vestream.io/token/${g.chainId}/${g.tokenAddress}`;
+      const tokenUrl = `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}`;
       const tokenStr = g.tokenSymbol ?? "Unknown";
       const amountStr = fmtTokenAmount(g.amount, g.tokenDecimals);
       return {
@@ -264,7 +264,7 @@ export default async function WindowPage({ params }: PageParams) {
           eventStatus:          "https://schema.org/EventScheduled",
           eventAttendanceMode:  "https://schema.org/OnlineEventAttendanceMode",
           url:                  tokenUrl,
-          image:                ["https://vestream.io/opengraph-image"],
+          image:                ["https://www.vestream.io/opengraph-image"],
           location: {
             "@type": "VirtualLocation",
             url:     tokenUrl,
@@ -272,7 +272,7 @@ export default async function WindowPage({ params }: PageParams) {
           organizer: {
             "@type": "Organization",
             name:    protocolDisplay(g.protocol).name,
-            url:     `https://vestream.io/protocols/${g.protocol}`,
+            url:     `https://www.vestream.io/protocols/${g.protocol}`,
           },
         },
       };
@@ -283,9 +283,9 @@ export default async function WindowPage({ params }: PageParams) {
     "@context": "https://schema.org",
     "@type":    "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home",    item: "https://vestream.io/" },
-      { "@type": "ListItem", position: 2, name: "Unlocks", item: "https://vestream.io/unlocks" },
-      { "@type": "ListItem", position: 3, name: def.label, item: `https://vestream.io/unlocks/${range}` },
+      { "@type": "ListItem", position: 1, name: "Home",    item: "https://www.vestream.io/" },
+      { "@type": "ListItem", position: 2, name: "Unlocks", item: "https://www.vestream.io/unlocks" },
+      { "@type": "ListItem", position: 3, name: def.label, item: `https://www.vestream.io/unlocks/${range}` },
     ],
   };
 

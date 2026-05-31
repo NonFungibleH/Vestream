@@ -7,11 +7,11 @@ import PricingCta from "@/components/PricingCta";
 export const metadata: Metadata = {
   title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
   description: "Vestream is free for 3 wallets and 10 push alerts per month. Pro at $9.99/mo ($74.99/yr — save 37%) unlocks unlimited push + email alerts, 10 wallets, the web dashboard, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax.",
-  alternates:  { canonical: "https://vestream.io/pricing" },
+  alternates:  { canonical: "https://www.vestream.io/pricing" },
   openGraph: {
     title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
     description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year — save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
-    url:         "https://vestream.io/pricing",
+    url:         "https://www.vestream.io/pricing",
     siteName:    "Vestream",
     type:        "website",
   },
@@ -85,15 +85,15 @@ const pricingJsonLd = {
   name:         "Vestream",
   description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 7 chains.",
   brand:        { "@type": "Brand", name: "Vestream" },
-  url:          "https://vestream.io/pricing",
-  image:        "https://vestream.io/logo.svg",
+  url:          "https://www.vestream.io/pricing",
+  image:        "https://www.vestream.io/logo.svg",
   offers: [
     {
       "@type":       "Offer",
       name:          "Free",
       price:         "0",
       priceCurrency: "USD",
-      url:           "https://vestream.io/pricing",
+      url:           "https://www.vestream.io/pricing",
       availability:  "https://schema.org/InStock",
       description:   "3 wallets, auto-scan across all chains and protocols, 10 push alerts per month.",
     },
@@ -102,7 +102,7 @@ const pricingJsonLd = {
       name:          "Pro Monthly",
       price:         "9.99",
       priceCurrency: "USD",
-      url:           "https://vestream.io/pricing",
+      url:           "https://www.vestream.io/pricing",
       availability:  "https://schema.org/InStock",
       description:   "10 wallets, unlimited push + email alerts, web dashboard, tax-ready CSV exports for Koinly / CoinTracker / TurboTax, 14-day free trial.",
       priceSpecification: {
@@ -118,7 +118,7 @@ const pricingJsonLd = {
       name:          "Pro Annual",
       price:         "74.99",
       priceCurrency: "USD",
-      url:           "https://vestream.io/pricing",
+      url:           "https://www.vestream.io/pricing",
       availability:  "https://schema.org/InStock",
       description:   "Pro features billed annually — saves ~37% vs monthly.",
       priceSpecification: {

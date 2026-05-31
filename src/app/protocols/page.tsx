@@ -209,12 +209,12 @@ export const metadata: Metadata = {
   title: "Token unlock trackers — Vestream",
   description:
     "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow and Jupiter Lock — across Ethereum, Base, BSC, Polygon and Solana.",
-  alternates: { canonical: "https://vestream.io/protocols" },
+  alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
     title: "Token unlock trackers — Vestream",
     description:
       "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
-    url: "https://vestream.io/protocols",
+    url: "https://www.vestream.io/protocols",
     siteName: "Vestream",
     type: "website",
   },
@@ -309,11 +309,11 @@ export default async function UnlocksIndexPage() {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Token unlock trackers",
-    url: "https://vestream.io/protocols",
+    url: "https://www.vestream.io/protocols",
     hasPart: protocols.map((p) => ({
       "@type": "WebPage",
       name: `${p.name} unlock tracker`,
-      url: `https://vestream.io/protocols/${p.slug}`,
+      url: `https://www.vestream.io/protocols/${p.slug}`,
     })),
   };
 

@@ -172,7 +172,7 @@ export async function generateMetadata(
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
     : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
 
-  const url = `https://vestream.io/token/${cid}/${addr}`;
+  const url = `https://www.vestream.io/token/${cid}/${addr}`;
 
   return {
     title,
@@ -276,12 +276,12 @@ export default async function TokenPage(
   // signal also reinforces the site hierarchy for ranking. Positions are
   // 1-indexed and run Home → Protocols → [Protocol] → [Token].
   const breadcrumbs = [
-    { name: "Home",      url: "https://vestream.io/" },
-    { name: "Protocols", url: "https://vestream.io/protocols" },
+    { name: "Home",      url: "https://www.vestream.io/" },
+    { name: "Protocols", url: "https://www.vestream.io/protocols" },
     ...(dominantProtocol
-      ? [{ name: dominantProtocol.name, url: `https://vestream.io/protocols/${dominantProtocol.slug}` }]
+      ? [{ name: dominantProtocol.name, url: `https://www.vestream.io/protocols/${dominantProtocol.slug}` }]
       : []),
-    { name: `${symbol} on ${CHAIN_NAMES[cid]}`, url: `https://vestream.io/token/${cid}/${addr}` },
+    { name: `${symbol} on ${CHAIN_NAMES[cid]}`, url: `https://www.vestream.io/token/${cid}/${addr}` },
   ];
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -336,7 +336,7 @@ export default async function TokenPage(
                   </span>
                 ) : (
                   <Link
-                    href={b.url.replace("https://vestream.io", "")}
+                    href={b.url.replace("https://www.vestream.io", "")}
                     className="transition-colors hover:underline"
                     style={{ color: "#8B8E92" }}
                   >

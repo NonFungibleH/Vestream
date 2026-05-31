@@ -17,7 +17,7 @@ import FindVestingsClient from "./FindVestingsClient";
 export const metadata: Metadata = {
   title: "Find your token vestings — scan any wallet · Vestream",
   description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
-  alternates: { canonical: "https://vestream.io/find-vestings" },
+  alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };
 
 // Display order mirrors the homepage "Integrated with" strip — same colours,
@@ -65,7 +65,7 @@ const findVestingsJsonLd = {
   "@graph": [
     {
       "@type": "HowTo",
-      "@id":   "https://vestream.io/find-vestings#howto",
+      "@id":   "https://www.vestream.io/find-vestings#howto",
       name:    "How to find every token vesting unlock for a wallet",
       description:
         "Scan any wallet address across 9 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule — cliffs, linear streams, step releases, claimable balances.",
@@ -78,29 +78,29 @@ const findVestingsJsonLd = {
           position: 1,
           name: "Paste a wallet address",
           text: "Paste any public EVM (0x…) or Solana wallet address into the scanner.",
-          url: "https://vestream.io/find-vestings#step-1",
+          url: "https://www.vestream.io/find-vestings#step-1",
         },
         {
           "@type": "HowToStep",
           position: 2,
           name: "Run the scan",
           text: "Vestream queries Sablier, Hedgey, UNCX, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
-          url: "https://vestream.io/find-vestings#step-2",
+          url: "https://www.vestream.io/find-vestings#step-2",
         },
         {
           "@type": "HowToStep",
           position: 3,
           name: "Review every unlock",
           text: "See a grouped summary by protocol × chain × token. Each row shows total amount locked, amount claimable now, and the next unlock date.",
-          url: "https://vestream.io/find-vestings#step-3",
+          url: "https://www.vestream.io/find-vestings#step-3",
         },
       ],
     },
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home",           item: "https://vestream.io" },
-        { "@type": "ListItem", position: 2, name: "Find vestings",  item: "https://vestream.io/find-vestings" },
+        { "@type": "ListItem", position: 1, name: "Home",           item: "https://www.vestream.io" },
+        { "@type": "ListItem", position: 2, name: "Find vestings",  item: "https://www.vestream.io/find-vestings" },
       ],
     },
   ],
