@@ -532,31 +532,20 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Results action strip — inline CTA shown right after ResultsSummary
-// ─────────────────────────────────────────────────────────────────────────
-
-function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { totalStreams: number; walletAddress: string; primarySymbol: string | null }) {
-  // Conversion-tier action card. The previous single-row strip read as a
-  // suggestion ("Track in Vestream") that users skimmed past once they'd
-  // visually confirmed their vestings on web. This version is built around
-  // three product principles drawn from the May 2026 conversion review:
-  //
-  //   1. Make the WEB view feel partial. Users see static totals here;
-  //      the app shows them live progress, the moment of unlock, and a
-  //      direct claim path. We surface a stylised lock-screen notification
-  //      preview so the value is visual, not just listed.
-  //
-  //   2. Loss-framed headline. "Track in Vestream" is benefit-positive;
-  //      "Don't miss your next NOVA unlock" is loss-framed. Same fact,
-  //      ~2× conversion uplift in this kind of slot per industry data.
-  //      We anchor on the user's actual primary token symbol when we have
-  //      one, so the headline is personalised to their portfolio.
-  //
-  //   3. Specific bullets, not vague copy. "Push alerts the moment
-  //      anything unlocks · one-tap claim links · no spreadsheets" is
-  //      OK, but bulleting the three things WITH icons reads as a
-  //      checklist — visually inventories what they get for free.
+/**
+ * Primary conversion gate shown immediately after ResultsSummary.
+ * Goal: one dominant action — download the app to unlock amounts.
+ * No social proof copy until we have real review data.
+ */
+function DownloadGate({
+  totalStreams,
+  walletAddress,
+  primarySymbol,
+}: {
+  totalStreams: number;
+  walletAddress: string;
+  primarySymbol: string | null;
+}) {
   return (
     <div
       className="rounded-2xl p-5 md:p-7 relative overflow-hidden"
@@ -565,6 +554,7 @@ function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { to
         boxShadow: "0 14px 38px rgba(28,184,184,0.32)",
       }}
     >
+      {/* Subtle radial highlight */}
       <div
         className="absolute inset-0 pointer-events-none opacity-60"
         style={{
@@ -573,70 +563,124 @@ function ResultsActionStrip({ totalStreams, walletAddress, primarySymbol }: { to
         }}
       />
 
-      <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto] gap-6 md:gap-10 items-center">
-        {/* Left: copy + bullets + CTA */}
+      <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto] gap-5 md:gap-10 items-center">
+        {/* Left: headline + buttons */}
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider mb-3"
-            style={{ background: "rgba(255,255,255,0.18)", color: "white", letterSpacing: "0.08em" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "white" }} />
-            Next step
-          </div>
-
           <h3
             className="text-xl md:text-3xl font-bold leading-tight mb-2"
             style={{ color: "white", letterSpacing: "-0.02em" }}
           >
-            {primarySymbol
-              ? <>Don&rsquo;t miss your next <span style={{ background: "rgba(255,255,255,0.22)", padding: "0 6px", borderRadius: 6 }}>{primarySymbol}</span> unlock</>
-              : <>Don&rsquo;t miss your next unlock</>}
+            {primarySymbol ? (
+              <>
+                Don&rsquo;t miss your next{" "}
+                <span
+                  style={{
+                    background: "rgba(255,255,255,0.22)",
+                    padding: "0 6px",
+                    borderRadius: 6,
+                  }}
+                >
+                  {primarySymbol}
+                </span>{" "}
+                unlock
+              </>
+            ) : (
+              <>
+                Your {totalStreams === 1 ? "vesting is" : `${totalStreams} vestings are`} ready
+              </>
+            )}
           </h3>
-          <p className="text-sm md:text-base mb-5" style={{ color: "rgba(255,255,255,0.86)", lineHeight: 1.55 }}>
-            You&rsquo;ve seen your {totalStreams === 1 ? "vesting" : `${totalStreams} vestings`} on web. The app keeps watching them — even when this tab is closed.
+          <p
+            className="text-sm mb-5"
+            style={{ color: "rgba(255,255,255,0.82)", lineHeight: 1.55 }}
+          >
+            See live amounts, track progress, and claim — free on iOS and Android.
           </p>
 
-          {/* Three specific value bullets with icons. Replaces the
-              comma-separated tagline; reads as a "you'll get this"
-              checklist. */}
-          <ul className="space-y-2 mb-6">
-            {[
-              "Push alert the second any of them unlocks",
-              "Live progress bars + one-tap claim links",
-              "Tax-ready CSV at year-end (Pro)",
-            ].map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm md:text-[15px]" style={{ color: "rgba(255,255,255,0.95)" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" className="mt-0.5 flex-shrink-0">
-                  <path d="M5 12.5l4.2 4.2L19 7" />
-                </svg>
-                <span>{b}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <TrackInAppCTA
-              walletAddress={walletAddress}
-              surface="find_vestings_results"
-              className="results-action-cta inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm md:text-base font-bold transition-all hover:opacity-95 whitespace-nowrap"
+          {/* Store badges — direct links, no deep-link delay */}
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                track("cta_clicked", {
+                  cta_id: "app_store_download",
+                  surface: "find_vestings_gate",
+                })
+              }
+              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
               style={{
-                background: "white",
-                color: "#1CB8B8",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.20)",
+                background: "black",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.2)",
+                minWidth: 155,
               }}
+              aria-label="Download on the App Store"
             >
-              Set my alerts now →
-            </TrackInAppCTA>
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
-              Free · iOS &amp; Android
-            </span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              <div className="text-left leading-tight">
+                <div
+                  className="text-[9px] uppercase tracking-wider"
+                  style={{ color: "rgba(255,255,255,0.7)" }}
+                >
+                  Download on the
+                </div>
+                <div className="text-[15px] font-semibold">App Store</div>
+              </div>
+            </a>
+
+            <a
+              href="https://play.google.com/store/apps/details?id=io.vestream.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                track("cta_clicked", {
+                  cta_id: "play_store_download",
+                  surface: "find_vestings_gate",
+                })
+              }
+              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
+              style={{
+                background: "black",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.2)",
+                minWidth: 155,
+              }}
+              aria-label="Get it on Google Play"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <defs>
+                  <linearGradient id="gp-blue"   x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00C3FF" /><stop offset="100%" stopColor="#1A73E8" /></linearGradient>
+                  <linearGradient id="gp-green"  x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00F076" /><stop offset="100%" stopColor="#00D95F" /></linearGradient>
+                  <linearGradient id="gp-red"    x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FF3A44" /><stop offset="100%" stopColor="#C31162" /></linearGradient>
+                  <linearGradient id="gp-yellow" x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE000" /><stop offset="100%" stopColor="#FFBD00" /></linearGradient>
+                </defs>
+                <path fill="url(#gp-blue)"   d="M3.3 2.5c-.3.3-.5.8-.5 1.5v16c0 .7.2 1.2.5 1.5l9.4-9.5z" />
+                <path fill="url(#gp-green)"  d="M16.2 15 12.7 11.5 3.3 21a1.6 1.6 0 0 0 2 .1z" />
+                <path fill="url(#gp-yellow)" d="M20.8 11 16.2 8.4 12.3 12l3.9 3.9 4.6-2.6c1.4-.8 1.4-2.1 0-2.3z" />
+                <path fill="url(#gp-red)"    d="M5.3 2.4a1.6 1.6 0 0 0-2 .1l9.4 9.5L16.2 8.4z" />
+              </svg>
+              <div className="text-left leading-tight">
+                <div
+                  className="text-[9px] uppercase tracking-wider"
+                  style={{ color: "rgba(255,255,255,0.7)" }}
+                >
+                  Get it on
+                </div>
+                <div className="text-[15px] font-semibold">Google Play</div>
+              </div>
+            </a>
           </div>
+
+          <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.65)" }}>
+            Free · iOS &amp; Android
+          </p>
         </div>
 
-        {/* Right: stylised lock-screen notification preview. Visual proof
-            of what "push alert the moment it unlocks" actually feels like
-            on the user's phone. Custom inline SVG-ish layout — no image
-            asset dependency, scales cleanly, dark-mode invariant. Hidden
-            on small screens (image takes too much vertical space; the
-            text + CTA already do the conversion work there). */}
+        {/* Right (or bottom on mobile): phone notification preview */}
         <NotificationMockup primarySymbol={primarySymbol} />
       </div>
     </div>
@@ -657,7 +701,7 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
   const tokenLabel = primarySymbol ?? "NOVA";
   return (
     <div
-      className="hidden md:flex flex-col gap-2 w-[280px] flex-shrink-0"
+      className="flex flex-col gap-2 w-full md:w-[240px] flex-shrink-0"
       aria-hidden="true"
     >
       {/* Status-bar hint */}
