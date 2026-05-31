@@ -308,7 +308,6 @@ export default function FindVestingsClient() {
             <ResultsBlock result={result} />
           )}
 
-          <MobileAppCta hasResults={result.totalStreams > 0} />
         </>
       )}
     </div>
@@ -351,17 +350,16 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
   return (
     <>
       <ResultsSummary result={result} />
-      {/* Strong inline CTA — placed RIGHT after the summary so users
-          see the call to install the app at the moment they realise
-          they have real vestings to track. */}
+
+      {/* Primary conversion gate — store download badges, directly after summary */}
       <div ref={stripRef}>
-        <ResultsActionStrip
+        <DownloadGate
           totalStreams={result.totalStreams}
-          walletAddress={result.address}
           primarySymbol={primarySymbol}
         />
       </div>
-      <SaveToAppCard walletAddress={result.address} />
+
+      {/* Teaser cards — protocol/chain/symbol visible, amounts blurred */}
       <div className="grid grid-cols-1 gap-3">
         {result.groups.map((g) => (
           <TeaserCard
@@ -371,6 +369,10 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
           />
         ))}
       </div>
+
+      {/* Secondary conversion — email capture, demoted to below the cards */}
+      <SaveToAppCard walletAddress={result.address} />
+
       <StickyAppBar
         totalStreams={result.totalStreams}
         walletAddress={result.address}
@@ -863,7 +865,7 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
             Continue in the app
           </h3>
           <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-            Drop in your email — we&rsquo;ll have this scan waiting when you sign into the mobile app. No password, just the same email and an OTP.
+            On desktop? Drop your email — this scan will be waiting when you open the app. No password, just OTP sign-in.
           </p>
         </div>
       </div>
@@ -981,7 +983,7 @@ function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams
             boxShadow: "0 4px 14px rgba(37,99,235,0.35)",
           }}
         >
-          Open
+          Get the app
         </TrackInAppCTA>
       </div>
     </div>
@@ -1203,120 +1205,3 @@ function NoResults({ address }: { address: string }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Mobile App CTA — App Store + Play Store badges
-// ─────────────────────────────────────────────────────────────────────────
-
-function MobileAppCta({ hasResults }: { hasResults: boolean }) {
-  return (
-    <div
-      className="rounded-3xl p-6 md:p-10 text-center overflow-hidden relative"
-      style={{
-        background: "linear-gradient(135deg, #1A1D20 0%, #1e293b 100%)",
-        boxShadow: "0 20px 50px rgba(15,23,42,0.2)",
-      }}
-    >
-      <div
-        className="absolute inset-0 opacity-30 pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(circle at 20% 30%, rgba(28,184,184,0.4), transparent 40%), radial-gradient(circle at 80% 70%, rgba(15,138,138,0.4), transparent 40%)",
-        }}
-      />
-      <div className="relative">
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5"
-          style={{ background: "rgba(255,255,255,0.08)", color: "white", border: "1px solid rgba(255,255,255,0.15)" }}
-        >
-          📱 Next step
-        </div>
-        <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "white", letterSpacing: "-0.02em" }}>
-          {hasResults
-            ? "See these vestings live in the Vestream app"
-            : "Get the app and try again"}
-        </h3>
-        <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
-          {hasResults
-            ? "Install Vestream, sign in with email, and the exact same vestings appear — with real-time progress bars, push alerts the moment anything unlocks, and one-tap claim links."
-            : "Vestream watches all 9 protocols across 7 chains (EVM + Solana), 24/7. You&rsquo;ll get a push alert the moment a new vesting is created for your address."}
-        </p>
-
-        {/* App store badges */}
-        <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
-          <AppStoreBadge />
-          <PlayStoreBadge />
-        </div>
-
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Apps rolling out now — join early access for TestFlight / Play Store beta invite
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/** Apple App Store badge — links to the live App Store listing. */
-function AppStoreBadge() {
-  return (
-    <a
-      href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all hover:opacity-85"
-      style={{
-        background: "black",
-        color: "white",
-        border: "1px solid rgba(255,255,255,0.2)",
-        minWidth: 180,
-      }}
-      aria-label="Download on the App Store"
-    >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-      </svg>
-      <div className="text-left leading-tight">
-        <div className="text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
-          Download on the
-        </div>
-        <div className="text-base font-semibold">App Store</div>
-      </div>
-    </a>
-  );
-}
-
-/** Google Play badge — links to the live listing. */
-function PlayStoreBadge() {
-  return (
-    <a
-      href="https://play.google.com/store/apps/details?id=io.vestream.app"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all hover:opacity-85"
-      style={{
-        background: "black",
-        color: "white",
-        border: "1px solid rgba(255,255,255,0.2)",
-        minWidth: 180,
-      }}
-      aria-label="Get it on Google Play"
-    >
-      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
-        <defs>
-          <linearGradient id="play-blue"   x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00C3FF" /><stop offset="100%" stopColor="#1A73E8" /></linearGradient>
-          <linearGradient id="play-green"  x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00F076" /><stop offset="100%" stopColor="#00D95F" /></linearGradient>
-          <linearGradient id="play-red"    x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FF3A44" /><stop offset="100%" stopColor="#C31162" /></linearGradient>
-          <linearGradient id="play-yellow" x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE000" /><stop offset="100%" stopColor="#FFBD00" /></linearGradient>
-        </defs>
-        <path fill="url(#play-blue)"   d="M3.3 2.5c-.3.3-.5.8-.5 1.5v16c0 .7.2 1.2.5 1.5l9.4-9.5z" />
-        <path fill="url(#play-green)"  d="M16.2 15 12.7 11.5 3.3 21a1.6 1.6 0 0 0 2 .1z" />
-        <path fill="url(#play-yellow)" d="M20.8 11 16.2 8.4 12.3 12l3.9 3.9 4.6-2.6c1.4-.8 1.4-2.1 0-2.3z" />
-        <path fill="url(#play-red)"    d="M5.3 2.4a1.6 1.6 0 0 0-2 .1l9.4 9.5L16.2 8.4z" />
-      </svg>
-      <div className="text-left leading-tight">
-        <div className="text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
-          Get it on
-        </div>
-        <div className="text-base font-semibold">Google Play</div>
-      </div>
-    </a>
-  );
-}
