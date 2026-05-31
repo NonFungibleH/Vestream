@@ -15,7 +15,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
@@ -1174,11 +1173,13 @@ function MobileAppCta({ hasResults }: { hasResults: boolean }) {
   );
 }
 
-/** Apple App Store badge — visual placeholder linking to early access. */
+/** Apple App Store badge — links to the live App Store listing. */
 function AppStoreBadge() {
   return (
-    <Link
-      href="/early-access"
+    <a
+      href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl transition-all hover:opacity-85"
       style={{
         background: "black",
@@ -1197,7 +1198,7 @@ function AppStoreBadge() {
         </div>
         <div className="text-base font-semibold">App Store</div>
       </div>
-    </Link>
+    </a>
   );
 }
 
