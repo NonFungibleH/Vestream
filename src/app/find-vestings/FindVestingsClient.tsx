@@ -539,11 +539,9 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
  */
 function DownloadGate({
   totalStreams,
-  walletAddress,
   primarySymbol,
 }: {
   totalStreams: number;
-  walletAddress: string;
   primarySymbol: string | null;
 }) {
   return (
@@ -688,9 +686,9 @@ function DownloadGate({
 }
 
 /**
- * Stylised lock-screen notification preview for the action strip. Shown on
- * md+ screens; collapses to nothing on mobile where vertical space is
- * better spent on the text + CTA.
+ * Stylised lock-screen notification preview. Renders on all screen sizes —
+ * full-width and stacked below the headline copy on mobile, fixed-width in
+ * the right column on md+.
  *
  * Deliberately abstract — not a real device chrome, just enough visual
  * vocabulary that users read it as "phone notification". Avoids brand
