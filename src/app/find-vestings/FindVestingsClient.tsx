@@ -607,7 +607,6 @@ function DownloadGate({
                 track("cta_clicked", {
                   cta_id: "app_store_download",
                   surface: "find_vestings_gate",
-                  wallet: walletAddress,
                 })
               }
               className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
@@ -641,7 +640,6 @@ function DownloadGate({
                 track("cta_clicked", {
                   cta_id: "play_store_download",
                   surface: "find_vestings_gate",
-                  wallet: walletAddress,
                 })
               }
               className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
@@ -700,7 +698,7 @@ function DownloadGate({
  * landing the message: this is what the app does for you.
  */
 function NotificationMockup({ primarySymbol }: { primarySymbol: string | null }) {
-  const tokenLabel = primarySymbol ?? "NOVA";
+  const tokenLabel = primarySymbol ?? "your vesting";
   return (
     <div
       className="flex flex-col gap-2 w-full md:w-[240px] flex-shrink-0"
@@ -1086,7 +1084,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
               </div>
 
               {/* Amount block — blurred */}
-              <div className="relative">
+              <div className="relative" style={{ minHeight: 52 }}>
                 {/* Actual numbers, blurred so they are unreadable */}
                 <div
                   className="px-3 pb-3"
