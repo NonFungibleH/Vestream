@@ -69,15 +69,10 @@ async function getHomepageLiveStats() {
 //   - WebApplication      → describes the dashboard product itself; powers app
 //                           cards in SERPs and feeds Google's app-graph
 //   - MobileApplication   → iOS app card in SERPs. Conditionally rendered:
-//                           the App Store Connect ID is known (eas.json
-//                           ascAppId 6769799911) but the public App Store
-//                           URL only resolves once the app passes review.
-//                           Schema activates when NEXT_PUBLIC_IOS_APP_URL
-//                           is set — pre-launch absence keeps Google from
-//                           seeing a 404 install link, post-launch presence
-//                           ships the rich SERP card without a code change.
-//                           Set it to "https://apps.apple.com/app/id6769799911"
-//                           in Vercel the day the app goes public on iOS.
+//                           App is LIVE (2026-05-31):
+//                           https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911
+//                           Set NEXT_PUBLIC_IOS_APP_URL in Vercel to activate
+//                           the rich Google SERP install card (structured data).
 const iosAppUrl = process.env.NEXT_PUBLIC_IOS_APP_URL;
 const androidAppUrl = process.env.NEXT_PUBLIC_ANDROID_APP_URL;
 
@@ -256,7 +251,7 @@ export default async function Home() {
                 <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
                   Or get it on your phone
                 </p>
-                <AppStoreBadges align="start" comingSoon />
+                <AppStoreBadges align="start" />
               </div>
             </div>
           </div>

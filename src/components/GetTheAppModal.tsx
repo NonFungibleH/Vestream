@@ -187,7 +187,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
               We use Apple's apps.apple.com link which Universal Links
               upgrade to "open in app" if installed. */}
           <a
-            href="https://apps.apple.com/app/id6739000000"
+            href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("cta_clicked", { cta_id: "get_the_app_appstore" })}

@@ -605,7 +605,7 @@ function DemoConfigForm({
               Download the Vestream app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
             </p>
           </div>
-          <AppStoreBadges comingSoon />
+          <AppStoreBadges />
         </div>
 
         {/* Quiet "start the web sim anyway" affordance — kept because the sim

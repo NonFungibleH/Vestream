@@ -613,7 +613,7 @@ export default async function TokenPage(
               are ready to claim — plus coverage for every other wallet you
               track, across all 9 protocols and 7 chains — EVM and Solana.
             </p>
-            <AppStoreBadges align="center" comingSoon={false} />
+            <AppStoreBadges align="center" />
             <div className="mt-5">
               <Link
                 href="/find-vestings"

@@ -827,7 +827,7 @@ export default async function ProtocolLandingPage(
             </p>
 
             {/* Store badges — primary CTA */}
-            <AppStoreBadges align="center" comingSoon={false} />
+            <AppStoreBadges align="center" />
 
             {/* Secondary: web scanner */}
             <div className="mt-5">

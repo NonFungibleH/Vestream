@@ -34,7 +34,7 @@ interface Props {
   children?: React.ReactNode;
 }
 
-const APP_STORE_URL = "https://apps.apple.com/app/id6739000000"; // updated post-EAS-submit
+const APP_STORE_URL = "https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911";
 
 export function TrackInAppCTA({ walletAddress, tokenSymbol, surface, className, style, children }: Props) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {

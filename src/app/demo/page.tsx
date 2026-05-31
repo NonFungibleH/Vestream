@@ -307,7 +307,7 @@ export default function DemoPage() {
                 Secondary keeps the "Scan my wallet" web fallback for visitors
                 who want to try it now without leaving the browser. */}
             <div className="flex flex-col items-center gap-4">
-              <AppStoreBadges align="center" comingSoon />
+              <AppStoreBadges align="center" />
               <Link
                 href="/find-vestings"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all hover:opacity-90"

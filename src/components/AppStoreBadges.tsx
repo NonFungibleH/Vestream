@@ -11,24 +11,20 @@
 // App Store listing goes live, download the .svg into public/badges/
 // and swap the inline SVG for an <img> tag.
 //
-// Status (2026-05-28):
-//   Google Play — LIVE at GOOGLE_PLAY_URL below. comingSoon never shown.
-//   App Store   — Pending review. comingSoon badge shown when caller passes
-//                 comingSoon={true}. Update APP_STORE_URL + flip callers to
-//                 comingSoon={false} once it goes live.
+// Status (2026-05-31):
+//   App Store  — LIVE: https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911
+//   Google Play — LIVE at GOOGLE_PLAY_URL below.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const APP_STORE_URL    = "https://apps.apple.com/app/id6769799911";
+const APP_STORE_URL    = "https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911";
 const GOOGLE_PLAY_URL  = "https://play.google.com/store/apps/details?id=io.vestream.app";
 
 interface Props {
   /** Centre-align the pair (default) or leave the alignment to the parent. */
   align?: "center" | "start";
-  /** Adds a small "Coming soon" ribbon corner when the stores haven't approved yet. */
-  comingSoon?: boolean;
 }
 
-export function AppStoreBadges({ align = "center", comingSoon = false }: Props) {
+export function AppStoreBadges({ align = "center" }: Props) {
   return (
     <div
       className={`flex flex-wrap items-center gap-3 ${align === "center" ? "justify-center" : ""}`}
@@ -39,7 +35,6 @@ export function AppStoreBadges({ align = "center", comingSoon = false }: Props) 
         caption="Download on the"
         wordmark="App Store"
         icon={<AppleLogo />}
-        comingSoon={comingSoon}
       />
       <StoreBadge
         href={GOOGLE_PLAY_URL}
@@ -47,7 +42,6 @@ export function AppStoreBadges({ align = "center", comingSoon = false }: Props) 
         caption="GET IT ON"
         wordmark="Google Play"
         icon={<PlayLogo />}
-        comingSoon={false}
       />
     </div>
   );
@@ -56,15 +50,14 @@ export function AppStoreBadges({ align = "center", comingSoon = false }: Props) 
 // ── Pill button ─────────────────────────────────────────────────────────────
 
 interface BadgeProps {
-  href:       string;
-  label:      string;
-  caption:    string;
-  wordmark:   string;
-  icon:       React.ReactNode;
-  comingSoon: boolean;
+  href:     string;
+  label:    string;
+  caption:  string;
+  wordmark: string;
+  icon:     React.ReactNode;
 }
 
-function StoreBadge({ href, label, caption, wordmark, icon, comingSoon }: BadgeProps) {
+function StoreBadge({ href, label, caption, wordmark, icon }: BadgeProps) {
   return (
     <a
       href={href}
@@ -86,17 +79,6 @@ function StoreBadge({ href, label, caption, wordmark, icon, comingSoon }: BadgeP
         <span className="text-[15px] font-semibold tracking-tight" style={{ color: "white", letterSpacing: "-0.01em" }}>
           {wordmark}
         </span>
-        {comingSoon && (
-          <span
-            className="mt-1 px-1.5 py-px rounded text-[8px] font-bold uppercase tracking-wider"
-            style={{
-              background: "linear-gradient(135deg, #F0992E, #B3322E)",
-              color: "white",
-            }}
-          >
-            Coming soon
-          </span>
-        )}
       </span>
     </a>
   );
