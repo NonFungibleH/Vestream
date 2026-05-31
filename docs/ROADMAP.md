@@ -5,7 +5,7 @@
 > not including review/testing/marketing follow-up. Re-rank when priorities
 > change. **This is for internal planning — not a public commitment.**
 >
-> _Last updated: 2026-05-30_
+> _Last updated: 2026-05-31_
 
 ---
 
@@ -145,6 +145,32 @@ After these land, the personal-context trifecta is complete: what (notes), how o
 4. Superfluid — defer. Different claiming model warrants its own design pass.
 
 **Note:** Arbitrum and Optimism need to be added to the wagmi chain config before Hedgey claiming works on those chains (30 min).
+
+---
+
+### Received-token wallet alerts
+
+- **What** — Push notification when a token lands in a tracked wallet — airdrop, OTC transfer, exchange withdrawal, payment received. Completes the money-in picture alongside vesting unlocks (scheduled money) and payment streams (streamed money). Tagline: "Every way money moves to you, one inbox."
+- **Why** — Natural product extension. Users already trust Vestream for unlocks; this makes the app the single notification surface for all incoming crypto value — raising daily engagement and reducing churn.
+- **How** — Register each tracked wallet with the Alchemy Address Activity webhook (free tier: 100 endpoints, 10M CUs/month). Webhook fires on any ERC-20 receive → value check against `tokenPricesCache` → push if above threshold. Dedup via existing `webhook_event_dedup` table.
+- **Size** — `M` (~2–3 days EVM v1)
+- **Dust filter (hard-coded defaults, v1):**
+
+  | Tier  | Alert threshold | Rationale |
+  |-------|-----------------|-----------|
+  | Free  | > $10 USD       | Aggressive — only genuinely meaningful amounts count against the push quota |
+  | Pro   | > $1 USD        | More sensitive but still filters dust and unknown-price spam tokens |
+
+  Tokens with no liquid market price → skip alert entirely (eliminates ~95% of spam airdrops without any blocklist).
+  Same token received twice within 1 hour → debounce (split-transaction guard).
+  Wallet already has a vesting stream for this token → skip (they already get unlock alerts; no double-fire).
+
+- **Caveats / decisions before building:**
+  1. **EVM v1, Solana v2** — Alchemy doesn't cover Solana. Helius has an equivalent API but requires a separate registration path. Ship EVM, add Solana in a follow-on.
+  2. **User-controlled threshold** — a slider in notification preferences ("alert me for > $X") is a nice v2 polish; fixed defaults are M-size and ship faster.
+  3. **Free-tier push quota** — received-token alerts consume the same 10/month Free push budget as unlock alerts. No new gating needed.
+
+- **Stack additions:** Alchemy Webhook API (POST on wallet-add, DELETE on wallet-remove), `alchemy_webhook_id` column on `wallets` table, new `POST /api/webhooks/alchemy` route.
 
 ---
 
