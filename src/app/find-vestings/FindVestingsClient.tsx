@@ -18,7 +18,6 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
-import { TrackInAppCTA } from "@/components/TrackInAppCTA";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
 
 // ── Shape mirrored from /api/find-vestings route ───────────────────────────
@@ -507,7 +506,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
         </div>
 
         <p className="text-xs mt-4" style={{ color: "#B8BABD" }}>
-          Cross-checking 9 vesting protocols across Ethereum, BNB, Polygon, Base and Solana — usually 10–30 seconds.
+          Scanning all supported protocols and chains — usually 10–30 seconds.
         </p>
       </div>
 
@@ -547,74 +546,75 @@ function DownloadGate({
   primarySymbol: string | null;
 }) {
   return (
-    <div
-      className="rounded-2xl p-5 md:p-7 relative overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, #1CB8B8 0%, #189D9D 100%)",
-        boxShadow: "0 14px 38px rgba(28,184,184,0.32)",
-      }}
-    >
-      {/* Subtle radial highlight */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-60"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.20), transparent 45%), radial-gradient(circle at 10% 110%, rgba(0,0,0,0.18), transparent 50%)",
-        }}
-      />
+    <>
+      {/* keyframes for pulsing glow + badge float — scoped to this component */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes gate-glow {
+          0%, 100% { box-shadow: 0 14px 40px rgba(28,184,184,0.30); }
+          50%       { box-shadow: 0 20px 64px rgba(28,184,184,0.55), 0 0 0 8px rgba(28,184,184,0.10); }
+        }
+        @keyframes badge-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-3px); }
+        }
+      `}} />
 
-      <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto] gap-5 md:gap-10 items-center">
-        {/* Left: headline + buttons */}
-        <div className="min-w-0">
+      <div
+        id="download-gate"
+        className="rounded-2xl p-6 md:p-10 relative overflow-hidden text-center"
+        style={{
+          background: "linear-gradient(135deg, #1CB8B8 0%, #189D9D 100%)",
+          animation: "gate-glow 3s ease-in-out infinite",
+        }}
+      >
+        {/* Radial highlights */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 80% 15%, rgba(255,255,255,0.22), transparent 50%), radial-gradient(circle at 20% 90%, rgba(0,0,0,0.15), transparent 50%)",
+          }}
+        />
+
+        <div className="relative">
           <h3
-            className="text-xl md:text-3xl font-bold leading-tight mb-2"
+            className="text-2xl md:text-4xl font-bold leading-tight mb-3"
             style={{ color: "white", letterSpacing: "-0.02em" }}
           >
             {primarySymbol ? (
               <>
                 Don&rsquo;t miss your next{" "}
-                <span
-                  style={{
-                    background: "rgba(255,255,255,0.22)",
-                    padding: "0 6px",
-                    borderRadius: 6,
-                  }}
-                >
+                <span style={{ background: "rgba(255,255,255,0.22)", padding: "0 6px", borderRadius: 6 }}>
                   {primarySymbol}
                 </span>{" "}
                 unlock
               </>
             ) : (
-              <>
-                Your {totalStreams === 1 ? "vesting is" : `${totalStreams} vestings are`} ready
-              </>
+              <>Your {totalStreams === 1 ? "vesting is" : `${totalStreams} vestings are`} ready</>
             )}
           </h3>
+
           <p
-            className="text-sm mb-5"
-            style={{ color: "rgba(255,255,255,0.82)", lineHeight: 1.55 }}
+            className="text-sm md:text-base mb-7 max-w-sm mx-auto"
+            style={{ color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}
           >
             See live amounts, track progress, and claim — free on iOS and Android.
           </p>
 
-          {/* Store badges — direct links, no deep-link delay */}
-          <div className="flex flex-wrap gap-3">
+          {/* Store badges — centred, floating animation */}
+          <div className="flex flex-wrap gap-3 justify-center">
             <a
               href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() =>
-                track("cta_clicked", {
-                  cta_id: "app_store_download",
-                  surface: "find_vestings_gate",
-                })
-              }
-              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
+              onClick={() => track("cta_clicked", { cta_id: "app_store_download", surface: "find_vestings_gate" })}
+              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-90"
               style={{
                 background: "black",
                 color: "white",
                 border: "1px solid rgba(255,255,255,0.2)",
                 minWidth: 155,
+                animation: "badge-float 3s ease-in-out infinite",
               }}
               aria-label="Download on the App Store"
             >
@@ -622,10 +622,7 @@ function DownloadGate({
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
               <div className="text-left leading-tight">
-                <div
-                  className="text-[9px] uppercase tracking-wider"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
-                >
+                <div className="text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
                   Download on the
                 </div>
                 <div className="text-[15px] font-semibold">App Store</div>
@@ -636,27 +633,23 @@ function DownloadGate({
               href="https://play.google.com/store/apps/details?id=io.vestream.app"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() =>
-                track("cta_clicked", {
-                  cta_id: "play_store_download",
-                  surface: "find_vestings_gate",
-                })
-              }
-              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:opacity-85"
+              onClick={() => track("cta_clicked", { cta_id: "play_store_download", surface: "find_vestings_gate" })}
+              className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-90"
               style={{
                 background: "black",
                 color: "white",
                 border: "1px solid rgba(255,255,255,0.2)",
                 minWidth: 155,
+                animation: "badge-float 3s ease-in-out infinite 0.4s",
               }}
               aria-label="Get it on Google Play"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
                 <defs>
-                  <linearGradient id="gp-blue"   x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00C3FF" /><stop offset="100%" stopColor="#1A73E8" /></linearGradient>
-                  <linearGradient id="gp-green"  x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#00F076" /><stop offset="100%" stopColor="#00D95F" /></linearGradient>
-                  <linearGradient id="gp-red"    x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FF3A44" /><stop offset="100%" stopColor="#C31162" /></linearGradient>
-                  <linearGradient id="gp-yellow" x1="0%" y1="0%"   x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE000" /><stop offset="100%" stopColor="#FFBD00" /></linearGradient>
+                  <linearGradient id="gp-blue"   x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00C3FF" /><stop offset="100%" stopColor="#1A73E8" /></linearGradient>
+                  <linearGradient id="gp-green"  x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00F076" /><stop offset="100%" stopColor="#00D95F" /></linearGradient>
+                  <linearGradient id="gp-red"    x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FF3A44" /><stop offset="100%" stopColor="#C31162" /></linearGradient>
+                  <linearGradient id="gp-yellow" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE000" /><stop offset="100%" stopColor="#FFBD00" /></linearGradient>
                 </defs>
                 <path fill="url(#gp-blue)"   d="M3.3 2.5c-.3.3-.5.8-.5 1.5v16c0 .7.2 1.2.5 1.5l9.4-9.5z" />
                 <path fill="url(#gp-green)"  d="M16.2 15 12.7 11.5 3.3 21a1.6 1.6 0 0 0 2 .1z" />
@@ -664,10 +657,7 @@ function DownloadGate({
                 <path fill="url(#gp-red)"    d="M5.3 2.4a1.6 1.6 0 0 0-2 .1l9.4 9.5L16.2 8.4z" />
               </svg>
               <div className="text-left leading-tight">
-                <div
-                  className="text-[9px] uppercase tracking-wider"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
-                >
+                <div className="text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
                   Get it on
                 </div>
                 <div className="text-[15px] font-semibold">Google Play</div>
@@ -675,15 +665,17 @@ function DownloadGate({
             </a>
           </div>
 
-          <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.65)" }}>
+          <p className="text-xs mt-4" style={{ color: "rgba(255,255,255,0.65)" }}>
             Free · iOS &amp; Android
           </p>
-        </div>
 
-        {/* Right (or bottom on mobile): phone notification preview */}
-        <NotificationMockup primarySymbol={primarySymbol} />
+          {/* Notification mockup — centred below badges */}
+          <div className="mt-6 flex justify-center">
+            <NotificationMockup primarySymbol={primarySymbol} />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -973,9 +965,11 @@ function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams
             </div>
           </div>
         </div>
-        <TrackInAppCTA
-          walletAddress={walletAddress}
-          surface="find_vestings_sticky_bar"
+        <button
+          onClick={() => {
+            track("cta_clicked", { cta_id: "scroll_to_gate", surface: "find_vestings_sticky_bar" });
+            document.getElementById("download-gate")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }}
           className="inline-flex items-center gap-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-95 whitespace-nowrap flex-shrink-0"
           style={{
             background: "linear-gradient(135deg, #2563eb, #7c3aed)",
@@ -984,7 +978,7 @@ function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams
           }}
         >
           Get the app
-        </TrackInAppCTA>
+        </button>
       </div>
     </div>
   );
@@ -1113,10 +1107,11 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
                   className="absolute inset-0 flex items-center justify-center"
                   style={{ background: "rgba(248,250,252,0.55)" }}
                 >
-                  <TrackInAppCTA
-                    walletAddress={walletAddress}
-                    tokenSymbol={tok.symbol}
-                    surface={`find_vestings_teaser_${group.protocolId}`}
+                  <button
+                    onClick={() => {
+                      track("cta_clicked", { cta_id: "scroll_to_gate", surface: `find_vestings_teaser_${group.protocolId}` });
+                      document.getElementById("download-gate")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap"
                     style={
                       tokClaimable
@@ -1125,7 +1120,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
                     }
                   >
                     {tokClaimable ? "Claim in app →" : "See amounts →"}
-                  </TrackInAppCTA>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1160,9 +1155,11 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
             )}
           </span>
         </div>
-        <TrackInAppCTA
-          walletAddress={walletAddress}
-          surface={`find_vestings_teaser_footer_${group.protocolId}`}
+        <button
+          onClick={() => {
+            track("cta_clicked", { cta_id: "scroll_to_gate", surface: `find_vestings_teaser_footer_${group.protocolId}` });
+            document.getElementById("download-gate")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }}
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap flex-shrink-0"
           style={
             liveClaimableSymbol
@@ -1171,7 +1168,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
           }
         >
           {liveClaimableSymbol ? "Claim now →" : "Open app →"}
-        </TrackInAppCTA>
+        </button>
       </div>
     </div>
   );
