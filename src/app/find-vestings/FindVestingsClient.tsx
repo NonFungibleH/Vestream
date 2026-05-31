@@ -722,7 +722,7 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
 /**
  * Sticky bottom bar shown after the user scrolls past the inline action
  * strip. Locks the conversion path within thumb-reach as they keep
- * scrolling through GroupCards. Auto-hides when the user scrolls back up
+ * scrolling through TeaserCards. Auto-hides when the user scrolls back up
  * to the inline strip (no double-CTA visual stack).
  *
  * Why a sticky bar specifically: the inline strip is a single visual
