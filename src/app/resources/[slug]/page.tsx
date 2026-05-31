@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
-import { linkifyProtocols } from "@/lib/article-linkify";
+import { linkifyContent } from "@/lib/article-linkify";
 
 // Reduce a block list to a single plain-text string for JSON-LD `articleBody`.
 // Strips tags, normalises whitespace, caps the length (Google ignores beyond a
@@ -48,6 +48,7 @@ export async function generateMetadata(
     title: `${article.title} | Vestream`,
     description: article.excerpt,
     keywords: article.tags.join(", "),
+    authors: [{ name: "Vestream", url: "https://www.vestream.io" }],
     openGraph: {
       title: article.title,
       description: article.excerpt,
@@ -55,6 +56,7 @@ export async function generateMetadata(
       type: "article",
       publishedTime: article.publishedAt,
       modifiedTime:  article.updatedAt,
+      authors: ["https://www.vestream.io"],
       tags: article.tags,
     },
     twitter: {
@@ -89,7 +91,7 @@ function RenderBlock({ block }: { block: Block }) {
     case "p":
       return (
         <p className="text-base leading-relaxed mb-5" style={{ color: "#334155" }}
-          dangerouslySetInnerHTML={{ __html: linkifyProtocols(block.html) }} />
+          dangerouslySetInnerHTML={{ __html: linkifyContent(block.html) }} />
       );
 
     case "ul":
@@ -99,7 +101,7 @@ function RenderBlock({ block }: { block: Block }) {
             <li key={i} className="flex gap-3 text-base leading-relaxed" style={{ color: "#334155" }}>
               <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full"
                 style={{ background: "#1CB8B8", marginTop: "9px" }} />
-              <span dangerouslySetInnerHTML={{ __html: linkifyProtocols(item) }} />
+              <span dangerouslySetInnerHTML={{ __html: linkifyContent(item) }} />
             </li>
           ))}
         </ul>
@@ -115,7 +117,7 @@ function RenderBlock({ block }: { block: Block }) {
                 style={{ background: "#1CB8B8", minWidth: "24px" }}>
                 {i + 1}
               </span>
-              <span dangerouslySetInnerHTML={{ __html: linkifyProtocols(item) }} />
+              <span dangerouslySetInnerHTML={{ __html: linkifyContent(item) }} />
             </li>
           ))}
         </ol>
