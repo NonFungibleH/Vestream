@@ -652,7 +652,7 @@ const articles: Article[] = [
       { type: "h2", text: "How to Track Your Vestings with Vestream" },
       {
         type: "p",
-        html: "Vestream is a dedicated token vesting tracker that covers all five major vesting protocols (Sablier, UNCX, Team Finance, Hedgey, and Unvest) across Ethereum, BNB Chain, Base, and Sepolia. Here is a step-by-step guide to getting set up:",
+        html: "Vestream is a dedicated token vesting tracker that covers the major vesting protocols — Sablier, UNCX, Hedgey, Unvest, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, BNB Chain, Base, Arbitrum, and Solana. Here is a step-by-step guide to getting set up:",
       },
       {
         type: "ol",
@@ -747,7 +747,7 @@ const articles: Article[] = [
           },
           {
             q: "What is the best tool for tracking token vesting?",
-            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view, covering Sablier, UNCX, Team Finance, Hedgey, and Unvest across Ethereum, BNB Chain, Base, and Sepolia in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
+            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view — covering Sablier, UNCX, Hedgey, Unvest, Superfluid, PinkSale, Streamflow, and Jupiter Lock across Ethereum, BNB Chain, Base, Arbitrum, and Solana in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
           },
           {
             q: "Can I track someone else's token vesting?",
@@ -3036,7 +3036,7 @@ const articles: Article[] = [
       { type: "h2", text: "Tracking Sablier Streams on Vestream" },
       {
         type: "p",
-        html: "Vestream indexes Sablier across all five supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
+        html: "Vestream indexes Sablier across all supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Superfluid, PinkSale, Streamflow, Jupiter Lock, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
       },
       {
         type: "p",
@@ -3466,21 +3466,13 @@ const articles: Article[] = [
         html: "Conversely, if you want per-second streaming, transferable governance-aware vesting NFTs, or per-recipient revocability, you'll likely look at <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier</a> or <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey</a> first.",
       },
 
-      { type: "h2", text: "Tracking Team Finance Vests on Vestream" },
-      {
-        type: "callout",
-        emoji: "📡",
-        title: "Track Team Finance vesting on Vestream",
-        body:  "Vestream's Team Finance adapter covers Ethereum, BNB Chain, Polygon, Base, and Sepolia. Add your wallet at <a href=\"/login\">Vestream</a> and every vest you receive or grant will appear alongside positions from Sablier, Hedgey, UNCX, and the rest.",
-      },
-
       { type: "h2", text: "FAQ" },
       {
         type: "faq",
         items: [
           { q: "Can a Team Finance vest be cancelled by the project?", a: "Generally no, once funded — but there can be exceptions when admin keys are configured. Always read the deployment's parameters before treating any lock as truly immutable." },
           { q: "Does Team Finance support per-second streaming?", a: "No. Team Finance's vests release in scheduled tranches. If you need streaming, Sablier or Superfluid are better fits." },
-          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs. Vestream indexes the five primary networks." },
+          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs." },
           { q: "Can I transfer my Team Finance vest to another wallet?", a: "Vests are tied to a recipient address. There is no NFT to transfer — moving the position requires the project to redeploy. This is one reason some teams prefer Hedgey." },
         ],
       },

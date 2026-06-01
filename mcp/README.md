@@ -22,7 +22,7 @@ Six tools, all schema-validated:
 | `create_webhook_subscription` | **Pro** | Register a new webhook with optional filters (wallet, protocol, chain) and a lookahead window. Returns a signing secret once — store it for HMAC verification. **Cap: 50 active subscriptions per API key** — delete unused ones with `delete_webhook_subscription`. |
 | `delete_webhook_subscription` | **Pro** | Remove a subscription by id. |
 
-Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Team Finance · Superfluid · PinkSale · Streamflow · Jupiter Lock.
+Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Superfluid · PinkSale · Streamflow · Jupiter Lock.
 
 Supported **chains**: Ethereum (`1`) · BNB Chain (`56`) · Polygon (`137`) · Base (`8453`) · Solana (`101`).
 

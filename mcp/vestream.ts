@@ -136,7 +136,7 @@ function parseRetryAfter(header: string | null): number | null {
 // backend never sees out-of-range values.
 
 const PROTOCOL_VALUES = [
-  "sablier", "hedgey", "uncx", "unvest", "team-finance",
+  "sablier", "hedgey", "uncx", "unvest",
   "superfluid", "pinksale", "streamflow", "jupiter-lock",
 ] as const;
 
@@ -168,7 +168,7 @@ server.tool(
   "get_wallet_vestings",
   "Get all token vesting streams for a wallet across every supported protocol " +
   "and chain (including Solana). EVM protocols: Sablier, Hedgey, UNCX, Unvest, " +
-  "Team Finance, Superfluid, PinkSale. Solana protocols: Streamflow, Jupiter Lock. " +
+  "Superfluid, PinkSale. Solana protocols: Streamflow, Jupiter Lock. " +
   "EVM chains: Ethereum, BSC, Polygon, Base. Non-EVM chains: Solana. " +
   "Returns normalised stream data: token, amounts locked/claimable/withdrawn, " +
   "schedule dates, cliff time, next unlock, and claim history — identical " +

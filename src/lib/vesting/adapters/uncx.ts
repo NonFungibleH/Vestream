@@ -40,13 +40,17 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               "5foyqAtEVWtcSJX62sMC6fVR7FmetsFy8eYRKRT2E7DU"
                             ),
   [CHAIN_IDS.BASE_SEPOLIA]: undefined, // UNCX is on Sepolia, not Base Sepolia
-  // Arbitrum: UNCX docs (checked 2026-05-02) only publish a Liquidity
-  // Locker V3 subgraph on Arbitrum — NOT the TokenVesting V3 we use here.
-  // It's unclear whether UNCX has a TokenVesting V3 deployment on Arbitrum
-  // at all; their token-vesting product may be ETH/BSC/Base only.
-  // Action to unblock: contact UNCX team or check their GitHub for an
-  // Arbitrum TokenVesting deployment + matching subgraph.
-  [CHAIN_IDS.ARBITRUM]:     undefined,
+  // Arbitrum: TokenVesting V3 subgraph exists (6WJvVn4AFimpn8JfmeZA17ZWbGkj3c1a4Ate4z3Z7dya)
+  // and the contract is live at 0x8cb0300af2a801dc9992225d45399ac56888cbcd.
+  // However the subgraph has "no allocations" on the decentralised Graph
+  // Network — no indexers are currently serving it (same state as UNCX
+  // Polygon). Set UNCX_SUBGRAPH_URL_ARBITRUM to an alternative endpoint
+  // (Goldsky mirror, self-hosted, etc.) to enable Arbitrum scanning.
+  // Checked 2026-06-01.
+  [CHAIN_IDS.ARBITRUM]:     resolveSubgraphUrl(
+                              process.env.UNCX_SUBGRAPH_URL_ARBITRUM,
+                              undefined,
+                            ),
   // Optimism: same status as Arbitrum — TokenVesting V3 subgraph not
   // publicly catalogued. Action to unblock: ask UNCX team.
   [CHAIN_IDS.OPTIMISM]:     undefined,
@@ -207,6 +211,7 @@ export const uncxAdapter: VestingAdapter = {
     CHAIN_IDS.BSC,
     CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
+    CHAIN_IDS.ARBITRUM, // subgraph has no allocations — skips silently unless UNCX_SUBGRAPH_URL_ARBITRUM is set
     CHAIN_IDS.SEPOLIA,
   ],
   fetch: fetchForChain,

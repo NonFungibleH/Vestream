@@ -44,7 +44,6 @@ const PROTOCOLS = [
   { name: "PinkSale",     tagline: "Launchpad TGE locks"       },
   { name: "Streamflow",   tagline: "Solana vesting"            },
   { name: "Jupiter Lock", tagline: "Solana team allocations"   },
-  { name: "Team Finance", tagline: "Token locker (paused)"     },
 ];
 
 export default function InvestLanding() {
