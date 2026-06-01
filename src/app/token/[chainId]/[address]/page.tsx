@@ -931,11 +931,17 @@ function UnlockCalendar({
 
             {/* Bars themselves — iterate `visible` so the history fallback
                 works correctly. Past bars render at 50% opacity to visually
-                recede vs. the forward-looking buckets. */}
+                recede vs. the forward-looking buckets.
+                Heights use explicit pixels (not height:100% chains) so the
+                bars render correctly even when all data lands in a single
+                month — CSS percentage heights in a flex-end context can
+                silently resolve to zero when the intermediate column div
+                has no explicit height (reproducer: $HOUND on Base, 2026-06-01). */}
             <div className="flex items-end gap-1 md:gap-2" style={{ height: 130 }}>
               {visible.map((b, idx) => {
-                const pct = (b.totalTokensWhole / maxBucket) * 100;
-                const usd = priceUsd ? b.totalTokensWhole * priceUsd : null;
+                const pct     = (b.totalTokensWhole / maxBucket) * 100;
+                const barPx   = Math.max(0, Math.round(pct * 130 / 100));
+                const usd     = priceUsd ? b.totalTokensWhole * priceUsd : null;
                 const isThisMonth = idx === firstFutureIdx;
                 return (
                   <div
@@ -945,7 +951,7 @@ function UnlockCalendar({
                     <div
                       className="w-full flex flex-col-reverse rounded-t"
                       style={{
-                        height:   "100%",
+                        height:   barPx,
                         position: "relative",
                         // Past bars render muted so the eye is pulled to
                         // future months — which is the decision-relevant
@@ -959,17 +965,16 @@ function UnlockCalendar({
                           : ""
                       }`}
                     >
-                      {b.byProtocol.length === 0 ? (
-                        <div className="w-full" style={{ height: 0 }} />
-                      ) : (
+                      {b.byProtocol.length === 0 ? null : (
                         b.byProtocol.map((seg, i) => {
-                          const segPct = (seg.tokensWhole / b.totalTokensWhole) * pct;
+                          // Segment pixel height = proportion of this bar's pixels
+                          const segPx = Math.max(0, Math.round((seg.tokensWhole / b.totalTokensWhole) * barPx));
                           return (
                             <div
                               key={seg.protocol + i}
                               className="w-full transition-opacity group-hover:opacity-90"
                               style={{
-                                height:     `${segPct}%`,
+                                height:     segPx,
                                 background: protocolColour(seg.protocol),
                                 borderTop:  i > 0 ? "1px solid rgba(255,255,255,0.4)" : undefined,
                               }}
