@@ -115,7 +115,7 @@ const homepageJsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Track token vestings across 10+ protocols",
+        "Track token vestings across 9+ protocols",
         "Real-time unlock alerts via push and email",
         "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana",
         "P&L tracking and CSV export",
@@ -228,10 +228,10 @@ export default async function Home() {
             </h1>
 
             <p className="text-lg max-w-xl mb-3 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
-              Find and track every token vesting you&rsquo;re owed — across all chains and protocols. Get notified the moment the token is claimable.
+              Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              10+ vesting protocols. Seven chains. Mobile app and desktop dashboard.
+              9+ protocols. Seven chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs — app badges lead (mobile is the primary product),
@@ -239,14 +239,14 @@ export default async function Home() {
             <div className="flex flex-col items-center lg:items-start gap-5">
               <div className="flex flex-col items-center lg:items-start gap-2">
                 <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
-                  Get the app — iOS &amp; Android
+                  Get the app - iOS &amp; Android
                 </p>
                 <AppStoreBadges align="start" />
               </div>
 
               <div className="flex flex-col items-center lg:items-start gap-1.5">
                 <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
-                  Or search on the web — free, no signup
+                  Or search in browser
                 </p>
                 <Link
                   href="/find-vestings"
@@ -1182,7 +1182,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "10+ protocols scanned simultaneously — every one listed above",
+                "9+ protocols scanned simultaneously - every one listed above",
                 "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
