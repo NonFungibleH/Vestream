@@ -246,7 +246,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     name: "UNCX",
     tagline: "Token vesting and locker suite",
     description:
-      "UNCX Network (formerly UniCrypt) runs one of crypto's longest-standing token-locker and vesting suites. Projects use it to lock LP tokens and team allocations with customisable cliff-plus-cycle schedules. Vestream tracks both the classic TokenVesting and newer VestingManager contracts across four chains.",
+      "UNCX Network (formerly UniCrypt) runs one of crypto's longest-standing token-locker and vesting suites. Projects use it to lock LP tokens and team allocations with customisable cliff-plus-cycle schedules. Vestream tracks both the classic TokenVesting and newer VestingManager contracts across Ethereum, Base, and BNB Chain.",
     color: "#3D7FD0",
     bg:    "rgba(61,127,208,0.08)",
     border:"rgba(61,127,208,0.22)",
