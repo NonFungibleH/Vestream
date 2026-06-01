@@ -29,6 +29,8 @@ import type {
   TokenUpcomingEvent,
   TokenRecipient,
 } from "./token-aggregates";
+import { blockExplorerUrl, blockExplorerName } from "../chain-links";
+import { chainLabel } from "./protocol-stats";
 
 export interface FAQItem {
   question: string;
@@ -264,6 +266,20 @@ function ansCirculatingVsTotal(input: BuildFAQInput): string {
  * the bottom. The same list feeds both the accordion and the JSON-LD
  * schema so on-page and search-result views stay in sync.
  */
+
+function ansContractInfo({ symbol, chainId, tokenAddress }: BuildFAQInput): string {
+  const chain   = chainLabel(chainId);
+  const explorer = blockExplorerUrl(chainId, tokenAddress);
+  const explorerName = blockExplorerName(chainId);
+  const addrDisplay = `${tokenAddress.slice(0, 6)}…${tokenAddress.slice(-4)}`;
+
+  const explorerNote = explorer && explorerName
+    ? ` You can verify it on ${explorerName}: ${explorer}`
+    : "";
+
+  return `${symbol} is deployed on ${chain}. The contract address is ${addrDisplay} (full address: ${tokenAddress}).${explorerNote}`;
+}
+
 export function buildTokenFAQ(input: BuildFAQInput): FAQItem[] {
   const { symbol } = input;
   return [
@@ -302,6 +318,10 @@ export function buildTokenFAQ(input: BuildFAQInput): FAQItem[] {
     {
       question: `Why does ${symbol} circulating supply differ from the locked amount Vestream shows?`,
       answer:   ansCirculatingVsTotal(input),
+    },
+    {
+      question: `What blockchain is ${symbol} on and what is its contract address?`,
+      answer:   ansContractInfo(input),
     },
   ];
 }

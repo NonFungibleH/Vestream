@@ -570,6 +570,32 @@ export default async function ProtocolLandingPage(
         );
       })()}
 
+      {/* ── Pro upsell strip ─────────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-8 max-w-5xl mx-auto">
+        <div
+          className="rounded-2xl px-5 py-4 md:px-6 md:py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          style={{
+            background: `linear-gradient(135deg, ${meta.bg} 0%, rgba(28,184,184,0.03) 100%)`,
+            border: `1px solid ${meta.border}`,
+          }}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: meta.color }}>
+              Vestream Pro
+            </div>
+            <p className="text-sm font-medium leading-snug" style={{ color: "#1A1D20" }}>
+              Get push and email alerts before every {meta.name} unlock — plus full portfolio tracking across all 9 protocols.
+            </p>
+            <p className="text-xs mt-1" style={{ color: "#8B8E92" }}>
+              Available to Pro subscribers on iOS &amp; Android.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <AppStoreBadges align="start" />
+          </div>
+        </div>
+      </section>
+
       {/* ── Spotlight stats (fun-fact row) ──────────────────────────────────
           2026-05-14: surfaces three "interesting things" beyond the raw
           stream counts above — biggest active stream, most-streamed
@@ -635,7 +661,7 @@ export default async function ProtocolLandingPage(
             What&apos;s happening on {meta.name} right now
           </h2>
           <p className="text-sm max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
-            Pulled from Vestream&apos;s index — updated every minute so you see what crawlers see.
+            Pulled from Vestream&apos;s index — refreshed regularly as new vesting activity is detected.
           </p>
         </div>
 

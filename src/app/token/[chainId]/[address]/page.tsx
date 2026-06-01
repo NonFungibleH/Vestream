@@ -37,6 +37,8 @@ import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
+import { CopyButton } from "@/components/CopyButton";
+import { TokenShareRow } from "@/components/TokenShareRow";
 import { buildTokenFAQ } from "@/lib/vesting/token-faq";
 import { buildTokenPulse } from "@/lib/vesting/token-pulse";
 import {
@@ -389,9 +391,11 @@ export default async function TokenPage(
               </span>
             </div>
             <div className="mt-1 flex items-center gap-3 flex-wrap text-sm">
-              <span className="font-mono" style={{ color: "#8B8E92" }}>
-                {truncate(addr, 6)}
-              </span>
+              <CopyButton
+                value={addr}
+                display={`${addr.slice(0, 6)}…${addr.slice(-4)}`}
+                style={{ color: "#8B8E92" }}
+              />
               {priceUsd && (
                 <>
                   <span className="font-bold tabular-nums" style={{ color: "#1A1D20" }}>
@@ -413,6 +417,20 @@ export default async function TokenPage(
           {/* The duplicate DexScreener / Website buttons that used to sit here
               moved into <TokenMetaPanel/> below so every external link lives
               in one consistent row (explorer, website, X, TokenSniffer, …). */}
+        </div>
+
+        {/* Share actions — always visible, helps projects share the page */}
+        <div className="mt-4 flex items-center gap-2 flex-wrap">
+          <TokenShareRow
+            pageUrl={`https://www.vestream.io/token/${cid}/${addr}`}
+            symbol={symbol}
+            chainName={CHAIN_NAMES[cid] ?? ""}
+            lockedSummary={
+              lockedUsd != null && lockedUsd > 1000
+                ? `$${lockedUsd >= 1e6 ? `${(lockedUsd / 1e6).toFixed(1)}M` : `${(lockedUsd / 1e3).toFixed(0)}K`}`
+                : null
+            }
+          />
         </div>
       </section>
 
@@ -541,6 +559,37 @@ export default async function TokenPage(
             </section>
           )}
         </>
+      )}
+
+      {/* ── Pro upsell strip ────────────────────────────────────────────────
+          Sits between the data and the market stats — high-intent position.
+          Visitors who've seen the calendar + recipients are already qualified;
+          this is the moment to convert them into app installs. */}
+      {hasVesting && (
+        <section className="px-4 md:px-8 pb-8 max-w-5xl mx-auto">
+          <div
+            className="rounded-2xl px-5 py-4 md:px-6 md:py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            style={{
+              background: "linear-gradient(135deg, rgba(28,184,184,0.06) 0%, rgba(28,184,184,0.02) 100%)",
+              border: "1px solid rgba(28,184,184,0.18)",
+            }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#0F8A8A" }}>
+                Vestream Pro
+              </div>
+              <p className="text-sm font-medium leading-snug" style={{ color: "#1A1D20" }}>
+                See live claimable amounts, wallet-level alerts before every {symbol} unlock, and tax-ready exports.
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#8B8E92" }}>
+                Full data available to Pro subscribers on iOS &amp; Android.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <AppStoreBadges align="start" />
+            </div>
+          </div>
+        </section>
       )}
 
       {/* ── Market stats + external links (price/liquidity/volume/FDV +
