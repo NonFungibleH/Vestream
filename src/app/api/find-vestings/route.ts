@@ -9,6 +9,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
+
+// Give the scan up to 25s on Vercel Pro before the infrastructure kills it.
+// The programmatic timeout below fires at 22s so we always return a JSON
+// error rather than letting the function hard-timeout into an HTML 504.
+export const maxDuration = 25;
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
@@ -85,7 +90,19 @@ export async function GET(req: NextRequest) {
   });
 
   try {
-    const streams = await aggregateVestingStreams([normaliseAddress(address)], SCAN_CHAINS);
+    // Belt-and-suspenders timeout: if aggregate hangs (e.g. a slow RPC chain),
+    // we throw a clean JSON error at 22s rather than letting Vercel's 25s
+    // infrastructure timeout fire an HTML 504 that the client can't parse.
+    const SCAN_BUDGET_MS = 22_000;
+    const streams = await Promise.race([
+      aggregateVestingStreams([normaliseAddress(address)], SCAN_CHAINS),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Scan timed out — please try again")),
+          SCAN_BUDGET_MS,
+        )
+      ),
+    ]);
 
     // Group by protocol × chain, then per-token
     const byKey = new Map<string, { group: FindVestingsGroup; tokenMap: Map<string, FindVestingsTokenSummary> }>();

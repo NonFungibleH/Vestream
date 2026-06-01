@@ -19,6 +19,12 @@ import {
 // Alchemy free-tier's 10-block eth_getLogs cap on ETH. The shared pool gives
 // us proper fallback-over-all-providers via viem's fallback transport, so a
 // single provider 401/429/timeout no longer kills the whole chunk scan.
+//
+// 2026-04-29: BSC and Base removed. dRPC free tier no longer serves
+// eth_getLogs on those chains, and UNCX-VM's eth_getLogs scan (up to
+// ~100M+ blocks in 50k-block chunks) causes every free RPC provider to
+// time out — eventually killing the Vercel function with a 504. Re-add
+// if/when paid RPC env vars (BSC_RPC_URL, ALCHEMY_RPC_URL_BASE) are set.
 const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
   contractAddress: `0x${string}`;
   fromBlock:       bigint;
@@ -26,14 +32,6 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
   [CHAIN_IDS.ETHEREUM]: {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n, // deployed 2025-08-15
-  },
-  [CHAIN_IDS.BASE]: {
-    contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
-    fromBlock:       43_187_425n,
-  },
-  [CHAIN_IDS.BSC]: {
-    contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
-    fromBlock:       85_818_300n,
   },
 };
 
@@ -244,6 +242,6 @@ async function fetchForChain(
 export const uncxVmAdapter: VestingAdapter = {
   id:                 "uncx-vm",
   name:               "UNCX VestingManager",
-  supportedChainIds:  [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC],
+  supportedChainIds:  [CHAIN_IDS.ETHEREUM],
   fetch:              fetchForChain,
 };

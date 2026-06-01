@@ -48,6 +48,51 @@ interface ScanResponse {
   scannedAt:    string;
 }
 
+// ── Session-scoped scan cache ─────────────────────────────────────────────
+// Keyed by normalised wallet address. TTL = 10 minutes.
+// sessionStorage persists for the browser tab lifetime, so navigating away
+// and back shows the cached result instantly instead of re-scanning.
+const SCAN_CACHE_PREFIX = "vestr-scan:";
+const SCAN_CACHE_TTL_MS = 10 * 60 * 1_000;
+
+interface CachedScan {
+  result:   ScanResponse;
+  cachedAt: number; // ms epoch
+}
+
+function readScanCache(address: string): ScanResponse | null {
+  try {
+    const raw = sessionStorage.getItem(SCAN_CACHE_PREFIX + address.toLowerCase());
+    if (!raw) return null;
+    const { result, cachedAt } = JSON.parse(raw) as CachedScan;
+    if (Date.now() - cachedAt > SCAN_CACHE_TTL_MS) {
+      sessionStorage.removeItem(SCAN_CACHE_PREFIX + address.toLowerCase());
+      return null;
+    }
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function writeScanCache(address: string, result: ScanResponse): void {
+  try {
+    const entry: CachedScan = { result, cachedAt: Date.now() };
+    sessionStorage.setItem(
+      SCAN_CACHE_PREFIX + address.toLowerCase(),
+      JSON.stringify(entry),
+    );
+  } catch {
+    // Ignore quota / private-browsing errors
+  }
+}
+
+function clearScanCache(address: string): void {
+  try {
+    sessionStorage.removeItem(SCAN_CACHE_PREFIX + address.toLowerCase());
+  } catch { /* ignore */ }
+}
+
 const PROTOCOL_COLOURS: Record<string, string> = {
   sablier:        "#F0992E",
   hedgey:         "#a855f7",
@@ -82,9 +127,10 @@ export default function FindVestingsClient() {
   const [manualAddress, setManualAddress] = useState("");
 
   // ── Scan state ──────────────────────────────────────────────────────────
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
-  const [result,  setResult]  = useState<ScanResponse | null>(null);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
+  const [result,    setResult]    = useState<ScanResponse | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   const lastScanned = useRef<string | null>(null);
 
   const scanAddress = useCallback(async (addr: string) => {
@@ -97,12 +143,16 @@ export default function FindVestingsClient() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setFromCache(false);
     lastScanned.current = normaliseAddress(addr);
+    // Clear stale cache so a forced refresh actually hits the network
+    clearScanCache(addr);
     try {
       const res  = await fetch(`/api/find-vestings?address=${addr}`, { cache: "no-store" });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Scan failed");
       setResult(body);
+      writeScanCache(addr, body);
       track("wallet_scan_completed", {
         surface:       "find_vestings",
         address_type:  addressType,
@@ -116,10 +166,22 @@ export default function FindVestingsClient() {
     }
   }, []);
 
-  // Auto-scan when wallet becomes connected (or swaps)
+  // Auto-scan when wallet becomes connected (or swaps).
+  // Check sessionStorage first — if a recent result exists, show it
+  // immediately without hitting the network again.
   useEffect(() => {
     if (!isConnected || !connectedAddress) return;
     if (lastScanned.current === connectedAddress.toLowerCase()) return;
+    lastScanned.current = connectedAddress.toLowerCase();
+
+    const cached = readScanCache(connectedAddress);
+    if (cached) {
+      setResult(cached);
+      setFromCache(true);
+      setError(null);
+      return;
+    }
+
     scanAddress(connectedAddress);
   }, [isConnected, connectedAddress, scanAddress]);
 
@@ -128,6 +190,7 @@ export default function FindVestingsClient() {
     if (!isConnected) {
       setResult(null);
       setError(null);
+      setFromCache(false);
       lastScanned.current = null;
     }
   }, [isConnected]);
@@ -275,13 +338,25 @@ export default function FindVestingsClient() {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => disconnect()}
-            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-            style={{ color: "#8B8E92", background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
-          >
-            Disconnect
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Show a refresh button when we're displaying a cached result */}
+            {fromCache && !loading && (
+              <button
+                onClick={() => scanAddress(connectedAddress!)}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                style={{ color: "#1CB8B8", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.2)" }}
+              >
+                Refresh
+              </button>
+            )}
+            <button
+              onClick={() => disconnect()}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={{ color: "#8B8E92", background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
       )}
 
