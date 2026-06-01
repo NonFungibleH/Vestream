@@ -2,6 +2,8 @@ import Link from "next/link";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { PricingComparisonTable } from "@/components/PricingComparisonTable";
+import { PhoneClock } from "@/components/PhoneClock";
 import { listProtocols } from "@/lib/protocol-constants";
 import {
   getProtocolStats,
@@ -150,15 +152,17 @@ const homepageJsonLd = {
   ],
 };
 
+function formatStreamCount(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M+`;
+  if (n >= 1_000)     return `${Math.floor(n / 1_000)}K+`;
+  return `${n}`;
+}
+
 export default async function Home() {
-  // The "live freshness strip" (1.4M streams indexed across N protocols,
-  // refreshed Xs ago) was removed in the May 5 2026 hero repositioning.
-  // Reasoning: it read as institutional credibility-flexing — Tokenomist-
-  // shaped trust signal — rather than something an everyday investor
-  // (the Maya persona) responds to. Maya doesn't care that we index 1.4M
-  // streams; she cares whether HER token is supported. The
-  // getHomepageLiveStats helper is left in place for the schema.org
-  // structured-data block + any future re-introduction.
+  const liveStats = await getHomepageLiveStats();
+  const streamLabel = liveStats.totalStreams > 0
+    ? formatStreamCount(liveStats.totalStreams)
+    : "150K+";
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
@@ -211,7 +215,7 @@ export default async function Home() {
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-widest"
                 style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
-                Live · Watching every chain 24/7
+                {streamLabel} streams · $3.4B+ tracked
               </span>
             </div>
 
@@ -230,28 +234,31 @@ export default async function Home() {
               10+ vesting protocols. Seven chains. Mobile app and desktop dashboard.
             </p>
 
-            {/* CTAs — primary scanner + app badges. The scanner gets
-                visitors into the product without an install (try-before-
-                you-buy); the app badges signal that the canonical
-                experience is mobile. */}
+            {/* CTAs — app badges lead (mobile is the primary product),
+                scanner below as the no-install discovery path. */}
             <div className="flex flex-col items-center lg:items-start gap-5">
-              <Link
-                href="/find-vestings"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
-                style={{
-                  background: "#1CB8B8",
-                  color: "white",
-                  boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
-                }}
-              >
-                Find my vestings →
-              </Link>
-
               <div className="flex flex-col items-center lg:items-start gap-2">
                 <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
-                  Or get it on your phone
+                  Get the app — iOS &amp; Android
                 </p>
                 <AppStoreBadges align="start" />
+              </div>
+
+              <div className="flex flex-col items-center lg:items-start gap-1.5">
+                <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+                  Or search on the web — free, no signup
+                </p>
+                <Link
+                  href="/find-vestings"
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "#1CB8B8",
+                    color: "white",
+                    boxShadow: "0 8px 24px rgba(28,184,184,0.35)",
+                  }}
+                >
+                  Find my vestings →
+                </Link>
               </div>
             </div>
           </div>
@@ -339,25 +346,9 @@ export default async function Home() {
                   </div>
                 </div>
 
-                {/* Date + giant time, mirroring the iOS lock-screen
-                    layout from the App Store screenshot reference. */}
-                <div className="text-center" style={{ color: "white", paddingTop: 22 }}>
-                  <div
-                    className="inline-flex items-center justify-center gap-1"
-                    style={{ fontSize: 11, opacity: 0.7, fontWeight: 500, letterSpacing: "0.02em" }}
-                  >
-                    {/* Tiny lock glyph — same iconography iOS uses next
-                        to the date on a locked screen. */}
-                    <svg width="8" height="9" viewBox="0 0 10 11" fill="none" stroke="currentColor" strokeWidth="1.4">
-                      <rect x="2" y="5" width="6" height="5" rx="1"/>
-                      <path d="M3.4 5V3.5a1.6 1.6 0 0 1 3.2 0V5"/>
-                    </svg>
-                    <span>Wednesday, 14 May</span>
-                  </div>
-                  <div style={{ fontSize: 70, fontWeight: 300, letterSpacing: "-0.06em", lineHeight: 1, marginTop: 4 }}>
-                    9:41
-                  </div>
-                </div>
+                {/* Date + giant time — rendered by a client component so
+                    it always reflects the visitor's current date/time. */}
+                <PhoneClock />
 
                 {/* ── Notification stack ─────────────────────────────────
                     Three iOS lock-screen cards:
@@ -1900,63 +1891,7 @@ export default async function Home() {
           </Link>
         </p>
 
-        {/* Comparison table — 3 columns (Feature / Free / Pro) after May 2026
-            pricing simplification. Fully responsive at 375px viewport — no
-            horizontal scroll, no min-width. The wider "Feature" column
-            gets ~50% of width on mobile so multi-word labels wrap cleanly;
-            tier columns hold short text or icon checks. The previous
-            `min-w-[480px]` was forcing the parent section (and all
-            its siblings — pricing cards, headings) to render at 514px
-            on a 375px viewport, breaking the whole pricing block. */}
-        <div
-          className="rounded-2xl w-full overflow-hidden"
-          aria-label="Tier comparison table"
-          role="region"
-          style={{
-            border: "1px solid rgba(21,23,26,0.10)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-          }}
-        >
-          <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] px-3 md:px-6 py-4 gap-2" style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-          </div>
-          {([
-            ["Wallet addresses",            "3",                  "10"],
-            ["Auto-scan all chains",        true,                 true],
-            ["All 10+ vesting protocols",   true,                 true],
-            ["Real-time mobile app",        true,                 true],
-            ["Claimable balance tracking",  true,                 true],
-            ["Unlock calendar",             true,                 true],
-            ["Push notifications",          "10 / month",         "Unlimited"],
-            ["Email alerts",                false,                true],
-            ["Live countdowns + reminders", false,                true],
-            ["Web dashboard access",        false,                true],
-            ["Token Vesting Explorer",      false,                true],
-            ["Search any wallet",           false,                true],
-            ["Multi-wallet portfolio view", false,                true],
-            ["Tax-ready CSV exports",       false,                true],
-            ["Vesting income statement",    false,                true],
-            ["Year-end PDF tax report",     false,                true],
-          ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
-            <div key={feature} className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] px-3 md:px-6 py-3.5 items-center gap-2"
-              style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined, background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)" }}>
-              <span className="text-[13px] md:text-sm leading-snug" style={{ color: "#374151" }}>{feature}</span>
-              {([free, pro] as (string | boolean)[]).map((val, j) => (
-                <div key={j} className="flex justify-center">
-                  {typeof val === "boolean" ? (
-                    val
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  ) : (
-                    <span className="text-[11px] md:text-xs font-semibold text-center leading-tight" style={{ color: j === 0 ? "#374151" : "#1CB8B8" }}>{val}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+        <PricingComparisonTable />
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────────── */}

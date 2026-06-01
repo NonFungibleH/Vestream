@@ -24,6 +24,7 @@ interface Props {
 const NAV_LINKS = [
   { label: "Protocols", href: "/protocols" },
   { label: "Demo",      href: "/demo"      },
+  { label: "Pricing",   href: "/pricing"   },
 ] as const;
 
 const THEME = {

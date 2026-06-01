@@ -151,13 +151,14 @@ import { SiteNav } from "@/components/SiteNav";
 ### Nav links (current)
 ```ts
 const NAV_LINKS = [
-  { label: "Portfolio",   href: "/"          },
-  { label: "Developers",  href: "/developer" },
-  { label: "AI Agents",   href: "/ai"        },
+  { label: "Protocols", href: "/protocols" },
+  { label: "Demo",      href: "/demo"      },
+  { label: "Pricing",   href: "/pricing"   },
 ];
 ```
 
-- **Do not add** Resources, Pricing, or other links to the top nav — they live in page footers
+- **Do not add** Resources or other links to the top nav — they live in page footers
+- Pricing IS in the nav (added 2026-06-01)
 - CTA is always "Early Access →" linking to `/early-access`
 - Active state: `"/"` uses exact match only (`pathname === "/"`); all other hrefs use startsWith
 
@@ -1101,8 +1102,14 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
 - **Never use real token names in mockups** — use NOVA, FLUX, VEST, KLAR
 - **Prices are now live** — do not replace them with "Coming soon" badges
 - **Never alter the logo SVG files** without explicit instruction
-- **Never add nav links to SiteNav** — Resources, Pricing etc. belong in page footers
+- **Never add nav links to SiteNav** without explicit instruction — Resources etc. belong in page footers; Pricing was added 2026-06-01
 - **Never use inline SVG for the Vestream logo in the nav** — use `<img src="/logo.svg">` or `<img src="/logo-dark.svg">`
 - **Never commit without verifying in preview first**
 - **Long `<code>` strings in cards** — add `break-all` or `overflow-x-auto` on the parent `<pre>` to prevent overflow on mobile
 - **Section backgrounds on dev/AI pages** — use theme-matched card colours, not the page background colour of the other theme
+
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->

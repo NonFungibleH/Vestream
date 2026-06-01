@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import PricingCta from "@/components/PricingCta";
+import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 
 export const metadata: Metadata = {
   title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
@@ -193,7 +194,7 @@ export default function Pricing() {
 
             <PricingCta
               href="/early-access"
-              label="Get early access →"
+              label="Get started free →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 mb-6"
               style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)", color: "#1CB8B8", textDecoration: "none" }}
             />
@@ -281,70 +282,10 @@ export default function Pricing() {
       </section>
 
       {/* ── Feature comparison table ──────────────────────────────────────────── */}
-      <section className="px-6 pb-20">
-        <div className="max-w-4xl mx-auto">
+      <section className="px-4 md:px-6 pb-20">
+        <div className="max-w-3xl mx-auto">
           <h2 className="text-xl font-bold text-center mb-8" style={{ color: "#1A1D20" }}>Compare plans</h2>
-
-          {/* Outer wrapper handles horizontal scroll on small screens —
-              375px can't fit a 4-column comparison grid without crushing
-              feature labels. Inner min-w-[640px] preserves desktop layout. */}
-          <div className="rounded-2xl overflow-x-auto"
-            style={{ border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-            <div className="min-w-[640px]">
-            {/* Header */}
-            <div className="grid grid-cols-4 px-4 md:px-6 py-4"
-              style={{ background: "#f1f5f9", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#B8BABD" }}>Feature</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#B8BABD" }}>Free</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#1CB8B8" }}>Pro</span>
-            </div>
-
-            {([
-              ["Wallet addresses",              "3",                "10 wallets"],
-              ["Auto-scan (all chains + platforms)", true,          true],
-              ["Real-time dashboard",           true,               true],
-              ["Claimable balance tracking",    true,               true],
-              ["Unlock calendar",               true,               true],
-              ["Push notifications",            "10 / month",       "Unlimited"],
-              ["Email alerts",                  false,              true],
-              ["Web dashboard (QR sign-in)",    false,              true],
-              ["Token Vesting Explorer",        false,              true],
-              ["Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)", false, true],
-              ["Vesting income statement (P&L view)", false,        true],
-              ["Year-end PDF tax report",       false,              true],
-              ["Support",                       false,              "Ticketing"],
-            ] as [string, string | boolean, string | boolean][]).map(([feature, free, pro], i, arr) => (
-              <div key={feature}
-                className="grid grid-cols-3 px-4 md:px-6 py-3.5 items-center"
-                style={{
-                  borderBottom: i < arr.length - 1 ? "1px solid rgba(0,0,0,0.05)" : undefined,
-                  background: i % 2 === 0 ? "white" : "rgba(248,250,252,0.6)",
-                }}>
-                <span className="text-sm" style={{ color: "#374151" }}>{feature}</span>
-                {/* Free */}
-                <div className="flex justify-center">
-                  {typeof free === "boolean" ? (
-                    free
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: "#374151" }}>{free}</span>
-                  )}
-                </div>
-                {/* Pro */}
-                <div className="flex justify-center">
-                  {typeof pro === "boolean" ? (
-                    pro
-                      ? <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#1CB8B8" fillOpacity={0.1}/><path d="M5 8l2 2 4-4" stroke="#1CB8B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : <svg width={16} height={16} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#B8BABD" fillOpacity={0.08}/><path d="M6 6l4 4M10 6l-4 4" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  ) : (
-                    <span className="text-xs font-semibold text-center" style={{ color: "#1CB8B8" }}>{pro}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-            </div>
-          </div>
+          <PricingComparisonTable />
         </div>
       </section>
 
