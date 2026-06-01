@@ -26,7 +26,7 @@
 // (via Vercel Data Cache wrapping the whole load — see protocols/page.tsx).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { protocolTvlSnapshots } from "../db/schema";
 import type { SupportedChainId } from "./types";
@@ -920,4 +920,44 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
       }, 2000),
     ),
   ]);
+}
+
+/**
+ * Per-protocol TVL breakdown — returns one `{ chainId, tvlUsd }` entry per
+ * chain for all given adapter IDs. Used by the `/protocols/[slug]` detail
+ * page to render the per-chain TVL bar chart.
+ *
+ * Returns rows summed across adapters (e.g. `uncx` + `uncx-vm` on the same
+ * chain are combined into a single row). Chains with $0 TVL are omitted.
+ * Sorted descending by tvlUsd.
+ */
+export async function readSnapshotsForAdapters(
+  adapterIds: readonly string[],
+): Promise<Array<{ chainId: number; tvlUsd: number }>> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  if (adapterIds.length === 0) return [];
+
+  try {
+    const rows = await db
+      .select({
+        chainId: protocolTvlSnapshots.chainId,
+        tvlUsd:  protocolTvlSnapshots.tvlUsd,
+      })
+      .from(protocolTvlSnapshots)
+      .where(inArray(protocolTvlSnapshots.protocol, [...adapterIds]));
+
+    // Sum across adapters — uncx + uncx-vm can have rows for the same chainId
+    const byChain = new Map<number, number>();
+    for (const r of rows) {
+      byChain.set(r.chainId, (byChain.get(r.chainId) ?? 0) + Number(r.tvlUsd));
+    }
+
+    return Array.from(byChain.entries())
+      .filter(([, usd]) => usd > 0)
+      .map(([chainId, tvlUsd]) => ({ chainId, tvlUsd }))
+      .sort((a, b) => b.tvlUsd - a.tvlUsd);
+  } catch (err) {
+    console.warn(`[tvl-snapshot] readSnapshotsForAdapters failed: ${err instanceof Error ? err.message : err}`);
+    return [];
+  }
 }

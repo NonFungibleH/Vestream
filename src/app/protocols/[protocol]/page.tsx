@@ -49,6 +49,7 @@ import {
   getLastGoodProtocolData,
   setLastGoodProtocolData,
 } from "@/lib/vesting/page-data-fallback";
+import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 
 // ISR with 60-second revalidation. Builds pre-render every protocol slug
 // once, runtime requests are served from edge cache (Cache-Control:
@@ -106,6 +107,8 @@ interface ProtocolPageData {
   /** 2026-05-14: fun-fact stats — biggest active stream, most popular
    *  token on this protocol, new-streams count for the past 24h. */
   funStats:     ProtocolFunStats | null;
+  /** 2026-06-01: per-chain TVL breakdown from protocolTvlSnapshots. */
+  tvlPerChain:  Array<{ chainId: number; tvlUsd: number }>;
 }
 
 // Empty-shape default. Returned during the build phase (no DB access)
@@ -118,6 +121,7 @@ const EMPTY_PROTOCOL_DATA: ProtocolPageData = {
   upcoming:     null,
   upcomingList: [],
   funStats:     null,
+  tvlPerChain:  [],
 };
 
 const loadProtocolData = unstable_cache(
@@ -146,16 +150,18 @@ const loadProtocolData = unstable_cache(
       getNextUpcomingUnlock(adapterIds),
       getUpcomingUnlocksForProtocol(adapterIds, 6),
       getProtocolFunStats(adapterIds),
+      readSnapshotsForAdapters(adapterIds),
     ]);
     const stats        = settled[0].status === "fulfilled" ? settled[0].value : null;
     const latest       = settled[1].status === "fulfilled" ? settled[1].value : null;
     const upcoming     = settled[2].status === "fulfilled" ? settled[2].value : null;
     const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
     const funStats     = settled[4].status === "fulfilled" ? settled[4].value : null;
+    const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number }>) : [];
     for (let i = 0; i < settled.length; i++) {
       const r = settled[i];
       if (r.status === "rejected") {
-        const queryName = ["getProtocolStats", "getLatestUnlock", "getNextUpcomingUnlock", "getUpcomingUnlocksForProtocol", "getProtocolFunStats"][i];
+        const queryName = ["getProtocolStats", "getLatestUnlock", "getNextUpcomingUnlock", "getUpcomingUnlocksForProtocol", "getProtocolFunStats", "readSnapshotsForAdapters"][i];
         console.warn(`[protocol-page] ${queryName} failed for ${adapterIds.join(",")}:`, r.reason);
       }
     }
@@ -224,13 +230,13 @@ const loadProtocolData = unstable_cache(
       upcoming: enrich(upcoming),
       upcomingList: upcomingList.map((g) => enrich(g)!),
       funStats,
+      tvlPerChain,
     };
   },
-  // v6 = bump after the funStats addition. Without bumping, the
-  // unstable_cache layer would serve old payloads missing the funStats
-  // field for up to CACHE_TTL_SECONDS, causing the new UI block to flicker
-  // empty for an hour after deploy.
-  ["protocol-page-data-v6"],
+  // v7 = bump after adding tvlPerChain. Without bumping, the
+  // unstable_cache layer would serve old payloads missing the field
+  // for up to CACHE_TTL_SECONDS after deploy.
+  ["protocol-page-data-v7"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -309,7 +315,7 @@ export default async function ProtocolLandingPage(
     const lastGood = await getLastGoodProtocolData<ProtocolPageData>(meta.slug);
     pageData = lastGood ?? EMPTY_PROTOCOL_DATA;
   }
-  const { stats, latest, upcoming, upcomingList, funStats } = pageData;
+  const { stats, latest, upcoming, upcomingList, funStats, tvlPerChain } = pageData;
 
   // Stream counts now come from cache only (getGlobalStats was dropped —
   // see the loadProtocolData comment for the why).
@@ -515,6 +521,54 @@ export default async function ProtocolLandingPage(
           </p>
         )}
       </section>
+
+      {/* ── TVL by chain ────────────────────────────────────────────────── */}
+      {tvlPerChain.length > 0 && (() => {
+        const totalTvl = tvlPerChain.reduce((s, r) => s + r.tvlUsd, 0);
+        return (
+          <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
+            <div
+              className="rounded-2xl p-5 md:p-6"
+              style={{ background: "white", border: `1px solid ${meta.border}`, boxShadow: `0 2px 10px rgba(0,0,0,0.03)` }}
+            >
+              <div className="flex items-baseline justify-between mb-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "#94A3B8", letterSpacing: "0.08em" }}>
+                  Locked value by chain
+                </h2>
+                <span className="text-base font-bold tabular-nums" style={{ color: "#1A1D20" }}>
+                  {formatUsdCompact(totalTvl)}
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {tvlPerChain.map((row) => {
+                  const pct = totalTvl > 0 ? (row.tvlUsd / totalTvl) * 100 : 0;
+                  return (
+                    <div key={row.chainId}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium" style={{ color: "#334155" }}>
+                          {chainLabel(row.chainId)}
+                        </span>
+                        <span className="text-sm font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
+                          {formatUsdCompact(row.tvlUsd)}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${Math.max(pct, 0.5)}%`, background: meta.color, opacity: 0.75 }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs mt-4" style={{ color: "#94A3B8" }}>
+                Vesting TVL only · updated daily · source: {tvlPerChain.length > 0 && ["sablier", "sablier-flow", "hedgey", "streamflow"].some(id => meta.adapterIds.includes(id)) ? "DefiLlama" : "on-chain index"}
+              </p>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── Spotlight stats (fun-fact row) ──────────────────────────────────
           2026-05-14: surfaces three "interesting things" beyond the raw
