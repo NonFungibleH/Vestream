@@ -111,27 +111,31 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
         // ── Per-chain sanity cap ─────────────────────────────────────────
         // DefiLlama's per-chain numbers occasionally include obvious data
         // errors — a single memecoin priced at a stale or corrupted oracle
-        // value can balloon a chain row by 10-100×. Real example
-        // (May 5 2026): sablier-lockup → Arbitrum-vesting reported $4.93B
-        // while every other chain sat under $300M and the global
-        // chainTvls.vesting headline was $5.5B (the bad chain alone
-        // accounted for 90% of it).
+        // value can balloon a chain row by 10-100×. Real examples:
+        //   May  5 2026: sablier-lockup → Arbitrum-vesting $4.93B (was 90%
+        //                of headline; other chains all under $300M).
+        //   Jun  1 2026: sablier-lockup → Arbitrum-vesting $7.09B while
+        //                Ethereum sat at $494M. With the old 5× multiplier
+        //                the cap had crept to $2.47B as ETH grew — an
+        //                apparent $1B jump in our displayed TVL.
         //
-        // The cap is the LARGER of "5× the next-largest chain" and a
+        // The cap is the LARGER of "3× the next-largest chain" and a
         // $1B absolute floor. Two failure modes the floor protects:
         //   - Streamflow on Solana ($552M legit, but next chain is ~$15M
-        //     so a relative-only cap would clip Solana to $75M).
+        //     so a relative-only cap would clip Solana to $45M).
         //   - Jupiter Lock on Solana (single-chain protocol, would be
-        //     clamped to second-largest × 5 = ~$0).
-        // The relative cap protects against "every chain is plausible
-        // except one" (the Sablier Arbitrum case).
+        //     clamped to second-largest × 3 = ~$0).
+        // Multiplier dropped 5× → 3× (2026-06-01): the 5× value let the
+        // Sablier Arbitrum bad-data bleed through as Ethereum TVL grew.
+        // At 3×: Arbitrum is capped at ~$1.48B (494M × 3) instead of
+        // $2.47B, keeping the headline closer to reality.
         //
         // When a row IS clamped we also reduce totalUsd by the difference
         // so the headline matches the post-cap sum.
         const ABSOLUTE_CHAIN_CAP_USD = 1_000_000_000;
         if (perChain.length >= 1) {
           const second = perChain[1]?.usd ?? 0;
-          const cap    = Math.max(second * 5, ABSOLUTE_CHAIN_CAP_USD);
+          const cap    = Math.max(second * 3, ABSOLUTE_CHAIN_CAP_USD);
           if (perChain[0].usd > cap) {
             const reduction = perChain[0].usd - cap;
             perChain[0] = { ...perChain[0], usd: cap };
