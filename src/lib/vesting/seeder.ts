@@ -542,7 +542,7 @@ const VIEM_CHAIN_MAP = {
 // Polygon ~10 days). The shared pool tags publicnode entries with
 // `excludeForLogs: true` and we pass `{ forLogs: true }` here so the seeder
 // only ever gets pool members that retain historical logs.
-import { getRpcUrl as getRpcUrlPool, getSolanaRpcUrls } from "./rpc";
+import { getRpcUrl as getRpcUrlPool, getSolanaRpcUrls, makeFallbackClient } from "./rpc";
 function getRpcUrl(chainId: SupportedChainId): string | undefined {
   return getRpcUrlPool(chainId, { forLogs: true });
 }
@@ -576,18 +576,23 @@ const HEDGEY_PAGE_SIZE = 100;
 
 export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
-  const rpcUrl   = getRpcUrl(chainId);
-  if (!contract || !rpcUrl) {
-    console.log(`[seeder:hedgey/${chainId}] skipped — RPC env var not configured`);
+  if (!contract) {
+    console.log(`[seeder:hedgey/${chainId}] skipped — no contract address configured`);
     return [];
   }
 
-  const chain = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
-  if (!chain) return [];
-
   const tag = `hedgey/${chainId}`;
   try {
-    const client = createPublicClient({ chain, transport: http(rpcUrl) });
+    // Use makeFallbackClient (full RPC pool with per-URL quarantine) instead of
+    // a single getRpcUrl() pick. BSC/Polygon multicall discovery was returning
+    // 0 unique owners when the single-URL rotation landed on 1rpc.io or ankr —
+    // providers that silently fail multicalls or cap responses. The fallback
+    // client retries down the pool on any single-provider failure.
+    const client = makeFallbackClient(chainId, { batch: true });
+    if (!client) {
+      console.log(`[seeder:hedgey/${chainId}] skipped — no fallback client available`);
+      return [];
+    }
 
     const totalSupply = await client.readContract({
       address: contract,
