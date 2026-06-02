@@ -450,13 +450,13 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
 
   // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
   // Reuse the URL that succeeded in phase 1 (already proven it's alive).
-  // Concurrency 2 with 200ms inter-batch pacing — concurrency 4 at 100ms
-  // triggered sustained 429 storms on Helius (observed 2026-06-02 with
-  // 413k accounts). At 2/200ms the 50k cap completes in ~50s comfortably
-  // within Vercel's 300s limit and Helius's free-tier CU/s window.
+  // Concurrency 1 with 500ms inter-batch pacing. Higher concurrency (2-4)
+  // triggers sustained 429 storms when Streamflow is running in parallel
+  // on the same Helius endpoint. At 1/500ms: 500 chunks × 500ms = 250s —
+  // within Vercel's 300s limit and well under Helius's CU/s rate limit.
   const connection = new Connection(usedUrl, "confirmed");
   const CHUNK = 100;
-  const FETCH_CONCURRENCY = 2;
+  const FETCH_CONCURRENCY = 1;
   const chunks: PublicKey[][] = [];
   for (let i = 0; i < pubkeys.length; i += CHUNK) {
     chunks.push(pubkeys.slice(i, i + CHUNK));
@@ -486,7 +486,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
         }
       }
     },
-    200, // 200ms inter-batch pacing — 100ms caused 429 storms at 413k scale.
+    500, // 500ms inter-batch pacing — concurrency 1 at 500ms = ~2 req/s, safe for Helius free tier.
   );
   console.log(
     `[jupiter-lock] phase 2 decode: ${escrows.length} active escrows from ${pubkeys.length} pubkeys (${chunkErrors} chunk errors)`,

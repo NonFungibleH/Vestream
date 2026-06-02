@@ -1191,24 +1191,21 @@ function limitFor(mode: SeedMode): number {
  *                 is slow and was reliably starving the tail of "subgraphs".
  *                 Own group gives Hedgey a full 300s budget.
  */
-export type SeedGroup = "heavy" | "solana" | "subgraphs" | "sablier" | "superfluid" | "hedgey";
+// 2026-06-02: "solana" group split into "streamflow" + "solana" (Jupiter Lock only).
+// When both Streamflow and Jupiter Lock shared the "solana" group they ran in
+// parallel (PARALLEL=6), both hitting Helius simultaneously (if SOLANA_RPC_URL
+// points to Helius). Combined traffic saturated Helius's free-tier CU/s limit
+// causing sustained 429 storms and Vercel 300s timeouts. Running sequentially
+// in separate cron jobs with a 30-min gap eliminates the contention.
+// Streamflow runs daily; Jupiter Lock every 2 days.
+export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey";
 
-// jupiter-lock group removed 2026-05-06 — JL per-stream seed disabled
-// while we're on Helius free tier (see SEED_JOBS for rationale).
-//
-// sablier extracted from subgraphs 2026-05-13 — Sablier alone eats 80–90s
-// of the 300s budget across 4 chains. With 45 other jobs in the same
-// group the subgraphs run was timing out at Vercel's hard limit. Splitting
-// Sablier into its own group lets the remaining ~35 lighter subgraph jobs
-// fit inside their 300s window comfortably while Sablier gets the full
-// budget for its slow chains. Net: one more cron entry, no extra total
-// runtime, no risk of timeout cascading from Sablier into the others.
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs", "sablier", "superfluid", "hedgey"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
-  if (adapterId === "streamflow")    return "solana";
-  if (adapterId === "jupiter-lock") return "solana";
+  if (adapterId === "streamflow")    return "streamflow"; // own group — runs daily, separate from JL
+  if (adapterId === "jupiter-lock") return "solana";      // "solana" group = Jupiter Lock only
   if (adapterId === "sablier")       return "sablier";
   // 2026-05-28: sablier-flow moved from "subgraphs" to "sablier" group.
   // Both adapters use the same Envio Hasura endpoint and have comparable
