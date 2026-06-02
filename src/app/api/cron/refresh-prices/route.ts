@@ -57,10 +57,23 @@ async function handle(req: NextRequest) {
 
   const startedAt = Date.now();
 
+  // Optional: ?minAgeDays=X — only refresh tokens older than X days.
+  // Useful for targeted catch-up runs ("refresh everything older than 3d")
+  // without changing the batch size. Default is no extra floor (the
+  // REFRESH_AFTER_SEC gate below still applies as a minimum).
+  const minAgeDaysParam = req.nextUrl.searchParams.get("minAgeDays");
+  const minAgeSec = minAgeDaysParam
+    ? Math.max(REFRESH_AFTER_SEC, Number(minAgeDaysParam) * 86_400)
+    : REFRESH_AFTER_SEC;
+
+  // Optional: ?limit=N — override the batch size for this run (capped at 2000).
+  const limitParam = req.nextUrl.searchParams.get("limit");
+  const batchSize = limitParam
+    ? Math.min(2000, Math.max(1, Number(limitParam)))
+    : REFRESH_BATCH_SIZE;
+
   // 1. Pick the N stalest tokens currently in the cache.
-  //    Brand-new tokens not yet in the cache get picked up by the TVL
-  //    snapshot cron's walker output — by design (see header comment).
-  const candidates = await pickStalestCachedTokens(REFRESH_BATCH_SIZE);
+  const candidates = await pickStalestCachedTokens(batchSize);
 
   if (candidates.length === 0) {
     return NextResponse.json({
@@ -74,7 +87,7 @@ async function handle(req: NextRequest) {
   // Apply the staleness threshold: ONLY refresh entries older than
   // REFRESH_AFTER_SEC. If the top-N stalest are all fresh, this cron is
   // effectively a no-op — fine, no API calls wasted.
-  const staleEnough = candidates.filter((c) => c.ageSec >= REFRESH_AFTER_SEC);
+  const staleEnough = candidates.filter((c) => c.ageSec >= minAgeSec);
 
   if (staleEnough.length === 0) {
     return NextResponse.json({
