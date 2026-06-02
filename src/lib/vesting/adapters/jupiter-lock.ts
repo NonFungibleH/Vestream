@@ -429,13 +429,34 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
     console.error("[jupiter-lock] phase 1 getProgramAccounts failed (or returned 0) on all configured URLs");
     return null;
   }
+
+  // ── Free-tier credit cap ──────────────────────────────────────────────────
+  // Jupiter Lock has grown to 413k+ escrow accounts (verified 2026-06-02).
+  // Fetching all of them costs ~826k Helius CUs per run — 25× the 1M/month
+  // free tier at daily frequency. Cap Phase 1 to PHASE1_ACCOUNT_CAP accounts
+  // so each run stays within ~100k CUs:
+  //   Phase 1: 50k accounts × 1 CU = 50k CU
+  //   Phase 2: 50k ÷ 100 chunks × 1 CU = 500 CU
+  //   Total: ~50.5k CU/run × 15 runs/month (every-2-days) ≈ 757k CU/month
+  // This is within the 1M free limit. Raise the cap or move to a paid
+  // Helius plan to index more accounts.
+  const PHASE1_ACCOUNT_CAP = 50_000;
+  if (pubkeys.length > PHASE1_ACCOUNT_CAP) {
+    console.warn(
+      `[jupiter-lock] phase 1: ${pubkeys.length} pubkeys exceeds cap of ${PHASE1_ACCOUNT_CAP} — truncating for free-tier Helius budget`,
+    );
+    pubkeys = pubkeys.slice(0, PHASE1_ACCOUNT_CAP);
+  }
+
   // Phase 2 — chunked full-body fetch via getMultipleAccountsInfo.
   // Reuse the URL that succeeded in phase 1 (already proven it's alive).
-  // 100-pubkey chunks × concurrency 4 keeps us under Helius free
-  // compute units/sec while still completing in ~60s for 44k accounts.
+  // Concurrency 2 with 200ms inter-batch pacing — concurrency 4 at 100ms
+  // triggered sustained 429 storms on Helius (observed 2026-06-02 with
+  // 413k accounts). At 2/200ms the 50k cap completes in ~50s comfortably
+  // within Vercel's 300s limit and Helius's free-tier CU/s window.
   const connection = new Connection(usedUrl, "confirmed");
   const CHUNK = 100;
-  const FETCH_CONCURRENCY = 4;
+  const FETCH_CONCURRENCY = 2;
   const chunks: PublicKey[][] = [];
   for (let i = 0; i < pubkeys.length; i += CHUNK) {
     chunks.push(pubkeys.slice(i, i + CHUNK));
@@ -465,7 +486,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
         }
       }
     },
-    100, // 100ms inter-batch pacing — same Helius rate-limit guard as Streamflow.
+    200, // 200ms inter-batch pacing — 100ms caused 429 storms at 413k scale.
   );
   console.log(
     `[jupiter-lock] phase 2 decode: ${escrows.length} active escrows from ${pubkeys.length} pubkeys (${chunkErrors} chunk errors)`,

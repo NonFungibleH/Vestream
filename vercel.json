@@ -82,7 +82,7 @@
     },
     {
       "path": "/api/cron/seed-cache?group=solana",
-      "schedule": "15 7 * * *"
+      "schedule": "15 7 */2 * *"
     }
   ],
   "headers": [
