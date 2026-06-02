@@ -394,12 +394,21 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
     const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").split("?")[0].slice(0, 60);
     try {
       const conn = new Connection(url, "confirmed");
+      // Phase 1 — pubkeys only via getProgramAccounts.
+      //
+      // IMPORTANT: dataSlice is set to { offset:0, length:8 } (the discriminator
+      // bytes), NOT { length:0 }. Some RPC providers (including Helius) apply
+      // dataSlice BEFORE evaluating memcmp filters, meaning a { length:0 } slice
+      // gives the filter 0 bytes to compare against and no accounts match.
+      // Fetching 8 bytes per account guarantees the memcmp filter always has
+      // data to compare. The extra ~352KB payload (8B × 44k accounts) is worth
+      // it to avoid silent 0-account returns.
       const lite = await conn.getProgramAccounts(programId, {
         commitment: "confirmed",
         filters: [
           { memcmp: { offset: 0, bytes: VESTING_ESCROW_DISCRIMINATOR_BS58 } },
         ],
-        dataSlice: { offset: 0, length: 0 },
+        dataSlice: { offset: 0, length: 8 },
       });
       const result = lite.map((a) => a.pubkey);
       if (result.length === 0) {
