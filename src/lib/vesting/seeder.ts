@@ -1208,6 +1208,7 @@ export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "subgraphs"
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
   if (adapterId === "streamflow")    return "solana";
+  if (adapterId === "jupiter-lock") return "solana";
   if (adapterId === "sablier")       return "sablier";
   // 2026-05-28: sablier-flow moved from "subgraphs" to "sablier" group.
   // Both adapters use the same Envio Hasura endpoint and have comparable

@@ -45,12 +45,15 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
 import { mapBounded } from "../rpc";
 
-// Helius free tier caps compute units per second. Concurrency 4 with a
-// 100ms inter-batch delay keeps us comfortably under the limit while
-// still completing 50 wallets in ~5-10s. Bumping concurrency higher
-// triggers 429 storms (confirmed in production logs May 1 2026).
-const SOLANA_CONCURRENCY = 4;
-const SOLANA_BATCH_DELAY_MS = 100;
+// Concurrency + delay tuned for free-tier Solana RPCs (Alchemy / Helius).
+// Each Streamflow SDK call internally fires 3-5 RPC sub-requests, so
+// CONCURRENCY=4 → ~16 simultaneous requests per batch, which reliably
+// triggers 429 storms on Alchemy (observed in production 2026-06-02).
+// Dropping to 2 concurrent wallets × 250ms inter-batch delay gives
+// ~8 requests/batch every 250ms = ~32 req/s — well inside Alchemy's
+// free-tier 40 req/s window and Helius's credit rate limits.
+const SOLANA_CONCURRENCY = 2;
+const SOLANA_BATCH_DELAY_MS = 250;
 
 // ─── Jupiter token list (symbol fallback) ───────────────────────────────────
 //
