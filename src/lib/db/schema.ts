@@ -602,6 +602,19 @@ export const vestingStreamsCache = pgTable(
     // Without it: 290ms parallel Seq Scan. With: 3ms index lookup.
     // Drizzle doesn't natively model expression indexes; declared via
     // raw SQL in migration 0017 and mirrored here as a comment.
+    //
+    // Partial index: (protocol, end_time) WHERE is_fully_vested = false.
+    // The /protocols/[slug]/unlocks page queries active-only streams ordered
+    // by end_time — the full index vsc_protocol_end_time_idx covered
+    // (protocol, end_time) but left Postgres to apply is_fully_vested as a
+    // post-filter, scanning and discarding 15k+ dead rows per query.
+    // 80% of the cache is fully-vested; the partial index covers only the
+    // active 19%, shrinking the index 5× and dropping Pass A from 2,084ms
+    // to 433ms. Created live 2026-06-02; mirrored here as a comment since
+    // Drizzle doesn't model partial indexes natively.
+    // SQL: CREATE INDEX vsc_active_protocol_end_time_idx
+    //      ON vesting_streams_cache (protocol, end_time)
+    //      WHERE is_fully_vested = false;
   ]
 );
 
