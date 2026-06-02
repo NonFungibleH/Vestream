@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/refresh-prices",
-      "schedule": "20 8,20 * * *"
+      "schedule": "20 2,8,14,20 * * *"
     },
     {
       "path": "/api/cron/notify",

@@ -93,14 +93,15 @@ function parseMode(req: NextRequest): SeedMode {
  * self-fetch) gets a sub-second 202 confirming the work is queued, then
  * the seeder runs to completion within Vercel's maxDuration (300s).
  */
-function runOneGroup(group: SeedGroup, mode: SeedMode): NextResponse {
+function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null = null): NextResponse {
   after(async () => {
     const startedAt = Date.now();
     try {
-      const results = await seedAll(mode, group);
+      const results = await seedAll(mode, group, protocolId);
       const summary = summariseRun(results);
       const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
-      console.log(`[cron/seed-cache] group="${group}" mode="${mode}" complete in ${elapsed}s —`, summary);
+      const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
+      console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsed}s —`, summary);
       // Fresh data landed in vesting_streams_cache. Bust the
       // /protocols + /status page caches so users see the new freshness
       // matrix on their next pageview instead of waiting out the 5-min
@@ -118,9 +119,12 @@ function runOneGroup(group: SeedGroup, mode: SeedMode): NextResponse {
   return NextResponse.json({
     ok:        true,
     group,
+    ...(protocolId ? { protocol: protocolId } : {}),
     mode,
     accepted:  true,
-    message:   `Group "${group}" queued in background. Check Vercel logs for completion.`,
+    message:   protocolId
+      ? `Protocol "${protocolId}" in group "${group}" queued in background.`
+      : `Group "${group}" queued in background. Check Vercel logs for completion.`,
     startedAt: new Date().toISOString(),
   }, { status: 202 });
 }
@@ -133,9 +137,12 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const mode  = parseMode(req);
-  const group = parseSeedGroup(req.nextUrl.searchParams.get("group"));
-  const sync  = req.nextUrl.searchParams.get("sync") === "1";
+  const mode       = parseMode(req);
+  const group      = parseSeedGroup(req.nextUrl.searchParams.get("group"));
+  const sync       = req.nextUrl.searchParams.get("sync") === "1";
+  // Optional: narrow to a single adapter within the group.
+  // e.g. ?group=subgraphs&protocol=unvest — runs only Unvest jobs.
+  const protocolId = req.nextUrl.searchParams.get("protocol") ?? null;
 
   // Diagnostic sync path: blocks until seedAll() completes and returns the
   // actual per-job results. Use sparingly — caller pays the full latency
@@ -144,7 +151,7 @@ async function handle(req: NextRequest) {
   if (sync && group) {
     const startedAt = Date.now();
     try {
-      const results = await seedAll(mode, group);
+      const results = await seedAll(mode, group, protocolId);
       const summary = summariseRun(results);
       return NextResponse.json({
         ok:      true,
@@ -176,7 +183,7 @@ async function handle(req: NextRequest) {
 
   // Per-group path — Vercel cron / curl asked for a specific group. Run inline.
   if (group) {
-    return runOneGroup(group, mode);
+    return runOneGroup(group, mode, protocolId);
   }
 
   // No `?group=` provided — return 400 with a usage hint. The fan-out

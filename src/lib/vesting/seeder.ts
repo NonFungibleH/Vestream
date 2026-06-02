@@ -1674,8 +1674,13 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
  *     (manually or via a separate weekly cron), not on every tick.
  */
 export async function seedAll(
-  mode:  SeedMode  = "incremental",
-  group: SeedGroup | null = null,
+  mode:       SeedMode    = "incremental",
+  group:      SeedGroup | null = null,
+  /** Optional: restrict to a single adapter ID within the group.
+   *  Used by the seed-cache route's ?protocol=X param so an operator
+   *  can re-seed just one protocol without running the whole group.
+   *  Example: group="subgraphs"&protocol="unvest" → only Unvest jobs. */
+  protocolId: string | null = null,
 ): Promise<SeedRunResult[]> {
   const limit    = limitFor(mode);
   // Parallel job count within a single group invocation. Was 3; bumped to
@@ -1701,12 +1706,16 @@ export async function seedAll(
     return enabled;
   });
 
-  // Optional group filter. Used by the seed-cache route's fan-out pattern
-  // so each background invocation runs only its slice — heavy/solana/
-  // subgraphs each get their own 300s budget.
+  // Optional group filter.
   if (group) {
     jobs = jobs.filter((j) => groupFor(j.adapterId) === group);
     console.log(`[seeder] running group="${group}" — ${jobs.length} job(s)`);
+  }
+
+  // Optional protocol filter — narrows within the group to a single adapter.
+  if (protocolId) {
+    jobs = jobs.filter((j) => j.adapterId === protocolId);
+    console.log(`[seeder] protocol filter="${protocolId}" — ${jobs.length} job(s)`);
   }
 
   for (let i = 0; i < jobs.length; i += PARALLEL) {
