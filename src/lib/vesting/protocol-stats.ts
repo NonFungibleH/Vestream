@@ -281,7 +281,13 @@ async function computeProtocolStatsFromCache(
 ): Promise<ProtocolStats> {
   const filter = adapterFilter(adapterIds);
 
-  const [statsRow] = await db
+  // This GROUP BY runs across the entire vestingStreamsCache table with JSONB
+  // parsing. On a large table it can take 5-20s. Cap at 6s so that repeated
+  // parallel calls from the /protocols page don't cascade into a 524 timeout.
+  // The caller (getProtocolStats) catches this error and the page renders with
+  // placeholder stats. The protocol_summaries fast path avoids this entirely
+  // when the cron has run.
+  const queryPromise = db
     .select({
       total:       sql<number>`count(*)::int`,
       active:      sql<number>`count(*) filter (
@@ -303,6 +309,13 @@ async function computeProtocolStatsFromCache(
     })
     .from(vestingStreamsCache)
     .where(and(filter, excludeTestnets));
+
+  const [statsRow] = await Promise.race([
+    queryPromise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("computeProtocolStatsFromCache: 6s query timeout")), 6_000)
+    ),
+  ]);
 
   const lastIndexedAt = toDate(statsRow?.lastIndexed);
 

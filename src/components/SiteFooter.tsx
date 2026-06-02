@@ -60,7 +60,7 @@ const LINK_GROUPS = [
       { label: "Unlock calendar",      href: "/unlocks"   },
       { label: "Demo",                 href: "/demo"      },
       { label: "Pricing",              href: "/pricing"   },
-      { label: "Payroll · Coming soon", href: "/payroll"  },
+      { label: "Payroll",                href: "/payroll"  },
       { label: "Resources",            href: "/resources" },
       { label: "FAQ",                  href: "/faq"       },
       { label: "Contact",              href: "/contact"   },

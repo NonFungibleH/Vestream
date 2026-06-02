@@ -101,22 +101,39 @@ const loadProtocolsData = unstable_cache(
       computedAtMap:  {} as Record<string, string>,
     };
 
-    try {
-      const [statsEntries, snapshotRows] = await Promise.all([
-        Promise.all(
-          protocols.map(async (p) => {
-            try {
-              return [p.slug, await getProtocolStats(p.adapterIds)] as const;
-            } catch (err) {
-              console.error(`[unlocks] stats failed for ${p.slug}:`, err);
-              return [p.slug, null as ProtocolStats | null] as const;
-            }
-          }),
+    // Hard budget for the entire data load. The protocol_summaries fast path
+    // should finish in <500ms. If it falls through to computeProtocolStatsFromCache
+    // (GROUP BY on vestingStreamsCache) for all protocols in parallel, the
+    // combined query time can exceed Cloudflare's 100s gateway timeout and
+    // return a 524. Cap at 12s so we always return a partial-but-valid page
+    // rather than a timeout error. The unstable_cache layer retries on the
+    // next request; partial data is strictly better than a blank 524.
+    const STATS_TIMEOUT_MS = 8_000;   // per-protocol cap
+    const TOTAL_TIMEOUT_MS = 12_000;  // whole loadProtocolsData budget
+
+    const withStatsTimeout = (p: typeof protocols[number]) =>
+      Promise.race([
+        getProtocolStats(p.adapterIds),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`stats timeout for ${p.slug}`)), STATS_TIMEOUT_MS)
         ),
-        readAllSnapshots().catch((err) => {
-          console.error("[unlocks] snapshot read failed:", err);
-          return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
-        }),
+      ]).catch((err) => {
+        console.warn(`[protocols] stats timeout/error for ${p.slug}:`, err instanceof Error ? err.message : err);
+        return null as ProtocolStats | null;
+      });
+
+    try {
+      const [statsEntries, snapshotRows] = await Promise.race([
+        Promise.all([
+          Promise.all(protocols.map((p) => withStatsTimeout(p).then((s) => [p.slug, s] as const))),
+          readAllSnapshots().catch((err) => {
+            console.error("[unlocks] snapshot read failed:", err);
+            return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
+          }),
+        ]),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("loadProtocolsData total budget exceeded")), TOTAL_TIMEOUT_MS)
+        ),
       ]);
 
       // Aggregate snapshot rows by protocol — sum across chains.
