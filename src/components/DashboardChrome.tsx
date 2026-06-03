@@ -16,6 +16,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardFooter } from "./DashboardFooter";
 
 // ─── Mobile bottom navigation bar ────────────────────────────────────────────
 // Shown only on small screens (md:hidden). Mirrors the 5 most-used nav items.
@@ -164,6 +165,9 @@ export function DashboardChrome({ children, tier }: DashboardChromeProps) {
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-[60px] md:pb-0">
             {children}
           </div>
+          {/* Slim dashboard-wide footer (desktop only — mobile uses MobileNav).
+              Pinned below the scrollable content; themes via --preview vars. */}
+          <DashboardFooter />
         </div>
       </div>
 
