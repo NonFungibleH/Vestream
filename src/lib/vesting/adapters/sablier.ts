@@ -81,6 +81,15 @@ const STREAMS_QUERY = /* GraphQL */ `
         amount
         endTime
       }
+      segments {
+        position
+        startTime
+        endTime
+        startAmount
+        endAmount
+        amount
+        exponent
+      }
       actions(
         where: { category: { _eq: "Withdraw" } }
         limit: 20
@@ -115,6 +124,20 @@ interface RawLockupStream {
   cancelable:      boolean;
   category:        string | null;     // "LockupLinear" | "LockupTranched" | "LockupDynamic"
   tranches:        Array<{ amount: string; endTime: string }> | null;
+  // LockupDynamic only — curve segments. `exponent` is 1e18-scaled (1e18 = 1.0
+  // = linear; >1e18 = back-loaded/convex; <1e18 = front-loaded/concave).
+  // startAmount/endAmount are the EXACT cumulative vested at each segment
+  // boundary (Envio computes them), so we anchor to those and interpolate the
+  // curve within a segment via the exponent.
+  segments:        Array<{
+    position:    string;
+    startTime:   string;
+    endTime:     string;
+    startAmount: string;
+    endAmount:   string;
+    amount:      string;
+    exponent:    string;
+  }> | null;
   // LockupAction is polymorphic — Withdraw actions keep the amount in `amountB`.
   actions?:         Array<{ amountB: string | null; timestamp: string }> | null;
   // Create action (filtered to category=Create above) — single-element
@@ -122,6 +145,64 @@ interface RawLockupStream {
   // index didn't track the create event (very old streams from before
   // Envio added the field).
   creationActions?: Array<{ hash: string | null }> | null;
+}
+
+// ─── LockupDynamic curve sampling ────────────────────────────────────────────
+// Sablier LockupDynamic vests along a curve defined by segments. Each segment
+// releases `amount` between [startTime, endTime] following
+//   vested(t) = startAmount + (endAmount - startAmount) · progress ^ exponent
+// where progress = (t - startTime) / (endTime - startTime) ∈ [0,1] and
+// `exponent` is 1e18-scaled (1e18 ⇒ 1.0 ⇒ linear).
+//
+// We sample the curve into discrete `unlockSteps` (incremental amounts) so the
+// existing "steps" rendering + computeStepVesting handle it — no new chart or
+// math path. Endpoints anchor to Envio's exact startAmount/endAmount, so the
+// approximation is exact at segment boundaries and smooth in between.
+const DYNAMIC_SUBSTEPS = 8;        // sample points per non-linear segment
+const EXPONENT_SCALE   = 1e18;     // Sablier SD59x18: 1e18 == exponent 1.0
+
+function sampleDynamicSegments(
+  segments: NonNullable<RawLockupStream["segments"]>,
+): Array<{ timestamp: number; amount: string }> {
+  const steps: Array<{ timestamp: number; amount: string }> = [];
+  let prevCum = 0n;
+
+  const ordered = [...segments].sort((a, b) => Number(a.position) - Number(b.position));
+  for (const seg of ordered) {
+    const segStart = Number(seg.startTime);
+    const segEnd   = Number(seg.endTime);
+    const startCum = BigInt(seg.startAmount);
+    const endCum   = BigInt(seg.endAmount);
+    const dur      = segEnd - segStart;
+
+    // Degenerate / instant segment (cliff-like): emit one step at its end.
+    if (dur <= 0 || endCum <= startCum) {
+      if (endCum > prevCum) {
+        steps.push({ timestamp: segEnd, amount: (endCum - prevCum).toString() });
+        prevCum = endCum;
+      }
+      continue;
+    }
+
+    const exp      = Number(seg.exponent) / EXPONENT_SCALE;
+    const isLinear = Math.abs(exp - 1) < 1e-9;
+    const n        = isLinear ? 1 : DYNAMIC_SUBSTEPS;
+    const span     = endCum - startCum;
+
+    for (let i = 1; i <= n; i++) {
+      const frac = i / n;                              // fraction along segment time
+      const ts   = segStart + Math.round(frac * dur);
+      // cumulative within segment; at frac=1 → frac^exp=1 → cum=endCum exactly.
+      const curveFrac = Math.pow(frac, exp);           // ∈ [0,1]
+      const cum = startCum + (span * BigInt(Math.round(curveFrac * 1e9))) / 1_000_000_000n;
+      const delta = cum > prevCum ? cum - prevCum : 0n;
+      if (delta > 0n) {
+        steps.push({ timestamp: ts, amount: delta.toString() });
+        prevCum = cum;
+      }
+    }
+  }
+  return steps;
 }
 
 // ─── Fetch ─────────────────────────────────────────────────────────────────────
@@ -196,14 +277,21 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     const total     = BigInt(raw.depositAmount);
     const withdrawn = BigInt(raw.withdrawnAmount);
 
-    // LockupTranched = step/milestone vesting. Tranches carry their own end
-    // times + amounts; vesting math uses computeStepVesting instead of linear.
-    const isStepStream = raw.category === "LockupTranched" && Array.isArray(raw.tranches) && raw.tranches.length > 0;
-    const unlockSteps  = isStepStream
+    // Both Tranched and Dynamic vest in a non-linear shape we represent as
+    // discrete unlockSteps (Tranched = explicit tranches; Dynamic = its curve
+    // sampled via sampleDynamicSegments). Both then use computeStepVesting +
+    // the "steps" chart, so claimable math and the rendered curve agree.
+    // LockupLinear (and anything else) stays on the straight-line path.
+    const isTranched = raw.category === "LockupTranched" && Array.isArray(raw.tranches) && raw.tranches.length > 0;
+    const isDynamic  = raw.category === "LockupDynamic"  && Array.isArray(raw.segments) && raw.segments.length > 0;
+    const unlockSteps = isTranched
       ? raw.tranches!
           .map((t) => ({ timestamp: Number(t.endTime), amount: t.amount }))
           .sort((a, b) => a.timestamp - b.timestamp)
-      : undefined;
+      : isDynamic
+        ? sampleDynamicSegments(raw.segments!)
+        : undefined;
+    const isStepStream = (isTranched || isDynamic) && !!unlockSteps && unlockSteps.length > 0;
 
     let claimableNow: bigint, lockedAmount: bigint, isFullyVested: boolean;
     if (isStepStream && unlockSteps) {
