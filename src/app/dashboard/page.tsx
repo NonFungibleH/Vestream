@@ -1176,8 +1176,11 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                   <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{pctClaimable.toFixed(1)}% of total</p>
                 </>
               )}
-              {/* Raw amounts for tokens without a market price */}
-              {claimableNoPrice.slice(0, 2).map((t) => (
+              {/* Raw amounts for tokens without a market price — only in USD
+                  mode (alongside the USD total). When there's NO price at all,
+                  the fallback below renders them instead — gating on hasPrice
+                  here stops both paths listing the same tokens twice. */}
+              {hasPrice && claimableNoPrice.slice(0, 2).map((t) => (
                 <p key={t.symbol} className="text-sm font-bold tabular-nums mt-0.5 leading-tight text-white">
                   {t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })}
                   <span className="text-[10px] font-semibold ml-1" style={{ color: t.color }}>{t.symbol}</span>

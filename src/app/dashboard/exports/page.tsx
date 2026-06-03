@@ -308,8 +308,8 @@ export default function ExportsPage() {
     : [];
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--preview-bg)" }}>
-      <main className="flex-1 px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
+    <div className="flex flex-1 overflow-hidden" style={{ background: "var(--preview-bg)" }}>
+      <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
 
         {/* Hero */}
         <div className="mb-5">
@@ -319,25 +319,11 @@ export default function ExportsPage() {
             <span>Tax</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Tax &amp; Income
+            Tax Exports
           </h1>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
             Every vesting claim priced at the moment of receipt. Export to your accountant or import directly into Koinly, CoinTracker, or TurboTax.
           </p>
-        </div>
-
-        {/* Sub-tab nav — Tax Exports | Income Statement */}
-        <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
-          style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)" }}>
-          <span className="px-4 py-1.5 rounded-lg text-xs font-semibold"
-            style={{ background: "var(--preview-card)", color: "#1CB8B8", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
-            Tax Exports
-          </span>
-          <Link href="/dashboard/income-statement"
-            className="px-4 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
-            style={{ color: "var(--preview-text-3)" }}>
-            Income Statement
-          </Link>
         </div>
 
         {/* Coverage banner — honest about what's indexed */}

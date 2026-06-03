@@ -113,6 +113,12 @@ After these land, the personal-context trifecta is complete: what (notes), how o
 
 ## Soon (1–3 months)
 
+### Vesting income statement (re-introduce)
+
+- **What** — Bring back the `/dashboard/income-statement` view (gross vesting income by payer/period). The page code still exists; it was unlinked from the sidebar + the Tax page sub-tab on 2026-06-04 as low-priority while we focus the Tax page on the claims→export flow.
+- **Why** — Useful for DAO contributors / payroll recipients filing ordinary income, but lower priority than making the core export tool slick. Re-link the nav + sub-tab when we pick it back up.
+- **Size** — `S` to re-link; `M` if we rework it to match the redesigned Tax page.
+
 ### In-app claiming (connect wallet → claim direct from smart contracts)
 
 - **What** — Instead of linking users out to Sablier/Hedgey/etc to claim, surface a "Claim" button in the dashboard and mobile app. User connects their wallet, we call the protocol's release function directly. No protocol page needed.
