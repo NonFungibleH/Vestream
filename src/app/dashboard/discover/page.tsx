@@ -275,22 +275,23 @@ function ResultCard({
               ? (isTokenWatching(tok.address) || watchStatus[tokenKey] === "watching")
               : false;
 
-            return (
-              <div key={tokenKey} className="px-4 py-2.5 flex items-center gap-3"
-                style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
-
-                {/* Token avatar */}
+            // Token avatar + info; made clickable into the Vesting Index
+            // drill-down when we have a contract address.
+            const tokenInner = (
+              <>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[9px] font-bold"
                   style={{ background: pc.bg, color: pc.text }}>
                   {tok.symbol.slice(0, 3).toUpperCase()}
                 </div>
-
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>{tok.symbol}</span>
                     <span className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
                       · {tok.streamCount} stream{tok.streamCount !== 1 ? "s" : ""}
                     </span>
+                    {tok.address && (
+                      <span className="text-[9px] font-semibold" style={{ color: "#0F8A8A" }}>· view →</span>
+                    )}
                   </div>
                   <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
                     <span style={{ color: "#3FA568" }}>{fmtTokenAmount(tok.claimableNowRaw, tok.decimals)} claimable</span>
@@ -298,6 +299,23 @@ function ResultCard({
                     {fmtTokenAmount(tok.totalAmountRaw, tok.decimals)} total
                   </p>
                 </div>
+              </>
+            );
+
+            return (
+              <div key={tokenKey} className="px-4 py-2.5 flex items-center gap-3"
+                style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
+
+                {tok.address ? (
+                  <Link
+                    href={`/dashboard/explorer/token/${result.chainId}/${tok.address}`}
+                    className="flex items-center gap-3 flex-1 min-w-0 rounded-lg transition-colors hover:bg-[var(--preview-muted)]"
+                  >
+                    {tokenInner}
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 flex-1 min-w-0">{tokenInner}</div>
+                )}
 
                 {/* Watch this token (only if we have a contract address) */}
                 {tok.address ? (
