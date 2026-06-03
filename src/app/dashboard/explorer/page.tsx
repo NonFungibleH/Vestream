@@ -42,6 +42,7 @@ import { resolveEnsName } from "@/lib/ens";
 import { listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
+import { SavedTokensStrip } from "./SavedTokensStrip";
 // ExplorerSidebar removed — sidebar is now provided by
 // src/app/dashboard/layout.tsx via the shared DashboardSidebar component.
 // import { ExplorerSidebar } from "./Sidebar";
@@ -260,6 +261,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             </Link>
           </p>
         </header>
+
+        {/* Saved tokens (replaces the old standalone watchlist page) */}
+        <SavedTokensStrip />
 
         {/* Search input */}
         <ExplorerSearchInput

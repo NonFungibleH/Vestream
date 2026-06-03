@@ -20,6 +20,7 @@ import { getCurrentUserTier } from "@/lib/auth/tier";
 import { TokenUnlockChart } from "./TokenUnlockChart";
 import { RoundsList } from "./RoundsList";
 import { CopyButton } from "./CopyButton";
+import { SaveTokenButton } from "./SaveTokenButton";
 
 const FREE_TIER_ROW_CAP = 50;
 
@@ -90,14 +91,17 @@ export default async function ExplorerTokenPage({
               </span>
             </div>
           </div>
-          {priceUsd != null && (
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>Price</p>
-              <p className="text-lg font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
-                ${priceUsd < 0.01 ? priceUsd.toPrecision(2) : priceUsd.toLocaleString("en-US", { maximumFractionDigits: 4 })}
-              </p>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {priceUsd != null && (
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>Price</p>
+                <p className="text-lg font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
+                  ${priceUsd < 0.01 ? priceUsd.toPrecision(2) : priceUsd.toLocaleString("en-US", { maximumFractionDigits: 4 })}
+                </p>
+              </div>
+            )}
+            <SaveTokenButton chainId={cid} address={addr} symbol={symbol} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
