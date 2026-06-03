@@ -273,7 +273,11 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
         {/* Active mode tabs + save-search action */}
         <div className="mt-5 flex items-center justify-between gap-3 border-b" style={{ borderColor: "var(--preview-border)" }}>
           <div className="flex items-center gap-1">
-            {(["calendar", "stream", "wallet"] as const).map((m) => {
+            {/* Only the two browse lenses get tabs. Wallet lookups have no tab:
+                searching a wallet address / ENS in the box routes to wallet
+                results automatically (destinationForQuery → ?mode=wallet), so a
+                dedicated tab is redundant. ?mode=wallet links still render. */}
+            {(["calendar", "stream"] as const).map((m) => {
               const active = mode === m;
               const href = buildUrl({ ...sp, mode: m });
               return (
@@ -288,11 +292,11 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                   }}
                 >
                   {/* Renamed from Calendar/Streams to Upcoming/Schedules so
-                      the three facets read as distinct lenses rather than
+                      the facets read as distinct lenses rather than
                       overlapping nouns. URL params (?mode=calendar) kept
                       unchanged so existing links / SEO / saved searches
                       don't break. */}
-                  {m === "calendar" ? "Upcoming" : m === "stream" ? "Schedules" : "Wallets"}
+                  {m === "calendar" ? "Upcoming" : "Schedules"}
                 </Link>
               );
             })}
