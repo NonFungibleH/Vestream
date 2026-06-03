@@ -5,6 +5,8 @@ import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { readFromCache, writeToCache, readAllStreamsForWallets, mergeFreshWithCached } from "@/lib/vesting/dbcache";
+import { getUserByAddress } from "@/lib/db/queries";
+import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 
 // ─── Hot in-memory cache (L1) ─────────────────────────────────────────────────
 // Avoids DB round-trips for the same request within a single server instance.
@@ -36,6 +38,14 @@ export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session.address) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Defense-in-depth Pro-tier gate. The dashboard layout already guards the
+  // UI server-side, but the data API must independently verify tier so it
+  // can't be hit directly by a logged-in-but-non-Pro session. Fail closed.
+  const user = await getUserByAddress(session.address).catch(() => null);
+  if (!canAccessDashboard(normaliseTier(user?.tier))) {
+    return NextResponse.json({ error: "Pro subscription required" }, { status: 403 });
   }
 
   // Rate limit: 30 vesting lookups per user per minute (subgraph calls are expensive)

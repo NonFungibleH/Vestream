@@ -27,35 +27,63 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
 import { getSession } from "@/lib/auth/session";
+import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
 /**
- * Look up the authenticated user's tier without crashing if the request
- * isn't authenticated or the DB is unreachable. Best-effort: returns
- * "free" as a sensible default so the sidebar still renders. Auth
- * gating itself happens at the middleware / per-page level — this is
- * just for the upgrade-prompt rendering.
+ * Server-side dashboard gate. Defense-in-depth on top of the middleware
+ * cookie-existence check (src/middleware.ts):
+ *
+ *   - middleware blocks visitors with NO `vestr_session` cookie.
+ *   - this layout DECRYPTS the iron-session and confirms a real address +
+ *     Pro tier. A stripped, expired, or non-Pro cookie reaches here, fails
+ *     the check, and gets bounced — the middleware can't do this because it
+ *     can't decrypt the cookie at the edge.
+ *
+ * Build-phase guard: skip DB/session work during `next build` (no request
+ * context) so static generation doesn't crash — see CLAUDE.md landmine.
+ * Returns the validated tier for the sidebar's upgrade-prompt rendering.
  */
-async function getUserTier(): Promise<string> {
+async function requireDashboardAccess(): Promise<string> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return "pro";
+  let address: string | null = null;
   try {
     const session = await getSession();
-    if (!session.address) return "free";
+    address = session.address ?? null;
+  } catch {
+    address = null;
+  }
+  // No valid (decryptable) session → not logged in.
+  if (!address) redirect("/login");
+
+  let tier = "free";
+  try {
     const [u] = await db
       .select({ tier: users.tier })
       .from(users)
-      .where(eq(users.address, session.address.toLowerCase()))
+      .where(eq(users.address, address.toLowerCase()))
       .limit(1);
-    return u?.tier ?? "free";
+    tier = u?.tier ?? "free";
   } catch {
-    return "free";
+    // DB unreachable — fail CLOSED for a security gate. A transient blip
+    // bouncing a real Pro user to /login is recoverable; serving the
+    // dashboard to an unverified session is not.
+    redirect("/login");
   }
+
+  if (!canAccessDashboard(normaliseTier(tier))) {
+    // Valid session but not Pro (e.g. lapsed subscription) → upgrade path.
+    redirect("/login");
+  }
+  return tier;
 }
 
 export default async function DashboardLayout({
@@ -63,10 +91,13 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [rateBundle, cookieStore, tier] = await Promise.all([
+  // Gate FIRST — redirect() throws, so nothing below renders for an
+  // unauthenticated / non-Pro request.
+  const tier = await requireDashboardAccess();
+
+  const [rateBundle, cookieStore] = await Promise.all([
     getRates(),
     cookies(),
-    getUserTier(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
   // Read dark-mode preference from cookie at SSR. Pre-refactor, every
