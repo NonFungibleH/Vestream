@@ -4862,7 +4862,15 @@ export default function Dashboard() {
   function toggleDark() {
     setDark((v) => {
       const next = !v;
-      setDarkModePreference(next);
+      setDarkModePreference(next);   // persist to cookie + localStorage
+      // The dashboard's `.dark` class lives on the SERVER-rendered layout
+      // wrapper (app/dashboard/layout.tsx), which spans the sidebar AND the
+      // main column. Setting the cookie alone doesn't re-theme the already-
+      // rendered tree, so the old behaviour left the sidebar light while the
+      // main column changed — the "half dark" bug. router.refresh() re-runs
+      // the server layout with the new cookie, flipping the whole tree
+      // atomically (one source of truth, no half-state).
+      router.refresh();
       return next;
     });
   }

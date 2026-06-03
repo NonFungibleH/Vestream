@@ -24,7 +24,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback } from "react";
 
 // ─── Icons (match the existing dashboard set; kept inline to avoid adding
 // an icon library) ──────────────────────────────────────────────────────────
@@ -74,23 +74,9 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
-  const [dark, setDark] = useState(false);
-
-  // Sync dark mode from localStorage (set by the main dashboard page)
-  useEffect(() => {
-    const stored = localStorage.getItem("vestr-dark");
-    setDark(stored === "true");
-  }, []);
-
-  function toggleDark() {
-    setDark((v) => {
-      const next = !v;
-      localStorage.setItem("vestr-dark", String(next));
-      // Toggle .dark on <html> so CSS vars + Tailwind dark: classes apply
-      document.documentElement.classList.toggle("dark", next);
-      return next;
-    });
-  }
+  // Theme is controlled by the header toggle + the layout's cookie-driven
+  // `.dark` wrapper. The logo swap below uses Tailwind `dark:` variants which
+  // key off that ancestor class, so the sidebar needs no local dark state.
 
   const handleNav = useCallback((href: string) => {
     router.push(href);
@@ -166,20 +152,12 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
           </div>
         </div>
 
-        {/* Dark / light mode toggle — applies across all dashboard routes */}
-        <button
-          onClick={toggleDark}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all"
-          style={{ color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--preview-muted)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-        >
-          <span>{dark ? "☀ Light mode" : "☽ Dark mode"}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-            style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
-            {dark ? "ON" : "OFF"}
-          </span>
-        </button>
+        {/* Dark/light toggle removed 2026-06 — it used a stale localStorage
+            format ("true"/"false" vs the shared lib's "1"/"0") and wrote
+            `.dark` to <html> while the layout themes off a cookie on its own
+            wrapper, so the two fought and it "did nothing". The single theme
+            control now lives in the header (see dashboard/page.tsx toggleDark
+            → router.refresh()), which re-themes the whole tree consistently. */}
       </div>
     </aside>
   );
