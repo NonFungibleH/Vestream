@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -457,6 +457,50 @@ function IconIncomeStatement() {
       <line x1="12" y1="20" x2="12" y2="10"/>
       <line x1="18" y1="20" x2="18" y2="4"/>
       <line x1="6"  y1="20" x2="6"  y2="14"/>
+    </svg>
+  );
+}
+
+// ── Panel/tab icons (replace the previous emoji labels) ──────────────────────
+function IconCalendar({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>
+      <line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+    </svg>
+  );
+}
+
+function IconCashFlow({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>
+      <path d="M6 12h.01M18 12h.01"/>
+    </svg>
+  );
+}
+
+function IconTrendUp({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>
+    </svg>
+  );
+}
+
+function IconTag({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  );
+}
+
+function IconGantt({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="10" y1="18" x2="18" y2="18"/>
     </svg>
   );
 }
@@ -1072,53 +1116,30 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
     : { background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)" };
 
   return (
-    <div className="rounded-2xl overflow-hidden mb-5 relative" style={gradientStyle}>
+    <div className="rounded-2xl overflow-hidden mb-4 relative" style={gradientStyle}>
       {/* Decorative orbs */}
       <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
       <div className="absolute right-32 bottom-0 w-32 h-32 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(28,184,184,0.1) 0%, transparent 70%)" }} />
 
-      <div className="relative px-7 py-6">
+      <div className="relative px-6 py-4">
         <div className="flex items-start justify-between gap-6">
           {/* Left: main value */}
           <div className="flex-1">
             <p className="text-[11px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>
               Total Portfolio Value
             </p>
-            <p className="text-5xl font-bold tabular-nums tracking-tight text-white leading-none">
+            <p className="text-4xl font-bold tabular-nums tracking-tight text-white leading-none">
               {fmtCurrencyFull(totalValue)}
             </p>
-            <div className="flex items-center gap-2.5 mt-3">
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {(() => {
-                  const parts: string[] = [];
-                  if (hasPrice) {
-                    // Some tokens have USD prices — show USD total + any no-price tokens separately
-                    if (totalClaimable >= 0.5) parts.push(fmtCurrencyFull(totalClaimable));
-                    claimableNoPrice.forEach((t) =>
-                      parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
-                    );
-                  } else {
-                    // No prices at all — show raw token amounts only
-                    tokens.filter((t) => t.claimable > 0).forEach((t) =>
-                      parts.push(`${t.claimable.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t.symbol}`)
-                    );
-                  }
-                  return (parts.length > 0 ? parts.join(" + ") : "Nothing") + " ready to claim";
-                })()}
-              </span>
-              {(hasPrice ? totalValue > 0 : tokens.some((t) => t.claimable > 0)) && (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
-                  {hasPrice ? `${pctClaimable.toFixed(1)}% of portfolio` : `${activeStreams.length} active`}
-                </span>
-              )}
-            </div>
+            {/* "Ready to claim" intentionally not repeated here — it's shown in
+                the "Ready to Claim" stat chip (right) and per-token in the
+                Token Unlock Status section below. */}
 
             {/* Portfolio bar */}
             {tokens.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-3">
                 <div className="h-1 w-56 rounded-full overflow-hidden flex" style={{ background: "rgba(255,255,255,0.1)" }}>
                   {tokens.map((t) => {
                     // Use USD values when available, otherwise fall back to raw token amounts
@@ -1274,19 +1295,12 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
 
 function SnapshotPanel({
   streams,
-  allStreams,
-  activeTokens,
-  onToggleToken,
   prices,
 }: {
   streams: VestingStream[];
-  allStreams: VestingStream[];
-  activeTokens: Set<string>;
-  onToggleToken: (symbol: string) => void;
   prices: Record<string, number>;
 }) {
   const tokens    = buildTokenSummaries(streams, prices);
-  const allTokens = buildTokenSummaries(allStreams, prices);
 
   if (tokens.length === 0) return null;
 
@@ -1304,29 +1318,6 @@ function SnapshotPanel({
           <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Portfolio Mix</h2>
         </div>
         <DonutChart tokens={tokens} />
-
-        {/* Filter pills */}
-        {allTokens.length > 1 && (
-          <div className="mt-4 pt-4 flex flex-wrap gap-1.5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
-            {allTokens.map((t) => {
-              const isActive = activeTokens.has(t.symbol);
-              return (
-                <button key={t.symbol} onClick={() => onToggleToken(t.symbol)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all duration-150 select-none"
-                  style={{
-                    background: isActive ? t.color + "15" : "var(--preview-muted-2)",
-                    borderColor: isActive ? t.color + "40" : "var(--preview-border-2)",
-                    color: isActive ? t.color : "var(--preview-text-3)",
-                  }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: t.color, opacity: isActive ? 1 : 0.3 }} />
-                  {t.symbol}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Right: bar chart */}
@@ -4345,12 +4336,12 @@ function WalletRow({
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const features = [
-    { icon: "📊", title: "Portfolio overview", desc: "See all your vesting streams, claimable amounts, and total portfolio value in one place." },
-    { icon: "📅", title: "Vesting schedule", desc: "Visual unlock timeline so you always know what's coming and when." },
-    { icon: "💸", title: "Monthly cashflow", desc: "Month-by-month view of tokens unlocking — plan your treasury or personal finances ahead." },
-    { icon: "🔍", title: "Wallet Scanner", desc: "Scan any wallet to discover vesting streams across all major protocols instantly." },
-    { icon: "📈", title: "P&L Tracker", desc: "Log your entry price and sales to track realized and unrealized profit across your vested tokens." },
-    { icon: "🧾", title: "Tax exports", desc: "One-click CSV exports compatible with Koinly, CoinTracker, and TurboTax." },
+    { icon: <IconGrid />,     title: "Portfolio overview", desc: "Every vesting stream, claimable amount, and total portfolio value in one place." },
+    { icon: <IconCalendar size={16} />, title: "Vesting schedule", desc: "A visual unlock timeline so you always know what's coming and when." },
+    { icon: <IconCashFlow size={16} />, title: "Monthly cashflow", desc: "Month-by-month view of tokens unlocking — plan treasury or personal finances ahead." },
+    { icon: <IconSearch />,   title: "Wallet scanner", desc: "Scan any wallet to discover vesting streams across all major protocols instantly." },
+    { icon: <IconTrendUp size={16} />,  title: "P&L tracker", desc: "Log entry prices and sales to track realized and unrealized profit on vested tokens." },
+    { icon: <IconExport />,   title: "Tax exports", desc: "One-click CSV exports compatible with Koinly, CoinTracker, and TurboTax." },
   ];
 
   const proFeatures = [
@@ -4375,13 +4366,13 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 text-center"
           style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.08), rgba(37,99,235,0.06))", borderBottom: "1px solid var(--preview-border-2)" }}>
-          <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center text-2xl"
-            style={{ background: "rgba(28,184,184,0.12)" }}>🌊</div>
+          <img src="/logo-icon.svg"      alt="Vestream" className="w-12 h-12 mx-auto mb-3 block dark:hidden" />
+          <img src="/logo-icon-dark.svg" alt=""         aria-hidden="true" className="w-12 h-12 mx-auto mb-3 hidden dark:block" />
           <h2 className="text-base font-bold mb-1" style={{ color: "var(--preview-text)" }}>
-            Welcome to the Vestream Dashboard
+            Welcome to your vesting dashboard
           </h2>
           <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-            Your vesting portfolio, all in one place. Here&apos;s what you can do.
+            Every unlock, claim, and price across your wallets and protocols — in one live view. Here&apos;s a quick tour.
           </p>
         </div>
 
@@ -4390,7 +4381,7 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
           {features.map((f) => (
             <div key={f.title} className="rounded-xl p-3"
               style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
-              <div className="text-lg mb-1">{f.icon}</div>
+              <div className="mb-1.5" style={{ color: "#1CB8B8" }}>{f.icon}</div>
               <p className="text-[11px] font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{f.title}</p>
               <p className="text-[10px] leading-relaxed" style={{ color: "var(--preview-text-3)" }}>{f.desc}</p>
             </div>
@@ -4400,11 +4391,11 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
         {/* Pro callout */}
         <div className="mx-6 mb-4 rounded-xl p-3"
           style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)" }}>
-          <p className="text-[11px] font-semibold mb-2" style={{ color: "#0F8A8A" }}>⚡ Pro features</p>
+          <p className="text-[11px] font-semibold mb-2" style={{ color: "#0F8A8A" }}>Pro features</p>
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
             {proFeatures.map(f => (
               <li key={f} className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--preview-text-2)" }}>
-                <span className="text-[8px]" style={{ color: "#1CB8B8" }}>✦</span>{f}
+                <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "#1CB8B8" }} />{f}
               </li>
             ))}
           </ul>
@@ -5524,35 +5515,64 @@ export default function Dashboard() {
               {/* Token Unlock Status moved immediately below PortfolioHero for
                   at-a-glance live status without scrolling */}
               <NextClaimCountdown streams={filteredStreams} prices={prices} imageUrls={imageUrls} />
-              <UpcomingOutlook streams={filteredStreams} prices={prices} />
-              <SnapshotPanel
-                streams={filteredStreams}
-                allStreams={streams}
-                activeTokens={activeTokens}
-                onToggleToken={toggleToken}
-                prices={prices}
-              />
+
+              {/* Global token filter — drives filteredStreams across the whole
+                  dashboard. Kept directly above the table so you filter the
+                  content you're reading. (Previously these pills lived inside
+                  the Portfolio Mix card, which now sits below the table.) */}
+              {(() => {
+                const allTokens = buildTokenSummaries(streams, prices);
+                if (allTokens.length <= 1) return null;
+                return (
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                    <span className="text-[11px] font-medium mr-0.5" style={{ color: "var(--preview-text-3)" }}>Tokens</span>
+                    {allTokens.map((t) => {
+                      const isActive = activeTokens.has(t.symbol);
+                      return (
+                        <button key={t.symbol} onClick={() => toggleToken(t.symbol)}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all duration-150 select-none"
+                          style={{
+                            background: isActive ? t.color + "15" : "var(--preview-muted-2)",
+                            borderColor: isActive ? t.color + "40" : "var(--preview-border-2)",
+                            color: isActive ? t.color : "var(--preview-text-3)",
+                          }}>
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ background: t.color, opacity: isActive ? 1 : 0.3 }} />
+                          {t.symbol}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* ── Tab strip for below-fold panels ───────────────────── */}
               {/* Floating pill tabs — each panel keeps its own card wrapper below */}
               <div className="flex gap-1 mb-3 overflow-x-auto">
                 {(["schedule", "cashflow", "pnl", "market", "gantt"] as const).map((tab) => {
                   const labels: Record<string, string> = {
-                    schedule: "📅 Schedule",
-                    cashflow: "💸 Cash Flow",
-                    pnl:      "📈 P&L",
-                    market:   "🏷 Market",
-                    gantt:    "📊 Gantt",
+                    schedule: "Schedule",
+                    cashflow: "Cash Flow",
+                    pnl:      "P&L",
+                    market:   "Market",
+                    gantt:    "Gantt",
+                  };
+                  const icons: Record<string, ReactNode> = {
+                    schedule: <IconCalendar />,
+                    cashflow: <IconCashFlow />,
+                    pnl:      <IconTrendUp />,
+                    market:   <IconTag />,
+                    gantt:    <IconGantt />,
                   };
                   const isActive = activeTab === tab;
                   return (
                     <button key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
                       style={isActive
                         ? { background: "rgba(28,184,184,0.12)", color: "#1CB8B8", border: "1px solid rgba(28,184,184,0.25)" }
                         : { background: "var(--preview-card)", color: "var(--preview-text-3)", border: "1px solid var(--preview-border)" }}>
-                      {labels[tab]}
+                      {icons[tab]}{labels[tab]}
                     </button>
                   );
                 })}
@@ -5595,6 +5615,14 @@ export default function Dashboard() {
               {activeTab === "gantt" && (
                 <UnlockTimeline streams={filteredStreams} dark={dark} />
               )}
+
+              {/* Secondary insight panels — moved below the table so the
+                  schedule sits high on the page. Upcoming outlook + the
+                  portfolio-mix / claimable-vs-locked charts. */}
+              <div className="mt-5">
+                <UpcomingOutlook streams={filteredStreams} prices={prices} />
+                <SnapshotPanel streams={filteredStreams} prices={prices} />
+              </div>
 
               {/* Footer — stacks on mobile (links above copyright) so the
                   links stay tap-friendly on phones, side-by-side on md+. */}
