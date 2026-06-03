@@ -38,8 +38,6 @@ const PROTOCOL_SLUG_SET   = new Set<string>(PROTOCOL_SLUGS);
 const PROTOCOL_ALIASES: Record<string, string> = {
   "uncx-vm":     "uncx",
   "uncx-network": "uncx",
-  "team":        "team-finance",
-  "teamfinance": "team-finance",
   "pinklock":    "pinksale",
   "pink-sale":   "pinksale",
   "stream-flow": "streamflow",

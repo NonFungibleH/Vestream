@@ -71,7 +71,6 @@ const PROTOCOL_NAMES: Record<string, string> = {
   uncx:           "UNCX",
   "uncx-vm":      "UNCX",
   unvest:         "Unvest",
-  "team-finance": "Team Finance",
   superfluid:     "Superfluid",
   pinksale:       "PinkSale",
 };

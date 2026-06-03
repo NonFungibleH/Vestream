@@ -99,7 +99,6 @@ const PROTOCOL_LABELS: Record<string, string> = {
   "uncx":         "UNCX V3",
   "uncx-vm":      "UNCX VM",
   "unvest":       "Unvest",
-  "team-finance": "Team Finance",
   "superfluid":   "Superfluid",
   "pinksale":     "PinkSale",
   "streamflow":   "Streamflow",

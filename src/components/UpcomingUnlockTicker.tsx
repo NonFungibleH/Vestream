@@ -90,7 +90,6 @@ const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: strin
   uncx:           { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
   "uncx-vm":      { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
   unvest:         { color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.22)",   name: "Unvest" },
-  "team-finance": { color: "#2DB36A", bg: "rgba(45,179,106,0.08)",  border: "rgba(45,179,106,0.22)",  name: "Team Finance" },
   superfluid:     { color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.22)",   name: "Superfluid" },
   pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
 };

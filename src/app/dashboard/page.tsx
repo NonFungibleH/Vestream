@@ -132,7 +132,6 @@ const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string
   sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.10)",  border: "rgba(240,153,46,0.20)"  },
   "sablier-flow": { text: "#E07B1A", bg: "rgba(224,123,26,0.10)",  border: "rgba(224,123,26,0.20)"  },
   hedgey:         { text: "#8169E0", bg: "rgba(129,105,224,0.10)", border: "rgba(129,105,224,0.20)" },
-  "team-finance": { text: "#2563EB", bg: "rgba(37,99,235,0.10)",   border: "rgba(37,99,235,0.20)"   },
   uncx:           { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
   "uncx-vm":      { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
   unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.10)",  border: "rgba(11,160,203,0.20)"  },
@@ -146,7 +145,6 @@ const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string
 const CLAIM_LINKS: Record<string, string> = {
   sablier:        "https://app.sablier.com",
   hedgey:         "https://app.hedgey.finance",
-  "team-finance": "https://app.team.finance",
   uncx:           "https://app.uncx.network",
   "uncx-vm":      "https://app.uncx.network",
   unvest:         "https://unvest.io",
@@ -224,7 +222,6 @@ function protocolDisplay(protocol: string) {
     uncx:           "UNCX",
     "uncx-vm":      "UNCX",
     unvest:         "Unvest",
-    "team-finance": "Team Finance",
     superfluid:     "Superfluid",
     pinksale:       "PinkSale",
   };
@@ -4069,7 +4066,7 @@ const CHAIN_LABELS: Record<string, string> = {
   "42161": "Arbitrum", "101": "SOL", "11155111": "Sepolia",
 };
 const PROTOCOL_LABELS: Record<string, string> = {
-  "sablier": "Sablier", "uncx": "UNCX", "team-finance": "Team Finance",
+  "sablier": "Sablier", "uncx": "UNCX",
   "hedgey": "Hedgey", "unvest": "Unvest", "superfluid": "Superfluid",
   "pinksale": "PinkSale", "streamflow": "Streamflow", "jupiter-lock": "Jupiter",
 };

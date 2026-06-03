@@ -62,7 +62,6 @@ const CHAIN_OPTIONS = [
 const PROTOCOL_OPTIONS = [
   { id: "sablier",      label: "Sablier"       },
   { id: "uncx",         label: "UNCX"          },
-  { id: "team-finance", label: "Team Finance"  },
   { id: "hedgey",       label: "Hedgey"        },
   { id: "unvest",       label: "Unvest"        },
   { id: "superfluid",   label: "Superfluid"    },
@@ -72,7 +71,6 @@ const PROTOCOL_OPTIONS = [
 const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.12)",  border: "rgba(240,153,46,0.25)"  },
   hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.12)",   border: "rgba(28,184,184,0.25)"   },
-  "team-finance": { text: "#2563EB", bg: "rgba(37,99,235,0.12)",  border: "rgba(37,99,235,0.25)"  },
   uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
   unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.12)",   border: "rgba(11,160,203,0.25)"   },

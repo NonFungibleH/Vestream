@@ -34,7 +34,7 @@ const PRICE_USD = {
 type TokenSymbol = keyof typeof PRICE_USD;
 
 interface DemoStream {
-  protocolId: "sablier" | "hedgey" | "team-finance";
+  protocolId: "sablier" | "hedgey" | "uncx";
   protocolName: string;
   token:       TokenSymbol;
   tokenColors: [string, string]; // gradient from → to
@@ -63,7 +63,7 @@ const STREAMS: DemoStream[] = [
     unlockInHrs: 72,
   },
   {
-    protocolId: "team-finance", protocolName: "Team Finance",
+    protocolId: "uncx", protocolName: "UNCX",
     token: "VEST", tokenColors: ["#2DB36A", "#0BA0CB"],
     chain: "BNB Chain",
     totalAmount: 50_000, claimable: 12_500, vested: 30_000, percent: 60,
@@ -74,13 +74,12 @@ const STREAMS: DemoStream[] = [
 // Featured stream (the one surfaced on alert + claim steps — the biggest USD value)
 const FEATURED = STREAMS[0];
 
-// 9 protocols scanned in parallel; 3 hit in our fake result set
+// 8 protocols scanned in parallel; 3 hit in our fake result set
 const PROTOCOLS = [
   { id: "sablier",      name: "Sablier",       hit: true,  count: 1 },
   { id: "hedgey",       name: "Hedgey",        hit: true,  count: 1 },
-  { id: "uncx",         name: "UNCX",          hit: false, count: 0 },
+  { id: "uncx",         name: "UNCX",          hit: true,  count: 1 },
   { id: "unvest",       name: "Unvest",        hit: false, count: 0 },
-  { id: "team-finance", name: "Team Finance",  hit: true,  count: 1 },
   { id: "superfluid",   name: "Superfluid",    hit: false, count: 0 },
   { id: "pinksale",     name: "PinkSale",      hit: false, count: 0 },
   { id: "streamflow",   name: "Streamflow",    hit: false, count: 0 },
