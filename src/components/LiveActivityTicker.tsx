@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useState } from "react";
+import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
 
 type Activity = {
   streamId:        string;
@@ -64,16 +65,10 @@ const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: strin
   pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
 };
 
+// Canonical CHAIN_NAMES map (single source of truth) — a local switch here
+// dropped Arbitrum (42161) and rendered "Chain 42161".
 function chainLabel(id: number): string {
-  switch (id) {
-    case 1:         return "Ethereum";
-    case 56:        return "BNB Chain";
-    case 137:       return "Polygon";
-    case 8453:      return "Base";
-    case 101:       return "Solana";
-    case 11155111:  return "Sepolia";
-    default:        return `Chain ${id}`;
-  }
+  return CHAIN_NAMES[id as SupportedChainId] ?? `Chain ${id}`;
 }
 
 function truncAddr(a: string): string {
