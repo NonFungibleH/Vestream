@@ -135,6 +135,23 @@ async function fetchActiveStreams(chainId: number, tokenAddress: string): Promis
 }
 
 /**
+ * Raw active streams for a token, straight from the cache — the un-aggregated
+ * VestingStream[] needed to group into vesting rounds. (getTokenRecipients
+ * aggregates per recipient and loses per-stream terms; this keeps them.)
+ * Build-phase guard per CLAUDE.md (Supabase pooler can drop mid-build).
+ */
+export async function getTokenStreams(
+  chainId: number,
+  tokenAddress: string,
+): Promise<VestingStream[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  const rows = await fetchActiveStreams(chainId, tokenAddress);
+  return rows
+    .map((r) => r.streamData as unknown as VestingStream)
+    .filter((s): s is VestingStream => !!s && typeof s.id === "string");
+}
+
+/**
  * All streams for a token — active AND fully-vested. Used by the unlock
  * calendar when we want historical buckets too (past unlock events live on
  * both active-but-partial streams, via their past tranches, and on

@@ -481,7 +481,7 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
     <div className="flex items-center"
       style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link
-        href={`/token/${group.chainId}/${group.tokenAddress}`}
+        href={`/dashboard/explorer/token/${group.chainId}/${group.tokenAddress}`}
         className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
@@ -597,7 +597,7 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
     <div className="flex items-center"
       style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link
-        href={`/token/${row.chainId}/${row.tokenAddress}`}
+        href={`/dashboard/explorer/token/${row.chainId}/${row.tokenAddress}`}
         className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
