@@ -491,42 +491,33 @@ export default async function Home() {
             an appendage to the right column. */}
         <div className="relative mt-16">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#B8BABD" }}>Integrated with</p>
-          {/* Row 1 */}
-          <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
+          {/* Logo wall — uniform white cards so the mixed third-party logos
+              (different backgrounds / aspect ratios / whitespace) read as an
+              even grid. Sablier…LlamaPay are wordmark logos; Streamflow +
+              Jupiter Lock are icon-only marks (rendered a touch larger). */}
+          <div className="flex items-center justify-center gap-2.5 flex-wrap max-w-3xl mx-auto">
             {[
-              // Canonical palette — matches protocol-constants.ts.
-              { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
-              { name: "Hedgey",       color: "#8169E0", bg: "rgba(129,105,224,0.07)", border: "rgba(129,105,224,0.15)" },
-              { name: "UNCX",         color: "#3D7FD0", bg: "rgba(61,127,208,0.07)",  border: "rgba(61,127,208,0.15)"  },
-              { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
+              { name: "Sablier",      src: "/protocols/sablier.jpeg" },
+              { name: "Hedgey",       src: "/protocols/hedgey.png" },
+              { name: "UNCX",         src: "/protocols/uncx.png" },
+              { name: "LlamaPay",     src: "/protocols/llamapay.png" },
+              { name: "Unvest",       src: "/protocols/unvest.png" },
+              { name: "Superfluid",   src: "/protocols/superfluid.png" },
+              { name: "PinkSale",     src: "/protocols/pinksale.png" },
+              { name: "Streamflow",   src: "/protocols/streamflow.png", icon: true },
+              { name: "Jupiter Lock", src: "/protocols/jupiter-lock.png", icon: true },
             ].map((p) => (
-              <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
-                style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
-                  <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
-                </div>
-                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
-              </div>
-            ))}
-          </div>
-          {/* Row 2 — 5 cards (Unvest / Superfluid / PinkSale / Streamflow /
-              Jupiter Lock). Streamflow + Jupiter Lock use Solana-ecosystem
-              accent colours (Solana green, Jupiter gold) to signal non-EVM
-              coverage at a glance. */}
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            {[
-              { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
-              { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",   border: "rgba(40,184,149,0.15)"   },
-              { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
-              { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
-              { name: "Jupiter Lock", color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)"  },
-            ].map((p) => (
-              <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
-                style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
-                  <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
-                </div>
-                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
+              <div key={p.name} className="flex items-center justify-center rounded-xl"
+                style={{
+                  width: 132, height: 56,
+                  background: "#ffffff",
+                  border: "1px solid rgba(0,0,0,0.08)",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  padding: p.icon ? "8px" : "10px 14px",
+                }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt={p.name} className="object-contain"
+                  style={{ maxHeight: p.icon ? 36 : 24, maxWidth: "100%", width: "auto" }} />
               </div>
             ))}
           </div>

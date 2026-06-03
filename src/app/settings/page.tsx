@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isValidWalletAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { UpsellModal } from "@/components/UpsellModal";
 import { CalendarSubscribeCard } from "@/components/CalendarSubscribeCard";
@@ -88,13 +87,6 @@ function IconSearch() {
   );
 }
 
-function IconPlus() {
-  return (
-    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  );
-}
 
 function IconWallet() {
   return (
@@ -533,16 +525,6 @@ export default function Settings() {
   const [wallets, setWallets]             = useState<Wallet[]>([]);
   const [removingId, setRemovingId]       = useState<string | null>(null);
 
-  // Add wallet form
-  const [newAddress, setNewAddress] = useState("");
-  const [newLabel, setNewLabel]     = useState("");
-  const [addError, setAddError]     = useState<string | null>(null);
-  const [adding, setAdding]         = useState(false);
-  // Required single chain + single platform for new wallet
-  const [newSelChain,    setNewSelChain]    = useState<string>("");
-  const [newSelProtocol, setNewSelProtocol] = useState<string>("");
-  const [newTokenAddr,   setNewTokenAddr]   = useState<string>("");
-
   // Notification prefs
   const [prefs, setPrefs]       = useState<Prefs>({ emailEnabled: false, email: null, hoursBeforeUnlock: 24, notifyCliff: true, notifyStreamEnd: true });
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -580,34 +562,6 @@ export default function Settings() {
         }));
       });
   }, [loadWallets]);
-
-  async function handleAddWallet(e: React.FormEvent) {
-    e.preventDefault();
-    setAddError(null);
-    if (!isValidWalletAddress(newAddress)) { setAddError("Enter a valid wallet address (EVM 0x… or Solana pubkey)"); return; }
-    setAdding(true);
-    try {
-      // All optional — wallet-add defaults to auto-scan all chains + platforms.
-      // Users can narrow chains/platforms/token afterwards from the wallet card.
-      const chains =
-        newSelChain ? [parseInt(newSelChain)] : undefined;
-      const protocols = newSelProtocol
-        ? (newSelProtocol === "uncx" ? ["uncx", "uncx-vm"] : [newSelProtocol])
-        : undefined;
-      const tokenAddress = newTokenAddr.trim() && isValidWalletAddress(newTokenAddr.trim()) ? newTokenAddr.trim() : undefined;
-      const res = await fetch("/api/wallets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: newAddress, label: newLabel || undefined, chains, protocols, tokenAddress }),
-      });
-      if (res.status === 409) { setAddError("Wallet already tracked"); return; }
-      if (!res.ok) { const j = await res.json(); setAddError(j.error ?? "Failed"); return; }
-      setNewAddress(""); setNewLabel("");
-      setNewSelChain(""); setNewSelProtocol(""); setNewTokenAddr("");
-      await loadWallets();
-    } catch { setAddError("Network error"); }
-    finally { setAdding(false); }
-  }
 
   async function handleRemoveWallet(wallet: Wallet) {
     setRemovingId(wallet.id);
@@ -822,97 +776,17 @@ export default function Settings() {
               </ul>
             )}
 
-            {/* Add wallet form — gated for free plan at limit */}
-            {walletLimit !== null && wallets.length >= walletLimit && tier === "free" ? (
-              <div className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl"
-                style={{ background: "rgba(28,184,184,0.05)", border: "1px solid rgba(28,184,184,0.18)", borderTop: "1px solid var(--preview-border-2)", marginTop: "0.25rem" }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base">🔒</span>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Add another wallet</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-                      Free plan includes 1 wallet. Upgrade to Pro for up to 3.
-                    </p>
-                  </div>
-                </div>
-                <a href="/pricing"
-                  className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-white"
-                  style={{ background: "#1CB8B8" }}>
-                  Upgrade →
-                </a>
-              </div>
-            ) : (
-            <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1.25rem" }}>
-              <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>Add a wallet</p>
-              <p className="text-[11px] mb-3" style={{ color: "var(--preview-text-3)" }}>
-                We&apos;ll scan every supported chain &amp; platform for you. Narrow scope later if you want to.
+            {/* Adding wallets lives on the Dashboard now — one add-flow, no
+                duplicate UI. Settings is for managing wallets you already
+                track (which chains/platforms each scans, or removing them). */}
+            <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1rem" }}>
+              <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                Need to track another wallet? Add it from the{" "}
+                <a href="/dashboard" className="underline font-medium" style={{ color: "#1CB8B8" }}>Dashboard</a>{" "}
+                or scan one in the{" "}
+                <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#1CB8B8" }}>Wallet Scanner</a>.
               </p>
-              <form onSubmit={handleAddWallet} className="flex flex-col gap-2.5">
-                <StyledInput placeholder="Wallet address (0x… or Solana pubkey)" value={newAddress} onChange={setNewAddress} fontMono />
-                <StyledInput placeholder="Label (optional — e.g. Team vesting)" value={newLabel} onChange={setNewLabel} />
-
-                {/* Optional advanced filters */}
-                <details className="mt-1">
-                  <summary className="text-[11px] cursor-pointer select-none" style={{ color: "var(--preview-text-3)" }}>
-                    Advanced — narrow chains / platforms / token (optional)
-                  </summary>
-                  <div className="mt-3 flex flex-col gap-2.5">
-                    <div className="flex gap-3 flex-wrap">
-                      <div className="flex-1 min-w-[130px]">
-                        <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>Chain</p>
-                        <select
-                          value={newSelChain}
-                          onChange={(e) => setNewSelChain(e.target.value)}
-                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                          style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
-                        >
-                          <option value="">All chains</option>
-                          {CHAIN_OPTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex-1 min-w-[150px]">
-                        <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>Platform</p>
-                        <select
-                          value={newSelProtocol}
-                          onChange={(e) => setNewSelProtocol(e.target.value)}
-                          className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                          style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
-                        >
-                          <option value="">All platforms</option>
-                          {PROTOCOL_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-                        Token contract address <span className="normal-case font-normal">(optional)</span>
-                      </p>
-                      <StyledInput placeholder="0x… or Solana mint" value={newTokenAddr} onChange={setNewTokenAddr} fontMono />
-                      <p className="text-[9px] mt-1" style={{ color: "var(--preview-text-3)" }}>
-                        Narrows tracking to a single token. Leave blank to auto-scan all.
-                      </p>
-                    </div>
-                  </div>
-                </details>
-
-                <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
-                  Not sure?{" "}
-                  <a href="/dashboard/discover" className="underline font-medium" style={{ color: "#1CB8B8" }}>
-                    Scan all platforms in Discover →
-                  </a>
-                </p>
-
-                {addError && <p className="text-xs text-red-400">{addError}</p>}
-                <button type="submit"
-                  disabled={adding || !newAddress}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 self-start"
-                  style={{ background: "#1CB8B8", boxShadow: "0 2px 8px rgba(28,184,184,0.3)" }}>
-                  <IconPlus /> {adding ? "Adding…" : "Track wallet"}
-                </button>
-              </form>
             </div>
-            )}
           </Section>}
 
           {/* ── Email Notifications ──────────────────────────────────────── */}
@@ -1121,10 +995,87 @@ export default function Settings() {
 
           {/* ── Account ──────────────────────────────────────────────────── */}
           {activeSection === "account" && <Section title="Account">
+            {/* ── Plan ── billing is handled by the App Store / Google Play
+                via the mobile app (RevenueCat IAP), so plan management lives
+                in the app, not on the web. We only know the tier here. */}
+            {(() => {
+              const isPaid = tier === "pro" || tier === "mobile" || tier === "fund";
+              return (
+                <div className="rounded-xl p-4 mb-5"
+                  style={{
+                    background: isPaid ? "rgba(28,184,184,0.06)" : "var(--preview-muted-2)",
+                    border: `1px solid ${isPaid ? "rgba(28,184,184,0.22)" : "var(--preview-border-2)"}`,
+                  }}>
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Your plan</p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider"
+                      style={isPaid
+                        ? { background: "rgba(28,184,184,0.15)", color: "#0F8A8A" }
+                        : { background: "var(--preview-border)", color: "var(--preview-text-3)" }}>
+                      {isPaid ? "PRO" : "FREE"}
+                    </span>
+                  </div>
+                  {isPaid ? (
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--preview-text-2)" }}>
+                      You&apos;re on the <strong>Pro</strong> plan — full dashboard, unlimited alerts, Discover, and tax exports.
+                      Billing is handled through the App Store / Google Play. To see your plan (monthly or yearly),
+                      your renewal date, or to cancel, open the <strong>Vestream app → Settings → Manage subscription</strong>.
+                    </p>
+                  ) : (
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--preview-text-2)" }}>
+                      You&apos;re on the <strong>Free</strong> plan. Upgrade to Pro in the Vestream mobile app for the full
+                      desktop dashboard, unlimited alerts, Discover, and tax-ready exports.
+                    </p>
+                  )}
+                  <div className="flex gap-2 mt-3">
+                    <a href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
+                      style={{ background: "#000", color: "#fff" }}>
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                      App Store
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=io.vestream.app" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:brightness-110"
+                      style={{ background: "linear-gradient(135deg, #2DB36A, #059669)", color: "#fff" }}>
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5V3.5c0-.35.2-.65.5-.8l10.04 9.3L3.5 21.3c-.3-.15-.5-.45-.5-.8zM14.4 12l2.96 2.96-8.9 5.08 5.94-8.04zm0 0L8.46 3.96l8.9 5.08L14.4 12zM20.5 12c0 .4-.2.8-.6 1.02l-2.2 1.26L14.4 12l3.3-2.28 2.2 1.26c.4.22.6.62.6 1.02z"/></svg>
+                      Google Play
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── Community ── */}
+            <div className="mb-5 pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--preview-text)" }}>Community</p>
+              <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>Follow product news and reach the team.</p>
+              <div className="flex gap-2 flex-wrap">
+                <a href="https://x.com/Vestream_" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors hover:bg-[var(--preview-hover)]"
+                  style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", color: "var(--preview-text-2)" }}>
+                  <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  X (@Vestream_)
+                </a>
+                <a href="https://t.me/vestream" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors hover:bg-[var(--preview-hover)]"
+                  style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", color: "var(--preview-text-2)" }}>
+                  <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                  Telegram
+                </a>
+              </div>
+            </div>
+
+            {/* ── Mailing list ── */}
+            <div className="mb-5 pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <MailingListSignup />
+            </div>
+
             {/* Display currency — purely cosmetic. Every $ figure across the
                 dashboard converts at the current FX rate. Tax exports use
                 historical rates and aren't affected. */}
-            <CurrencyPicker />
+            <div className="pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+              <CurrencyPicker />
+            </div>
 
             <div className="mt-5 pt-5 flex items-center justify-between" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
               <div>
@@ -1198,6 +1149,59 @@ export default function Settings() {
         />
       )}
     </>
+  );
+}
+
+// ─── Mailing list signup ─────────────────────────────────────────────────────
+// Posts to the existing /api/waitlist endpoint (email capture, rate-limited,
+// dedupes on conflict). Used here as a product-updates subscribe.
+function MailingListSignup() {
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setState("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (!res.ok) { setState("error"); return; }
+      setState("done");
+      track("cta_clicked", { cta_id: "newsletter_subscribed" });
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-sm font-medium mb-1" style={{ color: "var(--preview-text)" }}>Product updates</p>
+      <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
+        Occasional emails on new chains, protocols, and features. No spam, unsubscribe anytime.
+      </p>
+      {state === "done" ? (
+        <p className="text-xs font-semibold" style={{ color: "#3FA568" }}>You&apos;re subscribed ✓</p>
+      ) : (
+        <form onSubmit={submit} className="flex gap-2">
+          <input
+            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="flex-1 text-sm px-3 py-2 rounded-lg outline-none"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+          />
+          <button type="submit" disabled={state === "loading"}
+            className="text-sm font-semibold px-4 py-2 rounded-lg text-white transition-all disabled:opacity-60 flex-shrink-0"
+            style={{ background: "#1CB8B8" }}>
+            {state === "loading" ? "…" : "Subscribe"}
+          </button>
+        </form>
+      )}
+      {state === "error" && <p className="text-xs mt-2" style={{ color: "#B3322E" }}>Couldn&apos;t subscribe — please try again.</p>}
+    </div>
   );
 }
 
