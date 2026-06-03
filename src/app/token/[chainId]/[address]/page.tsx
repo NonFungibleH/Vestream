@@ -37,6 +37,7 @@ import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
+import { TokenPaywall } from "@/components/TokenPaywall";
 import { CopyButton } from "@/components/CopyButton";
 import { TokenShareRow } from "@/components/TokenShareRow";
 import { buildTokenFAQ } from "@/lib/vesting/token-faq";
@@ -677,6 +678,11 @@ export default async function TokenPage(
       </section>
 
       <SiteFooter theme="light" />
+
+      {/* Soft paywall — client-side, applied only for human visitors over the
+          free limit. The full page above always server-renders (SEO intact);
+          this just overlays a blurred "get the app" gate post-hydration. */}
+      <TokenPaywall chainId={cid} address={addr} symbol={symbol} />
     </div>
   );
 }
