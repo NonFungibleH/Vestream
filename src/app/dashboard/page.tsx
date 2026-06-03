@@ -17,7 +17,7 @@ import { StreamAnnotationEditor } from "@/components/StreamAnnotationEditor";
 import { StreamTagsEditor } from "@/components/StreamTagsEditor";
 import { useCurrency } from "@/lib/use-currency";
 import { track } from "@/lib/analytics";
-import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
+import { useDarkMode } from "@/lib/use-dark-mode";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -4799,7 +4799,10 @@ export default function Dashboard() {
   const [walletLimit, setWalletLimit]     = useState<number | null>(1); // free tier default
   const [showAddWallet, setShowAddWallet] = useState(false);
   const [walletChipOpen, setWalletChipOpen] = useState(false);
-  const [dark, setDark]                   = useState(false);
+  // Night mode is now a single shared control (sidebar) backed by
+  // DarkModeProvider. Read the reactive value here for inline-styled children
+  // (PortfolioHero gradient, UnlockTimeline) — no local state, no per-page toggle.
+  const { dark }                          = useDarkMode();
   const [activeTokens, setActiveTokens]   = useState<Set<string>>(new Set());
   const [exportOpen, setExportOpen]       = useState(false);
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
@@ -4822,7 +4825,6 @@ export default function Dashboard() {
   // Gives instant population without waiting for the network. Cloud data
   // loaded in Phase 2 below will override any matching entries.
   useEffect(() => {
-    setDark(getDarkModePreference());
     // Show onboarding modal on first visit (never seen the dashboard before)
     if (!localStorage.getItem("vestr-onboarding-seen")) {
       setShowOnboarding(true);
@@ -4858,22 +4860,6 @@ export default function Dashboard() {
       }
     } catch { /* ignore */ }
   }, []);
-
-  function toggleDark() {
-    setDark((v) => {
-      const next = !v;
-      setDarkModePreference(next);   // persist to cookie + localStorage
-      // The dashboard's `.dark` class lives on the SERVER-rendered layout
-      // wrapper (app/dashboard/layout.tsx), which spans the sidebar AND the
-      // main column. Setting the cookie alone doesn't re-theme the already-
-      // rendered tree, so the old behaviour left the sidebar light while the
-      // main column changed — the "half dark" bug. router.refresh() re-runs
-      // the server layout with the new cookie, flipping the whole tree
-      // atomically (one source of truth, no half-state).
-      router.refresh();
-      return next;
-    });
-  }
 
   function updateCostBasis(symbol: string, price: number) {
     setCostBasis((prev) => {
@@ -5493,7 +5479,8 @@ export default function Dashboard() {
                 </a>
               </div>
             )}
-            <DarkToggle dark={dark} onToggle={toggleDark} />
+            {/* Night-mode toggle moved to the shared sidebar — single control
+                for the whole dashboard (see DashboardSidebar + DarkModeProvider). */}
             {sessionAddress && (
               <WalletChip
                 address={sessionAddress}

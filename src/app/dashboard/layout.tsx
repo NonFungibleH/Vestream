@@ -30,6 +30,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
+import { DarkModeProvider } from "@/lib/use-dark-mode";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
@@ -100,24 +101,18 @@ export default async function DashboardLayout({
     cookies(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
-  // Read dark-mode preference from cookie at SSR. Pre-refactor, every
-  // dashboard page wrapped both its sidebar and its main column in a
-  // single `${dark ? " dark" : ""}` div, so both shared the theme. After
-  // we extracted the sidebar into this shared layout, the sidebar lost
-  // its `.dark` ancestor — users with dark mode on saw a light sidebar
-  // next to a dark main column, and on every page navigation there was
-  // a brief "load + skip" because the inner page component would
-  // re-apply `.dark` to its main element after hydration.
-  // Applying `.dark` here at the layout root puts both the sidebar AND
-  // the main column under the same theme class, server-rendered on
-  // first byte. No flicker, single source of truth.
+  // SSR-read the night-mode cookie and hand it to DarkModeProvider, which
+  // owns the single `.dark` wrapper for the whole dashboard tree and exposes
+  // { dark, toggle } to client components. This is the single source of truth
+  // — pages no longer keep their own dark state, and there's one toggle
+  // (the sidebar). First-byte correct (no flash), reactive on toggle.
   const dark = getDarkModeFromCookies(cookieStore);
 
   return (
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>
-      <div className={dark ? "dark" : ""}>
+      <DarkModeProvider initialDark={dark}>
         <DashboardChrome tier={tier}>{children}</DashboardChrome>
-      </div>
+      </DarkModeProvider>
     </CurrencyProvider>
   );
 }

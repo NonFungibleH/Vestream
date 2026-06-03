@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
-import { getDarkModePreference, setDarkModePreference } from "@/lib/dark-mode";
+import { useDarkMode } from "@/lib/use-dark-mode";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -325,7 +325,7 @@ function ResultCard({
 
 export default function DiscoverPage() {
   const router = useRouter();
-  const [dark,           setDark]           = useState(false);
+  const { dark }                            = useDarkMode();
   const [tier,           setTier]           = useState<string>("free");
   const [wallets,        setWallets]        = useState<TrackedWallet[]>([]);
   const [address,        setAddress]        = useState<string>("");
@@ -339,9 +339,6 @@ export default function DiscoverPage() {
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   const [scanResetAt,    setScanResetAt]    = useState<string | null>(null);
 
-  useEffect(() => {
-    setDark(getDarkModePreference());
-  }, []);
 
   const loadWallets = useCallback(async () => {
     try {
@@ -566,19 +563,8 @@ export default function DiscoverPage() {
               onMouseLeave={(e) => (e.currentTarget.style.background = "var(--preview-card)")}>
               ← Dashboard
             </button>
-            <button
-              onClick={() => {
-                setDark(v => {
-                  const next = !v;
-                  setDarkModePreference(next);
-                  return next;
-                });
-              }}
-              className="h-8 w-8 flex items-center justify-center rounded-lg border transition-all text-sm"
-              style={{ background: "var(--preview-muted-2)", borderColor: "var(--preview-border)", color: "var(--preview-text-2)" }}
-            >
-              {dark ? "☀" : "🌙"}
-            </button>
+            {/* Per-page dark toggle removed — night mode is the single shared
+                control in the sidebar (DarkModeProvider). */}
           </div>
         </header>
 

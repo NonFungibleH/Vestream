@@ -25,6 +25,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { useDarkMode } from "@/lib/use-dark-mode";
 
 // ─── Icons (match the existing dashboard set; kept inline to avoid adding
 // an icon library) ──────────────────────────────────────────────────────────
@@ -74,9 +75,11 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
-  // Theme is controlled by the header toggle + the layout's cookie-driven
-  // `.dark` wrapper. The logo swap below uses Tailwind `dark:` variants which
-  // key off that ancestor class, so the sidebar needs no local dark state.
+
+  // Single night-mode control for the WHOLE dashboard. Lives here in the
+  // shared sidebar (the one element on every dashboard route) and drives the
+  // shared DarkModeProvider — one toggle, one source of truth.
+  const { dark, toggle: toggleNightMode } = useDarkMode();
 
   const handleNav = useCallback((href: string) => {
     router.push(href);
@@ -152,12 +155,23 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
           </div>
         </div>
 
-        {/* Dark/light toggle removed 2026-06 — it used a stale localStorage
-            format ("true"/"false" vs the shared lib's "1"/"0") and wrote
-            `.dark` to <html> while the layout themes off a cookie on its own
-            wrapper, so the two fought and it "did nothing". The single theme
-            control now lives in the header (see dashboard/page.tsx toggleDark
-            → router.refresh()), which re-themes the whole tree consistently. */}
+        {/* Single night-mode toggle for the whole dashboard. Persists the
+            cookie + router.refresh()es so the server layout re-themes every
+            surface consistently (replaces the old per-page toggles). */}
+        <button
+          onClick={toggleNightMode}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all"
+          style={{ color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--preview-muted)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          aria-label="Toggle night mode"
+        >
+          <span>{dark ? "☀ Light mode" : "☽ Night mode"}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+            style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
+            {dark ? "ON" : "OFF"}
+          </span>
+        </button>
       </div>
     </aside>
   );
