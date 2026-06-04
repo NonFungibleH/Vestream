@@ -164,9 +164,15 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           aria-label="Toggle night mode"
         >
-          <span>{dark ? "☀ Light mode" : "☽ Night mode"}</span>
+          {/* Constant feature label + ON/OFF reflecting the actual mode — the
+              old action-style label ("Light mode") with an ON badge read as
+              "Light mode ON" while in dark mode. */}
+          <span>☽ Night mode</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-            style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
+            style={{
+              background: dark ? "rgba(28,184,184,0.18)" : "var(--preview-muted-2)",
+              color: dark ? "#0F8A8A" : "var(--preview-text-3)",
+            }}>
             {dark ? "ON" : "OFF"}
           </span>
         </button>

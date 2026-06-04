@@ -825,9 +825,13 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
         </div>
       </div>
 
-      {/* maxWidth caps the on-screen height — width:100% on a full-width table
-          row rendered this ~260px tall; the viewBox is ~7:1 so 680px ≈ 94px. */}
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: "visible", maxWidth: 680, display: "block" }}>
+      {/* CSS-only sizing: a `width="100%"` ATTRIBUTE makes the SVG derive its
+          height from the full container width even when max-width clips the box
+          (why it stayed ~260px tall). Using CSS width:100% + height:auto +
+          maxWidth makes height follow the *capped* width via the viewBox ratio
+          (~7:1 → 520px ≈ 72px tall). */}
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet"
+        style={{ overflow: "visible", display: "block", width: "100%", height: "auto", maxWidth: 520 }}>
         {/* Horizontal grid lines at 25/50/75% */}
         {[0.25, 0.5, 0.75].map((f) => (
           <line key={f}
@@ -1904,7 +1908,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                             <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
                             <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
                             {s.tokenAddress && (
-                              <a href={`/token/${s.chainId}/${s.tokenAddress}`} target="_blank" rel="noopener noreferrer"
+                              <a href={`/dashboard/explorer/token/${s.chainId}/${s.tokenAddress}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-0.5 mt-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
                                 style={{ color: "#1CB8B8" }}>
