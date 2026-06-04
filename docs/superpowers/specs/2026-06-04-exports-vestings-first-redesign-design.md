@@ -6,11 +6,16 @@
 
 ## Goal
 
-Turn `/dashboard/exports` from a format-first page (global "refresh all
-protocols" → download a format) into a **vestings-first tool**: the user sees
-their vestings up top, runs a **scoped report** to pull the claim history for
-*that token only* (not a full all-protocols/all-chains scan), reviews the
-claims, then exports to a pre-made tax format — per token or for everything.
+Turn `/dashboard/exports` from a format-first page into a **vestings-first
+tax tool**: the user picks one of their vestings → the tool shows, for that
+token, the **full tax picture — both** (a) **income**: every claim/unlock
+*received*, valued at FMV on receipt, and (b) **gains**: every *sale/disposal*,
+valued at the price on the sale date — then exports to a pre-made tax format
+(per token or for everything).
+
+**Scope = Both (income + gains)** per user decision (2026-06-04). Income is
+auto-indexed (claim ingestors, all protocols). Gains need a sales-data source
+(see the Gains section — the key open decision).
 
 ## Why
 
@@ -22,21 +27,52 @@ as a purpose-built tax tool.
 
 ## What already exists (reuse)
 
+**Income (claims) side:**
 - `ingestAllClaimsForUser(userId, wallets, chainIds)` → fans out to per-protocol
-  ingestors in `src/lib/vesting/ingestors/*-claims.ts`. **Only Sablier is
-  shipped** (`SHIPPED_INGESTORS`); others return `notImplemented:true`.
-- `GET /api/claims/history?since&until&protocol` → `{ events, summary{byYear} }`
-  (already supports a `protocol` filter).
-- `GET /api/claims/export?format=…&year=…` → CSV download.
+  ingestors in `src/lib/vesting/ingestors/*-claims.ts`. **CORRECTION:** the
+  ingestor code exists for ALL ten protocols (`SHIPPED_INGESTORS` lists them
+  all) — the "only Sablier · others coming soon" banner on the page is **stale
+  copy**, not reality. Remaining work is verification + honest caveat labels
+  (Superfluid = discrete events only; Streamflow/Jupiter = Solana snapshot
+  approximations, `SOLANA_ENABLED`-gated; Team Finance = paused).
+- `GET /api/claims/history?since&until&protocol` → `{ events, summary{byYear} }`.
+- `GET /api/claims/export?format=…&year=…` → CSV.
 - Export formats (Koinly / CoinTracker / TurboTax / per-claim FMV / per-payer).
+
+**Gains (sales) side — already partly built:**
+- `stream_sales` table + `/api/mobile/pnl/[token]/sales` (POST add, DELETE one)
+  — a **manual sales ledger**: `{ saleDate, amount, price }` per (user, token).
+  Powers mobile P&L. This is the reliable source of disposal data today.
+- There is **no** automatic on-chain sale detection yet.
+
 - The user's tracked streams (token + protocol + chain + wallet) — same data the
-  dashboard renders; can be read from the cache (`getTokenStreams` or the
-  wallets→streams path).
+  dashboard renders; read from the cache (`getTokenStreams` / wallets→streams).
 
 ## Decisions locked with user
 
 - **Approach:** spec first, then build (this doc).
-- **Scope:** vestings list → per-token scoped scan → claim history → export.
+- **Scope:** vestings list → pick a vesting → BOTH income (claims) + gains
+  (sales) for that token → export.
+- **Coverage:** all protocols' claim ingestors already exist; verify + drop the
+  "only Sablier" banner (caveats on Superfluid / Solana / Team Finance).
+
+## Gains (sales) — the key open decision
+
+Auto-detecting disposals purely on-chain is genuinely hard and error-prone for
+tax (a transfer out could be a CEX deposit/sale, a move to your own wallet, an
+LP deposit, a gift…). Tax tools solve this with exchange imports + heuristics +
+user reconciliation. Three ways to source sales, in increasing cost/risk:
+
+1. **Manual sales ledger (recommended v1).** Reuse `stream_sales` — the user
+   logs each sale (date, amount, price; or we auto-fill price-at-date). Reliable,
+   honest, already built on mobile; we just surface + edit it on web per vesting.
+2. **On-chain "candidate disposals" (v2).** Index ERC-20 `Transfer` events *out*
+   of the user's wallet for that token and present them as **suggested** sales
+   for the user to confirm/price — never auto-booked. Approximate; flags only.
+3. **Full auto sale detection.** Not recommended — accuracy/liability risk.
+
+**Default for the plan: (1) now, design so (2) can layer on later.** Confirm at
+review.
 
 ## Open decisions (defaults chosen; confirm at review)
 
