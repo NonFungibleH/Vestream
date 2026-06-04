@@ -825,7 +825,9 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
         </div>
       </div>
 
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: "visible" }}>
+      {/* maxWidth caps the on-screen height — width:100% on a full-width table
+          row rendered this ~260px tall; the viewBox is ~7:1 so 680px ≈ 94px. */}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: "visible", maxWidth: 680, display: "block" }}>
         {/* Horizontal grid lines at 25/50/75% */}
         {[0.25, 0.5, 0.75].map((f) => (
           <line key={f}
