@@ -198,6 +198,20 @@ const loadProtocolsData = unstable_cache(
         };
       }
 
+      // Guard against caching a degraded result. `withStatsTimeout` swallows
+      // per-protocol failures and returns null (so one slow protocol doesn't
+      // sink the page). But if EVERY protocol came back null, the whole stats
+      // fetch degraded (cold-pooler error → slow GROUP-BY fallback → 8s
+      // per-protocol timeout). Caching that — or saving it as last-good —
+      // makes the page show "0 streams indexed" for 5 min and poisons the
+      // fallback. Throw instead: unstable_cache skips the write, the caller
+      // keeps the previous last-good (which has real counts), and the next
+      // request retries fresh. (TVL rows can still be empty legitimately, so
+      // we only gate on stats.)
+      if (statsEntries.length > 0 && statsEntries.every(([, s]) => s === null)) {
+        throw new Error("all protocol stats null — skipping cache to avoid serving 0 streams");
+      }
+
       return { statsEntries, tvlMap, methodologyMap, computedAtMap };
     } catch (err) {
       // Throw — don't cache this empty result. unstable_cache doesn't
@@ -215,7 +229,9 @@ const loadProtocolsData = unstable_cache(
   // wrongly-clamped $78M, etc.). Key bump force-flushes Vercel's Data
   // Cache so users see the new figures immediately rather than waiting
   // out the 5-min TTL. v5 lasted from the page-data-fallback work.
-  ["protocols-page-data-v10"],
+  // v11 = flush the poisoned all-null-stats entry that rendered "0 streams
+  // indexed" (2026-06-04). Paired with the all-null guard above.
+  ["protocols-page-data-v11"],
   {
     revalidate: CACHE_TTL_SECONDS,
     tags: ["protocols-page"],
