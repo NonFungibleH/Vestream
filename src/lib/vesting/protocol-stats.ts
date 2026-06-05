@@ -340,8 +340,10 @@ export function foldProtocolStats(
     tokens     += s.tokensTracked;
     recipients += s.recipientCount;
     for (const c of s.chainIds) chainSet.add(c);
-    if (s.lastIndexedAt && (!lastIndexedAt || s.lastIndexedAt > lastIndexedAt)) {
-      lastIndexedAt = s.lastIndexedAt;
+    // ProtocolStats.lastIndexedAt is typed string | Date | null — coerce to Date.
+    const d = toDate(s.lastIndexedAt);
+    if (d && (!lastIndexedAt || d > lastIndexedAt)) {
+      lastIndexedAt = d;
     }
   }
   return {
