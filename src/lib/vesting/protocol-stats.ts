@@ -280,6 +280,81 @@ async function fastPathStats(adapterIds: readonly string[]): Promise<ProtocolSta
 }
 
 /**
+ * Bulk fast-path read: ONE select over the whole protocol_summaries table
+ * (≤ a dozen rows, ~100ms), returned as a map keyed by adapter id. Callers
+ * that render many protocols at once (the /protocols index) use this instead
+ * of N parallel getProtocolStats() calls — the fan-out was saturating the
+ * Supabase pooler and forcing the multi-second GROUP-BY fallback, which is
+ * what made the page 8s+. NEVER touches the 176k-row vesting_streams_cache.
+ * Returns an empty map on error (caller renders last-good, not 0s).
+ */
+export async function getAllProtocolStatsMap(): Promise<Map<string, ProtocolStats>> {
+  if (shouldSkipDbAtBuildTime()) return new Map();
+  const rows = await db
+    .select({
+      protocol:       protocolSummaries.protocol,
+      totalStreams:   protocolSummaries.totalStreams,
+      activeStreams:  protocolSummaries.activeStreams,
+      tokensTracked:  protocolSummaries.tokensTracked,
+      recipientCount: protocolSummaries.recipientCount,
+      chainIds:       protocolSummaries.chainIds,
+      lastIndexedAt:  protocolSummaries.lastIndexedAt,
+    })
+    .from(protocolSummaries);
+
+  const map = new Map<string, ProtocolStats>();
+  for (const r of rows) {
+    map.set(r.protocol, {
+      totalStreams:   r.totalStreams,
+      activeStreams:  r.activeStreams,
+      tokensTracked:  r.tokensTracked,
+      recipientCount: r.recipientCount,
+      chainIds:       (r.chainIds ?? []).slice().sort((a, b) => a - b),
+      lastIndexedAt:  toDate(r.lastIndexedAt),
+    });
+  }
+  return map;
+}
+
+/**
+ * Fold the summary rows for a protocol's adapter ids (e.g. UNCX = uncx +
+ * uncx-vm) into one ProtocolStats from a map built by getAllProtocolStatsMap().
+ * Returns null if none of the ids have a row (so the caller can show an
+ * "indexing…" state instead of a fake 0).
+ */
+export function foldProtocolStats(
+  map: Map<string, ProtocolStats>,
+  adapterIds: readonly string[],
+): ProtocolStats | null {
+  const matched = adapterIds
+    .map((id) => map.get(id))
+    .filter((s): s is ProtocolStats => !!s);
+  if (matched.length === 0) return null;
+
+  let total = 0, active = 0, tokens = 0, recipients = 0;
+  const chainSet = new Set<number>();
+  let lastIndexedAt: Date | null = null;
+  for (const s of matched) {
+    total      += s.totalStreams;
+    active     += s.activeStreams;
+    tokens     += s.tokensTracked;
+    recipients += s.recipientCount;
+    for (const c of s.chainIds) chainSet.add(c);
+    if (s.lastIndexedAt && (!lastIndexedAt || s.lastIndexedAt > lastIndexedAt)) {
+      lastIndexedAt = s.lastIndexedAt;
+    }
+  }
+  return {
+    totalStreams:   total,
+    activeStreams:  active,
+    tokensTracked:  tokens,
+    recipientCount: recipients,
+    chainIds:       Array.from(chainSet).sort((a, b) => a - b),
+    lastIndexedAt,
+  };
+}
+
+/**
  * Underlying GROUP BY computation — the same expression that
  * getProtocolStats used to run on every read. Now factored out so it can
  * be called from refreshProtocolSummaries() (write path) and as a

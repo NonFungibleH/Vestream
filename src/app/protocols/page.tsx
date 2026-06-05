@@ -28,7 +28,8 @@ import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
-  getProtocolStats,
+  getAllProtocolStatsMap,
+  foldProtocolStats,
   relativeFreshness,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
@@ -101,40 +102,26 @@ const loadProtocolsData = unstable_cache(
       computedAtMap:  {} as Record<string, string>,
     };
 
-    // Hard budget for the entire data load. The protocol_summaries fast path
-    // should finish in <500ms. If it falls through to computeProtocolStatsFromCache
-    // (GROUP BY on vestingStreamsCache) for all protocols in parallel, the
-    // combined query time can exceed Cloudflare's 100s gateway timeout and
-    // return a 524. Cap at 12s so we always return a partial-but-valid page
-    // rather than a timeout error. The unstable_cache layer retries on the
-    // next request; partial data is strictly better than a blank 524.
-    const STATS_TIMEOUT_MS = 8_000;   // per-protocol cap
-    const TOTAL_TIMEOUT_MS = 12_000;  // whole loadProtocolsData budget
-
-    const withStatsTimeout = (p: typeof protocols[number]) =>
-      Promise.race([
-        getProtocolStats(p.adapterIds),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`stats timeout for ${p.slug}`)), STATS_TIMEOUT_MS)
-        ),
-      ]).catch((err) => {
-        console.warn(`[protocols] stats timeout/error for ${p.slug}:`, err instanceof Error ? err.message : err);
-        return null as ProtocolStats | null;
-      });
-
     try {
-      const [statsEntries, snapshotRows] = await Promise.race([
-        Promise.all([
-          Promise.all(protocols.map((p) => withStatsTimeout(p).then((s) => [p.slug, s] as const))),
-          readAllSnapshots().catch((err) => {
-            console.error("[unlocks] snapshot read failed:", err);
-            return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
-          }),
-        ]),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("loadProtocolsData total budget exceeded")), TOTAL_TIMEOUT_MS)
-        ),
+      // Block-explorer-fast render path: TWO small pre-aggregated reads only,
+      // never the 176k-row vesting_streams_cache. Previously this fanned out N
+      // parallel getProtocolStats() calls (each able to fall into a ~5–8s
+      // GROUP-BY over that raw table) which saturated the Supabase pooler and
+      // produced 8s+ TTFB. Now: one bulk protocol_summaries read folded in
+      // memory + one snapshots read.
+      const [summariesMap, snapshotRows] = await Promise.all([
+        getAllProtocolStatsMap().catch((err) => {
+          console.error("[protocols] summaries read failed:", err);
+          return new Map<string, ProtocolStats>();
+        }),
+        readAllSnapshots().catch((err) => {
+          console.error("[unlocks] snapshot read failed:", err);
+          return [] as Awaited<ReturnType<typeof readAllSnapshots>>;
+        }),
       ]);
+
+      const statsEntries: Array<readonly [string, ProtocolStats | null]> =
+        protocols.map((p) => [p.slug, foldProtocolStats(summariesMap, p.adapterIds)] as const);
 
       // Aggregate snapshot rows by protocol — sum across chains.
       const tvlMap: Record<string, ProtocolTvl> = {};
@@ -198,16 +185,13 @@ const loadProtocolsData = unstable_cache(
         };
       }
 
-      // Guard against caching a degraded result. `withStatsTimeout` swallows
-      // per-protocol failures and returns null (so one slow protocol doesn't
-      // sink the page). But if EVERY protocol came back null, the whole stats
-      // fetch degraded (cold-pooler error → slow GROUP-BY fallback → 8s
-      // per-protocol timeout). Caching that — or saving it as last-good —
-      // makes the page show "0 streams indexed" for 5 min and poisons the
-      // fallback. Throw instead: unstable_cache skips the write, the caller
-      // keeps the previous last-good (which has real counts), and the next
-      // request retries fresh. (TVL rows can still be empty legitimately, so
-      // we only gate on stats.)
+      // Guard against caching a degraded result. If the bulk summaries read
+      // failed (caught → empty map), every foldProtocolStats() returns null.
+      // Caching that — or saving it as last-good — makes the page show "0
+      // streams indexed" for 5 min and poisons the fallback. Throw instead:
+      // unstable_cache skips the write, the caller keeps the previous last-good
+      // (real counts), and the next request retries fresh. (TVL rows can be
+      // empty legitimately, so we only gate on stats.)
       if (statsEntries.length > 0 && statsEntries.every(([, s]) => s === null)) {
         throw new Error("all protocol stats null — skipping cache to avoid serving 0 streams");
       }
