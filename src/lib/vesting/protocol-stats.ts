@@ -204,67 +204,79 @@ export async function getProtocolStats(
   if (shouldSkipDbAtBuildTime()) return EMPTY_PROTOCOL_STATS;
   if (adapterIds.length === 0)   return EMPTY_PROTOCOL_STATS;
 
-  // ── Fast path ──────────────────────────────────────────────────────────────
-  // Wrapped in try/catch so a missing table (migration 0018 not applied) or
-  // any other query failure falls through to the legacy path rather than
-  // crashing the page. Same defensive shape as getCacheStatsCells() in
-  // cache-stats.ts.
-  try {
-    const rows = await db
-      .select({
-        protocol:       protocolSummaries.protocol,
-        totalStreams:   protocolSummaries.totalStreams,
-        activeStreams:  protocolSummaries.activeStreams,
-        tokensTracked:  protocolSummaries.tokensTracked,
-        recipientCount: protocolSummaries.recipientCount,
-        chainIds:       protocolSummaries.chainIds,
-        lastIndexedAt:  protocolSummaries.lastIndexedAt,
-      })
-      .from(protocolSummaries)
-      .where(inArray(protocolSummaries.protocol, Array.from(adapterIds)));
-
-    if (rows.length > 0) {
-      // Sum across matched rows (UNCX merges uncx + uncx-vm; everyone else
-      // gets a single row). Distinct-token / distinct-recipient counts
-      // can't be summed correctly across protocols without revisiting the
-      // source — but for our two-protocol UNCX merge the overlap is
-      // negligible (different contracts → different streams) so a sum is
-      // close enough for the public stats display. If higher precision
-      // is ever needed, store the underlying sets in the summaries blob
-      // instead of pre-counted scalars.
-      let total = 0, active = 0, tokens = 0, recipients = 0;
-      const chainSet = new Set<number>();
-      let lastIndexedAt: Date | null = null;
-      for (const r of rows) {
-        total      += r.totalStreams;
-        active     += r.activeStreams;
-        tokens     += r.tokensTracked;
-        recipients += r.recipientCount;
-        for (const c of r.chainIds ?? []) chainSet.add(c);
-        if (r.lastIndexedAt) {
-          const d = toDate(r.lastIndexedAt);
-          if (d && (!lastIndexedAt || d > lastIndexedAt)) lastIndexedAt = d;
-        }
-      }
-      return {
-        totalStreams:   total,
-        activeStreams:  active,
-        tokensTracked:  tokens,
-        recipientCount: recipients,
-        chainIds:       Array.from(chainSet).sort((a, b) => a - b),
-        lastIndexedAt,
-      };
+  // ── Fast path (protocol_summaries), with one retry ──────────────────────────
+  // The fast-path query is ~30ms. A TRANSIENT error (cold Supabase pooler,
+  // connection reset) must NOT drop us into the multi-second GROUP-BY fallback
+  // when the summaries table is populated — that fallback running for all
+  // protocols in parallel is what made /protocols slow + cached "0 streams".
+  // So retry the cheap query once before falling back. Only the *bootstrap*
+  // case (table genuinely has no row for this protocol → fastPathStats returns
+  // null) or repeated failure reaches the GROUP BY.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const fast = await fastPathStats(adapterIds);
+      if (fast) return fast;
+      break; // genuinely empty (fresh deploy, pre-cron) → bootstrap GROUP BY
+    } catch (err) {
+      console.warn(
+        `[protocol-stats] protocol_summaries fast path attempt ${attempt + 1} failed: ${err instanceof Error ? err.message : err}`,
+      );
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 150));
     }
-    // Empty result → fall through to legacy path. Happens on fresh deploy
-    // before the first cron pass populates the summaries table.
-  } catch (err) {
-    console.warn(
-      `[protocol-stats] protocol_summaries fast path failed (likely table missing); falling back to GROUP BY: ${err instanceof Error ? err.message : err}`,
-    );
   }
 
   // ── Bootstrap fallback (legacy GROUP BY) ──────────────────────────────────
   return computeProtocolStatsFromCache(adapterIds);
+}
+
+/**
+ * Fast path: read pre-aggregated counts from protocol_summaries and fold the
+ * (possibly multiple, e.g. UNCX classic + VM) matching rows into one
+ * ProtocolStats. Returns null when the table has no row for any of the adapter
+ * ids (bootstrap case) so the caller can fall back to the GROUP BY.
+ */
+async function fastPathStats(adapterIds: readonly string[]): Promise<ProtocolStats | null> {
+  const rows = await db
+    .select({
+      protocol:       protocolSummaries.protocol,
+      totalStreams:   protocolSummaries.totalStreams,
+      activeStreams:  protocolSummaries.activeStreams,
+      tokensTracked:  protocolSummaries.tokensTracked,
+      recipientCount: protocolSummaries.recipientCount,
+      chainIds:       protocolSummaries.chainIds,
+      lastIndexedAt:  protocolSummaries.lastIndexedAt,
+    })
+    .from(protocolSummaries)
+    .where(inArray(protocolSummaries.protocol, Array.from(adapterIds)));
+
+  if (rows.length === 0) return null;
+
+  // Sum across matched rows. Distinct-token / distinct-recipient counts can't
+  // be summed perfectly across protocols, but for the UNCX classic+VM merge the
+  // overlap is negligible (different contracts → different streams), so a sum is
+  // close enough for the public stats display.
+  let total = 0, active = 0, tokens = 0, recipients = 0;
+  const chainSet = new Set<number>();
+  let lastIndexedAt: Date | null = null;
+  for (const r of rows) {
+    total      += r.totalStreams;
+    active     += r.activeStreams;
+    tokens     += r.tokensTracked;
+    recipients += r.recipientCount;
+    for (const c of r.chainIds ?? []) chainSet.add(c);
+    if (r.lastIndexedAt) {
+      const d = toDate(r.lastIndexedAt);
+      if (d && (!lastIndexedAt || d > lastIndexedAt)) lastIndexedAt = d;
+    }
+  }
+  return {
+    totalStreams:   total,
+    activeStreams:  active,
+    tokensTracked:  tokens,
+    recipientCount: recipients,
+    chainIds:       Array.from(chainSet).sort((a, b) => a - b),
+    lastIndexedAt,
+  };
 }
 
 /**
