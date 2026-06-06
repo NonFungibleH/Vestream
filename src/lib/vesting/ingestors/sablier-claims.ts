@@ -175,12 +175,13 @@ async function fetchSablierActions(
  */
 export async function getClaimHistoryForUser(
   userId:        string,
-  opts: { since?: Date; until?: Date; protocol?: string } = {},
+  opts: { since?: Date; until?: Date; protocol?: string; tokenAddress?: string } = {},
 ) {
   const conditions = [eq(claimEvents.userId, userId)];
-  if (opts.since)    conditions.push(sql`${claimEvents.claimedAt} >= ${opts.since}`);
-  if (opts.until)    conditions.push(sql`${claimEvents.claimedAt} <= ${opts.until}`);
-  if (opts.protocol) conditions.push(eq(claimEvents.protocol, opts.protocol));
+  if (opts.since)        conditions.push(sql`${claimEvents.claimedAt} >= ${opts.since}`);
+  if (opts.until)        conditions.push(sql`${claimEvents.claimedAt} <= ${opts.until}`);
+  if (opts.protocol)     conditions.push(eq(claimEvents.protocol, opts.protocol));
+  if (opts.tokenAddress) conditions.push(sql`lower(${claimEvents.tokenAddress}) = ${opts.tokenAddress.toLowerCase()}`);
 
   return db
     .select()

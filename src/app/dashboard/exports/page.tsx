@@ -34,6 +34,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { track } from "@/lib/analytics";
+import { VestingsList } from "./VestingsList";
 
 // Drizzle row shape mirrored manually — the API returns rows from the
 // claim_events table with claimedAt as ISO string after JSON serialization.
@@ -358,6 +359,10 @@ export default function ExportsPage() {
             </div>
           </div>
         </div>
+
+        {/* Vestings-first: one row per token the user vests, with claimed-to-date
+            income and an expandable per-token claim history. */}
+        <VestingsList />
 
         {/* Action row */}
         <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">

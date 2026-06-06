@@ -57,15 +57,17 @@ export async function GET(req: NextRequest) {
   const auth = await getAuthedUser();
   if (!auth) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const sp       = req.nextUrl.searchParams;
-  const since    = sp.get("since");
-  const until    = sp.get("until");
-  const protocol = sp.get("protocol") ?? undefined;
+  const sp           = req.nextUrl.searchParams;
+  const since        = sp.get("since");
+  const until        = sp.get("until");
+  const protocol     = sp.get("protocol") ?? undefined;
+  const tokenAddress = sp.get("tokenAddress") ?? undefined;
 
   const events = await getClaimHistoryForUser(auth.userId, {
     since:    since ? new Date(since) : undefined,
     until:    until ? new Date(until) : undefined,
     protocol,
+    tokenAddress,
   });
 
   // Summary: totals + per-year breakdown for the UI's "year switcher".
