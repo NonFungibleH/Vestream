@@ -592,6 +592,11 @@ export const vestingStreamsCache = pgTable(
     // protocol X" queries. Range-scans the hot tail of upcoming
     // events without re-filtering 40k+ Sablier rows in memory.
     index("vsc_protocol_end_time_idx").on(t.protocol, t.endTime),
+    // Compound (protocol, first_seen_at) for the /protocols/[slug] "new
+    // streams in last 24h" fun-stat. Without it that count Seq Scanned the
+    // whole 210MB table (~10s on the slow-IO tier); the index → ~150ms.
+    // Created in prod via CREATE INDEX CONCURRENTLY 2026-06-05.
+    index("vsc_protocol_first_seen_idx").on(t.protocol, t.firstSeenAt),
     // Single-column token_symbol — used by getTopSymbols() at build
     // time and on /tokens index. Without it the GROUP BY does a Seq
     // Scan over 130k+ rows (1.6s); with it the planner uses the index
