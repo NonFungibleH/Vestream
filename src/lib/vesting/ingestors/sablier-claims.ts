@@ -19,7 +19,12 @@ import { sql, and, eq } from "drizzle-orm";
 import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
 import type { SupportedChainId } from "../types";
 
-const SABLIER_ENVIO_URL = "https://indexer.bigdevenergy.link/3b4ea6b/v1/graphql";
+// MUST match the live endpoint the main adapter uses (adapters/sablier.ts).
+// This was hardcoded to a stale `bigdevenergy.link/3b4ea6b` host that returns
+// nothing — so claim_events stayed empty and tax exports produced no data
+// (found 2026-06-05). Keep in sync with the adapter + honour the env override.
+const SABLIER_ENVIO_URL =
+  process.env.SABLIER_ENVIO_URL ?? "https://indexer.hyperindex.xyz/53b7e25/v1/graphql";
 
 const SUPPORTED_CHAINS: SupportedChainId[] = [1, 56, 137, 8453, 11155111] as SupportedChainId[];
 
