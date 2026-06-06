@@ -47,12 +47,14 @@ export async function GET(req: NextRequest) {
   const sp        = req.nextUrl.searchParams;
   const formatRaw = (sp.get("format") ?? "vestream-generic") as ExportFormat;
   const format    = VALID_FORMATS.has(formatRaw) ? formatRaw : "vestream-generic";
-  const since     = sp.get("since");
-  const until     = sp.get("until");
+  const since        = sp.get("since");
+  const until        = sp.get("until");
+  const tokenAddress = sp.get("tokenAddress") ?? undefined;
 
   const events = await getClaimHistoryForUser(u.id, {
     since: since ? new Date(since) : undefined,
     until: until ? new Date(until) : undefined,
+    tokenAddress,
   });
 
   // Load the user's stream annotations + tags in parallel and build

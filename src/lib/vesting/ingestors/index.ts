@@ -81,6 +81,49 @@ export const SHIPPED_INGESTORS: AdapterId[] = [
   "jupiter-lock",
 ];
 
+/** Map each adapter id to its ingestor fn. Single source of truth used by
+ *  both the full fan-out and the scoped per-token path. */
+const INGESTOR_BY_PROTOCOL: Record<AdapterId, (u: string, w: string[], c?: SupportedChainId[]) => Promise<number>> = {
+  "sablier":      ingestSablierClaimsForUser,
+  "hedgey":       ingestHedgeyClaimsForUser,
+  "team-finance": ingestTeamFinanceClaimsForUser,
+  "pinksale":     ingestPinksaleClaimsForUser,
+  "uncx-vm":      ingestUncxVmClaimsForUser,
+  "uncx":         ingestUncxClaimsForUser,
+  "unvest":       ingestUnvestClaimsForUser,
+  "superfluid":   ingestSuperfluidClaimsForUser,
+  "streamflow":   ingestStreamflowClaimsForUser,
+  "jupiter-lock": ingestJupiterLockClaimsForUser,
+};
+
+function runGated(protocol: AdapterId, run: () => Promise<number>): Promise<IngestResult> {
+  if (!isAdapterEnabled(protocol)) return Promise.resolve({ protocol, inserted: 0 });
+  return run()
+    .then((inserted) => ({ protocol, inserted }))
+    .catch((err): IngestResult => ({ protocol, inserted: 0, error: String(err?.message ?? err) }));
+}
+
+/**
+ * Scoped ingest for a single token: only run the ingestor(s) for the
+ * token's protocol(s) on its chain. Much cheaper than the full fan-out
+ * (one chain, 1–2 protocols vs 10 protocols × all chains) — this powers
+ * the per-token "Run report" button on the Tax page. The ingestors don't
+ * filter by token address themselves, but the per-token history GET
+ * filters on read; ingesting the user's other claims on the same
+ * protocol/chain is legitimate (it's their data) and idempotent.
+ */
+export async function ingestClaimsForToken(
+  userId:  string,
+  wallets: string[],
+  opts: { chainId: SupportedChainId; protocols: AdapterId[] },
+): Promise<IngestResult[]> {
+  const seen = new Set<AdapterId>();
+  const tasks = opts.protocols
+    .filter((p) => INGESTOR_BY_PROTOCOL[p] && !seen.has(p) && (seen.add(p), true))
+    .map((protocol) => runGated(protocol, () => INGESTOR_BY_PROTOCOL[protocol](userId, wallets, [opts.chainId])));
+  return Promise.all(tasks);
+}
+
 /**
  * Run every adapter's ingestor in parallel for the given user. Returns
  * a per-protocol breakdown so the API surface can honestly report

@@ -107,10 +107,18 @@ export function VestingsList() {
   );
 }
 
+const EXPORT_FORMATS: { id: string; label: string }[] = [
+  { id: "koinly",           label: "Koinly" },
+  { id: "cointracker",      label: "CoinTracker" },
+  { id: "vestream-generic", label: "CSV" },
+];
+
 function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
   const [open, setOpen]       = useState(false);
   const [claims, setClaims]   = useState<ClaimRow[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [runMsg, setRunMsg]   = useState<string | null>(null);
 
   const loadClaims = useCallback(async () => {
     setLoading(true);
@@ -124,6 +132,27 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
       setLoading(false);
     }
   }, [v.tokenAddress]);
+
+  async function runReport() {
+    setRunning(true);
+    setRunMsg(null);
+    try {
+      const sp  = new URLSearchParams({ action: "refresh", chainId: String(v.chainId), protocol: v.protocols.join(",") });
+      const res = await fetch(`/api/claims/history?${sp.toString()}`, { method: "POST" });
+      const data = await res.json();
+      setRunMsg(res.ok ? (data.message ?? "Done.") : (data.error ?? "Refresh failed."));
+      if (res.ok) await loadClaims();
+    } catch {
+      setRunMsg("Refresh failed.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  function download(format: string) {
+    const sp = new URLSearchParams({ format, tokenAddress: v.tokenAddress });
+    window.location.href = `/api/claims/export?${sp.toString()}`;
+  }
 
   function toggle() {
     const next = !open;
@@ -169,6 +198,37 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
 
       {open && (
         <div className="px-4 pb-4" style={{ background: "var(--preview-bg)" }}>
+          {/* Per-token actions: re-index this token's claims, or export scoped CSV */}
+          <div className="flex items-center justify-between gap-3 flex-wrap pb-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={runReport}
+                disabled={running}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-all disabled:opacity-50"
+                style={{ background: "#1CB8B8" }}
+              >
+                {running ? "Indexing…" : "↻ Run report"}
+              </button>
+              {runMsg && (
+                <span className="text-[11px]" style={{ color: runMsg.toLowerCase().includes("fail") ? "#B3322E" : "var(--preview-text-3)" }}>
+                  {runMsg}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider mr-1" style={{ color: "var(--preview-text-3)" }}>Export</span>
+              {EXPORT_FORMATS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => download(f.id)}
+                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all"
+                  style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {loading ? (
             <p className="text-xs py-2" style={{ color: "var(--preview-text-3)" }}>Loading claims…</p>
           ) : !claims || claims.length === 0 ? (
