@@ -113,6 +113,12 @@ After these land, the personal-context trifecta is complete: what (notes), how o
 
 ## Soon (1–3 months)
 
+### Verify all claim ingestors on mainnet data
+- **What** — The Sablier claim ingestor was pointed at a dead Envio endpoint (fixed 2026-06-05; claim_events now populates + `/api/cron/ingest-claims` runs daily). The other 8 ingestors (Hedgey, UNCX, UNCX-VM, Unvest, PinkSale, Superfluid, Streamflow, Jupiter Lock) have NOT been verified against real mainnet claim data — the only paid user is testnet-only, so we proved the mechanism (Sablier) but not the others.
+- **Why** — Tax exports are a paid feature; a silently-broken ingestor = wrong/empty tax data. Sablier had exactly this bug. Treat each ingestor as unverified until it produces correct rows for a real mainnet wallet.
+- **How** — When a mainnet Pro user exists (or with a known mainnet test wallet per protocol): trigger `/api/cron/ingest-claims?userId=…`, then check `claim_events` per protocol for correct amount / timestamp / `usd_value_at_claim`. Spot-check the endpoint each ingestor hits matches its live adapter (the Sablier drift).
+- **Size** — `S` per protocol to verify; `M` if any need an endpoint/query fix like Sablier did.
+
 ### Vesting income statement (re-introduce)
 
 - **What** — Bring back the `/dashboard/income-statement` view (gross vesting income by payer/period). The page code still exists; it was unlinked from the sidebar + the Tax page sub-tab on 2026-06-04 as low-priority while we focus the Tax page on the claims→export flow.
