@@ -5,6 +5,10 @@
       "schedule": "15 3 * * *"
     },
     {
+      "path": "/api/cron/ingest-claims",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/refresh-prices",
       "schedule": "20 2,8,14,20 * * *"
     },
