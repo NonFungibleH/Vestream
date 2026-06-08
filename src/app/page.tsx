@@ -1750,7 +1750,7 @@ export default async function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year — saves 37%, 14-day trial) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year — saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1823,11 +1823,7 @@ export default async function Home() {
             <p className="text-3xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
               $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-3"
-              style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
-              14-day free trial
-            </div>
-            <p className="text-sm mb-1" style={{ color: "#8B8E92" }}>
+            <p className="text-sm mb-1 mt-2" style={{ color: "#8B8E92" }}>
               Or <span className="font-semibold" style={{ color: "#0F8A8A" }}>$74.99/year</span> — save 37%.
             </p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Everything you need to track every unlock.</p>

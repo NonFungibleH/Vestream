@@ -105,7 +105,7 @@ const pricingJsonLd = {
       priceCurrency: "USD",
       url:           "https://www.vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "10 wallets, unlimited push + email alerts, web dashboard, tax-ready CSV exports for Koinly / CoinTracker / TurboTax, 14-day free trial.",
+      description:   "10 wallets, unlimited push + email alerts, web dashboard, tax-ready CSV exports for Koinly / CoinTracker / TurboTax.",
       priceSpecification: {
         "@type":            "UnitPriceSpecification",
         price:              "9.99",
@@ -235,13 +235,6 @@ export default function Pricing() {
                 <span className="text-4xl font-bold tracking-tight" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>$9.99</span>
                 <span className="text-sm mb-1.5" style={{ color: "#B8BABD" }}>/month</span>
               </div>
-              {/* Trial chip — earnest green to feel like a genuine benefit rather
-                  than a pushy marketing flag. Sits under the price so the visitor
-                  clocks "free trial" before "how much will this cost me". */}
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold mb-2"
-                style={{ background: "rgba(45,179,106,0.1)", border: "1px solid rgba(45,179,106,0.25)", color: "#059669" }}>
-                14-day free trial
-              </div>
               <p className="text-sm" style={{ color: "#8B8E92" }}>
                 Or{" "}
                 <span className="font-semibold" style={{ color: "#1CB8B8" }}>$74.99/year</span>
@@ -251,7 +244,7 @@ export default function Pricing() {
 
             <PricingCta
               href="/early-access"
-              label="Start 14-day free trial →"
+              label="Get Vestream Pro →"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 mb-6"
               style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.35)" }}
             />
@@ -313,10 +306,6 @@ export default function Pricing() {
             <FAQItem
               q="How does annual billing work?"
               a="Pro annual is charged upfront for 12 months at $74.99/year (~$6.25/mo) — saves 37% vs paying monthly. You can switch between monthly and annual at renewal."
-            />
-            <FAQItem
-              q="How does the 14-day free trial work?"
-              a="New Pro signups get 14 days of full Pro access before any charge. Add a card to start the trial — we won't bill until day 15, and you can cancel anytime before then with one click. If you forget and we do charge, contact support within 48 hours for a full refund, no questions asked."
             />
             <FAQItem
               q="I track more than 10 wallets — what do I do?"

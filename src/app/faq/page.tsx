@@ -180,11 +180,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "How much does Vestream cost?",
-        a: "Free: $0, 3 wallets, 10 push alerts per month (resets on the 1st), no email alerts. Pro: $9.99/month or $74.99/year (saves 37%) for 10 wallets, unlimited push + email alerts, the web dashboard, the Discover page, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement). Every new Pro signup includes a 14-day free trial. Tracking more than 10 wallets? Email team@vestream.io.",
-      },
-      {
-        q: "Is there a free trial for Pro?",
-        a: "Yes — every new Pro signup includes a 14-day free trial. Add a card to start; we don't charge until day 15, and you can cancel anytime before then with one click. The Free plan is indefinite on top of that, so you can also validate the core experience (wallet tracking, mobile app, dashboard) without ever entering payment details. iOS and Android follow each store's respective trial policy.",
+        a: "Free: $0, 3 wallets, 10 push alerts per month (resets on the 1st), no email alerts. Pro: $9.99/month or $74.99/year (saves 37%) for 10 wallets, unlimited push + email alerts, the web dashboard, the Discover page, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement). Tracking more than 10 wallets? Email team@vestream.io.",
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",
