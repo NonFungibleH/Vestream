@@ -101,9 +101,13 @@ src/
                           unvest, team-finance, superfluid, pinksale. Each exports fetchStreams(address, chainId)
       aggregate.ts        Calls all adapters in parallel, dedupes, sorts
       normalize.ts        Cross-protocol field normalisation
-      dbcache.ts          Read/write to vestingStreamsCache table
+      dbcache.ts          Cache-first read/write to vestingStreamsCache (serves stale + background-revalidates; filters disabled protocols)
       explorer.ts         Token-level explorer queries (all holders of a token)
       graph.ts            The Graph API helpers
+      ingestors/          Per-protocol claim-event ingestors (*-claims.ts) → claimEvents table (tax income). index.ts fans out via ingestAllClaimsForUser / ingestClaimsForToken
+      sell-detect.ts      Auto sell-detection: Alchemy getAssetTransfers → disposalCandidates (tax gains)
+      historical-prices.ts getHistoricalPrice(chainId, token, ts) — USD-at-claim/at-sale pricing (Redis-cached)
+      user-vestings.ts    getUserVestingTokens — vestings-first list (one entry per token + claim totals)
     db/
       schema.ts           Drizzle table definitions (source of truth for DB shape)
       index.ts            Drizzle client singleton
@@ -379,6 +383,14 @@ Stream ID format: `"{protocol}-{chainId}-{nativeId}"` e.g. `sablier-1-12345`, `u
 | `/api/feedback` | Beta feedback submission |
 | `/api/find-vestings/save-link` | Web→mobile handoff: persist (email, wallet) so mobile OTP-verify can auto-claim it. Fires a confirmation email via Resend with App Store badges. Rate-limited 20/hr per (IP, email). |
 | `/api/notifications/preferences` | Save notification settings |
+| `/api/claims/history` | GET: claim history (income), filters `since`/`until`/`protocol`/`tokenAddress`. POST `?action=refresh`: ingest claims for the user's wallets (global, or scoped via `chainId`+`protocol`). |
+| `/api/claims/vestings` | GET: one entry per token the user vests, with claim totals — the vestings-first list on the Tax page. |
+| `/api/claims/export` | GET: tax-ready CSV (Koinly / CoinTracker / TurboTax / generic), filters `since`/`until`/`tokenAddress`. Persists a copy to `taxReportFiles`. |
+| `/api/dashboard/pnl/[token]` | GET entry price + sales + purchases + pending sell-detection candidates; POST entry price; DELETE clears. Web mirror of `/api/mobile/pnl/[token]`. |
+| `/api/dashboard/pnl/[token]/sales` + `/sales/[saleId]` | Manual gains ledger: POST add sale, DELETE remove. |
+| `/api/dashboard/pnl/[token]/detect-sales` | POST `?chainId=`: auto sell-detection scan (Alchemy `getAssetTransfers`, ETH+Base) → upserts `disposalCandidates`, returns pending. Pro-gated, rate-limited. |
+| `/api/dashboard/pnl/[token]/candidates/[id]` | POST `{action: confirm\|dismiss}`: confirm → `streamSales` (source="detected"); dismiss → keep, skip on re-scan. |
+| `/api/cron/ingest-claims` | Cron (daily 07:00 UTC): runs `ingestAllClaimsForUser` for paid users → populates `claimEvents`. `?userId=` scopes to one user (verification). |
 | `/api/cron/notify` | Cron: send unlock notification emails |
 | `/api/cron/cleanup-pending-links` | Cron (daily 04:15 UTC): sweeps expired unclaimed `pending_wallet_links` + > 30 day `webhook_event_dedup` rows |
 | `/api/admin/login` | Admin login — rate-limited, timing-safe, sets derived cookie |
@@ -424,7 +436,11 @@ Tables in `src/lib/db/schema.ts`:
 | `pendingWalletLinks` | Web→mobile handoff. (email, wallet_address) rows persisted from `/find-vestings` email-capture. Mobile OTP verify auto-claims matching rows into the `wallets` table. 30-day TTL. |
 | `webhookEventDedup` | (event_id, source) replay protection for the RevenueCat + Stripe webhooks. `claimWebhookEvent()` in `lib/webhook-dedup.ts` is the single gate; failure-open on DB outage. 30-day TTL via the cleanup cron. |
 | `streamPnl` | 1:1 entry-price row per `(userId, tokenAddress)`. Powers the cross-device P&L sync at `/api/mobile/pnl/[token]`. Unique index enforces one entry-price per user-per-token. |
-| `streamSales` | 1:N sales-ledger rows per `(userId, tokenAddress)`. Each row = `{saleDate, amount, price}`. Indexed on `(userId, tokenAddress)` for fast per-token reads. |
+| `streamSales` | 1:N sales-ledger rows per `(userId, tokenAddress)`. Each row = `{saleDate, amount, price, source}`. `source` is `"manual"` or `"detected"` (confirmed from a sell-detection candidate). Indexed on `(userId, tokenAddress)`. |
+| `streamPurchases` | 1:N purchase-ledger rows per `(userId, tokenAddress)` — cost-basis lots, mirror of `streamSales`. |
+| `claimEvents` | Per-claim income rows for the tax feature. One row per on-chain withdrawal/claim: `(userId, streamId, protocol, chainId, tokenAddress, tokenSymbol, amount, claimedAt, usdValueAtClaim)`. Populated by the per-protocol claim ingestors (`src/lib/vesting/ingestors/*-claims.ts`) via the `ingest-claims` cron. `usdValueAtClaim` is priced at receipt via `getHistoricalPrice`. This is the **income** half of the Tax Reports tool. |
+| `disposalCandidates` | Sell-detection inbox. One row per outbound ERC-20 transfer of a tracked token: `(userId, chainId, tokenAddress, txHash, uniqueId, toAddress, amountRaw, decimals, occurredAt, priceUsdAtTime, internalTransfer, status)`. `status` ∈ `pending|confirmed|dismissed`; confirmed rows are copied into `streamSales` (source="detected"). Dedup unique index on `(userId, chainId, txHash, uniqueId)`. The **gains** half. See `src/lib/vesting/sell-detect.ts`. |
+| `taxReportFiles` | Persisted CSV exports (so mobile Tax Reports can list + re-download). Written via `after()` from `/api/claims/export`. |
 
 `users.timezone` (IANA string, nullable) — added 2026-05-20. Mobile detects via `Intl.DateTimeFormat` and POSTs to `/api/mobile/me/timezone`. Used by the email scheduler to render dates in user-local time. Future quiet-hours / daily-digest features will consume the same column.
 
@@ -515,7 +531,7 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 | UNCX (TokenVesting) | `uncx` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Token locker v3 |
 | UNCX (VestingManager) | `uncx-vm` | ETH only | `eth_getLogs` event scan via shared multi-RPC pool | Hidden in UI; merged with `uncx`. BSC/Base/Polygon dropped Apr 29 2026 — dRPC free tier no longer serves eth_getLogs there. Re-add if/when paid RPC env vars set. |
 | Unvest | `unvest` | ETH, BSC, Polygon, Base | The Graph subgraph | Step/milestone vesting |
-| Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | Squid GraphQL (different stack than The Graph) | **TEMPORARILY PAUSED — May 2 2026.** `disabled: true` flag set in protocol-constants.ts; no seeder calls, no UI surfaces, cache rows preserved for re-enable. See "Pausing an integration" subsection below. |
+| Team Finance | `team-finance` | ETH, BSC, Polygon, Base, Sepolia | Squid GraphQL (different stack than The Graph) | **PAUSED — `disabled: true` (May 2026).** **June 2026:** all user-facing mentions removed pre-launch (no legal agreement yet) AND the cache + TVL rows were **purged** (815 + 4 rows deleted). The `disabled` gate stops the seeder from rebuilding them, and `dbcache` (`readFromCache`/`readAllStreamsForWallets`) now filters out any disabled-protocol row defensively. Adapter/walker/ingestor code is intact — re-enable is a single `disabled: false` flip + a deep-seed once legal lands. Do NOT add Team Finance to any user-facing surface (UI/blog/docs/manifest) until then. See "Pausing an integration" subsection below. |
 | Superfluid | `superfluid` | ETH, BSC, Polygon, Base | Superfluid hosted subgraph (no GRAPH_API_KEY) | Cliff + linear streaming; endpoint: `https://subgraph-endpoints.superfluid.dev/{chain}/vesting-scheduler` |
 | PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem (no subgraph) | TGE + cycle-based schedule. Adapter pages `getUserNormalLockAtIndex` in batches of 50 to dodge free-RPC 100KB response cap (Polygon-shaped bug). PINKSALE_CONTRACT_ADDRESSES is the single-source-of-truth map in protocol-constants.ts — do NOT add per-file copies. |
 | Streamflow | `streamflow` | Solana | @streamflow/stream SDK | Per-user fetches throttled via `mapBounded` (concurrency 4, 100ms inter-batch delay) to stay under Helius free CU/s. AlignedContract variant skipped. Gated behind `SOLANA_ENABLED=true`. |
@@ -992,6 +1008,19 @@ npm run db:push        # push schema directly (dev only — skips migration file
 npm run db:studio      # open Drizzle Studio GUI
 ```
 
+> ⚠️ **The drizzle migration chain is currently broken** — `db:generate` fails
+> with a snapshot collision (`drizzle/meta/0009|0010|0011_snapshot.json ...
+> pointing to a parent snapshot ... collision`) left by prior raw-SQL changes.
+> Until that's repaired, **schema changes are applied to prod directly via
+> idempotent SQL** (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE TABLE
+> IF NOT EXISTS`, `CREATE INDEX ... IF NOT EXISTS`), and `schema.ts` stays the
+> source of truth for Drizzle's TS types. This is the established pattern for
+> recent additions (the `CREATE INDEX CONCURRENTLY` perf indexes, the
+> `watchlist` table re-create, and the `claimEvents` / `disposalCandidates` /
+> `stream_sales.source` additions). Match column names/types/defaults to
+> `schema.ts` exactly when writing the DDL. Repairing the meta chain so
+> `db:generate` works again is its own backlog task.
+
 ### npm publish checklist
 Before publishing `@vestream/mcp`:
 1. `npm whoami` — confirm correct account
@@ -1113,6 +1142,9 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
 - **Never commit without verifying in preview first**
 - **Long `<code>` strings in cards** — add `break-all` or `overflow-x-auto` on the parent `<pre>` to prevent overflow on mobile
 - **Section backgrounds on dev/AI pages** — use theme-matched card colours, not the page background colour of the other theme
+- **Cliff vesting math — nothing is claimable before the cliff.** `computeLinearVesting` (in `@vestream/shared`) takes an optional `cliffTime` and returns 0 claimable / all-locked while `now < cliff`; the Hedgey adapter has its own `hedgeyRedeemable()` gate. A claimable/vested calc that accrues straight-line from `startTime` and ignores the cliff is a bug (we shipped tokens as "claimable" pre-cliff in June 2026). Any new claimable/vested code MUST gate on the cliff, and the emission charts (web `EmissionChart`, mobile `LinearVestingCurve`) must draw flat-until-cliff → jump → linear.
+- **The vestings read path is cache-first.** `/api/vesting` + `/api/mobile/vestings` serve cached streams INSTANTLY and revalidate stale wallets in the background (`void aggregate…then(writeToCache)`) — never re-introduce a blocking live scan on the normal load path. Only a first-ever load with zero cache, or an explicit `?refresh=1`, may block.
+- **Don't surface a `disabled` protocol.** `listProtocols()` excludes disabled protocols by default, the seeder skips them, and `dbcache` filters their rows out of reads. Team Finance is disabled + purged — keep it (and any future paused protocol) off every user-facing surface.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
