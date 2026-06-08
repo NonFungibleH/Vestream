@@ -390,6 +390,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   // rather than throwing). We fall through to the next URL in that case.
   let pubkeys: PublicKey[] | null = null;
   let usedUrl = candidateUrls[0];
+  let lastFailure: string | null = null; // captured reason for an actionable final error
   for (const url of candidateUrls) {
     const urlShort = url.replace(/api[-_]?key=[^&?]+/i, "api-key=***").split("?")[0].slice(0, 60);
     try {
@@ -415,6 +416,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
         // Silent empty response — some providers (e.g. Alchemy) return []
         // for programs they don't fully index instead of throwing. Try next.
         console.warn(`[jupiter-lock] phase 1: ${urlShort} returned 0 pubkeys (silent provider failure) — trying next`);
+        lastFailure = `${urlShort}: returned 0 accounts (provider doesn't index this program / silent failure)`;
         continue;
       }
       pubkeys = result;
@@ -422,11 +424,22 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
       console.log(`[jupiter-lock] phase 1 enumeration: ${pubkeys.length} escrow pubkeys (RPC=${urlShort})`);
       break;
     } catch (err) {
-      console.warn(`[jupiter-lock] phase 1 failed on ${urlShort}: ${err instanceof Error ? err.message.slice(0, 100) : err}`);
+      const msg = err instanceof Error ? err.message.slice(0, 140) : String(err);
+      console.warn(`[jupiter-lock] phase 1 failed on ${urlShort}: ${msg}`);
+      lastFailure = `${urlShort}: ${msg}`;
     }
   }
   if (pubkeys === null) {
-    console.error("[jupiter-lock] phase 1 getProgramAccounts failed (or returned 0) on all configured URLs");
+    // Actionable, greppable failure — names the cause + the fix so this never
+    // silently goes stale for days again. The discovery needs an RPC that
+    // serves getProgramAccounts on a large program; Alchemy 429s it on CU/s,
+    // so set JUPITER_LOCK_RPC_URL to a Helius (or paid) endpoint.
+    console.error(
+      `[jupiter-lock] DISCOVERY FAILED — getProgramAccounts exhausted on all ${candidateUrls.length} RPC URL(s). ` +
+      `Last reason: ${lastFailure ?? "unknown"}. ` +
+      `Jupiter Lock will NOT refresh until SOLANA_RPC_URL / JUPITER_LOCK_RPC_URL points at an RPC that serves ` +
+      `getProgramAccounts at scale (Helius). Cache rows will go stale.`,
+    );
     return null;
   }
 
