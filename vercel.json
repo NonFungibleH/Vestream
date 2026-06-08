@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/warm",
+      "schedule": "*/15 * * * *"
+    },
+    {
       "path": "/api/cron/tvl-snapshot",
       "schedule": "15 3 * * *"
     },
