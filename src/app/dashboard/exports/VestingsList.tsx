@@ -281,23 +281,40 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
             </div>
           )}
 
-          {/* Gains — manual sales ledger (realized gains vs entry cost basis) */}
-          <SalesSection tokenAddress={v.tokenAddress} tokenSymbol={v.tokenSymbol} tokenDecimals={undefined} />
+          {/* Gains — auto-detected disposals + manual sales ledger */}
+          <SalesSection tokenAddress={v.tokenAddress} tokenSymbol={v.tokenSymbol} chainId={v.chainId} />
         </div>
       )}
     </div>
   );
 }
 
-function SalesSection({ tokenAddress, tokenSymbol }: { tokenAddress: string; tokenSymbol: string; tokenDecimals?: number }) {
-  const [sales, setSales]         = useState<SaleRow[] | null>(null);
-  const [entryPrice, setEntry]    = useState<number | null>(null);
-  const [adding, setAdding]       = useState(false);
-  const [date, setDate]           = useState("");
-  const [amount, setAmount]       = useState("");
-  const [price, setPrice]         = useState("");
-  const [submitting, setSubmit]   = useState(false);
-  const [err, setErr]             = useState<string | null>(null);
+// Chains sell-detection can scan today — must match SELL_DETECT_CHAINS server-side.
+const SELL_SCAN_CHAINS = [1, 8453];
+
+interface DisposalCandidate {
+  id: string; chainId: number; txHash: string; toAddress: string;
+  amount: number; priceUsd: number | null; occurredAt: string; internalTransfer: boolean;
+}
+
+const EXPLORER_TX: Record<number, string> = {
+  1:    "https://etherscan.io/tx/",
+  8453: "https://basescan.org/tx/",
+};
+
+function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: string; tokenSymbol: string; chainId: number }) {
+  const [sales, setSales]             = useState<SaleRow[] | null>(null);
+  const [entryPrice, setEntry]        = useState<number | null>(null);
+  const [candidates, setCandidates]   = useState<DisposalCandidate[]>([]);
+  const [adding, setAdding]           = useState(false);
+  const [date, setDate]               = useState("");
+  const [amount, setAmount]           = useState("");
+  const [price, setPrice]             = useState("");
+  const [submitting, setSubmit]       = useState(false);
+  const [err, setErr]                 = useState<string | null>(null);
+  const [scanning, setScanning]       = useState(false);
+  const [scanMsg, setScanMsg]         = useState<string | null>(null);
+  const canScan = SELL_SCAN_CHAINS.includes(chainId);
 
   const load = useCallback(async () => {
     try {
@@ -305,12 +322,44 @@ function SalesSection({ tokenAddress, tokenSymbol }: { tokenAddress: string; tok
       const data = await res.json();
       setSales(data.sales ?? []);
       setEntry(typeof data.entryPrice === "number" ? data.entryPrice : null);
+      setCandidates(data.candidates ?? []);
     } catch {
       setSales([]);
     }
   }, [tokenAddress]);
 
   useEffect(() => { void load(); }, [load]);
+
+  async function scan() {
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const res  = await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}/detect-sales?chainId=${chainId}`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { setScanMsg(data.error ?? "Scan failed."); return; }
+      setCandidates(data.candidates ?? []);
+      const n = (data.candidates ?? []).length;
+      setScanMsg(n === 0 ? "No disposals found on-chain." : `${n} disposal${n === 1 ? "" : "s"} found — confirm the ones that were sales.`);
+    } catch {
+      setScanMsg("Scan failed.");
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  async function actCandidate(id: string, action: "confirm" | "dismiss") {
+    setCandidates((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}/candidates/${encodeURIComponent(id)}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ action }),
+      });
+      if (action === "confirm") await load(); // pull the newly-created sale row
+    } catch {
+      void load();
+    }
+  }
 
   async function addSale(e: React.FormEvent) {
     e.preventDefault();
@@ -350,14 +399,83 @@ function SalesSection({ tokenAddress, tokenSymbol }: { tokenAddress: string; tok
         <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
           Gains — sales {entryPrice != null ? `(cost basis $${entryPrice.toLocaleString(undefined, { maximumFractionDigits: 4 })})` : ""}
         </p>
-        {!adding && (
-          <button onClick={() => setAdding(true)}
-            className="text-[11px] font-semibold px-2 py-1 rounded-md"
-            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}>
-            + Add sale
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={scan}
+            disabled={scanning || !canScan}
+            title={canScan ? "Scan the chain for times you sold or transferred this token" : "Sell scanning isn't available on this chain yet"}
+            className="text-[11px] font-semibold px-2 py-1 rounded-md text-white disabled:opacity-50"
+            style={{ background: "#1CB8B8" }}>
+            {scanning ? "Scanning…" : "⌕ Scan for sales"}
           </button>
-        )}
+          {!adding && (
+            <button onClick={() => setAdding(true)}
+              className="text-[11px] font-semibold px-2 py-1 rounded-md"
+              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}>
+              + Add sale
+            </button>
+          )}
+        </div>
       </div>
+
+      {scanMsg && (
+        <p className="text-[11px] mb-2" style={{ color: scanMsg.toLowerCase().includes("fail") ? "#B3322E" : "var(--preview-text-3)" }}>
+          {scanMsg}
+        </p>
+      )}
+      {!canScan && (
+        <p className="text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
+          Auto sell-detection currently covers Ethereum &amp; Base. Add sales for this chain manually below.
+        </p>
+      )}
+
+      {/* Detected disposals — confirm the ones that were sales, dismiss the rest. */}
+      {candidates.length > 0 && (
+        <div className="mb-3 rounded-xl overflow-hidden" style={{ border: "1px solid var(--preview-border)" }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5"
+            style={{ background: "var(--preview-card)", color: "var(--preview-text-3)" }}>
+            Detected on-chain — confirm sales
+          </p>
+          {candidates.map((c) => (
+            <div key={c.id}
+              className="flex items-center justify-between gap-2 px-3 py-2 text-xs"
+              style={{ borderTop: "1px solid var(--preview-border-2)", opacity: c.internalTransfer ? 0.6 : 1 }}>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span style={{ color: "var(--preview-text)" }}>{c.occurredAt.slice(0, 10)}</span>
+                  <span className="font-mono" style={{ color: "var(--preview-text)" }}>
+                    {c.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {tokenSymbol}
+                  </span>
+                  {c.priceUsd != null && (
+                    <span style={{ color: "var(--preview-text-3)" }}>@ ${c.priceUsd.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                  )}
+                  {c.internalTransfer && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--preview-bg)", color: "var(--preview-text-3)", border: "1px solid var(--preview-border-2)" }}>
+                      to your wallet
+                    </span>
+                  )}
+                </div>
+                {EXPLORER_TX[c.chainId] && (
+                  <a href={`${EXPLORER_TX[c.chainId]}${c.txHash}`} target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] font-mono hover:underline" style={{ color: "var(--preview-text-3)" }}>
+                    {c.txHash.slice(0, 10)}… ↗
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button onClick={() => actCandidate(c.id, "confirm")}
+                  className="text-[11px] font-semibold px-2 py-1 rounded-md text-white" style={{ background: "#0F8A4A" }}>
+                  Confirm
+                </button>
+                <button onClick={() => actCandidate(c.id, "dismiss")}
+                  className="text-[11px] px-2 py-1 rounded-md" style={{ color: "var(--preview-text-3)", border: "1px solid var(--preview-border)" }}>
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {entryPrice == null && (
         <p className="text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
