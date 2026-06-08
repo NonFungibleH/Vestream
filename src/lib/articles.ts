@@ -140,7 +140,6 @@ const articles: Article[] = [
         items: [
           "<strong>Sablier:</strong> Real-time streaming vesting on Ethereum and multiple L2s. Tokens unlock per second in a continuous stream.",
           "<strong>UNCX Network:</strong> Token locker and vesting platform widely used for project team and investor allocations.",
-          "<strong>Team Finance:</strong> Vesting and locking service supporting multiple EVM chains.",
           "<strong>Hedgey Finance:</strong> Supports cliff, linear, and custom vesting with on-chain NFT-based positions.",
           "<strong>Unvest:</strong> Multi-chain vesting with support for delegated claiming and batch management.",
         ],
@@ -206,7 +205,7 @@ const articles: Article[] = [
           "<strong>Check the project documentation:</strong> Most serious projects publish tokenomics docs or a whitepaper detailing vesting terms by category. Look for 'tokenomics', 'token distribution', or 'vesting schedule' sections.",
           "<strong>Read your investment agreement:</strong> For private round participants, your SAFT (Simple Agreement for Future Tokens) or token purchase agreement specifies your exact vesting terms.",
           "<strong>Use a block explorer:</strong> If you know the vesting contract address, you can inspect it on Etherscan, BscScan, or Basescan to see your locked balance and schedule.",
-          "<strong>Use a protocol-native dashboard:</strong> Platforms like Sablier, Team Finance, and Hedgey all provide dashboards where you can connect your wallet and view active positions.",
+          "<strong>Use a protocol-native dashboard:</strong> Platforms like Sablier and Hedgey all provide dashboards where you can connect your wallet and view active positions.",
           "<strong>Use a dedicated vesting tracker:</strong> Tools like Vestream aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
         ],
       },
@@ -250,7 +249,7 @@ const articles: Article[] = [
           },
           {
             q: "How do I know if my wallet has vested tokens waiting to be claimed?",
-            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (Sablier app, Team Finance, etc.), or you can use a cross-protocol tracker like Vestream to see all your vested-but-unclaimed balances across every supported platform in one view.",
+            a: "You need to check the vesting contracts associated with your wallet address. Each protocol has its own dashboard (the Sablier app, etc.), or you can use a cross-protocol tracker like Vestream to see all your vested-but-unclaimed balances across every supported platform in one view.",
           },
           {
             q: "Can I sell my unvested tokens?",
@@ -487,7 +486,6 @@ const articles: Article[] = [
         rows: [
           ["Sablier", "✓ (real-time)", "✓", "✓", "✓", "Ethereum, Base, Arbitrum, others"],
           ["UNCX Network", "✓", "✓", "✓", "✓", "Ethereum, BSC, Base"],
-          ["Team Finance", "✓", "✓", "✓", "✓", "Ethereum, BSC, Sepolia"],
           ["Hedgey Finance", "✓", "✓", "✓", "✓", "Ethereum, BSC, Base"],
           ["Unvest", "✓", "✓", "✓", "✓", "Ethereum, BSC, Polygon, others"],
         ],
@@ -561,7 +559,7 @@ const articles: Article[] = [
           "<strong>Missed planning:</strong> Portfolio managers need to know when significant token tranches unlock to plan hedging, liquidation, or reinvestment strategies.",
           "<strong>Tax obligations:</strong> In many jurisdictions, vesting events create taxable income at the point of vesting — not just at sale. Missing these events means missed tax filings.",
           "<strong>Project monitoring:</strong> Tracking when major team and investor vestings unlock for a project you hold is essential due diligence — large unlock events consistently correlate with increased sell-side pressure.",
-          "<strong>Fragmentation:</strong> A single wallet may have active positions on Sablier, Team Finance, and Hedgey simultaneously — across Ethereum, BSC, and Base. Without a unified view, this is nearly impossible to manage manually.",
+          "<strong>Fragmentation:</strong> A single wallet may have active positions on Sablier and Hedgey simultaneously — across Ethereum, BSC, and Base. Without a unified view, this is nearly impossible to manage manually.",
         ],
       },
 
@@ -573,7 +571,7 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Multiple protocols:</strong> Sablier, UNCX, Team Finance, Hedgey, Unvest, and custom contracts each have their own dashboards and data formats",
+          "<strong>Multiple protocols:</strong> Sablier, UNCX, Hedgey, Unvest, and custom contracts each have their own dashboards and data formats",
           "<strong>Multiple blockchains:</strong> The same wallet address may hold vestings on Ethereum mainnet, BNB Chain, Base, and testnets simultaneously",
           "<strong>Multiple wallets:</strong> Fund managers and project teams often manage dozens of beneficiary wallets",
           "<strong>No universal standard:</strong> There is no shared data format or API across vesting protocols — each must be queried separately",
@@ -616,14 +614,13 @@ const articles: Article[] = [
         rows: [
           ["Sablier", "app.sablier.com", "Active streams, claimable amount, start/end dates, withdrawal history"],
           ["UNCX Network", "uncx.network", "Locked positions, unlock schedule, claim interface"],
-          ["Team Finance", "team.finance", "Vesting schedules, cliff dates, claimable balance"],
           ["Hedgey Finance", "hedgey.finance", "Token plans, unlock calendar, batch claiming"],
           ["Unvest", "unvest.io", "Positions by chain, real-time unlock amounts"],
         ],
       },
       {
         type: "p",
-        html: "Protocol-native dashboards are reliable and up-to-date for their own contracts, but they only show positions on <em>that specific protocol</em>. If you have vestings across Sablier <em>and</em> Team Finance <em>and</em> Hedgey, you need to visit three separate sites, potentially across multiple chains.",
+        html: "Protocol-native dashboards are reliable and up-to-date for their own contracts, but they only show positions on <em>that specific protocol</em>. If you have vestings across Sablier <em>and</em> Hedgey <em>and</em> UNCX, you need to visit three separate sites, potentially across multiple chains.",
       },
 
       { type: "h2", text: "Method 3: Dedicated Token Vesting Trackers" },
@@ -638,7 +635,7 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Multi-protocol coverage:</strong> Should cover all major vesting platforms — Sablier, UNCX, Team Finance, Hedgey, Unvest at minimum",
+          "<strong>Multi-protocol coverage:</strong> Should cover all major vesting platforms — Sablier, UNCX, Hedgey, Unvest at minimum",
           "<strong>Multi-chain coverage:</strong> Ethereum, BNB Chain, Base, and any chains where you hold positions",
           "<strong>Real-time data:</strong> Claimable balances change every second on streaming protocols — the tool should reflect current on-chain state",
           "<strong>Unlock calendar:</strong> A calendar view of upcoming unlock events so you can plan ahead",
@@ -1603,7 +1600,7 @@ const articles: Article[] = [
             a: "As a rough guide: under 3% is generally low impact, 3–8% warrants monitoring, 8–15% is significant and should factor into position sizing, and above 15% is a high-risk event regardless of holder type. These thresholds scale down in bear markets and up in strong bull markets where buy-side depth is deeper.",
           },
           {
-            q: "Does vesting through Sablier vs UNCX vs Team Finance affect price impact?",
+            q: "Does vesting through Sablier vs UNCX affect price impact?",
             a: "The protocol itself does not change the fundamental supply dynamics — the price impact comes from recipient incentives and market conditions, not which smart contract holds the tokens. However, streaming protocols like Sablier produce continuous micro-unlocks rather than discrete cliff events, which tend to spread sell pressure more evenly and reduce day-of volatility compared to cliff-based protocols.",
           },
           {
@@ -1662,7 +1659,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "In <strong>Team Finance and UNCX</strong>, the cliff is modelled as a single timestamp before which nothing vests. After the cliff, the contract calculates how many full periods have elapsed since the start and releases the proportional amount. Some implementations allow multiple cliff stages — a <strong>cascading cliff</strong> where partial amounts release at defined intervals before the full schedule begins.",
+        html: "In <strong>UNCX</strong>, the cliff is modelled as a single timestamp before which nothing vests. After the cliff, the contract calculates how many full periods have elapsed since the start and releases the proportional amount. Some implementations allow multiple cliff stages — a <strong>cascading cliff</strong> where partial amounts release at defined intervals before the full schedule begins.",
       },
       {
         type: "ul",
@@ -1739,7 +1736,7 @@ const articles: Article[] = [
         items: [
           "<strong>Find the vesting contract address.</strong> The project's documentation, tokenomics page, or initial token deployment transaction should reference the vesting contract. Many projects post this on their website or GitHub.",
           "<strong>Read the contract storage.</strong> Using a block explorer (Etherscan, BscScan, etc.), navigate to the contract and call the read functions. Look for <code>cliffTime</code>, <code>cliffDate</code>, <code>vestingStart</code>, or equivalent variables.",
-          "<strong>Use a vesting aggregator.</strong> Tools like Vestream index vesting contracts across Sablier, UNCX, Team Finance, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
+          "<strong>Use a vesting aggregator.</strong> Tools like Vestream index vesting contracts across Sablier, UNCX, Hedgey, and Unvest, surfacing your cliff dates and unlock calendar in a single dashboard without manual contract interrogation.",
           "<strong>Verify against tokenomics documentation.</strong> On-chain data is ground truth, but project documentation often explains the intent behind the schedule. Discrepancies between documented schedules and on-chain data are a significant red flag.",
         ],
       },
@@ -1765,7 +1762,7 @@ const articles: Article[] = [
           },
           {
             q: "Can I sell or transfer my vesting position before the cliff fires?",
-            a: "On protocols that represent vesting as NFTs (Sablier, Hedgey), you can transfer the vesting NFT to another address, effectively selling the future claim to the tokens. The new holder then waits for the cliff and claims. On address-locked protocols (UNCX, Team Finance, Unvest), you cannot transfer the vesting position — it is permanently tied to the recipient address set at creation.",
+            a: "On protocols that represent vesting as NFTs (Sablier, Hedgey), you can transfer the vesting NFT to another address, effectively selling the future claim to the tokens. The new holder then waits for the cliff and claims. On address-locked protocols (UNCX, Unvest), you cannot transfer the vesting position — it is permanently tied to the recipient address set at creation.",
           },
         ],
       },
@@ -1979,7 +1976,7 @@ const articles: Article[] = [
           },
           {
             q: "How can I find out when a token's unlock events are scheduled?",
-            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, Hedgey, and Team Finance protocols.",
+            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, and Hedgey protocols.",
           },
           {
             q: "What should a project team do if they already have a poorly structured vesting schedule?",
@@ -2179,7 +2176,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "On-chain vesting — enforced by protocols like Sablier, UNCX, Team Finance, Hedgey, or Unvest — is verifiable by anyone. You can look at the vesting contract address on a block explorer and confirm exactly how many tokens are locked, when they unlock, and who the beneficiary is. <strong>If a project's team vesting is not on-chain, the only thing preventing early access to those tokens is the team's word.</strong>",
+        html: "On-chain vesting — enforced by protocols like Sablier, UNCX, Hedgey, or Unvest — is verifiable by anyone. You can look at the vesting contract address on a block explorer and confirm exactly how many tokens are locked, when they unlock, and who the beneficiary is. <strong>If a project's team vesting is not on-chain, the only thing preventing early access to those tokens is the team's word.</strong>",
       },
       {
         type: "callout",
@@ -2325,7 +2322,7 @@ const articles: Article[] = [
       { type: "h2", text: "Tracking Vesting Unlocks Across Your Portfolio" },
       {
         type: "p",
-        html: "The practical problem is that tracking vesting across multiple projects is genuinely hard. Different protocols (Sablier, UNCX, Hedgey, Team Finance, Unvest) use different contract structures. Different chains (Ethereum, Base, BSC) require different tooling. And most projects do not send you a notification when a major unlock is approaching.",
+        html: "The practical problem is that tracking vesting across multiple projects is genuinely hard. Different protocols (Sablier, UNCX, Hedgey, Unvest) use different contract structures. Different chains (Ethereum, Base, BSC) require different tooling. And most projects do not send you a notification when a major unlock is approaching.",
       },
       {
         type: "p",
@@ -2451,7 +2448,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The third option — a dedicated vesting aggregator — is the only one that gives you a consolidated view if you hold multiple token positions across different protocols. Most investors have vesting positions spread across Sablier, UNCX, Hedgey, and Team Finance simultaneously, and checking each protocol manually is impractical.",
+        html: "The third option — a dedicated vesting aggregator — is the only one that gives you a consolidated view if you hold multiple token positions across different protocols. Most investors have vesting positions spread across Sablier, UNCX, and Hedgey simultaneously, and checking each protocol manually is impractical.",
       },
 
       { type: "h2", text: "Building Your Personal Token Unlock Calendar" },
@@ -2482,7 +2479,6 @@ const articles: Article[] = [
           ["Sablier", "Per-second linear streaming", "Ethereum, Base, Polygon, BNB Chain"],
           ["UNCX", "Configurable lock & vest", "Ethereum, Base, Polygon, BNB Chain"],
           ["Hedgey", "Batch grants, DAO payroll", "Ethereum, Base, Polygon, BNB Chain"],
-          ["Team Finance", "Team & investor vesting", "Ethereum, Base, Polygon, BNB Chain"],
           ["Unvest", "Milestone + linear vesting", "Ethereum, Base, Polygon, BNB Chain"],
         ],
       },
@@ -2646,7 +2642,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Team Finance, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
       },
 
       { type: "h2", text: "What to Know Before You Hold Any Token" },
@@ -3343,142 +3339,6 @@ const articles: Article[] = [
     ],
   },
 
-  // ── Article 20 ───────────────────────────────────────────────────────────────
-  {
-    slug:        "team-finance-vesting-guide",
-    title:       "Team Finance Vesting: A Project Founder's Guide",
-    excerpt:     "Team Finance is the locker most associated with the blue 'team tokens locked' badge. Here is how its vesting product works and why projects choose it.",
-    publishedAt: "2026-04-27",
-    updatedAt:   "2026-04-27",
-    readingTime: "8 min read",
-    category:    "Guides",
-    tags:        ["team finance", "vesting", "tokenomics", "founders", "guides"],
-    content: [
-      {
-        type: "p",
-        html: "<strong>Team Finance</strong> is one of the longest-running token lockers in the EVM ecosystem. If you have looked at a token's marketing site and seen a 'Team Tokens Locked — Team Finance' badge, that's their vesting product in action. This guide is aimed at founders evaluating where to lock their team allocation, but it doubles as a reference for any token holder receiving tokens through a Team Finance vest.",
-      },
-
-      { type: "h2", text: "What Team Finance Offers" },
-      {
-        type: "p",
-        html: "Team Finance runs three principal products that overlap with vesting: liquidity locking (LP tokens), team token locking (single-recipient bare ERC-20 lock), and vesting (multi-tranche scheduled release to one or many recipients). The vesting product is what we focus on here.",
-      },
-      {
-        type: "ul",
-        items: [
-          "<strong>Single-recipient locks:</strong> deposit tokens, name a recipient, set an unlock date. The contract releases everything at that timestamp.",
-          "<strong>Vesting schedules:</strong> deposit tokens, configure a series of unlock tranches over time. The recipient claims each tranche as it matures.",
-          "<strong>Multi-recipient batches:</strong> upload a list of recipients with individual amounts and schedules — useful for distributing investor allocations.",
-        ],
-      },
-      {
-        type: "callout",
-        emoji: "🔐",
-        title: "Why founders pick Team Finance",
-        body:  "Brand recognition with retail. The Team Finance badge is a strong trust signal for token buyers, especially on BSC and the BSC-derivative ecosystem.",
-      },
-
-      { type: "h2", text: "Why Vest on Team Finance Specifically?" },
-      {
-        type: "p",
-        html: "Compared to streaming-first protocols like Sablier or NFT-based platforms like Hedgey, Team Finance's appeal is institutional: the badge, the long track record, the explicit transparency reports. For a project whose primary audience is retail token buyers — particularly on BSC — that recognition translates directly to investor confidence at listing.",
-      },
-      {
-        type: "ol",
-        items: [
-          "<strong>Retail trust:</strong> the badge is widely recognised on listing aggregators and audit reports.",
-          "<strong>Operational simplicity:</strong> Team Finance's UI hides almost all the contract complexity from the project. Founders configure a vest in minutes.",
-          "<strong>Cross-chain support:</strong> same product on Ethereum, BNB Chain, Polygon, Base, and several smaller EVMs.",
-          "<strong>Transparency:</strong> every vest has a public URL on teamfinance.io that anyone can audit without needing the contract address.",
-        ],
-      },
-
-      { type: "h2", text: "How a Team Finance Vest Works On-Chain" },
-      {
-        type: "p",
-        html: "Team Finance's vesting contracts hold the locked tokens in escrow and reference each individual vest by an integer ID. The vesting metadata stored on-chain is straightforward:",
-      },
-      {
-        type: "ul",
-        items: [
-          "<strong>token</strong> — the ERC-20 being vested",
-          "<strong>amount</strong> — total locked",
-          "<strong>recipient</strong> — the wallet entitled to claim",
-          "<strong>unlocks</strong> — an array of (timestamp, amount) tranches",
-          "<strong>withdrawn</strong> — total claimed so far",
-        ],
-      },
-      {
-        type: "p",
-        html: "Tranche-based release means Team Finance is closer to <em>cliff vesting</em> than to streaming — you get a chunk on each scheduled date, not per-second flow. For deeper background on the difference, see <a href=\"/resources/cliff-vesting-vs-linear-vesting\">Cliff Vesting vs Linear Vesting</a>.",
-      },
-
-      { type: "h2", text: "Transparency Benefits for Recipients" },
-      {
-        type: "p",
-        html: "From a recipient's standpoint, Team Finance has two big advantages over a hand-rolled multisig-based vesting setup:",
-      },
-      {
-        type: "ul",
-        items: [
-          "<strong>You can verify the schedule yourself:</strong> every vest is on-chain. The project can't change the unlock dates after creation.",
-          "<strong>You can verify the contract is funded:</strong> if your project says they locked 10M tokens for the team but the on-chain balance only shows 1M, that's a discrepancy you can detect immediately.",
-          "<strong>You can verify your specific allocation:</strong> Vestream and Team Finance's own UI show your individual position, not just the aggregate lock.",
-        ],
-      },
-      {
-        type: "callout",
-        emoji: "🔎",
-        title: "Trust but verify",
-        body:  "A vest deployed but unfunded is the most common edge case. Always check the on-chain token balance of the vesting contract matches the announced amount before treating an allocation as 'locked'.",
-      },
-
-      { type: "h2", text: "Comparing Team Finance to Other Vesting Protocols" },
-      {
-        type: "table",
-        headers: ["Feature", "Team Finance", "Sablier", "Hedgey", "UNCX"],
-        rows: [
-          ["Release pattern", "Tranched", "Streaming or tranched", "Streaming, tranched, or both", "Linear between two timestamps"],
-          ["Position type", "Vest record", "Stream record", "NFT", "Vest record"],
-          ["Best-known for", "Team token locks", "Founder/team streams", "Investor + governance", "LP locks (vesting added later)"],
-          ["Brand recognition", "High (BSC retail)", "High (institutional / DAO)", "High (DAOs / treasury)", "Highest LP locker brand"],
-          ["Multi-recipient flow", "Yes (CSV upload)", "Yes", "Yes (per-NFT)", "Yes (VestingManager)"],
-        ],
-      },
-
-      { type: "h2", text: "When Team Finance Is the Right Choice" },
-      {
-        type: "p",
-        html: "Team Finance is a strong fit when:",
-      },
-      {
-        type: "ul",
-        items: [
-          "Your audience is primarily retail and the trust signal is the marketing point.",
-          "Your unlock schedule is naturally tranched (e.g. quarterly cliffs) rather than continuous.",
-          "You are also locking liquidity on Team Finance and want both products on the same dashboard.",
-          "You value operational simplicity over deep customisation.",
-        ],
-      },
-      {
-        type: "p",
-        html: "Conversely, if you want per-second streaming, transferable governance-aware vesting NFTs, or per-recipient revocability, you'll likely look at <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier</a> or <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey</a> first.",
-      },
-
-      { type: "h2", text: "FAQ" },
-      {
-        type: "faq",
-        items: [
-          { q: "Can a Team Finance vest be cancelled by the project?", a: "Generally no, once funded — but there can be exceptions when admin keys are configured. Always read the deployment's parameters before treating any lock as truly immutable." },
-          { q: "Does Team Finance support per-second streaming?", a: "No. Team Finance's vests release in scheduled tranches. If you need streaming, Sablier or Superfluid are better fits." },
-          { q: "What chains does Team Finance support?", a: "Ethereum, BNB Chain, Polygon, Base, Sepolia, and several smaller EVMs." },
-          { q: "Can I transfer my Team Finance vest to another wallet?", a: "Vests are tied to a recipient address. There is no NFT to transfer — moving the position requires the project to redeploy. This is one reason some teams prefer Hedgey." },
-        ],
-      },
-    ],
-  },
-
   // ── Article 21 ───────────────────────────────────────────────────────────────
   {
     slug:        "streamflow-solana-vesting",
@@ -3755,7 +3615,7 @@ const articles: Article[] = [
           { q: "Do I have to wrap my tokens to use Superfluid?", a: "Yes — Superfluid operates on Super Tokens, which are 1:1 wrappers around an underlying ERC-20. Wrap and unwrap are permissionless and instant." },
           { q: "Can a Superfluid vesting flow be cancelled?", a: "The sender can close any Superfluid flow they originated. This is by design but can surprise recipients used to immutable streams." },
           { q: "How is Superfluid different from Sablier?", a: "Sablier holds tokens in a per-stream contract and computes claimable balance on read. Superfluid uses a per-account net-flow accounting model with a wrapper token. Sablier is more 'vesting-native'; Superfluid is more 'payments-native'." },
-          { q: "Does Superfluid support tranched vesting?", a: "Not natively — Superfluid is flow-first. For tranched schedules, Sablier's LockupTranched or Team Finance are better fits." },
+          { q: "Does Superfluid support tranched vesting?", a: "Not natively — Superfluid is flow-first. For tranched schedules, Sablier's LockupTranched is a better fit." },
         ],
       },
     ],
@@ -3865,7 +3725,6 @@ const articles: Article[] = [
           ["Sablier (LockupLinear)", "Yes (inline param)", "Yes (per-second)", "LockupTranched"],
           ["Hedgey", "Yes", "Yes", "Yes (period-based)"],
           ["UNCX (TokenVesting v3)", "Yes (via emission delay)", "Yes (linear between two timestamps)", "No"],
-          ["Team Finance", "Yes (as first tranche)", "No (tranched only)", "Yes (custom tranches)"],
           ["Superfluid", "Yes (separate cliff transfer)", "Yes (post-cliff flow)", "No"],
           ["Streamflow", "Yes", "Yes", "Yes"],
           ["PinkSale (PinkLock V2)", "Yes (TGE percent)", "Cycle-based", "Yes"],
@@ -3896,7 +3755,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📡",
         title: "View any cliff or linear schedule on Vestream",
-        body:  "Vestream normalises cliff dates, linear release rates, and tranche events into one dashboard across Sablier, Hedgey, UNCX, Team Finance, Superfluid, Streamflow, and more. Sign in at <a href=\"/login\">Vestream</a> to compare schedules side by side.",
+        body:  "Vestream normalises cliff dates, linear release rates, and tranche events into one dashboard across Sablier, Hedgey, UNCX, Superfluid, Streamflow, and more. Sign in at <a href=\"/login\">Vestream</a> to compare schedules side by side.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -4164,7 +4023,6 @@ const articles: Article[] = [
           ["Hedgey",                 "PlanRedeemed",                  "Per-plan redemption against an NFT"],
           ["UNCX (V3 + VM)",         "WithdrawEvent / TokensReleased","Each unlock is a discrete event"],
           ["Unvest",                 "Claim",                         "Per-milestone or pro-rata draws"],
-          ["Team Finance",           "VestingClaim",                  "Claim against a vested allocation"],
           ["Superfluid",             "VestingCliffAndFlowExecuted",   "Cliff payouts are discrete; continuous flow accrues every second"],
           ["PinkSale",               "LockUnlocked",                  "Cycle-based unlocks"],
           ["Streamflow / Jupiter Lock","Withdraw instruction",        "Solana — recorded against the program account"],

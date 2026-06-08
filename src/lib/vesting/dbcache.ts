@@ -18,6 +18,7 @@
 import { db } from "@/lib/db";
 import { vestingStreamsCache } from "@/lib/db/schema";
 import { inArray, and, gte, sql } from "drizzle-orm";
+import { isAdapterEnabled } from "@/lib/protocol-constants";
 import { VestingStream, categoryForProtocol } from "./types";
 import { normaliseAddress } from "@/lib/address-validation";
 
@@ -75,6 +76,11 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
   const streams: VestingStream[] = [];
 
   for (const row of rows) {
+    // Never serve streams from a disabled/paused protocol (e.g. Team Finance),
+    // even if stale cache rows linger — defends against surfacing a protocol we
+    // aren't licensed/agreed to show. The seeder already skips disabled
+    // adapters, so this is belt-and-braces.
+    if (!isAdapterEnabled(row.protocol)) continue;
     const ttl = row.isFullyVested ? VESTED_TTL_SECONDS : ACTIVE_TTL_SECONDS;
     const ageSeconds = (now.getTime() - row.lastRefreshedAt.getTime()) / 1000;
     const fresh = ageSeconds < ttl;
@@ -122,7 +128,11 @@ export async function readAllStreamsForWallets(wallets: string[]): Promise<Vesti
     .select()
     .from(vestingStreamsCache)
     .where(inArray(vestingStreamsCache.recipient, normalisedWallets));
-  return rows.map((r) => hydrateCachedStream(r.streamData as Record<string, unknown>));
+  // Exclude disabled/paused protocols (e.g. Team Finance) from the merge
+  // fallback so a lingering cache row can never surface to users.
+  return rows
+    .filter((r) => isAdapterEnabled(r.protocol))
+    .map((r) => hydrateCachedStream(r.streamData as Record<string, unknown>));
 }
 
 /**

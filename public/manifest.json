@@ -1,7 +1,7 @@
 {
   "name": "Vestream — Token unlock tracker",
   "short_name": "Vestream",
-  "description": "Track every token vesting schedule across Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid and PinkSale. Get push alerts the moment tokens unlock.",
+  "description": "Track every token vesting schedule across Sablier, Hedgey, UNCX, Unvest, Superfluid and PinkSale. Get push alerts the moment tokens unlock.",
   "start_url": "/demo",
   "scope": "/",
   "display": "standalone",

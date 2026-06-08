@@ -76,6 +76,5 @@ Update cadence: streams indexed daily; unlock calendar refreshes every 15 minute
 - [Sablier Token Streaming and Vesting Explained](https://www.vestream.io/resources/sablier-token-streaming-vesting-explained): How Sablier's Lockup and Flow products work
 - [Hedgey NFT Vesting Plans Explained](https://www.vestream.io/resources/hedgey-nft-vesting-plans-explained): Hedgey's ERC-721 vesting plan mechanics
 - [UNCX Token Lockers and Vesting](https://www.vestream.io/resources/uncx-token-lockers-and-vesting): UNCX V3 TokenVesting and VestingManager contracts
-- [Team Finance Vesting Guide](https://www.vestream.io/resources/team-finance-vesting-guide): Team Finance vesting contract structure
 - [Streamflow Solana Vesting](https://www.vestream.io/resources/streamflow-solana-vesting): Streamflow's Solana vesting program
 - [Superfluid Cliff and Streaming Vesting Explained](https://www.vestream.io/resources/superfluid-cliff-and-streaming-vesting): Superfluid's vesting scheduler contract

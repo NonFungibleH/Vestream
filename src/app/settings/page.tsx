@@ -49,15 +49,15 @@ const CHAIN_OPTIONS = [
 const PROTOCOL_OPTIONS = [
   { id: "sablier",      label: "Sablier"      },
   { id: "uncx",         label: "UNCX"         },
-  { id: "team-finance", label: "Team Finance" },
   { id: "hedgey",       label: "Hedgey"       },
   { id: "unvest",       label: "Unvest"       },
   { id: "superfluid",   label: "Superfluid"   },
   { id: "pinksale",     label: "PinkSale"     },
 ];
 
-// All backend protocol IDs (includes uncx-vm which is hidden in UI but treated as part of UNCX)
-const ALL_BACKEND_PROTOCOL_IDS = ["sablier", "uncx", "uncx-vm", "team-finance", "hedgey", "unvest", "superfluid", "pinksale"];
+// All backend protocol IDs (includes uncx-vm which is hidden in UI but treated as part of UNCX).
+// team-finance is omitted — paused, not surfaced to users.
+const ALL_BACKEND_PROTOCOL_IDS = ["sablier", "uncx", "uncx-vm", "hedgey", "unvest", "superfluid", "pinksale"];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

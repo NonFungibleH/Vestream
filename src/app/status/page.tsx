@@ -390,10 +390,10 @@ function relativeAge(unixSec: number, nowSec: number): string {
 }
 
 export default async function StatusPage() {
-  // Pull every cell, including disabled protocols — the table reflects the
-  // claimed support matrix, not the currently-active one. Disabled protocols
-  // get a "Paused" badge so the row isn't misleading.
-  const protocols = listProtocols({ includeDisabled: true });
+  // Only currently-active protocols appear in the public matrix. Disabled /
+  // paused protocols (e.g. Team Finance) are excluded entirely — we don't
+  // surface a protocol we're not actively indexing anywhere user-facing.
+  const protocols = listProtocols();
 
   // Single cached call — all error handling lives in loadStatusData. If
   // the query layer failed, `error` is set and we render the degraded

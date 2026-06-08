@@ -192,7 +192,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       { title: "Private round investors",    body: "Investors holding Hedgey plan NFTs see the exact unlock schedule, next cliff, and claimable amount — not a vague 'check the contract' page." },
       { title: "Transferable vesting",       body: "Because Hedgey plans are NFTs, you can transfer or sell them. Vestream keeps tracking a plan even after it changes wallets — unlock alerts follow the current owner." },
     ],
-    relatedSlugs: ["sablier", "team-finance", "uncx"],
+    relatedSlugs: ["sablier", "uncx"],
     testimonials: [],
     // DefiLlama per-chain breakdown; chain-filtered to our 6 supported
     // chains. Self-indexed walker (tvl-walker/hedgey.ts) is kept as a
@@ -270,7 +270,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       { title: "Cycle-based drips",          body: "UNCX supports complex cliff-plus-cycle release — e.g. 10% at TGE then 5% monthly for 18 months. Vestream flattens that into a clean next-unlock timestamp." },
       { title: "Side-by-side variants",      body: "We merge the classic TokenVesting and newer VestingManager contracts into one unified view so you don't need to know which variant you're on." },
     ],
-    relatedSlugs: ["team-finance", "pinksale", "unvest"],
+    relatedSlugs: ["pinksale", "unvest"],
     testimonials: [],
     // No externalTvl: DefiLlama's `uncx-network-v2` + `-v3` entries are
     // Token Locker category — includes LP locks (the majority of UNCX's TVL
@@ -367,7 +367,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       { title: "LP-lock transparency",       body: "PinkLock is commonly used for LP-token locks. Buyers verifying a project's liquidity schedule can pull live status from Vestream rather than spelunking the contract." },
       { title: "Cycle-based schedules",      body: "PinkLock supports TGE% + regular cycle unlocks. Vestream flattens that into a simple 'next unlock in Xd Yh' countdown for every recipient." },
     ],
-    relatedSlugs: ["uncx", "team-finance", "hedgey"],
+    relatedSlugs: ["uncx", "hedgey"],
     testimonials: [],
     // No externalTvl: DefiLlama's `pinksale` entry is Launchpad category and
     // its ~$157M includes active sales + LP locks on top of PinkLock V2's

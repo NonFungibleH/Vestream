@@ -35,7 +35,7 @@ interface CreateResponse {
   secret:       string;
 }
 
-const PROTOCOLS = ["sablier", "hedgey", "uncx", "unvest", "team-finance", "superfluid", "pinksale", "streamflow", "jupiter-lock"] as const;
+const PROTOCOLS = ["sablier", "hedgey", "uncx", "unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock"] as const;
 const CHAINS    = [
   { id: 1,    label: "Ethereum" },
   { id: 56,   label: "BNB Chain" },
