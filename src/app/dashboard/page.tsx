@@ -769,15 +769,34 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
     );
     nowY = toChartY(vestedNow);
   } else {
-    // Linear: diagonal from (start, 0) → (end, total)
-    pathPoints = [
-      { x: PAD.left,               y: toChartY(0)     },
-      { x: toChartX(stream.endTime), y: toChartY(total) },
-    ];
-    // Vested at now = linear interpolation
-    const elapsed  = Math.max(0, Math.min(nowSec - stream.startTime, stream.endTime - stream.startTime));
+    // Linear vesting. With a cliff it stays flat at 0 until the cliff date,
+    // jumps to the back-accrued amount at the cliff, then goes linear to the
+    // end — nothing vests before the cliff. (Matches on-chain semantics + the
+    // mobile chart; previously this drew a straight line from start, showing
+    // tokens vesting pre-cliff.)
     const duration = stream.endTime - stream.startTime;
-    const vestedNow = duration > 0 ? (total * elapsed) / duration : 0;
+    const cliff = stream.cliffTime && stream.cliffTime > stream.startTime && stream.cliffTime < stream.endTime
+      ? stream.cliffTime : null;
+    if (cliff !== null && duration > 0) {
+      const cliffAmt = (total * (cliff - stream.startTime)) / duration;
+      pathPoints = [
+        { x: PAD.left,                 y: toChartY(0)        },
+        { x: toChartX(cliff),          y: toChartY(0)        }, // flat until cliff
+        { x: toChartX(cliff),          y: toChartY(cliffAmt) }, // jump at cliff
+        { x: toChartX(stream.endTime), y: toChartY(total)    }, // linear to end
+      ];
+    } else {
+      pathPoints = [
+        { x: PAD.left,                 y: toChartY(0)     },
+        { x: toChartX(stream.endTime), y: toChartY(total) },
+      ];
+    }
+    // Vested at now = 0 before the cliff, else linear interpolation.
+    let vestedNow = 0;
+    if (cliff === null || nowSec >= cliff) {
+      const elapsed = Math.max(0, Math.min(nowSec - stream.startTime, duration));
+      vestedNow = duration > 0 ? (total * elapsed) / duration : 0;
+    }
     nowY = toChartY(vestedNow);
   }
 
