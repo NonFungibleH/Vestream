@@ -527,7 +527,7 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 | Protocol | ID | Chains | Data source | Notes |
 |---|---|---|---|---|
 | Sablier | `sablier` | ETH, BSC, Polygon, Base, Arbitrum, Sepolia | Envio Hasura (single endpoint, chainId-filtered) | Linear + tranched (LockupTranched). Replaced per-chain The Graph subgraphs in 2025. |
-| Hedgey | `hedgey` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph + ERC721Enumerable contract reads for discovery | NFT-based vesting plans. Discovery uses paginated `tokenByIndex` + `ownerOf` multicalls (HEDGEY_PAGE_SIZE=100) — see seeder.ts landmine note. |
+| Hedgey | `hedgey` | ETH, BSC, Polygon, Base, **Arbitrum, Optimism**, Sepolia | Event-driven indexer (ERC721 `Transfer` scan) — same contract address on every EVM chain | NFT-based vesting plans. Migrated to the event-driven indexer (`indexer/hedgey.ts`) on all chains incl. Arbitrum + Optimism (verified live in cache June 2026). Legacy seeder discovery uses paginated `tokenByIndex` + `ownerOf` multicalls (HEDGEY_PAGE_SIZE=100). |
 | UNCX (TokenVesting) | `uncx` | ETH, BSC, Polygon, Base, Sepolia | The Graph subgraph | Token locker v3 |
 | UNCX (VestingManager) | `uncx-vm` | ETH only | `eth_getLogs` event scan via shared multi-RPC pool | Hidden in UI; merged with `uncx`. BSC/Base/Polygon dropped Apr 29 2026 — dRPC free tier no longer serves eth_getLogs there. Re-add if/when paid RPC env vars set. |
 | Unvest | `unvest` | ETH, BSC, Polygon, Base | The Graph subgraph | Step/milestone vesting |
@@ -536,7 +536,7 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 | PinkSale (PinkLock V2) | `pinksale` | ETH, BSC, Polygon, Base | Direct contract reads via viem (no subgraph) | TGE + cycle-based schedule. Adapter pages `getUserNormalLockAtIndex` in batches of 50 to dodge free-RPC 100KB response cap (Polygon-shaped bug). PINKSALE_CONTRACT_ADDRESSES is the single-source-of-truth map in protocol-constants.ts — do NOT add per-file copies. |
 | Streamflow | `streamflow` | Solana | @streamflow/stream SDK | Per-user fetches throttled via `mapBounded` (concurrency 4, 100ms inter-batch delay) to stay under Helius free CU/s. AlignedContract variant skipped. Gated behind `SOLANA_ENABLED=true`. |
 | Jupiter Lock | `jupiter-lock` | Solana | Solana `getProgramAccounts` + dataSize=296 filter | Solana's default token locker (used by JUP team allocations). Same `mapBounded` throttle as Streamflow. Helius is the only free Solana RPC that supports `getProgramAccounts`. |
-| LlamaPay | `llamapay` | ETH, BSC, Polygon, Base, Arbitrum (TVL only) | DefiLlama passthrough (`chainTvls.vesting`) | TVL-only — no per-wallet adapter yet. Extends the recipient-side TAM toward streamed payroll. Future work: build a real adapter for per-wallet stream tracking. |
+| LlamaPay | `llamapay` | ETH, Optimism (per-wallet); DefiLlama TVL covers more | Real per-wallet adapter (`adapters/llamapay.ts` + `tvl-walker/llamapay.ts`); DefiLlama passthrough for TVL | **Real adapter shipped** — tracks per-wallet streams on ETH + Optimism (~637 streams indexed). BSC/Polygon/Arbitrum/Base per-wallet dropped May 2026 (LlamaPay's subgraphs there became unreliable); re-add when they redeploy. Continuous per-second streaming (payroll); claimable = accrued − withdrawn. |
 
 ### Adding a new adapter
 
