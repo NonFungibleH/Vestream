@@ -148,6 +148,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // The Team Finance vesting guide article was removed (June 2026) when
+      // we pulled all Team Finance mentions pre-launch. Redirect any stray
+      // external/indexed links to the resources index instead of 404ing.
+      {
+        source: "/resources/team-finance-vesting-guide",
+        destination: "/resources",
+        permanent: true,
+      },
+    ];
+  },
   // /unlocks is now the canonical home of the date-windowed unlock calendar
   // (today, this-week, 30-days, etc.) — a higher-value SEO surface than the
   // legacy /unlocks → /protocols redirect could provide. Old backlinks like

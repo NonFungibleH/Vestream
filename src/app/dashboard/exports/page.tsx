@@ -343,12 +343,12 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Live:{" "}
-                <span style={{ color: "#0F8A8A" }}>Sablier</span>
-                <span style={{ color: "var(--preview-text-3)" }}> · Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Streamflow, PinkSale, Jupiter Lock coming soon</span>
+                Verified:{" "}
+                <span style={{ color: "#0F8A8A" }}>Sablier, UNCX, Unvest, Superfluid</span>
+                <span style={{ color: "var(--preview-text-3)" }}> · Hedgey, PinkSale, Streamflow, Jupiter Lock still indexing — verify those before filing</span>
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Hit refresh to index your Sablier claim history. Each claim is priced at the date of
+                Hit refresh to index your claim history. Each claim is priced at the date of
                 receipt — the right figure for US / Canada / EU / Germany tax purposes.{" "}
                 <strong>UK (HMRC)</strong> and <strong>Australia (ATO)</strong> filers may need to
                 re-attribute to unlock dates with their accountant.{" "}
@@ -540,9 +540,9 @@ export default function ExportsPage() {
                 Incomplete data — do not use as a complete tax record
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-2)" }}>
-                This export only includes claims from <strong>Sablier</strong>.
-                Claims from <strong>Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Streamflow, PinkSale,</strong> and{" "}
-                <strong>Jupiter Lock</strong> are not yet indexed and will be missing.
+                Verified income coverage: <strong>Sablier, UNCX, Unvest, Superfluid</strong>.
+                Claims from <strong>Hedgey, PinkSale, Streamflow,</strong> and{" "}
+                <strong>Jupiter Lock</strong> may be incomplete or still indexing.
                 Submit to your accountant or tax software only after confirming all your protocols are covered.
               </p>
             </div>
