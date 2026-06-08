@@ -40,24 +40,24 @@ export async function GET(req: NextRequest) {
     ...slugs.map((s) => `${BASE}/protocols/${s}`),
   ];
 
-  const results = await Promise.allSettled(
-    urls.map(async (url) => {
-      const started = Date.now();
+  // Warm SEQUENTIALLY, not in parallel. Firing 13 heavy renders at once
+  // contends on the DB pool + DexScreener pricing — it spiked the two biggest
+  // pages to 5–6s and would momentarily slow any real visitor mid-burst.
+  // One-at-a-time keeps each render's cost isolated and the site smooth.
+  const warmed: Array<{ url: string; status?: number; ms?: number; error?: string }> = [];
+  for (const url of urls) {
+    const started = Date.now();
+    try {
       // no-store on OUR fetch so the warmer never serves itself a cached
       // response — the page still renders server-side and repopulates its own
-      // unstable_cache Data Cache. A warm header lets us exclude these from
-      // analytics if needed.
+      // unstable_cache Data Cache.
       const res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
-      return { url, status: res.status, ms: Date.now() - started };
-    }),
-  );
-
-  const warmed = results.map((r, i) =>
-    r.status === "fulfilled"
-      ? r.value
-      : { url: urls[i], error: String((r as PromiseRejectedResult).reason).slice(0, 120) },
-  );
-  const slow = warmed.filter((w) => "ms" in w && (w as { ms: number }).ms > 1500);
+      warmed.push({ url, status: res.status, ms: Date.now() - started });
+    } catch (err) {
+      warmed.push({ url, error: String(err).slice(0, 120) });
+    }
+  }
+  const slow = warmed.filter((w) => typeof w.ms === "number" && w.ms > 1500);
 
   return NextResponse.json({ ok: true, count: warmed.length, slow, warmed });
 }
