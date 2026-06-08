@@ -153,6 +153,9 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
 
   function download(format: string) {
     const sp = new URLSearchParams({ format, tokenAddress: v.tokenAddress });
+    // Same-tab download — window.location.href IS a navigation side effect,
+    // not a render-time mutation (matches the pattern on the parent page).
+    // eslint-disable-next-line react-hooks/immutability
     window.location.href = `/api/claims/export?${sp.toString()}`;
   }
 
