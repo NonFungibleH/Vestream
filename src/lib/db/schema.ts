@@ -411,9 +411,45 @@ export const streamSales = pgTable("stream_sales", {
   amount:       text("amount").notNull(),
   /** Sale price in USD per whole token. */
   price:        text("price").notNull(),
+  /** How the row was created: "manual" (user-entered) or "detected"
+   *  (confirmed from an auto-detected on-chain disposal candidate). */
+  source:       text("source").default("manual").notNull(),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
   index("stream_sales_user_token_idx").on(t.userId, t.tokenAddress),
+]);
+
+/**
+ * Auto-detected disposal candidates (sell-detection). One row per outbound
+ * ERC-20 transfer of a token from the user's tracked wallets, surfaced for the
+ * user to confirm/dismiss. Confirmed rows are copied into `stream_sales`
+ * (source="detected"); dismissed rows are kept so re-scans skip them.
+ * See docs/superpowers/specs/2026-06-08-auto-sell-detection-design.md.
+ */
+export const disposalCandidates = pgTable("disposal_candidates", {
+  id:               uuid("id").primaryKey().defaultRandom(),
+  userId:           uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  chainId:          integer("chain_id").notNull(),
+  tokenAddress:     text("token_address").notNull(),     // lowercased
+  txHash:           text("tx_hash").notNull(),
+  /** Alchemy getAssetTransfers uniqueId — stable per-transfer dedup key. */
+  uniqueId:         text("unique_id").notNull(),
+  toAddress:        text("to_address").notNull(),        // lowercased
+  /** Token amount disposed, base units (stringified bigint). */
+  amountRaw:        text("amount_raw").notNull(),
+  occurredAt:       timestamp("occurred_at").notNull(),
+  /** USD per whole token at the time of disposal (from getHistoricalPrice). */
+  priceUsdAtTime:   numeric("price_usd_at_time"),
+  /** `to` is one of the user's own tracked wallets — likely not a sale. */
+  internalTransfer: boolean("internal_transfer").default(false).notNull(),
+  /** pending | confirmed | dismissed. */
+  status:           text("status").default("pending").notNull(),
+  createdAt:        timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("disposal_candidates_dedup_idx").on(t.userId, t.chainId, t.txHash, t.uniqueId),
+  index("disposal_candidates_user_token_idx").on(t.userId, t.tokenAddress),
 ]);
 
 export const streamPurchases = pgTable("stream_purchases", {
