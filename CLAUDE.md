@@ -797,8 +797,14 @@ sit side by side.
 | Free | $0                                | Public `/find-vestings` search, 3 wallets, 10 push alerts / month (resets on the 1st) |
 | Pro  | $9.99/mo *or* $74.99/yr (saves 37%) | Mobile app + **web dashboard** (QR sign-in): 10 wallets, unlimited push + email alerts, Discover (Token Vesting Explorer), search any wallet, tax-ready CSV exports (Koinly / CoinTracker / TurboTax), vesting income statement, year-end PDF. |
 
-Pro comes with a 14-day free trial (per RevenueCat / Apple / Google
-rules). RevenueCat entitlement IDs to set in their dashboard:
+**No free trial currently.** The 14-day free trial was removed from all
+consumer pricing surfaces (2026-06) — do NOT reintroduce "14-day free trial"
+copy on /pricing, the homepage, FAQ, or login. It will return later once
+Stripe billing is wired up; the developer-side Stripe checkout
+(`/api/billing/checkout`, `BillingPanel.tsx`) intentionally still carries
+`trial_period_days` for that future rollout.
+
+RevenueCat entitlement IDs to set in their dashboard:
 - `pro` — entitled by either the $9.99/mo or $74.99/yr product
 
 Legacy `mobile` entitlement (pre-May-2026 retired middle tier) is still
