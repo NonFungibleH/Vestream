@@ -31,6 +31,7 @@ describe("transfersToCandidates", () => {
       uniqueId:         "0xhash:log:0",
       toAddress:        DEX.toLowerCase(),
       amountRaw:        "1000000000000000000",
+      decimals:         18,
       occurredAt:       "2026-03-01T12:00:00.000Z",
       internalTransfer: false,
     });

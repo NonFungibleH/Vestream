@@ -439,6 +439,8 @@ export const disposalCandidates = pgTable("disposal_candidates", {
   toAddress:        text("to_address").notNull(),        // lowercased
   /** Token amount disposed, base units (stringified bigint). */
   amountRaw:        text("amount_raw").notNull(),
+  /** Token decimals — scales amountRaw → whole units on confirm/display. */
+  decimals:         integer("decimals").default(18).notNull(),
   occurredAt:       timestamp("occurred_at").notNull(),
   /** USD per whole token at the time of disposal (from getHistoricalPrice). */
   priceUsdAtTime:   numeric("price_usd_at_time"),

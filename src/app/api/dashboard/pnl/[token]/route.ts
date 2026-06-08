@@ -11,8 +11,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { getUserByAddress } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { streamPnl, streamSales, streamPurchases } from "@/lib/db/schema";
+import { streamPnl, streamSales, streamPurchases, disposalCandidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { baseToWhole } from "@/lib/vesting/sell-detect";
 
 function normaliseTokenAddress(raw: string): string | null {
   if (!raw || typeof raw !== "string") return null;
@@ -65,8 +66,29 @@ export async function GET(
     .from(streamPurchases)
     .where(and(eq(streamPurchases.userId, userId), eq(streamPurchases.tokenAddress, tokenAddress)));
 
+  // Pending auto-detected disposal candidates (sell-detection) for this token.
+  const candidateRows = await db
+    .select()
+    .from(disposalCandidates)
+    .where(and(
+      eq(disposalCandidates.userId, userId),
+      eq(disposalCandidates.tokenAddress, tokenAddress),
+      eq(disposalCandidates.status, "pending"),
+    ))
+    .orderBy(disposalCandidates.occurredAt);
+
   return NextResponse.json({
     entryPrice: entryRow ? Number(entryRow.entryPrice) : null,
+    candidates: candidateRows.map((c) => ({
+      id:               c.id,
+      chainId:          c.chainId,
+      txHash:           c.txHash,
+      toAddress:        c.toAddress,
+      amount:           Number(baseToWhole(c.amountRaw, c.decimals)),
+      priceUsd:         c.priceUsdAtTime != null ? Number(c.priceUsdAtTime) : null,
+      occurredAt:       c.occurredAt.toISOString(),
+      internalTransfer: c.internalTransfer,
+    })),
     sales: saleRows.map((s) => ({
       id:     s.id,
       date:   s.saleDate,

@@ -34,6 +34,7 @@ export interface DisposalCandidate {
   uniqueId:         string;
   toAddress:        string;        // lowercased
   amountRaw:        string;        // token base units, stringified bigint
+  decimals:         number;        // token decimals (to scale amountRaw → whole units)
   occurredAt:       string;        // ISO
   internalTransfer: boolean;       // `to` is one of the user's own tracked wallets
 }
@@ -43,6 +44,21 @@ export const SELL_DETECT_CHAINS: SupportedChainId[] = [CHAIN_IDS.ETHEREUM, CHAIN
 
 export function isSellDetectSupported(chainId: number): boolean {
   return SELL_DETECT_CHAINS.includes(chainId as SupportedChainId);
+}
+
+/** Base units (bigint string) → whole-token decimal string, exact (no float). */
+export function baseToWhole(amountRaw: string, decimals: number): string {
+  try {
+    const big = BigInt(amountRaw);
+    const divisor = 10n ** BigInt(decimals);
+    const whole = big / divisor;
+    const frac  = big % divisor;
+    if (frac === 0n) return whole.toString();
+    const fracStr = frac.toString().padStart(decimals, "0").replace(/0+$/, "");
+    return fracStr ? `${whole}.${fracStr}` : whole.toString();
+  } catch {
+    return "0";
+  }
 }
 
 /** Best-effort base-unit amount: prefer the exact hex rawValue; otherwise scale
@@ -93,6 +109,7 @@ export function transfersToCandidates(
       uniqueId:         tx.uniqueId,
       toAddress:        to,
       amountRaw,
+      decimals:         tx.decimals ?? 18,
       occurredAt:       tx.blockTimestamp,
       internalTransfer: own.has(to),
     });
