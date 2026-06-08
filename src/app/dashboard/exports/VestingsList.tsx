@@ -33,6 +33,8 @@ interface ClaimRow {
   priceConfidence: "exact" | "nearest" | "missing";
 }
 
+interface SaleRow { id: string; date: string; amount: number; price: number }
+
 function chainName(id: number): string {
   return CHAIN_NAMES[id as keyof typeof CHAIN_NAMES] ?? `chain ${id}`;
 }
@@ -229,6 +231,9 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
               ))}
             </div>
           </div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+            Income — claims (priced at receipt)
+          </p>
           {loading ? (
             <p className="text-xs py-2" style={{ color: "var(--preview-text-3)" }}>Loading claims…</p>
           ) : !claims || claims.length === 0 ? (
@@ -272,6 +277,165 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
               </table>
             </div>
           )}
+
+          {/* Gains — manual sales ledger (realized gains vs entry cost basis) */}
+          <SalesSection tokenAddress={v.tokenAddress} tokenSymbol={v.tokenSymbol} tokenDecimals={undefined} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SalesSection({ tokenAddress, tokenSymbol }: { tokenAddress: string; tokenSymbol: string; tokenDecimals?: number }) {
+  const [sales, setSales]         = useState<SaleRow[] | null>(null);
+  const [entryPrice, setEntry]    = useState<number | null>(null);
+  const [adding, setAdding]       = useState(false);
+  const [date, setDate]           = useState("");
+  const [amount, setAmount]       = useState("");
+  const [price, setPrice]         = useState("");
+  const [submitting, setSubmit]   = useState(false);
+  const [err, setErr]             = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res  = await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}`);
+      const data = await res.json();
+      setSales(data.sales ?? []);
+      setEntry(typeof data.entryPrice === "number" ? data.entryPrice : null);
+    } catch {
+      setSales([]);
+    }
+  }, [tokenAddress]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function addSale(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setSubmit(true);
+    try {
+      const res  = await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}/sales`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ date, amount: Number(amount), price: Number(price) }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErr(data.error ?? "Couldn't add sale"); return; }
+      setSales((prev) => [...(prev ?? []), data.sale]);
+      setDate(""); setAmount(""); setPrice(""); setAdding(false);
+    } catch {
+      setErr("Couldn't add sale");
+    } finally {
+      setSubmit(false);
+    }
+  }
+
+  async function removeSale(id: string) {
+    setSales((prev) => (prev ?? []).filter((s) => s.id !== id));
+    try {
+      await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}/sales/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {
+      void load(); // re-sync on failure
+    }
+  }
+
+  const gain = (s: SaleRow): number | null => (entryPrice != null ? (s.price - entryPrice) * s.amount : null);
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
+          Gains — sales {entryPrice != null ? `(cost basis $${entryPrice.toLocaleString(undefined, { maximumFractionDigits: 4 })})` : ""}
+        </p>
+        {!adding && (
+          <button onClick={() => setAdding(true)}
+            className="text-[11px] font-semibold px-2 py-1 rounded-md"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}>
+            + Add sale
+          </button>
+        )}
+      </div>
+
+      {entryPrice == null && (
+        <p className="text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
+          No entry price set for {tokenSymbol} — set one in the dashboard P&amp;L to compute realized gains. Sales below show proceeds only.
+        </p>
+      )}
+
+      {adding && (
+        <form onSubmit={addSale} className="flex flex-wrap items-end gap-2 mb-2 rounded-xl p-2"
+          style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+          <label className="flex flex-col text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+            Date
+            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
+              className="text-xs px-2 py-1 rounded-md outline-none"
+              style={{ background: "var(--preview-bg)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }} />
+          </label>
+          <label className="flex flex-col text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+            Amount ({tokenSymbol})
+            <input type="number" step="any" min="0" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.0"
+              className="text-xs px-2 py-1 rounded-md outline-none w-28"
+              style={{ background: "var(--preview-bg)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }} />
+          </label>
+          <label className="flex flex-col text-[10px]" style={{ color: "var(--preview-text-3)" }}>
+            Sale price (USD)
+            <input type="number" step="any" min="0" required value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00"
+              className="text-xs px-2 py-1 rounded-md outline-none w-28"
+              style={{ background: "var(--preview-bg)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }} />
+          </label>
+          <button type="submit" disabled={submitting}
+            className="text-xs font-semibold px-3 py-1.5 rounded-md text-white disabled:opacity-50"
+            style={{ background: "#1CB8B8" }}>
+            {submitting ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onClick={() => { setAdding(false); setErr(null); }}
+            className="text-xs px-2 py-1.5 rounded-md" style={{ color: "var(--preview-text-3)" }}>
+            Cancel
+          </button>
+          {err && <span className="text-[11px] w-full" style={{ color: "#B3322E" }}>{err}</span>}
+        </form>
+      )}
+
+      {sales === null ? (
+        <p className="text-xs py-1" style={{ color: "var(--preview-text-3)" }}>Loading sales…</p>
+      ) : sales.length === 0 ? (
+        <p className="text-xs py-1" style={{ color: "var(--preview-text-3)" }}>No sales recorded for this token.</p>
+      ) : (
+        <div className="rounded-xl overflow-x-auto"
+          style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border-2)" }}>
+          <table className="w-full text-sm" style={{ minWidth: 480 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
+                <th className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Date</th>
+                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Amount</th>
+                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Price</th>
+                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Proceeds</th>
+                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Realized gain</th>
+                <th className="px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {sales.map((s, i) => {
+                const g = gain(s);
+                return (
+                  <tr key={s.id} style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--preview-text)" }}>{s.date}</td>
+                    <td className="px-3 py-2 text-right font-mono whitespace-nowrap" style={{ color: "var(--preview-text)" }}>{s.amount.toLocaleString()}</td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap" style={{ color: "var(--preview-text)" }}>${s.price.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap" style={{ color: "var(--preview-text)" }}>${(s.amount * s.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap font-semibold"
+                      style={{ color: g == null ? "var(--preview-text-3)" : g >= 0 ? "#0F8A8A" : "#B3322E" }}>
+                      {g == null ? "—" : `${g >= 0 ? "+" : "−"}$${Math.abs(g).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                    </td>
+                    <td className="px-2 py-2 text-right">
+                      <button onClick={() => removeSale(s.id)} title="Remove sale"
+                        className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>✕</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
