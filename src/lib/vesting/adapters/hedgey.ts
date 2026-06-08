@@ -49,6 +49,33 @@ type HedgeyPlan = {
   rate: bigint; period: bigint; vestingAdmin: `0x${string}`; adminTransferOBO: boolean;
 };
 
+/**
+ * Redeemable (vested) amount for a Hedgey plan at a given time.
+ *
+ * Hedgey accrues `rate` tokens per `period` from `start`, but releases
+ * NOTHING until the `cliff` date — on-chain `redeemableBalance` returns 0
+ * while `now < cliff`, then the full back-accrued amount unlocks at the cliff
+ * and continues per period. Result is capped at the plan `amount`.
+ *
+ * Bug history (2026-06): this was previously computed inline as
+ * `rate * floor((now-start)/period)` with NO cliff check, so before the
+ * cliff we surfaced ~1 period of tokens as "claimable" that cannot actually
+ * be claimed — Hedgey's own UI shows 0 vested / 0 claimable pre-cliff.
+ * Reported on a Sepolia SEP plan (cliff 31 Jul 2026, app showed 4.17 SEP
+ * claimable on 7 Jun). Both the mobile app and the web dashboard read this
+ * value from the cache, so the wrong number appeared on both surfaces.
+ */
+export function hedgeyRedeemable(p: {
+  amount: bigint; rate: bigint; period: bigint;
+  startTime: number; cliffTime: number | null; nowSec: number;
+}): bigint {
+  if (p.cliffTime !== null && p.nowSec < p.cliffTime) return 0n; // nothing before the cliff
+  if (p.period <= 0n) return 0n;
+  const elapsed = BigInt(Math.max(0, p.nowSec - p.startTime));
+  const vested  = p.rate * (elapsed / p.period);
+  return vested > p.amount ? p.amount : vested;                  // never exceed the plan total
+}
+
 // 2026-05-26: migrated from single-URL http() transport to the shared
 // fallback client. Previous pattern picked ONE URL via getRpcUrl() and
 // pinned the entire wallet scan to it — if that URL happened to be
@@ -184,14 +211,17 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         const startTime = Number(plan.start);
         const cliffTime = Number(plan.cliff) > startTime ? Number(plan.cliff) : null;
 
-        // Hedgey: discrete period-based vesting
-        const elapsed        = BigInt(Math.max(0, nowSec - startTime));
-        const periodsElapsed = plan.period > 0n ? elapsed / plan.period : 0n;
-        const vested         = plan.rate * periodsElapsed;
+        // Hedgey: discrete period-based vesting, gated on the cliff (see
+        // hedgeyRedeemable — nothing is redeemable before the cliff date).
+        const periodsElapsed = plan.period > 0n ? BigInt(Math.max(0, nowSec - startTime)) / plan.period : 0n;
+        const vested         = hedgeyRedeemable({
+          amount: plan.amount, rate: plan.rate, period: plan.period,
+          startTime, cliffTime, nowSec,
+        });
         const totalPeriods   = plan.rate > 0n ? plan.amount / plan.rate : 0n;
         const endTime        = startTime + Number(totalPeriods * plan.period);
 
-        const claimableNow  = vested > 0n ? vested : 0n;
+        const claimableNow  = vested;
         const lockedAmount  = plan.amount > vested ? plan.amount - vested : 0n;
         const isFullyVested = vested >= plan.amount;
 
