@@ -1209,12 +1209,14 @@ export function relativeTimeSince(date: Date | string | null, nowMs = Date.now()
 export function relativeFreshness(date: Date | string | null, nowMs = Date.now()): string {
   const d = toDateSafe(date);
   if (!d) return "never";
-  const diffSec = Math.max(0, Math.floor((nowMs - d.getTime()) / 1000));
-  if (diffSec < 60)    return "just now";
-  if (diffSec < 3600)  return `${Math.floor(diffSec / 60)} min ago`;
-  if (diffSec < 86400) return "today";
-  if (diffSec < 86400 * 2) return "yesterday";
-  return `${Math.floor(diffSec / 86400)} days ago`;
+  // Calendar-day buckets. Exact minute/hour precision ("26 min ago") reads as
+  // oddly specific and even a little stale; users only need to know it's
+  // current. Anything indexed today → "today". (Product call, 2026-06.)
+  const startOfDayUTC = (x: Date) => Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate());
+  const dayDiff = Math.round((startOfDayUTC(new Date(nowMs)) - startOfDayUTC(d)) / 86_400_000);
+  if (dayDiff <= 0) return "today";
+  if (dayDiff === 1) return "yesterday";
+  return `${dayDiff} days ago`;
 }
 
 /** Time-until from now → a unix-seconds future timestamp — "in 4 d 2 h". */
