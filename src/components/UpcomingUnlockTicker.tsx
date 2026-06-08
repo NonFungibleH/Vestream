@@ -337,21 +337,25 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-semibold truncate" style={{ color: "#0f172a" }}>
+        {/* Single line — never wraps. The amount/symbol (long for Solana
+            base58 tickers) truncates with an ellipsis; the protocol + chain +
+            USD stay pinned at full size so the row layout can't break onto a
+            second line. */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-nowrap">
+          <span className="text-sm font-semibold truncate min-w-0" style={{ color: "#0f172a" }}>
             {amount}
           </span>
           {row.usdValue != null && (
-            <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#0F8A4A" }}>
+            <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: "#0F8A4A" }}>
               {fmtUsdShort(row.usdValue)}
             </span>
           )}
-          <span className="text-xs" style={{ color: "#94a3b8" }}>on</span>
-          <span className="text-xs font-semibold" style={{ color: meta.color }}>
+          <span className="text-xs flex-shrink-0" style={{ color: "#94a3b8" }}>on</span>
+          <span className="text-xs font-semibold flex-shrink-0" style={{ color: meta.color }}>
             {meta.name}
           </span>
           <span
-            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider"
+            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
           >
             {chainLabel(row.chainId)}
