@@ -79,43 +79,31 @@ export async function GET(req: NextRequest) {
 
   if (canUseCache) {
     const dbResult = await readFromCache(addresses);
-    if (dbResult.isFresh) {
-      // Fresh-path merge: readFromCache marks a wallet "fresh" if ANY of
-      // its rows are within the TTL window, but it only RETURNS the rows
-      // that are themselves fresh. After the May 2 2026 setWhere
-      // optimization in writeToCache (only updates rows whose data changed),
-      // unchanged rows individually drift past the TTL while the wallet as
-      // a whole keeps getting touched by the seeder — so the stale row
-      // gets silently dropped from the response while the wallet appears
-      // healthy. Reading all rows and unioning here closes that gap.
-      const allCached = await readAllStreamsForWallets(addresses);
+    // Union with every cached row (any age). Keeps previously-discovered
+    // streams visible despite the May 2 2026 setWhere TTL drift (unchanged
+    // rows age past the TTL one-by-one while the wallet stays "fresh") and
+    // transient adapter blips — the "every stream visible the moment they
+    // open the app" guarantee.
+    const allCached = await readAllStreamsForWallets(addresses);
+
+    if (allCached.length > 0) {
+      // ── Serve cache-first, revalidate in the background ──────────────────
+      // Whenever we have ANY cached data, serve it INSTANTLY — never block the
+      // app on a live multi-subgraph/RPC scan (the pain a user feels when they
+      // open the app after weeks away). Refresh stale wallets in the
+      // BACKGROUND so the next open / pull-to-refresh shows fresh data.
+      // Pull-to-refresh (?refresh=1) still forces a blocking live fetch via
+      // the else branch below. First-ever load with zero cache also blocks.
       streams = mergeFreshWithCached(dbResult.streams, allCached);
-    } else if (dbResult.staleWallets.length < addresses.length) {
-      // Partial hit: re-fetch only the stale wallets, then merge with the
-      // last-known-good rows we already have (including stale ones for the
-      // wallets we DID re-fetch — adapter coverage can shift run-to-run).
-      const fresh = await aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds);
-      void writeToCache(fresh);
-      const allCached = await readAllStreamsForWallets(addresses);
-      // dbResult.streams is the FRESH cached rows for fresh wallets;
-      // allCached spans every wallet (including the ones we just re-fetched).
-      // Union order: latest fresh > stale cache > redundant fresh-cache.
-      streams = mergeFreshWithCached([...dbResult.streams, ...fresh], allCached);
+      if (dbResult.staleWallets.length > 0) {
+        void aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds)
+          .then((fresh) => writeToCache(fresh))
+          .catch((err) => console.error("[mobile/vestings] background refresh failed:", err));
+      }
     } else {
-      // Full miss — every wallet's cache was stale (or empty). Run the live
-      // adapters AND read every existing cache row, then union them. Without
-      // this merge, a single subgraph/RPC blip on a chain that contributes
-      // ONE stream wipes the rest of the user's portfolio from the response
-      // until the next successful run. With it, we always serve at least the
-      // last-known-good streams (the user's "winning feature": every stream
-      // visible the moment they open the app, regardless of upstream weather).
-      const fresh    = await aggregateVestingStreams(addresses, chainIds, protocolIds);
-      const stale    = await readAllStreamsForWallets(addresses);
-      streams = mergeFreshWithCached(fresh, stale);
-      // Persist only fresh — writeToCache uses lastRefreshedAt setWhere so
-      // unchanged stale rows keep their old timestamps and the freshness
-      // signal stays meaningful.
-      void writeToCache(fresh);
+      // No cache at all — first load. Block on the live fetch this once.
+      streams = await aggregateVestingStreams(addresses, chainIds, protocolIds);
+      void writeToCache(streams);
     }
     // Apply chain filter in memory (cache stores all chains per wallet)
     if (chainIds.length < ALL_CHAIN_IDS.length) {

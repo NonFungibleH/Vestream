@@ -119,48 +119,41 @@ export async function GET(req: NextRequest) {
   const useDbCache = !refresh && !protocolIds && !hasTokenFilters;
   if (useDbCache) {
     const dbResult = await readFromCache(wallets);
-    if (dbResult.isFresh) {
-      // All wallets had fresh data — apply chain filter in memory and serve.
-      // Note: readFromCache marks a wallet "fresh" if ANY of its rows are
-      // within TTL, but only returns the in-TTL rows. After the May 2 2026
-      // setWhere optimization, unchanged rows drift past the TTL one-by-one
-      // even while the seeder keeps running — so the wallet looks fresh but
-      // some streams silently fall off the response. Union with the full
-      // cache (any age) here so every previously-discovered stream stays
-      // visible.
-      const allCached = await readAllStreamsForWallets(wallets);
+    // Union with EVERY cached row (any age). This keeps previously-discovered
+    // streams visible despite the May 2 2026 setWhere TTL drift (unchanged
+    // rows age past the TTL one-by-one) and transient adapter failures.
+    const allCached = await readAllStreamsForWallets(wallets);
+
+    // ── Serve cache-first, revalidate in the background ──────────────────────
+    // Whenever we have ANY cached data for these wallets, serve it INSTANTLY —
+    // never block a returning user on a live multi-subgraph/RPC scan. If some
+    // (or all) wallets are stale — e.g. a user coming back weeks later — kick
+    // the refresh off in the BACKGROUND so the next request (HTTP SWR / the
+    // client's revalidation a moment later) picks up fresh data. Only a
+    // first-ever load with zero cache falls through to the blocking fetch.
+    if (allCached.length > 0) {
       let streams = mergeFreshWithCached(dbResult.streams, allCached);
       if (chainIds !== ALL_CHAIN_IDS) {
         streams = streams.filter((s) => chainIds.includes(s.chainId));
       }
-      const fetchedAt = new Date().toISOString();
-      hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
-      return NextResponse.json(
-        { streams, fetchedAt, cached: "db" },
-        { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
-      );
-    }
 
-    // Partial hit: some wallets were fresh, some need re-fetching
-    if (dbResult.staleWallets.length < wallets.length) {
-      const freshStreams = dbResult.streams;
-      const freshData    = await aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds);
-      // Write only the newly fetched streams back to DB (fire-and-forget)
-      void writeToCache(freshData);
-
-      // Union with EVERY cached row (including stale ones) so transient
-      // adapter failures on a chain that contributes one of the user's
-      // streams don't drop that stream from the response. See the
-      // companion comment in /api/mobile/vestings — same principle.
-      const allCached = await readAllStreamsForWallets(wallets);
-      let streams = mergeFreshWithCached([...freshStreams, ...freshData], allCached);
-      if (chainIds !== ALL_CHAIN_IDS) {
-        streams = streams.filter((s) => chainIds.includes(s.chainId));
+      if (dbResult.staleWallets.length > 0) {
+        // Fire-and-forget — the user does NOT wait on this.
+        void aggregateVestingStreams(dbResult.staleWallets, chainIds, protocolIds)
+          .then((freshData) => writeToCache(freshData))
+          .catch((err) => console.error("[vesting] background refresh failed:", err));
       }
+
       const fetchedAt = new Date().toISOString();
-      hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
+      // Only pin FRESH responses in L1. A stale-while-revalidating response
+      // must NOT stick in the hot cache, or it would mask the background
+      // refresh for up to CACHE_TTL_MS — leaving the client's next revalidate
+      // re-reading the now-updated DB cache instead.
+      if (dbResult.isFresh) {
+        hotCache.set(key, { streams, expiresAt: Date.now() + CACHE_TTL_MS, fetchedAt });
+      }
       return NextResponse.json(
-        { streams, fetchedAt, cached: "partial" },
+        { streams, fetchedAt, cached: dbResult.isFresh ? "db" : "stale-revalidating" },
         { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
       );
     }
