@@ -297,7 +297,7 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
     if (isStepStream && unlockSteps) {
       ({ claimableNow, lockedAmount, isFullyVested } = computeStepVesting(total, withdrawn, unlockSteps, nowSec));
     } else {
-      ({ claimableNow, lockedAmount, isFullyVested } = computeLinearVesting(total, withdrawn, startTime, endTime, nowSec));
+      ({ claimableNow, lockedAmount, isFullyVested } = computeLinearVesting(total, withdrawn, startTime, endTime, nowSec, cliffTime));
     }
 
     return {

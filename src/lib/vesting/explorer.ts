@@ -136,7 +136,7 @@ export async function explorerFetchSablier(
     if (isStep && unlockSteps) {
       ({ claimableNow, lockedAmount, isFullyVested } = computeStepVesting(total, withdrawn, unlockSteps, nowSec));
     } else {
-      ({ claimableNow, lockedAmount, isFullyVested } = computeLinearVesting(total, withdrawn, startTime, endTime, nowSec));
+      ({ claimableNow, lockedAmount, isFullyVested } = computeLinearVesting(total, withdrawn, startTime, endTime, nowSec, cliffTime));
     }
 
     return {

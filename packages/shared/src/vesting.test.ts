@@ -106,6 +106,29 @@ describe("computeLinearVesting", () => {
     expect(r.claimableNow).toBe(trillion / 2n);
     expect(r.lockedAmount).toBe(trillion / 2n);
   });
+
+  // ── Cliff gating (2026-06): nothing claimable before the cliff. ──
+  it("returns 0 claimable + all-locked before the cliff", () => {
+    // total 100, start 0, end 100, now 50 (would be 50% linear) but cliff at 80.
+    const r = computeLinearVesting(100n, 0n, 0, 100, 50, 80);
+    expect(r.claimableNow).toBe(0n);
+    expect(r.lockedAmount).toBe(100n);
+    expect(r.isFullyVested).toBe(false);
+  });
+
+  it("unlocks the back-accrued amount at/after the cliff", () => {
+    // at now=80 (= cliff): 80% elapsed → 80 vested becomes claimable at once.
+    const r = computeLinearVesting(100n, 0n, 0, 100, 80, 80);
+    expect(r.claimableNow).toBe(80n);
+    expect(r.lockedAmount).toBe(20n);
+  });
+
+  it("is unaffected when cliffTime is null/undefined (back-compat)", () => {
+    const noCliff   = computeLinearVesting(100n, 0n, 0, 100, 50);
+    const nullCliff = computeLinearVesting(100n, 0n, 0, 100, 50, null);
+    expect(noCliff.claimableNow).toBe(50n);
+    expect(nullCliff.claimableNow).toBe(50n);
+  });
 });
 
 describe("nextUnlockTime", () => {

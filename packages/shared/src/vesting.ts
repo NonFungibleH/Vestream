@@ -218,7 +218,15 @@ export function computeLinearVesting(
   startTime: number,
   endTime: number,
   nowSec: number,
+  cliffTime?: number | null,
 ): { claimableNow: bigint; lockedAmount: bigint; isFullyVested: boolean } {
+  // Linear-with-cliff releases NOTHING until the cliff date, then unlocks the
+  // back-accrued amount at the cliff and continues linearly. Without this gate
+  // we'd surface tokens as claimable before the cliff — which they aren't.
+  // (Same class of bug fixed in the Hedgey adapter, 2026-06.)
+  if (cliffTime != null && nowSec < cliffTime) {
+    return { claimableNow: 0n, lockedAmount: total, isFullyVested: false };
+  }
   const duration = endTime - startTime;
   const elapsed  = Math.max(0, Math.min(nowSec - startTime, duration));
   const vested   = duration > 0 ? (total * BigInt(elapsed)) / BigInt(duration) : 0n;
