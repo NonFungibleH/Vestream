@@ -1199,24 +1199,24 @@ export function relativeTimeSince(date: Date | string | null, nowMs = Date.now()
  * ~23-hour window between runs.
  *
  * Buckets (descending priority):
- *   < 1 min   → "just now"
- *   < 60 min  → "X min ago"                  (minute precision builds trust
- *                                              for manual reruns / user hits)
- *   < 24 h    → "today"                      (the key UX change)
- *   < 48 h    → "yesterday"
- *   else      → "N days ago"
+ *   today     → "today"                      (indexed at any point today)
+ *   else      → "recently"                   (no day-count timeline shown)
+ *
+ * We deliberately collapse everything older than today to "recently" rather
+ * than surfacing an exact "N days ago" timeline. A specific day-count reads as
+ * stale ("indexed 7 days ago") even when the protocol genuinely has no new
+ * on-chain data — the freshest-data signal can legitimately sit days old (see
+ * the lastRefreshedAt semantic shift). "recently" keeps the freshness pill
+ * confidence-inspiring without implying a refresh cadence we don't promise.
+ * (Product call, 2026-06.)
  */
 export function relativeFreshness(date: Date | string | null, nowMs = Date.now()): string {
   const d = toDateSafe(date);
   if (!d) return "never";
-  // Calendar-day buckets. Exact minute/hour precision ("26 min ago") reads as
-  // oddly specific and even a little stale; users only need to know it's
-  // current. Anything indexed today → "today". (Product call, 2026-06.)
   const startOfDayUTC = (x: Date) => Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate());
   const dayDiff = Math.round((startOfDayUTC(new Date(nowMs)) - startOfDayUTC(d)) / 86_400_000);
   if (dayDiff <= 0) return "today";
-  if (dayDiff === 1) return "yesterday";
-  return `${dayDiff} days ago`;
+  return "recently";
 }
 
 /** Time-until from now → a unix-seconds future timestamp — "in 4 d 2 h". */
