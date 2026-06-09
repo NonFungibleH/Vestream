@@ -87,45 +87,27 @@ function StoreBadge({ href, label, caption, wordmark, icon }: BadgeProps) {
 // ── Brand marks (single-colour white, inline for self-containment) ──────────
 
 function AppleLogo() {
-  // Canonical Apple logo path, simplified. Used under fair-use context-of-use
-  // for pointing at the App Store — swap for the official badge asset when
-  // trademark-compliant badges are available.
+  // Canonical Apple wordmark silhouette (the standard brand path used in store
+  // badges). viewBox is portrait (384×512) so the bite/leaf proportions are
+  // correct — the previous 24×24 path was a distorted approximation.
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style={{ color: "white" }}>
-      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.42c1.39.07 2.35.82 3.15.85.82-.08 2.43-.99 4.1-.84 1.01.08 3.86.41 5.7 3.14-4.84 2.69-4.07 8.64.05 10.71zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+    <svg viewBox="0 0 384 512" width="17" height="21" fill="currentColor" style={{ color: "white" }} aria-hidden="true">
+      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
     </svg>
   );
 }
 
 function PlayLogo() {
-  // Google Play triangle. Approximates the four-colour brand mark with a
-  // simpler single-fill gradient for in-button use — the official logo has
-  // four colour bands that don't render well at small sizes on a black pill.
+  // Google Play "play" triangle in its four official brand colours — blue
+  // (top-left), red (top-right toward the tip), green (bottom-left), yellow
+  // (bottom-right toward the tip), meeting at the centre fold and fanning to
+  // the right tip. (The previous paths were broken geometry.)
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <defs>
-        <linearGradient id="gplay-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#00D7FE" />
-          <stop offset="1" stopColor="#00A0E1" />
-        </linearGradient>
-        <linearGradient id="gplay-b" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#FFCE00" />
-          <stop offset="1" stopColor="#FFEA00" />
-        </linearGradient>
-        <linearGradient id="gplay-c" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#FF3A44" />
-          <stop offset="1" stopColor="#C31162" />
-        </linearGradient>
-        <linearGradient id="gplay-d" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="#00A071" />
-          <stop offset="1" stopColor="#00F076" />
-        </linearGradient>
-      </defs>
-      {/* Four triangular quadrants that form the Google Play logo. */}
-      <path d="M3.5 2.8v18.4c0 .3.3.5.6.3l10.4-6-4-4L3.5 2.8z" fill="url(#gplay-a)" />
-      <path d="M20.1 11.2l-3.4-2-3.2 3 3.2 3 3.4-2c.9-.5.9-1.6 0-2.1z" fill="url(#gplay-b)" />
-      <path d="M14.5 15.5l-4 4 6.2-3.6-2.2-2.4z" fill="url(#gplay-c)" />
-      <path d="M14.5 8.5l2.2-2.4L10.5 2.5l4 4z" fill="url(#gplay-d)" />
+    <svg viewBox="0 0 24 24" width="20" height="22" aria-hidden="true">
+      <path d="M4 3 L12 7.2 L12 12 L4 12 Z"   fill="#00A0FF" />
+      <path d="M12 7.2 L21 12 L12 12 Z"        fill="#FF3D47" />
+      <path d="M4 12 L12 12 L12 16.8 L4 21 Z"  fill="#00DE76" />
+      <path d="M12 12 L21 12 L12 16.8 Z"       fill="#FFCE00" />
     </svg>
   );
 }
