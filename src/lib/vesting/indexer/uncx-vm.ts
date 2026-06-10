@@ -202,6 +202,12 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           unlockSteps,
           cancelable:      schedule.isSoft,
           lockTxHash:      entries[i].lockTxHash,
+          // In-app claiming: release(vestingId) on the VestingManager —
+          // keep in lockstep with adapters/uncx-vm.ts. Without these the
+          // indexer's 30-min ticks would overwrite the adapter-seeded
+          // claim fields with undefined.
+          claimContract:   config.contractAddress,
+          claimNativeId:   entries[i].vestingId.toString(),
         });
       }
 
