@@ -441,6 +441,12 @@ export function locksToVestingStreams(
       cancelable:      false,
       shape:           "steps",
       unlockSteps,
+      // In-app claiming: unlock(lockId) on the chain's PinkLock V2.
+      // Selector 0x6198e339 verified present in the deployed bytecode on
+      // all four chains — identical 20622-byte deploys (eth_getCode
+      // scan, 2026-06-10). Callable by the lock owner == our recipient.
+      claimContract:   PINKSALE_CONTRACTS[chainId] ?? null,
+      claimNativeId:   lock.id.toString(),
     };
   });
 }

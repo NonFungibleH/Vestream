@@ -229,6 +229,11 @@ async function fetchForChain(
         unlockSteps,
         cancelable:      schedule.isSoft,
         lockTxHash:      entries[i].lockTxHash,
+        // In-app claiming: release(vestingId) on the VestingManager.
+        // Selector 0x37bdc99b verified present in the deployed bytecode
+        // (eth_getCode scan, 2026-06-10). vestingId == nativeId.
+        claimContract:   contractAddress,
+        claimNativeId:   entries[i].vestingId.toString(),
       });
     }
   } catch (err) {
