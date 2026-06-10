@@ -7,7 +7,8 @@ type AlertTriggerType =
   | "vesting-start"
   | "cliff"
   | "stream-end"
-  | "claim-ready";
+  | "claim-ready"
+  | "threshold";   // claimable USD value crossed the user's $N line (2026-06)
 
 function formatAmount(amount: string, decimals: number): string {
   const raw = BigInt(amount);
@@ -64,6 +65,8 @@ function renderEmail(
   eventTime: Date,
   tz: string | null,
   appUrl: string,
+  // "threshold" only — the USD line crossed + current claimable value.
+  usd?: { thresholdUsd?: number; claimableUsd?: number },
 ): { subject: string; body: string } {
   const amount = formatAmount(stream.totalAmount, stream.tokenDecimals);
   const sym = stream.tokenSymbol;
@@ -110,6 +113,23 @@ Tokens will begin unlocking on this token's schedule.
 
 View your dashboard: ${appUrl}/dashboard${footer}`,
       };
+    case "threshold": {
+      const thresholdStr = usd?.thresholdUsd != null
+        ? `$${Math.round(usd.thresholdUsd).toLocaleString("en-US")}`
+        : "your alert threshold";
+      const claimableLine = usd?.claimableUsd != null
+        ? `\nClaimable now: about $${Math.round(usd.claimableUsd).toLocaleString("en-US")}\n`
+        : "";
+      return {
+        subject: `Vestream: ${sym} passed ${thresholdStr} claimable`,
+        body: `Your claimable ${sym} from ${protocolDisplay} (${chainDisplay}) has crossed ${thresholdStr}.
+
+Crossed: ${eventDateStr}${claimableLine}
+Head to your dashboard to claim.
+
+View your dashboard: ${appUrl}/dashboard${footer}`,
+      };
+    }
     case "claim-ready":
       return {
         subject: `Vestream: ${sym} is now claimable`,
@@ -160,6 +180,9 @@ export async function sendEmailNotification(
   options?: {
     trigger?: AlertTriggerType;
     timezone?: string | null;
+    /** "threshold" trigger only — USD line crossed + current claimable. */
+    thresholdUsd?: number;
+    claimableUsd?: number;
   },
 ) {
   const trigger  = options?.trigger  ?? "before-unlock";
@@ -167,7 +190,10 @@ export async function sendEmailNotification(
   const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
   const fromAddr = process.env.RESEND_FROM_EMAIL  ?? "notifications@vestream.io";
 
-  const { subject, body } = renderEmail(trigger, stream, eventTime, timezone, appUrl);
+  const { subject, body } = renderEmail(trigger, stream, eventTime, timezone, appUrl, {
+    thresholdUsd: options?.thresholdUsd,
+    claimableUsd: options?.claimableUsd,
+  });
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {

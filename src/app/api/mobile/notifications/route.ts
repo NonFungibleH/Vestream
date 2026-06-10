@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { notificationPreferences, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { normaliseTier } from "@/lib/auth/tier";
+import { validateStreamPrefs } from "@/lib/notifications/threshold";
 
 export async function GET(req: NextRequest) {
   const token  = extractBearerToken(req);
@@ -75,10 +76,15 @@ export async function POST(req: NextRequest) {
   // streamPrefs is a flexible jsonb bag (per-token alert overrides
   // keyed by stream id). Defensively reject anything that isn't an
   // object so a malformed request can't blow up the rest of the row.
-  const safeStreamPrefs =
-    streamPrefs && typeof streamPrefs === "object" && !Array.isArray(streamPrefs)
-      ? streamPrefs
-      : {};
+  // validateStreamPrefs additionally whitelists alertNTriggerType
+  // values (incl. the 2026-06 "threshold" trigger) and bounds-checks /
+  // rounds thresholdUsd1-3 to whole dollars in [1, 1,000,000]; other
+  // per-stream keys pass through untouched.
+  const checkedPrefs = validateStreamPrefs(streamPrefs);
+  if (!checkedPrefs.ok) {
+    return NextResponse.json({ error: checkedPrefs.error }, { status: 400 });
+  }
+  const safeStreamPrefs = checkedPrefs.value;
 
   const [existing] = await db.select({ id: notificationPreferences.id })
     .from(notificationPreferences)

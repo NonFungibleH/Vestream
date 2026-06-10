@@ -10,13 +10,21 @@ import {
 } from "@/lib/db/queries";
 import { mapBounded } from "@/lib/vesting/rpc";
 import type { VestingStream } from "@/lib/vesting/types";
+import { readPriceCache } from "@/lib/vesting/token-price-cache";
+import {
+  collectThresholdSlots,
+  resolveThresholdAlert,
+  renderThresholdCopy,
+  thresholdDedupTimestamp,
+} from "./threshold";
 
 type AlertTriggerType =
   | "before-unlock"
   | "vesting-start"
   | "cliff"
   | "stream-end"
-  | "claim-ready";  // legacy; functionally same as before-unlock @ 0h
+  | "claim-ready"   // legacy; functionally same as before-unlock @ 0h
+  | "threshold";    // state-crossing: claimable USD value passed $N (2026-06)
 
 interface PerStreamPref {
   enabled?: boolean;
@@ -30,6 +38,12 @@ interface PerStreamPref {
   alert3Enabled?: boolean;
   alert3TriggerType?: AlertTriggerType;
   pushTiming3?: number | null;
+  // 2026-06: per-slot USD thresholds for the "threshold" trigger type.
+  // Mirrors the per-slot timing convention (hoursBeforeUnlock /
+  // pushTiming2 / pushTiming3) — slot N reads thresholdUsdN.
+  thresholdUsd1?: number | null;
+  thresholdUsd2?: number | null;
+  thresholdUsd3?: number | null;
 }
 
 /**
@@ -42,7 +56,9 @@ interface PerStreamPref {
  */
 interface AlertSpec {
   slot: 1 | 2 | 3;
-  triggerType: AlertTriggerType;
+  /** "threshold" is excluded — it's a state-crossing alert with no
+   *  firingTime, evaluated in its own branch of the per-stream loop. */
+  triggerType: Exclude<AlertTriggerType, "threshold">;
   /** When in real time the push should sound (unix seconds). */
   firingTime: number;
   /** When in the stream's lifecycle the alert references (unix seconds). */
@@ -136,6 +152,21 @@ export async function runNotificationJob(): Promise<number> {
 
       const prefsMap = (streamPrefs ?? {}) as Record<string, PerStreamPref>;
 
+      // ── Threshold-alert price pre-pass ──────────────────────────────
+      // "threshold" slots need a CURRENT USD price. Collect the token
+      // keys for every stream carrying an enabled threshold slot and
+      // bulk-read the token_prices_cache table once per user — a single
+      // SQL query against a cache the hourly refresh-prices cron keeps
+      // warm. No external price API is ever called from this cron.
+      // Streams whose token has no fresh cached price simply don't get
+      // a price-map entry and are skipped silently below.
+      const thresholdPriceKeys = streams
+        .filter((s) => collectThresholdSlots(prefsMap[s.id]).length > 0)
+        .map((s) => ({ chainId: s.chainId, tokenAddress: s.tokenAddress }));
+      const thresholdPrices = thresholdPriceKeys.length > 0
+        ? await readPriceCache(thresholdPriceKeys)
+        : null;
+
       for (const stream of streams) {
         // Per-stream opt-in is REQUIRED. A user who never visited the
         // Alerts tab for this token gets nothing — see the 2026-05-20
@@ -146,17 +177,27 @@ export async function runNotificationJob(): Promise<number> {
         // Gather the alert specs for this stream — up to 3 per stream.
         const alertSpecs: AlertSpec[] = [];
 
+        // "threshold" slots are state-crossing alerts (claimable USD
+        // passed $N) with no firingTime, so they don't become
+        // AlertSpecs — they're gathered here and evaluated in their
+        // own branch after the time-based loop below. The slot blocks
+        // skip them so they never reach resolveAlertSpecs.
+        const thresholdSlots = collectThresholdSlots(perStream);
+
         // ── Alert 1 ──
         if (perStream.alert1Enabled === true) {
-          alertSpecs.push(
-            ...resolveAlertSpecs(
-              1,
-              perStream.alert1TriggerType ?? "before-unlock",
-              perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
-              stream,
-              nowSec,
-            ),
-          );
+          const triggerType = perStream.alert1TriggerType ?? "before-unlock";
+          if (triggerType !== "threshold") {
+            alertSpecs.push(
+              ...resolveAlertSpecs(
+                1,
+                triggerType,
+                perStream.hoursBeforeUnlock ?? hoursBeforeUnlock,
+                stream,
+                nowSec,
+              ),
+            );
+          }
         }
 
         // ── Alert 2 ──
@@ -168,25 +209,29 @@ export async function runNotificationJob(): Promise<number> {
         if (alert2On) {
           const triggerType: AlertTriggerType =
             perStream.alert2TriggerType ?? "before-unlock";
-          const hoursBefore =
-            triggerType === "before-unlock"
-              ? (perStream.pushTiming2 ?? 1)
-              : 0;
-          alertSpecs.push(...resolveAlertSpecs(2, triggerType, hoursBefore, stream, nowSec));
+          if (triggerType !== "threshold") {
+            const hoursBefore =
+              triggerType === "before-unlock"
+                ? (perStream.pushTiming2 ?? 1)
+                : 0;
+            alertSpecs.push(...resolveAlertSpecs(2, triggerType, hoursBefore, stream, nowSec));
+          }
         }
 
         // ── Alert 3 ──
         if (perStream.alert3Enabled === true) {
           const triggerType: AlertTriggerType =
             perStream.alert3TriggerType ?? "before-unlock";
-          const hoursBefore =
-            triggerType === "before-unlock"
-              ? (perStream.pushTiming3 ?? 0)
-              : 0;
-          alertSpecs.push(...resolveAlertSpecs(3, triggerType, hoursBefore, stream, nowSec));
+          if (triggerType !== "threshold") {
+            const hoursBefore =
+              triggerType === "before-unlock"
+                ? (perStream.pushTiming3 ?? 0)
+                : 0;
+            alertSpecs.push(...resolveAlertSpecs(3, triggerType, hoursBefore, stream, nowSec));
+          }
         }
 
-        if (alertSpecs.length === 0) continue;
+        if (alertSpecs.length === 0 && thresholdSlots.length === 0) continue;
 
         // Evaluate each alert independently. One slot firing doesn't
         // block the other — they have different firingTimes and
@@ -249,6 +294,83 @@ export async function runNotificationJob(): Promise<number> {
             console.error(`Failed to send notification for stream ${stream.id} slot ${spec.slot}:`, err);
           }
         }
+
+        // ── Threshold alerts (state-crossing — no firingTime) ────────
+        // Works for ANY stream shape, including `category === "stream"`
+        // rows (Superfluid / LlamaPay continuous streams) whose
+        // countdown alerts have nothing to count down to: only
+        // claimableNow + tokenDecimals are read, never nextUnlockTime /
+        // unlockSteps.
+        for (const tSlot of thresholdSlots) {
+          const price = thresholdPrices?.get(
+            `${stream.chainId}:${stream.tokenAddress.toLowerCase()}`,
+          );
+          // No usable cached price → resolveThresholdAlert returns null
+          // and we skip silently. Never alert on unpriced claimable.
+          const resolved = resolveThresholdAlert(stream, price?.priceUsd, tSlot.thresholdUsd);
+          if (!resolved || !resolved.fired) continue;
+
+          // Synthetic dedup timestamp — threshold alerts have no event
+          // time, so the key is derived from the threshold itself (see
+          // thresholdDedupTimestamp). Stable per (stream, threshold):
+          // the crossing fires AT MOST ONCE and never re-fires unless
+          // the user changes the threshold (new synthetic key).
+          const dedupDate = thresholdDedupTimestamp(tSlot.thresholdUsd);
+          const alreadySent = await hasNotificationBeenSent(userId, stream.id, dedupDate);
+          if (alreadySent) continue;
+
+          const { title, body } = renderThresholdCopy(
+            stream, tSlot.thresholdUsd, resolved.claimableUsd,
+          );
+
+          let sentSomething = false;
+          try {
+            // ── Email channel ── (same Pro-only gate as other alerts)
+            if (canEmail && email) {
+              try {
+                await sendEmailNotification(
+                  email,
+                  stream,
+                  new Date(nowSec * 1000), // crossing observed "now"
+                  {
+                    trigger:      "threshold",
+                    timezone,
+                    thresholdUsd: tSlot.thresholdUsd,
+                    claimableUsd: resolved.claimableUsd,
+                  },
+                );
+                sentSomething = true;
+              } catch (err) {
+                console.error(`Email send failed for user ${userId}:`, err);
+              }
+            }
+
+            // ── Push channel ── (same token + credit gates)
+            if (canPush && expoPushToken) {
+              const credit = await checkAndConsumePushCredit(userId);
+              if (credit.allowed) {
+                const result = await sendExpoPush({
+                  to:    expoPushToken,
+                  title,
+                  body,
+                  data:  { streamId: stream.id, url: `/stream/${stream.id}` },
+                }).catch((err) => {
+                  console.error(`Push send failed for user ${userId}:`, err);
+                  return { ok: false, error: "send failed" } as const;
+                });
+                if (result.ok) sentSomething = true;
+              }
+            }
+
+            // Same record-only-on-success rule as time-based alerts.
+            if (sentSomething) {
+              await recordNotificationSent(userId, stream.id, dedupDate);
+              userNotifiedCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to send threshold notification for stream ${stream.id} slot ${tSlot.slot}:`, err);
+          }
+        }
       }
 
       return userNotifiedCount;
@@ -293,7 +415,9 @@ const LOOKAHEAD_SEC = 14 * 24 * 60 * 60;
 
 function resolveAlertSpecs(
   slot: 1 | 2 | 3,
-  triggerType: AlertTriggerType,
+  // "threshold" never reaches here — it has no firingTime and is
+  // evaluated in its own branch of the per-stream loop.
+  triggerType: Exclude<AlertTriggerType, "threshold">,
   hoursBefore: number,
   stream: VestingStream,
   nowSec: number,
@@ -314,7 +438,7 @@ function resolveAlertSpecs(
           })
           .map(s => ({
             slot,
-            triggerType: triggerType as AlertTriggerType,
+            triggerType,
             eventTime:  s.timestamp,
             firingTime: s.timestamp - Math.max(0, hoursBefore) * 3600,
             hoursBefore,
