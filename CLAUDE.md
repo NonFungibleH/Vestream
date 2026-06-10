@@ -653,11 +653,16 @@ Single Vercel function gets 300s. PinkSale × 4 chains alone can exhaust that, l
 
 2026-05-20: the dispatcher mode (commit `4924c63`) was removed because Vercel's background-fetch throttling on the Hobby tier was causing only 2/3 child invocations to actually run. Calling groups explicitly is more predictable.
 
-The four groups (defined in `seeder.ts:groupFor`):
+The groups (defined in `seeder.ts:groupFor` — SEVEN as of June 2026, the
+old four-group list below caused a missed-hedgey seed on 2026-06-10):
 - `heavy` — PinkSale × 4 chains. Slowest workload.
-- `solana` — Streamflow + Jupiter Lock. Helius-throttled.
-- `subgraphs` — Hedgey, UNCX, UNCX-VM, Unvest, Superfluid, plus paused adapters.
-- `sablier` — Sablier on its own group (split out from `subgraphs` because the Envio Hasura endpoint can chew the full 300s on a deep seed).
+- `solana` — Solana protocols; `streamflow` also exists as its own group.
+- `subgraphs` — UNCX, UNCX-VM, Unvest, plus paused adapters.
+- `sablier` — Sablier alone (Envio Hasura can chew the full 300s on a deep seed).
+- `hedgey` — Hedgey × 7 chains (ERC721 multicall discovery), split out of `subgraphs`.
+- `superfluid` — Superfluid alone.
+- Check `SEED_GROUPS` in seeder.ts for the authoritative list before any
+  manual full refresh — loop over THAT, not this doc.
 
 Calling the endpoint WITHOUT a `group=` param returns a `400` with the helpful list of acceptable values — don't be surprised by it, it's the route telling you to be explicit.
 
