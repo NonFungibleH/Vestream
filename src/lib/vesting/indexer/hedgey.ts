@@ -257,6 +257,10 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           nextUnlockTime:  nextUnlock,
           cancelable:      plan.vestingAdmin.toLowerCase() !== ZERO_ADDRESS,
           lockTxHash,
+          // In-app claiming: redeemPlans([planId]) on this chain's
+          // TokenVestingPlans deployment. planId == tokenId == nativeId.
+          claimContract:   HEDGEY_CONTRACTS[chainId] ?? null,
+          claimNativeId:   tokenIdKey,
         });
       }
 

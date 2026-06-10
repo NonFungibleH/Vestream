@@ -67,6 +67,8 @@ const STREAMS_QUERY = /* GraphQL */ `
       subgraphId
       chainId
       recipient
+      contract
+      tokenId
       asset { address symbol decimals }
       depositAmount
       withdrawnAmount
@@ -113,6 +115,13 @@ interface RawLockupStream {
   subgraphId:      string;
   chainId:         string;
   recipient:       string;
+  /** The Lockup contract this stream lives on — the claim target for
+   *  withdrawMax(). Streams span multiple deployments (v1.x linear,
+   *  tranched, the unified Lockup, …) so this is per-stream. */
+  contract:        string;
+  /** The on-chain stream id WITHIN `contract` (ERC-721 tokenId). This —
+   *  not subgraphId — is what withdrawMax(streamId, to) takes. */
+  tokenId:         string;
   asset:           { address: string; symbol: string; decimals: string };
   depositAmount:   string;
   withdrawnAmount: string;
@@ -336,6 +345,11 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
             .map((a) => ({ timestamp: Number(a.timestamp), amount: a.amountB! }))
         : undefined,
       lockTxHash:      raw.creationActions?.[0]?.hash ?? null,
+      // In-app claiming: every Lockup deployment Envio indexes (2023+)
+      // exposes withdrawMax(uint256 streamId, address to). The claim id
+      // is the per-contract tokenId, NOT subgraphId — see RawLockupStream.
+      claimContract:   raw.contract ?? null,
+      claimNativeId:   raw.tokenId ?? null,
     };
   });
 }

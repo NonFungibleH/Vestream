@@ -209,6 +209,18 @@ export interface VestingStream {
    *  2026-05-14 for the retail-transparency push: a verifiable on-chain
    *  link from each vesting back to its creation event. */
   lockTxHash?: string | null;
+  /** In-app claiming (2026-06, Phase 1: Sablier + Hedgey).
+   *  claimContract — the on-chain contract holding the claim function
+   *  (Sablier: per-stream Lockup contract from Envio's `contract` field;
+   *  Hedgey: the TokenVestingPlans deployment for the chain).
+   *  claimNativeId — the on-chain id the claim function takes. NOT always
+   *  the stream id's third segment: Sablier ids embed Envio's `subgraphId`
+   *  (a global counter), while withdrawMax() needs the per-contract
+   *  `tokenId`. Hedgey's planId is the same in both places.
+   *  Both undefined ⇒ in-app claiming unsupported for this stream (mobile
+   *  falls back to the protocol's web claim UI). */
+  claimContract?: string | null;
+  claimNativeId?: string | null;
 }
 
 // ── Shared math helpers ─────────────────────────────────────────────────────

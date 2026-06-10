@@ -251,6 +251,10 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
           isFullyVested,
           nextUnlockTime:  nxtUnlock,
           cancelable:      plan.vestingAdmin.toLowerCase() !== ZERO_ADDRESS,
+          // In-app claiming: redeemPlans([planId]) on the chain's
+          // TokenVestingPlans deployment. planId == our nativeId.
+          claimContract:   CONTRACTS[chainId] ?? null,
+          claimNativeId:   planIds[i].toString(),
         });
       }
     } catch (err) {
