@@ -21,7 +21,6 @@ import {
   CHAIN_IDS,
   type SupportedChainId,
   type VestingStream,
-  computeStepVesting,
   nextUnlockTimeForSteps,
 } from "../types";
 import { writeToCache } from "../dbcache";
@@ -53,6 +52,12 @@ const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
 const VESTING_CREATED_TOPIC =
   "0xcfcd2ea84a9e988255710b3adc4919275a012aa72f68b63acf1e9f67296e134f" as Hex;
 
+// 2026-06-10: struct corrected to match the Sourcify-verified ABI and
+// kept identical to adapters/uncx-vm.ts. The old shape mis-decoded
+// (wrong top-level field order + 2-field tranches where the contract has
+// 3), producing garbage claimable. tranche.amount is CUMULATIVE; claimable
+// is read from getReleasableAmount. See the adapter header for the full
+// write-up — these two decode paths MUST stay in lockstep.
 const VESTING_MANAGER_ABI = [
   {
     name: "getVestingSchedule",
@@ -67,24 +72,48 @@ const VESTING_MANAGER_ABI = [
         { name: "creator",     type: "address" },
         { name: "beneficiary", type: "address" },
         { name: "totalAmount", type: "uint256" },
+        { name: "released",    type: "uint256" },
         { name: "isSoft",      type: "bool"    },
         { name: "isNftized",   type: "bool"    },
-        { name: "isTopable",   type: "bool"    },
-        { name: "released",    type: "uint256" },
         { name: "cancelled",   type: "bool"    },
+        { name: "isTopable",   type: "bool"    },
         { name: "vestingType", type: "uint8"   },
         {
           name: "tranches",
           type: "tuple[]",
           components: [
             { name: "time",   type: "uint256" },
-            { name: "amount", type: "uint256" },
+            { name: "amount", type: "uint256" }, // CUMULATIVE
+            { name: "flag",   type: "uint256" },
           ],
         },
       ],
     }],
   },
+  {
+    name: "getReleasableAmount",
+    type: "function",
+    stateMutability: "view",
+    inputs:  [{ name: "vestingId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
+
+/** Cumulative tranche amounts → incremental unlockSteps. Mirror of the
+ *  helper in adapters/uncx-vm.ts (kept inline so the two decode paths are
+ *  self-contained). Input must be time-sorted. */
+function cumulativeToIncremental(
+  sorted: { timestamp: number; cumulative: bigint }[],
+): { timestamp: number; amount: string }[] {
+  const steps: { timestamp: number; amount: string }[] = [];
+  let prev = 0n;
+  for (const t of sorted) {
+    const inc = t.cumulative > prev ? t.cumulative - prev : 0n;
+    steps.push({ timestamp: t.timestamp, amount: inc.toString() });
+    prev = t.cumulative;
+  }
+  return steps;
+}
 
 function makeIndexer(chainId: SupportedChainId): Indexer {
   const config = UNCX_VM_CONFIG[chainId];
@@ -132,12 +161,20 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
         lockTxHash: log.transactionHash ?? null,
       }));
 
-      // 2. Multicall every schedule for this batch.
+      // 2. Multicall every schedule + its authoritative releasable amount.
       const scheduleResults = await client.multicall({
         contracts: entries.map(({ vestingId }) => ({
           address:      config.contractAddress,
           abi:          VESTING_MANAGER_ABI,
           functionName: "getVestingSchedule" as const,
+          args:         [vestingId] as [bigint],
+        })),
+      });
+      const releasableResults = await client.multicall({
+        contracts: entries.map(({ vestingId }) => ({
+          address:      config.contractAddress,
+          abi:          VESTING_MANAGER_ABI,
+          functionName: "getReleasableAmount" as const,
           args:         [vestingId] as [bigint],
         })),
       });
@@ -171,14 +208,18 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
         }
         const { symbol: tokenSymbol, decimals: tokenDecimals } = tokenCache.get(tokenAddr)!;
 
-        const unlockSteps = [...schedule.tranches]
-          .map((t) => ({ timestamp: Number(t.time), amount: t.amount.toString() }))
+        const sortedCum = [...schedule.tranches]
+          .map((t) => ({ timestamp: Number(t.time), cumulative: t.amount }))
           .sort((a, b) => a.timestamp - b.timestamp);
+        const unlockSteps = cumulativeToIncremental(sortedCum);
 
         const total     = schedule.totalAmount;
         const withdrawn = schedule.released;
-        const { claimableNow, lockedAmount, isFullyVested } =
-          computeStepVesting(total, withdrawn, unlockSteps, nowSec);
+        const releasableRes = releasableResults[i];
+        const claimableNow  = releasableRes?.status === "success" ? releasableRes.result : 0n;
+        const remaining     = total > withdrawn ? total - withdrawn : 0n;
+        const lockedAmount  = remaining > claimableNow ? remaining - claimableNow : 0n;
+        const isFullyVested = lockedAmount === 0n && claimableNow === 0n;
 
         streams.push({
           id:              `uncx-vm-${chainId}-${entries[i].vestingId.toString()}`,

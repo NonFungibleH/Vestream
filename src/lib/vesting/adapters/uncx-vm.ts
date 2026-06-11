@@ -5,7 +5,6 @@ import {
   VestingStream,
   SupportedChainId,
   CHAIN_IDS,
-  computeStepVesting,
   nextUnlockTimeForSteps,
 } from "../types";
 
@@ -44,6 +43,22 @@ const VESTING_CREATED_TOPIC =
   "0xcfcd2ea84a9e988255710b3adc4919275a012aa72f68b63acf1e9f67296e134f" as Hex;
 
 // ─── Minimal ABIs ─────────────────────────────────────────────────────────────
+//
+// 2026-06-10: struct corrected against the Sourcify-verified ABI. The
+// previous shape was WRONG on two counts and produced garbage data
+// (timestamps decoded into amount slots → fake claimable):
+//   1. Top-level field ORDER: `released` sits right after `totalAmount`,
+//      and the bool order is isSoft/isNftized/cancelled/isTopable — the
+//      old version had released four slots late and the bools shuffled.
+//   2. Each tranche is THREE fields {time, amount, flag}, not two — so
+//      the 2-field tuple slid every array element by a word.
+// Two further semantics confirmed on-chain:
+//   - tranche.amount is CUMULATIVE (each entry = total vested AT that
+//     time; final entry == totalAmount). We convert to incremental
+//     unlockSteps below to match every other adapter.
+//   - claimable is read straight from getReleasableAmount(vestingId)
+//     — the contract's own authoritative number — instead of
+//     re-deriving it (immune to any cliff/condition logic we'd miss).
 const VESTING_MANAGER_ABI = [
   {
     name: "getVestingSchedule",
@@ -58,24 +73,48 @@ const VESTING_MANAGER_ABI = [
         { name: "creator",     type: "address" },
         { name: "beneficiary", type: "address" },
         { name: "totalAmount", type: "uint256" },
+        { name: "released",    type: "uint256" },
         { name: "isSoft",      type: "bool"    },
         { name: "isNftized",   type: "bool"    },
-        { name: "isTopable",   type: "bool"    },
-        { name: "released",    type: "uint256" },
         { name: "cancelled",   type: "bool"    },
+        { name: "isTopable",   type: "bool"    },
         { name: "vestingType", type: "uint8"   },
         {
           name: "tranches",
           type: "tuple[]",
           components: [
             { name: "time",   type: "uint256" },
-            { name: "amount", type: "uint256" },
+            { name: "amount", type: "uint256" }, // CUMULATIVE — see header
+            { name: "flag",   type: "uint256" },
           ],
         },
       ],
     }],
   },
+  {
+    name: "getReleasableAmount",
+    type: "function",
+    stateMutability: "view",
+    inputs:  [{ name: "vestingId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
+
+/** Cumulative tranche amounts → incremental unlockSteps (each step's
+ *  amount = how much unlocks AT that timestamp), matching the shape
+ *  every other adapter produces. Tranches must already be time-sorted. */
+function cumulativeToIncremental(
+  sorted: { timestamp: number; cumulative: bigint }[],
+): { timestamp: number; amount: string }[] {
+  const steps: { timestamp: number; amount: string }[] = [];
+  let prev = 0n;
+  for (const t of sorted) {
+    const inc = t.cumulative > prev ? t.cumulative - prev : 0n;
+    steps.push({ timestamp: t.timestamp, amount: inc.toString() });
+    prev = t.cumulative;
+  }
+  return steps;
+}
 
 // ─── Fetcher ───────────────────────────────────────────────────────────────────
 async function fetchForChain(
@@ -160,12 +199,21 @@ async function fetchForChain(
       lockTxHash: log.transactionHash ?? null,
     }));
 
-    // Batch-read all vesting schedules via multicall
+    // Batch-read all vesting schedules + their authoritative releasable
+    // amounts via multicall (two calls per vestingId).
     const scheduleResults = await client.multicall({
       contracts: entries.map(({ vestingId }) => ({
         address:      contractAddress,
         abi:          VESTING_MANAGER_ABI,
         functionName: "getVestingSchedule" as const,
+        args:         [vestingId] as [bigint],
+      })),
+    });
+    const releasableResults = await client.multicall({
+      contracts: entries.map(({ vestingId }) => ({
+        address:      contractAddress,
+        abi:          VESTING_MANAGER_ABI,
+        functionName: "getReleasableAmount" as const,
         args:         [vestingId] as [bigint],
       })),
     });
@@ -194,18 +242,27 @@ async function fetchForChain(
 
       const { symbol: tokenSymbol, decimals: tokenDecimals } = tokenCache.get(tokenAddr)!;
 
-      // Sort tranches ascending by unlock time
-      const unlockSteps = [...schedule.tranches]
-        .map((t) => ({ timestamp: Number(t.time), amount: t.amount.toString() }))
+      // Tranche amounts are CUMULATIVE on-chain → sort by time, then
+      // convert to incremental unlockSteps (matches every other adapter
+      // + the step-chart's expectation).
+      const sortedCum = [...schedule.tranches]
+        .map((t) => ({ timestamp: Number(t.time), cumulative: t.amount }))
         .sort((a, b) => a.timestamp - b.timestamp);
+      const unlockSteps = cumulativeToIncremental(sortedCum);
 
       const total     = schedule.totalAmount;
       const withdrawn = schedule.released;
-      const { claimableNow, lockedAmount, isFullyVested } =
-        computeStepVesting(total, withdrawn, unlockSteps, nowSec);
+      // Claimable comes straight from the contract — authoritative, and
+      // the reason the old re-derivation was wrong. Locked is whatever
+      // isn't already withdrawn or claimable now.
+      const releasableRes = releasableResults[i];
+      const claimableNow  = releasableRes?.status === "success" ? releasableRes.result : 0n;
+      const remaining     = total > withdrawn ? total - withdrawn : 0n;
+      const lockedAmount  = remaining > claimableNow ? remaining - claimableNow : 0n;
+      const isFullyVested = lockedAmount === 0n && claimableNow === 0n;
 
-      const startTime = unlockSteps[0]?.timestamp ?? 0;
-      const endTime   = unlockSteps.at(-1)?.timestamp ?? 0;
+      const startTime = sortedCum[0]?.timestamp ?? 0;
+      const endTime   = sortedCum.at(-1)?.timestamp ?? 0;
 
       streams.push({
         id:              `uncx-vm-${chainId}-${entries[i].vestingId.toString()}`,
@@ -230,8 +287,9 @@ async function fetchForChain(
         cancelable:      schedule.isSoft,
         lockTxHash:      entries[i].lockTxHash,
         // In-app claiming: release(vestingId) on the VestingManager.
-        // Selector 0x37bdc99b verified present in the deployed bytecode
-        // (eth_getCode scan, 2026-06-10). vestingId == nativeId.
+        // Selector 0x37bdc99b verified in deployed bytecode; claimableNow
+        // now sourced from getReleasableAmount so the claimableNow>0 gate
+        // exactly tracks when release() succeeds. vestingId == nativeId.
         claimContract:   contractAddress,
         claimNativeId:   entries[i].vestingId.toString(),
       });
