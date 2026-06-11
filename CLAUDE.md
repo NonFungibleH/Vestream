@@ -538,6 +538,27 @@ Non-EVM chain IDs are synthetic (Solana has no canonical EVM-style chainId — 1
 | Jupiter Lock | `jupiter-lock` | Solana | Solana `getProgramAccounts` + dataSize=296 filter | Solana's default token locker (used by JUP team allocations). Same `mapBounded` throttle as Streamflow. Helius is the only free Solana RPC that supports `getProgramAccounts`. |
 | LlamaPay | `llamapay` | ETH, Optimism (per-wallet); DefiLlama TVL covers more | Real per-wallet adapter (`adapters/llamapay.ts` + `tvl-walker/llamapay.ts`); DefiLlama passthrough for TVL | **Real adapter shipped** — tracks per-wallet streams on ETH + Optimism (~637 streams indexed). BSC/Polygon/Arbitrum/Base per-wallet dropped May 2026 (LlamaPay's subgraphs there became unreliable); re-add when they redeploy. Continuous per-second streaming (payroll); claimable = accrued − withdrawn. |
 
+### ⚠️ KNOWN BUG: UNCX-VM tranche decode is wrong (2026-06-10)
+
+`adapters/uncx-vm.ts` + `indexer/uncx-vm.ts` decode `getVestingSchedule`'s
+`tranches` with the ABI tuple `{uint256 time, uint256 amount}`. That does
+NOT match the deployed contract — fields come back scrambled. Verified by
+reading live schedules: e.g. vestingId 4995 returns a tranche whose
+`amount` is `2094152401` (a ~2036 unix timestamp, not a token amount) and
+a sibling tranche with `time = 2`. `computeStepVesting` then produces a
+garbage `claimableNow`/`lockedAmount` for EVERY uncx-vm position — a
+DISPLAY-correctness bug (we show wrong claimable figures), independent of
+claiming. Discovered when impersonated `eth_call` claims (from=recipient)
+reverted on every uncx-vm position while Sablier/Hedgey/PinkSale all
+succeeded.
+
+In-app claiming already excludes uncx-vm because of this (mobile
+`lib/claim.ts`). The real fix: pull the correct tranche struct from the
+deployed VestingManager ABI (it likely has >2 fields per tranche, or a
+different field order) and update BOTH the adapter and the indexer decode
+in lockstep, then re-verify with `release()` impersonation. Until then
+uncx-vm claimable/locked numbers shown to users are unreliable.
+
 ### Adding a new adapter
 
 > ⚠️ **ARCHITECTURAL RULE — read before adding any new protocol:**
