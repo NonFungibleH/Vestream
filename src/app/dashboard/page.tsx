@@ -4070,7 +4070,7 @@ function Spinner16() {
 // was viewing, and the Explorer pill never lit up.
 const NAV_ITEMS = [
   { icon: <IconGrid />,     label: "Dashboard",      href: "/dashboard"                    },
-  { icon: <IconCompass />,  label: "Vesting Index",  href: "/dashboard/explorer"           },
+  { icon: <IconCompass />,  label: "Vesting Explorer",  href: "/dashboard/explorer"           },
   { icon: <IconSearch />,   label: "Wallet Scanner", href: "/dashboard/discover"           },
   { icon: <IconBookmark />, label: "Token Watchlist", href: "/dashboard/watchlist"         },
   { icon: <IconIncomeStatement />, label: "Income",  href: "/dashboard/income-statement"  },

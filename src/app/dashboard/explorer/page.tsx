@@ -77,6 +77,24 @@ const AMOUNT_FILTERS = [
   { id: "1m",   label: "$1M+",   threshold: 1000000 },
 ] as const;
 
+// Wallet-count filter — surfaces mass distributions (airdrops, launchpad
+// rounds) vs single-recipient team locks. Group-level, calendar mode only.
+const WALLET_FILTERS = [
+  { id: "10",  label: "10+ wallets",  min: 10  },
+  { id: "25",  label: "25+ wallets",  min: 25  },
+  { id: "100", label: "100+ wallets", min: 100 },
+] as const;
+
+// Calendar sort toggles. "amount" is the raw token amount — honest label
+// in the UI ("Largest (token amt)") because we don't price all groups in
+// USD on this path yet; cross-token amount comparisons are approximate.
+const CALENDAR_SORTS = [
+  { id: "date",    label: "Soonest" },
+  { id: "wallets", label: "Most wallets" },
+  { id: "amount",  label: "Largest (token amt)" },
+] as const;
+type CalendarSort = (typeof CALENDAR_SORTS)[number]["id"];
+
 const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
   { id: "all",       label: "Any time" },
   { id: "today",     label: "Today" },
@@ -94,6 +112,8 @@ interface ExplorerSearchParams {
   protocol?: string;   // comma-separated slugs
   date?:     string;   // window slug or "all"
   amount?:   string;   // amount-filter id
+  wallets?:  string;   // wallet-count filter id ("10" | "25" | "100")
+  sort?:     string;   // calendar sort ("date" | "wallets" | "amount")
   status?:   string;
 }
 
@@ -128,6 +148,8 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const chainIds = parseCsvNumbers(sp.chain);
   const protocols = parseCsvStrings(sp.protocol);
   const amountThreshold = AMOUNT_FILTERS.find((f) => f.id === sp.amount)?.threshold;
+  const minWallets = WALLET_FILTERS.find((f) => f.id === sp.wallets)?.min;
+  const sortKey: CalendarSort = (CALENDAR_SORTS.find((c) => c.id === sp.sort)?.id ?? "date");
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
@@ -172,6 +194,17 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     if (amountThreshold) {
       // Heuristic non-empty-amount filter until we surface USD pricing here.
       calendarGroups = calendarGroups.filter((g) => Number(g.amount ?? 0) > 0);
+    }
+    if (minWallets) {
+      calendarGroups = calendarGroups.filter((g) => g.walletCount >= minWallets);
+    }
+    // getUnlocksInWindow returns soonest-first; only re-sort for the
+    // non-default toggles.
+    if (sortKey === "wallets") {
+      calendarGroups = [...calendarGroups].sort((a, b) => b.walletCount - a.walletCount);
+    } else if (sortKey === "amount") {
+      const amt = (g: WindowUnlockGroup) => { try { return BigInt(g.amount ?? "0"); } catch { return 0n; } };
+      calendarGroups = [...calendarGroups].sort((a, b) => (amt(b) > amt(a) ? 1 : amt(b) < amt(a) ? -1 : 0));
     }
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
@@ -220,6 +253,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   if (protocols.length)   exportParams.set("protocol", protocols.join(","));
   if (sp.date)            exportParams.set("date", sp.date);
   if (sp.amount)          exportParams.set("amount", sp.amount);
+  if (sp.wallets)         exportParams.set("wallets", sp.wallets);
   const exportHref = `/api/dashboard/explorer/export?${exportParams.toString()}`;
 
   // Active-filter count for the free-tier multi-filter cap.
@@ -227,6 +261,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     chainIds.length > 0 ? "chain" : null,
     protocols.length > 0 ? "protocol" : null,
     sp.amount ? "amount" : null,
+    sp.wallets ? "wallets" : null,
     dateSlug !== "30-days" ? "date" : null,
   ].filter(Boolean) as string[];
   const overFilterCap = isFree && activeFilters.length > FREE_TIER_FILTER_CAP;
@@ -240,7 +275,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <span>/</span>
-            <span>Vesting Index</span>
+            <span>Vesting Explorer</span>
           </div>
           {/* Hero positioned as the indexed-universe SEARCH surface — distinct
               from /dashboard/discover which is the live wallet SCANNER. The
@@ -315,6 +350,22 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
         <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>
           {/* Results */}
           <section>
+            {mode === "calendar" && (
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-[10px] font-bold tracking-widest uppercase mr-1" style={{ color: "var(--preview-text-3)" }}>
+                  Sort
+                </span>
+                {CALENDAR_SORTS.map((c) => (
+                  <FilterPill
+                    key={c.id}
+                    active={sortKey === c.id}
+                    href={buildUrl({ ...sp, sort: c.id === "date" ? undefined : c.id })}
+                  >
+                    {c.label}
+                  </FilterPill>
+                ))}
+              </div>
+            )}
             {mode === "calendar" && (
               <CalendarResults
                 rows={visibleCalendar}
@@ -395,7 +446,18 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 </FilterPill>
               ))}
             </FilterGroup>
-            {(chainIds.length > 0 || protocols.length > 0 || sp.amount || dateSlug !== "30-days") && (
+            <FilterGroup label="Wallets per unlock">
+              {WALLET_FILTERS.map((w) => (
+                <FilterPill
+                  key={w.id}
+                  active={sp.wallets === w.id}
+                  href={buildUrl({ ...sp, wallets: sp.wallets === w.id ? undefined : w.id })}
+                >
+                  {w.label}
+                </FilterPill>
+              ))}
+            </FilterGroup>
+            {(chainIds.length > 0 || protocols.length > 0 || sp.amount || sp.wallets || dateSlug !== "30-days") && (
               <Link
                 href={buildUrl({ q: query })}
                 className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"

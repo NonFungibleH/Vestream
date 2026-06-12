@@ -24,6 +24,7 @@ import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
 import { fetchWithRetry } from "../fetch-with-retry";
+import { normaliseAddress } from "../address-validation";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -586,14 +587,14 @@ export async function getTokenMarketData(
     liquidity:  null, volume24h: null, tokenName: null, imageUrl: null,
     website: null, twitterUrl: null,
     dexScreenerUrl: DS_CHAIN_SLUG[chainId]
-      ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${tokenAddress.toLowerCase()}` : null,
+      ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${normaliseAddress(tokenAddress)}` : null,
     dexToolsUrl:    DEXTOOLS_CHAIN_SLUG[chainId]
       ? `https://www.dextools.io/app/en/${DEXTOOLS_CHAIN_SLUG[chainId]}/pair-explorer/${tokenAddress.toLowerCase()}` : null,
   };
 
   try {
     const res = await fetchWithRetry(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress.toLowerCase()}`,
+      `https://api.dexscreener.com/latest/dex/tokens/${normaliseAddress(tokenAddress)}`,
       { next: { revalidate: 300 }, headers: { Accept: "application/json" } },
       { tag: "dexscreener-token-page", retries: 2 },
     );

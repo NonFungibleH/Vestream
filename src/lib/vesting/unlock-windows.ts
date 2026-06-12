@@ -13,6 +13,10 @@
 import { and, asc, eq, gt, ilike, inArray, lte, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
+// Ecosystem-aware: lowercases EVM hex, preserves case-SENSITIVE Solana
+// base58 mints. Plain .toLowerCase() here corrupted every Solana token
+// address flowing into explorer links (Streamflow/Jupiter 404s, 2026-06-12).
+import { normaliseAddress } from "../address-validation";
 import type { VestingStream } from "./types";
 
 /**
@@ -402,16 +406,34 @@ export async function getUnlocksInWindow(
   const rows = [...rowsA, ...rowsB];
 
   // ── Compute per-row eventTime + filter by window ───────────────────────
-  // eventTime = nextUnlockTime if positive, else endTime. Streams without
-  // either get a 0 eventTime and are dropped by the window filter.
+  // eventTime = next unlock event if one exists, else endTime. Streams
+  // without either get a 0 eventTime and are dropped by the window filter.
+  //
+  // STALE-CACHE REPAIR (2026-06-12): the stored `nextUnlockTime` is a
+  // snapshot from the last seeder/indexer run. Once that moment elapses,
+  // the old `next > 0 ? next : end` logic produced a PAST eventTime and the
+  // stream silently vanished from EVERY window — even though its future
+  // steps are sitting right there in `unlockSteps`. Real-world impact:
+  // 828 of PYME's 852 active vestings were invisible to the calendar.
+  // When the stored value is behind the window start, re-derive the next
+  // event from unlockSteps at query time; linear streams (no steps) fall
+  // back to endTime as before.
   type EnrichedRow = typeof rows[number] & { eventTime: number };
   const enriched: EnrichedRow[] = rows.map((row) => {
     const sd = row.streamData as Partial<VestingStream>;
-    const next = typeof sd.nextUnlockTime === "number" && sd.nextUnlockTime > 0
+    let next = typeof sd.nextUnlockTime === "number" && sd.nextUnlockTime > 0
       ? sd.nextUnlockTime
       : 0;
+    if (next < startSec && Array.isArray(sd.unlockSteps) && sd.unlockSteps.length > 0) {
+      let derived = 0;
+      for (const step of sd.unlockSteps) {
+        const ts = typeof step?.timestamp === "number" ? step.timestamp : 0;
+        if (ts >= startSec && (derived === 0 || ts < derived)) derived = ts;
+      }
+      if (derived > 0) next = derived;
+    }
     const end = row.endTime ?? 0;
-    const eventTime = next > 0 ? next : end;
+    const eventTime = next >= startSec ? next : end;
     return { ...row, eventTime };
   }).filter((r) => r.eventTime >= startSec && r.eventTime <= endSec);
 
@@ -446,7 +468,7 @@ export async function getUnlocksInWindow(
 
   for (const row of enriched) {
     const protoCanonical = row.protocol === "uncx-vm" ? "uncx" : row.protocol;
-    const tokenKey       = (row.tokenAddress ?? "").toLowerCase();
+    const tokenKey       = normaliseAddress(row.tokenAddress ?? "");
     const eventTime      = row.eventTime;
     const hourBucket     = Math.floor(eventTime / SECONDS_PER_HOUR);
     const key            = `${protoCanonical}-${row.chainId}-${tokenKey}-${hourBucket}`;
@@ -510,19 +532,19 @@ export async function getUnlocksInWindow(
       protocol:      g.protoCanonical,
       chainId:       g.representative.chainId,
       tokenSymbol:   g.representative.tokenSymbol ?? null,
-      tokenAddress:  (g.representative.tokenAddress ?? "").toLowerCase(),
+      tokenAddress:  normaliseAddress(g.representative.tokenAddress ?? ""),
       tokenDecimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
       eventTime:     g.earliestEvent,
       amount:        g.hasAmount ? g.amountSum.toString() : null,
       recipient:    g.representative.recipient,
       walletCount:  g.recipients.size,
       streamCount:  g.streamCount,
-      groupKey:     `${g.protoCanonical}-${g.representative.chainId}-${(g.representative.tokenAddress ?? "").toLowerCase()}-${g.hourBucket}`,
+      groupKey:     `${g.protoCanonical}-${g.representative.chainId}-${normaliseAddress(g.representative.tokenAddress ?? "")}-${g.hourBucket}`,
     };
   });
 
   const chainSet  = new Set(ordered.map((g) => g.representative.chainId));
-  const tokenSet  = new Set(ordered.map((g) => (g.representative.tokenAddress ?? "").toLowerCase()));
+  const tokenSet  = new Set(ordered.map((g) => normaliseAddress(g.representative.tokenAddress ?? "")));
 
   // Sort by-token aggregates by amount desc — used for "biggest unlocks" lists
   const byToken = Array.from(tokenAmountMap.values())

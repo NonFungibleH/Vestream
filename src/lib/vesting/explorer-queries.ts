@@ -14,6 +14,7 @@
 import { and, asc, eq, gt, inArray, lte, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
+import { normaliseAddress } from "../address-validation";
 import type { VestingStream } from "./types";
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
@@ -79,7 +80,7 @@ export async function getStreamsForExplorer(filter: StreamsFilter = {}): Promise
     wheres.push(inArray(vestingStreamsCache.protocol, [...filter.adapterIds]));
   }
   if (filter.tokenAddress) {
-    wheres.push(eq(vestingStreamsCache.tokenAddress, filter.tokenAddress.toLowerCase()));
+    wheres.push(eq(vestingStreamsCache.tokenAddress, normaliseAddress(filter.tokenAddress)));
   }
   // Symbol filter handled in JS — postgres lower() comparison without a
   // function index is a sequential scan; the JS filter on the result of an
@@ -113,7 +114,7 @@ export async function getStreamsForExplorer(filter: StreamsFilter = {}): Promise
       chainId:        r.chainId,
       recipient:      r.recipient,
       tokenSymbol:    r.tokenSymbol,
-      tokenAddress:   (r.tokenAddress ?? "").toLowerCase(),
+      tokenAddress:   normaliseAddress(r.tokenAddress ?? ""),
       tokenDecimals:  typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
       endTime:        r.endTime ?? 0,
       nextUnlockTime: next,
@@ -189,7 +190,7 @@ export async function getStreamsByRecipient(
       chainId:        r.chainId,
       recipient:      r.recipient,
       tokenSymbol:    r.tokenSymbol,
-      tokenAddress:   (r.tokenAddress ?? "").toLowerCase(),
+      tokenAddress:   normaliseAddress(r.tokenAddress ?? ""),
       tokenDecimals:  typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
       endTime:        r.endTime ?? 0,
       nextUnlockTime: next,

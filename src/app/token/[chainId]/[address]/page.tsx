@@ -30,6 +30,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
@@ -161,7 +162,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { chainId, address } = await params;
   const cid  = Number(chainId);
-  const addr = address.toLowerCase();
+  const addr = normaliseAddress(decodeURIComponent(address));
   if (!CHAIN_NAMES[cid]) return { title: "Token not found — Vestream" };
 
   // Same allSettled pattern as the page render below — if metadata
@@ -214,9 +215,11 @@ export default async function TokenPage(
 ) {
   const { chainId, address } = await params;
   const cid   = Number(chainId);
-  const addr  = address.toLowerCase();
+  // Ecosystem-aware (2026-06-12): EVM-only regex + .toLowerCase() 404'd
+  // every Solana token page (base58 mints are case-sensitive).
+  const addr  = normaliseAddress(decodeURIComponent(address));
 
-  if (!CHAIN_NAMES[cid] || !/^0x[0-9a-f]{40}$/.test(addr)) {
+  if (!CHAIN_NAMES[cid] || !isValidWalletAddress(addr)) {
     notFound();
   }
 

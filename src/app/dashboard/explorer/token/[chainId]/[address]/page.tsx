@@ -10,6 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { notFound } from "next/navigation";
+import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
@@ -40,8 +41,11 @@ export default async function ExplorerTokenPage({
 }) {
   const { chainId, address } = await params;
   const cid = Number(chainId);
-  const addr = address.toLowerCase();
-  if (!CHAIN_NAMES[cid as SupportedChainId] || !/^0x[0-9a-f]{40}$/.test(addr)) {
+  // Ecosystem-aware (2026-06-12): the old EVM-only regex + blanket
+  // .toLowerCase() 404'd every Solana token (Streamflow / Jupiter Lock) —
+  // base58 mints are case-SENSITIVE and don't match /^0x.../.
+  const addr = normaliseAddress(decodeURIComponent(address));
+  if (!CHAIN_NAMES[cid as SupportedChainId] || !isValidWalletAddress(addr)) {
     notFound();
   }
 
@@ -72,7 +76,7 @@ export default async function ExplorerTokenPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-[11px] mb-3" style={{ color: "var(--preview-text-3)" }}>
         <Link href="/dashboard" className="hover:underline">Dashboard</Link><span>/</span>
-        <Link href="/dashboard/explorer" className="hover:underline">Vesting Index</Link><span>/</span>
+        <Link href="/dashboard/explorer" className="hover:underline">Vesting Explorer</Link><span>/</span>
         <span style={{ color: "var(--preview-text-2)" }}>{symbol}</span>
       </div>
 

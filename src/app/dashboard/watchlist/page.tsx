@@ -72,7 +72,7 @@ export default function WatchlistPage() {
       </h1>
       <p className="text-sm mb-6" style={{ color: "var(--preview-text-2)" }}>
         Tokens you&apos;ve saved from the{" "}
-        <Link href="/dashboard/explorer" className="underline" style={{ color: "#0F8A8A" }}>Vesting Index</Link>{" "}
+        <Link href="/dashboard/explorer" className="underline" style={{ color: "#0F8A8A" }}>Vesting Explorer</Link>{" "}
         — one click back to each token&apos;s vesting overview, rounds, and unlock schedule. Save any token with the{" "}
         <strong>☆ Save</strong> button on its page. (Tracking your own wallets is the{" "}
         <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>Dashboard</Link>; a one-shot scan is the{" "}
@@ -85,12 +85,12 @@ export default function WatchlistPage() {
         <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
           <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>No saved tokens yet</p>
           <p className="text-xs mb-4" style={{ color: "var(--preview-text-3)" }}>
-            Open the Vesting Index, find a token, and hit ☆ Save to pin it here.
+            Open the Vesting Explorer, find a token, and hit ☆ Save to pin it here.
           </p>
           <Link href="/dashboard/explorer"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white"
             style={{ background: "#1CB8B8", boxShadow: "0 4px 16px rgba(28,184,184,0.25)" }}>
-            Browse the Vesting Index →
+            Browse the Vesting Explorer →
           </Link>
         </div>
       ) : (

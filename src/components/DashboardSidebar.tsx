@@ -49,7 +49,7 @@ const NAV_ITEMS: Array<{
   activePaths?: string[];
 }> = [
   { icon: <IconGrid />,     label: "Dashboard",       href: "/dashboard"                    },
-  { icon: <IconCompass />,  label: "Vesting Index",   href: "/dashboard/explorer"           },
+  { icon: <IconCompass />,  label: "Vesting Explorer",   href: "/dashboard/explorer"           },
   { icon: <IconSearch />,   label: "Wallet Scanner",  href: "/dashboard/discover"           },
   { icon: <IconStar />,     label: "Watchlist",       href: "/dashboard/watchlist"          },
   {
