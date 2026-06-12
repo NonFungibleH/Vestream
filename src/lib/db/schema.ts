@@ -1141,3 +1141,55 @@ export const walletSearches = pgTable(
     index("wallet_searches_user_idx").on(t.userId),
   ]
 );
+
+/**
+ * Smart-money leaderboard snapshot. One row per (rank, recipient) for the
+ * latest cron run; refreshed daily at 03:30 UTC by /api/cron/smart-money.
+ *
+ * Why a snapshot table and not a live query: the source aggregation
+ * (GROUP BY recipient on a 189k-row vestingStreamsCache) takes ~22s in
+ * prod (verified 2026-06-12). That's fine for a cron, not for a page
+ * render — so the page reads this table (sub-100ms).
+ *
+ * recipient = canonical normalised address (lowercase EVM, case-
+ * sensitive Solana base58). chainEcosystem = "evm" | "solana" — the
+ * filter chips on /dashboard/smart-money read this column.
+ *
+ * topTokensJson = `[{ chainId, tokenAddress, symbol, usdValue }]` for the
+ * wallet's top-3 tokens by USD value, precomputed so the page render
+ * doesn't fetch DexScreener prices on every visit.
+ *
+ * Refreshed in place (DELETE + bulk INSERT) every day. We keep only the
+ * latest snapshot — historical leaderboards aren't part of v1.
+ */
+export const smartMoneySnapshot = pgTable(
+  "smart_money_snapshot",
+  {
+    /** Position on the leaderboard, 1 = top. UNIQUE — exactly one wallet
+     *  per rank. Page reads ORDER BY rank ASC. */
+    rank:               integer("rank").primaryKey(),
+    recipient:          text("recipient").notNull(),
+    /** "evm" | "solana" — filter chip key. */
+    chainEcosystem:     text("chain_ecosystem").notNull(),
+    /** Number of distinct (chain, token) pairs this wallet vests across
+     *  all active streams. The headline number on the row. */
+    distinctTokenCount: integer("distinct_token_count").notNull(),
+    /** Number of distinct streams (positions). A wallet receiving 5
+     *  vestings of the same token = 5 streams, 1 distinct token. */
+    streamCount:        integer("stream_count").notNull(),
+    /** Total locked USD across the wallet's tokens. Best-effort —
+     *  unpriced tokens contribute 0 but still feed distinctTokenCount. */
+    totalLockedUsd:     numeric("total_locked_usd", { precision: 24, scale: 2 }),
+    /** Top 3 tokens by USD value for this wallet (precomputed). */
+    topTokensJson:      jsonb("top_tokens_json")
+                          .$type<Array<{ chainId: number; tokenAddress: string; symbol: string | null; usdValue: number | null }>>()
+                          .notNull(),
+    computedAt:         timestamp("computed_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("smart_money_recipient_idx").on(t.recipient),
+    // Two-value column but cheap, and lets the "EVM / Solana" filter
+    // pills skip a sequential scan.
+    index("smart_money_ecosystem_idx").on(t.chainEcosystem),
+  ]
+);
