@@ -141,6 +141,12 @@ export async function upsertNotificationPreferences(
     notifyCliff: boolean;
     notifyStreamEnd: boolean;
     notifyMonthly: boolean;
+    notifyNextClaim: boolean;
+    // Per-stream alert overrides — keyed by streamId. The web Alerts UI
+    // and the mobile alerts tab both write into this same bag. Shape is
+    // documented on the schema (notificationPreferences.streamPrefs);
+    // callers MUST run it through validateStreamPrefs() before passing in.
+    streamPrefs: Record<string, unknown>;
   }>
 ) {
   const existing = await getNotificationPreferences(userId);

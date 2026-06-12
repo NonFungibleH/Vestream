@@ -5,6 +5,7 @@ import {
   getNotificationPreferences,
   upsertNotificationPreferences,
 } from "@/lib/db/queries";
+import { validateStreamPrefs } from "@/lib/notifications/threshold";
 
 // Minimal RFC-shape email regex. Not a full RFC 5322 parser — that's neither
 // possible nor desirable in a regex — but rejects whitespace, missing @, and
@@ -39,7 +40,16 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const { emailEnabled, email, hoursBeforeUnlock, notifyCliff, notifyStreamEnd, notifyMonthly } = await req.json();
+  const {
+    emailEnabled,
+    email,
+    hoursBeforeUnlock,
+    notifyCliff,
+    notifyStreamEnd,
+    notifyMonthly,
+    notifyNextClaim,
+    streamPrefs,
+  } = await req.json();
 
   const validHours = [1, 6, 12, 24, 48, 72];
   if (hoursBeforeUnlock !== undefined && !validHours.includes(hoursBeforeUnlock)) {
@@ -55,6 +65,23 @@ export async function PUT(req: NextRequest) {
     }
   }
 
+  // streamPrefs is a jsonb bag of per-stream alert overrides keyed by
+  // streamId — the SAME shape mobile already writes. Until 2026-06-12 this
+  // route silently dropped the field (only the global six were
+  // destructured), so the new web Alerts UI's per-stream edits would have
+  // saved on the wire but never reached Postgres. Mirror the mobile route's
+  // validation (lib/notifications/threshold.ts → validateStreamPrefs) so
+  // the alertNTriggerType whitelist + thresholdUsdN bounds-check apply
+  // identically across surfaces.
+  let validatedStreamPrefs: Record<string, unknown> | undefined;
+  if (streamPrefs !== undefined) {
+    const checked = validateStreamPrefs(streamPrefs);
+    if (!checked.ok) {
+      return NextResponse.json({ error: checked.error }, { status: 400 });
+    }
+    validatedStreamPrefs = checked.value;
+  }
+
   const update: Parameters<typeof upsertNotificationPreferences>[1] = {};
   if (emailEnabled !== undefined) update.emailEnabled = emailEnabled;
   if (email !== undefined) update.email = email;
@@ -62,6 +89,8 @@ export async function PUT(req: NextRequest) {
   if (notifyCliff !== undefined) update.notifyCliff = notifyCliff;
   if (notifyStreamEnd !== undefined) update.notifyStreamEnd = notifyStreamEnd;
   if (notifyMonthly !== undefined) update.notifyMonthly = notifyMonthly;
+  if (notifyNextClaim !== undefined) update.notifyNextClaim = notifyNextClaim;
+  if (validatedStreamPrefs !== undefined) update.streamPrefs = validatedStreamPrefs;
 
   const prefs = await upsertNotificationPreferences(user.id, update);
   return NextResponse.json({ preferences: prefs });
