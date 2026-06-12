@@ -47,6 +47,12 @@ export interface WindowUnlockGroup {
   walletCount:   number;
   streamCount:   number;
   groupKey:      string;
+  /** USD value of the group's `amount` at render time, or null when the
+   *  token has no liquid DEX pair / we couldn't price it. Populated by
+   *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
+   *  so callers that don't render USD don't pay the DexScreener cost. */
+  usdValue?:     number | null;
+  usdConfidence?: "high" | "medium" | null;
 }
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
@@ -561,4 +567,51 @@ export async function getUnlocksInWindow(
       byToken,
     },
   };
+}
+
+/**
+ * Enrich a window-result's groups with USD value via DexScreener.
+ *
+ * Kept OUT of getUnlocksInWindow() on purpose: half the callers
+ * (homepage widget, mobile, several ISR pages) already do their own
+ * pricing on a curated slice, or don't need USD at all. Charging
+ * DexScreener for every WindowResult would 2-3× the request count on
+ * those paths for nothing.
+ *
+ * Pricing batches over distinct (chainId, tokenAddress) pairs, so a
+ * group of 200 PYME unlocks costs one priced pair, not 200. The
+ * `redis` option mirrors quick-prices: pass `false` from ISR/build
+ * render paths so the Upstash SDK's no-store fetch doesn't poison
+ * the route (see quick-prices.ts comment).
+ *
+ * Returns a NEW array — does not mutate `groups`.
+ */
+export async function enrichGroupsWithUsd(
+  groups: ReadonlyArray<WindowUnlockGroup>,
+  opts?: { redis?: boolean },
+): Promise<WindowUnlockGroup[]> {
+  if (groups.length === 0) return [...groups];
+  const { getQuickUsdPrices, toUsdValue } = await import("./quick-prices");
+
+  // Distinct (chainId, normalised address). Drop unpriceable rows
+  // (no amount or no address) early — they can't get a USD value anyway.
+  const pairs = new Map<string, { chainId: number; address: string }>();
+  for (const g of groups) {
+    if (!g.amount || !g.tokenAddress) continue;
+    const key = `${g.chainId}:${g.tokenAddress.toLowerCase()}`;
+    if (!pairs.has(key)) {
+      pairs.set(key, { chainId: g.chainId, address: g.tokenAddress });
+    }
+  }
+  if (pairs.size === 0) return groups.map((g) => ({ ...g, usdValue: null, usdConfidence: null }));
+
+  const priceMap = await getQuickUsdPrices([...pairs.values()], opts);
+
+  return groups.map((g) => {
+    if (!g.amount) return { ...g, usdValue: null, usdConfidence: null };
+    const price = priceMap.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
+    const usdValue   = toUsdValue(g.amount, g.tokenDecimals, price);
+    const usdConfidence = price?.confidence ?? null;
+    return { ...g, usdValue, usdConfidence };
+  });
 }

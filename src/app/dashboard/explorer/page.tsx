@@ -29,10 +29,12 @@ import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import {
   getUnlocksInWindow,
+  enrichGroupsWithUsd,
   WINDOWS,
   type WindowSlug,
   type WindowUnlockGroup,
 } from "@/lib/vesting/unlock-windows";
+import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import {
   getStreamsForExplorer,
   getStreamsByRecipient,
@@ -191,9 +193,20 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
     }
     calendarGroups = calendarResult.groups;
+    // Price every group in one DexScreener batch. The explorer is dynamic,
+    // so the Upstash Redis layer is allowed; one batch covers up to 30
+    // distinct (chain, token) pairs which comfortably absorbs our visible
+    // window (≤ 50 rows × usually 5-15 distinct tokens).
+    calendarGroups = await enrichGroupsWithUsd(calendarGroups);
+
     if (amountThreshold) {
-      // Heuristic non-empty-amount filter until we surface USD pricing here.
-      calendarGroups = calendarGroups.filter((g) => Number(g.amount ?? 0) > 0);
+      // Filter on REAL USD value once priced. Unpriced rows are kept
+      // (we don't penalise tokens DexScreener doesn't cover) — the table
+      // sorts them last in "Largest" mode anyway, so they're easy to tell
+      // apart from the priced ones.
+      calendarGroups = calendarGroups.filter(
+        (g) => g.usdValue == null || g.usdValue >= amountThreshold,
+      );
     }
     if (minWallets) {
       calendarGroups = calendarGroups.filter((g) => g.walletCount >= minWallets);
@@ -203,8 +216,22 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     if (sortKey === "wallets") {
       calendarGroups = [...calendarGroups].sort((a, b) => b.walletCount - a.walletCount);
     } else if (sortKey === "amount") {
-      const amt = (g: WindowUnlockGroup) => { try { return BigInt(g.amount ?? "0"); } catch { return 0n; } };
-      calendarGroups = [...calendarGroups].sort((a, b) => (amt(b) > amt(a) ? 1 : amt(b) < amt(a) ? -1 : 0));
+      // Priced rows sort first by USD (honest). Unpriced rows fall to the
+      // end, ordered among themselves by raw token amount so a Sablier
+      // unlock of 10B BERA-like-token doesn't outrank a $1M priced USDC
+      // event. Cross-token raw amounts being compared is the same caveat
+      // that's labelled in the sort toggle.
+      const rawAmt = (g: WindowUnlockGroup) => {
+        try { return BigInt(g.amount ?? "0"); } catch { return 0n; }
+      };
+      calendarGroups = [...calendarGroups].sort((a, b) => {
+        const av = a.usdValue, bv = b.usdValue;
+        if (av != null && bv != null) return bv - av;
+        if (av != null) return -1;
+        if (bv != null) return 1;
+        const ar = rawAmt(a), br = rawAmt(b);
+        return br > ar ? 1 : br < ar ? -1 : 0;
+      });
     }
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
@@ -550,7 +577,7 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
       style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link
         href={`/dashboard/explorer/token/${group.chainId}/${group.tokenAddress}`}
-        className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+        className="flex-1 grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
           style={{ background: accent }}>
@@ -571,6 +598,27 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
               </>
             )}
           </p>
+        </div>
+        {/* USD value column. Medium-confidence prices are dim-italic so a
+            user comparing rows can spot the "this number stands on
+            thinner liquidity" rows at a glance. Unpriced rows render
+            "—" rather than $0 so they don't look like an explicit "zero". */}
+        <div className="text-right tabular-nums" style={{ minWidth: 64 }}>
+          {group.usdValue != null ? (
+            <p
+              className="text-sm font-bold"
+              style={{
+                color: "var(--preview-text)",
+                fontStyle: group.usdConfidence === "medium" ? "italic" : "normal",
+                opacity:   group.usdConfidence === "medium" ? 0.7 : 1,
+              }}
+              title={group.usdConfidence === "medium" ? "Medium liquidity — DEX pool < $10k" : undefined}
+            >
+              {formatUsdCompact(group.usdValue)}
+            </p>
+          ) : (
+            <p className="text-sm font-bold" style={{ color: "var(--preview-text-3)" }}>—</p>
+          )}
         </div>
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
