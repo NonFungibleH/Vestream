@@ -19,7 +19,7 @@
 // server-rendered surface re-reads the cookie and stays consistent.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useRef, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { setDarkModePreference } from "@/lib/dark-mode";
 
@@ -41,8 +41,17 @@ export function DarkModeProvider({
   const [dark, setDark] = useState(initialDark);
 
   // Keep in sync if the server-resolved value changes (router.refresh,
-  // navigation, another tab). Cheap and idempotent.
-  useEffect(() => { setDark(initialDark); }, [initialDark]);
+  // navigation, another tab). This is the official React pattern for
+  // "adjust state when a prop changes" — track the last-seen prop in a
+  // ref and call setState during render when it changes. Using useEffect
+  // for the same purpose trips react-hooks/set-state-in-effect (rightly:
+  // it causes an extra render) and was previously failing CI.
+  // Docs: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const lastSeenInitial = useRef(initialDark);
+  if (lastSeenInitial.current !== initialDark) {
+    lastSeenInitial.current = initialDark;
+    setDark(initialDark);
+  }
 
   const toggle = useCallback(() => {
     setDark((v) => {
