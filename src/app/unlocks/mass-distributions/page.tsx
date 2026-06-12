@@ -93,7 +93,7 @@ export default async function MassDistributionsPage() {
           Mass distributions
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-2" style={{ color: "#475569" }}>
-          Token unlock events with {MIN_WALLETS}+ recipients landing in the next {WINDOW_DAYS} days. Captures airdrops, launchpad rounds, and seed-round distributions — the events most likely to move a token's circulating supply.
+          Token unlock events with {MIN_WALLETS}+ recipients landing in the next {WINDOW_DAYS} days. Captures airdrops, launchpad rounds, and seed-round distributions — the events most likely to move a token&apos;s circulating supply.
         </p>
         <p className="text-xs" style={{ color: "#8B8E92" }}>
           Single-recipient team grants are excluded by design — see <Link href="/unlocks/biggest-this-week" className="underline">biggest unlocks this week</Link> for those.
