@@ -81,6 +81,12 @@ export interface QuickPrice {
   priceUsd:    number;
   /** "high" if liquidity ≥ $10k, "medium" if ≥ $1k. Below $1k filtered out. */
   confidence:  "high" | "medium";
+  /** 24-hour USD volume from DexScreener (`pair.volume.h24`). Used by the
+   *  explorer's risk column to compute the absorption ratio
+   *  (unlockValueUsd / volume24hUsd) — "can the market absorb this?".
+   *  Null when DexScreener didn't return a volume figure for the pair we
+   *  selected; the consumer treats null as "can't compute". */
+  volume24hUsd?: number | null;
 }
 
 /**
@@ -240,9 +246,13 @@ export async function getQuickUsdPrices(
               && p.address === pair.baseToken.address.toLowerCase(),
         );
         if (!matchedPair) continue;
+        const vol = typeof pair.volume?.h24 === "number" && Number.isFinite(pair.volume.h24)
+          ? pair.volume.h24
+          : null;
         const quickPrice: QuickPrice = {
-          priceUsd:   parseFloat(pair.priceUsd!),
-          confidence: conf,
+          priceUsd:    parseFloat(pair.priceUsd!),
+          confidence:  conf,
+          volume24hUsd: vol,
         };
         out.set(priceKey(matchedPair.chainId, matchedPair.address), quickPrice);
         dexResolved.add(priceKey(matchedPair.chainId, matchedPair.address));

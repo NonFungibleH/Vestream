@@ -10,7 +10,7 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, ilike, inArray, lte, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, ilike, inArray, lte, notInArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 // Ecosystem-aware: lowercases EVM hex, preserves case-SENSITIVE Solana
@@ -53,6 +53,25 @@ export interface WindowUnlockGroup {
    *  so callers that don't render USD don't pay the DexScreener cost. */
   usdValue?:     number | null;
   usdConfidence?: "high" | "medium" | null;
+
+  // ── Risk-judgment metrics (populated by enrichGroupsWithUsd) ──────────
+  // These let the UI render "is this risky to hold through?" without the
+  // user having to do mental math. All are 0-or-positive; null = can't
+  // compute (missing input). Cross-token comparisons of `supplyShare` are
+  // meaningful (it's a ratio of THIS token's locked supply); the other
+  // two are also per-token ratios.
+
+  /** Share of group `amount` owned by the single largest recipient (0–1).
+   *  1.0 = single recipient (a team grant); ≤0.1 = broad distribution. */
+  recipientConcentration?: number | null;
+  /** unlockValueUsd ÷ token's 24h trading volume. >1 = the unlock is
+   *  larger than a full day's volume; the market would visibly struggle
+   *  to absorb it without slippage. Null when usdValue or volume24h missing. */
+  absorptionRatio?:        number | null;
+  /** Share of THIS token's total locked supply (across all schedules,
+   *  active + finished) that this group releases (0–1). 0.05 = "this one
+   *  event releases 5% of all locked supply". */
+  supplyShare?:            number | null;
 }
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
@@ -456,6 +475,10 @@ export async function getUnlocksInWindow(
     amountSum:      bigint;
     hasAmount:      boolean;
     earliestEvent:  number;
+    /** Per-recipient amount totals — drives the risk column's
+     *  "recipient concentration" metric (largest single share). Same
+     *  bigint arithmetic as amountSum so the ratio is exact. */
+    recipientAmount: Map<string, bigint>;
   }
 
   const groups = new Map<string, Group>();
@@ -490,6 +513,7 @@ export async function getUnlocksInWindow(
         amountSum:      0n,
         hasAmount:      false,
         earliestEvent:  eventTime,
+        recipientAmount: new Map(),
       };
       groups.set(key, g);
     } else if (eventTime > 0 && eventTime < g.earliestEvent) {
@@ -508,6 +532,10 @@ export async function getUnlocksInWindow(
         const amt = BigInt(rawAmount);
         g.amountSum += amt;
         g.hasAmount  = true;
+        // Track per-recipient totals for concentration metric. A single
+        // recipient can have multiple streams in the same group (e.g. a
+        // team member's tranches all unlock the same hour); sum them.
+        g.recipientAmount.set(row.recipient, (g.recipientAmount.get(row.recipient) ?? 0n) + amt);
         const tokenChainKey = `${row.chainId}:${tokenKey}`;
         const existing = tokenAmountMap.get(tokenChainKey);
         if (existing) {
@@ -533,6 +561,19 @@ export async function getUnlocksInWindow(
 
   const groupSummaries: WindowUnlockGroup[] = ordered.map((g) => {
     const sd = g.representative.streamData as Partial<VestingStream>;
+    // Concentration: largest single recipient's share of the group amount.
+    // Computed here (not in enrichGroupsWithUsd) because the per-recipient
+    // breakdown only exists during the grouping loop.
+    let concentration: number | null = null;
+    if (g.hasAmount && g.amountSum > 0n && g.recipientAmount.size > 0) {
+      let largest = 0n;
+      for (const v of g.recipientAmount.values()) if (v > largest) largest = v;
+      // Float division on bigints: scale up by 1e6 first, then back down,
+      // so we preserve 6 decimal places without overflowing Number.
+      const scale = 1_000_000n;
+      const ratioScaled = Number((largest * scale) / g.amountSum);
+      concentration = ratioScaled / 1_000_000;
+    }
     return {
       streamId:      g.representative.streamId,
       protocol:      g.protoCanonical,
@@ -546,6 +587,7 @@ export async function getUnlocksInWindow(
       walletCount:  g.recipients.size,
       streamCount:  g.streamCount,
       groupKey:     `${g.protoCanonical}-${g.representative.chainId}-${normaliseAddress(g.representative.tokenAddress ?? "")}-${g.hourBucket}`,
+      recipientConcentration: concentration,
     };
   });
 
@@ -605,13 +647,100 @@ export async function enrichGroupsWithUsd(
   }
   if (pairs.size === 0) return groups.map((g) => ({ ...g, usdValue: null, usdConfidence: null }));
 
-  const priceMap = await getQuickUsdPrices([...pairs.values()], opts);
+  // Two server-side fetches in parallel: DexScreener prices (for USD value
+  // + 24h volume → absorption ratio) and a per-token total-locked sum
+  // (for supply share). One DB round-trip covers all visible tokens.
+  const [priceMap, totalLockedByToken] = await Promise.all([
+    getQuickUsdPrices([...pairs.values()], opts),
+    getTotalLockedByToken([...pairs.values()]),
+  ]);
 
   return groups.map((g) => {
     if (!g.amount) return { ...g, usdValue: null, usdConfidence: null };
-    const price = priceMap.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
-    const usdValue   = toUsdValue(g.amount, g.tokenDecimals, price);
+    const priceKey = `${g.chainId}:${g.tokenAddress.toLowerCase()}`;
+    const price       = priceMap.get(priceKey);
+    const usdValue    = toUsdValue(g.amount, g.tokenDecimals, price);
     const usdConfidence = price?.confidence ?? null;
-    return { ...g, usdValue, usdConfidence };
+
+    // Absorption: unlockValueUsd / volume24hUsd. >1 = unlock exceeds a
+    // full day's volume; price would move visibly to clear it.
+    let absorptionRatio: number | null = null;
+    const vol = price?.volume24hUsd;
+    if (usdValue != null && typeof vol === "number" && vol > 0) {
+      absorptionRatio = usdValue / vol;
+    }
+
+    // Supply share: this group's amount / total locked for this token
+    // (across all active + finished schedules). bigint division scaled
+    // through 1e6 to keep 6 decimals without overflow.
+    let supplyShare: number | null = null;
+    const totalLocked = totalLockedByToken.get(priceKey);
+    if (totalLocked && totalLocked > 0n) {
+      try {
+        const groupAmt = BigInt(g.amount);
+        const scale = 1_000_000n;
+        const ratioScaled = Number((groupAmt * scale) / totalLocked);
+        supplyShare = ratioScaled / 1_000_000;
+      } catch { /* keep null */ }
+    }
+
+    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare };
   });
+}
+
+/**
+ * Sum `lockedAmount` across all rows in vestingStreamsCache for the
+ * supplied (chainId, tokenAddress) pairs. Used by the risk column's
+ * supply-share metric: "this group releases X% of the token's total
+ * locked supply, including not-yet-active and partially-vested schedules".
+ *
+ * Locked, not total — we want the share of *unreleased* supply being
+ * released, not the share of original allocation. A token where 90%
+ * has already been claimed wouldn't have a 90% locked-share denominator.
+ *
+ * One round-trip via UNION ALL, never per-token. Empty input → empty map.
+ */
+async function getTotalLockedByToken(
+  pairs: ReadonlyArray<{ chainId: number; address: string }>,
+): Promise<Map<string, bigint>> {
+  const out = new Map<string, bigint>();
+  if (pairs.length === 0) return out;
+  // jsonb numeric: locked_amount lives inside the streamData JSONB.
+  // The CAST handles it as numeric (bigint-safe in Postgres). Group by
+  // (chainId, lower(tokenAddress)) so a token bridged to multiple chains
+  // gets one row per chain (matches priceKey shape).
+  const lowered = pairs.map((p) => ({
+    chainId: p.chainId,
+    addr:    normaliseAddress(p.address),
+  }));
+  const lowerAddrs = lowered.map((p) => p.addr);
+  const chainIds = [...new Set(lowered.map((p) => p.chainId))];
+
+  // Filter to only the tokens we asked about (cheap, indexed scan).
+  // The cache already stores normalised addresses (lowercase EVM, original-
+  // case Solana), so an inArray match is exact — no lower() wrap needed.
+  const rows = await db
+    .select({
+      chainId:      vestingStreamsCache.chainId,
+      tokenAddress: vestingStreamsCache.tokenAddress,
+      lockedSum:    sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)::text`,
+    })
+    .from(vestingStreamsCache)
+    .where(
+      and(
+        inArray(vestingStreamsCache.chainId, chainIds),
+        inArray(vestingStreamsCache.tokenAddress, lowerAddrs),
+      ),
+    )
+    .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress);
+
+  for (const r of rows) {
+    const key = `${r.chainId}:${(r.tokenAddress ?? "").toLowerCase()}`;
+    let amt = 0n;
+    try { amt = BigInt(r.lockedSum); } catch { /* keep 0n */ }
+    // Multiple rows can have the same lowercased address if the original
+    // case differs (shouldn't, but defensively sum). Use addition.
+    out.set(key, (out.get(key) ?? 0n) + amt);
+  }
+  return out;
 }

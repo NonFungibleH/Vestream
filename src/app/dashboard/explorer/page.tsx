@@ -579,6 +579,84 @@ function CalendarResults({
   );
 }
 
+// ── Risk chip ────────────────────────────────────────────────────────────
+// Categorical at-a-glance signal driven by the worst of three computed
+// metrics. The honest numbers live in the tooltip (`title` attr), so a
+// power user can sanity-check the chip; a casual user just sees the
+// color band. Designed to be conservative — false-positives ("HIGH" on
+// a benign event) are worse than false-negatives.
+
+interface RiskBand {
+  label: "HIGH" | "MED" | "LOW";
+  bg:    string;
+  fg:    string;
+}
+
+const RISK_HIGH: RiskBand = { label: "HIGH", bg: "rgba(220,38,38,0.12)", fg: "#dc2626" };
+const RISK_MED:  RiskBand = { label: "MED",  bg: "rgba(217,119,6,0.12)", fg: "#d97706" };
+const RISK_LOW:  RiskBand = { label: "LOW",  bg: "rgba(28,184,184,0.10)", fg: "#0F8A8A" };
+
+function classifyRisk(group: WindowUnlockGroup): RiskBand | null {
+  const a = group.absorptionRatio;
+  const s = group.supplyShare;
+  // Insufficient data — don't pretend to judge.
+  if (a == null && s == null) return null;
+
+  // HIGH: this unlock is going to be felt.
+  //   absorption ≥ 0.5  → > half a day's volume in one event
+  //   supplyShare ≥ 0.05 → > 5% of locked supply releasing here
+  if ((a != null && a >= 0.5) || (s != null && s >= 0.05)) return RISK_HIGH;
+
+  // MED: meaningful but not alarming.
+  //   absorption ≥ 0.1   → > 10% of daily volume
+  //   supplyShare ≥ 0.01 → > 1% of locked supply
+  if ((a != null && a >= 0.1) || (s != null && s >= 0.01)) return RISK_MED;
+
+  return RISK_LOW;
+}
+
+function fmtPct(x: number | null | undefined): string {
+  if (x == null) return "—";
+  if (x >= 1)  return `${Math.round(x * 100)}%`;
+  if (x >= 0.001) return `${(x * 100).toFixed(1)}%`;
+  return `<0.1%`;
+}
+
+function RiskChip({ group }: { group: WindowUnlockGroup }) {
+  const band = classifyRisk(group);
+  // Three-line tooltip via native title. \n is preserved by most browsers
+  // in title attrs (Chrome, Safari, Firefox; Edge collapses but still
+  // readable). The "vs daily volume" / "of locked supply" / "to top wallet"
+  // phrasing tells the user what each number means without a legend.
+  const tip = [
+    group.absorptionRatio != null
+      ? `${(group.absorptionRatio * 100).toFixed(0)}% of token's 24h volume`
+      : "Absorption: no volume data",
+    group.supplyShare != null
+      ? `${fmtPct(group.supplyShare)} of locked supply`
+      : "Supply share: not computable",
+    group.recipientConcentration != null
+      ? `${fmtPct(group.recipientConcentration)} to top wallet`
+      : "Concentration: not computable",
+  ].join("\n");
+  if (!band) {
+    return (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+        style={{ color: "var(--preview-text-3)" }}
+        title={tip}>
+        —
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
+      style={{ background: band.bg, color: band.fg }}
+      title={tip}>
+      {band.label}
+    </span>
+  );
+}
+
 function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showTopBorder: boolean }) {
   const meta      = getProtocol(group.protocol);
   const accent    = meta?.color ?? "#64748b";
@@ -590,7 +668,7 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
       style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link
         href={`/dashboard/explorer/token/${group.chainId}/${group.tokenAddress}`}
-        className="flex-1 grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+        className="flex-1 grid grid-cols-[auto_1fr_auto_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-2 md:gap-4 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
           style={{ background: accent }}>
@@ -632,6 +710,14 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
           ) : (
             <p className="text-sm font-bold" style={{ color: "var(--preview-text-3)" }}>—</p>
           )}
+        </div>
+        {/* Risk column — color-coded HIGH/MED/LOW chip driven by the worst
+            of the three computed metrics, with all three numbers in the
+            native browser tooltip. The chip is only rendered when we can
+            actually judge (have usdValue OR supplyShare); pure-token
+            rows render "—" rather than guessing. */}
+        <div className="text-right" style={{ minWidth: 48 }}>
+          <RiskChip group={group} />
         </div>
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
