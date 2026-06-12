@@ -10,7 +10,7 @@
 //   - higher pool ceiling so we can comfortably surface 200+ rows
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, inArray, lte, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, ilike, inArray, lte, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import type { VestingStream } from "./types";
@@ -294,6 +294,15 @@ export async function getUnlocksInWindow(
    *  Used when a chain-filter UI is active (e.g. "Show only Ethereum
    *  unlocks"). Empty array → no filter. */
   chainIds?: readonly number[],
+  /** Optional — if set, restrict to streams of this token symbol
+   *  (case-insensitive exact match). MUST be applied here in SQL, not by
+   *  the caller on the returned groups: the pool below is capped at
+   *  `poolLimit` ACROSS ALL TOKENS (soonest-ending first), so a post-hoc
+   *  filter only sees whichever slice of the token's streams happened to
+   *  make the global pool. Real bug: the dashboard explorer's calendar
+   *  mode post-filtered to PYME and showed "24 wallets" when the token
+   *  had 850+ vestings (2026-06-12). */
+  tokenSymbol?: string,
 ): Promise<WindowResult> {
   // Build-time short-circuit. Two cases:
   //  (a) CI runs `next build` with a dummy `postgres://ci:ci@localhost:...`
@@ -320,6 +329,12 @@ export async function getUnlocksInWindow(
     : undefined;
   const chainFilter = chainIds && chainIds.length > 0
     ? inArray(vestingStreamsCache.chainId, [...chainIds])
+    : undefined;
+  // ilike with the wildcard characters escaped = case-insensitive exact
+  // match. Symbols are user-supplied search input, so don't let a stray
+  // `%`/`_` turn the equality into a pattern scan.
+  const symbolFilter = tokenSymbol && tokenSymbol.trim().length > 0
+    ? ilike(vestingStreamsCache.tokenSymbol, tokenSymbol.trim().replace(/([%_\\])/g, "\\$1"))
     : undefined;
 
   // Two-pass pool — see JSDoc above for the full rationale.
@@ -352,6 +367,7 @@ export async function getUnlocksInWindow(
     excludeTestnets,
     ...(protocolFilter ? [protocolFilter] : []),
     ...(chainFilter ? [chainFilter] : []),
+    ...(symbolFilter ? [symbolFilter] : []),
   ] as const;
 
   const [rowsA, rowsB] = await Promise.all([

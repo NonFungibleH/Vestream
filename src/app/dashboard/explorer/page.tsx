@@ -158,6 +158,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
         isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
         adapterIds,
         chainIds.length > 0 ? chainIds : undefined,
+        // Symbol searches MUST filter in SQL, not on the returned groups:
+        // the pool is capped across ALL tokens (soonest-ending first), so a
+        // post-hoc filter only sees whichever slice of this token's streams
+        // happened to make the global pool. The old post-filter showed
+        // "24 wallets" for PYME when the token had 850+ vestings.
+        queryKind.kind === "symbol" ? queryKind.symbol : undefined,
       );
     } catch {
       calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
@@ -166,10 +172,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     if (amountThreshold) {
       // Heuristic non-empty-amount filter until we surface USD pricing here.
       calendarGroups = calendarGroups.filter((g) => Number(g.amount ?? 0) > 0);
-    }
-    if (queryKind.kind === "symbol") {
-      const wanted = queryKind.symbol.toLowerCase();
-      calendarGroups = calendarGroups.filter((g) => (g.tokenSymbol ?? "").toLowerCase() === wanted);
     }
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
