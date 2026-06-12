@@ -564,6 +564,114 @@ const DEXTOOLS_CHAIN_SLUG: Record<number, string> = {
   8453: "base",
 };
 
+// CoinGecko platform slugs — used by the socials FALLBACK below. Distinct
+// from the DexScreener slug table because CG uses different names
+// ("binance-smart-chain" vs "bsc"). Subset of the master list in tvl.ts;
+// kept local to avoid a heavier import path.
+const CG_PLATFORM_SLUG: Record<number, string> = {
+  1:     "ethereum",
+  56:    "binance-smart-chain",
+  137:   "polygon-pos",
+  8453:  "base",
+  42161: "arbitrum-one",
+  10:    "optimistic-ethereum",
+  101:   "solana",
+};
+
+interface SocialLinks {
+  website:     string | null;
+  twitterUrl:  string | null;
+  telegramUrl: string | null;
+  discordUrl:  string | null;
+}
+
+interface CoinGeckoContractResponse {
+  links?: {
+    /** Array of project websites. We take the first non-empty entry. */
+    homepage?: string[];
+    /** Just the handle (e.g. "degentokenbase"), not a full URL. */
+    twitter_screen_name?: string;
+    /** Just the channel name (e.g. "degentokenbase"), not a full URL. */
+    telegram_channel_identifier?: string;
+    /** Mixed chat URLs (Discord, Slack, etc). We filter for discord.gg. */
+    chat_url?: string[];
+  };
+}
+
+/**
+ * Fill in any missing socials from CoinGecko's contract endpoint.
+ *
+ * Triggered ONLY when DexScreener returned an incomplete set — most
+ * tokens are fully covered by DexScreener (which sources its socials from
+ * the project's pair submission) and the CG call doesn't fire at all.
+ * The handful where DexScreener has gaps (auto-listed pairs without
+ * project metadata) get filled in here.
+ *
+ * Endpoint: GET /api/v3/coins/{platform}/contract/{address}
+ *   - Free tier, no auth, ~30 req/min from a Vercel region
+ *   - Returns 404 for tokens CoinGecko doesn't index — we treat that
+ *     as "no fallback available" and return the input unchanged
+ *
+ * Cached via Next.js fetch cache at 1h (socials don't change often) +
+ * a 4s timeout so a slow CG response can't drag the whole page render.
+ */
+async function enrichSocialsFromCoinGecko(
+  chainId: number,
+  tokenAddress: string,
+  existing: SocialLinks,
+): Promise<SocialLinks> {
+  // Already complete? Skip the call entirely.
+  if (existing.website && existing.twitterUrl && existing.telegramUrl && existing.discordUrl) {
+    return existing;
+  }
+  const platform = CG_PLATFORM_SLUG[chainId];
+  if (!platform) return existing;
+
+  try {
+    // Query-param flags strip every field we don't need so CG returns a
+    // smaller payload — links are the only thing we care about.
+    const addrSegment = normaliseAddress(tokenAddress);
+    const url = `https://api.coingecko.com/api/v3/coins/${platform}/contract/${addrSegment}`
+      + `?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`;
+    const res = await fetchWithRetry(
+      url,
+      { next: { revalidate: 3600 }, headers: { Accept: "application/json" } },
+      { tag: "coingecko-socials", retries: 1, timeoutMs: 4000 },
+    );
+    if (!res || !res.ok) return existing;
+    const data = (await res.json()) as CoinGeckoContractResponse;
+    const links = data.links ?? {};
+
+    // Homepage: first non-empty entry. CG sometimes returns 3 empty strings.
+    const homepage = (links.homepage ?? []).find((u) => typeof u === "string" && u.trim().length > 0) ?? null;
+
+    // CG gives us just the handle/identifier, never the full URL. Reconstruct.
+    const twHandle = links.twitter_screen_name?.trim();
+    const tgHandle = links.telegram_channel_identifier?.trim();
+    const twitterFromCg  = twHandle ? `https://x.com/${twHandle}` : null;
+    const telegramFromCg = tgHandle ? `https://t.me/${tgHandle}` : null;
+
+    // chat_url is mixed — could be Discord, Slack, Matrix, etc. Filter for
+    // anything that looks like Discord. (CG used to have a `discord` key
+    // but moved to chat_url around 2023.)
+    const discordFromCg = (links.chat_url ?? []).find(
+      (u) => typeof u === "string" && /discord\.(gg|com)/i.test(u),
+    ) ?? null;
+
+    return {
+      website:     existing.website     ?? homepage,
+      twitterUrl:  existing.twitterUrl  ?? twitterFromCg,
+      telegramUrl: existing.telegramUrl ?? telegramFromCg,
+      discordUrl:  existing.discordUrl  ?? discordFromCg,
+    };
+  } catch (err) {
+    // Failure here MUST NOT cascade — socials are decorative. Worst case
+    // we render the DexScreener-only set, same as before this fallback.
+    console.warn("[token-aggregates] CoinGecko socials fallback failed:", err);
+    return existing;
+  }
+}
+
 interface DexPair {
   chainId:     string;
   url?:        string;
@@ -597,53 +705,67 @@ export async function getTokenMarketData(
       ? `https://www.dextools.io/app/en/${DEXTOOLS_CHAIN_SLUG[chainId]}/pair-explorer/${tokenAddress.toLowerCase()}` : null,
   };
 
+  let best: DexPair | null = null;
   try {
     const res = await fetchWithRetry(
       `https://api.dexscreener.com/latest/dex/tokens/${normaliseAddress(tokenAddress)}`,
       { next: { revalidate: 300 }, headers: { Accept: "application/json" } },
       { tag: "dexscreener-token-page", retries: 2 },
     );
-    if (!res || !res.ok) return empty;
-    const data = (await res.json()) as { pairs?: DexPair[] };
-    const dsChain = DS_CHAIN_SLUG[chainId];
-    const onChain = (data.pairs ?? []).filter((p) => !dsChain || p.chainId === dsChain);
-    const withPrice = onChain.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0 && (p.liquidity?.usd ?? 0) >= 1000);
-    if (withPrice.length === 0) return empty;
-
-    const best = withPrice.sort((a, b) => (b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0))[0];
-    const website = best.info?.websites?.find((w) => w.label?.toLowerCase() === "website")?.url
-      ?? best.info?.websites?.[0]?.url
-      ?? null;
-    // DexScreener uses "twitter" for the type slug even though the product
-    // is now called X — accept both defensively. Returns the FIRST match
-    // since tokens rarely have more than one project-X account.
-    const socials = best.info?.socials ?? [];
-    const findSocial = (...types: string[]): string | null => {
-      const wanted = new Set(types.map((t) => t.toLowerCase()));
-      return socials.find((s) => wanted.has(s.type?.toLowerCase()))?.url ?? null;
-    };
-    const twitterUrl  = findSocial("twitter", "x");
-    const telegramUrl = findSocial("telegram");
-    const discordUrl  = findSocial("discord");
-
-    return {
-      ...empty,
-      priceUsd:   parseFloat(best.priceUsd!),
-      fdv:        best.fdv        ?? null,
-      marketCap:  best.marketCap  ?? null,
-      change24h:  best.priceChange?.h24 ?? null,
-      liquidity:  best.liquidity?.usd   ?? null,
-      volume24h:  best.volume?.h24      ?? null,
-      tokenName:  best.baseToken?.name  ?? null,
-      imageUrl:   best.info?.imageUrl   ?? null,
-      website,
-      twitterUrl,
-      telegramUrl,
-      discordUrl,
-      dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
-    };
+    if (res && res.ok) {
+      const data = (await res.json()) as { pairs?: DexPair[] };
+      const dsChain = DS_CHAIN_SLUG[chainId];
+      const onChain = (data.pairs ?? []).filter((p) => !dsChain || p.chainId === dsChain);
+      const withPrice = onChain.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0 && (p.liquidity?.usd ?? 0) >= 1000);
+      if (withPrice.length > 0) {
+        best = withPrice.sort((a, b) => (b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0))[0];
+      }
+    }
   } catch (err) {
-    console.error("[token-aggregates] DexScreener fetch failed:", err);
-    return empty;
+    console.warn("[token-aggregates] DexScreener fetch failed:", err);
   }
+
+  // Build socials from DexScreener first. DexScreener uses "twitter" for
+  // the X type slug even though the product is now X — accept both
+  // defensively. Returns the FIRST match (tokens rarely have more than
+  // one of each).
+  const dsSocials = best?.info?.socials ?? [];
+  const findSocial = (...types: string[]): string | null => {
+    const wanted = new Set(types.map((t) => t.toLowerCase()));
+    return dsSocials.find((s) => wanted.has(s.type?.toLowerCase()))?.url ?? null;
+  };
+  const dsWebsite = best?.info?.websites?.find((w) => w.label?.toLowerCase() === "website")?.url
+    ?? best?.info?.websites?.[0]?.url
+    ?? null;
+  const fromDexScreener: SocialLinks = {
+    website:     dsWebsite,
+    twitterUrl:  findSocial("twitter", "x"),
+    telegramUrl: findSocial("telegram"),
+    discordUrl:  findSocial("discord"),
+  };
+
+  // Fill in any gaps from CoinGecko. Runs even when DexScreener returned
+  // no pairs at all — many tokens DS doesn't know are indexed on CG, and
+  // their socials are useful even when we can't render a price.
+  const socials = await enrichSocialsFromCoinGecko(chainId, tokenAddress, fromDexScreener);
+
+  // No DexScreener data at all → still return the empty shell with whatever
+  // socials CG could give us. Worst case: pure-empty (unchanged from before).
+  if (!best) {
+    return { ...empty, ...socials };
+  }
+
+  return {
+    ...empty,
+    priceUsd:   parseFloat(best.priceUsd!),
+    fdv:        best.fdv        ?? null,
+    marketCap:  best.marketCap  ?? null,
+    change24h:  best.priceChange?.h24 ?? null,
+    liquidity:  best.liquidity?.usd   ?? null,
+    volume24h:  best.volume?.h24      ?? null,
+    tokenName:  best.baseToken?.name  ?? null,
+    imageUrl:   best.info?.imageUrl   ?? null,
+    ...socials,
+    dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
+  };
 }
