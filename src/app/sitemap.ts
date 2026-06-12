@@ -67,7 +67,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/payroll`,           lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/corporate/token-payroll`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: now, changeFrequency: "daily",   priority: 0.95 },
-    { url: `${SITE}/unlocks`,       lastModified: now, changeFrequency: "daily",   priority: 0.9 },
+    { url: `${SITE}/unlocks`,                     lastModified: now, changeFrequency: "daily",   priority: 0.9 },
+    // Ranking pages — high-intent commercial queries ("biggest token unlocks
+    // this week", "airdrop unlocks"). Same crawl cadence as /unlocks itself.
+    { url: `${SITE}/unlocks/biggest-this-week`,   lastModified: now, changeFrequency: "daily",   priority: 0.85 },
+    { url: `${SITE}/unlocks/mass-distributions`,  lastModified: now, changeFrequency: "daily",   priority: 0.85 },
     { url: `${SITE}/demo`,          lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE}/find-vestings`, lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
     { url: `${SITE}/developer`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
