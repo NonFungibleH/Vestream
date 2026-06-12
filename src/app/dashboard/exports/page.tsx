@@ -295,13 +295,21 @@ export default function ExportsPage() {
       sp.set("until", `${yearFilter}-12-31`);
     }
     track("cta_clicked", { cta_id: "exports_download", format, year: yearFilter });
-    // Trigger a same-tab download. window.location.href IS a navigation
-    // primitive, not a "mutation of external state" — the React compiler
-    // lint rule that flags this can't tell the difference. Suppress here
-    // rather than refactor to a hidden <a> tag, which would be ceremony
-    // for the same outcome.
-    // eslint-disable-next-line react-hooks/immutability
-    window.location.href = `/api/claims/export?${sp.toString()}`;
+    // Click a synthetic <a download> instead of navigating via
+    // window.location.href. The old form consumed the click as a
+    // navigation, so a subsequent window.open() in the same handler (the
+    // "Send to {platform}" guided flow) was blocked by the popup gate —
+    // users reported "send to Koinly doesn't open the tab". The <a> form
+    // is explicit (don't navigate this tab), preserves the user gesture
+    // for window.open, and lets the server's Content-Disposition decide
+    // the file name (download="" doesn't override it).
+    const a = document.createElement("a");
+    a.href = `/api/claims/export?${sp.toString()}`;
+    a.download = "";
+    a.rel  = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   const years = summary
@@ -526,28 +534,11 @@ export default function ExportsPage() {
           </div>
         )}
 
-        {/* Strong coverage warning — shown whenever there is data to download.
-            Users must not mistake a partial export for a complete tax record. */}
-        {events.length > 0 && (
-          <div className="rounded-2xl px-4 py-3 mb-5 flex items-start gap-3"
-            style={{
-              background: "rgba(240,153,46,0.07)",
-              border: "1px solid rgba(240,153,46,0.35)",
-            }}>
-            <span className="flex-shrink-0 mt-0.5 text-sm">⚠️</span>
-            <div>
-              <p className="text-xs font-semibold mb-0.5" style={{ color: "rgba(200,130,30,1)" }}>
-                Incomplete data — do not use as a complete tax record
-              </p>
-              <p className="text-[11px]" style={{ color: "var(--preview-text-2)" }}>
-                Verified income coverage: <strong>Sablier, UNCX, Unvest, Superfluid</strong>.
-                Claims from <strong>Hedgey, PinkSale, Streamflow,</strong> and{" "}
-                <strong>Jupiter Lock</strong> may be incomplete or still indexing.
-                Submit to your accountant or tax software only after confirming all your protocols are covered.
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Coverage warning previously rendered here was a duplicate of the
+            "Verified: …" panel at the top of the page (same protocols, same
+            "verify before filing" message). Removed 2026-06-12 to cut alarm
+            fatigue. The top panel is the single source of truth for what
+            we've confirmed vs what's still indexing. */}
 
         {/* Download formats — always visible so users understand what's available
             before they hit refresh. Cards are slightly muted when no data exists
@@ -617,10 +608,13 @@ function ExportFormatCard({
   const [expanded, setExpanded] = useState(false);
 
   function handleGuidedSend() {
-    onDownload();
+    // Order matters. Open the import tab FIRST, while the click's user
+    // gesture is still "fresh" — browsers blank out popups initiated
+    // after a programmatic download click. Then trigger the download.
     if (format.importUrl) {
       window.open(format.importUrl, "_blank", "noopener,noreferrer");
     }
+    onDownload();
     setExpanded(true);
     track("cta_clicked", { cta_id: "exports_guided_send", format: format.id });
   }
