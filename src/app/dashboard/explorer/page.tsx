@@ -34,7 +34,7 @@ import {
   type WindowSlug,
   type WindowUnlockGroup,
 } from "@/lib/vesting/unlock-windows";
-import { formatUsdCompact } from "@/lib/vesting/quick-prices";
+import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 import {
   getStreamsForExplorer,
   getStreamsByRecipient,
@@ -259,6 +259,18 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     }
   }
 
+  // ── Wallet-mode portfolio summary ──────────────────────────────────────
+  // "Smart money" signal: when a user lands on a wallet (after clicking a
+  // recipient from a calendar row or round), tell them what else this
+  // wallet is vesting. A whale or fund will hold positions in 5-20 tokens;
+  // a one-off recipient will hold one. That number is the punchline.
+  // Computed purely from `walletRows` (already loaded), so no extra DB
+  // hit; the only side-call is a single price batch for the top 8 tokens.
+  let walletPortfolio: WalletPortfolioRow[] = [];
+  if (mode === "wallet" && walletRows.length > 0) {
+    walletPortfolio = await buildWalletPortfolio(walletRows);
+  }
+
   // Compute the cap split per mode using the same shape, so render below
   // can use one banner component.
   const totalMatches =
@@ -423,6 +435,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 ensHint={walletEnsHint}
                 queryGiven={query.length > 0}
                 exportHref={exportHref}
+                portfolio={walletPortfolio}
               />
             )}
           </section>
@@ -764,7 +777,7 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
 // ─── Wallet-mode results (positions for a single recipient) ───────────────
 
 function WalletResults({
-  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven, exportHref,
+  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven, exportHref, portfolio,
 }: {
   rows:          StreamRow[];
   totalMatches:  number;
@@ -774,6 +787,7 @@ function WalletResults({
   ensHint:       string | null;
   queryGiven:    boolean;
   exportHref:    string;
+  portfolio:     WalletPortfolioRow[];
 }) {
   if (!queryGiven) {
     return (
@@ -830,6 +844,46 @@ function WalletResults({
           </a>
         )}
       </div>
+      {/* "Also vesting" smart-money strip — what other tokens does this
+          wallet receive? Lets users spot whales / funds at a glance. The
+          ≥2 gate stops it appearing for genuinely single-token recipients
+          (where it would just restate the row below). */}
+      {portfolio.length > 1 && (
+        <div className="rounded-2xl border p-4 mb-3"
+          style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: "var(--preview-text-3)" }}>
+            Also vesting · {portfolio.length} distinct token{portfolio.length === 1 ? "" : "s"}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {portfolio.slice(0, 8).map((t) => (
+              <Link
+                key={`${t.chainId}-${t.tokenAddress.toLowerCase()}`}
+                href={`/dashboard/explorer/token/${t.chainId}/${t.tokenAddress}`}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold hover:opacity-80 transition-opacity"
+                style={{
+                  background:   "var(--preview-muted)",
+                  border:       "1px solid var(--preview-border)",
+                  color:        "var(--preview-text)",
+                }}
+              >
+                <span>{t.tokenSymbol ?? shortAddr(t.tokenAddress)}</span>
+                {t.usdValue != null && (
+                  <span className="tabular-nums" style={{ color: "var(--preview-text-3)" }}>
+                    {formatUsdCompact(t.usdValue)}
+                  </span>
+                )}
+              </Link>
+            ))}
+            {portfolio.length > 8 && (
+              <span className="inline-flex items-center px-2 py-1 text-xs"
+                style={{ color: "var(--preview-text-3)" }}>
+                +{portfolio.length - 8} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         {rows.map((s, i) => (
           <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
@@ -922,6 +976,86 @@ function UpgradeBanner({
 }
 
 // ─── URL / param helpers ────────────────────────────────────────────────────
+
+// ── Wallet portfolio summary ──────────────────────────────────────────────
+// One row per distinct (chain, token) pair this wallet vests, with the
+// summed locked amount and a USD value when DexScreener gives us a price.
+// Used by the "Also vesting" strip at the top of WalletResults.
+
+interface WalletPortfolioRow {
+  chainId:       number;
+  tokenAddress:  string;
+  tokenSymbol:   string | null;
+  tokenDecimals: number;
+  amountRaw:     string;     // stringified bigint
+  usdValue:      number | null;
+}
+
+async function buildWalletPortfolio(rows: StreamRow[]): Promise<WalletPortfolioRow[]> {
+  // Aggregate by (chainId, lower(tokenAddress)). Pure JS — `rows` already
+  // came back from getStreamsByRecipient.
+  const agg = new Map<string, {
+    chainId:       number;
+    tokenAddress:  string;
+    tokenSymbol:   string | null;
+    tokenDecimals: number;
+    amount:        bigint;
+  }>();
+  for (const r of rows) {
+    if (!r.tokenAddress) continue;
+    // Active vests only — finished schedules aren't "still receiving".
+    // StreamRow.status is the normalised flag (set by explorer-queries
+    // from vestingStreamsCache.isFullyVested).
+    if (r.status !== "active") continue;
+    const key = `${r.chainId}:${r.tokenAddress.toLowerCase()}`;
+    let amt = 0n;
+    try { amt = BigInt(r.amount ?? "0"); } catch { /* keep 0n */ }
+    const existing = agg.get(key);
+    if (existing) {
+      existing.amount += amt;
+    } else {
+      agg.set(key, {
+        chainId:       r.chainId,
+        tokenAddress:  r.tokenAddress,
+        tokenSymbol:   r.tokenSymbol,
+        tokenDecimals: r.tokenDecimals ?? 18,
+        amount:        amt,
+      });
+    }
+  }
+  const list = [...agg.values()];
+  if (list.length === 0) return [];
+
+  // Price all of them in one DexScreener batch. Cap at 30 (DexScreener
+  // batch size) — if a wallet vests > 30 distinct tokens, the tail won't
+  // show USD but is still listed by raw amount.
+  const priceMap = await getQuickUsdPrices(
+    list.slice(0, 30).map((t) => ({ chainId: t.chainId, address: t.tokenAddress })),
+  );
+
+  const enriched: WalletPortfolioRow[] = list.map((t) => {
+    const price = priceMap.get(`${t.chainId}:${t.tokenAddress.toLowerCase()}`);
+    const usd   = toUsdValue(t.amount.toString(), t.tokenDecimals, price);
+    return {
+      chainId:       t.chainId,
+      tokenAddress:  t.tokenAddress,
+      tokenSymbol:   t.tokenSymbol,
+      tokenDecimals: t.tokenDecimals,
+      amountRaw:     t.amount.toString(),
+      usdValue:      usd,
+    };
+  });
+
+  // Sort: priced rows by USD desc; unpriced rows after, by raw amount
+  // (cross-token comparison is approximate but at least deterministic).
+  return enriched.sort((a, b) => {
+    if (a.usdValue != null && b.usdValue != null) return b.usdValue - a.usdValue;
+    if (a.usdValue != null) return -1;
+    if (b.usdValue != null) return 1;
+    const ar = BigInt(a.amountRaw), br = BigInt(b.amountRaw);
+    return br > ar ? 1 : br < ar ? -1 : 0;
+  });
+}
 
 function buildUrl(params: Record<string, string | undefined>): string {
   const sp = new URLSearchParams();
