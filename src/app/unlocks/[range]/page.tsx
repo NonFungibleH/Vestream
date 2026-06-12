@@ -34,18 +34,30 @@ import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib
 // crawlers still index every event.
 const TEASER_VISIBLE_ROWS = 10;
 
-// Force dynamic rendering — the page calls Upstash Redis (no-store) for
-// quick-prices, which Next.js 16.3.0-canary.19 hard-errors on for any
-// page that's also trying to ISR. The 16.2.x runtime tolerated this
-// silently; the canary doesn't. SSR with a stale-while-revalidate edge
-// cache header (set in src/middleware.ts) replaces the ISR pattern —
-// users still get sub-100ms responses from the CDN, the lambda only
-// fires once per window every ~5 minutes.
+// On-demand ISR, 1h revalidation (2026-06-12). This page was briefly
+// force-dynamic because getQuickUsdPrices' Upstash Redis calls (the SDK
+// hardcodes no-store fetches) hard-error inside ISR routes on Next
+// 16.3.0-canary.19. The replacement — a middleware-injected SWR
+// Cache-Control header — never actually stuck: this canary's framework-set
+// `private, no-cache, no-store` for dynamic routes overrides middleware
+// headers (verified live 2026-06-12). Result: zero HTTP caching and a
+// live render per visitor, feeding the Cloudflare QUIC-kill timeouts.
 //
-// Was: `export const revalidate = 3600` + generateStaticParams. Both
-// removed; middleware Cache-Control does the equivalent work without
-// the static-vs-dynamic boundary error.
-export const dynamic = "force-dynamic";
+// Now the pricing call passes `{ redis: false }` (its DexScreener fetch
+// uses next.revalidate — ISR-safe), so real ISR is back: the framework
+// emits `s-maxage=3600, stale-while-revalidate` natively and the CDN
+// serves cached HTML instantly while revalidating in the background.
+//
+// generateStaticParams is REQUIRED for ISR on this canary: without
+// static-params samples, `await params` counts as a request-time API and
+// the route silently renders per-request (revalidate becomes dead code).
+// Build prerenders bake the empty state (DB helpers short-circuit at
+// build); the first runtime revalidation fills them.
+export const revalidate = 3600;
+
+export function generateStaticParams() {
+  return ALL_WINDOW_SLUGS.map((range) => ({ range }));
+}
 
 interface PageParams {
   params: Promise<{ range: string }>;
@@ -212,8 +224,11 @@ export default async function WindowPage({ params }: PageParams) {
   // fetch-with-retry.ts) means a sick DexScreener can't hang the page —
   // worst case we render with no USD values and the previous raw-amount
   // sort, which is still functional.
+  // redis:false — this is an ISR render; the Upstash SDK's no-store fetch
+  // hard-errors here. The DexScreener fetch inside uses next.revalidate.
   const tokenPriceMap = await getQuickUsdPrices(
     result.stats.byToken.map((t) => ({ chainId: t.chainId, address: t.address })),
+    { redis: false },
   );
   const byTokenWithUsd = result.stats.byToken.map((t) => {
     const price = tokenPriceMap.get(`${t.chainId}:${t.address.toLowerCase()}`);

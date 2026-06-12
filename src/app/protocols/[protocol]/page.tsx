@@ -8,22 +8,22 @@
 // borders all take their cue from PROTOCOLS[slug].color. Vestream stays the
 // container; the protocol gets the visual attention.
 //
-// Rendering: ISR with revalidate=60. Stats + latest/upcoming unlock are
-// re-fetched from vestingStreamsCache every minute so crawlers + LLMs see
-// genuinely fresh content. dynamicParams=false locks routes to the curated 7.
+// Rendering: on-demand ISR with revalidate=300 — see the directive comment
+// below for the full force-dynamic → ISR history. Unknown slugs 404 via the
+// page-body getProtocol() guard.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
+import { after } from "next/server";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import {
   getProtocol,
   listProtocols,
-  PROTOCOL_SLUGS,
   type ProtocolMeta,
 } from "@/lib/protocol-constants";
 import {
@@ -51,34 +51,37 @@ import {
 } from "@/lib/vesting/page-data-fallback";
 import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 
-// ISR with 60-second revalidation. Builds pre-render every protocol slug
-// once, runtime requests are served from edge cache (Cache-Control:
-// s-maxage=60), and the page revalidates in the background after expiry
-// so users always get instant page loads.
+// On-demand ISR with 5-minute revalidation (2026-06-12).
 //
-// The original force-dynamic was added because builds without DB access
-// hung for 60s × N retries when the loadProtocolData function tried to
-// reach Postgres. We now short-circuit DB work during the build phase
-// (NEXT_PHASE === "phase-production-build") so builds always finish in
-// seconds — empty pages get baked, ISR fills them on first runtime hit,
-// and Vercel's edge then serves them sub-100ms to every subsequent
-// visitor without ever calling our lambda.
+// History, because this page has been around the block:
+//   1. `revalidate = 60` ISR — broke when getQuickUsdPrices started doing
+//      Upstash Redis calls: the SDK hardcodes `cache: "no-store"` on its
+//      fetches, and Next 16.3.0-canary.19 hard-errors on a no-store fetch
+//      inside a route that exports `revalidate`.
+//   2. `force-dynamic` + middleware-injected SWR Cache-Control header —
+//      the header silently never stuck: this canary's framework-set
+//      `private, no-cache, no-store` for dynamic routes overrides
+//      middleware headers (verified live 2026-06-12 — dynamic routes
+//      served no-store + x-vercel-cache MISS while static routes kept the
+//      header). Every visitor executed the lambda; cold Data-Cache windows
+//      stalled past Cloudflare's patience → the QUIC-error / 524 reports.
+//   3. NOW: back to real ISR, with the Redis poison removed — the pricing
+//      call passes `{ redis: false }` (its DexScreener fetch uses
+//      next.revalidate, ISR-safe) and the last-good write runs in
+//      `after()`. The framework emits `s-maxage=300, stale-while-
+//      revalidate` natively; Vercel edge + Cloudflare serve cached HTML
+//      instantly and revalidate in the background, off the user's path.
 //
-// This is the right architecture for marketing pages with mostly-static
-// data (protocol stats, TVL, next-unlock) that change on minute scale.
-// The 1-2s cold renders the user reported as "painfully slow" went
-// away because no user ever hits a cold lambda — only the ISR
-// background revalidation does, and that's not on the critical path.
-// Force dynamic rendering — the page calls Upstash Redis (no-store) via
-// getQuickUsdPrices, which Next.js 16.3.0-canary.19 hard-errors on for
-// any page also trying to ISR. Middleware-level Cache-Control header
-// (src/middleware.ts → isMarketingDataPath) supplies the SWR caching
-// previously provided by `revalidate = 60` — users still get edge-cached
-// responses, the lambda only fires once every 60s per protocol.
-//
-// Was: `revalidate = 60` + `dynamicParams = false`. Both removed; SWR
-// edge cache covers the same UX without the static-dynamic boundary error.
-export const dynamic = "force-dynamic";
+// generateStaticParams is REQUIRED for ISR on this canary, not optional:
+// `await params` counts as a request-time API unless the route provides
+// static-params samples (docs: 01-getting-started/08-caching.md), so
+// without it the route silently renders per-request and `revalidate` is
+// dead code — verified locally via byte-diff (the minute-granular
+// countdown string changed across back-to-back requests). The empty-bake
+// problem that tempted us to drop it is solved differently: the loader
+// THROWS during the build phase, and the page's catch path bakes the
+// Redis last-good payload (ISR-safe raw fetch) instead of dashes.
+export const revalidate = 300;
 
 // Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
 // /protocols index. Without this, EVERY visit triggered live subgraph
@@ -132,7 +135,11 @@ const loadProtocolData = unstable_cache(
     // lets the build complete in seconds; ISR fills the pages with real
     // data on the first runtime request after deploy.
     if (process.env.NEXT_PHASE === "phase-production-build") {
-      return EMPTY_PROTOCOL_DATA;
+      // THROW rather than return empty: unstable_cache doesn't cache thrown
+      // errors, and the page's catch path reads the Redis last-good payload
+      // via an ISR/build-safe raw fetch — so build prerenders bake REAL
+      // data (last successful render) instead of dashes.
+      throw new Error("build-phase: skipping DB, page falls back to last-good");
     }
     // Each query gets resolved independently. If three of four succeed and
     // one throws (transient DB blip, Multicall timeout, RPC slow), we want
@@ -210,7 +217,10 @@ const loadProtocolData = unstable_cache(
     let priceMap;
     try {
       priceMap = await Promise.race([
-        getQuickUsdPrices(tokensToPrice),
+        // redis:false — this runs inside an ISR render (via unstable_cache
+        // revalidation); the Upstash SDK's no-store fetch hard-errors there.
+        // The DexScreener fetch inside uses next.revalidate and is ISR-safe.
+        getQuickUsdPrices(tokensToPrice, { redis: false }),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("pricing timeout (5s)")), 5_000),
         ),
@@ -240,15 +250,12 @@ const loadProtocolData = unstable_cache(
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
-export async function generateStaticParams() {
-  // Skip disabled protocols (e.g. team-finance, paused May 2026) — paired
-  // with `dynamicParams = false` above this means a paused protocol's URL
-  // returns 404 from the static-params layer, before we ever hit the page
-  // body's notFound() guard.
-  return PROTOCOL_SLUGS
-    .map((slug) => ({ slug, meta: getProtocol(slug) }))
-    .filter(({ meta }) => meta && !meta.disabled)
-    .map(({ slug }) => ({ protocol: slug }));
+// Required for ISR — see the revalidate comment above. Build prerenders
+// bake last-good data (the loader throws at build phase; the catch path
+// reads Redis last-good). Disabled protocols (e.g. team-finance) are
+// excluded here AND 404 via the getProtocol().disabled page-body guard.
+export function generateStaticParams() {
+  return listProtocols().map((p) => ({ protocol: p.slug }));
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
@@ -308,8 +315,11 @@ export default async function ProtocolLandingPage(
   let pageData: ProtocolPageData;
   try {
     pageData = await loadProtocolData(meta.adapterIds);
-    // Don't await — non-blocking write to Redis last-good.
-    setLastGoodProtocolData(meta.slug, pageData);
+    // Inside after(): the Upstash SDK write is a no-store fetch, which
+    // would hard-error / dynamic-flip this ISR render if it executed
+    // during render. after() runs it once the response has finished.
+    const goodData = pageData;
+    after(() => setLastGoodProtocolData(meta.slug, goodData));
   } catch (err) {
     console.warn(`[protocol-page] loadProtocolData threw for ${meta.slug}:`, err);
     const lastGood = await getLastGoodProtocolData<ProtocolPageData>(meta.slug);

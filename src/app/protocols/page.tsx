@@ -17,6 +17,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
+import { after } from "next/server";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 // LiveActivityTicker intentionally removed from this page — it polls
@@ -40,11 +41,27 @@ import {
   setLastGoodProtocolsData,
 } from "@/lib/vesting/page-data-fallback";
 
-// Page stays force-dynamic (DB-dependent data can't be pre-rendered at build
-// time — ECONNREFUSED without DATABASE_URL). Perf comes from caching one
-// level deeper: the entire "load /protocols data" payload is wrapped in
-// unstable_cache with a 5-min TTL, stored in Vercel's Data Cache (shared
-// across serverless instances, unlike in-process module state).
+// ISR with 5-minute revalidation (2026-06-12). This page was force-dynamic
+// for a long stretch, relying on src/middleware.ts to inject an SWR
+// Cache-Control header for edge caching — but on Next 16.3.0-canary.19 the
+// framework's `private, no-cache, no-store` for dynamic routes overrides
+// middleware-set Cache-Control (verified live: /protocols served no-store +
+// x-vercel-cache MISS while static /unlocks kept the header). Net effect:
+// ZERO HTTP caching — every visitor executed the lambda, and any cold
+// Data-Cache window stalled long enough for Cloudflare to kill the
+// connection (the recurring QUIC-error / 524 reports).
+//
+// ISR makes the framework emit `s-maxage=300, stale-while-revalidate`
+// natively, so Vercel's edge + Cloudflare serve cached HTML instantly and
+// revalidate in the background — users never wait on a render. The DB-at-
+// build-time problem that originally motivated force-dynamic is handled by
+// the NEXT_PHASE short-circuits in the query helpers; the build-phase
+// degraded result throws (see loader guard below) and the catch bakes the
+// Redis last-good payload instead of dashes.
+//
+// Perf still comes from caching one level deeper too: the entire "load
+// /protocols data" payload is wrapped in unstable_cache, stored in Vercel's
+// Data Cache (shared across instances AND persisted across deploys).
 //
 // TVL data model (April 2026 rewrite — honest-TVL pass):
 //   TVL no longer gets computed at page-render time. The daily cron
@@ -61,8 +78,9 @@ import {
 // and when. See CLAUDE.md "TVL Methodology" section for the full rules.
 //
 // Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
-// (Data Cache hit) is ~50-100ms.
-export const dynamic = "force-dynamic";
+// (Data Cache hit) is ~50-100ms — and with ISR, no visitor ever waits on
+// either: renders happen in the background revalidation, off the user path.
+export const revalidate = 300;
 // 1800s (30 min) — was 300s. Bumped 2026-05-10 as part of the egress-
 // reduction pass after Supabase Free's 5 GB/month quota was exceeded.
 // /protocols data (per-protocol stream counts + TVL snapshots) is updated
@@ -267,9 +285,17 @@ export default async function UnlocksIndexPage() {
   let pageData: ProtocolsData;
   try {
     pageData = await loadProtocolsData();
-    setLastGoodProtocolsData(pageData);
+    // Inside after(): the Upstash SDK write is a no-store fetch, which
+    // would hard-error / dynamic-flip an ISR render if it executed during
+    // render. after() runs it once the response/prerender has finished.
+    const goodData = pageData;
+    after(() => setLastGoodProtocolsData(goodData));
   } catch (err) {
     console.warn("[protocols-index] loadProtocolsData threw, trying last-good:", err);
+    // ISR-safe raw-fetch read — at build time this bakes the last-good
+    // payload into the prerendered HTML instead of dashes (the build-phase
+    // NEXT_PHASE short-circuits make the loader throw via its degraded
+    // guard, landing here).
     const lastGood = await getLastGoodProtocolsData<ProtocolsData>();
     pageData = lastGood ?? fallbackEmpty;
   }

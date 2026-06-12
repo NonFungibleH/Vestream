@@ -110,10 +110,22 @@ const priceKey = (chainId: number, address: string) => `${chainId}:${address.toL
  * page" — without it, every cold lambda hits DexScreener live (1-5s).
  * With it, only the first lambda after each 5-minute window pays the
  * upstream cost; everyone else gets ~10ms Redis reads.
+ *
+ * `opts.redis: false` — REQUIRED for callers on ISR page render paths.
+ * The Upstash SDK hardcodes `fetch(…, { cache: "no-store" })` on every
+ * command (verified: @upstash/redis nodejs.js → `cache: config.cache ??
+ * "no-store"`), and Next 16.3.0-canary.19 hard-errors when a no-store
+ * fetch executes inside a route that exports `revalidate`. ISR pages are
+ * already cached at the route level (plus usually unstable_cache around
+ * the caller), so they don't need the cross-lambda Redis layer — only
+ * the DexScreener fetch, which uses `next: { revalidate: 60 }` and is
+ * ISR-safe. Route handlers (/api/*) keep the default redis: true.
  */
 export async function getQuickUsdPrices(
   pairs: ReadonlyArray<{ chainId: number; address: string }>,
+  opts?: { redis?: boolean },
 ): Promise<QuickPriceMap> {
+  const useRedis = opts?.redis !== false;
   const out: QuickPriceMap = new Map();
   if (pairs.length === 0) return out;
 
@@ -134,7 +146,7 @@ export async function getQuickUsdPrices(
   // ── Redis cache check ─────────────────────────────────────────────────────
   // Try to satisfy as many pairs as possible from Redis before going to
   // DexScreener. mget batches the lookups into a single round-trip.
-  const redis = getRedis();
+  const redis = useRedis ? getRedis() : null;
   const stillNeeded: Array<{ chainId: number; address: string }> = [];
   if (redis) {
     try {

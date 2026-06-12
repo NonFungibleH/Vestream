@@ -57,6 +57,18 @@ import {
 
 export const revalidate = 1800;
 
+// REQUIRED for ISR on this canary (2026-06-12): without at least one
+// static-params sample, `await params` counts as a request-time API and
+// the route silently renders per-request — which is exactly what was
+// happening in prod (this page served `private, no-cache, no-store`
+// despite the revalidate above, and every visit ran the full DB fan-out
+// live). One stable sample is enough to flip `params` prerender-safe;
+// every other token renders on demand and is then ISR-cached. USDC on
+// Ethereum — guaranteed to exist forever.
+export function generateStaticParams() {
+  return [{ chainId: "1", address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }];
+}
+
 // ─── Small presentational helpers ───────────────────────────────────────────
 
 const CHAIN_NAMES: Record<number, string> = {

@@ -127,6 +127,12 @@ const nextConfig: NextConfig = {
         source: "/protocols/:slug/unlocks",
         headers: [dataCacheHeader],
       },
+      // Chain-filtered variant (path segment since 2026-06-12 — the old
+      // ?chain= query form 308s here via middleware).
+      {
+        source: "/protocols/:slug/unlocks/:chain",
+        headers: [dataCacheHeader],
+      },
       // Token explorer pages — same DexScreener pricing dependency.
       {
         source: "/token/:chainId/:address",

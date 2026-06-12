@@ -50,13 +50,32 @@ function getRedis(): Redis | null {
  * Read a previously cached "last good" payload, or null if none exists.
  * Errors are swallowed — Redis blip should NEVER cascade into a page
  * render failure (that would defeat the entire purpose of this layer).
+ *
+ * Deliberately NOT the Upstash SDK: the SDK hardcodes `cache: "no-store"`
+ * on every fetch (@upstash/redis nodejs.js → `cache: config.cache ??
+ * "no-store"`), which Next 16.3.0-canary.19 hard-errors on inside routes
+ * that export `revalidate`, and which would flip an ISR render dynamic.
+ * This read runs on the page render path (failure branch + build-phase
+ * bake), so it goes through a plain GET against the Upstash REST API with
+ * `next.revalidate` — ISR- and build-compatible. 60s of fetch-cache
+ * staleness is irrelevant for a value whose whole job is "up to 7 days
+ * stale beats empty".
  */
 async function readFallback<T>(key: string): Promise<T | null> {
-  const redis = getRedis();
-  if (!redis) return null;
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
   try {
-    const raw = await redis.get<T>(key);
-    return raw ?? null;
+    const res = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      next:    { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    // REST shape: { result: string | null }. The SDK JSON-serialises
+    // values on write, so a non-null result is a JSON string to parse.
+    const body = (await res.json()) as { result: string | null };
+    if (body.result == null) return null;
+    return JSON.parse(body.result) as T;
   } catch (err) {
     console.error(`[page-fallback] read failed for ${key}:`, err);
     return null;
@@ -64,16 +83,17 @@ async function readFallback<T>(key: string): Promise<T | null> {
 }
 
 /**
- * Persist the latest successful render. Fire-and-forget — callers should
- * NOT await this. Errors are logged and swallowed.
+ * Persist the latest successful render. Errors are logged and swallowed.
  *
- * Called on every successful render; over time Redis holds the last
- * known good copy of every protocol page + the index.
+ * MUST be called from inside `after()` (next/server) on ISR pages — the
+ * SDK's no-store fetch is only safe once the response/prerender has
+ * finished. Called on every successful render; over time Redis holds the
+ * last known good copy of every protocol page + the index.
  */
 function writeFallback<T>(key: string, value: T): void {
   const redis = getRedis();
   if (!redis) return;
-  // No await — fire-and-forget. Don't block the response on Redis latency.
+  // No await — fire-and-forget. Don't block on Redis latency.
   redis.set(key, value, { ex: TTL_SECONDS }).catch((err) => {
     console.error(`[page-fallback] write failed for ${key}:`, err);
   });
