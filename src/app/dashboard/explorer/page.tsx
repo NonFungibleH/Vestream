@@ -24,9 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
-import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import {
   getUnlocksInWindow,
   enrichGroupsWithUsd,
@@ -131,13 +129,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // authenticated dashboard user (free or pro) can access the explorer.
   // Tier-based caps (FREE_TIER_ROW_CAP, FREE_TIER_FILTER_CAP) are applied
   // below via isFree so free users still see a limited but functional view.
-  const cookieStore = await cookies();
-  // Inherit dark-mode preference from any prior dashboard surface. The
-  // /dashboard and /dashboard/discover client toggles set both localStorage
-  // and a cookie via setDarkModePreference(); this read picks up the
-  // cookie on first byte so the explorer renders in the right theme without
-  // a flash.
-  const dark = getDarkModeFromCookies(cookieStore);
+  // Dark-mode theming is owned by <DarkModeProvider> in the dashboard
+  // layout — its single reactive `.dark` wrapper themes this whole
+  // subtree. We deliberately do NOT add a per-page SSR `.dark` class:
+  // that class is non-reactive (only updates after router.refresh
+  // completes), so it kept the page dark for a beat after the user
+  // toggled back to light. Removed 2026-06-12.
 
   const tier: Tier | null = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
@@ -308,7 +305,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // The flex shell + sidebar are provided by src/app/dashboard/layout.tsx
   // (DashboardChrome). We render only the right-hand main content here.
   return (
-      <main className={`flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto${dark ? " dark" : ""}`}>
+      <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto">
         {/* Header */}
         <header className="mb-5">
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>

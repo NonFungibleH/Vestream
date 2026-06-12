@@ -11,10 +11,8 @@
 
 import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
-import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { getTokenStreams, getTokenMarketData } from "@/lib/vesting/token-aggregates";
 import { groupIntoRounds } from "@/lib/vesting/rounds";
 import { getCurrentUserTier } from "@/lib/auth/tier";
@@ -49,8 +47,9 @@ export default async function ExplorerTokenPage({
     notFound();
   }
 
-  const cookieStore = await cookies();
-  const dark = getDarkModeFromCookies(cookieStore);
+  // Dark-mode theming is owned by <DarkModeProvider> in the dashboard
+  // layout — see the comment on the parent /dashboard/explorer page for
+  // the full why-no-per-page-dark-class rationale. 2026-06-12.
   const tier = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
 
@@ -72,7 +71,7 @@ export default async function ExplorerTokenPage({
   );
 
   return (
-    <main className={`flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto${dark ? " dark" : ""}`}>
+    <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-[11px] mb-3" style={{ color: "var(--preview-text-3)" }}>
         <Link href="/dashboard" className="hover:underline">Dashboard</Link><span>/</span>
