@@ -540,7 +540,12 @@ export interface TokenMarketData {
   /** Project's X / Twitter URL, pulled from DexScreener's info.socials[].
    *  Null when the token submission didn't include socials (common for
    *  tokens listed only by an automated pair scanner). */
-  twitterUrl: string | null;
+  twitterUrl:  string | null;
+  /** Project's Telegram channel/group URL. Same DexScreener socials feed
+   *  as twitterUrl; type slug is "telegram". */
+  telegramUrl: string | null;
+  /** Project's Discord invite/server URL. Same source; type slug "discord". */
+  discordUrl:  string | null;
   dexScreenerUrl: string | null;
   dexToolsUrl:    string | null;
 }
@@ -573,7 +578,7 @@ interface DexPair {
     imageUrl?: string;
     websites?: Array<{ label: string; url: string }>;
     // DexScreener exposes socials as {type, url} where type is "twitter",
-    // "telegram", "discord", etc. We only surface twitter right now.
+    // "telegram", "discord", "github", "medium", etc.
     socials?: Array<{ type: string; url: string }>;
   };
 }
@@ -585,7 +590,7 @@ export async function getTokenMarketData(
   const empty: TokenMarketData = {
     priceUsd:   null, fdv: null, marketCap: null, change24h: null,
     liquidity:  null, volume24h: null, tokenName: null, imageUrl: null,
-    website: null, twitterUrl: null,
+    website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: DS_CHAIN_SLUG[chainId]
       ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${normaliseAddress(tokenAddress)}` : null,
     dexToolsUrl:    DEXTOOLS_CHAIN_SLUG[chainId]
@@ -612,9 +617,14 @@ export async function getTokenMarketData(
     // DexScreener uses "twitter" for the type slug even though the product
     // is now called X — accept both defensively. Returns the FIRST match
     // since tokens rarely have more than one project-X account.
-    const twitterUrl = best.info?.socials?.find(
-      (s) => s.type?.toLowerCase() === "twitter" || s.type?.toLowerCase() === "x",
-    )?.url ?? null;
+    const socials = best.info?.socials ?? [];
+    const findSocial = (...types: string[]): string | null => {
+      const wanted = new Set(types.map((t) => t.toLowerCase()));
+      return socials.find((s) => wanted.has(s.type?.toLowerCase()))?.url ?? null;
+    };
+    const twitterUrl  = findSocial("twitter", "x");
+    const telegramUrl = findSocial("telegram");
+    const discordUrl  = findSocial("discord");
 
     return {
       ...empty,
@@ -628,6 +638,8 @@ export async function getTokenMarketData(
       imageUrl:   best.info?.imageUrl   ?? null,
       website,
       twitterUrl,
+      telegramUrl,
+      discordUrl,
       dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
     };
   } catch (err) {

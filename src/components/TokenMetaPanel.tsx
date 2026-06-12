@@ -233,6 +233,16 @@ export function TokenMetaPanel({
           testid="link-twitter"
         />
         <LinkPill
+          href={market.telegramUrl}
+          label="Telegram"
+          testid="link-telegram"
+        />
+        <LinkPill
+          href={market.discordUrl}
+          label="Discord"
+          testid="link-discord"
+        />
+        <LinkPill
           href={tokenSnifferUrl(chainId, tokenAddress)}
           label="TokenSniffer"
           testid="link-tokensniffer"
@@ -241,6 +251,11 @@ export function TokenMetaPanel({
           href={market.dexScreenerUrl}
           label="DexScreener"
           testid="link-dexscreener"
+        />
+        <LinkPill
+          href={market.dexToolsUrl}
+          label="DexTools"
+          testid="link-dextools"
         />
         <LinkPill
           href={xSearchUrl(tokenSymbol, tokenAddress)}

@@ -176,7 +176,7 @@ export async function generateMetadata(
   const market   = marketRes.status   === "fulfilled" ? marketRes.value   : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
     liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
-    website: null, twitterUrl: null,
+    website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: null, dexToolsUrl: null,
   } as TokenMarketData;
 
@@ -262,7 +262,7 @@ export default async function TokenPage(
   const market: TokenMarketData = settled[4].status === "fulfilled" ? settled[4].value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
     liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
-    website: null, twitterUrl: null,
+    website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: null, dexToolsUrl: null,
   };
 

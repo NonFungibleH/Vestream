@@ -20,6 +20,8 @@ import { TokenUnlockChart } from "./TokenUnlockChart";
 import { RoundsList } from "./RoundsList";
 import { CopyButton } from "./CopyButton";
 import { SaveTokenButton } from "./SaveTokenButton";
+import { blockExplorerUrl, blockExplorerName, tokenSnifferUrl, xSearchUrl } from "@/lib/chain-links";
+import type { TokenMarketData } from "@/lib/vesting/token-aggregates";
 
 const FREE_TIER_ROW_CAP = 50;
 
@@ -120,6 +122,18 @@ export default async function ExplorerTokenPage({
             </div>
           ))}
         </div>
+
+        {/* Due-diligence row — project social/data links to help users
+            assess the token. All sourced from DexScreener except the
+            block explorer + TokenSniffer (chain-deterministic) and the
+            X-search (always available). Links missing from DexScreener
+            simply don't render — no awkward "—" placeholders. 2026-06-12. */}
+        <DueDiligenceRow
+          chainId={cid}
+          tokenAddress={addr}
+          tokenSymbol={symbol}
+          market={market}
+        />
       </div>
 
       {streams.length === 0 ? (
@@ -141,5 +155,67 @@ export default async function ExplorerTokenPage({
         </>
       )}
     </main>
+  );
+}
+
+// ── Due-diligence link row ───────────────────────────────────────────────
+// Renders only what we actually have. Themed via CSS vars so it tracks the
+// dashboard's dark-mode reactively (the explorer's whole tree sits inside
+// the DarkModeProvider's reactive `.dark` wrapper — see use-dark-mode.tsx).
+// Order is by user intent: project surfaces first (the things you'd visit
+// to read about the project), market/data surfaces second (where you'd
+// check liquidity + traders), security/explorer last.
+
+interface DueDiligenceRowProps {
+  chainId:      number;
+  tokenAddress: string;
+  tokenSymbol:  string;
+  market:       TokenMarketData | null;
+}
+
+function DueDiligenceRow({ chainId, tokenAddress, tokenSymbol, market }: DueDiligenceRowProps) {
+  const explorerName = blockExplorerName(chainId);
+  const links: Array<{ href: string | null; label: string }> = [
+    // Project surfaces.
+    { href: market?.website     ?? null, label: "Website" },
+    { href: market?.twitterUrl  ?? null, label: "X / Twitter" },
+    { href: market?.telegramUrl ?? null, label: "Telegram" },
+    { href: market?.discordUrl  ?? null, label: "Discord" },
+    // Market / data surfaces.
+    { href: market?.dexScreenerUrl ?? null, label: "DexScreener" },
+    { href: market?.dexToolsUrl    ?? null, label: "DexTools" },
+    { href: xSearchUrl(tokenSymbol, tokenAddress), label: `Search $${tokenSymbol} on X` },
+    // Security + on-chain truth.
+    { href: tokenSnifferUrl(chainId, tokenAddress), label: "TokenSniffer" },
+    { href: blockExplorerUrl(chainId, tokenAddress), label: explorerName ?? "Explorer" },
+  ];
+  const present = links.filter((l) => l.href);
+  if (present.length === 0) return null;
+
+  return (
+    <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--preview-border-2)" }}>
+      <p className="text-[10px] uppercase tracking-wide mb-2" style={{ color: "var(--preview-text-3)" }}>
+        Project links · do your own due diligence
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {present.map((l) => (
+          <a
+            key={l.label}
+            href={l.href!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-80"
+            style={{
+              background: "var(--preview-muted)",
+              border:     "1px solid var(--preview-border)",
+              color:      "var(--preview-text)",
+            }}
+          >
+            {l.label}
+            <span aria-hidden style={{ opacity: 0.5 }}>↗</span>
+          </a>
+        ))}
+      </div>
+    </div>
   );
 }
