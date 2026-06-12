@@ -1084,9 +1084,35 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
      for any caller doing eth_getLogs.
    - AbortSignal in fetch's `init` disables Next.js's data cache. Use
      `Promise.race` for fetch timeouts instead. See `src/lib/fetch-with-retry.ts`.
-   - `force-dynamic` page directive overrides `next.config.ts` headers.
-     Use middleware to set Cache-Control on those routes. See
-     `src/middleware.ts`.
+   - **ISR / cache-header rules on Next 16.3.0-canary.19** (rewritten
+     2026-06-12 after the QUIC-timeout incident; supersedes the old
+     "use middleware to set Cache-Control" guidance, which was WRONG):
+       1. **Middleware-set Cache-Control does NOT stick on dynamically
+          rendered routes** — the framework's `private, no-cache,
+          no-store` wins (verified live). On static/ISR routes middleware
+          headers DO apply, but there they can only weaken the stronger
+          native ISR header. Never use middleware for cache headers.
+       2. **`await params` without `generateStaticParams` is a
+          request-time API** — the route silently renders per-request and
+          any `revalidate` export is dead code (this is why /token pages
+          served no-store for weeks). Every dynamic-param marketing page
+          MUST export `generateStaticParams` (≥ 1 sample is enough; the
+          rest are on-demand ISR). Same for `searchParams` — reading it
+          at all makes the route dynamic; use path segments instead
+          (see /protocols/[slug]/unlocks/[chain]).
+       3. **The Upstash SDK (`@upstash/redis`) hardcodes
+          `cache: "no-store"` on every fetch**, which hard-errors inside
+          ISR routes. On render paths: reads go through a plain REST
+          `fetch` with `next.revalidate` (see `page-data-fallback.ts`),
+          pricing passes `{ redis: false }` (`quick-prices.ts`), and
+          writes run inside `after()` from `next/server`.
+       4. **`unstable_cache` JSON-serialises its payload** — a BigInt
+          anywhere in the result makes every cache write reject silently
+          (unhandledRejection) and the wrapped query re-runs per request.
+          Stringify BigInts before returning.
+       5. To verify a route is REALLY cached, don't trust timings or
+          headers alone: `curl` it twice and byte-diff — re-renders leak
+          through time-relative strings ("in 1 h 38 min").
    - **`BSC_RPC_URL` / `POLYGON_RPC_URL` / `ALCHEMY_RPC_URL_BASE` are
      INTENTIONALLY OPTIONAL.** The user reviewed and rejected adding
      these as required env vars in `ef21b41` (Apr 29, 07:00). The
