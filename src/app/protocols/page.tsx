@@ -26,6 +26,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 // "Reconnecting to the live feed…" placeholder undermines the rest of the
 // page. Re-add when we have steady real traffic (track via analytics).
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
+import { getUpcomingUnlocksEnriched } from "@/lib/vesting/upcoming-unlocks";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
 import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
@@ -338,6 +339,22 @@ export default async function UnlocksIndexPage() {
     ? Math.max(0, Math.round((Date.now() - oldestSnapshot.getTime()) / 3_600_000))
     : null;
 
+  // Server-render the FIRST paint of the upcoming-unlocks panel so it shows
+  // data instantly instead of a client fetch-after-mount skeleton (the "not
+  // instant" report). The widget still polls /api/unlocks/upcoming every 30s
+  // for liveness — this just seeds the initial render. redis:false because
+  // this is an ISR render path (see upcoming-unlocks.ts). Best-effort: on
+  // failure the widget falls back to its own client fetch (no regression).
+  let initialUpcoming:
+    | { ok: true; nowMs: number; unlocks: Awaited<ReturnType<typeof getUpcomingUnlocksEnriched>> }
+    | null = null;
+  try {
+    const unlocks = await getUpcomingUnlocksEnriched(12, { redis: false });
+    initialUpcoming = { ok: true, nowMs: Date.now(), unlocks };
+  } catch (err) {
+    console.warn("[protocols-index] upcoming initial render failed:", err);
+  }
+
   // Stream counts come from our indexed cache only. Historically we also
   // queried every subgraph for a "global" count and took the max — but that
   // doubled the page's cold-start latency and the cache number is the one
@@ -440,7 +457,7 @@ export default async function UnlocksIndexPage() {
           externallySourced={externallySourced}
           snapshotAgeHours={snapshotAgeHours}
         />
-        <UpcomingUnlockTicker />
+        <UpcomingUnlockTicker initialData={initialUpcoming} />
       </section>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}

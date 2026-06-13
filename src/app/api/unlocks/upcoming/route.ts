@@ -31,11 +31,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getUpcomingUnlockGroupsAcross,
-  type UnlockGroupSummary,
-} from "@/lib/vesting/protocol-stats";
-import { getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
+import { type UnlockGroupSummary } from "@/lib/vesting/protocol-stats";
+import { getUpcomingUnlocksEnriched } from "@/lib/vesting/upcoming-unlocks";
 
 export const dynamic = "force-dynamic";
 
@@ -54,22 +51,9 @@ export async function GET(req: NextRequest) {
   const limit    = Math.max(1, Math.min(20, Number.isFinite(rawLimit) ? rawLimit : 10));
 
   try {
-    const unlocks = await getUpcomingUnlockGroupsAcross(limit);
-    // Attach USD-equivalent values via DexScreener (≤ 20 tokens, batched
-    // and edge-cached for 60s — cheap). Tokens that lack a sufficiently
-    // liquid DEX pair come back undefined and the renderer falls back to
-    // the raw token amount.
-    const priceMap = await getQuickUsdPrices(
-      unlocks.map((u) => ({ chainId: u.chainId, address: u.tokenAddress })),
-    );
-    const enriched: UnlockGroupSummary[] = unlocks.map((u) => ({
-      ...u,
-      usdValue: toUsdValue(
-        u.amount,
-        u.tokenDecimals,
-        priceMap.get(`${u.chainId}:${u.tokenAddress.toLowerCase()}`),
-      ),
-    }));
+    // Shared with the /protocols server-render (see upcoming-unlocks.ts).
+    // Route handler → default redis caching is fine (not an ISR path).
+    const enriched: UnlockGroupSummary[] = await getUpcomingUnlocksEnriched(limit);
     return NextResponse.json(
       {
         ok:    true,

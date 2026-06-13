@@ -148,8 +148,11 @@ function countdown(unlockSec: number | null, nowMs: number): string {
   return h > 0 ? `${d}d ${h}h` : `${d}d`;
 }
 
-export function UpcomingUnlockTicker() {
-  const [data, setData]   = useState<UpcomingResponse | null>(null);
+export function UpcomingUnlockTicker({ initialData = null }: { initialData?: UpcomingResponse | null }) {
+  // Seed from server-rendered data when provided (see /protocols page) so the
+  // first paint shows real rows instead of the loading skeleton. The poll
+  // below still refreshes every 30s for liveness.
+  const [data, setData]   = useState<UpcomingResponse | null>(initialData);
   const [nowMs, setNowMs] = useState(Date.now());
   const [err, setErr]     = useState<string | null>(null);
 
