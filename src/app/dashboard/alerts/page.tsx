@@ -359,10 +359,13 @@ export default function AlertsPage() {
         style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
         Notification alerts
       </h1>
-      <p className="text-sm mb-6" style={{ color: "var(--preview-text-2)" }}>
-        Configure per-stream alerts and review what we&apos;ve sent you. Globals (email, lead time, cliff/end alerts) live in{" "}
-        <Link href="/settings" className="underline" style={{ color: "#0F8A8A" }}>Settings → Notifications</Link>.
+      <p className="text-sm mb-2" style={{ color: "var(--preview-text-2)" }}>
+        Configure email, push, and per-stream alerts. Everything on this page is shared with the mobile app — toggle on either, see it on both.
       </p>
+      <div className="inline-flex items-center gap-1.5 mb-6 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+        <span style={{ width: 6, height: 6, borderRadius: 3, background: "#0F8A8A", display: "inline-block" }} />
+        Synced with the Vestream mobile app
+      </div>
 
       {error && (
         <div className="rounded-xl px-3 py-2 mb-4 text-xs"
@@ -378,11 +381,24 @@ export default function AlertsPage() {
 
       {prefs && streams && (
         <>
-          {/* ── Active alerts ─────────────────────────────────────────── */}
+          {/* ── Push alerts (globals) ─────────────────────────────────────
+              These match the mobile app's "Push alerts" section. They
+              apply to every tracked stream unless overridden in Active
+              alerts below. */}
+          <GlobalPushSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
+
+          {/* ── Email alerts (globals) ───────────────────────────────────
+              Same shape as the mobile "Email alerts" section. */}
+          <GlobalEmailSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
+
+          {/* ── Test push ─────────────────────────────────────────────── */}
+          <TestPushSection setError={setError} />
+
+          {/* ── Active alerts (per-stream overrides) ──────────────────── */}
           <section className="mb-8">
             <div className="flex items-baseline justify-between mb-3">
               <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
-                Active alerts
+                Per-stream alerts
                 {activeAlerts.length > 0 && (
                   <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
                     {activeSlotTotal} slot{activeSlotTotal === 1 ? "" : "s"} across {activeAlerts.length} stream{activeAlerts.length === 1 ? "" : "s"}
@@ -394,10 +410,10 @@ export default function AlertsPage() {
               <div className="rounded-xl border border-dashed p-6 text-center"
                 style={{ borderColor: "var(--preview-border)" }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>
-                  No custom alerts yet
+                  No per-stream overrides yet
                 </p>
                 <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-                  Use the list below to set up a per-stream alert — or rely on your global defaults from Settings.
+                  Your global push + email settings above apply to every stream by default. Use the list below to set up a custom alert (different timing, threshold-USD trigger) for a specific token.
                 </p>
               </div>
             ) : (
@@ -422,7 +438,7 @@ export default function AlertsPage() {
           </section>
 
           {/* ── Streams without custom alerts ─────────────────────────── */}
-          {otherStreams.length > 0 && (
+          {otherStreams.length > 0 ? (
             <section className="mb-8">
               <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
                 Your other streams
@@ -446,6 +462,33 @@ export default function AlertsPage() {
                     onClear={() => clearStreamPref(s.id)}
                   />
                 ))}
+              </div>
+            </section>
+          ) : streams.length === 0 && (
+            // streams.length === 0 → no tracked wallets / no vestings indexed
+            // yet. Surface a clear next-step instead of letting the page look
+            // empty (users would assume alerts are broken otherwise).
+            <section className="mb-8">
+              <div className="rounded-xl border border-dashed p-6 text-center"
+                style={{ borderColor: "var(--preview-border)" }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>
+                  No vesting streams indexed yet
+                </p>
+                <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
+                  Per-stream alert controls appear here once your tracked wallets have vesting positions. Add a wallet from the Dashboard or scan one with the Wallet Scanner.
+                </p>
+                <div className="flex justify-center gap-2">
+                  <Link href="/dashboard"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+                    Open Dashboard →
+                  </Link>
+                  <Link href="/dashboard/discover"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    style={{ color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
+                    Wallet Scanner
+                  </Link>
+                </div>
               </div>
             </section>
           )}
@@ -800,5 +843,321 @@ function HistoryRow({
         </p>
       </div>
     </div>
+  );
+}
+
+// ── Global push prefs ───────────────────────────────────────────────────────
+// Mirrors the mobile app's "Push alerts" section. Each toggle / hour pill
+// writes through to /api/notifications/preferences (PUT), which is the SAME
+// row that the mobile app's /api/mobile/notifications writes to — toggle
+// on either surface, see it on both.
+
+const VALID_HOURS = [1, 6, 12, 24, 48, 72] as const;
+
+type MutatePrefsFn = (
+  updater: (cur: { preferences: Partial<Prefs> | null } | undefined) =>
+    { preferences: Partial<Prefs> | null } | undefined,
+  opts?: { revalidate?: boolean },
+) => void;
+
+async function putGlobalPref(patch: Partial<Prefs>): Promise<void> {
+  const res = await fetch("/api/notifications/preferences", {
+    method:  "PUT",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => ({}));
+    throw new Error((errJson as { error?: string }).error ?? "Failed to save");
+  }
+}
+
+function GlobalPushSection({
+  prefs, mutate, setError,
+}: {
+  prefs:    Prefs;
+  mutate:   MutatePrefsFn;
+  setError: (s: string | null) => void;
+}) {
+  const [saving, setSaving] = useState<string | null>(null);
+
+  async function set<K extends keyof Prefs>(key: K, value: Prefs[K]) {
+    setSaving(key as string);
+    setError(null);
+    // Optimistic SWR update so the toggle feels instant; on error we
+    // revert by re-reading from the server.
+    mutate(
+      (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), [key]: value } } : cur,
+      { revalidate: false },
+    );
+    try {
+      await putGlobalPref({ [key]: value } as Partial<Prefs>);
+      mutate((cur) => cur, { revalidate: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+      mutate((cur) => cur, { revalidate: true });
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
+        Push alerts
+        <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
+          apply to every tracked stream
+        </span>
+      </h2>
+      <div className="rounded-xl border p-4"
+        style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+        {/* Lead-time pills */}
+        <div className="mb-4">
+          <p className="text-[11px] font-semibold mb-2" style={{ color: "var(--preview-text-2)" }}>
+            Notify me before an unlock
+            <span className="ml-2 text-[10px] font-normal" style={{ color: "var(--preview-text-3)" }}>
+              applied unless a per-stream override is set
+            </span>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {VALID_HOURS.map((h) => (
+              <button
+                key={h}
+                type="button"
+                disabled={saving !== null}
+                onClick={() => set("hoursBeforeUnlock", h)}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-md"
+                style={{
+                  background: prefs.hoursBeforeUnlock === h ? "rgba(28,184,184,0.14)" : "var(--preview-muted)",
+                  color:      prefs.hoursBeforeUnlock === h ? "#0F8A8A" : "var(--preview-text-2)",
+                  border:     `1px solid ${prefs.hoursBeforeUnlock === h ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
+                  opacity:    saving === "hoursBeforeUnlock" ? 0.6 : 1,
+                }}
+              >
+                {h}h
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Event toggles */}
+        <div className="space-y-2 pt-3"
+          style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+          <PrefToggle label="Cliff hits"             desc="Fires when a vesting cliff triggers." value={prefs.notifyCliff}     saving={saving === "notifyCliff"}     onChange={(v) => set("notifyCliff", v)} />
+          <PrefToggle label="Stream ends"            desc="Fires when a vest is fully claimable." value={prefs.notifyStreamEnd} saving={saving === "notifyStreamEnd"} onChange={(v) => set("notifyStreamEnd", v)} />
+          <PrefToggle label="Monthly summary"        desc="Recap of upcoming unlocks once a month." value={prefs.notifyMonthly}  saving={saving === "notifyMonthly"}   onChange={(v) => set("notifyMonthly", v)} />
+          <PrefToggle label="Next available claim"   desc="Heads-up the moment tokens become claimable." value={prefs.notifyNextClaim} saving={saving === "notifyNextClaim"} onChange={(v) => set("notifyNextClaim", v)} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PrefToggle({
+  label, desc, value, saving, onChange,
+}: {
+  label:    string;
+  desc:     string;
+  value:    boolean;
+  saving:   boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>{label}</p>
+        <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{desc}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        disabled={saving}
+        className="text-[10px] font-bold px-2 py-1 rounded flex-shrink-0"
+        style={{
+          background: value ? "rgba(28,184,184,0.12)" : "rgba(0,0,0,0.04)",
+          color:      value ? "#0F8A8A" : "var(--preview-text-3)",
+          border:     `1px solid ${value ? "rgba(28,184,184,0.25)" : "var(--preview-border)"}`,
+          opacity:    saving ? 0.6 : 1,
+        }}
+      >
+        {value ? "ON" : "OFF"}
+      </button>
+    </div>
+  );
+}
+
+// ── Global email prefs ──────────────────────────────────────────────────────
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function GlobalEmailSection({
+  prefs, mutate, setError,
+}: {
+  prefs:    Prefs;
+  mutate:   MutatePrefsFn;
+  setError: (s: string | null) => void;
+}) {
+  const [emailDraft, setEmailDraft] = useState<string>(prefs.email ?? "");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  // Keep draft in sync if the server pushes a fresh value.
+  useEffect(() => {
+    if (!editing) setEmailDraft(prefs.email ?? "");
+  }, [prefs.email, editing]);
+
+  const emailValid = emailDraft.trim().length === 0 || EMAIL_RE.test(emailDraft.trim());
+
+  async function setEnabled(v: boolean) {
+    setSaving("emailEnabled");
+    setError(null);
+    mutate((cur) => cur ? { preferences: { ...(cur.preferences ?? {}), emailEnabled: v } } : cur, { revalidate: false });
+    try {
+      await putGlobalPref({ emailEnabled: v });
+      mutate((cur) => cur, { revalidate: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+      mutate((cur) => cur, { revalidate: true });
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function saveEmail() {
+    if (!emailValid) return;
+    setSaving("email");
+    setError(null);
+    const next = emailDraft.trim().length === 0 ? null : emailDraft.trim();
+    try {
+      await putGlobalPref({ email: next });
+      mutate((cur) => cur ? { preferences: { ...(cur.preferences ?? {}), email: next } } : cur, { revalidate: true });
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
+        Email alerts
+      </h2>
+      <div className="rounded-xl border p-4"
+        style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+        <PrefToggle
+          label="Email me about unlocks"
+          desc={prefs.email ? `Sent to ${prefs.email}` : "Set an email address below first."}
+          value={prefs.emailEnabled}
+          saving={saving === "emailEnabled"}
+          onChange={setEnabled}
+        />
+        <div className="flex items-center gap-2 mt-3 pt-3"
+          style={{ borderTop: "1px solid var(--preview-border-2)" }}>
+          <input
+            type="email"
+            value={emailDraft}
+            onFocus={() => setEditing(true)}
+            onChange={(e) => { setEmailDraft(e.target.value); setEditing(true); }}
+            placeholder="you@example.com"
+            className="flex-1 text-xs px-2 py-1.5 rounded"
+            style={{
+              background: "var(--preview-muted)",
+              border:     `1px solid ${emailValid ? "var(--preview-border)" : "rgba(220,38,38,0.45)"}`,
+              color:      "var(--preview-text)",
+            }}
+          />
+          <button
+            type="button"
+            onClick={saveEmail}
+            disabled={!emailValid || saving === "email" || !editing}
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-md"
+            style={{
+              background: "#1CB8B8",
+              color:      "white",
+              border:     "1px solid #1CB8B8",
+              opacity:    (!emailValid || saving === "email" || !editing) ? 0.5 : 1,
+            }}
+          >
+            {saving === "email" ? "Saving…" : "Save"}
+          </button>
+        </div>
+        {!emailValid && (
+          <p className="text-[11px] mt-2" style={{ color: "#dc2626" }}>
+            That doesn&apos;t look like a valid email address.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ── Test push ───────────────────────────────────────────────────────────────
+
+function TestPushSection({ setError }: { setError: (s: string | null) => void }) {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [hint, setHint] = useState<string | null>(null);
+
+  async function send() {
+    setStatus("sending");
+    setError(null);
+    setHint(null);
+    try {
+      const res = await fetch("/api/notifications/test", { method: "POST" });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = (errJson as { error?: string }).error ?? "Failed to send";
+        setStatus("error");
+        setHint(msg);
+        return;
+      }
+      setStatus("sent");
+      setHint("Test push sent. Check your mobile device — it should arrive within a few seconds.");
+    } catch (e) {
+      setStatus("error");
+      setHint(e instanceof Error ? e.message : "Failed to send");
+    }
+  }
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
+        Test
+      </h2>
+      <div className="rounded-xl border p-4"
+        style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>
+              Send a test push to your phone
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
+              Confirms permissions, your push token, and the relay are wired up — without waiting for a real unlock. Requires the mobile app installed and signed in to this account.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={send}
+            disabled={status === "sending"}
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-md flex-shrink-0"
+            style={{
+              background: status === "sent" ? "rgba(28,184,184,0.10)" : "#1CB8B8",
+              color:      status === "sent" ? "#0F8A8A" : "white",
+              border:     "1px solid #1CB8B8",
+              opacity:    status === "sending" ? 0.6 : 1,
+            }}
+          >
+            {status === "sending" ? "Sending…" : status === "sent" ? "Sent ✓" : "Send test"}
+          </button>
+        </div>
+        {hint && (
+          <p className="text-[11px] mt-3"
+            style={{ color: status === "error" ? "#dc2626" : "var(--preview-text-3)" }}>
+            {hint}
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
