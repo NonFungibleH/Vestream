@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
+import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 type Status = "loading" | "waiting" | "confirmed" | "expired" | "error";
 
@@ -179,6 +180,19 @@ export default function LoginPage() {
               <p className="text-xs mt-2" style={{ color: "#B8BABD" }}>
                 Waiting for confirmation… This page will redirect automatically when you open the app.
               </p>
+
+              {/* No-app fallback. The deep link above only works if the Vestream
+                  app is installed — without it, "Open in Vestream" silently does
+                  nothing and the mobile visitor is stuck. Give them a way out:
+                  install the app, then re-tap the button (the code is still
+                  valid for its 5-min TTL). */}
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                <p className="text-xs mb-3" style={{ color: "#8B8E92" }}>
+                  Don&apos;t have the app yet? Install it, then tap{" "}
+                  <span className="font-semibold">Open in Vestream</span> above.
+                </p>
+                <AppStoreBadges />
+              </div>
             </div>
           )}
 
