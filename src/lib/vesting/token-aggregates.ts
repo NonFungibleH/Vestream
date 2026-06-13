@@ -710,7 +710,11 @@ export async function getTokenMarketData(
     const res = await fetchWithRetry(
       `https://api.dexscreener.com/latest/dex/tokens/${normaliseAddress(tokenAddress)}`,
       { next: { revalidate: 300 }, headers: { Accept: "application/json" } },
-      { tag: "dexscreener-token-page", retries: 2 },
+      // retries:1 + a 3s per-attempt cap. This is a RENDER-PATH enrichment
+      // call: the default (retries:2, no timeoutMs → 8s × 3 = 24s worst
+      // case) could hang the token page. Price/FDV is nice-to-have; the
+      // vesting schedule is the real content and renders without it.
+      { tag: "dexscreener-token-page", retries: 1, timeoutMs: 3000 },
     );
     if (res && res.ok) {
       const data = (await res.json()) as { pairs?: DexPair[] };
@@ -747,7 +751,19 @@ export async function getTokenMarketData(
   // Fill in any gaps from CoinGecko. Runs even when DexScreener returned
   // no pairs at all — many tokens DS doesn't know are indexed on CG, and
   // their socials are useful even when we can't render a price.
-  const socials = await enrichSocialsFromCoinGecko(chainId, tokenAddress, fromDexScreener);
+  //
+  // BUT: socials are pure nice-to-have, and CoinGecko's free tier 429s on
+  // unknown tokens — the retryable 429s used to drag this call (and the
+  // whole token-page render) to 5-6s for low-liquidity tokens. Cap the
+  // BLOCKING wait at 1.5s via Promise.race: if CG is slow, render with the
+  // DexScreener socials we already have. The CG fetch keeps running and
+  // warms Next's fetch cache (revalidate:3600), so the next ISR
+  // revalidation picks up any extra socials for free. Not an AbortSignal —
+  // that would poison Next's data cache (see fetch-with-retry.ts).
+  const socials = await Promise.race([
+    enrichSocialsFromCoinGecko(chainId, tokenAddress, fromDexScreener),
+    new Promise<SocialLinks>((resolve) => setTimeout(() => resolve(fromDexScreener), 1500)),
+  ]);
 
   // No DexScreener data at all → still return the empty shell with whatever
   // socials CG could give us. Worst case: pure-empty (unchanged from before).
