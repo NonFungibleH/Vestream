@@ -14,6 +14,22 @@ import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const hotCache = new Map<string, { streams: VestingStream[]; expiresAt: number; fetchedAt: string }>();
 
+// In-flight cold-start scans, keyed by the same cacheKey() as hotCache.
+// A brand-new user (zero cache) gets an instant empty `scanning:true`
+// response while the real multi-subgraph walk runs in the background; the
+// client then polls every few seconds. This Set dedupes those polls so we
+// kick off exactly ONE background scan per wallet-set, not one per poll.
+const inFlightScans = new Set<string>();
+
+// Wallet-sets we finished scanning recently that turned up ZERO streams —
+// i.e. genuinely-empty portfolios. Without this, a user with no vestings
+// would loop forever: scan finds nothing → cache stays empty → next poll
+// re-scans. The marker lets the cold-start branch return scanning:false
+// (real empty state) instead. TTL-pruned so a wallet that later gains a
+// vesting re-scans after the window.
+const recentlyScannedEmpty = new Map<string, number>();
+const SCANNED_EMPTY_TTL_MS = 5 * 60 * 1000;
+
 function cacheKey(
   wallets:      string[],
   chainIds:     SupportedChainId[],
@@ -157,6 +173,56 @@ export async function GET(req: NextRequest) {
         { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
       );
     }
+
+    // ── Cold start: zero cache for these wallets ───────────────────────────────
+    // First-ever load. Instead of blocking the user for 5-30s on a live
+    // multi-subgraph/RPC walk (the old behaviour — a dead spinner), return
+    // an empty payload IMMEDIATELY with scanning:true and run the scan in
+    // the background. The client renders the dashboard shell + skeleton and
+    // fast-polls (every 4s) until the cache fills, at which point the next
+    // poll hits the L2 branch above and gets real data.
+    //
+    // The in-flight guard ensures the client's fast poll spawns exactly one
+    // background scan per wallet-set — without it, each 4s poll would kick
+    // off another overlapping expensive aggregate while the first is still
+    // running. no-store on the response so a transient empty isn't edge-cached.
+
+    // Genuinely-empty portfolio? If we JUST scanned this wallet-set and it
+    // turned up nothing, stop the poll loop: return scanning:false so the
+    // client shows the real "no vestings" empty state.
+    const scannedAt = recentlyScannedEmpty.get(key);
+    if (scannedAt && Date.now() - scannedAt < SCANNED_EMPTY_TTL_MS) {
+      return NextResponse.json(
+        { streams: [], scanning: false, fetchedAt: new Date().toISOString() },
+        { headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    if (!inFlightScans.has(key)) {
+      inFlightScans.add(key);
+      void aggregateVestingStreams(wallets, chainIds, protocolIds)
+        .then((fresh) => {
+          void writeToCache(fresh);
+          // Mark a zero-result scan so the next poll returns the empty state
+          // instead of re-scanning forever. A non-empty result needs no
+          // marker — the next poll hits the L2 cache branch and gets data.
+          if (fresh.length === 0) {
+            recentlyScannedEmpty.set(key, Date.now());
+            if (recentlyScannedEmpty.size > 500) {
+              const cutoff = Date.now() - SCANNED_EMPTY_TTL_MS;
+              for (const [k, ts] of recentlyScannedEmpty) {
+                if (ts < cutoff) recentlyScannedEmpty.delete(k);
+              }
+            }
+          }
+        })
+        .catch((err) => console.error("[vesting] cold-start background scan failed:", err))
+        .finally(() => inFlightScans.delete(key));
+    }
+    return NextResponse.json(
+      { streams: [], scanning: true, fetchedAt: new Date().toISOString() },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   }
 
   // ── L3: full subgraph fetch ──────────────────────────────────────────────────

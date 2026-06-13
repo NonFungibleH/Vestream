@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -8,14 +9,31 @@ import useSWR from "swr";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
-import { UpsellModal } from "@/components/UpsellModal";
 // MobileAppBanner removed — dashboard users have demonstrably already paired
 // via QR code, so "Get the app" prompts are noise for this audience.
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { useDashboardChrome } from "@/components/DashboardChrome";
-import { StreamAnnotationEditor } from "@/components/StreamAnnotationEditor";
-import { StreamTagsEditor } from "@/components/StreamTagsEditor";
 import { useCurrency } from "@/lib/use-currency";
+
+// Interaction-gated components — none render on first paint. The upsell
+// modal only mounts when a free-tier action hits the paywall; the two
+// per-stream editors only mount inside an EXPANDED stream-detail row.
+// Loading them with next/dynamic (ssr:false) keeps ~640 lines of editor
+// + modal code out of the dashboard's initial JS chunk, so returning
+// users hydrate the portfolio view faster. They load on demand the first
+// time the user expands a row / triggers the paywall.
+const UpsellModal = dynamic(
+  () => import("@/components/UpsellModal").then((m) => ({ default: m.UpsellModal })),
+  { ssr: false },
+);
+const StreamAnnotationEditor = dynamic(
+  () => import("@/components/StreamAnnotationEditor").then((m) => ({ default: m.StreamAnnotationEditor })),
+  { ssr: false },
+);
+const StreamTagsEditor = dynamic(
+  () => import("@/components/StreamTagsEditor").then((m) => ({ default: m.StreamTagsEditor })),
+  { ssr: false },
+);
 import { track } from "@/lib/analytics";
 import { useDarkMode } from "@/lib/use-dark-mode";
 
@@ -4809,8 +4827,20 @@ export default function Dashboard() {
     ? `/api/vesting?wallets=${walletAddresses}${chainsQs}${protocolsQs}${tokenFiltersQs}`
     : null;
 
-  const { data, isLoading, mutate: mutateStreams } = useSWR<{ streams: VestingStream[] }>(
-    vestingUrl, fetcher, { refreshInterval: 60_000, revalidateOnFocus: true }
+  const { data, isLoading, mutate: mutateStreams } = useSWR<{ streams: VestingStream[]; scanning?: boolean }>(
+    vestingUrl, fetcher,
+    {
+      // While the server reports it's still doing a first-ever background
+      // scan (cold start, zero cache for these wallets) it returns
+      // { streams: [], scanning: true } INSTANTLY instead of blocking for
+      // 5-30s on a live multi-subgraph/RPC walk. Poll fast (4s) so the
+      // real data lands seconds after the background scan finishes; once
+      // streams arrive, drop back to the lazy 60s refresh.
+      refreshInterval: (latest) => (latest?.scanning ? 4_000 : 60_000),
+      // revalidateOnFocus inherits the provider default (false) — the 60s
+      // poll already covers staleness, so refetching on every tab-focus
+      // was pure cost. (Was an explicit `true` override here.)
+    }
   );
 
   const { data: livePrices } = useSWR<Record<string, number>>(
@@ -4826,6 +4856,12 @@ export default function Dashboard() {
     () => data?.streams ?? [],
     [data?.streams],
   );
+
+  // First-ever load for these wallets: the server returned an empty payload
+  // with scanning:true and is building the cache in the background. Keep the
+  // skeleton up (rather than flashing the "no vestings" empty state) until
+  // the fast poll above picks up the real streams.
+  const isScanning = data?.scanning === true;
 
   // ── Phase 2: merge cloud P&L once streams are known ──────────────────────
   // Runs after the streams SWR fetch resolves. Builds symbolToAddress from
@@ -5316,7 +5352,7 @@ export default function Dashboard() {
                 <IconPlus /> Add your first wallet
               </button>
             </div>
-          ) : isLoading ? (
+          ) : (isLoading || isScanning) ? (
             <LoadingSkeleton walletCount={wallets.length} chainUnion={chainUnion} protocolUnion={protocolUnion} />
           ) : (
             <>
