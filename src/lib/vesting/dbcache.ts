@@ -16,7 +16,7 @@
  */
 
 import { db } from "@/lib/db";
-import { vestingStreamsCache } from "@/lib/db/schema";
+import { vestingStreamsCache, seederState } from "@/lib/db/schema";
 import { inArray, and, gte, sql } from "drizzle-orm";
 import { isAdapterEnabled } from "@/lib/protocol-constants";
 import { VestingStream, categoryForProtocol } from "./types";
@@ -357,6 +357,62 @@ export async function bumpSeedHeartbeat(
     `);
   } catch (err) {
     console.error(`[dbcache] bumpSeedHeartbeat(${protocol}, ${chainId}):`, err);
+  }
+}
+
+/**
+ * Record a seeder-attempt outcome into seeder_state. Called from every
+ * runJob exit point — success, empty discovery, error, special-path
+ * walkers — so the admin /status grid can show "checked Xh ago" for
+ * every cell regardless of whether data moved or any cache row exists.
+ *
+ * Why this exists alongside bumpSeedHeartbeat: that one bumps a cache
+ * row's last_refreshed_at so `freshestSec` advances. It misses two
+ * legitimate "cron ran" cases: (a) discover() returned 0 recipients
+ * (curated-list adapters, quiet chains) and (b) the cell has 0 cache
+ * rows yet (fresh deploy). seeder_state is unconditional — one upsert
+ * per job per cron tick, ~11 protocols × ~5 chains = ~55 small writes
+ * per group run. Negligible.
+ *
+ * Failures here are swallowed: this is diagnostic instrumentation, not
+ * load-bearing. The seed job itself succeeded before this was called.
+ */
+export async function recordSeederAttempt(
+  adapterId:      string,
+  chainId:        number,
+  streamsWritten: number,
+  error:          string | null,
+): Promise<void> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+
+  const now = new Date();
+  try {
+    await db
+      .insert(seederState)
+      .values({
+        adapterId,
+        chainId,
+        lastAttemptAt:      now,
+        lastSuccessAt:      error ? null : now,
+        lastError:          error,
+        lastStreamsWritten: streamsWritten,
+      })
+      .onConflictDoUpdate({
+        target: [seederState.adapterId, seederState.chainId],
+        set: {
+          lastAttemptAt:      now,
+          // Preserve last_success_at on failure so ops can see "last good run"
+          // separately from "last attempt" — same shape as indexer_state.
+          lastSuccessAt:      error
+            ? sql`${seederState.lastSuccessAt}`
+            : now,
+          lastError:          error,
+          lastStreamsWritten: streamsWritten,
+          updatedAt:          now,
+        },
+      });
+  } catch (err) {
+    console.error(`[dbcache] recordSeederAttempt(${adapterId}, ${chainId}):`, err);
   }
 }
 

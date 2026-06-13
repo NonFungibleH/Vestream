@@ -15,7 +15,7 @@
 import Link from "next/link";
 import { getCacheStatsCells, type CacheStatsCell } from "@/lib/vesting/cache-stats";
 import { db } from "@/lib/db";
-import { indexerState } from "@/lib/db/schema";
+import { indexerState, seederState } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -101,10 +101,15 @@ function buildGrid(
 export default async function CacheStatsPage() {
   const nowMs = Date.now();
 
-  // Fetch indexer_state alongside cache stats — tells us when each
-  // event-driven indexer last attempted a run, independent of whether
-  // any data changed. Lets us distinguish "no new events" from "broken".
-  const [cells, indexerRows] = await Promise.all([
+  // Fetch indexer_state + seeder_state alongside cache stats. Together
+  // they tell us when each (protocol, chain) last attempted a run,
+  // independent of whether any data changed. indexer_state covers the
+  // event-driven indexers (uncx-vm, hedgey); seeder_state covers the
+  // batch-seeder protocols (pinksale, sablier, unvest, superfluid,
+  // llamapay, streamflow, jupiter-lock, etc). Together they cover every
+  // cell on the grid — letting us distinguish "no new events" from
+  // "broken" everywhere, not just on indexed protocols.
+  const [cells, indexerRows, seederRows] = await Promise.all([
     getCacheStatsCells(),
     db
       .select({
@@ -114,12 +119,33 @@ export default async function CacheStatsPage() {
       })
       .from(indexerState)
       .catch(() => [] as { protocol: string; chainId: number; lastAttemptSec: number | null }[]),
+    db
+      .select({
+        protocol:       seederState.adapterId,
+        chainId:        seederState.chainId,
+        lastAttemptSec: sql<number | null>`extract(epoch from ${seederState.lastAttemptAt})::int`,
+      })
+      .from(seederState)
+      .catch(() => [] as { protocol: string; chainId: number; lastAttemptSec: number | null }[]),
   ]);
 
-  // Build a lookup map keyed by "protocol:chainId"
+  // Build a lookup map keyed by "protocol:chainId". seeder_state is
+  // written second so it wins on protocols that have BOTH an indexer
+  // and a seeder during the cutover (e.g. hedgey, uncx-vm) — the seeder
+  // ran more recently in practice and the user-visible "checked" should
+  // reflect whichever signal is fresher.
   const checkedMap = new Map<string, number | null>();
   for (const r of indexerRows) {
     checkedMap.set(`${r.protocol}:${r.chainId}`, r.lastAttemptSec);
+  }
+  for (const r of seederRows) {
+    const key  = `${r.protocol}:${r.chainId}`;
+    const prev = checkedMap.get(key) ?? null;
+    // Take whichever timestamp is more recent — guards against the case
+    // where the indexer ran later than the seeder (or vice versa).
+    if (prev === null || (r.lastAttemptSec ?? 0) > prev) {
+      checkedMap.set(key, r.lastAttemptSec);
+    }
   }
 
   const grid = buildGrid(cells, checkedMap);

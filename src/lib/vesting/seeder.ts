@@ -704,7 +704,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
-import { getCachedRecipients, bumpSeedHeartbeat } from "./dbcache";
+import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
@@ -1725,6 +1725,16 @@ export async function seedAll(
     const batch   = jobs.slice(i, i + PARALLEL);
     const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
+    // Record one seeder_state row per job — success or failure — so the
+    // admin /status grid can show "checked Xh ago" for every cell even
+    // when discover() returned 0 recipients or the cell has no cache rows
+    // yet (the two cases bumpSeedHeartbeat silently misses). Diagnostic
+    // only; recordSeederAttempt swallows its own errors.
+    await Promise.all(
+      batchR.map((r) =>
+        recordSeederAttempt(r.adapterId, r.chainId, r.streamsWritten, r.error ?? null),
+      ),
+    );
   }
 
   // Materialise the (protocol × chain) rollup into status_summary so

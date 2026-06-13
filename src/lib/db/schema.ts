@@ -1088,6 +1088,39 @@ export const indexerState = pgTable(
   ]
 );
 
+// Diagnostic mirror of indexer_state for the batch-seeder protocols
+// (pinksale, sablier, hedgey, uncx, uncx-vm, unvest, superfluid, llamapay,
+// streamflow, jupiter-lock). Filled by `recordSeederAttempt()` from every
+// runJob exit point — success, empty discovery, error. Pre-existing
+// `bumpSeedHeartbeat` only advances freshestSec when the cell has ≥1
+// cache row AND discover() returned recipients; this table records every
+// attempt unconditionally so the admin /status grid can show
+// "checked Xh ago" for all 11 protocols, not just the 2 with indexers.
+export const seederState = pgTable(
+  "seeder_state",
+  {
+    /** Adapter id — matches vestingStreamsCache.protocol (e.g. "pinksale"). */
+    adapterId:          text("adapter_id").notNull(),
+    chainId:            integer("chain_id").notNull(),
+
+    /** Wall-clock time of the last attempt (success OR failure). */
+    lastAttemptAt:      timestamp("last_attempt_at"),
+    /** Wall-clock time of the last successful run (no error thrown). */
+    lastSuccessAt:      timestamp("last_success_at"),
+    /** Last error message, if the most recent run failed. NULL on success. */
+    lastError:          text("last_error"),
+    /** How many streams the last run wrote — 0 is healthy for empty-discovery. */
+    lastStreamsWritten: integer("last_streams_written").default(0),
+
+    createdAt:          timestamp("created_at").defaultNow().notNull(),
+    updatedAt:          timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.adapterId, t.chainId] }),
+    index("seeder_state_last_attempt_idx").on(t.lastAttemptAt),
+  ]
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Wallet searches  (May 15 2026)
 // ─────────────────────────────────────────────────────────────────────────────
