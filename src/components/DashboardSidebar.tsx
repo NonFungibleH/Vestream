@@ -23,8 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { useDarkMode } from "@/lib/use-dark-mode";
 
 // ─── Icons (match the existing dashboard set; kept inline to avoid adding
@@ -75,7 +74,6 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
-  const router   = useRouter();
   const pathname = usePathname();
 
   // Single night-mode control for the WHOLE dashboard. Lives here in the
@@ -83,10 +81,10 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
   // shared DarkModeProvider — one toggle, one source of truth.
   const { dark, toggle: toggleNightMode } = useDarkMode();
 
-  const handleNav = useCallback((href: string) => {
-    router.push(href);
-    onClose(); // close mobile drawer on navigation
-  }, [router, onClose]);
+  // handleNav + router.push were removed when the nav items switched from
+  // <button onClick={router.push}> to <Link prefetch> — the Link form
+  // handles navigation natively AND triggers prefetch, the button form did
+  // neither. Mobile-drawer close moved to onClick={onClose} on the Link.
 
   return (
     <aside
@@ -115,6 +113,14 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
           Free-tier badge logic was removed because dashboard middleware
           gates the entire `/dashboard/*` tree on the Pro iron-session
           cookie — free-tier users never reach this component. */}
+      {/* Nav items render as <Link>, not <button onClick={router.push}>.
+          The Link form lets Next prefetch the destination route's JS
+          bundle on hover (or in the background on viewport entry on
+          mobile), so by the time the user actually clicks, the bundle
+          is already loaded. The button + router.push form skipped this
+          entirely — every nav was a cold bundle fetch. The router.push
+          path was kept only as a mobile-drawer-close side effect; that's
+          now `onClick` on the Link instead. */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
           const isActive = item.href === "/dashboard"
@@ -122,8 +128,11 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
             : pathname.startsWith(item.href) ||
               (item.activePaths ?? []).some((p) => pathname.startsWith(p));
           return (
-            <button key={item.label}
-              onClick={() => handleNav(item.href)}
+            <Link
+              key={item.label}
+              href={item.href}
+              prefetch={true}
+              onClick={onClose}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
               style={isActive
                 ? { background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(15,138,138,0.08))", color: "#1CB8B8", border: "1px solid rgba(59,130,246,0.15)" }
@@ -133,7 +142,7 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
             >
               <span className="opacity-80 flex-shrink-0">{item.icon}</span>
               {item.label}
-            </button>
+            </Link>
           );
         })}
       </nav>

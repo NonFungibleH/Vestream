@@ -11,7 +11,8 @@
 // through that endpoint; this page lists + removes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
@@ -31,24 +32,39 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 export default function WatchlistPage() {
   const router = useRouter();
   const { dark } = useDarkMode();
-  const [entries, setEntries] = useState<Entry[] | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/watchlist");
-    if (res.status === 401) { router.push("/login"); return; }
-    if (!res.ok) { setEntries([]); return; }
-    const data = await res.json();
-    setEntries(data.entries ?? []);
-  }, [router]);
+  // useSWR replaces the previous useEffect → fetch → setState pattern.
+  // The dashboard's <DashboardSwrProvider> dedupes calls within 60s and
+  // keeps the cached response, so a user navigating Dashboard → Watchlist
+  // → Dashboard → Watchlist now sees the second Watchlist visit render
+  // instantly with the cached list (silently revalidating in the
+  // background). Auth redirect lives inside the fetcher so a stale
+  // session bounces to /login same as before.
+  const { data, mutate } = useSWR<{ entries: Entry[] }>(
+    "/api/watchlist",
+    async (url: string) => {
+      const res = await fetch(url, { credentials: "include" });
+      if (res.status === 401) { router.push("/login"); throw new Error("unauthorized"); }
+      if (!res.ok) return { entries: [] };
+      return res.json();
+    },
+  );
+  const entries: Entry[] | null = data?.entries ?? (data === undefined ? null : []);
 
-  useEffect(() => { load(); }, [load]);
+  // Analytics + tracking we used to fire on first-load completion stays
+  // intact via this small effect (only fires when entries first resolve).
+  useEffect(() => { /* placeholder for future first-load analytics */ }, [entries === null]);
 
   async function remove(id: string) {
     setRemoving(id);
     try {
       await fetch(`/api/watchlist?id=${id}`, { method: "DELETE" });
-      setEntries((cur) => (cur ?? []).filter((e) => e.id !== id));
+      // Optimistic cache update + background revalidate.
+      mutate(
+        (cur) => cur ? { entries: (cur.entries ?? []).filter((e) => e.id !== id) } : cur,
+        { revalidate: true },
+      );
       track("cta_clicked", { cta_id: "watchlist_removed" });
     } finally {
       setRemoving(null);

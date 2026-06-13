@@ -30,6 +30,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
@@ -205,17 +206,8 @@ function sortFormatsForAudience(
 
 export default function ExportsPage() {
   const router = useRouter();
-  const [events, setEvents]     = useState<ClaimEvent[]>([]);
-  const [summary, setSummary]   = useState<Summary | null>(null);
   const [coverage, setCoverage] = useState<string[]>([]);
   const [pending, setPending]   = useState<string[]>([]);
-  // From the user record. Drives the export-format card ordering — workers
-  // see payroll-flavoured CSVs first; investors see capital-gains formats
-  // first; null falls back to investor-first. Captured from the same
-  // /api/claims/history response that populates events + summary, so no
-  // extra round-trip.
-  const [audienceCategory, setAudienceCategory] = useState<string | null>(null);
-  const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshMsg, setRefreshMsg]   = useState<string | null>(null);
   const [yearFilter, setYearFilter]   = useState<string>("all");
@@ -230,27 +222,30 @@ export default function ExportsPage() {
   // yearFilter changes and load() re-runs.
   const autoRefreshed = useRef(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const sp = new URLSearchParams();
-      if (yearFilter !== "all") {
-        sp.set("since", `${yearFilter}-01-01`);
-        sp.set("until", `${yearFilter}-12-31`);
-      }
-      const res = await fetch(`/api/claims/history?${sp.toString()}`);
-      if (res.status === 401) { router.push("/login"); return; }
-      if (!res.ok) return;
-      const data = await res.json();
-      setEvents(data.events ?? []);
-      setSummary(data.summary ?? null);
-      setAudienceCategory(data.audienceCategory ?? null);
-    } finally {
-      setLoading(false);
-    }
-  }, [yearFilter, router]);
-
-  useEffect(() => { load(); }, [load]);
+  // SWR-cached per yearFilter. The dashboard's SWRConfig provider keeps
+  // the cache alive across navigations, so going Dashboard → Tax → Dashboard
+  // → Tax renders the second Tax visit instantly. The refresh() POST below
+  // mutates the SWR cache directly on success.
+  const sp = new URLSearchParams();
+  if (yearFilter !== "all") {
+    sp.set("since", `${yearFilter}-01-01`);
+    sp.set("until", `${yearFilter}-12-31`);
+  }
+  const swrKey = `/api/claims/history?${sp.toString()}`;
+  const { data: historyData, isLoading, mutate: mutateHistory } = useSWR<{
+    events: ClaimEvent[];
+    summary: Summary | null;
+    audienceCategory: string | null;
+  }>(swrKey, async (url: string) => {
+    const res = await fetch(url, { credentials: "include" });
+    if (res.status === 401) { router.push("/login"); throw new Error("unauthorized"); }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  });
+  const events: ClaimEvent[] = historyData?.events ?? [];
+  const summary: Summary | null = historyData?.summary ?? null;
+  const audienceCategory: string | null = historyData?.audienceCategory ?? null;
+  const loading = isLoading;
 
   // Auto-index on first visit if the user has never refreshed before.
   // Saves the "why is this page empty?" confusion — on mount, if the
@@ -280,7 +275,9 @@ export default function ExportsPage() {
       setPending((data.perProtocol ?? []).filter((r: IngestResult) => r.notImplemented).map((r: IngestResult) => r.protocol));
       setPerProtocol(data.perProtocol ?? []);
       track("cta_clicked", { cta_id: "exports_refresh", inserted: data.inserted });
-      await load();
+      // SWR-aware revalidate of the history cache so the events list
+      // reflects the new ingest. Replaces the previous explicit await load().
+      await mutateHistory();
     } catch {
       setRefreshMsg("Network error");
     } finally {

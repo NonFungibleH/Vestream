@@ -23,7 +23,8 @@
 // settlement that tax software needs.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { useCurrency } from "@/lib/use-currency";
 
@@ -111,27 +112,21 @@ function pretty(p: string): string {
 
 export default function IncomeStatementPage() {
   const { format, formatCompact, currency } = useCurrency();
-  const [data, setData]       = useState<IncomeStatement | null>(null);
-  const [loading, setLoading] = useState(true);
   const [yearFilter, setYearFilter] = useState<string>("all");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const sp = yearFilter === "all" ? "" : `?year=${yearFilter}`;
-      const res = await fetch(`/api/claims/income-statement${sp}`);
-      if (!res.ok) {
-        setData(null);
-        return;
-      }
-      const json = (await res.json()) as IncomeStatement;
-      setData(json);
-    } finally {
-      setLoading(false);
-    }
-  }, [yearFilter]);
-
-  useEffect(() => { load(); }, [load]);
+  // SWR-cached per yearFilter. Navigating away and back without changing
+  // the filter renders instantly from cache; flipping years swaps in the
+  // new cached year (or kicks a fetch if it's the first time). The
+  // dashboard's SWRConfig provider sets the 60s dedupe window globally.
+  const swrKey = yearFilter === "all"
+    ? "/api/claims/income-statement"
+    : `/api/claims/income-statement?year=${yearFilter}`;
+  const { data, isLoading } = useSWR<IncomeStatement>(swrKey, async (url: string) => {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json() as Promise<IncomeStatement>;
+  });
+  const loading = isLoading;
 
   const years = data?.byYear.map((r) => r.year) ?? [];
   // Build year-protocol pivot grid: rows = years, cols = protocols

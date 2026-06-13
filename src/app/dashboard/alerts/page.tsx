@@ -28,6 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
@@ -202,60 +203,67 @@ export default function AlertsPage() {
   // changing behaviour.
   void _dark;
 
-  const [prefs,    setPrefs]    = useState<Prefs | null>(null);
-  const [streams,  setStreams]  = useState<Stream[] | null>(null);
-  const [history,  setHistory]  = useState<HistoryItem[] | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error,    setError]    = useState<string | null>(null);
 
-  // ── Load everything in parallel ─────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [prefsRes, streamsRes, historyRes] = await Promise.all([
-          fetch("/api/notifications/preferences"),
-          fetch("/api/vesting"),
-          fetch("/api/notifications/history?limit=50"),
-        ]);
-        if (prefsRes.status === 401 || streamsRes.status === 401 || historyRes.status === 401) {
-          router.push("/login");
-          return;
-        }
-        if (cancelled) return;
-        const prefsJson = await prefsRes.json().catch(() => ({}));
-        const streamsJson = await streamsRes.json().catch(() => ({}));
-        const historyJson = await historyRes.json().catch(() => ({}));
-        const p = prefsJson.preferences ?? {};
-        setPrefs({
-          emailEnabled:      p.emailEnabled      ?? false,
-          email:             p.email             ?? null,
-          hoursBeforeUnlock: p.hoursBeforeUnlock ?? 24,
-          notifyCliff:       p.notifyCliff       ?? true,
-          notifyStreamEnd:   p.notifyStreamEnd   ?? true,
-          notifyMonthly:     p.notifyMonthly     ?? false,
-          notifyNextClaim:   p.notifyNextClaim   ?? true,
-          streamPrefs:       p.streamPrefs       ?? {},
-        });
-        setStreams((streamsJson.streams ?? []).map((s: Stream) => ({
-          id: s.id,
-          protocol: s.protocol,
-          chainId: s.chainId,
-          tokenSymbol: s.tokenSymbol,
-          tokenAddress: s.tokenAddress,
-          isFullyVested: s.isFullyVested,
-        })));
-        setHistory(historyJson.items ?? []);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load alerts");
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [router]);
+  // Three independent SWR caches — each survives navigation away/back
+  // (60s dedupe via the dashboard's SWRConfig provider), so revisiting
+  // /dashboard/alerts after a 5-second detour is instant instead of
+  // showing the "Loading alerts…" skeleton three times. The fetcher
+  // pushes 401s through the same /login bounce the old useEffect did.
+  const onAuthFail = useCallback(() => { router.push("/login"); }, [router]);
+  const authFetcher = useCallback(async <T,>(url: string): Promise<T> => {
+    const res = await fetch(url, { credentials: "include" });
+    if (res.status === 401) { onAuthFail(); throw new Error("unauthorized"); }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json() as Promise<T>;
+  }, [onAuthFail]);
+
+  const { data: prefsRaw, mutate: mutatePrefs } = useSWR<{ preferences: Partial<Prefs> | null }>(
+    "/api/notifications/preferences",
+    authFetcher,
+  );
+  const { data: streamsRaw } = useSWR<{ streams: Stream[] }>(
+    "/api/vesting",
+    authFetcher,
+  );
+  const { data: historyRaw } = useSWR<{ items: HistoryItem[] }>(
+    "/api/notifications/history?limit=50",
+    authFetcher,
+  );
+
+  const prefs: Prefs | null = useMemo(() => {
+    if (prefsRaw === undefined) return null;
+    const p = prefsRaw.preferences ?? {};
+    return {
+      emailEnabled:      p.emailEnabled      ?? false,
+      email:             p.email             ?? null,
+      hoursBeforeUnlock: p.hoursBeforeUnlock ?? 24,
+      notifyCliff:       p.notifyCliff       ?? true,
+      notifyStreamEnd:   p.notifyStreamEnd   ?? true,
+      notifyMonthly:     p.notifyMonthly     ?? false,
+      notifyNextClaim:   p.notifyNextClaim   ?? true,
+      streamPrefs:       p.streamPrefs       ?? {},
+    };
+  }, [prefsRaw]);
+  const streams: Stream[] | null = useMemo(() => {
+    if (streamsRaw === undefined) return null;
+    return (streamsRaw.streams ?? []).map((s) => ({
+      id: s.id, protocol: s.protocol, chainId: s.chainId,
+      tokenSymbol: s.tokenSymbol, tokenAddress: s.tokenAddress,
+      isFullyVested: s.isFullyVested,
+    }));
+  }, [streamsRaw]);
+  const history: HistoryItem[] | null = useMemo(
+    () => historyRaw === undefined ? null : (historyRaw.items ?? []),
+    [historyRaw],
+  );
 
   // ── Persist a single stream's prefs ─────────────────────────────────────
+  // Mutations write through SWR's cache via mutate() so the local state
+  // and the cache stay in sync — the next page nav that revisits this
+  // route reads the freshly mutated cache, not a stale snapshot.
   const saveStreamPref = useCallback(async (streamId: string, next: StreamPref) => {
     if (!prefs) return;
     setSavingId(streamId);
@@ -272,16 +280,20 @@ export default function AlertsPage() {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.error ?? "Failed to save");
       }
-      // Optimistic local update so the row reflects the new state without
-      // a full reload. Server returns the canonical row but we already
-      // sent the validated bag.
-      setPrefs((cur) => cur ? { ...cur, streamPrefs: merged } : cur);
+      // Optimistic SWR cache update — passes the merged shape back into
+      // the cache so the row reflects the new state without a fetch
+      // round-trip. `revalidate: true` kicks off a quiet background fetch
+      // to confirm with the server.
+      mutatePrefs(
+        (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), streamPrefs: merged } } : cur,
+        { revalidate: true },
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSavingId(null);
     }
-  }, [prefs]);
+  }, [prefs, mutatePrefs]);
 
   const clearStreamPref = useCallback(async (streamId: string) => {
     if (!prefs) return;
@@ -296,7 +308,10 @@ export default function AlertsPage() {
         body: JSON.stringify({ streamPrefs: merged }),
       });
       if (!res.ok) throw new Error("Failed to clear");
-      setPrefs((cur) => cur ? { ...cur, streamPrefs: merged } : cur);
+      mutatePrefs(
+        (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), streamPrefs: merged } } : cur,
+        { revalidate: true },
+      );
       setExpandedId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to clear");

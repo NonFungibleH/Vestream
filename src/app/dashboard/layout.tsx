@@ -28,9 +28,11 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { DarkModeProvider } from "@/lib/use-dark-mode";
+import { DashboardSwrProvider } from "@/components/DashboardSwrProvider";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
@@ -53,6 +55,26 @@ import { users } from "@/lib/db/schema";
  * context) so static generation doesn't crash — see CLAUDE.md landmine.
  * Returns the validated tier for the sidebar's upgrade-prompt rendering.
  */
+/**
+ * Look up the tier for one user address. Wrapped in React's `cache()` so
+ * multiple callers within the SAME server render dedupe to one DB hit —
+ * the layout was previously running this query top-level + the chrome
+ * could trigger another in nested components. Now it's once per request.
+ *
+ * This is render-scoped, not cross-request — we deliberately don't add
+ * an `unstable_cache` layer here because tier changes (subscribe, lapse)
+ * must reflect on the next page load, not 60s later. A user paying
+ * \$9.99 who lapses must hit /login on their VERY NEXT nav.
+ */
+const lookupTier = cache(async (address: string): Promise<string> => {
+  const [u] = await db
+    .select({ tier: users.tier })
+    .from(users)
+    .where(eq(users.address, address.toLowerCase()))
+    .limit(1);
+  return u?.tier ?? "free";
+});
+
 async function requireDashboardAccess(): Promise<string> {
   if (process.env.NEXT_PHASE === "phase-production-build") return "pro";
   let address: string | null = null;
@@ -67,12 +89,7 @@ async function requireDashboardAccess(): Promise<string> {
 
   let tier = "free";
   try {
-    const [u] = await db
-      .select({ tier: users.tier })
-      .from(users)
-      .where(eq(users.address, address.toLowerCase()))
-      .limit(1);
-    tier = u?.tier ?? "free";
+    tier = await lookupTier(address);
   } catch {
     // DB unreachable — fail CLOSED for a security gate. A transient blip
     // bouncing a real Pro user to /login is recoverable; serving the
@@ -108,10 +125,17 @@ export default async function DashboardLayout({
   // (the sidebar). First-byte correct (no flash), reactive on toggle.
   const dark = getDarkModeFromCookies(cookieStore);
 
+  // SWR provider mounted ONCE here so every dashboard sub-page shares
+  // the same client-side cache. Without this, each tab nav re-mounts its
+  // useEffect → fetch → spinner cycle, even when the data is unchanged
+  // since 5 seconds ago. With it: instant re-render on revisit, silent
+  // background revalidation. See DashboardSwrProvider for default config.
   return (
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>
       <DarkModeProvider initialDark={dark}>
-        <DashboardChrome tier={tier}>{children}</DashboardChrome>
+        <DashboardSwrProvider>
+          <DashboardChrome tier={tier}>{children}</DashboardChrome>
+        </DashboardSwrProvider>
       </DarkModeProvider>
     </CurrencyProvider>
   );

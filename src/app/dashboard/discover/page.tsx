@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
@@ -342,8 +343,6 @@ function ResultCard({
 export default function DiscoverPage() {
   const router = useRouter();
   const { dark }                            = useDarkMode();
-  const [tier,           setTier]           = useState<string>("free");
-  const [wallets,        setWallets]        = useState<TrackedWallet[]>([]);
   const [address,        setAddress]        = useState<string>("");
   const [filterChain,    setFilterChain]    = useState<string>("");   // "" = all chains
   const [filterProtocol, setFilterProtocol] = useState<string>("");   // "" = all platforms
@@ -355,21 +354,23 @@ export default function DiscoverPage() {
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   const [scanResetAt,    setScanResetAt]    = useState<string | null>(null);
 
-
-  const loadWallets = useCallback(async () => {
-    try {
-      const res = await fetch("/api/wallets");
-      if (res.status === 401) { router.push("/login"); return; }
-      if (res.ok) {
-        const json = await res.json();
-        setWallets(json.wallets ?? []);
-        const fetchedTier = json.tier ?? "free";
-        setTier(fetchedTier);
-      }
-    } catch { /* ignore */ }
-  }, [router]);
-
-  useEffect(() => { loadWallets(); }, [loadWallets]);
+  // SWR-cached wallets list — shared with the dashboard's other consumers
+  // of /api/wallets via the global SWRConfig provider. Nav back to this
+  // page after a 5-second detour renders instantly; the cached snapshot
+  // also covers the case where wallets were added/removed elsewhere and
+  // the cache is mutated by that surface.
+  const { data: walletsData, mutate: mutateWallets } = useSWR<{ wallets: TrackedWallet[]; tier: string }>(
+    "/api/wallets",
+    async (url: string) => {
+      const res = await fetch(url, { credentials: "include" });
+      if (res.status === 401) { router.push("/login"); throw new Error("unauthorized"); }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+  );
+  const wallets: TrackedWallet[] = walletsData?.wallets ?? [];
+  const tier: string = walletsData?.tier ?? "free";
+  const loadWallets = useCallback(async () => { await mutateWallets(); }, [mutateWallets]);
 
   async function handleScan() {
     setScanError(null);
