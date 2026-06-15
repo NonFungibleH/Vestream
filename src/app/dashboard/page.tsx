@@ -2166,6 +2166,21 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                       instead of /explore/* which 308-redirects there — saves a
                       round trip and means clicks feel instant. */}
                   <div className="flex items-center justify-end gap-1.5">
+                    {/* Set alert — deep-links into the token-first alerts page
+                        with this stream pre-selected (?stream=<id>). */}
+                    {!s.isFullyVested && (
+                      <a href={`/dashboard/alerts?stream=${s.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Set an alert for ${s.tokenSymbol}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg transition-colors hover:opacity-80"
+                        style={{ color: "var(--preview-text-3)", background: "var(--preview-muted)" }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        Alert
+                      </a>
+                    )}
                     {claimedIds.has(s.id) ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg"
                         style={{ background: "rgba(63,165,104,0.1)", color: "#3FA568", border: "1px solid rgba(63,165,104,0.2)" }}>
