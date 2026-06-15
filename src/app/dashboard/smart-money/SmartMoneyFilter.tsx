@@ -11,7 +11,7 @@
 // client island toggles the slice based on the active filter.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
@@ -46,8 +46,31 @@ function shortAddr(a: string): string {
   return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
+// Persist the active filter across navigation. Clicking a wallet leaves the
+// page (→ /dashboard/explorer); hitting Back re-mounts this island, which
+// otherwise reset to "all" and threw away the user's selection. sessionStorage
+// (not URL params) keeps it simple — no Suspense boundary or ISR-dynamization
+// concerns, and it survives same-tab back-navigation.
+const FILTER_STORAGE_KEY = "vestream-smart-money-filter";
+function isFilter(v: string | null): v is Filter {
+  return v === "all" || v === "evm" || v === "solana" || v === "top10" || v === "top25";
+}
+
 export function SmartMoneyFilter({ rows }: { rows: SnapshotRow[] }) {
   const [filter, setFilter] = useState<Filter>("all");
+
+  // Restore on mount (after SSR renders "all", so no hydration mismatch).
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(FILTER_STORAGE_KEY);
+      if (isFilter(saved)) setFilter(saved);
+    } catch { /* sessionStorage disabled — keep default */ }
+  }, []);
+
+  function selectFilter(f: Filter) {
+    setFilter(f);
+    try { sessionStorage.setItem(FILTER_STORAGE_KEY, f); } catch { /* ignore */ }
+  }
 
   const filtered = rows.filter((r) => {
     if (filter === "all")    return true;
@@ -69,7 +92,7 @@ export function SmartMoneyFilter({ rows }: { rows: SnapshotRow[] }) {
           <button
             key={f.id}
             type="button"
-            onClick={() => setFilter(f.id)}
+            onClick={() => selectFilter(f.id)}
             className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors"
             style={{
               background: filter === f.id ? "rgba(28,184,184,0.14)" : "var(--preview-card)",

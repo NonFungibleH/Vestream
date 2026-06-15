@@ -560,6 +560,24 @@ function CalendarResults({
         )}
       </div>
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        {/* Column headings — reuse CalendarRow's exact grid template so the
+            labels sit over their columns. Added because the Risk chip (HIGH/
+            MED/LOW) and the USD column had no header, so users couldn't tell
+            what the values meant. Trailing spacer matches the WatchButton
+            footprint (~26px icon + pr-3 pl-1) so the grid's right edge lines
+            up with the rows below. */}
+        <div className="flex items-center"
+          style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
+          <div className="flex-1 grid grid-cols-[auto_1fr_auto_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-2 md:gap-4 px-4 md:px-5 py-2">
+            <div className="w-8" aria-hidden />
+            <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Token</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: "var(--preview-text-3)", minWidth: 64 }}>Value</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: "var(--preview-text-3)", minWidth: 48 }}>Risk</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-right hidden md:block" style={{ color: "var(--preview-text-3)" }}>Date</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-right" style={{ color: "var(--preview-text-3)" }}>Unlocks</p>
+          </div>
+          <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
+        </div>
         {rows.map((g, i) => (
           <CalendarRow key={g.groupKey} group={g} showTopBorder={i > 0} />
         ))}
