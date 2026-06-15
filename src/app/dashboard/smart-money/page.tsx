@@ -24,6 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { smartMoneySnapshot } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
@@ -47,7 +48,9 @@ interface SnapshotRow {
     symbol:       string | null;
     usdValue:     number | null;
   }>;
-  computedAt:         Date;
+  // Epoch ms (not Date) so the row survives unstable_cache's JSON
+  // serialization — a Date would come back as a string and break getTime().
+  computedAt:         number;
 }
 
 function shortAddr(a: string): string {
@@ -55,13 +58,16 @@ function shortAddr(a: string): string {
   return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
-async function loadSnapshot(): Promise<SnapshotRow[]> {
-  // Build-phase short-circuit — DB-touching helpers must skip the build per
-  // CLAUDE.md (Postgres-pooler-drop-mid-build pattern). On runtime the
-  // snapshot is queried fresh; on build we bake the empty state and ISR
-  // fills on the first revalidation.
-  if (process.env.NEXT_PHASE === "phase-production-build") return [];
-  try {
+// The snapshot table is rewritten once a day by the cron, so the query
+// result is cacheable for an hour. Wrapping it in unstable_cache means the
+// per-request DB round-trip is skipped on warm cache — the dashboard layout
+// reads cookies (which dynamicises the route, killing the page-level
+// `revalidate`), so without this the leaderboard re-queried Postgres on every
+// navigation. Now the heavy read happens at most once per hour across all
+// visitors. JSON-serialised payload: computedAt is epoch ms, totalLockedUsd a
+// string, topTokensJson plain JSON — no BigInt/Date, so the cache write is safe.
+const loadSnapshotCached = unstable_cache(
+  async (): Promise<SnapshotRow[]> => {
     const rows = await db
       .select()
       .from(smartMoneySnapshot)
@@ -74,8 +80,21 @@ async function loadSnapshot(): Promise<SnapshotRow[]> {
       streamCount:        r.streamCount,
       totalLockedUsd:     r.totalLockedUsd,
       topTokensJson:      r.topTokensJson,
-      computedAt:         r.computedAt,
+      computedAt:         r.computedAt.getTime(),
     }));
+  },
+  ["smart-money-snapshot-v1"],
+  { revalidate: 3600, tags: ["smart-money"] },
+);
+
+async function loadSnapshot(): Promise<SnapshotRow[]> {
+  // Build-phase short-circuit — DB-touching helpers must skip the build per
+  // CLAUDE.md (Postgres-pooler-drop-mid-build pattern). On runtime the
+  // snapshot is served from the 1h cache; on build we bake the empty state
+  // and ISR fills on the first revalidation.
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  try {
+    return await loadSnapshotCached();
   } catch (err) {
     console.warn("[smart-money] snapshot read failed, rendering empty:", err);
     return [];
@@ -131,7 +150,7 @@ export default async function SmartMoneyPage() {
         <div>
           <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>Updated</p>
           <p className="text-lg font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
-            {lastComputedAt ? formatRelative(lastComputedAt) : "—"}
+            {lastComputedAt ? formatRelative(new Date(lastComputedAt)) : "—"}
           </p>
         </div>
       </div>
