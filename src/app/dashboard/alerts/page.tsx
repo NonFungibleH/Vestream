@@ -224,8 +224,24 @@ export default function AlertsPage() {
     "/api/notifications/preferences",
     authFetcher,
   );
+  // /api/vesting REQUIRES a `wallets` param — calling it bare returns 400,
+  // which left this page stuck on "Loading alerts…" forever. Fetch the
+  // user's tracked wallets first (same as the dashboard), then build the
+  // scoped URL. No wallets → skip the call (vestingUrl stays null) and the
+  // streams memo below resolves to [] so the empty state shows.
+  const { data: walletsRaw } = useSWR<{ wallets: { address: string }[] }>(
+    "/api/wallets",
+    authFetcher,
+  );
+  const walletAddresses = useMemo(
+    () => (walletsRaw?.wallets ?? []).map((w) => w.address).join(","),
+    [walletsRaw],
+  );
+  const vestingUrl = walletAddresses.length > 0
+    ? `/api/vesting?wallets=${walletAddresses}`
+    : null;
   const { data: streamsRaw } = useSWR<{ streams: Stream[] }>(
-    "/api/vesting",
+    vestingUrl,
     authFetcher,
   );
   const { data: historyRaw } = useSWR<{ items: HistoryItem[] }>(
@@ -248,13 +264,16 @@ export default function AlertsPage() {
     };
   }, [prefsRaw]);
   const streams: Stream[] | null = useMemo(() => {
+    // Wallets loaded but user has none → no streams to manage (empty state),
+    // NOT a perpetual "Loading alerts…". Resolve to [] so the gate releases.
+    if (walletsRaw !== undefined && walletAddresses.length === 0) return [];
     if (streamsRaw === undefined) return null;
     return (streamsRaw.streams ?? []).map((s) => ({
       id: s.id, protocol: s.protocol, chainId: s.chainId,
       tokenSymbol: s.tokenSymbol, tokenAddress: s.tokenAddress,
       isFullyVested: s.isFullyVested,
     }));
-  }, [streamsRaw]);
+  }, [streamsRaw, walletsRaw, walletAddresses]);
   const history: HistoryItem[] | null = useMemo(
     () => historyRaw === undefined ? null : (historyRaw.items ?? []),
     [historyRaw],

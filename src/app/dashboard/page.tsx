@@ -862,13 +862,13 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
         </div>
       </div>
 
-      {/* CSS-only sizing: a `width="100%"` ATTRIBUTE makes the SVG derive its
-          height from the full container width even when max-width clips the box
-          (why it stayed ~260px tall). Using CSS width:100% + height:auto +
-          maxWidth makes height follow the *capped* width via the viewBox ratio
-          (~7:1 → 520px ≈ 72px tall). */}
+      {/* Full-width: the chart fills the expanded row so it reads as part of
+          the table rather than a cramped inset. width:100% + height:auto lets
+          height follow the container width via the viewBox ratio (~7:1), so a
+          ~900px-wide row renders the chart ~124px tall instead of the old
+          520px-capped ~72px. */}
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet"
-        style={{ overflow: "visible", display: "block", width: "100%", height: "auto", maxWidth: 520 }}>
+        style={{ overflow: "visible", display: "block", width: "100%", height: "auto" }}>
         {/* Horizontal grid lines at 25/50/75% */}
         {[0.25, 0.5, 0.75].map((f) => (
           <line key={f}
@@ -1755,6 +1755,9 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
             {active.length} active position{active.length !== 1 ? "s" : ""} · scroll →
           </p>
         </div>
+        {/* Compact cancellable-vests warning — hover/focus for detail. Replaces
+            the old full-width banner that sat above the hero (too prominent). */}
+        <CancellableWatchdog streams={active} />
       </div>
 
       {/* ── Mobile condensed list (hidden on md+) ──────────────────────────── */}
@@ -5357,7 +5360,6 @@ export default function Dashboard() {
           ) : (
             <>
               {/* ── Above the fold ─────────────────────────────────────── */}
-              <CancellableWatchdog streams={filteredStreams} />
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
 
               {/* Global token filter — drives filteredStreams across the whole
