@@ -13,7 +13,7 @@ import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
-import { getTokenStreams, getTokenMarketData } from "@/lib/vesting/token-aggregates";
+import { getTokenStreams, getTokenMarketData, getSmartMoneyHoldersOfToken } from "@/lib/vesting/token-aggregates";
 import { groupIntoRounds } from "@/lib/vesting/rounds";
 import { getCurrentUserTier } from "@/lib/auth/tier";
 import { TokenUnlockChart } from "./TokenUnlockChart";
@@ -55,9 +55,10 @@ export default async function ExplorerTokenPage({
   const tier = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
 
-  const [streams, market] = await Promise.all([
+  const [streams, market, smartHolders] = await Promise.all([
     getTokenStreams(cid, addr),
     getTokenMarketData(cid, addr).catch(() => null),
+    getSmartMoneyHoldersOfToken(cid, addr).catch(() => []),
   ]);
 
   const rounds = groupIntoRounds(streams);
@@ -69,6 +70,21 @@ export default async function ExplorerTokenPage({
   const totalLockedWhole = streams.reduce((a, s) => a + Number(BigInt(s.lockedAmount ?? "0")) / 10 ** dec, 0);
   const nextUnlock = rounds.reduce<number | null>(
     (m, r) => (r.nextUnlockTime != null && (m == null || r.nextUnlockTime < m) ? r.nextUnlockTime : m),
+    null,
+  );
+
+  // ── #6 enrichments ──────────────────────────────────────────────────────
+  // Realisable value of the locked supply (price × locked), with a liquidity
+  // caveat: under $10k DEX depth the dollar figure is more notional than
+  // realisable, so we flag it rather than present it as gospel.
+  const lockedValueUsd = priceUsd != null ? totalLockedWhole * priceUsd : null;
+  const liqUsd = market?.liquidity ?? null;
+  const thinLiquidity = lockedValueUsd != null && (liqUsd == null || liqUsd < 10_000);
+  // Nearest FUTURE cliff across streams — a cliff is a single lump unlock
+  // (distinct from gradual linear/step vesting), the kind worth bracing for.
+  const nowSec = Math.floor(Date.now() / 1000);
+  const nextCliff = streams.reduce<number | null>(
+    (m, s) => (s.cliffTime != null && s.cliffTime > nowSec && (m == null || s.cliffTime < m) ? s.cliffTime : m),
     null,
   );
 
@@ -109,8 +125,9 @@ export default async function ExplorerTokenPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
           {[
+            { label: "Locked value", val: lockedValueUsd != null ? `$${fmtNum(lockedValueUsd)}` : "—" },
             { label: "Total locked", val: `${fmtNum(totalLockedWhole)} ${symbol}` },
             { label: "Recipients", val: recipientCount.toLocaleString() },
             { label: "Rounds", val: String(rounds.length) },
@@ -122,6 +139,43 @@ export default async function ExplorerTokenPage({
             </div>
           ))}
         </div>
+        {/* Realisable-value honesty: a thin DEX pool means the "locked value"
+            above is more notional than realisable. */}
+        {thinLiquidity && (
+          <p className="text-[11px] mt-2" style={{ color: "var(--preview-text-3)" }}>
+            ⚠ Locked value is notional — under $10k DEX liquidity, this size couldn&apos;t be realised at the quoted price.
+          </p>
+        )}
+        {/* Next-cliff callout — a lump unlock, distinct from gradual vesting. */}
+        {nextCliff != null && (
+          <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg text-xs"
+            style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)", color: "#b45309" }}>
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span><strong>Cliff unlock {fmtDate(nextCliff)}</strong> — a lump unlocks at once, not gradually.</span>
+          </div>
+        )}
+        {/* Smart-money-on-token — top-100 wallets that vest this token among
+            their largest positions. The "the smart money is in this" signal. */}
+        {smartHolders.length > 0 && (
+          <div className="mt-3 px-3 py-2.5 rounded-lg" style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.22)" }}>
+            <p className="text-[11px] font-semibold mb-1.5" style={{ color: "#0F8A8A" }}>
+              Smart money · {smartHolders.length} top-100 wallet{smartHolders.length === 1 ? "" : "s"} vest this token
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {smartHolders.slice(0, 8).map((h) => (
+                <Link key={h.recipient}
+                  href={`/dashboard/explorer?mode=wallet&q=${encodeURIComponent(h.recipient)}`}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold hover:opacity-80 transition-opacity"
+                  style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}>
+                  <span style={{ color: "#0F8A8A" }}>#{h.rank}</span>
+                  <span className="font-mono">{shortAddr(h.recipient)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Due-diligence row — project social/data links to help users
             assess the token. All sourced from DexScreener except the

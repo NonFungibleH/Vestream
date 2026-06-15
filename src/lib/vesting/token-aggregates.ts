@@ -21,7 +21,7 @@
 
 import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { db } from "../db";
-import { vestingStreamsCache } from "../db/schema";
+import { vestingStreamsCache, smartMoneySnapshot } from "../db/schema";
 import type { VestingStream } from "./types";
 import { fetchWithRetry } from "../fetch-with-retry";
 import { normaliseAddress } from "../address-validation";
@@ -150,6 +150,45 @@ export async function getTokenStreams(
   return rows
     .map((r) => r.streamData as unknown as VestingStream)
     .filter((s): s is VestingStream => !!s && typeof s.id === "string");
+}
+
+/**
+ * Smart-money wallets that vest this token — reverse lookup over the daily
+ * smart_money_snapshot. Each snapshot row carries the wallet's TOP tokens by
+ * USD (topTokensJson), so this surfaces wallets where this token is among
+ * their largest vesting positions — a "the smart money is in this" signal on
+ * the token page. Filtered in JS (≤100 wallets × top-N tokens = trivial); no
+ * jsonb query needed. Token addresses compared case-insensitively so EVM and
+ * Solana mints both match without mangling stored values.
+ */
+export async function getSmartMoneyHoldersOfToken(
+  chainId: number,
+  tokenAddress: string,
+): Promise<Array<{ rank: number; recipient: string; usdValue: number | null }>> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  const addrLower = tokenAddress.toLowerCase();
+  try {
+    const rows = await db
+      .select({
+        rank:          smartMoneySnapshot.rank,
+        recipient:     smartMoneySnapshot.recipient,
+        topTokensJson: smartMoneySnapshot.topTokensJson,
+      })
+      .from(smartMoneySnapshot)
+      .orderBy(asc(smartMoneySnapshot.rank));
+
+    const out: Array<{ rank: number; recipient: string; usdValue: number | null }> = [];
+    for (const r of rows) {
+      const hit = (r.topTokensJson ?? []).find(
+        (t) => t.chainId === chainId && (t.tokenAddress ?? "").toLowerCase() === addrLower,
+      );
+      if (hit) out.push({ rank: r.rank, recipient: r.recipient, usdValue: hit.usdValue ?? null });
+    }
+    return out;
+  } catch (err) {
+    console.warn("[token-aggregates] getSmartMoneyHoldersOfToken failed:", err);
+    return [];
+  }
 }
 
 /**
