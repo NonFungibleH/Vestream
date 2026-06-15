@@ -210,7 +210,13 @@ export default function ExportsPage() {
   const [pending, setPending]   = useState<string[]>([]);
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshMsg, setRefreshMsg]   = useState<string | null>(null);
-  const [yearFilter, setYearFilter]   = useState<string>("all");
+  // Date range for the report (empty string = open-ended). Replaces the old
+  // year-only dropdown — UK tax years (Apr 6–Apr 5) and single quarters don't
+  // fit calendar years. Presets below set these; the date inputs allow any
+  // custom span. The /api/claims/{history,export} endpoints already take
+  // since/until, so this is purely a UI change.
+  const [since, setSince] = useState<string>("");
+  const [until, setUntil] = useState<string>("");
   // Per-protocol inserted/error counts from the most recent refresh.
   // Used to surface the per-protocol diagnostic panel right after a refresh
   // so users can see exactly which ingestors ran, which inserted rows,
@@ -227,10 +233,8 @@ export default function ExportsPage() {
   // → Tax renders the second Tax visit instantly. The refresh() POST below
   // mutates the SWR cache directly on success.
   const sp = new URLSearchParams();
-  if (yearFilter !== "all") {
-    sp.set("since", `${yearFilter}-01-01`);
-    sp.set("until", `${yearFilter}-12-31`);
-  }
+  if (since) sp.set("since", since);
+  if (until) sp.set("until", until);
   const swrKey = `/api/claims/history?${sp.toString()}`;
   const { data: historyData, isLoading, mutate: mutateHistory } = useSWR<{
     events: ClaimEvent[];
@@ -287,11 +291,9 @@ export default function ExportsPage() {
 
   function downloadCsv(format: string) {
     const sp = new URLSearchParams({ format });
-    if (yearFilter !== "all") {
-      sp.set("since", `${yearFilter}-01-01`);
-      sp.set("until", `${yearFilter}-12-31`);
-    }
-    track("cta_clicked", { cta_id: "exports_download", format, year: yearFilter });
+    if (since) sp.set("since", since);
+    if (until) sp.set("until", until);
+    track("cta_clicked", { cta_id: "exports_download", format, since: since || "all", until: until || "all" });
     // Click a synthetic <a download> instead of navigating via
     // window.location.href. The old form consumed the click as a
     // navigation, so a subsequent window.open() in the same handler (the
@@ -309,9 +311,6 @@ export default function ExportsPage() {
     a.remove();
   }
 
-  const years = summary
-    ? Object.keys(summary.byYear).sort((a, b) => Number(b) - Number(a))
-    : [];
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ background: "var(--preview-bg)" }}>
@@ -370,22 +369,59 @@ export default function ExportsPage() {
         <VestingsList />
 
         {/* Action row */}
-        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-          <div className="flex items-center gap-3">
-            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Tax year</label>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="text-sm px-3 py-2 rounded-lg outline-none"
-              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
-            >
-              <option value="all">All time</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y} ({summary?.byYear[y]?.rows ?? 0} claims · ${(summary?.byYear[y]?.usd ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })})
-                </option>
-              ))}
-            </select>
+        <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Report period</span>
+            {/* Preset chips — calendar years + UK tax years (Apr 6–Apr 5).
+                For anything else (a single quarter, an arbitrary span) use the
+                From/To inputs below. */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(() => {
+                const now = new Date();
+                const yr  = now.getUTCFullYear();
+                // Which UK tax year does "today" fall in? It rolls over on Apr 6.
+                const afterApr6 = now.getUTCMonth() > 3 || (now.getUTCMonth() === 3 && now.getUTCDate() >= 6);
+                const ukStart = afterApr6 ? yr : yr - 1;
+                const yy = (n: number) => String(n).slice(2);
+                const presets: Array<{ label: string; since: string; until: string }> = [
+                  { label: "All time", since: "", until: "" },
+                  { label: `${yr}`,     since: `${yr}-01-01`,     until: `${yr}-12-31` },
+                  { label: `${yr - 1}`, since: `${yr - 1}-01-01`, until: `${yr - 1}-12-31` },
+                  { label: `UK ${yy(ukStart)}/${yy(ukStart + 1)}`,     since: `${ukStart}-04-06`,     until: `${ukStart + 1}-04-05` },
+                  { label: `UK ${yy(ukStart - 1)}/${yy(ukStart)}`, since: `${ukStart - 1}-04-06`, until: `${ukStart}-04-05` },
+                ];
+                return presets.map((p) => {
+                  const active = since === p.since && until === p.until;
+                  return (
+                    <button key={p.label} type="button" onClick={() => { setSince(p.since); setUntil(p.until); }}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors"
+                      style={{
+                        background: active ? "rgba(28,184,184,0.14)" : "var(--preview-card)",
+                        color:      active ? "#0F8A8A" : "var(--preview-text-2)",
+                        border:     `1px solid ${active ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
+                      }}>
+                      {p.label}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+            {/* Custom range */}
+            <div className="flex items-center gap-2 text-xs flex-wrap" style={{ color: "var(--preview-text-3)" }}>
+              <span>From</span>
+              <input type="date" value={since} max={until || undefined} onChange={(e) => setSince(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg outline-none"
+                style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }} />
+              <span>to</span>
+              <input type="date" value={until} min={since || undefined} onChange={(e) => setUntil(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg outline-none"
+                style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }} />
+              {(since || until) && (
+                <button type="button" onClick={() => { setSince(""); setUntil(""); }} className="underline" style={{ color: "var(--preview-text-2)" }}>
+                  clear
+                </button>
+              )}
+            </div>
           </div>
           <button
             onClick={refresh}
