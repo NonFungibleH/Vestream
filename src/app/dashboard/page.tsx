@@ -3838,62 +3838,9 @@ function DarkToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void })
   );
 }
 
-// ─── WalletChip ───────────────────────────────────────────────────────────────
-
-function WalletChip({ address, open, onToggle, onDisconnect }: {
-  address: string; open: boolean;
-  onToggle: (e: React.MouseEvent) => void;
-  onDisconnect: () => void;
-}) {
-  const isEmail  = address.includes("@");
-  const initials = isEmail
-    ? address.slice(0, 2).toUpperCase()
-    : address.slice(2, 4).toUpperCase();
-  const displayLabel = isEmail
-    ? (address.length > 16 ? address.slice(0, 14) + "…" : address)
-    : shortAddr(address);
-
-  return (
-    <div className="relative">
-      <button onClick={onToggle}
-        className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-xl border transition-all duration-150"
-        style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--preview-hover)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--preview-card)")}
-      >
-        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">{initials}</div>
-        <span className="text-xs font-medium" style={{ color: "var(--preview-text-2)", fontFamily: isEmail ? "inherit" : "monospace" }}>{displayLabel}</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-        <svg width={10} height={10} viewBox="0 0 10 10" fill="none" className="flex-shrink-0">
-          <path d={open ? "M2 6.5L5 3.5L8 6.5" : "M2 3.5L5 6.5L8 3.5"}
-            stroke="var(--preview-text-3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-64 rounded-2xl border z-50 p-1 overflow-hidden"
-          style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)", boxShadow: "0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(21,23,26,0.10)" }}>
-          <div className="px-3 py-3 mb-1" style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[11px] font-bold text-white">{initials}</div>
-              <div>
-                <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>{isEmail ? "Email account" : "My Wallet"}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="w-1 h-1 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] text-emerald-500 font-medium">Signed in</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-[10px] break-all" style={{ color: "var(--preview-text-3)", fontFamily: isEmail ? "inherit" : "monospace" }}>{address}</p>
-          </div>
-          <button onClick={onDisconnect}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors font-semibold">
-            <span>⊘</span> Sign out
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+// WalletChip moved to src/components/WalletChip.tsx — the account chip now
+// lives in the universal <DashboardHeader> (rendered by DashboardChrome on
+// every tab), not in this page's local header.
 
 // ─── Chain / protocol label maps (used by WalletRow badges + loading skeleton) ─
 const CHAIN_LABELS: Record<string, string> = {
@@ -4617,11 +4564,9 @@ export default function Dashboard() {
   // wagmi useAccount is used inside AddWalletBar — nothing needed at top level
   const [wallets, setWallets]             = useState<Wallet[]>([]);
   const [walletsLoaded, setWalletsLoaded] = useState(false);
-  const [sessionAddress, setSessionAddress] = useState<string | null>(null);
   const [tier, setTier]                   = useState<string>("free");
   const [walletLimit, setWalletLimit]     = useState<number | null>(1); // free tier default
   const [showAddWallet, setShowAddWallet] = useState(false);
-  const [walletChipOpen, setWalletChipOpen] = useState(false);
   // Night mode is now a single shared control (sidebar) backed by
   // DarkModeProvider. Read the reactive value here for inline-styled children
   // (PortfolioHero gradient, UnlockTimeline) — no local state, no per-page toggle.
@@ -4795,7 +4740,6 @@ export default function Dashboard() {
       if (res.ok) {
         const json = await res.json();
         setWallets(json.wallets);
-        setSessionAddress(json.sessionAddress ?? null);
         setTier(json.tier ?? "free");
         setWalletLimit(json.walletLimit !== undefined ? json.walletLimit : 3);
       }
@@ -4973,10 +4917,6 @@ export default function Dashboard() {
     {} as Record<string, string>
   );
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login"); router.refresh();
-  }
 
   async function handleRemoveWallet(address: string) {
     await fetch(`/api/wallets/${address}`, { method: "DELETE" });
@@ -4998,77 +4938,7 @@ export default function Dashboard() {
   // div — keeps DOM clean and matches the previous mount semantics.
   return (
     <>
-      <div
-        className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}
-        onClick={() => { if (walletChipOpen) setWalletChipOpen(false); }}
-      >
-        {/* Header */}
-        <header className="h-14 px-4 md:px-6 flex items-center justify-between flex-shrink-0"
-          style={{ background: "var(--preview-card)", borderBottom: "1px solid var(--preview-border)" }}>
-          <div className="flex items-center gap-3">
-            {/* Mobile hamburger — toggles the layout's shared sidebar via the
-                chrome context. Pre-refactor this lived in the local Sidebar
-                state; now it's owned by DashboardChrome (the parent layout
-                wrapper), so we ask the chrome to toggle it. */}
-            <button className="flex md:hidden w-8 h-8 items-center justify-center rounded-lg"
-              style={{ color: "var(--preview-text-2)" }}
-              onClick={toggleSidebar}
-              aria-label="Toggle sidebar">
-              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Overview</h1>
-              <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                {isLoading ? "Syncing…" : (() => {
-                  if (streams.length === 0) return "No streams found";
-                  const active = streams.filter(s => !s.isFullyVested).length;
-                  if (active === 0) return `${streams.length} stream${streams.length !== 1 ? "s" : ""} · all fully vested`;
-                  return `${active} active stream${active !== 1 ? "s" : ""} · live`;
-                })()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            {/* Wallet management — moved out of the sidebar (the layout's
-                shared sidebar doesn't carry per-page state). "+ Add" toggles
-                the AddWalletBar below; "Manage" links to /settings for the
-                full add/edit/remove experience. The wallets-tracked count
-                is the at-a-glance status the old sidebar gave users. */}
-            {wallets.length >= 0 && (
-              <div className="hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg"
-                style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)", color: "var(--preview-text-2)" }}>
-                <span>
-                  <strong style={{ color: "var(--preview-text)" }}>{wallets.length}</strong>
-                  {walletLimit !== null ? ` / ${walletLimit}` : ""} wallet{wallets.length === 1 ? "" : "s"}
-                </span>
-                <span style={{ color: "var(--preview-border)" }}>·</span>
-                <button
-                  onClick={() => setShowAddWallet((v) => !v)}
-                  className="font-semibold transition-colors hover:underline"
-                  style={{ color: "#0F8A8A" }}
-                >
-                  + Add
-                </button>
-                <span style={{ color: "var(--preview-border)" }}>·</span>
-                <a href="/settings" className="font-medium transition-colors hover:underline" style={{ color: "var(--preview-text-2)" }}>
-                  Manage
-                </a>
-              </div>
-            )}
-            {/* Night-mode toggle moved to the shared sidebar — single control
-                for the whole dashboard (see DashboardSidebar + DarkModeProvider). */}
-            {sessionAddress && (
-              <WalletChip
-                address={sessionAddress}
-                open={walletChipOpen}
-                onToggle={(e) => { e.stopPropagation(); setWalletChipOpen((v) => !v); }}
-                onDisconnect={handleLogout}
-              />
-            )}
-          </div>
-        </header>
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}>
 
         {/* AddWalletModal is rendered as a portal-like fixed overlay below */}
 
@@ -5097,6 +4967,26 @@ export default function Dashboard() {
           ) : (
             <>
               {/* ── Above the fold ─────────────────────────────────────── */}
+              {/* Home-only inline controls. The universal <DashboardHeader>
+                  (DashboardChrome) now carries the page title + wallet count +
+                  account menu on every tab; this row keeps the home page's
+                  live stream status and the quick "+ Add wallet" affordance
+                  that used to live in the page's local header. */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                  {(() => {
+                    if (streams.length === 0) return "No streams found";
+                    const active = streams.filter((s) => !s.isFullyVested).length;
+                    if (active === 0) return `${streams.length} stream${streams.length !== 1 ? "s" : ""} · all fully vested`;
+                    return `${active} active stream${active !== 1 ? "s" : ""} · live`;
+                  })()}
+                </p>
+                <button onClick={() => setShowAddWallet((v) => !v)}
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors flex-shrink-0"
+                  style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+                  + Add wallet
+                </button>
+              </div>
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
 
               {/* Global token filter — drives filteredStreams across the whole

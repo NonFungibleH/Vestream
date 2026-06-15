@@ -17,6 +17,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardFooter } from "./DashboardFooter";
+import { DashboardHeader } from "./DashboardHeader";
 
 // ─── Mobile bottom navigation bar ────────────────────────────────────────────
 // Shown only on small screens (md:hidden). Mirrors the 5 most-used nav items.
@@ -161,6 +162,10 @@ export function DashboardChrome({ children, tier }: DashboardChromeProps) {
         />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Universal top bar — rendered once here so every dashboard tab
+              shares the same header (title + wallet count + account menu),
+              instead of it living only on the home page. */}
+          <DashboardHeader />
           {/* Extra bottom padding on mobile so content isn't hidden behind the bottom nav */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-[60px] md:pb-0">
             {children}
