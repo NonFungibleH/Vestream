@@ -412,10 +412,12 @@ export default async function TokenPage(
                 display={`${addr.slice(0, 6)}…${addr.slice(-4)}`}
                 style={{ color: "#8B8E92" }}
               />
-              {priceUsd && (
+              {priceUsd != null && priceUsd > 0 && (
                 <>
                   <span className="font-bold tabular-nums" style={{ color: "#1A1D20" }}>
-                    {fmtUsd(priceUsd, false)}
+                    {/* Sub-cent prices round to "$0" in the 2-dp format — show
+                        "<$0.01" so a low-priced token doesn't read as broken. */}
+                    {priceUsd < 0.01 ? "<$0.01" : fmtUsd(priceUsd, false)}
                   </span>
                   {market.change24h != null && (
                     <span
@@ -478,14 +480,22 @@ export default async function TokenPage(
           />
           <HeroStat
             label="Unlocking next 7d"
-            value={upcoming7Usd != null ? fmtUsd(upcoming7Usd) : (overview ? fmtTokens(overview.upcoming7dTokens) : "—")}
-            sub={overview ? `${fmtTokens(overview.upcoming7dTokens)} ${symbol}` : ""}
+            value={overview && overview.upcoming7dTokens > 0
+              ? (upcoming7Usd != null ? fmtUsd(upcoming7Usd) : fmtTokens(overview.upcoming7dTokens))
+              : "None"}
+            sub={overview && overview.upcoming7dTokens > 0
+              ? `${fmtTokens(overview.upcoming7dTokens)} ${symbol}`
+              : "nothing in 7 days"}
             accent="#E063A0"
           />
           <HeroStat
             label="Unlocking next 30d"
-            value={upcoming30Usd != null ? fmtUsd(upcoming30Usd) : (overview ? fmtTokens(overview.upcoming30dTokens) : "—")}
-            sub={overview ? `${fmtTokens(overview.upcoming30dTokens)} ${symbol}` : ""}
+            value={overview && overview.upcoming30dTokens > 0
+              ? (upcoming30Usd != null ? fmtUsd(upcoming30Usd) : fmtTokens(overview.upcoming30dTokens))
+              : "None"}
+            sub={overview && overview.upcoming30dTokens > 0
+              ? `${fmtTokens(overview.upcoming30dTokens)} ${symbol}`
+              : "nothing in 30 days"}
             accent="#F0992E"
           />
           <HeroStat
@@ -1102,7 +1112,24 @@ function UnlockCalendar({
       />
       </div>
 
-      {/* Stats strip — four technical metrics pulled from the same data. */}
+      {/* Stats strip — four technical metrics pulled from the same data.
+          When NOTHING unlocks in the forward 12-month window every tile
+          would render "—" / "0.0%" — a wall of dashes that reads as
+          missing data rather than the real signal ("it's all locked
+          further out"). Collapse to one honest line in that case. */}
+      {grandTotal <= 0 ? (
+        <div
+          className="px-4 md:px-5 py-3 border-t text-xs"
+          style={{ borderColor: "rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.015)", color: "#64748b" }}
+        >
+          Nothing unlocks in the next 12 months
+          {remainingBeyond > 0 && (
+            <> — <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
+              {fmtTokens(remainingBeyond)} {symbol}
+            </span> still locked beyond</>
+          )}
+        </div>
+      ) : (
       <div
         className="px-4 md:px-5 py-3 grid grid-cols-2 md:grid-cols-4 gap-3 border-t"
         style={{ borderColor: "rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.015)" }}
@@ -1149,6 +1176,7 @@ function UnlockCalendar({
             : ""}
         />
       </div>
+      )}
 
       {/* Protocol legend */}
       <div
@@ -1199,6 +1227,35 @@ function CalendarStat({
 function ProtocolMix({
   mix, total,
 }: { mix: TokenOverview["protocolMix"]; total: number }) {
+  // Single protocol → a "mix" with one 100% bar is noise (it just restates
+  // the breadcrumb + pulse). Collapse to a one-line statement instead.
+  if (mix.length === 1) {
+    const p = mix[0];
+    const slug = protocolSlug(p.protocol);
+    const inner = (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="w-2.5 h-2.5 rounded-sm" style={{ background: protocolColour(p.protocol) }} />
+        <span className="text-sm font-semibold" style={{ color: "#1A1D20" }}>{protocolName(p.protocol)}</span>
+        <span className="text-xs" style={{ color: "#8B8E92" }}>
+          · all {p.streams} stream{p.streams === 1 ? "" : "s"}
+        </span>
+      </div>
+    );
+    return (
+      <div className="rounded-2xl overflow-hidden h-full"
+        style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 md:px-5 py-3" style={{ background: "rgba(0,0,0,0.02)", borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1A1D20" }}>Protocol</span>
+        </div>
+        <div className="px-4 md:px-5 py-4">
+          {slug ? (
+            <Link href={`/protocols/${slug}`} className="block hover:opacity-80 transition-opacity">{inner}</Link>
+          ) : inner}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="rounded-2xl overflow-hidden h-full"
