@@ -2,45 +2,59 @@
 
 // /dashboard/alerts
 // ─────────────────────────────────────────────────────────────────────────────
-// Web alerts management — the Pro-tier credibility gap fix. Until 2026-06-12
-// a user paying $9.99/mo could only manage alerts from the mobile app; the
-// web /settings page only carried email/push global toggles. This page brings
-// per-stream alert config (the same shape the mobile app already uses via
-// `streamPrefs` JSONB) onto the desktop, plus a notification history feed so
-// alerts feel real instead of invisible.
+// Web alerts management — token-first, mirroring the mobile app's Alerts tab.
+//
+// 2026-06-15 rebuild: the page is now TOKEN-FIRST. You pick a token (stream)
+// at the top, then see + configure that token's three alert slots below —
+// exactly the mental model the mobile app uses. This replaced the old
+// "global push defaults + a list of per-stream override rows" layout.
+//
+// Why the change went deeper than cosmetics:
+//   - The notification scheduler (src/lib/notifications/scheduler.ts) REQUIRES
+//     a per-stream prefs entry to send anything (`if (!perStream) continue` —
+//     a 2026-05-20 privacy fix). The old page's prominent "Global push" event
+//     toggles (notifyCliff / notifyStreamEnd / notifyMonthly / notifyNextClaim)
+//     were read by ZERO firing code — dead UI implying alerts that never sent.
+//     They're removed here. The only globals that still matter are the email
+//     enable + address (kept below) and `hoursBeforeUnlock` (a stored default
+//     timing, now set per-slot so it never needs a global control).
+//   - So this page now reflects how the backend actually works: every alert is
+//     per-stream and opt-in.
+//
+// Data model is shared with mobile: both write `streamPrefs[streamId]` (a JSONB
+// bag keyed by streamId) — toggle on either surface, see it on both. Web writes
+// via PUT /api/notifications/preferences; mobile via POST /api/mobile/notifications.
 //
 // Layout (top → bottom):
-//   1. Header + sub-nav into the page sections.
-//   2. ACTIVE ALERTS — every stream with non-default streamPrefs (any of
-//      alert{1,2,3}Enabled true, or thresholdUsd{1,2,3} set). Click a row
-//      to expand into an editor panel (no modal — inline expand is cheaper
-//      and keeps deep links working).
-//   3. ALL STREAMS — every other stream the user has, with a "+ Add alert"
-//      affordance so they can configure one for streams that don't yet have
-//      custom prefs (the global defaults apply otherwise).
-//   4. HISTORY — last 50 notifications from notifications_sent.
+//   1. Header.
+//   2. TOKEN SELECTOR — pills (≤4 active streams) or dropdown (>4), each with an
+//      "armed" alert-count badge. Active = non-fully-vested.
+//   3. SELECTED TOKEN CONFIG — 3 alert slots; each slot is a toggle + a trigger
+//      picker (timing chips / event chips / value chips). Continuous streams
+//      (Superfluid / LlamaPay) only offer value triggers.
+//   4. EMAIL alerts (global enable + address).
+//   5. TEST push.
+//   6. HISTORY — last 50 notifications.
 //
-// Data sources:
-//   - GET /api/notifications/preferences  (existing, returns streamPrefs)
-//   - PUT /api/notifications/preferences  (extended 2026-06-12 to write streamPrefs)
-//   - GET /api/notifications/history      (new, this batch)
-//   - GET /api/vesting                    (existing — for the stream list)
+// Every trigger offered here is verified to fire in the scheduler:
+//   before-unlock, vesting-start, cliff, stream-end (resolveAlertSpecs) and
+//   threshold (its own branch). No dead toggles.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { useDarkMode } from "@/lib/use-dark-mode";
 
-type TriggerType = "before-unlock" | "cliff" | "stream-end" | "threshold";
+type TriggerType = "before-unlock" | "vesting-start" | "cliff" | "stream-end" | "threshold";
 
 interface StreamSlotPref {
-  enabled?:         boolean;
-  triggerType?:     TriggerType;
+  enabled?:           boolean;
+  triggerType?:       TriggerType;
   hoursBeforeUnlock?: number | null;
-  thresholdUsd?:    number | null;
+  thresholdUsd?:      number | null;
 }
 
 /** Local UI shape — flat per-slot. Server stores a per-slot scattered
@@ -73,20 +87,20 @@ interface Prefs {
   emailEnabled:      boolean;
   email:             string | null;
   hoursBeforeUnlock: number;
-  notifyCliff:       boolean;
-  notifyStreamEnd:   boolean;
-  notifyMonthly:     boolean;
-  notifyNextClaim:   boolean;
   streamPrefs:       Record<string, RawStreamPref>;
 }
 
 interface Stream {
-  id:           string;
-  protocol:     string;
-  chainId:      number;
-  tokenSymbol:  string;
-  tokenAddress: string;
-  isFullyVested: boolean;
+  id:             string;
+  protocol:       string;
+  chainId:        number;
+  tokenSymbol:    string;
+  tokenAddress:   string;
+  isFullyVested:  boolean;
+  startTime:      number | null;
+  cliffTime:      number | null;
+  endTime:        number | null;
+  nextUnlockTime: number | null;
 }
 
 interface HistoryItem {
@@ -101,13 +115,50 @@ interface HistoryItem {
   eventTime:    string;
 }
 
-const HOUR_OPTIONS = [1, 6, 12, 24, 48, 72] as const;
-const TRIGGER_LABELS: Record<TriggerType, string> = {
-  "before-unlock": "Before unlock",
-  "cliff":         "Cliff hits",
-  "stream-end":    "Stream ends",
-  "threshold":     "Threshold $",
+// ── Trigger catalogue (mirrors the mobile app) ──────────────────────────────
+// Timing options for "before-unlock". Fractional hours encode sub-hour
+// lead times: 1/6 h = 10 min. The scheduler multiplies hoursBefore × 3600,
+// so any positive number works.
+const TIMING_OPTIONS: { hours: number; label: string }[] = [
+  { hours: 0,     label: "Live" },
+  { hours: 1 / 6, label: "10 min" },
+  { hours: 1,     label: "1h" },
+  { hours: 3,     label: "3h" },
+  { hours: 6,     label: "6h" },
+  { hours: 12,    label: "12h" },
+  { hours: 24,    label: "24h" },
+];
+const VALUE_OPTIONS = [100, 500, 1000, 5000, 10000] as const;
+
+const EVENT_TRIGGERS: TriggerType[] = ["vesting-start", "cliff", "stream-end"];
+const EVENT_LABELS: Record<string, string> = {
+  "vesting-start": "Vesting start",
+  "cliff":         "Cliff",
+  "stream-end":    "Stream end",
 };
+
+// Protocols with continuous (per-second) streaming and no discrete unlock —
+// timing/event triggers don't apply, only value-crosses.
+const CONTINUOUS_PROTOCOLS = new Set(["superfluid", "llamapay"]);
+
+function timingLabel(hours: number): string {
+  const opt = TIMING_OPTIONS.find((o) => Math.abs(o.hours - hours) < 1e-6);
+  if (opt) return opt.hours === 0 ? "at unlock" : `${opt.label} before`;
+  return `${hours}h before`;
+}
+
+/** Human summary of a single configured slot, for the collapsed slot subtitle. */
+function slotSummary(slot: StreamSlotPref, fallbackHours: number): string {
+  const trig = slot.triggerType ?? "before-unlock";
+  if (trig === "threshold") {
+    return slot.thresholdUsd != null ? `when claimable passes $${slot.thresholdUsd.toLocaleString()}` : "on a value threshold";
+  }
+  if (trig === "before-unlock") return timingLabel(slot.hoursBeforeUnlock ?? fallbackHours);
+  if (trig === "vesting-start") return "when vesting begins";
+  if (trig === "cliff")         return "at the cliff";
+  if (trig === "stream-end")    return "when the stream ends";
+  return "";
+}
 
 // ── Encoding / decoding raw streamPrefs ⇄ UI shape ──────────────────────────
 // Server stores per-slot fields scattered (alert1*, alert2*, alert3*) so the
@@ -162,18 +213,9 @@ function encodeStreamPref(pref: StreamPref): RawStreamPref {
   };
 }
 
-/** A stream is "managed" (shows up under Active alerts) when its prefs
- *  diverge from defaults — either muted or any slot configured. */
-function isManaged(raw: RawStreamPref | undefined): boolean {
-  if (!raw) return false;
-  if (raw.enabled === false) return true; // explicitly muted
-  if (raw.alert1Enabled || raw.alert2Enabled || raw.alert3Enabled) return true;
-  if (raw.thresholdUsd1 != null || raw.thresholdUsd2 != null || raw.thresholdUsd3 != null) return true;
-  if (raw.pushTiming2 != null) return true; // legacy implicit Alert 2 enable
-  return false;
-}
-
-function activeSlotCount(raw: RawStreamPref): number {
+function activeSlotCount(raw: RawStreamPref | undefined): number {
+  if (!raw) return 0;
+  if (raw.enabled === false) return 0; // muted
   let n = 0;
   if (raw.alert1Enabled) n++;
   if (raw.alert2Enabled || raw.pushTiming2 != null) n++;
@@ -204,14 +246,12 @@ export default function AlertsPage() {
   void _dark;
 
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error,    setError]    = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Three independent SWR caches — each survives navigation away/back
-  // (60s dedupe via the dashboard's SWRConfig provider), so revisiting
-  // /dashboard/alerts after a 5-second detour is instant instead of
-  // showing the "Loading alerts…" skeleton three times. The fetcher
-  // pushes 401s through the same /login bounce the old useEffect did.
+  // SWR caches — each survives navigation away/back (60s dedupe via the
+  // dashboard's SWRConfig provider), so revisiting /dashboard/alerts after a
+  // short detour is instant. The fetcher pushes 401s through the /login bounce.
   const onAuthFail = useCallback(() => { router.push("/login"); }, [router]);
   const authFetcher = useCallback(async <T,>(url: string): Promise<T> => {
     const res = await fetch(url, { credentials: "include" });
@@ -224,11 +264,10 @@ export default function AlertsPage() {
     "/api/notifications/preferences",
     authFetcher,
   );
-  // /api/vesting REQUIRES a `wallets` param — calling it bare returns 400,
-  // which left this page stuck on "Loading alerts…" forever. Fetch the
-  // user's tracked wallets first (same as the dashboard), then build the
-  // scoped URL. No wallets → skip the call (vestingUrl stays null) and the
-  // streams memo below resolves to [] so the empty state shows.
+  // /api/vesting REQUIRES a `wallets` param — calling it bare returns 400.
+  // Fetch the user's tracked wallets first, then build the scoped URL. No
+  // wallets → skip the call (vestingUrl stays null) and the streams memo below
+  // resolves to [] so the empty state shows.
   const { data: walletsRaw } = useSWR<{ wallets: { address: string }[] }>(
     "/api/wallets",
     authFetcher,
@@ -240,7 +279,7 @@ export default function AlertsPage() {
   const vestingUrl = walletAddresses.length > 0
     ? `/api/vesting?wallets=${walletAddresses}`
     : null;
-  const { data: streamsRaw } = useSWR<{ streams: Stream[] }>(
+  const { data: streamsRaw } = useSWR<{ streams: (Stream & Record<string, unknown>)[] }>(
     vestingUrl,
     authFetcher,
   );
@@ -256,13 +295,10 @@ export default function AlertsPage() {
       emailEnabled:      p.emailEnabled      ?? false,
       email:             p.email             ?? null,
       hoursBeforeUnlock: p.hoursBeforeUnlock ?? 24,
-      notifyCliff:       p.notifyCliff       ?? true,
-      notifyStreamEnd:   p.notifyStreamEnd   ?? true,
-      notifyMonthly:     p.notifyMonthly     ?? false,
-      notifyNextClaim:   p.notifyNextClaim   ?? true,
       streamPrefs:       p.streamPrefs       ?? {},
     };
   }, [prefsRaw]);
+
   const streams: Stream[] | null = useMemo(() => {
     // Wallets loaded but user has none → no streams to manage (empty state),
     // NOT a perpetual "Loading alerts…". Resolve to [] so the gate releases.
@@ -272,23 +308,62 @@ export default function AlertsPage() {
       id: s.id, protocol: s.protocol, chainId: s.chainId,
       tokenSymbol: s.tokenSymbol, tokenAddress: s.tokenAddress,
       isFullyVested: s.isFullyVested,
+      startTime:      (s.startTime as number | null) ?? null,
+      cliffTime:      (s.cliffTime as number | null) ?? null,
+      endTime:        (s.endTime as number | null) ?? null,
+      nextUnlockTime: (s.nextUnlockTime as number | null) ?? null,
     }));
   }, [streamsRaw, walletsRaw, walletAddresses]);
+
   const history: HistoryItem[] | null = useMemo(
     () => historyRaw === undefined ? null : (historyRaw.items ?? []),
     [historyRaw],
   );
 
+  // Active (alertable) streams — non-fully-vested, like the mobile app.
+  const activeStreams = useMemo(
+    () => (streams ?? []).filter((s) => !s.isFullyVested),
+    [streams],
+  );
+
+  // Labels: disambiguate duplicate token symbols with the protocol so two
+  // NOVA grants on different protocols are tellable apart in the selector.
+  const labelFor = useCallback((s: Stream): string => {
+    const dupes = activeStreams.filter((x) => x.tokenSymbol === s.tokenSymbol).length;
+    return dupes > 1 ? `${s.tokenSymbol} · ${s.protocol}` : s.tokenSymbol;
+  }, [activeStreams]);
+
+  // Deep-link (?stream=<id>) + auto-select first. Read from window so we don't
+  // pull useSearchParams (which forces a Suspense boundary at build time).
+  useEffect(() => {
+    if (activeStreams.length === 0) return;
+    setSelectedId((cur) => {
+      if (cur && activeStreams.some((s) => s.id === cur)) return cur;
+      const fromUrl = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("stream")
+        : null;
+      if (fromUrl && activeStreams.some((s) => s.id === fromUrl)) return fromUrl;
+      return activeStreams[0].id;
+    });
+  }, [activeStreams]);
+
+  const selectedStream = useMemo(
+    () => activeStreams.find((s) => s.id === selectedId) ?? null,
+    [activeStreams, selectedId],
+  );
+
   // ── Persist a single stream's prefs ─────────────────────────────────────
-  // Mutations write through SWR's cache via mutate() so the local state
-  // and the cache stay in sync — the next page nav that revisits this
-  // route reads the freshly mutated cache, not a stale snapshot.
   const saveStreamPref = useCallback(async (streamId: string, next: StreamPref) => {
     if (!prefs) return;
     setSavingId(streamId);
     setError(null);
     const encoded = encodeStreamPref(next);
     const merged: Record<string, RawStreamPref> = { ...prefs.streamPrefs, [streamId]: encoded };
+    // Optimistic SWR update so the toggle/chip feels instant.
+    mutatePrefs(
+      (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), streamPrefs: merged } } : cur,
+      { revalidate: false },
+    );
     try {
       const res = await fetch("/api/notifications/preferences", {
         method: "PUT",
@@ -297,47 +372,16 @@ export default function AlertsPage() {
       });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error ?? "Failed to save");
+        throw new Error((errJson as { error?: string }).error ?? "Failed to save");
       }
-      // Optimistic SWR cache update — passes the merged shape back into
-      // the cache so the row reflects the new state without a fetch
-      // round-trip. `revalidate: true` kicks off a quiet background fetch
-      // to confirm with the server.
-      mutatePrefs(
-        (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), streamPrefs: merged } } : cur,
-        { revalidate: true },
-      );
+      mutatePrefs((cur) => cur, { revalidate: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
+      mutatePrefs((cur) => cur, { revalidate: true }); // roll back to server truth
     } finally {
       setSavingId(null);
     }
   }, [prefs, mutatePrefs]);
-
-  const clearStreamPref = useCallback(async (streamId: string) => {
-    if (!prefs) return;
-    setSavingId(streamId);
-    setError(null);
-    const merged: Record<string, RawStreamPref> = { ...prefs.streamPrefs };
-    delete merged[streamId];
-    try {
-      const res = await fetch("/api/notifications/preferences", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ streamPrefs: merged }),
-      });
-      if (!res.ok) throw new Error("Failed to clear");
-      mutatePrefs(
-        (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), streamPrefs: merged } } : cur,
-        { revalidate: true },
-      );
-      setExpandedId(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear");
-    } finally {
-      setSavingId(null);
-    }
-  }, [prefs]);
 
   // ── Derived ─────────────────────────────────────────────────────────────
   const streamById = useMemo(() => {
@@ -346,20 +390,10 @@ export default function AlertsPage() {
     return m;
   }, [streams]);
 
-  const activeAlerts = useMemo(() => {
-    if (!prefs || !streams) return [];
-    return streams.filter((s) => isManaged(prefs.streamPrefs[s.id]));
-  }, [prefs, streams]);
-
-  const otherStreams = useMemo(() => {
-    if (!prefs || !streams) return [];
-    return streams.filter((s) => !isManaged(prefs.streamPrefs[s.id]) && !s.isFullyVested);
-  }, [prefs, streams]);
-
-  const activeSlotTotal = useMemo(() => {
+  const totalArmed = useMemo(() => {
     if (!prefs) return 0;
-    return Object.values(prefs.streamPrefs).reduce((n, r) => n + activeSlotCount(r), 0);
-  }, [prefs]);
+    return activeStreams.reduce((n, s) => n + activeSlotCount(prefs.streamPrefs[s.id]), 0);
+  }, [prefs, activeStreams]);
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
@@ -379,7 +413,7 @@ export default function AlertsPage() {
         Notification alerts
       </h1>
       <p className="text-sm mb-2" style={{ color: "var(--preview-text-2)" }}>
-        Configure email, push, and per-stream alerts. Everything on this page is shared with the mobile app — toggle on either, see it on both.
+        Pick a token, then set exactly how you want to hear about it — before an unlock, at the cliff, at full vest, or when its claimable value crosses a number. Everything here is shared with the mobile app.
       </p>
       <div className="inline-flex items-center gap-1.5 mb-6 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
         <span style={{ width: 6, height: 6, borderRadius: 3, background: "#0F8A8A", display: "inline-block" }} />
@@ -400,119 +434,52 @@ export default function AlertsPage() {
 
       {prefs && streams && (
         <>
-          {/* ── Push alerts (globals) ─────────────────────────────────────
-              These match the mobile app's "Push alerts" section. They
-              apply to every tracked stream unless overridden in Active
-              alerts below. */}
-          <GlobalPushSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
-
-          {/* ── Email alerts (globals) ───────────────────────────────────
-              Same shape as the mobile "Email alerts" section. */}
-          <GlobalEmailSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
-
-          {/* ── Test push ─────────────────────────────────────────────── */}
-          <TestPushSection setError={setError} />
-
-          {/* ── Active alerts (per-stream overrides) ──────────────────── */}
-          <section className="mb-8">
-            <div className="flex items-baseline justify-between mb-3">
-              <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
-                Per-stream alerts
-                {activeAlerts.length > 0 && (
-                  <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
-                    {activeSlotTotal} slot{activeSlotTotal === 1 ? "" : "s"} across {activeAlerts.length} stream{activeAlerts.length === 1 ? "" : "s"}
+          {/* ── Token-first config ─────────────────────────────────────── */}
+          {activeStreams.length === 0 ? (
+            <NoStreamsBlock hasStreams={streams.length > 0} />
+          ) : (
+            <section className="mb-8">
+              <div className="flex items-baseline justify-between mb-3">
+                <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
+                  Your tokens
+                </h2>
+                {totalArmed > 0 && (
+                  <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                    {totalArmed} alert{totalArmed === 1 ? "" : "s"} armed across {activeStreams.length} token{activeStreams.length === 1 ? "" : "s"}
                   </span>
                 )}
-              </h2>
-            </div>
-            {activeAlerts.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-6 text-center"
-                style={{ borderColor: "var(--preview-border)" }}>
-                <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>
-                  No per-stream overrides yet
-                </p>
-                <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-                  Your global push + email settings above apply to every stream by default. Use the list below to set up a custom alert (different timing, threshold-USD trigger) for a specific token.
-                </p>
               </div>
-            ) : (
-              <div className="rounded-xl overflow-hidden border"
-                style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
-                {activeAlerts.map((s, i) => (
-                  <StreamAlertRow
-                    key={s.id}
-                    stream={s}
-                    raw={prefs.streamPrefs[s.id]}
-                    globalHours={prefs.hoursBeforeUnlock}
-                    expanded={expandedId === s.id}
-                    saving={savingId === s.id}
-                    showTopBorder={i > 0}
-                    onToggleExpand={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                    onSave={(next) => saveStreamPref(s.id, next)}
-                    onClear={() => clearStreamPref(s.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
 
-          {/* ── Streams without custom alerts ─────────────────────────── */}
-          {otherStreams.length > 0 ? (
-            <section className="mb-8">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
-                Your other streams
-                <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
-                  using global defaults
-                </span>
-              </h2>
-              <div className="rounded-xl overflow-hidden border"
-                style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
-                {otherStreams.map((s, i) => (
-                  <StreamAlertRow
-                    key={s.id}
-                    stream={s}
-                    raw={undefined}
+              <TokenSelector
+                streams={activeStreams}
+                selectedId={selectedId}
+                streamPrefs={prefs.streamPrefs}
+                labelFor={labelFor}
+                onSelect={setSelectedId}
+              />
+
+              {selectedStream && (
+                <div className="mt-4">
+                  <StreamAlertConfig
+                    key={selectedStream.id}
+                    stream={selectedStream}
+                    raw={prefs.streamPrefs[selectedStream.id]}
                     globalHours={prefs.hoursBeforeUnlock}
-                    expanded={expandedId === s.id}
-                    saving={savingId === s.id}
-                    showTopBorder={i > 0}
-                    onToggleExpand={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                    onSave={(next) => saveStreamPref(s.id, next)}
-                    onClear={() => clearStreamPref(s.id)}
+                    saving={savingId === selectedStream.id}
+                    onSave={(next) => saveStreamPref(selectedStream.id, next)}
                   />
-                ))}
-              </div>
-            </section>
-          ) : streams.length === 0 && (
-            // streams.length === 0 → no tracked wallets / no vestings indexed
-            // yet. Surface a clear next-step instead of letting the page look
-            // empty (users would assume alerts are broken otherwise).
-            <section className="mb-8">
-              <div className="rounded-xl border border-dashed p-6 text-center"
-                style={{ borderColor: "var(--preview-border)" }}>
-                <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>
-                  No vesting streams indexed yet
-                </p>
-                <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
-                  Per-stream alert controls appear here once your tracked wallets have vesting positions. Add a wallet from the Dashboard or scan one with the Wallet Scanner.
-                </p>
-                <div className="flex justify-center gap-2">
-                  <Link href="/dashboard"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-                    Open Dashboard →
-                  </Link>
-                  <Link href="/dashboard/discover"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    style={{ color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
-                    Wallet Scanner
-                  </Link>
                 </div>
-              </div>
+              )}
             </section>
           )}
 
-          {/* ── History ───────────────────────────────────────────────── */}
+          {/* ── Email alerts (global) ────────────────────────────────────── */}
+          <GlobalEmailSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
+
+          {/* ── Test push ────────────────────────────────────────────────── */}
+          <TestPushSection setError={setError} />
+
+          {/* ── History ──────────────────────────────────────────────────── */}
           <section className="mb-8">
             <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
               Recent notifications
@@ -549,264 +516,395 @@ export default function AlertsPage() {
   );
 }
 
-// ── Per-stream row with inline editor ───────────────────────────────────────
+// ── No-streams empty state ──────────────────────────────────────────────────
 
-function StreamAlertRow({
-  stream, raw, globalHours, expanded, saving, showTopBorder,
-  onToggleExpand, onSave, onClear,
+function NoStreamsBlock({ hasStreams }: { hasStreams: boolean }) {
+  return (
+    <section className="mb-8">
+      <div className="rounded-xl border border-dashed p-6 text-center"
+        style={{ borderColor: "var(--preview-border)" }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>
+          {hasStreams ? "No active vestings to alert on" : "No vesting streams indexed yet"}
+        </p>
+        <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
+          {hasStreams
+            ? "All your tracked vestings are fully vested — there's nothing left to count down to. Add a wallet with active positions to set up alerts."
+            : "Alert controls appear here once your tracked wallets have vesting positions. Add a wallet from the Dashboard or scan one with the Wallet Scanner."}
+        </p>
+        <div className="flex justify-center gap-2">
+          <Link href="/dashboard"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+            Open Dashboard →
+          </Link>
+          <Link href="/dashboard/discover"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}>
+            Wallet Scanner
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Token selector ──────────────────────────────────────────────────────────
+// ≤4 active streams → inline pill row. >4 → a dropdown, so a long list stays
+// compact (mirrors the mobile PILL_TO_DROPDOWN_THRESHOLD = 4).
+
+const PILL_TO_DROPDOWN_THRESHOLD = 4;
+
+function TokenSelector({
+  streams, selectedId, streamPrefs, labelFor, onSelect,
 }: {
-  stream:          Stream;
-  raw:             RawStreamPref | undefined;
-  globalHours:     number;
-  expanded:        boolean;
-  saving:          boolean;
-  showTopBorder:   boolean;
-  onToggleExpand:  () => void;
-  onSave:          (next: StreamPref) => void;
-  onClear:         () => void;
+  streams:     Stream[];
+  selectedId:  string | null;
+  streamPrefs: Record<string, RawStreamPref>;
+  labelFor:    (s: Stream) => string;
+  onSelect:    (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (streams.length <= PILL_TO_DROPDOWN_THRESHOLD) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {streams.map((s) => {
+          const armed = activeSlotCount(streamPrefs[s.id]);
+          const active = s.id === selectedId;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => onSelect(s.id)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{
+                background: active ? "rgba(28,184,184,0.14)" : "var(--preview-card)",
+                color:      active ? "#0F8A8A" : "var(--preview-text-2)",
+                border:     `1px solid ${active ? "rgba(28,184,184,0.35)" : "var(--preview-border)"}`,
+              }}
+            >
+              {labelFor(s)}
+              {armed > 0 && <ArmedBadge n={armed} active={active} />}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const selected = streams.find((s) => s.id === selectedId);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 text-sm font-semibold px-3 py-2.5 rounded-lg"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+      >
+        <span className="flex items-center gap-2">
+          {selected ? labelFor(selected) : "Select a token"}
+          {selected && activeSlotCount(streamPrefs[selected.id]) > 0 && (
+            <ArmedBadge n={activeSlotCount(streamPrefs[selected.id])} active />
+          )}
+        </span>
+        <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>{open ? "▴" : "▾"}</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto rounded-lg shadow-lg"
+            style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+            {streams.map((s, i) => {
+              const armed = activeSlotCount(streamPrefs[s.id]);
+              const active = s.id === selectedId;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { onSelect(s.id); setOpen(false); }}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm hover:bg-[var(--preview-muted)]"
+                  style={{
+                    borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined,
+                    color: active ? "#0F8A8A" : "var(--preview-text)",
+                    fontWeight: active ? 700 : 500,
+                  }}
+                >
+                  <span>{labelFor(s)}</span>
+                  <span className="flex items-center gap-2">
+                    {armed > 0 && <ArmedBadge n={armed} active={active} />}
+                    {active && <span className="text-xs">✓</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ArmedBadge({ n, active }: { n: number; active: boolean }) {
+  return (
+    <span className="inline-flex items-center justify-center text-[9px] font-bold rounded-full"
+      style={{
+        minWidth: 15, height: 15, padding: "0 4px",
+        background: active ? "rgba(15,138,138,0.18)" : "rgba(28,184,184,0.12)",
+        color: "#0F8A8A",
+      }}
+      title={`${n} alert${n === 1 ? "" : "s"} armed`}
+    >
+      {n}
+    </span>
+  );
+}
+
+// ── Per-token alert config ──────────────────────────────────────────────────
+
+const DEFAULT_TIMINGS: Record<1 | 2 | 3, number> = { 1: 24, 2: 1, 3: 0 };
+
+function StreamAlertConfig({
+  stream, raw, globalHours, saving, onSave,
+}: {
+  stream:      Stream;
+  raw:         RawStreamPref | undefined;
+  globalHours: number;
+  saving:      boolean;
+  onSave:      (next: StreamPref) => void;
 }) {
   const decoded = useMemo(() => decodeStreamPref(raw), [raw]);
   const [draft, setDraft] = useState<StreamPref>(decoded);
-
-  // Re-sync the draft when the underlying raw prefs change (e.g. after a save).
   useEffect(() => { setDraft(decodeStreamPref(raw)); }, [raw]);
 
+  const isContinuous = CONTINUOUS_PROTOCOLS.has(stream.protocol);
   const chainName = CHAIN_NAMES[stream.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${stream.chainId}`;
 
-  // Summary chips for the collapsed row.
-  const summary: string[] = [];
-  for (const slot of [1, 2, 3] as const) {
-    const s = decoded.slots[slot];
-    if (!s.enabled) continue;
-    const trig = s.triggerType ?? "before-unlock";
-    if (trig === "before-unlock") {
-      const hours = s.hoursBeforeUnlock ?? globalHours;
-      summary.push(`${hours}h before unlock`);
-    } else if (trig === "threshold") {
-      summary.push(s.thresholdUsd != null ? `$${s.thresholdUsd.toLocaleString()} threshold` : "threshold");
+  // Which event triggers this stream's lifecycle actually supports.
+  const eventAvailable = useMemo<Record<string, boolean>>(() => ({
+    "vesting-start": !!stream.startTime,
+    "cliff":         !!stream.cliffTime,
+    "stream-end":    !!stream.endTime,
+  }), [stream]);
+
+  function commit(next: StreamPref) {
+    setDraft(next);
+    onSave(next);
+  }
+
+  function setSlot(slot: 1 | 2 | 3, patch: StreamSlotPref) {
+    commit({ ...draft, slots: { ...draft.slots, [slot]: { ...draft.slots[slot], ...patch } } });
+  }
+
+  function toggleSlot(slot: 1 | 2 | 3, on: boolean) {
+    if (!on) { setSlot(slot, { enabled: false }); return; }
+    // Sensible default when turning a slot on (mirrors the mobile app):
+    // continuous streams default to a $1,000 value trigger; everything else
+    // to a before-unlock timing (24h / 1h / Live for slots 1/2/3).
+    if (isContinuous) {
+      setSlot(slot, { enabled: true, triggerType: "threshold", thresholdUsd: 1000, hoursBeforeUnlock: null });
     } else {
-      summary.push(TRIGGER_LABELS[trig]);
+      setSlot(slot, { enabled: true, triggerType: "before-unlock", hoursBeforeUnlock: DEFAULT_TIMINGS[slot], thresholdUsd: null });
     }
   }
-  if (!decoded.enabled) summary.unshift("Muted");
 
   return (
-    <div style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
-      <button
-        type="button"
-        onClick={onToggleExpand}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[var(--preview-muted)] transition-colors"
-      >
+    <div className="rounded-xl border p-4"
+      style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+      {/* Token heading + mute */}
+      <div className="flex items-center justify-between gap-3 mb-1">
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>
-            {stream.tokenSymbol}{" "}
-            <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>
+          <p className="text-sm font-bold" style={{ color: "var(--preview-text)" }}>
+            {stream.tokenSymbol}
+            <span className="font-normal ml-1" style={{ color: "var(--preview-text-3)" }}>
               · {stream.protocol} · {chainName}
             </span>
           </p>
-          {summary.length > 0 ? (
-            <p className="text-xs truncate mt-0.5" style={{ color: "var(--preview-text-2)" }}>
-              {summary.join("  ·  ")}
-            </p>
-          ) : (
-            <p className="text-xs truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-              Using global default ({globalHours}h before unlock)
-            </p>
-          )}
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+            {isContinuous
+              ? "Streams continuously — alert by claimable value."
+              : "Choose up to three independent alerts for this token."}
+          </p>
         </div>
-        <span className="text-[11px] font-semibold" style={{ color: "#0F8A8A" }}>
-          {expanded ? "Close" : (raw ? "Edit" : "Set up")}
-        </span>
-      </button>
+        {saving && (
+          <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-3)" }}>Saving…</span>
+        )}
+      </div>
 
-      {expanded && (
-        <div className="px-4 pb-4 pt-1">
-          <div className="rounded-lg p-3"
-            style={{ background: "rgba(28,184,184,0.04)", border: "1px solid rgba(28,184,184,0.15)" }}>
-            {/* Master enable / mute toggle */}
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>
-                {draft.enabled ? "Alerts on for this stream" : "Muted — no alerts will fire"}
-              </span>
-              <button
-                type="button"
-                onClick={() => setDraft({ ...draft, enabled: !draft.enabled })}
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-md"
-                style={{
-                  background: draft.enabled ? "rgba(28,184,184,0.10)" : "rgba(0,0,0,0.04)",
-                  color:      draft.enabled ? "#0F8A8A" : "var(--preview-text-2)",
-                  border:     `1px solid ${draft.enabled ? "rgba(28,184,184,0.25)" : "var(--preview-border)"}`,
-                }}
-              >
-                {draft.enabled ? "Mute" : "Unmute"}
-              </button>
-            </div>
+      <div className="mt-2 divide-y" style={{ borderColor: "var(--preview-border-2)" }}>
+        {([1, 2, 3] as const).map((slot) => (
+          <AlertSlotRow
+            key={slot}
+            index={slot}
+            slot={draft.slots[slot]}
+            globalHours={globalHours}
+            isContinuous={isContinuous}
+            eventAvailable={eventAvailable}
+            onToggle={(on) => toggleSlot(slot, on)}
+            onChange={(patch) => setSlot(slot, patch)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-            {/* Three slots */}
-            <div className="space-y-3">
-              {([1, 2, 3] as const).map((slot) => (
-                <SlotEditor
-                  key={slot}
-                  slotNumber={slot}
-                  pref={draft.slots[slot]}
-                  globalHours={globalHours}
-                  onChange={(nextSlot) => setDraft({
-                    ...draft,
-                    slots: { ...draft.slots, [slot]: nextSlot },
-                  })}
-                />
-              ))}
-            </div>
+function AlertSlotRow({
+  index, slot, globalHours, isContinuous, eventAvailable, onToggle, onChange,
+}: {
+  index:          1 | 2 | 3;
+  slot:           StreamSlotPref;
+  globalHours:    number;
+  isContinuous:   boolean;
+  eventAvailable: Record<string, boolean>;
+  onToggle:       (on: boolean) => void;
+  onChange:       (patch: StreamSlotPref) => void;
+}) {
+  const on = slot.enabled === true;
+  return (
+    <div className="py-3" style={{ borderTopColor: "var(--preview-border-2)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>
+            Alert {index}
+          </p>
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+            {on ? `Notify ${slotSummary(slot, globalHours)}` : "Off"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onToggle(!on)}
+          className="text-[10px] font-bold px-2 py-1 rounded flex-shrink-0"
+          style={{
+            background: on ? "rgba(28,184,184,0.12)" : "rgba(0,0,0,0.04)",
+            color:      on ? "#0F8A8A" : "var(--preview-text-3)",
+            border:     `1px solid ${on ? "rgba(28,184,184,0.25)" : "var(--preview-border)"}`,
+          }}
+        >
+          {on ? "ON" : "OFF"}
+        </button>
+      </div>
 
-            <div className="flex justify-end gap-2 mt-3">
-              {raw && (
-                <button
-                  type="button"
-                  onClick={onClear}
-                  disabled={saving}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                  style={{
-                    background: "transparent",
-                    color: "var(--preview-text-3)",
-                    border: "1px solid var(--preview-border)",
-                  }}
-                >
-                  Reset to defaults
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => onSave(draft)}
-                disabled={saving}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                style={{
-                  background: "#1CB8B8",
-                  color:      "white",
-                  border:     "1px solid #1CB8B8",
-                  opacity:    saving ? 0.6 : 1,
-                }}
-              >
-                {saving ? "Saving…" : "Save alert"}
-              </button>
-            </div>
-          </div>
+      {on && (
+        <div className="mt-3">
+          <TriggerPicker
+            slot={slot}
+            isContinuous={isContinuous}
+            eventAvailable={eventAvailable}
+            onChange={onChange}
+          />
         </div>
       )}
     </div>
   );
 }
 
-function SlotEditor({
-  slotNumber, pref, globalHours, onChange,
+// ── Trigger picker (timing / event / value chips) ───────────────────────────
+
+function TriggerPicker({
+  slot, isContinuous, eventAvailable, onChange,
 }: {
-  slotNumber:  1 | 2 | 3;
-  pref:        StreamSlotPref;
-  globalHours: number;
-  onChange:    (next: StreamSlotPref) => void;
+  slot:           StreamSlotPref;
+  isContinuous:   boolean;
+  eventAvailable: Record<string, boolean>;
+  onChange:       (patch: StreamSlotPref) => void;
 }) {
-  const enabled = pref.enabled ?? false;
-  const trigger = pref.triggerType ?? "before-unlock";
-  const hours = pref.hoursBeforeUnlock ?? globalHours;
-  const threshold = pref.thresholdUsd ?? "";
+  const trig = slot.triggerType ?? "before-unlock";
+  const activeHours = trig === "before-unlock" ? (slot.hoursBeforeUnlock ?? null) : null;
+  const activeValue = trig === "threshold"     ? (slot.thresholdUsd ?? null)      : null;
 
   return (
-    <div className="rounded-md p-2.5"
-      style={{
-        background: enabled ? "var(--preview-card)" : "transparent",
-        border:     `1px solid ${enabled ? "var(--preview-border)" : "transparent"}`,
-        opacity:    enabled ? 1 : 0.7,
-      }}>
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--preview-text-3)" }}>
-          Alert slot {slotNumber}
-        </span>
-        <button
-          type="button"
-          onClick={() => onChange({ ...pref, enabled: !enabled })}
-          className="text-[10px] font-bold px-2 py-0.5 rounded"
-          style={{
-            background: enabled ? "rgba(28,184,184,0.12)" : "rgba(0,0,0,0.04)",
-            color:      enabled ? "#0F8A8A" : "var(--preview-text-3)",
-          }}
-        >
-          {enabled ? "ON" : "OFF"}
-        </button>
-      </div>
-
-      {enabled && (
-        <div className="space-y-2">
-          {/* Trigger type pills */}
-          <div className="flex flex-wrap gap-1">
-            {(["before-unlock", "cliff", "stream-end", "threshold"] as TriggerType[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => onChange({ ...pref, triggerType: t })}
-                className="text-[10px] font-semibold px-2 py-1 rounded"
-                style={{
-                  background: trigger === t ? "rgba(28,184,184,0.14)" : "var(--preview-muted)",
-                  color:      trigger === t ? "#0F8A8A" : "var(--preview-text-2)",
-                  border:     `1px solid ${trigger === t ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
-                }}
-              >
-                {TRIGGER_LABELS[t]}
-              </button>
-            ))}
-          </div>
-
-          {/* Conditional secondary control depending on trigger */}
-          {trigger === "before-unlock" && (
-            <div className="flex flex-wrap gap-1 items-center">
-              <span className="text-[10px] font-semibold mr-1" style={{ color: "var(--preview-text-3)" }}>
-                Hours:
-              </span>
-              {HOUR_OPTIONS.map((h) => (
-                <button
-                  key={h}
-                  type="button"
-                  onClick={() => onChange({ ...pref, hoursBeforeUnlock: h })}
-                  className="text-[10px] font-semibold px-2 py-1 rounded"
-                  style={{
-                    background: hours === h ? "rgba(28,184,184,0.14)" : "var(--preview-muted)",
-                    color:      hours === h ? "#0F8A8A" : "var(--preview-text-2)",
-                    border:     `1px solid ${hours === h ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
-                  }}
-                >
-                  {h}h
-                </button>
-              ))}
-            </div>
-          )}
-          {trigger === "threshold" && (
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-3)" }}>
-                Fire when claimable USD passes:
-              </span>
-              <span className="text-xs" style={{ color: "var(--preview-text-2)" }}>$</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={1_000_000}
-                value={threshold}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  onChange({ ...pref, thresholdUsd: Number.isFinite(n) && n > 0 ? Math.floor(n) : null });
-                }}
-                placeholder="1000"
-                className="text-xs px-2 py-1 rounded w-24"
-                style={{
-                  background: "var(--preview-card)",
-                  border:     "1px solid var(--preview-border)",
-                  color:      "var(--preview-text)",
-                }}
+    <div className="space-y-3">
+      {!isContinuous && (
+        <>
+          {/* Timing */}
+          <ChipGroup label="Timing">
+            {TIMING_OPTIONS.map((o) => (
+              <Chip
+                key={o.label}
+                label={o.label}
+                active={activeHours != null && Math.abs(activeHours - o.hours) < 1e-6}
+                onClick={() => onChange({ triggerType: "before-unlock", hoursBeforeUnlock: o.hours, thresholdUsd: null })}
               />
-            </div>
-          )}
-        </div>
+            ))}
+          </ChipGroup>
+
+          {/* Events */}
+          <ChipGroup label="Event">
+            {EVENT_TRIGGERS.map((ev) => {
+              const available = eventAvailable[ev];
+              return (
+                <Chip
+                  key={ev}
+                  label={EVENT_LABELS[ev]}
+                  active={trig === ev}
+                  disabled={!available}
+                  title={available ? undefined : `No ${EVENT_LABELS[ev].toLowerCase()} in this schedule`}
+                  onClick={() => onChange({ triggerType: ev, hoursBeforeUnlock: null, thresholdUsd: null })}
+                />
+              );
+            })}
+          </ChipGroup>
+        </>
       )}
+
+      {/* Value crosses */}
+      <ChipGroup label="Value crosses">
+        {VALUE_OPTIONS.map((v) => (
+          <Chip
+            key={v}
+            label={`$${v.toLocaleString()}`}
+            active={activeValue === v}
+            onClick={() => onChange({ triggerType: "threshold", thresholdUsd: v, hoursBeforeUnlock: null })}
+          />
+        ))}
+      </ChipGroup>
+      <p className="text-[10.5px]" style={{ color: "var(--preview-text-3)" }}>
+        {isContinuous
+          ? "This token streams continuously, so there's no unlock to count down to — get alerted when its claimable value passes an amount instead."
+          : "“Value crosses” fires once when this token's claimable value passes the amount."}
+      </p>
     </div>
+  );
+}
+
+function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--preview-text-3)" }}>
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  );
+}
+
+function Chip({
+  label, active, disabled, title, onClick,
+}: {
+  label:    string;
+  active:   boolean;
+  disabled?: boolean;
+  title?:   string;
+  onClick:  () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-colors"
+      style={{
+        background: active ? "rgba(28,184,184,0.14)" : "var(--preview-muted)",
+        color:      disabled ? "var(--preview-text-3)" : active ? "#0F8A8A" : "var(--preview-text-2)",
+        border:     `1px solid ${active ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
+        opacity:    disabled ? 0.4 : 1,
+        cursor:     disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -865,13 +963,9 @@ function HistoryRow({
   );
 }
 
-// ── Global push prefs ───────────────────────────────────────────────────────
-// Mirrors the mobile app's "Push alerts" section. Each toggle / hour pill
-// writes through to /api/notifications/preferences (PUT), which is the SAME
-// row that the mobile app's /api/mobile/notifications writes to — toggle
-// on either surface, see it on both.
-
-const VALID_HOURS = [1, 6, 12, 24, 48, 72] as const;
+// ── Global email prefs ──────────────────────────────────────────────────────
+// Writes to /api/notifications/preferences (PUT) — the SAME row the mobile app
+// writes via /api/mobile/notifications. Toggle on either surface, see on both.
 
 type MutatePrefsFn = (
   updater: (cur: { preferences: Partial<Prefs> | null } | undefined) =>
@@ -891,122 +985,6 @@ async function putGlobalPref(patch: Partial<Prefs>): Promise<void> {
   }
 }
 
-function GlobalPushSection({
-  prefs, mutate, setError,
-}: {
-  prefs:    Prefs;
-  mutate:   MutatePrefsFn;
-  setError: (s: string | null) => void;
-}) {
-  const [saving, setSaving] = useState<string | null>(null);
-
-  async function set<K extends keyof Prefs>(key: K, value: Prefs[K]) {
-    setSaving(key as string);
-    setError(null);
-    // Optimistic SWR update so the toggle feels instant; on error we
-    // revert by re-reading from the server.
-    mutate(
-      (cur) => cur ? { preferences: { ...(cur.preferences ?? {}), [key]: value } } : cur,
-      { revalidate: false },
-    );
-    try {
-      await putGlobalPref({ [key]: value } as Partial<Prefs>);
-      mutate((cur) => cur, { revalidate: true });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
-      mutate((cur) => cur, { revalidate: true });
-    } finally {
-      setSaving(null);
-    }
-  }
-
-  return (
-    <section className="mb-8">
-      <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
-        Push alerts
-        <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
-          apply to every tracked stream
-        </span>
-      </h2>
-      <div className="rounded-xl border p-4"
-        style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
-        {/* Lead-time pills */}
-        <div className="mb-4">
-          <p className="text-[11px] font-semibold mb-2" style={{ color: "var(--preview-text-2)" }}>
-            Notify me before an unlock
-            <span className="ml-2 text-[10px] font-normal" style={{ color: "var(--preview-text-3)" }}>
-              applied unless a per-stream override is set
-            </span>
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {VALID_HOURS.map((h) => (
-              <button
-                key={h}
-                type="button"
-                disabled={saving !== null}
-                onClick={() => set("hoursBeforeUnlock", h)}
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-md"
-                style={{
-                  background: prefs.hoursBeforeUnlock === h ? "rgba(28,184,184,0.14)" : "var(--preview-muted)",
-                  color:      prefs.hoursBeforeUnlock === h ? "#0F8A8A" : "var(--preview-text-2)",
-                  border:     `1px solid ${prefs.hoursBeforeUnlock === h ? "rgba(28,184,184,0.30)" : "var(--preview-border)"}`,
-                  opacity:    saving === "hoursBeforeUnlock" ? 0.6 : 1,
-                }}
-              >
-                {h}h
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Event toggles */}
-        <div className="space-y-2 pt-3"
-          style={{ borderTop: "1px solid var(--preview-border-2)" }}>
-          <PrefToggle label="Cliff hits"             desc="Fires when a vesting cliff triggers." value={prefs.notifyCliff}     saving={saving === "notifyCliff"}     onChange={(v) => set("notifyCliff", v)} />
-          <PrefToggle label="Stream ends"            desc="Fires when a vest is fully claimable." value={prefs.notifyStreamEnd} saving={saving === "notifyStreamEnd"} onChange={(v) => set("notifyStreamEnd", v)} />
-          <PrefToggle label="Monthly summary"        desc="Recap of upcoming unlocks once a month." value={prefs.notifyMonthly}  saving={saving === "notifyMonthly"}   onChange={(v) => set("notifyMonthly", v)} />
-          <PrefToggle label="Next available claim"   desc="Heads-up the moment tokens become claimable." value={prefs.notifyNextClaim} saving={saving === "notifyNextClaim"} onChange={(v) => set("notifyNextClaim", v)} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PrefToggle({
-  label, desc, value, saving, onChange,
-}: {
-  label:    string;
-  desc:     string;
-  value:    boolean;
-  saving:   boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 py-1.5">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>{label}</p>
-        <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{desc}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!value)}
-        disabled={saving}
-        className="text-[10px] font-bold px-2 py-1 rounded flex-shrink-0"
-        style={{
-          background: value ? "rgba(28,184,184,0.12)" : "rgba(0,0,0,0.04)",
-          color:      value ? "#0F8A8A" : "var(--preview-text-3)",
-          border:     `1px solid ${value ? "rgba(28,184,184,0.25)" : "var(--preview-border)"}`,
-          opacity:    saving ? 0.6 : 1,
-        }}
-      >
-        {value ? "ON" : "OFF"}
-      </button>
-    </div>
-  );
-}
-
-// ── Global email prefs ──────────────────────────────────────────────────────
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function GlobalEmailSection({
@@ -1020,7 +998,6 @@ function GlobalEmailSection({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
 
-  // Keep draft in sync if the server pushes a fresh value.
   useEffect(() => {
     if (!editing) setEmailDraft(prefs.email ?? "");
   }, [prefs.email, editing]);
@@ -1062,16 +1039,34 @@ function GlobalEmailSection({
     <section className="mb-8">
       <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
         Email alerts
+        <span className="ml-2 text-[11px] font-normal" style={{ color: "var(--preview-text-3)" }}>
+          also delivered for every armed alert above
+        </span>
       </h2>
       <div className="rounded-xl border p-4"
         style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
-        <PrefToggle
-          label="Email me about unlocks"
-          desc={prefs.email ? `Sent to ${prefs.email}` : "Set an email address below first."}
-          value={prefs.emailEnabled}
-          saving={saving === "emailEnabled"}
-          onChange={setEnabled}
-        />
+        <div className="flex items-center justify-between gap-3 py-1.5">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold" style={{ color: "var(--preview-text)" }}>Email me about unlocks</p>
+            <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+              {prefs.email ? `Sent to ${prefs.email}` : "Set an email address below first."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEnabled(!prefs.emailEnabled)}
+            disabled={saving === "emailEnabled"}
+            className="text-[10px] font-bold px-2 py-1 rounded flex-shrink-0"
+            style={{
+              background: prefs.emailEnabled ? "rgba(28,184,184,0.12)" : "rgba(0,0,0,0.04)",
+              color:      prefs.emailEnabled ? "#0F8A8A" : "var(--preview-text-3)",
+              border:     `1px solid ${prefs.emailEnabled ? "rgba(28,184,184,0.25)" : "var(--preview-border)"}`,
+              opacity:    saving === "emailEnabled" ? 0.6 : 1,
+            }}
+          >
+            {prefs.emailEnabled ? "ON" : "OFF"}
+          </button>
+        </div>
         <div className="flex items-center gap-2 mt-3 pt-3"
           style={{ borderTop: "1px solid var(--preview-border-2)" }}>
           <input
