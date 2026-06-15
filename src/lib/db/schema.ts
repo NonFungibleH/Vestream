@@ -64,6 +64,12 @@ export const users = pgTable("users", {
   //     overnight band)
   // Never used for relative-time copy ("in 2h") which is TZ-agnostic.
   timezone:              text("timezone"),
+  // 2026-06-15 (settings additions): optional display name for a personal
+  // greeting on the dashboard, and a marketing-email opt-in flag. The flag
+  // is stored only for now — no provider (Loops) is wired to it yet; that's
+  // a follow-up. Both nullable/defaulted so existing rows are unaffected.
+  displayName:           text("display_name"),
+  marketingOptIn:        boolean("marketing_opt_in").default(false).notNull(),
 });
 
 // ── Claim events ────────────────────────────────────────────────────────────

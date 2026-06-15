@@ -533,6 +533,13 @@ export default function Settings() {
   const [saveOk, setSaveOk]     = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Profile: display name (→ dashboard greeting) + marketing opt-in, plus a
+  // read-only device readout. Loaded from /api/account/profile.
+  const [profileName,    setProfileName]    = useState("");
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [profileMeta,    setProfileMeta]    = useState<{ mobileConnected: boolean; lastActiveAt: string | null; timezone: string | null }>({ mobileConnected: false, lastActiveAt: null, timezone: null });
+  const [profileSaved,   setProfileSaved]   = useState(false);
+
   const loadWallets = useCallback(async () => {
     const res = await fetch("/api/wallets");
     if (res.status === 401) { router.push("/login"); return; }
@@ -561,7 +568,36 @@ export default function Settings() {
           notifyStreamEnd:   preferences.notifyStreamEnd   ?? true,
         }));
       });
+    fetch("/api/account/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => {
+        if (!p) return;
+        setProfileName(p.displayName ?? "");
+        setMarketingOptIn(p.marketingOptIn ?? false);
+        setProfileMeta({
+          mobileConnected: !!p.mobileConnected,
+          lastActiveAt:    p.lastActiveAt ?? null,
+          timezone:        p.timezone ?? null,
+        });
+      })
+      .catch(() => { /* leave defaults */ });
   }, [loadWallets]);
+
+  // Persist a profile patch (name and/or marketing flag). Optimistic-ish:
+  // we already updated local state; this writes through and flashes "Saved".
+  async function saveProfile(patch: { displayName?: string; marketingOptIn?: boolean }) {
+    try {
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (res.ok) {
+        setProfileSaved(true);
+        setTimeout(() => setProfileSaved(false), 1800);
+      }
+    } catch { /* network — silent, user can retry */ }
+  }
 
   async function handleRemoveWallet(wallet: Wallet) {
     setRemovingId(wallet.id);
@@ -995,6 +1031,60 @@ export default function Settings() {
 
           {/* ── Account ──────────────────────────────────────────────────── */}
           {activeSection === "account" && <Section title="Account">
+            {/* ── Your name → personal dashboard greeting ── */}
+            <div className="rounded-xl p-4 mb-5" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+              <div className="flex items-center justify-between gap-3 mb-1.5">
+                <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Your name</p>
+                {profileSaved && <span className="text-[11px] font-semibold" style={{ color: "#0F8A8A" }}>Saved ✓</span>}
+              </div>
+              <p className="text-xs mb-2.5" style={{ color: "var(--preview-text-2)" }}>
+                Shown as a personal greeting on your dashboard. Leave blank for none.
+              </p>
+              <input
+                type="text"
+                value={profileName}
+                maxLength={40}
+                placeholder="e.g. Alex"
+                onChange={(e) => setProfileName(e.target.value)}
+                onBlur={() => saveProfile({ displayName: profileName.trim() })}
+                className="w-full max-w-xs text-sm px-3 py-2 rounded-lg outline-none"
+                style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", color: "var(--preview-text)" }}
+              />
+            </div>
+
+            {/* ── Mailing list ── (stored only; no provider wired yet) */}
+            <div className="rounded-xl p-4 mb-5 flex items-center justify-between gap-3" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Product updates &amp; tips</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-2)" }}>
+                  Occasional emails about new features and releases. Unsubscribe anytime.
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={marketingOptIn}
+                aria-label="Toggle product update emails"
+                onClick={() => { const next = !marketingOptIn; setMarketingOptIn(next); saveProfile({ marketingOptIn: next }); }}
+                className="relative w-10 h-6 rounded-full transition-colors flex-shrink-0"
+                style={{ background: marketingOptIn ? "#1CB8B8" : "var(--preview-border)" }}
+              >
+                <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: marketingOptIn ? "1.125rem" : "0.125rem" }} />
+              </button>
+            </div>
+
+            {/* ── Connected mobile device (read-only; what we actually store) ── */}
+            <div className="rounded-xl p-4 mb-5" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
+              <p className="text-sm font-semibold mb-2" style={{ color: "var(--preview-text)" }}>Mobile app</p>
+              <div className="flex flex-col gap-1 text-xs" style={{ color: "var(--preview-text-2)" }}>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: profileMeta.mobileConnected ? "#10b981" : "var(--preview-border)" }} />
+                  <span>{profileMeta.mobileConnected ? "Connected — push notifications enabled" : "Not connected"}</span>
+                </div>
+                {profileMeta.timezone && <p style={{ color: "var(--preview-text-3)" }}>Time zone: {profileMeta.timezone}</p>}
+                {profileMeta.lastActiveAt && <p style={{ color: "var(--preview-text-3)" }}>Last active: {new Date(profileMeta.lastActiveAt).toLocaleString()}</p>}
+              </div>
+            </div>
+
             {/* ── Plan ── billing is handled by the App Store / Google Play
                 via the mobile app (RevenueCat IAP), so plan management lives
                 in the app, not on the web. We only know the tier here. */}

@@ -67,7 +67,17 @@ export function DashboardHeader() {
   const walletLimit = data?.walletLimit ?? null;
   const sessionAddress = data?.sessionAddress ?? null;
 
-  const title = titleForPath(pathname);
+  // Personal greeting: on the home tab, if the user set a display name in
+  // settings, show "Welcome back, X" instead of "Overview". Cheap cached
+  // fetch shared across the dashboard.
+  const { data: profile } = useSWR<{ displayName: string | null }>(
+    "/api/account/profile",
+    (url: string) => fetch(url, { credentials: "include" }).then((r) => (r.ok ? r.json() : { displayName: null })),
+  );
+
+  const title = pathname === "/dashboard" && profile?.displayName
+    ? `Welcome back, ${profile.displayName}`
+    : titleForPath(pathname);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
