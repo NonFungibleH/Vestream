@@ -875,6 +875,92 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
   );
 }
 
+// ─── Wallet analytics panel ──────────────────────────────────────────────
+// Stats for the wallet-mode view: locked value, token/protocol/chain spread,
+// and a holdings-by-USD breakdown. This is the "what kind of wallet is this"
+// signal — derived entirely from the streams + priced portfolio we already
+// loaded. Scope is intentionally the wallet's VESTING book (not its whole
+// token balance, which we don't index).
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>{label}</p>
+      <p className="text-base font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>{value}</p>
+    </div>
+  );
+}
+
+function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: WalletPortfolioRow[] }) {
+  // uncx-vm is a hidden sub-protocol of uncx — collapse so the breakdown
+  // matches what users see elsewhere.
+  const norm = (p: string) => (p === "uncx-vm" ? "uncx" : p);
+
+  const totalUsd   = portfolio.reduce((s, t) => s + (t.usdValue ?? 0), 0);
+  const protoSet   = new Set(rows.map((r) => norm(r.protocol)));
+  const chainSet   = new Set(rows.map((r) => r.chainId));
+
+  const byProto = new Map<string, number>();
+  for (const r of rows) byProto.set(norm(r.protocol), (byProto.get(norm(r.protocol)) ?? 0) + 1);
+  const protoEntries = [...byProto.entries()].sort((a, b) => b[1] - a[1]);
+
+  const topHoldings = portfolio
+    .filter((t) => (t.usdValue ?? 0) > 0)
+    .sort((a, b) => (b.usdValue! - a.usdValue!))
+    .slice(0, 5);
+
+  return (
+    <div className="rounded-2xl border p-4 mb-3" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <StatTile label="Locked value" value={totalUsd > 0 ? formatUsdCompact(totalUsd) : "—"} />
+        <StatTile label="Distinct tokens" value={String(portfolio.length)} />
+        <StatTile label="Protocols" value={String(protoSet.size)} />
+        <StatTile label="Chains" value={String(chainSet.size)} />
+      </div>
+
+      {topHoldings.length > 0 && (
+        <div className="mb-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--preview-text-3)" }}>Holdings by value</p>
+          <div className="flex flex-col gap-1.5">
+            {topHoldings.map((t) => {
+              const pct = totalUsd > 0 ? (t.usdValue! / totalUsd) * 100 : 0;
+              return (
+                <div key={`${t.chainId}-${t.tokenAddress.toLowerCase()}`} className="flex items-center gap-2">
+                  <span className="text-xs font-semibold w-16 truncate flex-shrink-0" style={{ color: "var(--preview-text-2)" }}>
+                    {t.tokenSymbol ?? shortAddr(t.tokenAddress)}
+                  </span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--preview-muted)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(2, pct)}%`, background: "#1CB8B8" }} />
+                  </div>
+                  <span className="text-[11px] tabular-nums w-16 text-right flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
+                    {formatUsdCompact(t.usdValue!)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--preview-text-3)" }}>By protocol</p>
+        <div className="flex flex-wrap gap-1.5">
+          {protoEntries.map(([p, n]) => {
+            const meta = getProtocol(p);
+            return (
+              <span key={p} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold"
+                style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)" }}>
+                <span style={{ color: meta?.color ?? "var(--preview-text-2)" }}>{meta?.name ?? p}</span>
+                <span style={{ color: "var(--preview-text-3)" }}>{n}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Wallet-mode results (positions for a single recipient) ───────────────
 
 function WalletResults({
@@ -945,6 +1031,12 @@ function WalletResults({
           </a>
         )}
       </div>
+      {/* Wallet analytics — locked value, distinct tokens, protocol/chain
+          spread, and holdings-by-USD. Built purely from rows + portfolio
+          (no extra query). Shown when there's more than one position so it
+          adds signal rather than restating a single row. */}
+      {rows.length > 1 && <WalletStats rows={rows} portfolio={portfolio} />}
+
       {/* "Also vesting" smart-money strip — what other tokens does this
           wallet receive? Lets users spot whales / funds at a glance. The
           ≥2 gate stops it appearing for genuinely single-token recipients
