@@ -40,16 +40,26 @@ export interface ExplorerRow {
   walletCount:       number;          // per-bucket fallback
   tokenWalletCount?: number;          // true uncapped count
   tokenRoundCount?:  number;
+  vestStart?:        number | null;   // earliest active start (unix sec) — progress bar
+  vestEnd?:          number | null;   // latest active end (unix sec)
   eventTime:         number;
   absorptionRatio:   number | null;
   supplyShare:       number | null;
 }
 
-type SortCol = "token" | "amount" | "usd" | "wallets" | "rounds" | "risk" | "date";
+type SortCol = "token" | "amount" | "usd" | "wallets" | "rounds" | "risk" | "progress" | "date";
 type SortDir = "asc" | "desc";
 
 // ── Sort accessors ───────────────────────────────────────────────────────────
 function walletsOf(r: ExplorerRow): number { return r.tokenWalletCount ?? r.walletCount; }
+/** Fraction (0–1) of the token's whole vesting span that has elapsed, or null
+ *  if we lack a valid start/end span. Clamped so pre-start = 0, past-end = 1. */
+function progressOf(r: ExplorerRow): number | null {
+  const s = r.vestStart, e = r.vestEnd;
+  if (s == null || e == null || e <= s) return null;
+  const now = Date.now() / 1000;
+  return Math.max(0, Math.min(1, (now - s) / (e - s)));
+}
 function amountNum(r: ExplorerRow): number {
   if (!r.amount) return 0;
   try { return Number(BigInt(r.amount)) / 10 ** Math.min(r.tokenDecimals, 18); } catch { return 0; }
@@ -66,6 +76,7 @@ function sortValue(r: ExplorerRow, col: SortCol): number | string {
     case "wallets": return walletsOf(r);
     case "rounds":  return r.tokenRoundCount ?? 0;
     case "risk":    return riskRank(r);
+    case "progress": return progressOf(r) ?? -Infinity;   // unknown span sorts last (desc)
     case "date":    return r.eventTime || Infinity;
   }
 }
@@ -121,7 +132,7 @@ export function ExplorerTable({
   // 1fr token column hogging all the slack (the empty space). Mobile shows
   // Token · USD · Wallets; the desktop-only cells are display:none below md so
   // they drop out of the 3-col mobile grid.
-  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[2.2fr_1fr_1fr_0.85fr_0.7fr_0.7fr_1fr] items-center gap-3 px-4 md:px-5";
+  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[2fr_0.9fr_0.9fr_0.7fr_0.6fr_0.6fr_1.3fr_0.95fr] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
@@ -141,6 +152,7 @@ export function ExplorerTable({
             <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
             <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
             <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
+            <Th label="Vested"      active={col === "progress"} dir={dir} onClick={() => toggle("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
             <Th label="Next unlock" active={col === "date"}    dir={dir} onClick={() => toggle("date", "asc")} align="right" className="hidden md:flex" />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
@@ -255,6 +267,10 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
         <div className="text-right hidden md:block" style={{ minWidth: 48 }}>
           <RiskChip r={r} />
         </div>
+        {/* Vesting progress (desktop) */}
+        <div className="hidden md:block" title={progressTitle(r)}>
+          <VestingProgress r={r} />
+        </div>
         {/* Next unlock (desktop) */}
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>in {relativeUntil(r.eventTime)}</p>
@@ -308,6 +324,38 @@ function RiskChip({ r }: { r: ExplorerRow }) {
       title={title}>
       {band}
     </span>
+  );
+}
+
+// ── Vesting progress (whole-token span elapsed) ──────────────────────────────
+// Shown on the "Vested" header (hover).
+const PROGRESS_HELP =
+  "How far through its full vesting span the token is — from the earliest " +
+  "active start to the latest active end.\n0% = just started · 100% = fully unlocked.";
+
+function fmtMonthYear(sec: number | null | undefined): string {
+  if (!sec) return "—";
+  return new Date(sec * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+/** Per-row tooltip: the full start→end span plus elapsed %. */
+function progressTitle(r: ExplorerRow): string {
+  const p = progressOf(r);
+  if (p == null) return "Vesting span unavailable for this token.";
+  return `Vesting: ${fmtMonthYear(r.vestStart)} → ${fmtMonthYear(r.vestEnd)}\n${Math.round(p * 100)}% elapsed`;
+}
+
+function VestingProgress({ r }: { r: ExplorerRow }) {
+  const p = progressOf(r);
+  if (p == null) return <p className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }}>—</p>;
+  const pct = Math.round(p * 100);
+  return (
+    <div className="flex items-center gap-2 cursor-help">
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#0F8A8A" }} />
+      </div>
+      <span className="text-[11px] tabular-nums font-semibold" style={{ color: "var(--preview-text-3)" }}>{pct}%</span>
+    </div>
   );
 }
 

@@ -207,7 +207,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     ]);
     calendarGroups = enriched.map((g) => {
       const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
-      return sc ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds } : g;
+      return sc
+        ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds, vestStart: sc.firstStart, vestEnd: sc.lastEnd }
+        : g;
     });
 
     if (amountThreshold) {
@@ -311,6 +313,8 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     walletCount:       g.walletCount,
     tokenWalletCount:  g.tokenWalletCount,
     tokenRoundCount:   g.tokenRoundCount,
+    vestStart:         g.vestStart ?? null,
+    vestEnd:           g.vestEnd ?? null,
     eventTime:         g.eventTime,
     absorptionRatio:   g.absorptionRatio ?? null,
     supplyShare:       g.supplyShare ?? null,
@@ -451,8 +455,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             )}
           </section>
 
-          {/* Filter sidebar — collapsible on mobile via summary/details */}
-          <aside className="space-y-4 hidden md:block">
+          {/* Filter sidebar — collapsible on mobile via summary/details.
+              Sticky so filters stay reachable while scrolling the token list:
+              `self-start` stops the grid cell from stretching (sticky needs a
+              non-stretched item); the max-height + scroll keeps it usable when
+              the filter stack is taller than the viewport. */}
+          <aside className="space-y-4 hidden md:block self-start sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
             <FilterGroup label="Chain">
               {CHAIN_FILTERS.map((c) => (
                 <FilterPill

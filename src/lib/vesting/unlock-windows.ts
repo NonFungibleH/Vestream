@@ -59,6 +59,11 @@ export interface WindowUnlockGroup {
   /** TRUE distinct vesting-round count for this token (same key as
    *  rounds.ts groupIntoRounds: protocol|shape|cliffDays|durationDays). */
   tokenRoundCount?:  number;
+  /** Whole-token active vesting span (unix sec) — earliest start, latest end.
+   *  Drives the explorer "% vested" progress bar. Attached alongside the
+   *  token counts by getTokenScaleCounts; undefined until enriched. */
+  vestStart?:        number;
+  vestEnd?:          number;
   /** USD value of the group's `amount` at render time, or null when the
    *  token has no liquid DEX pair / we couldn't price it. Populated by
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
@@ -809,8 +814,8 @@ async function getTotalLockedByToken(
  */
 export async function getTokenScaleCounts(
   pairs: ReadonlyArray<{ chainId: number; tokenAddress: string }>,
-): Promise<Map<string, { wallets: number; rounds: number }>> {
-  const out = new Map<string, { wallets: number; rounds: number }>();
+): Promise<Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number }>> {
+  const out = new Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number }>();
   // DB-touching helper must short-circuit during `next build` (see CLAUDE.md).
   if (process.env.NEXT_PHASE === "phase-production-build") return out;
   if (pairs.length === 0) return out;
@@ -825,7 +830,7 @@ export async function getTokenScaleCounts(
   const shapeSql = sql`CASE WHEN ${vestingStreamsCache.streamData}->>'shape' = 'steps' THEN 'steps' ELSE 'linear' END`;
   const roundKey = sql`${vestingStreamsCache.protocol} || '|' || ${shapeSql} || '|' || GREATEST(0, ROUND((${cliffSql} - ${startSql}) / 86400))::int || '|' || GREATEST(0, ROUND((${vestingStreamsCache.endTime} - ${startSql}) / 86400))::int`;
 
-  let rows: { chainId: number; token: string; wallets: number; rounds: number }[];
+  let rows: { chainId: number; token: string; wallets: number; rounds: number; firstStart: number; lastEnd: number }[];
   try {
     rows = await db
       .select({
@@ -833,6 +838,10 @@ export async function getTokenScaleCounts(
         token:   sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
         wallets: sql<number>`count(distinct lower(${vestingStreamsCache.recipient}))`.mapWith(Number),
         rounds:  sql<number>`count(distinct ${roundKey})`.mapWith(Number),
+        // Whole-token vesting span (active rows only) → drives the explorer's
+        // "% vested" progress bar and start→end tooltip.
+        firstStart: sql<number>`min(${startSql})`.mapWith(Number),
+        lastEnd:    sql<number>`max(${vestingStreamsCache.endTime})`.mapWith(Number),
       })
       .from(vestingStreamsCache)
       .where(and(
@@ -854,7 +863,12 @@ export async function getTokenScaleCounts(
   for (const r of rows) {
     const key = `${r.chainId}:${r.token}`;
     if (!wanted.has(key)) continue; // a token addr can exist on a chain we didn't ask for
-    out.set(key, { wallets: Number(r.wallets) || 0, rounds: Number(r.rounds) || 0 });
+    out.set(key, {
+      wallets:    Number(r.wallets) || 0,
+      rounds:     Number(r.rounds) || 0,
+      firstStart: Number(r.firstStart) || 0,
+      lastEnd:    Number(r.lastEnd) || 0,
+    });
   }
   return out;
 }
