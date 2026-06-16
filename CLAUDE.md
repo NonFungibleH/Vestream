@@ -1013,18 +1013,25 @@ npm run db:push        # push schema directly (dev only — skips migration file
 npm run db:studio      # open Drizzle Studio GUI
 ```
 
-> ⚠️ **The drizzle migration chain is currently broken** — `db:generate` fails
-> with a snapshot collision (`drizzle/meta/0009|0010|0011_snapshot.json ...
-> pointing to a parent snapshot ... collision`) left by prior raw-SQL changes.
-> Until that's repaired, **schema changes are applied to prod directly via
-> idempotent SQL** (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE TABLE
-> IF NOT EXISTS`, `CREATE INDEX ... IF NOT EXISTS`), and `schema.ts` stays the
-> source of truth for Drizzle's TS types. This is the established pattern for
-> recent additions (the `CREATE INDEX CONCURRENTLY` perf indexes, the
-> `watchlist` table re-create, and the `claimEvents` / `disposalCandidates` /
-> `stream_sales.source` additions). Match column names/types/defaults to
-> `schema.ts` exactly when writing the DDL. Repairing the meta chain so
-> `db:generate` works again is its own backlog task.
+> ✅ **The drizzle migration chain was re-baselined 2026-06-16** — `db:generate`
+> works again. The old chain was unrepairable (meta snapshots 0005–0007 +
+> 0012–0018 missing, and 0009–0011 collided on the same parent), so it was
+> reset to a single baseline (`drizzle/0000_amused_peter_quill.sql`) generated
+> from `schema.ts`. The pre-reset migrations + broken meta are archived under
+> `drizzle/_archive_2026-06-16/` (git history too). `db:generate` now produces
+> clean incremental diffs from that baseline.
+>
+> **Prod is still shipped via raw idempotent SQL** — this has NOT changed. We
+> do NOT run `db:migrate` against prod (the Supabase pooler + a baseline that
+> recreates existing tables would conflict); the re-baseline only fixes the
+> *authoring* workflow. Continue applying schema changes to prod with
+> idempotent DDL (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF
+> NOT EXISTS`, `CREATE INDEX CONCURRENTLY IF NOT EXISTS`) via
+> `node scripts/apply-migration.mjs drizzle/<file>.sql`, with `schema.ts` as the
+> source of truth for the TS types. The hand-rolled raw-SQL files
+> (`drizzle/0019_*.sql` … `0031_*.sql`) are those deploy artifacts — they live
+> in `drizzle/` but are NOT in drizzle's journal, so `db:generate` ignores them.
+> Match column names/types/defaults to `schema.ts` exactly when writing DDL.
 
 ### npm publish checklist
 Before publishing `@vestream/mcp`:
