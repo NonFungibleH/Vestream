@@ -401,6 +401,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
         <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>
           {/* Results */}
           <section>
+            <ActiveFilters sp={sp} />
             {mode === "calendar" && (
               overFilterCap ? (
                 <UpgradeBanner
@@ -1278,6 +1279,44 @@ function buildUrl(params: Record<string, string | undefined>): string {
   }
   const qs = sp.toString();
   return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
+}
+
+// Active-filter chip bar — shows every applied filter as a removable chip
+// (✕ link clears just that one) plus a "Clear all". Gives a one-glance view
+// of what's narrowing the results + one-click reset, which the filter pills
+// in the sidebar didn't surface.
+function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
+  const chips: Array<{ key: string; label: string }> = [];
+  if (sp.q)        chips.push({ key: "q",        label: `“${sp.q}”` });
+  if (sp.chain)    { const n = sp.chain.split(",").length;    chips.push({ key: "chain",    label: `${n} chain${n > 1 ? "s" : ""}` }); }
+  if (sp.protocol) { const n = sp.protocol.split(",").length; chips.push({ key: "protocol", label: `${n} protocol${n > 1 ? "s" : ""}` }); }
+  if (sp.date)     chips.push({ key: "date",    label: DATE_FILTERS.find((d) => d.id === sp.date)?.label ?? "Date" });
+  if (sp.amount)   chips.push({ key: "amount",  label: AMOUNT_FILTERS.find((a) => a.id === sp.amount)?.label ?? "Amount" });
+  if (sp.wallets)  chips.push({ key: "wallets", label: WALLET_FILTERS.find((w) => w.id === sp.wallets)?.label ?? "Wallets" });
+  if (chips.length === 0) return null;
+  return (
+    <div className="flex items-center flex-wrap gap-2 mb-3">
+      <span className="text-[10px] font-bold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>Filters</span>
+      {chips.map((c) => (
+        <Link
+          key={c.key}
+          href={buildUrl({ ...sp, [c.key]: undefined })}
+          className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors hover:brightness-105"
+          style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
+        >
+          {c.label}
+          <span aria-hidden style={{ opacity: 0.65 }}>✕</span>
+        </Link>
+      ))}
+      <Link
+        href={buildUrl({ mode: sp.mode })}
+        className="text-[11px] font-semibold px-2 py-1 rounded-full transition-colors hover:underline"
+        style={{ color: "var(--preview-text-3)" }}
+      >
+        Clear all
+      </Link>
+    </div>
+  );
 }
 
 function parseCsvNumbers(raw: string | undefined): number[] {

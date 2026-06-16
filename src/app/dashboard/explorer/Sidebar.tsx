@@ -111,15 +111,14 @@ export function ExplorerSidebar({ tier }: { tier: Tier | null }) {
             <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
           </div>
         ) : (
+          // Legacy non-free/non-pro tiers (e.g. "mobile") are Pro aliases —
+          // show the Pro badge, not the long-removed "Fund Plan".
           <div
             className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "linear-gradient(135deg, rgba(28,184,184,0.12), rgba(28,184,184,0.10))", border: "1px solid rgba(28,184,184,0.25)" }}
+            style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}
           >
-            <span className="text-[10px]">✦</span>
-            <div>
-              <p className="text-[10px] font-bold" style={{ color: "#1CB8B8" }}>Fund Plan</p>
-              <p className="text-[8px]" style={{ color: "var(--preview-text-3)" }}>Unlimited · all features</p>
-            </div>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(28,184,184,0.15)", color: "#1CB8B8" }}>PRO</span>
+            <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
           </div>
         )}
         <p className="text-[8px] text-center" style={{ color: "var(--preview-text-3)" }}>
