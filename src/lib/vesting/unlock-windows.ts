@@ -18,6 +18,7 @@ import { vestingStreamsCache } from "../db/schema";
 // address flowing into explorer links (Streamflow/Jupiter 404s, 2026-06-12).
 import { normaliseAddress } from "../address-validation";
 import type { VestingStream } from "./types";
+import type { QuickPriceMap } from "./quick-prices";
 
 /**
  * Per-group output for window queries. Distinct from UnlockGroupSummary in
@@ -658,13 +659,42 @@ export async function enrichGroupsWithUsd(
   }
   if (pairs.size === 0) return groups.map((g) => ({ ...g, usdValue: null, usdConfidence: null }));
 
-  // Two server-side fetches in parallel: DexScreener prices (for USD value
-  // + 24h volume → absorption ratio) and a per-token total-locked sum
-  // (for supply share). One DB round-trip covers all visible tokens.
-  const [priceMap, totalLockedByToken] = await Promise.all([
-    getQuickUsdPrices([...pairs.values()], opts),
-    getTotalLockedByToken([...pairs.values()]),
+  // Pricing — read the persistent token_prices_cache FIRST (a fast local DB
+  // read the hourly cron keeps warm), and only hit the live DexScreener path
+  // (getQuickUsdPrices) for tokens the cache doesn't cover. This keeps every
+  // filter/sort re-render snappy instead of doing a live price batch each time.
+  // Cache rows carry liquidity (→ confidence band) but no 24h volume, so the
+  // absorption metric is computed only for live-priced tokens; the risk chip
+  // still works off supply-share for cache-priced ones. Runs parallel to the
+  // per-token total-locked sum (for supply share).
+  const { readPriceCache } = await import("./token-price-cache");
+  const allPairs = [...pairs.values()];
+  const EXPLORER_PRICE_MAX_AGE_SEC = 24 * 60 * 60; // browse tool — day-old prices are fine
+
+  const [cached, totalLockedByToken] = await Promise.all([
+    // Fail-safe: a cache-read error degrades to an empty map → all tokens
+    // become "misses" → live-priced, exactly the pre-change behaviour.
+    readPriceCache(allPairs.map((p) => ({ chainId: p.chainId, tokenAddress: p.address })), EXPLORER_PRICE_MAX_AGE_SEC)
+      .catch(() => new Map<string, { priceUsd: number; liquidityUsd: number | null }>()),
+    getTotalLockedByToken(allPairs),
   ]);
+
+  const priceMap: QuickPriceMap = new Map();
+  for (const [key, c] of cached) {
+    const liq = c.liquidityUsd;
+    const confidence: "high" | "medium" | "low" =
+      liq == null    ? "medium"   // CoinGecko-sourced rows have no liquidity → treat as medium
+      : liq >= 10_000 ? "high"
+      : liq >= 1_000  ? "medium"
+      :                 "low";
+    priceMap.set(key, { priceUsd: c.priceUsd, confidence, volume24hUsd: null });
+  }
+  // Live-price only the tokens the cache missed (or that aged out).
+  const misses = allPairs.filter((p) => !priceMap.has(`${p.chainId}:${p.address.toLowerCase()}`));
+  if (misses.length > 0) {
+    const live = await getQuickUsdPrices(misses, opts);
+    for (const [key, qp] of live) priceMap.set(key, qp);
+  }
 
   return groups.map((g) => {
     if (!g.amount) return { ...g, usdValue: null, usdConfidence: null };
