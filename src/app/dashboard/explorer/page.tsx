@@ -28,6 +28,7 @@ import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import {
   getUnlocksInWindow,
   enrichGroupsWithUsd,
+  getTokenScaleCounts,
   WINDOWS,
   type WindowSlug,
   type WindowUnlockGroup,
@@ -196,6 +197,21 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     // window (≤ 50 rows × usually 5-15 distinct tokens).
     calendarGroups = await enrichGroupsWithUsd(calendarGroups);
 
+    // TRUE per-token wallet + round counts (uncapped). The calendar pool is
+    // capped at 2000 streams globally, so group.walletCount undercounts big
+    // tokens. One aggregate query over ALL cached streams for the visible
+    // tokens fixes the count and supplies the round count for display + the
+    // wallet filter/sort below.
+    {
+      const scale = await getTokenScaleCounts(
+        calendarGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress })),
+      );
+      calendarGroups = calendarGroups.map((g) => {
+        const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
+        return sc ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds } : g;
+      });
+    }
+
     if (amountThreshold) {
       // Filter on REAL USD value once priced. Unpriced rows are kept
       // (we don't penalise tokens DexScreener doesn't cover) — the table
@@ -206,12 +222,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       );
     }
     if (minWallets) {
-      calendarGroups = calendarGroups.filter((g) => g.walletCount >= minWallets);
+      calendarGroups = calendarGroups.filter((g) => (g.tokenWalletCount ?? g.walletCount) >= minWallets);
     }
     // getUnlocksInWindow returns soonest-first; only re-sort for the
     // non-default toggles.
     if (sortKey === "wallets") {
-      calendarGroups = [...calendarGroups].sort((a, b) => b.walletCount - a.walletCount);
+      calendarGroups = [...calendarGroups].sort((a, b) => (b.tokenWalletCount ?? b.walletCount) - (a.tokenWalletCount ?? a.walletCount));
     } else if (sortKey === "amount") {
       // Priced rows sort first by USD (honest). Unpriced rows fall to the
       // end, ordered among themselves by raw token amount so a Sablier
@@ -697,12 +713,28 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
             <span style={{ color: accent }}>{meta?.name ?? group.protocol}</span>
             <span> · </span>
             {chainName}
-            {group.walletCount > 1 && (
-              <>
-                <span> · </span>
-                {group.walletCount} wallets
-              </>
-            )}
+            {(() => {
+              // tokenWalletCount = true uncapped count; fall back to the
+              // per-bucket walletCount only if the aggregate didn't resolve.
+              const wallets = group.tokenWalletCount ?? group.walletCount;
+              const rounds  = group.tokenRoundCount;
+              return (
+                <>
+                  {wallets > 1 && (
+                    <>
+                      <span> · </span>
+                      {wallets.toLocaleString()} wallets
+                    </>
+                  )}
+                  {rounds != null && rounds > 1 && (
+                    <>
+                      <span> · </span>
+                      {rounds} rounds
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </p>
         </div>
         {/* USD value column. Medium-confidence prices are dim-italic so a

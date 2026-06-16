@@ -44,9 +44,20 @@ export interface WindowUnlockGroup {
    *  if no member contributed a parseable amount. */
   amount:        string | null;
   recipient:     string;
+  /** Distinct recipients IN THIS unlock bucket, over the capped query pool —
+   *  an undercount for big tokens. Prefer tokenWalletCount for display. */
   walletCount:   number;
   streamCount:   number;
   groupKey:      string;
+  /** TRUE distinct-recipient count across ALL cached streams for this
+   *  (chainId, tokenAddress) — uncapped. Attached by getTokenScaleCounts in
+   *  the explorer page; undefined until enriched. Fixes the "24 wallets" on
+   *  an 850-vesting token undercount caused by the calendar pool's 2000-row
+   *  global cap. */
+  tokenWalletCount?: number;
+  /** TRUE distinct vesting-round count for this token (same key as
+   *  rounds.ts groupIntoRounds: protocol|shape|cliffDays|durationDays). */
+  tokenRoundCount?:  number;
   /** USD value of the group's `amount` at render time, or null when the
    *  token has no liquid DEX pair / we couldn't price it. Populated by
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
@@ -741,6 +752,70 @@ async function getTotalLockedByToken(
     // Multiple rows can have the same lowercased address if the original
     // case differs (shouldn't, but defensively sum). Use addition.
     out.set(key, (out.get(key) ?? 0n) + amt);
+  }
+  return out;
+}
+
+/**
+ * TRUE per-token wallet + round counts, UNCAPPED.
+ *
+ * The explorer's calendar groups carry a `walletCount` computed over the
+ * 2000-row global pool (soonest-ending first), so a token with more vestings
+ * than made the pool is undercounted ("24 wallets" on an 850-vesting token).
+ * This counts ALL cached streams for the given (chainId, tokenAddress) pairs:
+ *   - wallets = COUNT(DISTINCT recipient)
+ *   - rounds  = COUNT(DISTINCT round-key), where the key is replicated from
+ *     rounds.ts `groupIntoRounds`: `protocol|shape|cliffDays|durationDays`,
+ *     cliffDays = round(((cliffTime ?? startTime) - startTime)/86400),
+ *     durationDays = round((endTime - startTime)/86400), clamped ≥ 0.
+ *
+ * Computed in SQL (one GROUP BY query, no row transfer) so it scales to the
+ * biggest tokens. startTime/cliffTime/shape come from the stream_data jsonb;
+ * endTime + protocol + recipient are columns. Returns a map keyed
+ * `${chainId}:${lowercasedAddress}` — absent entries ⇒ no cached streams.
+ */
+export async function getTokenScaleCounts(
+  pairs: ReadonlyArray<{ chainId: number; tokenAddress: string }>,
+): Promise<Map<string, { wallets: number; rounds: number }>> {
+  const out = new Map<string, { wallets: number; rounds: number }>();
+  // DB-touching helper must short-circuit during `next build` (see CLAUDE.md).
+  if (process.env.NEXT_PHASE === "phase-production-build") return out;
+  if (pairs.length === 0) return out;
+
+  const addrs  = [...new Set(pairs.map((p) => p.tokenAddress.toLowerCase()))];
+  const chains = [...new Set(pairs.map((p) => p.chainId))];
+  const wanted = new Set(pairs.map((p) => `${p.chainId}:${p.tokenAddress.toLowerCase()}`));
+
+  // Round-key expression — must match rounds.ts groupIntoRounds exactly.
+  const startSql = sql`(${vestingStreamsCache.streamData}->>'startTime')::numeric`;
+  const cliffSql = sql`COALESCE((${vestingStreamsCache.streamData}->>'cliffTime')::numeric, ${startSql})`;
+  const shapeSql = sql`CASE WHEN ${vestingStreamsCache.streamData}->>'shape' = 'steps' THEN 'steps' ELSE 'linear' END`;
+  const roundKey = sql`${vestingStreamsCache.protocol} || '|' || ${shapeSql} || '|' || GREATEST(0, ROUND((${cliffSql} - ${startSql}) / 86400))::int || '|' || GREATEST(0, ROUND((${vestingStreamsCache.endTime} - ${startSql}) / 86400))::int`;
+
+  let rows: { chainId: number; token: string; wallets: number; rounds: number }[];
+  try {
+    rows = await db
+      .select({
+        chainId: vestingStreamsCache.chainId,
+        token:   sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
+        wallets: sql<number>`count(distinct lower(${vestingStreamsCache.recipient}))`.mapWith(Number),
+        rounds:  sql<number>`count(distinct ${roundKey})`.mapWith(Number),
+      })
+      .from(vestingStreamsCache)
+      .where(and(
+        inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, addrs),
+        inArray(vestingStreamsCache.chainId, chains),
+      ))
+      .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`);
+  } catch (err) {
+    console.error("[unlock-windows] getTokenScaleCounts failed:", err);
+    return out;
+  }
+
+  for (const r of rows) {
+    const key = `${r.chainId}:${r.token}`;
+    if (!wanted.has(key)) continue; // a token addr can exist on a chain we didn't ask for
+    out.set(key, { wallets: Number(r.wallets) || 0, rounds: Number(r.rounds) || 0 });
   }
   return out;
 }
