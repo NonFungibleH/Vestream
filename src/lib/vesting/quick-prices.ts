@@ -198,7 +198,25 @@ export async function getQuickUsdPrices(
     return out;
   }
 
-  const addresses = stillNeeded.map((p) => p.address);
+  // Bound the live work. Each DexScreener miss costs a network round-trip;
+  // an uncapped, SERIAL loop over hundreds of cache-miss tokens (the explorer
+  // can present 800+) stacked batches to minutes — past Cloudflare's 100s
+  // origin limit (Error 524). Two guards:
+  //   1. CAP the number of tokens priced live per call. `stillNeeded` is in
+  //      caller order (soonest-unlocking first for the explorer), so the cap
+  //      keeps the most-relevant tokens; the rest render "—" and get warmed
+  //      by the hourly token_prices_cache cron. NOT silently dropped — logged.
+  //   2. Run the (now ≤ LIVE_PRICE_CAP/30) batches in PARALLEL with an
+  //      explicit per-request timeout, so worst-case latency ≈ one batch
+  //      (~4s) instead of sum-of-batches.
+  const LIVE_PRICE_CAP = 120; // 4 batches of 30
+  const toQuery = stillNeeded.slice(0, LIVE_PRICE_CAP);
+  const dropped = stillNeeded.length - toQuery.length;
+  if (dropped > 0) {
+    console.warn(`[quick-prices] live-pricing capped at ${LIVE_PRICE_CAP}: priced ${toQuery.length}, left ${dropped} unpriced this render (cron warms the rest)`);
+  }
+
+  const addresses = toQuery.map((p) => p.address);
   const batches: string[][] = [];
   for (let i = 0; i < addresses.length; i += DS_BATCH_SIZE) {
     batches.push(addresses.slice(i, i + DS_BATCH_SIZE));
@@ -209,64 +227,70 @@ export async function getQuickUsdPrices(
   // tokens). We pin pairs back to the requested chain via the response's
   // chain slug so a USDC-on-Ethereum hit doesn't get mis-applied to a
   // USDC-on-Base unlock card.
-  const wantedSlugs = new Set(stillNeeded.map((p) => DS_CHAIN_SLUG[p.chainId]));
+  const wantedSlugs = new Set(toQuery.map((p) => DS_CHAIN_SLUG[p.chainId]));
 
   // Track which pairs we successfully priced from DexScreener so we can
   // negative-cache the rest at the end.
   const dexResolved = new Set<string>();
 
-  for (const batch of batches) {
+  // Fetch all batches concurrently (≤ 4 after the cap). 4s timeout each so a
+  // single slow DexScreener response can't stall the whole render.
+  const batchResults = await Promise.all(batches.map(async (batch): Promise<{ pairs?: DexPair[] } | null> => {
     try {
       const url = `https://api.dexscreener.com/latest/dex/tokens/${batch.join(",")}`;
       const res = await fetchWithRetry(url, {
         next:    { revalidate: 60 },
         headers: { Accept: "application/json" },
-      }, { tag: "dexscreener-quick", retries: 1 });
-      if (!res || !res.ok) continue;
-      const data = (await res.json()) as { pairs?: DexPair[] };
-
-      // Pick the highest-volume pair per (chain-slug, address) — mirrors
-      // DexScreener's primary-pair ranking. No liquidity floor (display path).
-      const best = new Map<string, DexPair>();
-      for (const pair of data.pairs ?? []) {
-        if (!wantedSlugs.has(pair.chainId)) continue;
-        // No liquidity floor for DISPLAY — show the market price even on
-        // thin liquidity. (The TVL aggregate excludes thin tokens in tvl.ts.)
-        const price = parseFloat(pair.priceUsd ?? "0");
-        if (!Number.isFinite(price) || price <= 0) continue;
-
-        const k = `${pair.chainId}:${pair.baseToken.address.toLowerCase()}`;
-        const ex = best.get(k);
-        if (!ex || (pair.volume?.h24 ?? 0) > (ex.volume?.h24 ?? 0)) {
-          best.set(k, pair);
-        }
-      }
-
-      // Project chain-slug-keyed pairs back to chainId-keyed entries so the
-      // caller can look up by their numeric chainId.
-      for (const [, pair] of best) {
-        const liqUsd = pair.liquidity?.usd ?? 0;
-        const conf: "high" | "medium" | "low" = liqUsd >= LIQUIDITY_HIGH ? "high"
-                                       : liqUsd >= LIQUIDITY_MEDIUM ? "medium"
-                                       : "low";
-        const matchedPair = stillNeeded.find(
-          (p) => DS_CHAIN_SLUG[p.chainId] === pair.chainId
-              && p.address === pair.baseToken.address.toLowerCase(),
-        );
-        if (!matchedPair) continue;
-        const vol = typeof pair.volume?.h24 === "number" && Number.isFinite(pair.volume.h24)
-          ? pair.volume.h24
-          : null;
-        const quickPrice: QuickPrice = {
-          priceUsd:    parseFloat(pair.priceUsd!),
-          confidence:  conf,
-          volume24hUsd: vol,
-        };
-        out.set(priceKey(matchedPair.chainId, matchedPair.address), quickPrice);
-        dexResolved.add(priceKey(matchedPair.chainId, matchedPair.address));
-      }
+      }, { tag: "dexscreener-quick", retries: 1, timeoutMs: 4000 });
+      if (!res || !res.ok) return null;
+      return (await res.json()) as { pairs?: DexPair[] };
     } catch (err) {
       console.warn("[quick-prices] batch failed:", err);
+      return null;
+    }
+  }));
+
+  for (const data of batchResults) {
+    if (!data) continue;
+    // Pick the highest-volume pair per (chain-slug, address) — mirrors
+    // DexScreener's primary-pair ranking. No liquidity floor (display path).
+    const best = new Map<string, DexPair>();
+    for (const pair of data.pairs ?? []) {
+      if (!wantedSlugs.has(pair.chainId)) continue;
+      // No liquidity floor for DISPLAY — show the market price even on
+      // thin liquidity. (The TVL aggregate excludes thin tokens in tvl.ts.)
+      const price = parseFloat(pair.priceUsd ?? "0");
+      if (!Number.isFinite(price) || price <= 0) continue;
+
+      const k = `${pair.chainId}:${pair.baseToken.address.toLowerCase()}`;
+      const ex = best.get(k);
+      if (!ex || (pair.volume?.h24 ?? 0) > (ex.volume?.h24 ?? 0)) {
+        best.set(k, pair);
+      }
+    }
+
+    // Project chain-slug-keyed pairs back to chainId-keyed entries so the
+    // caller can look up by their numeric chainId.
+    for (const [, pair] of best) {
+      const liqUsd = pair.liquidity?.usd ?? 0;
+      const conf: "high" | "medium" | "low" = liqUsd >= LIQUIDITY_HIGH ? "high"
+                                     : liqUsd >= LIQUIDITY_MEDIUM ? "medium"
+                                     : "low";
+      const matchedPair = toQuery.find(
+        (p) => DS_CHAIN_SLUG[p.chainId] === pair.chainId
+            && p.address === pair.baseToken.address.toLowerCase(),
+      );
+      if (!matchedPair) continue;
+      const vol = typeof pair.volume?.h24 === "number" && Number.isFinite(pair.volume.h24)
+        ? pair.volume.h24
+        : null;
+      const quickPrice: QuickPrice = {
+        priceUsd:    parseFloat(pair.priceUsd!),
+        confidence:  conf,
+        volume24hUsd: vol,
+      };
+      out.set(priceKey(matchedPair.chainId, matchedPair.address), quickPrice);
+      dexResolved.add(priceKey(matchedPair.chainId, matchedPair.address));
     }
   }
 
@@ -276,11 +300,13 @@ export async function getQuickUsdPrices(
   // shorter-TTL than positive (60s vs 5min) — illiquid tokens occasionally
   // get a new pair listed and we want to discover that within the hour,
   // not on the 5-minute boundary.
-  if (redis && stillNeeded.length > 0) {
+  if (redis && toQuery.length > 0) {
     try {
       // Build the pipeline of sets in a single round-trip via pipeline.
+      // Only the tokens we actually queried (toQuery) — never negative-cache
+      // the over-cap tail we never looked at.
       const pipeline = redis.pipeline();
-      for (const p of stillNeeded) {
+      for (const p of toQuery) {
         const k = redisKey(p.chainId, p.address);
         const lookupKey = priceKey(p.chainId, p.address);
         if (dexResolved.has(lookupKey)) {
