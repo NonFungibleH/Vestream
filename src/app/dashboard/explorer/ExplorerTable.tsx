@@ -71,13 +71,12 @@ function sortValue(r: ExplorerRow, col: SortCol): number | string {
 }
 
 export function ExplorerTable({
-  rows, isFree, totalMatches, hiddenCount, exportHref,
+  rows, isFree, totalMatches, hiddenCount,
 }: {
   rows:         ExplorerRow[];
   isFree:       boolean;
   totalMatches: number;
   hiddenCount:  number;
-  exportHref:   string;
 }) {
   // Default: soonest unlock first (matches the server's prior default).
   const [col, setCol] = useState<SortCol>("date");
@@ -130,12 +129,6 @@ export function ExplorerTable({
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
           {totalMatches} token{totalMatches === 1 ? "" : "s"}
         </p>
-        {!isFree && (
-          <a href={exportHref} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Export CSV
-          </a>
-        )}
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>

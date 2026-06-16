@@ -318,18 +318,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
   const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;
 
-  // CSV export URL — preserves every active filter param so Pro users
-  // download exactly what's on screen (just uncapped to EXPORT_LIMIT).
-  const exportParams = new URLSearchParams();
-  if (query)              exportParams.set("q", query);
-  if (mode)               exportParams.set("mode", mode);
-  if (chainIds.length)    exportParams.set("chain", chainIds.join(","));
-  if (protocols.length)   exportParams.set("protocol", protocols.join(","));
-  if (sp.date)            exportParams.set("date", sp.date);
-  if (sp.amount)          exportParams.set("amount", sp.amount);
-  if (sp.wallets)         exportParams.set("wallets", sp.wallets);
-  const exportHref = `/api/dashboard/explorer/export?${exportParams.toString()}`;
-
   // Active-filter count for the free-tier multi-filter cap.
   const activeFilters = [
     chainIds.length > 0 ? "chain" : null,
@@ -437,7 +425,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                   isFree={isFree}
                   totalMatches={totalMatches}
                   hiddenCount={hiddenCount}
-                  exportHref={exportHref}
                 />
               )
             )}
@@ -448,7 +435,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 hiddenCount={hiddenCount}
                 isFree={isFree}
                 overFilterCap={overFilterCap}
-                exportHref={exportHref}
               />
             )}
             {mode === "wallet" && (
@@ -460,7 +446,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 walletAddress={walletAddress}
                 ensHint={walletEnsHint}
                 queryGiven={query.length > 0}
-                exportHref={exportHref}
                 portfolio={walletPortfolio}
               />
             )}
@@ -541,14 +526,13 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 // ─── Calendar results block ─────────────────────────────────────────────────
 
 function CalendarResults({
-  rows, totalMatches, hiddenCount, isFree, overFilterCap, exportHref,
+  rows, totalMatches, hiddenCount, isFree, overFilterCap,
 }: {
   rows:           WindowUnlockGroup[];
   totalMatches:   number;
   hiddenCount:    number;
   isFree:         boolean;
   overFilterCap:  boolean;
-  exportHref:     string;
 }) {
   if (overFilterCap) {
     return (
@@ -578,15 +562,6 @@ function CalendarResults({
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
           {totalMatches} match{totalMatches === 1 ? "" : "es"}
         </p>
-        {!isFree && (
-          <a
-            href={exportHref}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
-          >
-            Export CSV
-          </a>
-        )}
       </div>
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         {/* Column headings — reuse CalendarRow's exact grid template so the
@@ -805,14 +780,13 @@ function CalendarRow({ group, showTopBorder }: { group: WindowUnlockGroup; showT
 // ─── Stream-mode results (per-stream rows) ─────────────────────────────────
 
 function StreamResults({
-  rows, totalMatches, hiddenCount, isFree, overFilterCap, exportHref,
+  rows, totalMatches, hiddenCount, isFree, overFilterCap,
 }: {
   rows:          StreamRow[];
   totalMatches:  number;
   hiddenCount:   number;
   isFree:        boolean;
   overFilterCap: boolean;
-  exportHref:    string;
 }) {
   if (overFilterCap) {
     return (
@@ -841,12 +815,6 @@ function StreamResults({
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
           {totalMatches} stream{totalMatches === 1 ? "" : "s"}
         </p>
-        {!isFree && (
-          <a href={exportHref} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Export CSV
-          </a>
-        )}
       </div>
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         {rows.map((s, i) => (
@@ -1009,7 +977,7 @@ function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: Wallet
 // ─── Wallet-mode results (positions for a single recipient) ───────────────
 
 function WalletResults({
-  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven, exportHref, portfolio,
+  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven, portfolio,
 }: {
   rows:          StreamRow[];
   totalMatches:  number;
@@ -1018,7 +986,6 @@ function WalletResults({
   walletAddress: string | null;
   ensHint:       string | null;
   queryGiven:    boolean;
-  exportHref:    string;
   portfolio:     WalletPortfolioRow[];
 }) {
   if (!queryGiven) {
@@ -1069,12 +1036,6 @@ function WalletResults({
             {ensHint ?? shortAddr(walletAddress!)}
           </span>
         </p>
-        {!isFree && (
-          <a href={exportHref} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
-            Export CSV
-          </a>
-        )}
       </div>
       {/* Wallet analytics — locked value, distinct tokens, protocol/chain
           spread, and holdings-by-USD. Built purely from rows + portfolio
