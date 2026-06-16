@@ -190,27 +190,24 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     } catch {
       calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
     }
-    calendarGroups = calendarResult.groups;
-    // Price every group in one DexScreener batch. The explorer is dynamic,
-    // so the Upstash Redis layer is allowed; one batch covers up to 30
-    // distinct (chain, token) pairs which comfortably absorbs our visible
-    // window (≤ 50 rows × usually 5-15 distinct tokens).
-    calendarGroups = await enrichGroupsWithUsd(calendarGroups);
+    const baseGroups = calendarResult.groups;
+    const scalePairs = baseGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }));
 
-    // TRUE per-token wallet + round counts (uncapped). The calendar pool is
-    // capped at 2000 streams globally, so group.walletCount undercounts big
-    // tokens. One aggregate query over ALL cached streams for the visible
-    // tokens fixes the count and supplies the round count for display + the
-    // wallet filter/sort below.
-    {
-      const scale = await getTokenScaleCounts(
-        calendarGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress })),
-      );
-      calendarGroups = calendarGroups.map((g) => {
-        const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
-        return sc ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds } : g;
-      });
-    }
+    // Price enrichment and the per-token wallet/round counts are independent
+    // (both keyed on the same groups), so run them in PARALLEL — one fewer
+    // serial DB round-trip on every load. enrichGroupsWithUsd reads the
+    // token_prices_cache first (cron-warmed) and only live-prices misses;
+    // getTokenScaleCounts is one uncapped GROUP BY aggregate (the calendar
+    // pool caps at 2000 streams, so group.walletCount undercounts big tokens —
+    // this supplies the true wallet + round counts for display + filter/sort).
+    const [enriched, scale] = await Promise.all([
+      enrichGroupsWithUsd(baseGroups),
+      getTokenScaleCounts(scalePairs),
+    ]);
+    calendarGroups = enriched.map((g) => {
+      const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
+      return sc ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds } : g;
+    });
 
     if (amountThreshold) {
       // Filter on REAL USD value once priced. Unpriced rows are kept
