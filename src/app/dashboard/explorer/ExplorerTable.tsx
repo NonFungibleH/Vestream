@@ -29,6 +29,7 @@ import { WatchButton } from "./WatchButton";
 export interface ExplorerRow {
   groupKey:          string;
   protocol:          string;
+  protocolCount?:    number;          // distinct protocols vesting this token (≥2 → "N protocols")
   chainId:           number;
   tokenSymbol:       string | null;
   tokenAddress:      string;
@@ -127,7 +128,7 @@ export function ExplorerTable({
     <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
-          {totalMatches} match{totalMatches === 1 ? "" : "es"}
+          {totalMatches} token{totalMatches === 1 ? "" : "s"}
         </p>
         {!isFree && (
           <a href={exportHref} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
@@ -162,7 +163,7 @@ export function ExplorerTable({
         <div className="mt-4 rounded-2xl px-5 py-4 text-center"
           style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)" }}>
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
-            {hiddenCount} more match{hiddenCount === 1 ? "" : "es"} above your free limit
+            {hiddenCount} more token{hiddenCount === 1 ? "" : "s"} above your free limit
           </p>
           <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
             Pro lifts the per-query cap, adds CSV export, multi-filter compose, and saved-search alerts.
@@ -223,7 +224,9 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
               {r.tokenSymbol ?? shortAddr(r.tokenAddress)}
             </p>
             <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
-              <span style={{ color: accent }}>{meta?.name ?? r.protocol}</span> · {chainName}
+              <span style={{ color: accent }}>
+                {r.protocolCount && r.protocolCount > 1 ? `${r.protocolCount} protocols` : (meta?.name ?? r.protocol)}
+              </span> · {chainName}
             </p>
           </div>
         </div>

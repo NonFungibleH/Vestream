@@ -166,6 +166,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     : WINDOWS[dateSlug as WindowSlug].range();
 
   let calendarGroups: WindowUnlockGroup[] = [];
+  let protoCountByKey = new Map<string, number>(); // distinct protocols per token (post-dedupe)
   let streamRows:     StreamRow[]         = [];
   let walletRows:     StreamRow[]         = [];
   let walletAddress:  string | null       = null;
@@ -224,6 +225,30 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     // getUnlocksInWindow returns soonest-first — the default. All other
     // sorting is now done client-side by clicking a column header in
     // <ExplorerTable> (no server round-trip), so there's no server re-sort.
+
+    // ── Dedupe to one row per token contract ───────────────────────────────
+    // The pool is one row per (proto, chain, token, hour-bucket), so a token
+    // with many unlock cohorts (e.g. USDC/Sablier) appears as a dozen
+    // near-identical rows whose Wallets/Rounds columns are token-level and
+    // therefore just repeated. Collapse to one row per (chainId, tokenAddress)
+    // — the same key the token-detail route uses — so each token is a single
+    // source of truth. Groups arrive soonest-first, so the first occurrence
+    // per key IS the token's NEXT unlock; keep it as the representative and
+    // tally how many distinct protocols vest the token (rare, but when it
+    // happens those rows were true duplicates pointing at one token page).
+    {
+      const repByKey   = new Map<string, WindowUnlockGroup>();
+      const protoByKey = new Map<string, Set<string>>();
+      for (const g of calendarGroups) {
+        const key = `${g.chainId}:${g.tokenAddress.toLowerCase()}`;
+        let protos = protoByKey.get(key);
+        if (!protos) protoByKey.set(key, (protos = new Set()));
+        protos.add(g.protocol);
+        if (!repByKey.has(key)) repByKey.set(key, g); // soonest-first → next unlock
+      }
+      calendarGroups  = [...repByKey.values()];
+      protoCountByKey = new Map([...protoByKey].map(([k, s]) => [k, s.size]));
+    }
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
       chainIds:    chainIds.length > 0 ? chainIds : undefined,
@@ -275,6 +300,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const calendarRows: ExplorerRow[] = visibleCalendar.map((g) => ({
     groupKey:          g.groupKey,
     protocol:          g.protocol,
+    protocolCount:     protoCountByKey.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`) ?? 1,
     chainId:           g.chainId,
     tokenSymbol:       g.tokenSymbol,
     tokenAddress:      g.tokenAddress,
