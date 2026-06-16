@@ -114,7 +114,14 @@ export function ExplorerTable({
   // Amount, Rounds, Risk, Next (7). Desktop-only cells use `hidden md:flex`,
   // so on mobile they're removed from the grid and the 3 visible cells fill
   // the 3-column template.
-  const GRID = "grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_auto_auto_auto_auto_auto] items-center gap-2 md:gap-4 px-4 md:px-5";
+  // Proportional `fr` columns (NOT auto): the template is deterministic, so
+  // the header grid and every row grid resolve to identical column widths and
+  // line up — `auto` sized each grid to its own content, which is why headers
+  // and values drifted. `fr` units also fill the width evenly instead of one
+  // 1fr token column hogging all the slack (the empty space). Mobile shows
+  // Token · USD · Wallets; the desktop-only cells are display:none below md so
+  // they drop out of the 3-col mobile grid.
+  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[2.2fr_1fr_1fr_0.85fr_0.7fr_0.7fr_1fr] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
