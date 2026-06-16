@@ -64,6 +64,12 @@ export interface WindowUnlockGroup {
    *  token counts by getTokenScaleCounts; undefined until enriched. */
   vestStart?:        number;
   vestEnd?:          number;
+  /** TRUE if any active stream has a meaningful cliff (lump unlock). From
+   *  getTokenScaleCounts; drives the ⚠️ cliff flag in the explorer. */
+  hasCliff?:         boolean;
+  /** Largest single recipient's share (0–1) of this token's locked supply —
+   *  concentration signal. Set by enrichGroupsWithUsd via getTotalLockedByToken. */
+  topHolderShare?:   number | null;
   /** USD value of the group's `amount` at render time, or null when the
    *  token has no liquid DEX pair / we couldn't price it. Populated by
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
@@ -720,7 +726,8 @@ export async function enrichGroupsWithUsd(
     // (across all active + finished schedules). bigint division scaled
     // through 1e6 to keep 6 decimals without overflow.
     let supplyShare: number | null = null;
-    const totalLocked = totalLockedByToken.get(priceKey);
+    const locked = totalLockedByToken.get(priceKey);
+    const totalLocked = locked?.total;
     if (totalLocked && totalLocked > 0n) {
       try {
         const groupAmt = BigInt(g.amount);
@@ -730,7 +737,7 @@ export async function enrichGroupsWithUsd(
       } catch { /* keep null */ }
     }
 
-    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare };
+    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare, topHolderShare: locked?.topShare ?? null };
   });
 }
 
@@ -748,13 +755,12 @@ export async function enrichGroupsWithUsd(
  */
 async function getTotalLockedByToken(
   pairs: ReadonlyArray<{ chainId: number; address: string }>,
-): Promise<Map<string, bigint>> {
-  const out = new Map<string, bigint>();
+): Promise<Map<string, { total: bigint; topShare: number | null }>> {
+  const out = new Map<string, { total: bigint; topShare: number | null }>();
   if (pairs.length === 0) return out;
   // jsonb numeric: locked_amount lives inside the streamData JSONB.
-  // The CAST handles it as numeric (bigint-safe in Postgres). Group by
-  // (chainId, lower(tokenAddress)) so a token bridged to multiple chains
-  // gets one row per chain (matches priceKey shape).
+  // Group by (chainId, lower(tokenAddress)) so a token bridged to multiple
+  // chains gets one row per chain (matches priceKey shape).
   const lowered = pairs.map((p) => ({
     chainId: p.chainId,
     addr:    normaliseAddress(p.address),
@@ -762,17 +768,19 @@ async function getTotalLockedByToken(
   const lowerAddrs = lowered.map((p) => p.addr);
   const chainIds = [...new Set(lowered.map((p) => p.chainId))];
 
-  // Match on lower(token_address) so this hits the functional index
-  // `vsc_chain_lower_token_idx` (chain_id, lower(token_address)) — the same
-  // index the token page (fetchActiveStreams) and getTokenScaleCounts use.
-  // Without it this seq-scanned the whole cache (the 30s nav / QUIC-timeout
-  // root cause). lower() on both sides also makes Solana mints (stored
-  // original-case) match a lowercased input consistently.
-  const rows = await db
+  // Two-level aggregate, one scan: the inner query sums locked PER RECIPIENT,
+  // the outer sums those (= total locked) AND takes the max (= the single
+  // largest holder's locked). topShare = largest holder / total → the
+  // concentration signal. Matches on lower(token_address) to hit the
+  // functional index `vsc_chain_lower_token_idx` (chain_id, lower(token)).
+  // lower() on both sides also makes Solana mints (stored original-case)
+  // match a lowercased input. Fully-vested rows carry 0 lockedAmount, so no
+  // is_fully_vested filter is needed — they contribute nothing.
+  const perRecipient = db
     .select({
-      chainId:      vestingStreamsCache.chainId,
-      tokenAddress: vestingStreamsCache.tokenAddress,
-      lockedSum:    sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)::text`,
+      chainId:     vestingStreamsCache.chainId,
+      tok:         sql<string>`lower(${vestingStreamsCache.tokenAddress})`.as("tok"),
+      recipLocked: sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)`.as("recip_locked"),
     })
     .from(vestingStreamsCache)
     .where(
@@ -781,15 +789,28 @@ async function getTotalLockedByToken(
         inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, lowerAddrs),
       ),
     )
-    .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress);
+    .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`, sql`lower(${vestingStreamsCache.recipient})`)
+    .as("per_recipient");
+
+  const rows = await db
+    .select({
+      chainId: perRecipient.chainId,
+      tok:     perRecipient.tok,
+      total:   sql<string>`SUM(${perRecipient.recipLocked})::text`,
+      top:     sql<string>`MAX(${perRecipient.recipLocked})::text`,
+    })
+    .from(perRecipient)
+    .groupBy(perRecipient.chainId, perRecipient.tok);
 
   for (const r of rows) {
-    const key = `${r.chainId}:${(r.tokenAddress ?? "").toLowerCase()}`;
-    let amt = 0n;
-    try { amt = BigInt(r.lockedSum); } catch { /* keep 0n */ }
-    // Multiple rows can have the same lowercased address if the original
-    // case differs (shouldn't, but defensively sum). Use addition.
-    out.set(key, (out.get(key) ?? 0n) + amt);
+    const key = `${r.chainId}:${(r.tok ?? "").toLowerCase()}`;
+    let total = 0n, top = 0n;
+    try { total = BigInt(r.total); } catch { /* keep 0n */ }
+    try { top   = BigInt(r.top);   } catch { /* keep 0n */ }
+    // BigInt ratio scaled through 1e6 to avoid Number precision loss on
+    // very large wei totals; the ratio itself is 0–1.
+    const topShare = total > 0n ? Number((top * 1_000_000n) / total) / 1_000_000 : null;
+    out.set(key, { total, topShare });
   }
   return out;
 }
@@ -814,8 +835,8 @@ async function getTotalLockedByToken(
  */
 export async function getTokenScaleCounts(
   pairs: ReadonlyArray<{ chainId: number; tokenAddress: string }>,
-): Promise<Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number }>> {
-  const out = new Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number }>();
+): Promise<Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }>> {
+  const out = new Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }>();
   // DB-touching helper must short-circuit during `next build` (see CLAUDE.md).
   if (process.env.NEXT_PHASE === "phase-production-build") return out;
   if (pairs.length === 0) return out;
@@ -830,7 +851,7 @@ export async function getTokenScaleCounts(
   const shapeSql = sql`CASE WHEN ${vestingStreamsCache.streamData}->>'shape' = 'steps' THEN 'steps' ELSE 'linear' END`;
   const roundKey = sql`${vestingStreamsCache.protocol} || '|' || ${shapeSql} || '|' || GREATEST(0, ROUND((${cliffSql} - ${startSql}) / 86400))::int || '|' || GREATEST(0, ROUND((${vestingStreamsCache.endTime} - ${startSql}) / 86400))::int`;
 
-  let rows: { chainId: number; token: string; wallets: number; rounds: number; firstStart: number; lastEnd: number }[];
+  let rows: { chainId: number; token: string; wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }[];
   try {
     rows = await db
       .select({
@@ -842,6 +863,9 @@ export async function getTokenScaleCounts(
         // "% vested" progress bar and start→end tooltip.
         firstStart: sql<number>`min(${startSql})`.mapWith(Number),
         lastEnd:    sql<number>`max(${vestingStreamsCache.endTime})`.mapWith(Number),
+        // Any active stream whose cliff sits meaningfully (>1 day) after its
+        // start = a lump-unlock cliff. Surfaced as a ⚠️ flag in the explorer.
+        hasCliff:   sql<boolean>`bool_or((${cliffSql} - ${startSql}) > 86400)`.mapWith(Boolean),
       })
       .from(vestingStreamsCache)
       .where(and(
@@ -868,6 +892,7 @@ export async function getTokenScaleCounts(
       rounds:     Number(r.rounds) || 0,
       firstStart: Number(r.firstStart) || 0,
       lastEnd:    Number(r.lastEnd) || 0,
+      hasCliff:   Boolean(r.hasCliff),
     });
   }
   return out;

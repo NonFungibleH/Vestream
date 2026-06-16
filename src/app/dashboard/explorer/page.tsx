@@ -208,7 +208,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     calendarGroups = enriched.map((g) => {
       const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
       return sc
-        ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds, vestStart: sc.firstStart, vestEnd: sc.lastEnd }
+        ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds, vestStart: sc.firstStart, vestEnd: sc.lastEnd, hasCliff: sc.hasCliff }
         : g;
     });
 
@@ -315,6 +315,8 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     tokenRoundCount:   g.tokenRoundCount,
     vestStart:         g.vestStart ?? null,
     vestEnd:           g.vestEnd ?? null,
+    hasCliff:          g.hasCliff ?? false,
+    topHolderShare:    g.topHolderShare ?? null,
     eventTime:         g.eventTime,
     absorptionRatio:   g.absorptionRatio ?? null,
     supplyShare:       g.supplyShare ?? null,
