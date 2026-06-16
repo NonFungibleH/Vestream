@@ -122,6 +122,19 @@ export default async function ExplorerTokenPage({
               </div>
             )}
             <SaveTokenButton chainId={cid} address={addr} symbol={symbol} />
+            {/* Link to the public, shareable token page (no auth) — same token,
+                but the marketing/SEO surface with the social-share + FAQ. The
+                two pages are deliberately different audiences (this is the
+                gated analyst tool; that one is public + shareable). */}
+            <a
+              href={`/token/${cid}/${addr}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+              style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)", color: "var(--preview-text-2)" }}
+            >
+              Public page ↗
+            </a>
           </div>
         </div>
 
