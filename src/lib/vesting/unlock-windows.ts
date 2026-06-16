@@ -757,9 +757,12 @@ async function getTotalLockedByToken(
   const lowerAddrs = lowered.map((p) => p.addr);
   const chainIds = [...new Set(lowered.map((p) => p.chainId))];
 
-  // Filter to only the tokens we asked about (cheap, indexed scan).
-  // The cache already stores normalised addresses (lowercase EVM, original-
-  // case Solana), so an inArray match is exact — no lower() wrap needed.
+  // Match on lower(token_address) so this hits the functional index
+  // `vsc_chain_lower_token_idx` (chain_id, lower(token_address)) — the same
+  // index the token page (fetchActiveStreams) and getTokenScaleCounts use.
+  // Without it this seq-scanned the whole cache (the 30s nav / QUIC-timeout
+  // root cause). lower() on both sides also makes Solana mints (stored
+  // original-case) match a lowercased input consistently.
   const rows = await db
     .select({
       chainId:      vestingStreamsCache.chainId,
@@ -770,7 +773,7 @@ async function getTotalLockedByToken(
     .where(
       and(
         inArray(vestingStreamsCache.chainId, chainIds),
-        inArray(vestingStreamsCache.tokenAddress, lowerAddrs),
+        inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, lowerAddrs),
       ),
     )
     .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress);
