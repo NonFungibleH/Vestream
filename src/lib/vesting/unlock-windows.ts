@@ -52,7 +52,7 @@ export interface WindowUnlockGroup {
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
    *  so callers that don't render USD don't pay the DexScreener cost. */
   usdValue?:     number | null;
-  usdConfidence?: "high" | "medium" | null;
+  usdConfidence?: "high" | "medium" | "low" | null;
 
   // ── Risk-judgment metrics (populated by enrichGroupsWithUsd) ──────────
   // These let the UI render "is this risky to hold through?" without the

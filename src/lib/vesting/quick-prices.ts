@@ -12,9 +12,14 @@
 //   - Protocol detail page Latest / Next / Upcoming queue cards
 //   - The cross-protocol /api/unlocks/upcoming response (homepage widget)
 //
-// Confidence rules MATCH the snapshot pipeline (high ≥ $10k DEX liquidity,
-// medium ≥ $1k, thin < $1k excluded). Same source-of-truth so the USD shown
-// on the unlock card and the headline TVL on /protocols never disagree.
+// Confidence bands: high ≥ $10k DEX liquidity, medium ≥ $1k, low below $1k.
+// Unlike the TVL snapshot pipeline (tvl.ts), this helper does NOT drop thin
+// tokens — for a single unlock row we show the market price even on low
+// liquidity (it's still the token's price; manipulation only distorts when
+// you MULTIPLY a thin price by a large locked supply, which is the TVL
+// aggregate's problem, not a per-token display's). The TVL pipeline keeps
+// its own thin-band exclusion + per-token ceiling, so the headline TVL is
+// unaffected by this. Consumers may dim `confidence: "low"` rows.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Redis } from "@upstash/redis";
@@ -65,7 +70,6 @@ const DS_CHAIN_SLUG: Record<number, string> = {
 
 const LIQUIDITY_HIGH      = 10_000;
 const LIQUIDITY_MEDIUM    = 1_000;
-const LIQUIDITY_FLOOR_USD = 1_000;
 
 const DS_BATCH_SIZE = 30;
 
@@ -79,8 +83,11 @@ interface DexPair {
 
 export interface QuickPrice {
   priceUsd:    number;
-  /** "high" if liquidity ≥ $10k, "medium" if ≥ $1k. Below $1k filtered out. */
-  confidence:  "high" | "medium";
+  /** "high" ≥ $10k DEX liquidity, "medium" ≥ $1k, "low" below $1k. Low-
+   *  confidence prices ARE returned (the per-token market price is useful
+   *  even on thin liquidity); the consumer may dim them. Thin tokens are
+   *  excluded from the TVL aggregate separately in tvl.ts. */
+  confidence:  "high" | "medium" | "low";
   /** 24-hour USD volume from DexScreener (`pair.volume.h24`). Used by the
    *  explorer's risk column to compute the absorption ratio
    *  (unlockValueUsd / volume24hUsd) — "can the market absorb this?".
@@ -99,9 +106,10 @@ const priceKey = (chainId: number, address: string) => `${chainId}:${address.toL
 
 /**
  * Quick-batch price for ≤ 30 (chainId, address) pairs. Pairs on chains we
- * don't have a DexScreener slug for are silently skipped. Tokens with
- * insufficient liquidity (<$1k) are excluded — the caller treats their
- * absence from the returned map as "unknown price".
+ * don't have a DexScreener slug for are silently skipped. Tokens with NO
+ * DexScreener pair at all are absent from the returned map (the caller
+ * treats absence as "unknown price"); thin-liquidity tokens ARE priced
+ * and returned with `confidence: "low"`.
  *
  * Caching strategy (top-down):
  *   1. In-process: callers within the same lambda invocation share results
@@ -217,13 +225,13 @@ export async function getQuickUsdPrices(
       if (!res || !res.ok) continue;
       const data = (await res.json()) as { pairs?: DexPair[] };
 
-      // Pick the highest-volume pair per (chain-slug, address) that passes
-      // the liquidity floor. Mirrors DexScreener's primary-pair ranking.
+      // Pick the highest-volume pair per (chain-slug, address) — mirrors
+      // DexScreener's primary-pair ranking. No liquidity floor (display path).
       const best = new Map<string, DexPair>();
       for (const pair of data.pairs ?? []) {
         if (!wantedSlugs.has(pair.chainId)) continue;
-        const liqUsd = pair.liquidity?.usd ?? 0;
-        if (liqUsd < LIQUIDITY_FLOOR_USD) continue;
+        // No liquidity floor for DISPLAY — show the market price even on
+        // thin liquidity. (The TVL aggregate excludes thin tokens in tvl.ts.)
         const price = parseFloat(pair.priceUsd ?? "0");
         if (!Number.isFinite(price) || price <= 0) continue;
 
@@ -238,9 +246,9 @@ export async function getQuickUsdPrices(
       // caller can look up by their numeric chainId.
       for (const [, pair] of best) {
         const liqUsd = pair.liquidity?.usd ?? 0;
-        const conf: "high" | "medium" = liqUsd >= LIQUIDITY_HIGH ? "high"
+        const conf: "high" | "medium" | "low" = liqUsd >= LIQUIDITY_HIGH ? "high"
                                        : liqUsd >= LIQUIDITY_MEDIUM ? "medium"
-                                       : "medium"; // unreachable due to floor
+                                       : "low";
         const matchedPair = stillNeeded.find(
           (p) => DS_CHAIN_SLUG[p.chainId] === pair.chainId
               && p.address === pair.baseToken.address.toLowerCase(),
