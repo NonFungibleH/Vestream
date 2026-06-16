@@ -146,7 +146,7 @@ export function ExplorerTable({
             <Th label="USD"         active={col === "usd"}     dir={dir} onClick={() => toggle("usd", "desc")} align="right" minW={64} />
             <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
             <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
-            <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} />
+            <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
             <Th label="Next unlock" active={col === "date"}    dir={dir} onClick={() => toggle("date", "asc")} align="right" className="hidden md:flex" />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
@@ -178,10 +178,10 @@ export function ExplorerTable({
 
 // ── Header cell ──────────────────────────────────────────────────────────────
 function Th({
-  label, active, dir, onClick, align = "left", minW, className = "",
+  label, active, dir, onClick, align = "left", minW, className = "", title,
 }: {
   label: string; active: boolean; dir: SortDir; onClick: () => void;
-  align?: "left" | "right"; minW?: number; className?: string;
+  align?: "left" | "right"; minW?: number; className?: string; title?: string;
 }) {
   return (
     <button
@@ -190,6 +190,7 @@ function Th({
       className={`flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`}
       style={{ minWidth: minW }}
       aria-label={`Sort by ${label}`}
+      title={title}
     >
       <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors"
         style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
@@ -280,16 +281,35 @@ function classifyRisk(r: ExplorerRow): "HIGH" | "MED" | "LOW" | null {
   return "LOW";
 }
 
+// Shown on the "Risk" header (hover) so the score is self-explanatory.
+const RISK_METHODOLOGY =
+  "Risk = the worse of two signals for this unlock:\n" +
+  "• Absorption — its USD value vs the token's 24h trading volume\n" +
+  "• Supply share — its size vs all of the token's locked supply\n" +
+  "HIGH: ≥50% of a day's volume or ≥5% of locked supply\n" +
+  "MED: ≥10% of volume or ≥1% of supply · LOW: below that";
+
+/** Per-row tooltip — the methodology plus THIS row's actual numbers. */
+function riskTitle(r: ExplorerRow): string {
+  const band = classifyRisk(r);
+  if (!band) return "Not scored — no USD price or locked-supply data for this token yet.";
+  const absorption = r.absorptionRatio == null ? "—" : `${Math.round(r.absorptionRatio * 100)}% of a day's volume`;
+  const share = r.supplyShare == null ? "—" : `${(r.supplyShare * 100).toFixed(r.supplyShare < 0.01 ? 2 : 1)}% of locked supply`;
+  return `Risk: ${band}\n\n${RISK_METHODOLOGY}\n\nThis unlock: ${absorption} · ${share}`;
+}
+
 function RiskChip({ r }: { r: ExplorerRow }) {
   const band = classifyRisk(r);
-  if (!band) return <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>—</span>;
+  const title = riskTitle(r);
+  if (!band) return <span className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>—</span>;
   const style =
     band === "HIGH" ? { bg: "rgba(220,38,38,0.12)", fg: "#dc2626" } :
     band === "MED"  ? { bg: "rgba(217,119,6,0.12)", fg: "#d97706" } :
                       { bg: "rgba(28,184,184,0.10)", fg: "#0F8A8A" };
   return (
-    <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
-      style={{ background: style.bg, color: style.fg }}>
+    <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider cursor-help"
+      style={{ background: style.bg, color: style.fg }}
+      title={title}>
       {band}
     </span>
   );
