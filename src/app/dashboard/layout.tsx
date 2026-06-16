@@ -36,6 +36,7 @@ import { DashboardSwrProvider } from "@/components/DashboardSwrProvider";
 import { getRates, getCurrencyFromCookies } from "@/lib/currency";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
+import { ToastProvider } from "@/components/Toast";
 import { getSession } from "@/lib/auth/session";
 import { canAccessDashboard, normaliseTier } from "@/lib/auth/tier";
 import { db } from "@/lib/db";
@@ -134,7 +135,9 @@ export default async function DashboardLayout({
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>
       <DarkModeProvider initialDark={dark}>
         <DashboardSwrProvider>
-          <DashboardChrome tier={tier}>{children}</DashboardChrome>
+          <ToastProvider>
+            <DashboardChrome tier={tier}>{children}</DashboardChrome>
+          </ToastProvider>
         </DashboardSwrProvider>
       </DarkModeProvider>
     </CurrencyProvider>
