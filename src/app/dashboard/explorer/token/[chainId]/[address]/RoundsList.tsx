@@ -3,9 +3,11 @@
 // Vesting rounds for a token. Each round is a collapsible card; expanding it
 // reveals every wallet in that round with amount, dates, claimed, claimable.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Round } from "@/lib/vesting/rounds";
+import type { VestingStream } from "@/lib/vesting/types";
+import { CopyButton } from "@/components/CopyButton";
 import { roundColor } from "./round-colors";
 
 const PROTO: Record<string, string> = {
@@ -62,37 +64,7 @@ export function RoundsList({
 
             {isOpen && (
               <div className="overflow-x-auto border-t" style={{ borderColor: "var(--preview-border-2)" }}>
-                <table className="w-full text-[12px] whitespace-nowrap">
-                  <thead>
-                    <tr style={{ color: "var(--preview-text-3)" }}>
-                      <th className="text-left font-medium px-4 md:px-5 py-2">Wallet</th>
-                      <th className="text-right font-medium px-2 py-2">Amount</th>
-                      <th className="text-left font-medium px-2 py-2">Start</th>
-                      <th className="text-left font-medium px-2 py-2">Cliff</th>
-                      <th className="text-left font-medium px-2 py-2">End</th>
-                      <th className="text-right font-medium px-2 py-2">Claimed</th>
-                      <th className="text-right font-medium px-4 md:px-5 py-2">Claimable</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {wallets.map((s) => (
-                      <tr key={s.id} className="border-t" style={{ borderColor: "var(--preview-border-2)" }}>
-                        <td className="px-4 md:px-5 py-2">
-                          <Link href={`/dashboard/explorer?q=${s.recipient}&mode=wallet`}
-                            className="font-mono hover:underline" style={{ color: "#0F8A8A" }}>
-                            {trunc(s.recipient)}
-                          </Link>
-                        </td>
-                        <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text)" }}>{fmtNum(whole(s.totalAmount, dec))}</td>
-                        <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.startTime)}</td>
-                        <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{s.cliffTime ? fmtDate(s.cliffTime) : "—"}</td>
-                        <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.endTime)}</td>
-                        <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text-3)" }}>{fmtNum(whole(s.withdrawnAmount, dec))}</td>
-                        <td className="text-right px-4 md:px-5 py-2 tabular-nums" style={{ color: "#3FA568" }}>{fmtNum(whole(s.claimableNow, dec))}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <WalletTable wallets={wallets} dec={dec} />
                 {hidden > 0 && (
                   <div className="px-4 md:px-5 py-2.5 text-[11px] border-t" style={{ borderColor: "var(--preview-border-2)", color: "var(--preview-text-3)" }}>
                     +{hidden} more wallet{hidden !== 1 ? "s" : ""} —{" "}
@@ -105,5 +77,102 @@ export function RoundsList({
         );
       })}
     </div>
+  );
+}
+
+// ── Sortable wallet table (per expanded round) ──────────────────────────────
+// In-memory sort over the round's wallets — clicking a header reorders rows
+// instantly with zero round-trip (mirrors ExplorerTable's pattern).
+
+type WalletSortCol = "amount" | "start" | "cliff" | "end" | "claimed" | "claimable";
+type WalletSortDir = "asc" | "desc";
+
+function walletSortValue(s: VestingStream, col: WalletSortCol): number {
+  switch (col) {
+    case "amount":    return Number(BigInt(s.totalAmount ?? "0"));
+    case "start":     return s.startTime ?? 0;
+    case "cliff":     return s.cliffTime ?? 0;
+    case "end":       return s.endTime ?? 0;
+    case "claimed":   return Number(BigInt(s.withdrawnAmount ?? "0"));
+    case "claimable": return Number(BigInt(s.claimableNow ?? "0"));
+  }
+}
+
+function WalletTable({ wallets, dec }: { wallets: VestingStream[]; dec: number }) {
+  const [col, setCol] = useState<WalletSortCol | null>(null);
+  const [dir, setDir] = useState<WalletSortDir>("desc");
+
+  const sorted = useMemo(() => {
+    if (!col) return wallets;
+    const copy = [...wallets];
+    copy.sort((a, b) => {
+      const cmp = walletSortValue(a, col) - walletSortValue(b, col);
+      return dir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [wallets, col, dir]);
+
+  function toggle(next: WalletSortCol, defaultDir: WalletSortDir) {
+    if (next === col) setDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setCol(next); setDir(defaultDir); }
+  }
+
+  return (
+    <table className="w-full text-[12px] whitespace-nowrap">
+      <thead>
+        <tr style={{ color: "var(--preview-text-3)" }}>
+          <th className="text-left font-medium px-4 md:px-5 py-2">Wallet</th>
+          <Wth label="Amount"    align="right" active={col === "amount"}    dir={dir} onClick={() => toggle("amount", "desc")} />
+          <Wth label="Start"     align="left"  active={col === "start"}     dir={dir} onClick={() => toggle("start", "asc")} />
+          <Wth label="Cliff"     align="left"  active={col === "cliff"}     dir={dir} onClick={() => toggle("cliff", "asc")} />
+          <Wth label="End"       align="left"  active={col === "end"}       dir={dir} onClick={() => toggle("end", "asc")} />
+          <Wth label="Claimed"   align="right" active={col === "claimed"}   dir={dir} onClick={() => toggle("claimed", "desc")} />
+          <Wth label="Claimable" align="right" active={col === "claimable"} dir={dir} onClick={() => toggle("claimable", "desc")} last />
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((s) => (
+          <tr key={s.id} className="border-t" style={{ borderColor: "var(--preview-border-2)" }}>
+            <td className="px-4 md:px-5 py-2">
+              <CopyButton
+                value={s.recipient}
+                display={trunc(s.recipient)}
+                style={{ color: "#0F8A8A" }}
+              />
+            </td>
+            <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text)" }}>{fmtNum(whole(s.totalAmount, dec))}</td>
+            <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.startTime)}</td>
+            <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{s.cliffTime ? fmtDate(s.cliffTime) : "—"}</td>
+            <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.endTime)}</td>
+            <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text-3)" }}>{fmtNum(whole(s.withdrawnAmount, dec))}</td>
+            <td className="text-right px-4 md:px-5 py-2 tabular-nums" style={{ color: "#3FA568" }}>{fmtNum(whole(s.claimableNow, dec))}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Wth({
+  label, align, active, dir, onClick, last,
+}: {
+  label: string; align: "left" | "right"; active: boolean;
+  dir: WalletSortDir; onClick: () => void; last?: boolean;
+}) {
+  const pad = last ? "px-4 md:px-5" : "px-2";
+  return (
+    <th className={`font-medium ${pad} py-2 ${align === "right" ? "text-right" : "text-left"}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}
+        aria-label={`Sort by ${label}`}
+      >
+        <span className="transition-colors" style={{ color: active ? "#0F8A8A" : "inherit" }}>{label}</span>
+        <span className="text-[8px]" style={{ color: active ? "#0F8A8A" : "transparent" }}>
+          {active ? (dir === "asc" ? "▲" : "▼") : "▲"}
+        </span>
+      </button>
+    </th>
   );
 }

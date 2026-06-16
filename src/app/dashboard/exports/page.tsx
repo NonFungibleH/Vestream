@@ -29,12 +29,15 @@
 //   - Direct accountant email
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { track } from "@/lib/analytics";
+import { useToast } from "@/components/Toast";
+import { CopyButton } from "@/components/CopyButton";
+import { useCountUp } from "@/lib/use-count-up";
 import { VestingsList } from "./VestingsList";
 
 // Drizzle row shape mirrored manually — the API returns rows from the
@@ -67,6 +70,24 @@ interface IngestResult {
   inserted:        number;
   notImplemented?: boolean;
   error?:          string;
+}
+
+// ── Claim-table sort (in-memory; mirrors ExplorerTable's pattern) ────────────
+type ClaimSortCol = "date" | "token" | "amount" | "usd" | "protocol" | "chain";
+type SortDir      = "asc" | "desc";
+
+function claimAmountNum(e: ClaimEvent): number {
+  try { return Number(BigInt(e.amount)) / 10 ** Math.min(e.tokenDecimals, 18); } catch { return 0; }
+}
+function claimSortValue(e: ClaimEvent, col: ClaimSortCol): number | string {
+  switch (col) {
+    case "date":     return new Date(e.claimedAt).getTime() || 0;
+    case "token":    return (e.tokenSymbol ?? e.tokenAddress).toLowerCase();
+    case "amount":   return claimAmountNum(e);
+    case "usd":      return e.usdValueAtClaim != null ? Number(e.usdValueAtClaim) : -Infinity;
+    case "protocol": return e.protocol.toLowerCase();
+    case "chain":    return (CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${e.chainId}`).toLowerCase();
+  }
 }
 
 // Platforms with a public import URL get a one-click "Open in <platform>" link
@@ -206,6 +227,7 @@ function sortFormatsForAudience(
 
 export default function ExportsPage() {
   const router = useRouter();
+  const toast  = useToast();
   const [coverage, setCoverage] = useState<string[]>([]);
   const [pending, setPending]   = useState<string[]>([]);
   const [refreshing, setRefreshing]   = useState(false);
@@ -251,6 +273,32 @@ export default function ExportsPage() {
   const audienceCategory: string | null = historyData?.audienceCategory ?? null;
   const loading = isLoading;
 
+  // In-memory sort of the claim table — same pattern as the explorer's
+  // ExplorerTable (click a header → reorder instantly, zero round-trip).
+  const [sortCol, setSortCol] = useState<ClaimSortCol>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const sortedEvents = useMemo(() => {
+    const copy = [...events];
+    copy.sort((a, b) => {
+      const x = claimSortValue(a, sortCol);
+      const y = claimSortValue(b, sortCol);
+      let cmp: number;
+      if (typeof x === "string" || typeof y === "string") cmp = String(x).localeCompare(String(y));
+      else cmp = x < y ? -1 : x > y ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [events, sortCol, sortDir]);
+  function toggleSort(next: ClaimSortCol, defaultDir: SortDir) {
+    if (next === sortCol) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortCol(next); setSortDir(defaultDir); }
+  }
+
+  // Headline figures count up on first paint.
+  const animTotalRows  = useCountUp(summary?.totalRows ?? 0);
+  const animTotalUsd   = useCountUp(summary?.totalUsd  ?? 0);
+  const animYears      = useCountUp(summary ? Object.keys(summary.byYear).length : 0);
+
   // Auto-index on first visit if the user has never refreshed before.
   // Saves the "why is this page empty?" confusion — on mount, if the
   // initial load completes with zero events and we haven't auto-refreshed
@@ -272,9 +320,11 @@ export default function ExportsPage() {
       const data = await res.json();
       if (!res.ok) {
         setRefreshMsg(data.error ?? "Refresh failed");
+        toast.error(data.error ?? "Refresh failed");
         return;
       }
       setRefreshMsg(data.message ?? "Indexing complete");
+      toast.success(data.message ?? "Indexing complete");
       setCoverage(data.coverage ?? []);
       setPending((data.perProtocol ?? []).filter((r: IngestResult) => r.notImplemented).map((r: IngestResult) => r.protocol));
       setPerProtocol(data.perProtocol ?? []);
@@ -284,6 +334,7 @@ export default function ExportsPage() {
       await mutateHistory();
     } catch {
       setRefreshMsg("Network error");
+      toast.error("Network error");
     } finally {
       setRefreshing(false);
     }
@@ -486,22 +537,22 @@ export default function ExportsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <SummaryCard
               label="Total claims"
-              value={summary.totalRows.toLocaleString()}
+              value={Math.round(animTotalRows).toLocaleString()}
             />
             <SummaryCard
               label="Total USD at claim"
-              value={`$${summary.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={`$${Math.round(animTotalUsd).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             />
             <SummaryCard
               label="Years covered"
-              value={Object.keys(summary.byYear).length.toString()}
+              value={Math.round(animYears).toString()}
             />
           </div>
         )}
 
         {/* Table */}
         {loading ? (
-          <div className="text-sm" style={{ color: "var(--preview-text-3)" }}>Loading…</div>
+          <ClaimTableSkeleton />
         ) : events.length === 0 ? (
           <div className="rounded-2xl p-8 text-center mb-6"
             style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border)", color: "var(--preview-text-3)" }}>
@@ -520,26 +571,32 @@ export default function ExportsPage() {
         ) : (
           <div className="rounded-2xl overflow-hidden mb-6"
             style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" style={{ maxHeight: 560 }}>
               <table className="w-full text-sm" style={{ minWidth: 700 }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Date</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Token</th>
-                    <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Amount</th>
-                    <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>USD at claim</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Protocol</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Chain</th>
+                    <ClaimTh label="Date"         col="date"     active={sortCol} dir={sortDir} onClick={() => toggleSort("date", "desc")} />
+                    <ClaimTh label="Token"        col="token"    active={sortCol} dir={sortDir} onClick={() => toggleSort("token", "asc")} />
+                    <ClaimTh label="Amount"       col="amount"   active={sortCol} dir={sortDir} onClick={() => toggleSort("amount", "desc")} align="right" />
+                    <ClaimTh label="USD at claim" col="usd"      active={sortCol} dir={sortDir} onClick={() => toggleSort("usd", "desc")} align="right" />
+                    <ClaimTh label="Protocol"     col="protocol" active={sortCol} dir={sortDir} onClick={() => toggleSort("protocol", "asc")} />
+                    <ClaimTh label="Chain"        col="chain"    active={sortCol} dir={sortDir} onClick={() => toggleSort("chain", "asc")} />
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map((e, i) => (
+                  {sortedEvents.map((e, i) => (
                     <tr key={e.id} style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
                       <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--preview-text)" }}>
                         {new Date(e.claimedAt).toISOString().slice(0, 10)}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--preview-text)" }}>
-                        {e.tokenSymbol ?? `${e.tokenAddress.slice(0, 6)}…${e.tokenAddress.slice(-4)}`}
+                        {e.tokenSymbol ?? (
+                          <CopyButton
+                            value={e.tokenAddress}
+                            display={`${e.tokenAddress.slice(0, 6)}…${e.tokenAddress.slice(-4)}`}
+                            style={{ color: "var(--preview-text)" }}
+                          />
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right font-mono whitespace-nowrap" style={{ color: "var(--preview-text)" }}>
                         {tokensWhole(e.amount, e.tokenDecimals)}
@@ -602,6 +659,69 @@ export default function ExportsPage() {
           </p>
         </div>
       </main>
+    </div>
+  );
+}
+
+// Sortable, sticky claim-table header cell. position:sticky + a solid
+// background keeps the header visible while scrolling a long claim list.
+function ClaimTh({
+  label, col, active, dir, onClick, align = "left",
+}: {
+  label: string; col: ClaimSortCol; active: ClaimSortCol; dir: SortDir;
+  onClick: () => void; align?: "left" | "right";
+}) {
+  const isActive = active === col;
+  return (
+    <th
+      className={`${align === "right" ? "text-right" : "text-left"} px-4 py-3 text-[10px] font-semibold uppercase tracking-wider`}
+      style={{
+        color:      isActive ? "#0F8A8A" : "var(--preview-text-3)",
+        position:   "sticky",
+        top:        0,
+        zIndex:     1,
+        background: "var(--preview-card)",
+        boxShadow:  "inset 0 -1px 0 var(--preview-border-2)",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}
+        aria-label={`Sort by ${label}`}
+      >
+        <span>{label}</span>
+        <span className="text-[8px]" style={{ color: isActive ? "#0F8A8A" : "transparent" }}>
+          {isActive ? (dir === "asc" ? "▲" : "▼") : "▲"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+// Shimmer skeleton for the claim table — reserves height to avoid layout jump
+// while the history loads. Mirrors src/app/dashboard/explorer/loading.tsx.
+function ClaimTableSkeleton() {
+  return (
+    <div className="rounded-2xl overflow-hidden mb-6"
+      style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+      <div className="flex items-center gap-4 px-4 py-3"
+        style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
+        {["12%", "14%", "12%", "14%", "12%", "12%"].map((w, i) => (
+          <div key={i} style={{ width: w }}>
+            <div style={{ width: "70%", height: 9, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.3 + i * 0.03}s` }} />
+          </div>
+        ))}
+      </div>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-4 py-3"
+          style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+          {[80, 70, 60, 72, 64, 56].map((w, j) => (
+            <div key={j} style={{ width: w, height: 13, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.35 + i * 0.04 + j * 0.01}s` }} />
+          ))}
+        </div>
+      ))}
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.85; } }`}</style>
     </div>
   );
 }

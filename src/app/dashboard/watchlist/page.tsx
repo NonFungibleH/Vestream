@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { useDarkMode } from "@/lib/use-dark-mode";
 import { track } from "@/lib/analytics";
+import { CopyButton } from "@/components/CopyButton";
 
 interface Entry {
   id:           string;
@@ -96,7 +97,27 @@ export default function WatchlistPage() {
       </p>
 
       {entries === null ? (
-        <p className="text-sm" style={{ color: "var(--preview-text-3)" }}>Loading…</p>
+        <div className="rounded-2xl overflow-hidden border" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-4"
+              style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+              <div className="w-9 h-9 rounded-lg flex-shrink-0"
+                style={{ background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${i * 0.12}s` }} />
+              <div className="flex-1 min-w-0">
+                <div style={{ width: "38%", height: 13, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${i * 0.12}s`, marginBottom: 8 }} />
+                <div style={{ width: "60%", height: 10, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.05 + i * 0.12}s` }} />
+              </div>
+              <div style={{ width: 56, height: 28, borderRadius: 8, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${i * 0.12}s` }} />
+              <div style={{ width: 64, height: 28, borderRadius: 8, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.05 + i * 0.12}s` }} />
+            </div>
+          ))}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 0.5; }
+              50%      { opacity: 0.85; }
+            }
+          `}</style>
+        </div>
       ) : entries.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
           <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>No saved tokens yet</p>
@@ -112,7 +133,7 @@ export default function WatchlistPage() {
       ) : (
         <div className="rounded-2xl overflow-hidden border" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
           {entries.map((e, i) => (
-            <div key={e.id} className="flex items-center gap-4 px-5 py-4"
+            <div key={e.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--preview-muted)]"
               style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
               <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
                 style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A" }}>
@@ -122,8 +143,9 @@ export default function WatchlistPage() {
                 <div className="text-sm font-semibold truncate" style={{ color: "var(--preview-text)" }}>
                   {e.label ?? short(e.tokenAddress)}
                 </div>
-                <div className="text-[11px] mt-0.5 font-mono truncate" style={{ color: "var(--preview-text-3)" }}>
-                  {CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `Chain ${e.chainId}`} · {e.tokenAddress}
+                <div className="text-[11px] mt-0.5 truncate" style={{ color: "var(--preview-text-3)" }}>
+                  {CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `Chain ${e.chainId}`} ·{" "}
+                  <CopyButton value={e.tokenAddress} display={short(e.tokenAddress)} style={{ color: "var(--preview-text-3)" }} />
                 </div>
               </div>
               <Link href={`/dashboard/explorer/token/${e.chainId}/${e.tokenAddress}`}
@@ -132,7 +154,7 @@ export default function WatchlistPage() {
                 View →
               </Link>
               <button onClick={() => remove(e.id)} disabled={removing === e.id} aria-label="Remove from watchlist"
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-transform hover:scale-110 active:scale-95"
                 style={{ background: "var(--preview-muted-2)", color: "var(--preview-text-3)" }}>
                 {removing === e.id ? "…" : "Remove"}
               </button>

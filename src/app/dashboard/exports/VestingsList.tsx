@@ -9,8 +9,75 @@
 // alongside the export-scoping param.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
+import { useToast } from "@/components/Toast";
+import { CopyButton } from "@/components/CopyButton";
+
+type SortDir = "asc" | "desc";
+
+// ── Claims (income) inner-table sort ─────────────────────────────────────────
+type ClaimSortCol = "date" | "amount" | "usd";
+function claimSortValue(c: ClaimRow, col: ClaimSortCol): number {
+  switch (col) {
+    case "date":   return new Date(c.claimedAt).getTime() || 0;
+    case "amount": try { return Number(BigInt(c.amount)) / 10 ** Math.min(c.tokenDecimals, 18); } catch { return 0; }
+    case "usd":    return c.usdValueAtClaim != null ? Number(c.usdValueAtClaim) : -Infinity;
+  }
+}
+
+// ── Sales (gains) inner-table sort ───────────────────────────────────────────
+type SaleSortCol = "date" | "amount" | "price" | "proceeds" | "gain";
+// "gain" needs entryPrice, so it's handled inline in the component, not here.
+function saleSortValue(s: SaleRow, col: Exclude<SaleSortCol, "gain">): number {
+  switch (col) {
+    case "date":     return new Date(s.date).getTime() || 0;
+    case "amount":   return s.amount;
+    case "price":    return s.price;
+    case "proceeds": return s.amount * s.price;
+  }
+}
+
+// Sortable inner-table header cell (shared by the claims + sales tables).
+function SortTh({
+  label, active, isActive, dir, onClick, align = "left",
+}: {
+  label: string; active: boolean; isActive: boolean; dir: SortDir;
+  onClick: () => void; align?: "left" | "right";
+}) {
+  // `active` kept for signature parity; `isActive` drives styling.
+  void active;
+  return (
+    <th className={`${align === "right" ? "text-right" : "text-left"} px-3 py-2 text-[10px] font-semibold uppercase tracking-wider`}
+      style={{ color: isActive ? "#0F8A8A" : "var(--preview-text-3)" }}>
+      <button type="button" onClick={onClick} aria-label={`Sort by ${label}`}
+        className={`inline-flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}>
+        <span>{label}</span>
+        <span className="text-[8px]" style={{ color: isActive ? "#0F8A8A" : "transparent" }}>
+          {isActive ? (dir === "asc" ? "▲" : "▼") : "▲"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+// Shimmer skeleton rows — reserves height to avoid layout jump. Mirrors
+// src/app/dashboard/explorer/loading.tsx.
+function ShimmerRows({ count, cols }: { count: number; cols: number }) {
+  return (
+    <div>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-3 py-2"
+          style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+          {Array.from({ length: cols }).map((_, j) => (
+            <div key={j} style={{ flex: 1, height: 12, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.1 + i * 0.05 + j * 0.02}s` }} />
+          ))}
+        </div>
+      ))}
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.85; } }`}</style>
+    </div>
+  );
+}
 
 interface VestingToken {
   chainId:         number;
@@ -86,7 +153,29 @@ export function VestingsList() {
   }
 
   if (vestings === null) {
-    return <div className="text-sm mb-5" style={{ color: "var(--preview-text-3)" }}>Loading your vestings…</div>;
+    // Shimmer rows reserve height to avoid layout jump on load.
+    return (
+      <div className="mb-6">
+        <div style={{ width: 110, height: 11, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite" }} className="mb-2" />
+        <div className="rounded-2xl overflow-hidden"
+          style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-3 px-4 py-3"
+              style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div style={{ width: 14, height: 14, borderRadius: 4, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.1 + i * 0.05}s` }} />
+                <div className="flex-1 min-w-0">
+                  <div style={{ width: "38%", height: 13, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.12 + i * 0.05}s` }} className="mb-1.5" />
+                  <div style={{ width: "52%", height: 10, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.16 + i * 0.05}s` }} />
+                </div>
+              </div>
+              <div style={{ width: 64, height: 14, borderRadius: 6, background: "var(--preview-muted)", animation: "pulse 1.6s ease-in-out infinite", animationDelay: `${0.14 + i * 0.05}s` }} />
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.85; } }`}</style>
+      </div>
+    );
   }
 
   if (vestings.length === 0) {
@@ -116,11 +205,28 @@ const EXPORT_FORMATS: { id: string; label: string }[] = [
 ];
 
 function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
+  const toast = useToast();
   const [open, setOpen]       = useState(false);
   const [claims, setClaims]   = useState<ClaimRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [runMsg, setRunMsg]   = useState<string | null>(null);
+  const [claimSortCol, setClaimSortCol] = useState<ClaimSortCol>("date");
+  const [claimSortDir, setClaimSortDir] = useState<SortDir>("desc");
+
+  const sortedClaims = useMemo(() => {
+    if (!claims) return claims;
+    const copy = [...claims];
+    copy.sort((a, b) => {
+      const cmp = claimSortValue(a, claimSortCol) - claimSortValue(b, claimSortCol);
+      return claimSortDir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [claims, claimSortCol, claimSortDir]);
+  function toggleClaimSort(next: ClaimSortCol, defaultDir: SortDir) {
+    if (next === claimSortCol) setClaimSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setClaimSortCol(next); setClaimSortDir(defaultDir); }
+  }
 
   const loadClaims = useCallback(async () => {
     setLoading(true);
@@ -142,10 +248,13 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
       const sp  = new URLSearchParams({ action: "refresh", chainId: String(v.chainId), protocol: v.protocols.join(",") });
       const res = await fetch(`/api/claims/history?${sp.toString()}`, { method: "POST" });
       const data = await res.json();
-      setRunMsg(res.ok ? (data.message ?? "Done.") : (data.error ?? "Refresh failed."));
-      if (res.ok) await loadClaims();
+      const msg = res.ok ? (data.message ?? "Done.") : (data.error ?? "Refresh failed.");
+      setRunMsg(msg);
+      if (res.ok) { toast.success(msg); await loadClaims(); }
+      else toast.error(msg);
     } catch {
       setRunMsg("Refresh failed.");
+      toast.error("Refresh failed.");
     } finally {
       setRunning(false);
     }
@@ -238,7 +347,9 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
             Income — claims (priced at receipt)
           </p>
           {loading ? (
-            <p className="text-xs py-2" style={{ color: "var(--preview-text-3)" }}>Loading claims…</p>
+            <div className="rounded-xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border-2)" }}>
+              <ShimmerRows count={3} cols={3} />
+            </div>
           ) : !claims || claims.length === 0 ? (
             <p className="text-xs py-2" style={{ color: "var(--preview-text-3)" }}>
               No claims indexed for this token yet. Hit <strong>Refresh claims</strong> above to index them.
@@ -249,13 +360,13 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
               <table className="w-full text-sm" style={{ minWidth: 440 }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
-                    <th className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Date</th>
-                    <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Amount</th>
-                    <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>USD at receipt</th>
+                    <SortTh label="Date"           active isActive={claimSortCol === "date"}   dir={claimSortDir} onClick={() => toggleClaimSort("date", "desc")} />
+                    <SortTh label="Amount"         active isActive={claimSortCol === "amount"} dir={claimSortDir} onClick={() => toggleClaimSort("amount", "desc")} align="right" />
+                    <SortTh label="USD at receipt" active isActive={claimSortCol === "usd"}    dir={claimSortDir} onClick={() => toggleClaimSort("usd", "desc")} align="right" />
                   </tr>
                 </thead>
                 <tbody>
-                  {claims.map((c, i) => (
+                  {(sortedClaims ?? []).map((c, i) => (
                     <tr key={c.id} style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
                       <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--preview-text)" }}>
                         {new Date(c.claimedAt).toISOString().slice(0, 10)}
@@ -303,7 +414,10 @@ const EXPLORER_TX: Record<number, string> = {
 };
 
 function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: string; tokenSymbol: string; chainId: number }) {
+  const toast = useToast();
   const [sales, setSales]             = useState<SaleRow[] | null>(null);
+  const [saleSortCol, setSaleSortCol] = useState<SaleSortCol>("date");
+  const [saleSortDir, setSaleSortDir] = useState<SortDir>("desc");
   const [entryPrice, setEntry]        = useState<number | null>(null);
   const [candidates, setCandidates]   = useState<DisposalCandidate[]>([]);
   const [adding, setAdding]           = useState(false);
@@ -336,12 +450,15 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
     try {
       const res  = await fetch(`/api/dashboard/pnl/${encodeURIComponent(tokenAddress)}/detect-sales?chainId=${chainId}`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) { setScanMsg(data.error ?? "Scan failed."); return; }
+      if (!res.ok) { setScanMsg(data.error ?? "Scan failed."); toast.error(data.error ?? "Scan failed."); return; }
       setCandidates(data.candidates ?? []);
       const n = (data.candidates ?? []).length;
-      setScanMsg(n === 0 ? "No disposals found on-chain." : `${n} disposal${n === 1 ? "" : "s"} found — confirm the ones that were sales.`);
+      const msg = n === 0 ? "No disposals found on-chain." : `${n} disposal${n === 1 ? "" : "s"} found — confirm the ones that were sales.`;
+      setScanMsg(msg);
+      toast.success(msg);
     } catch {
       setScanMsg("Scan failed.");
+      toast.error("Scan failed.");
     } finally {
       setScanning(false);
     }
@@ -372,11 +489,13 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
         body:    JSON.stringify({ date, amount: Number(amount), price: Number(price) }),
       });
       const data = await res.json();
-      if (!res.ok) { setErr(data.error ?? "Couldn't add sale"); return; }
+      if (!res.ok) { setErr(data.error ?? "Couldn't add sale"); toast.error(data.error ?? "Couldn't add sale"); return; }
       setSales((prev) => [...(prev ?? []), data.sale]);
       setDate(""); setAmount(""); setPrice(""); setAdding(false);
+      toast.success("Sale added");
     } catch {
       setErr("Couldn't add sale");
+      toast.error("Couldn't add sale");
     } finally {
       setSubmit(false);
     }
@@ -392,6 +511,29 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
   }
 
   const gain = (s: SaleRow): number | null => (entryPrice != null ? (s.price - entryPrice) * s.amount : null);
+
+  const sortedSales = useMemo(() => {
+    if (!sales) return sales;
+    const copy = [...sales];
+    copy.sort((a, b) => {
+      let cmp: number;
+      if (saleSortCol === "gain") {
+        const ga = gain(a), gb = gain(b);
+        cmp = (ga ?? -Infinity) - (gb ?? -Infinity);
+      } else {
+        const c = saleSortCol as Exclude<SaleSortCol, "gain">;
+        cmp = saleSortValue(a, c) - saleSortValue(b, c);
+      }
+      return saleSortDir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+    // gain depends on entryPrice; include it so a cost-basis change re-sorts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sales, saleSortCol, saleSortDir, entryPrice]);
+  function toggleSaleSort(next: SaleSortCol, defaultDir: SortDir) {
+    if (next === saleSortCol) setSaleSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSaleSortCol(next); setSaleSortDir(defaultDir); }
+  }
 
   return (
     <div className="mt-4">
@@ -518,7 +660,9 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
       )}
 
       {sales === null ? (
-        <p className="text-xs py-1" style={{ color: "var(--preview-text-3)" }}>Loading sales…</p>
+        <div className="rounded-xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border-2)" }}>
+          <ShimmerRows count={2} cols={5} />
+        </div>
       ) : sales.length === 0 ? (
         <p className="text-xs py-1" style={{ color: "var(--preview-text-3)" }}>No sales recorded for this token.</p>
       ) : (
@@ -527,16 +671,16 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
           <table className="w-full text-sm" style={{ minWidth: 480 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
-                <th className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Date</th>
-                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Amount</th>
-                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Price</th>
-                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Proceeds</th>
-                <th className="text-right px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Realized gain</th>
+                <SortTh label="Date"          active isActive={saleSortCol === "date"}     dir={saleSortDir} onClick={() => toggleSaleSort("date", "desc")} />
+                <SortTh label="Amount"        active isActive={saleSortCol === "amount"}   dir={saleSortDir} onClick={() => toggleSaleSort("amount", "desc")} align="right" />
+                <SortTh label="Price"         active isActive={saleSortCol === "price"}    dir={saleSortDir} onClick={() => toggleSaleSort("price", "desc")} align="right" />
+                <SortTh label="Proceeds"      active isActive={saleSortCol === "proceeds"} dir={saleSortDir} onClick={() => toggleSaleSort("proceeds", "desc")} align="right" />
+                <SortTh label="Realized gain" active isActive={saleSortCol === "gain"}     dir={saleSortDir} onClick={() => toggleSaleSort("gain", "desc")} align="right" />
                 <th className="px-2 py-2" />
               </tr>
             </thead>
             <tbody>
-              {sales.map((s, i) => {
+              {(sortedSales ?? []).map((s, i) => {
                 const g = gain(s);
                 return (
                   <tr key={s.id} style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>

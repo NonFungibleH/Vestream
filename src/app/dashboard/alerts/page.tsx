@@ -47,6 +47,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { useDarkMode } from "@/lib/use-dark-mode";
+import { CopyButton } from "@/components/CopyButton";
+import { useToast } from "@/components/Toast";
 
 type TriggerType = "before-unlock" | "vesting-start" | "cliff" | "stream-end" | "threshold";
 
@@ -238,6 +240,7 @@ function shortAddr(a: string): string {
 
 export default function AlertsPage() {
   const router = useRouter();
+  const toast = useToast();
   const { dark: _dark } = useDarkMode();
   // `dark` is unused inside the markup (CSS vars own all theming via the
   // provider's wrapper) but we keep the hook call so the provider's
@@ -375,13 +378,16 @@ export default function AlertsPage() {
         throw new Error((errJson as { error?: string }).error ?? "Failed to save");
       }
       mutatePrefs((cur) => cur, { revalidate: true });
+      toast.success("Alert saved");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      const msg = err instanceof Error ? err.message : "Failed to save";
+      setError(msg);
+      toast.error(msg);
       mutatePrefs((cur) => cur, { revalidate: true }); // roll back to server truth
     } finally {
       setSavingId(null);
     }
-  }, [prefs, mutatePrefs]);
+  }, [prefs, mutatePrefs, toast]);
 
   // ── Derived ─────────────────────────────────────────────────────────────
   const streamById = useMemo(() => {
@@ -474,10 +480,10 @@ export default function AlertsPage() {
           )}
 
           {/* ── Email alerts (global) ────────────────────────────────────── */}
-          <GlobalEmailSection prefs={prefs} mutate={mutatePrefs} setError={setError} />
+          <GlobalEmailSection prefs={prefs} mutate={mutatePrefs} setError={setError} toast={toast} />
 
           {/* ── Test push ────────────────────────────────────────────────── */}
-          <TestPushSection setError={setError} />
+          <TestPushSection setError={setError} toast={toast} />
 
           {/* ── History ──────────────────────────────────────────────────── */}
           <section className="mb-8">
@@ -946,7 +952,7 @@ function HistoryRow({
           {item.tokenAddress && (
             <>
               {" · "}
-              <span className="font-mono">{shortAddr(item.tokenAddress)}</span>
+              <CopyButton value={item.tokenAddress} display={shortAddr(item.tokenAddress)} style={{ color: "var(--preview-text-3)" }} />
             </>
           )}
         </p>
@@ -988,11 +994,12 @@ async function putGlobalPref(patch: Partial<Prefs>): Promise<void> {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function GlobalEmailSection({
-  prefs, mutate, setError,
+  prefs, mutate, setError, toast,
 }: {
   prefs:    Prefs;
   mutate:   MutatePrefsFn;
   setError: (s: string | null) => void;
+  toast:    ReturnType<typeof useToast>;
 }) {
   const [emailDraft, setEmailDraft] = useState<string>(prefs.email ?? "");
   const [editing, setEditing] = useState(false);
@@ -1011,8 +1018,11 @@ function GlobalEmailSection({
     try {
       await putGlobalPref({ emailEnabled: v });
       mutate((cur) => cur, { revalidate: true });
+      toast.success(v ? "Email alerts on" : "Email alerts off");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
+      const msg = e instanceof Error ? e.message : "Failed to save";
+      setError(msg);
+      toast.error(msg);
       mutate((cur) => cur, { revalidate: true });
     } finally {
       setSaving(null);
@@ -1028,8 +1038,11 @@ function GlobalEmailSection({
       await putGlobalPref({ email: next });
       mutate((cur) => cur ? { preferences: { ...(cur.preferences ?? {}), email: next } } : cur, { revalidate: true });
       setEditing(false);
+      toast.success("Email address saved");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
+      const msg = e instanceof Error ? e.message : "Failed to save";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(null);
     }
@@ -1109,7 +1122,12 @@ function GlobalEmailSection({
 
 // ── Test push ───────────────────────────────────────────────────────────────
 
-function TestPushSection({ setError }: { setError: (s: string | null) => void }) {
+function TestPushSection({
+  setError, toast,
+}: {
+  setError: (s: string | null) => void;
+  toast:    ReturnType<typeof useToast>;
+}) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [hint, setHint] = useState<string | null>(null);
 
@@ -1124,13 +1142,17 @@ function TestPushSection({ setError }: { setError: (s: string | null) => void })
         const msg = (errJson as { error?: string }).error ?? "Failed to send";
         setStatus("error");
         setHint(msg);
+        toast.error(msg);
         return;
       }
       setStatus("sent");
       setHint("Test push sent. Check your mobile device — it should arrive within a few seconds.");
+      toast.success("Test push sent");
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to send";
       setStatus("error");
-      setHint(e instanceof Error ? e.message : "Failed to send");
+      setHint(msg);
+      toast.error(msg);
     }
   }
 
