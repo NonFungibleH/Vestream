@@ -26,7 +26,7 @@
 import Link from "next/link";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import {
-  getUnlocksInWindow,
+  getUnlockGroupsCached,
   enrichGroupsWithUsd,
   getTokenScaleCounts,
   WINDOWS,
@@ -173,25 +173,26 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   let walletEnsHint:  string | null       = null;
 
   if (mode === "calendar") {
-    let calendarResult;
+    let baseGroups: WindowUnlockGroup[] = [];
     try {
-      calendarResult = await getUnlocksInWindow(
-        window.startSec,
-        window.endSec,
-        isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
+      // 60s-cached pool scan — repeat navigation (e.g. back from a token
+      // page) to the same window+filters skips the ~1.4s query.
+      baseGroups = await getUnlockGroupsCached({
+        startSec:  window.startSec,
+        endSec:    window.endSec,
+        poolLimit: isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
         adapterIds,
-        chainIds.length > 0 ? chainIds : undefined,
+        chainIds:  chainIds.length > 0 ? chainIds : undefined,
         // Symbol searches MUST filter in SQL, not on the returned groups:
         // the pool is capped across ALL tokens (soonest-ending first), so a
         // post-hoc filter only sees whichever slice of this token's streams
         // happened to make the global pool. The old post-filter showed
         // "24 wallets" for PYME when the token had 850+ vestings.
-        queryKind.kind === "symbol" ? queryKind.symbol : undefined,
-      );
+        tokenSymbol: queryKind.kind === "symbol" ? queryKind.symbol : undefined,
+      });
     } catch {
-      calendarResult = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
+      baseGroups = [];
     }
-    const baseGroups = calendarResult.groups;
     const scalePairs = baseGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }));
 
     // Price enrichment and the per-token wallet/round counts are independent

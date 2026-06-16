@@ -26,6 +26,7 @@ import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import {
   pickStalestCachedTokens,
+  pickUncachedActiveVestingTokens,
   writePriceCache,
   REFRESH_AFTER_SEC,
 } from "@/lib/vesting/token-price-cache";
@@ -72,34 +73,32 @@ async function handle(req: NextRequest) {
     ? Math.min(2000, Math.max(1, Number(limitParam)))
     : REFRESH_BATCH_SIZE;
 
-  // 1. Pick the N stalest tokens currently in the cache.
-  const candidates = await pickStalestCachedTokens(batchSize);
-
-  if (candidates.length === 0) {
-    return NextResponse.json({
-      ok:           true,
-      message:      "Cache is empty — nothing to refresh. The next TVL snapshot run will seed it.",
-      refreshedCount: 0,
-      elapsedMs:    Date.now() - startedAt,
-    });
-  }
-
-  // Apply the staleness threshold: ONLY refresh entries older than
-  // REFRESH_AFTER_SEC. If the top-N stalest are all fresh, this cron is
-  // effectively a no-op — fine, no API calls wasted.
+  // 1a. Pick the N stalest tokens currently in the cache (freshen what we know).
+  const candidates  = await pickStalestCachedTokens(batchSize);
   const staleEnough = candidates.filter((c) => c.ageSec >= minAgeSec);
 
-  if (staleEnough.length === 0) {
+  // 1b. ALSO seed active-vesting tokens that aren't in the cache yet, soonest-
+  //     unlocking first. pickStalestCachedTokens only refreshes existing rows,
+  //     so without this new active-vesting tokens are never priced ahead of
+  //     time and the explorer live-prices them on render (the 524 fan-out).
+  //     Capped so the extra API load stays inside free-tier rate windows.
+  const UNCACHED_SEED = 300;
+  const uncached = await pickUncachedActiveVestingTokens(UNCACHED_SEED);
+
+  if (staleEnough.length === 0 && uncached.length === 0) {
     return NextResponse.json({
-      ok:           true,
-      message:      `All ${candidates.length} candidates are still fresh (< ${REFRESH_AFTER_SEC}s old). Nothing to refresh this run.`,
+      ok:             true,
+      message:        candidates.length === 0
+        ? "Cache is empty and no uncached active-vesting tokens found."
+        : `All ${candidates.length} cached candidates fresh (< ${REFRESH_AFTER_SEC}s) and no uncached active tokens. Nothing to do.`,
       refreshedCount: 0,
       candidateCount: candidates.length,
-      elapsedMs:    Date.now() - startedAt,
+      elapsedMs:      Date.now() - startedAt,
     });
   }
 
-  // 2. Build a priceAggregates-compatible input shape.
+  // 2. Build a priceAggregates-compatible input shape (stale refresh + uncached
+  //    seed, de-duplicated by chain:token).
   //
   //    priceAggregates expects walker-style aggregates with tokenSymbol +
   //    tokenDecimals + lockedAmount. For pure price-refresh we don't have
@@ -107,13 +106,17 @@ async function handle(req: NextRequest) {
   //    so the function just resolves prices without trying to compute USD
   //    locked value. The PricedAggregate.usd field will be garbage in this
   //    call but we don't use it — only the side effect of writePriceCache.
-  const inputs = staleEnough.map((c) => ({
-    chainId:       c.chainId,
-    tokenAddress:  c.tokenAddress,
-    tokenSymbol:   null,
-    tokenDecimals: 0,       // see comment above — keeps wholeTokens=1
-    lockedAmount:  "1",
-  }));
+  const inputMap = new Map<string, { chainId: number; tokenAddress: string; tokenSymbol: null; tokenDecimals: number; lockedAmount: string }>();
+  for (const c of [...staleEnough, ...uncached]) {
+    inputMap.set(`${c.chainId}:${c.tokenAddress.toLowerCase()}`, {
+      chainId:       c.chainId,
+      tokenAddress:  c.tokenAddress,
+      tokenSymbol:   null,
+      tokenDecimals: 0,       // see comment above — keeps wholeTokens=1
+      lockedAmount:  "1",
+    });
+  }
+  const inputs = [...inputMap.values()];
 
   // 3. Force a cache bypass so we actually call the external APIs. The
   //    whole point of this run is to refresh stale entries — using the
@@ -127,10 +130,11 @@ async function handle(req: NextRequest) {
 
   return NextResponse.json({
     ok:             true,
-    message:        `Refreshed ${priced.length}/${staleEnough.length} stale prices`,
+    message:        `Priced ${priced.length}/${inputs.length} (${staleEnough.length} stale refresh + ${uncached.length} uncached active-vesting seed)`,
     refreshedCount: priced.length,
     skippedCount:   tokensSkipped,
     staleCount:     staleEnough.length,
+    uncachedSeeded: uncached.length,
     candidateCount: candidates.length,
     oldestAgeSec:   staleEnough[staleEnough.length - 1]?.ageSec,
     elapsedMs:      Date.now() - startedAt,

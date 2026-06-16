@@ -22,7 +22,7 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { tokenPricesCache } from "../db/schema";
+import { tokenPricesCache, vestingStreamsCache } from "../db/schema";
 import type { PriceInfo, PriceSource } from "./tvl";
 
 /** Default freshness window — 6 hours. Most callers use this. */
@@ -283,6 +283,50 @@ export async function pickStalestCachedTokens(
     }));
   } catch (err) {
     console.warn("[token-price-cache] pickStalest failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Pick the N active-vesting tokens that have NO row in the price cache yet,
+ * soonest-unlocking first (most likely to be viewed in the explorer).
+ *
+ * pickStalestCachedTokens only refreshes tokens ALREADY cached — brand-new
+ * active-vesting tokens never enter the cache via the hourly cron, so the
+ * explorer live-prices them on every render (the DexScreener fan-out that
+ * caused Error 524). Seeding them here, ordered by next unlock, closes that
+ * coverage gap durably. Testnets excluded to match the explorer's filter.
+ *
+ * On DB error returns [] (cache pipeline degrades to live-pricing as before).
+ */
+export async function pickUncachedActiveVestingTokens(
+  limit: number,
+): Promise<Array<{ chainId: number; tokenAddress: string }>> {
+  try {
+    const rows = await db
+      .select({
+        chainId:      vestingStreamsCache.chainId,
+        tokenAddress: sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
+      })
+      .from(vestingStreamsCache)
+      .leftJoin(
+        tokenPricesCache,
+        and(
+          eq(tokenPricesCache.chainId, vestingStreamsCache.chainId),
+          eq(sql`lower(${tokenPricesCache.tokenAddress})`, sql`lower(${vestingStreamsCache.tokenAddress})`),
+        ),
+      )
+      .where(and(
+        eq(vestingStreamsCache.isFullyVested, false),
+        sql`${tokenPricesCache.tokenAddress} IS NULL`,
+        sql`${vestingStreamsCache.chainId} NOT IN (11155111, 84532)`,
+      ))
+      .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`)
+      .orderBy(sql`min(${vestingStreamsCache.endTime}) ASC NULLS LAST`)
+      .limit(limit);
+    return rows.map((r) => ({ chainId: r.chainId, tokenAddress: r.tokenAddress }));
+  } catch (err) {
+    console.warn("[token-price-cache] pickUncachedActiveVestingTokens failed:", err);
     return [];
   }
 }
