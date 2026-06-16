@@ -50,6 +50,7 @@ import { SavedTokensStrip } from "./SavedTokensStrip";
 import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
 import { WatchButton } from "./WatchButton";
+import { ExplorerTable, type ExplorerRow } from "./ExplorerTable";
 
 export const dynamic = "force-dynamic";
 
@@ -149,7 +150,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const protocols = parseCsvStrings(sp.protocol);
   const amountThreshold = AMOUNT_FILTERS.find((f) => f.id === sp.amount)?.threshold;
   const minWallets = WALLET_FILTERS.find((f) => f.id === sp.wallets)?.min;
-  const sortKey: CalendarSort = (CALENDAR_SORTS.find((c) => c.id === sp.sort)?.id ?? "date");
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
@@ -224,28 +224,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     if (minWallets) {
       calendarGroups = calendarGroups.filter((g) => (g.tokenWalletCount ?? g.walletCount) >= minWallets);
     }
-    // getUnlocksInWindow returns soonest-first; only re-sort for the
-    // non-default toggles.
-    if (sortKey === "wallets") {
-      calendarGroups = [...calendarGroups].sort((a, b) => (b.tokenWalletCount ?? b.walletCount) - (a.tokenWalletCount ?? a.walletCount));
-    } else if (sortKey === "amount") {
-      // Priced rows sort first by USD (honest). Unpriced rows fall to the
-      // end, ordered among themselves by raw token amount so a Sablier
-      // unlock of 10B BERA-like-token doesn't outrank a $1M priced USDC
-      // event. Cross-token raw amounts being compared is the same caveat
-      // that's labelled in the sort toggle.
-      const rawAmt = (g: WindowUnlockGroup) => {
-        try { return BigInt(g.amount ?? "0"); } catch { return 0n; }
-      };
-      calendarGroups = [...calendarGroups].sort((a, b) => {
-        const av = a.usdValue, bv = b.usdValue;
-        if (av != null && bv != null) return bv - av;
-        if (av != null) return -1;
-        if (bv != null) return 1;
-        const ar = rawAmt(a), br = rawAmt(b);
-        return br > ar ? 1 : br < ar ? -1 : 0;
-      });
-    }
+    // getUnlocksInWindow returns soonest-first — the default. All other
+    // sorting is now done client-side by clicking a column header in
+    // <ExplorerTable> (no server round-trip), so there's no server re-sort.
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
       chainIds:    chainIds.length > 0 ? chainIds : undefined,
@@ -293,6 +274,24 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const visibleCount = isFree ? Math.min(totalMatches, FREE_TIER_ROW_CAP) : totalMatches;
   const hiddenCount  = totalMatches - visibleCount;
   const visibleCalendar = isFree ? calendarGroups.slice(0, FREE_TIER_ROW_CAP) : calendarGroups;
+  // Flatten to the serialisable shape the client-side sortable table needs.
+  const calendarRows: ExplorerRow[] = visibleCalendar.map((g) => ({
+    groupKey:          g.groupKey,
+    protocol:          g.protocol,
+    chainId:           g.chainId,
+    tokenSymbol:       g.tokenSymbol,
+    tokenAddress:      g.tokenAddress,
+    tokenDecimals:     g.tokenDecimals,
+    amount:            g.amount,
+    usdValue:          g.usdValue ?? null,
+    usdConfidence:     g.usdConfidence ?? null,
+    walletCount:       g.walletCount,
+    tokenWalletCount:  g.tokenWalletCount,
+    tokenRoundCount:   g.tokenRoundCount,
+    eventTime:         g.eventTime,
+    absorptionRatio:   g.absorptionRatio ?? null,
+    supplyShare:       g.supplyShare ?? null,
+  }));
   const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
   const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;
 
@@ -403,30 +402,20 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           {/* Results */}
           <section>
             {mode === "calendar" && (
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-[10px] font-bold tracking-widest uppercase mr-1" style={{ color: "var(--preview-text-3)" }}>
-                  Sort
-                </span>
-                {CALENDAR_SORTS.map((c) => (
-                  <FilterPill
-                    key={c.id}
-                    active={sortKey === c.id}
-                    href={buildUrl({ ...sp, sort: c.id === "date" ? undefined : c.id })}
-                  >
-                    {c.label}
-                  </FilterPill>
-                ))}
-              </div>
-            )}
-            {mode === "calendar" && (
-              <CalendarResults
-                rows={visibleCalendar}
-                totalMatches={totalMatches}
-                hiddenCount={hiddenCount}
-                isFree={isFree}
-                overFilterCap={overFilterCap}
-                exportHref={exportHref}
-              />
+              overFilterCap ? (
+                <UpgradeBanner
+                  title="Combine multiple filters with Pro"
+                  body="Free accounts can filter by one dimension at a time. Pro lets you stack chain + protocol + amount + date for surgical queries."
+                />
+              ) : (
+                <ExplorerTable
+                  rows={calendarRows}
+                  isFree={isFree}
+                  totalMatches={totalMatches}
+                  hiddenCount={hiddenCount}
+                  exportHref={exportHref}
+                />
+              )
             )}
             {mode === "stream" && (
               <StreamResults

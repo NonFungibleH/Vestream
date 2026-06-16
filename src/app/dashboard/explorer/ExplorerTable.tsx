@@ -1,0 +1,330 @@
+"use client";
+
+// src/app/dashboard/explorer/ExplorerTable.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Client-side sortable results table for the Vesting Explorer (calendar mode).
+//
+// Why client-side: the page is force-dynamic, so the old top-of-table sort
+// buttons changed the URL → full server re-render → a LIVE DexScreener price
+// batch before anything redrew. Sorting now happens IN-MEMORY here — click a
+// column header and the rows reorder instantly, zero round-trip. Filters
+// (chain/protocol/search/date/amount/wallet) stay server-side because they
+// change WHICH rows load; only sorting + column display moved here.
+//
+// Columns (all sortable; the narrow ones auto-hide below md):
+//   Token · Locked amount · USD value · Wallets · Rounds · Risk · Next unlock
+// Mobile collapses to Token · USD · Wallets.
+//
+// The server passes a flat, serialisable ExplorerRow[] (no bigints as values —
+// `amount` is a stringified bigint). USD + wallet/round counts are already
+// resolved server-side; we just render + sort them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { CHAIN_NAMES } from "@/lib/vesting/types";
+import { getProtocol } from "@/lib/protocol-constants";
+import { WatchButton } from "./WatchButton";
+
+export interface ExplorerRow {
+  groupKey:          string;
+  protocol:          string;
+  chainId:           number;
+  tokenSymbol:       string | null;
+  tokenAddress:      string;
+  tokenDecimals:     number;
+  amount:            string | null;   // stringified bigint (locked)
+  usdValue:          number | null;
+  usdConfidence:     "high" | "medium" | "low" | null;
+  walletCount:       number;          // per-bucket fallback
+  tokenWalletCount?: number;          // true uncapped count
+  tokenRoundCount?:  number;
+  eventTime:         number;
+  absorptionRatio:   number | null;
+  supplyShare:       number | null;
+}
+
+type SortCol = "token" | "amount" | "usd" | "wallets" | "rounds" | "risk" | "date";
+type SortDir = "asc" | "desc";
+
+// ── Sort accessors ───────────────────────────────────────────────────────────
+function walletsOf(r: ExplorerRow): number { return r.tokenWalletCount ?? r.walletCount; }
+function amountNum(r: ExplorerRow): number {
+  if (!r.amount) return 0;
+  try { return Number(BigInt(r.amount)) / 10 ** Math.min(r.tokenDecimals, 18); } catch { return 0; }
+}
+function riskRank(r: ExplorerRow): number {
+  const b = classifyRisk(r);
+  return b === "HIGH" ? 3 : b === "MED" ? 2 : b === "LOW" ? 1 : 0;
+}
+function sortValue(r: ExplorerRow, col: SortCol): number | string {
+  switch (col) {
+    case "token":   return (r.tokenSymbol ?? r.tokenAddress).toLowerCase();
+    case "amount":  return amountNum(r);
+    case "usd":     return r.usdValue ?? -Infinity;       // unpriced sort last (desc) / first (asc)
+    case "wallets": return walletsOf(r);
+    case "rounds":  return r.tokenRoundCount ?? 0;
+    case "risk":    return riskRank(r);
+    case "date":    return r.eventTime || Infinity;
+  }
+}
+
+export function ExplorerTable({
+  rows, isFree, totalMatches, hiddenCount, exportHref,
+}: {
+  rows:         ExplorerRow[];
+  isFree:       boolean;
+  totalMatches: number;
+  hiddenCount:  number;
+  exportHref:   string;
+}) {
+  // Default: soonest unlock first (matches the server's prior default).
+  const [col, setCol] = useState<SortCol>("date");
+  const [dir, setDir] = useState<SortDir>("asc");
+
+  const sorted = useMemo(() => {
+    const copy = [...rows];
+    copy.sort((a, b) => {
+      const x = sortValue(a, col);
+      const y = sortValue(b, col);
+      let cmp: number;
+      if (typeof x === "string" || typeof y === "string") cmp = String(x).localeCompare(String(y));
+      else cmp = x < y ? -1 : x > y ? 1 : 0;
+      return dir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [rows, col, dir]);
+
+  function toggle(next: SortCol, defaultDir: SortDir) {
+    if (next === col) { setDir((d) => (d === "asc" ? "desc" : "asc")); }
+    else { setCol(next); setDir(defaultDir); }
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>No upcoming unlocks match your filters.</p>
+        <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>Try widening the date range or clearing a filter.</p>
+      </div>
+    );
+  }
+
+  // Shared grid template: mobile = Token · USD · Wallets (3); desktop adds
+  // Amount, Rounds, Risk, Next (7). Desktop-only cells use `hidden md:flex`,
+  // so on mobile they're removed from the grid and the 3 visible cells fill
+  // the 3-column template.
+  const GRID = "grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_auto_auto_auto_auto_auto] items-center gap-2 md:gap-4 px-4 md:px-5";
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
+          {totalMatches} match{totalMatches === 1 ? "" : "es"}
+        </p>
+        {!isFree && (
+          <a href={exportHref} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
+            Export CSV
+          </a>
+        )}
+      </div>
+
+      <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        {/* Sortable header */}
+        <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
+          <div className={`flex-1 ${GRID} py-2`}>
+            <Th label="Token"       active={col === "token"}   dir={dir} onClick={() => toggle("token", "asc")} />
+            <Th label="Amount"      active={col === "amount"}  dir={dir} onClick={() => toggle("amount", "desc")} align="right" className="hidden md:flex" />
+            <Th label="USD"         active={col === "usd"}     dir={dir} onClick={() => toggle("usd", "desc")} align="right" minW={64} />
+            <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
+            <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
+            <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} />
+            <Th label="Next unlock" active={col === "date"}    dir={dir} onClick={() => toggle("date", "asc")} align="right" className="hidden md:flex" />
+          </div>
+          <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
+        </div>
+
+        {/* Rows */}
+        {sorted.map((r, i) => (
+          <Row key={r.groupKey} r={r} grid={GRID} showTopBorder={i > 0} />
+        ))}
+      </div>
+
+      {isFree && hiddenCount > 0 && (
+        <div className="mt-4 rounded-2xl px-5 py-4 text-center"
+          style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)" }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
+            {hiddenCount} more match{hiddenCount === 1 ? "" : "es"} above your free limit
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
+            Pro lifts the per-query cap, adds CSV export, multi-filter compose, and saved-search alerts.
+          </p>
+          <Link href="/pricing" className="inline-block mt-2 text-xs font-semibold" style={{ color: "#0F8A8A" }}>
+            View pricing →
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Header cell ──────────────────────────────────────────────────────────────
+function Th({
+  label, active, dir, onClick, align = "left", minW, className = "",
+}: {
+  label: string; active: boolean; dir: SortDir; onClick: () => void;
+  align?: "left" | "right"; minW?: number; className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`}
+      style={{ minWidth: minW }}
+      aria-label={`Sort by ${label}`}
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors"
+        style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
+        {label}
+      </span>
+      <span className="text-[8px]" style={{ color: active ? "#0F8A8A" : "transparent" }}>
+        {active ? (dir === "asc" ? "▲" : "▼") : "▲"}
+      </span>
+    </button>
+  );
+}
+
+// ── Row ──────────────────────────────────────────────────────────────────────
+function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTopBorder: boolean }) {
+  const meta      = getProtocol(r.protocol);
+  const accent    = meta?.color ?? "#64748b";
+  const chainName = CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`;
+
+  return (
+    <div className="flex items-center" style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
+      <Link href={`/dashboard/explorer/token/${r.chainId}/${r.tokenAddress}`}
+        className={`flex-1 ${grid} py-3 transition-colors hover:bg-[var(--preview-muted)]`}>
+        {/* Token */}
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0" style={{ background: accent }}>
+            {tokenInitial(r.tokenSymbol, r.tokenAddress)}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+              {r.tokenSymbol ?? shortAddr(r.tokenAddress)}
+            </p>
+            <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
+              <span style={{ color: accent }}>{meta?.name ?? r.protocol}</span> · {chainName}
+            </p>
+          </div>
+        </div>
+        {/* Amount (desktop) */}
+        <div className="text-right tabular-nums hidden md:block">
+          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{fmtAmount(r.amount, r.tokenDecimals)}</p>
+        </div>
+        {/* USD */}
+        <div className="text-right tabular-nums" style={{ minWidth: 64 }}>
+          {r.usdValue != null ? (
+            <p className="text-sm font-bold"
+              style={{
+                color: "var(--preview-text)",
+                fontStyle: r.usdConfidence === "low" ? "italic" : "normal",
+                opacity:   r.usdConfidence === "low" ? 0.65 : r.usdConfidence === "medium" ? 0.8 : 1,
+              }}
+              title={r.usdConfidence === "low" ? "Low liquidity — estimate" : r.usdConfidence === "medium" ? "Medium liquidity — DEX pool < $10k" : undefined}>
+              {formatUsdCompact(r.usdValue)}
+            </p>
+          ) : (
+            <p className="text-sm font-bold" style={{ color: "var(--preview-text-3)" }}>—</p>
+          )}
+        </div>
+        {/* Wallets */}
+        <div className="text-right tabular-nums" style={{ minWidth: 56 }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{walletsOf(r).toLocaleString()}</p>
+        </div>
+        {/* Rounds (desktop) */}
+        <div className="text-right tabular-nums hidden md:block">
+          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "—"}</p>
+        </div>
+        {/* Risk (desktop) */}
+        <div className="text-right hidden md:block" style={{ minWidth: 48 }}>
+          <RiskChip r={r} />
+        </div>
+        {/* Next unlock (desktop) */}
+        <div className="text-right hidden md:block">
+          <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>in {relativeUntil(r.eventTime)}</p>
+        </div>
+      </Link>
+      <div className="pr-3 pl-1">
+        <WatchButton tokenAddress={r.tokenAddress} chainId={r.chainId} tokenSymbol={r.tokenSymbol} />
+      </div>
+    </div>
+  );
+}
+
+// ── Risk classification (mirrors the server's prior classifyRisk) ────────────
+function classifyRisk(r: ExplorerRow): "HIGH" | "MED" | "LOW" | null {
+  const a = r.absorptionRatio;
+  const s = r.supplyShare;
+  if (a == null && s == null) return null;
+  if ((a != null && a >= 0.5) || (s != null && s >= 0.05)) return "HIGH";
+  if ((a != null && a >= 0.1) || (s != null && s >= 0.01)) return "MED";
+  return "LOW";
+}
+
+function RiskChip({ r }: { r: ExplorerRow }) {
+  const band = classifyRisk(r);
+  if (!band) return <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>—</span>;
+  const style =
+    band === "HIGH" ? { bg: "rgba(220,38,38,0.12)", fg: "#dc2626" } :
+    band === "MED"  ? { bg: "rgba(217,119,6,0.12)", fg: "#d97706" } :
+                      { bg: "rgba(28,184,184,0.10)", fg: "#0F8A8A" };
+  return (
+    <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
+      style={{ background: style.bg, color: style.fg }}>
+      {band}
+    </span>
+  );
+}
+
+// ── Presentation helpers (mirrors page.tsx) ──────────────────────────────────
+function tokenInitial(symbol: string | null, address: string): string {
+  if (symbol && symbol !== "UNKNOWN") return symbol.slice(0, 2).toUpperCase();
+  return address.slice(2, 4).toUpperCase();
+}
+function shortAddr(addr: string): string {
+  if (addr.length < 10) return addr;
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+function fmtAmount(raw: string | null, decimals: number): string {
+  if (!raw) return "—";
+  try {
+    const n = Number(BigInt(raw)) / 10 ** Math.min(decimals, 18);
+    if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+    if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+    if (n >= 1)   return n.toFixed(2);
+    return n.toFixed(4);
+  } catch {
+    return "—";
+  }
+}
+// Inlined (not imported from quick-prices.ts — that module pulls in the
+// Upstash Redis SDK, which must not enter the client bundle).
+function formatUsdCompact(usd: number | null | undefined): string {
+  if (usd == null || !Number.isFinite(usd) || usd <= 0) return "—";
+  if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)}B`;
+  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
+  if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
+  if (usd >= 1)   return `$${usd.toFixed(2)}`;
+  return `$${usd.toFixed(4)}`;
+}
+function relativeUntil(unix: number | null): string {
+  if (!unix) return "—";
+  const diff = Math.max(0, unix - Math.floor(Date.now() / 1000));
+  if (diff < 60)    return `${diff}s`;
+  if (diff < 3600)  return `${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h`;
+  return `${Math.floor(diff / 86400)} d`;
+}
