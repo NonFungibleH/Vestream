@@ -838,6 +838,12 @@ export async function getTokenScaleCounts(
       .where(and(
         inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, addrs),
         inArray(vestingStreamsCache.chainId, chains),
+        // Count only ACTIVE vestings, matching the token-detail page
+        // (fetchActiveStreams also filters is_fully_vested = false). Without
+        // this, a streaming-payment token like Superfluid OPx reported 1,519
+        // lifetime recipients while the token page — correctly — showed the 6
+        // still vesting. The explorer headline must agree with the click-through.
+        eq(vestingStreamsCache.isFullyVested, false),
       ))
       .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`);
   } catch (err) {
