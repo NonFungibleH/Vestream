@@ -774,8 +774,14 @@ async function getTotalLockedByToken(
   // concentration signal. Matches on lower(token_address) to hit the
   // functional index `vsc_chain_lower_token_idx` (chain_id, lower(token)).
   // lower() on both sides also makes Solana mints (stored original-case)
-  // match a lowercased input. Fully-vested rows carry 0 lockedAmount, so no
-  // is_fully_vested filter is needed — they contribute nothing.
+  // match a lowercased input.
+  //
+  // is_fully_vested = false is a PERFORMANCE filter, not a correctness one:
+  // fully-vested rows carry 0 lockedAmount (contribute nothing to sum or max),
+  // but a streaming-payment token like Superfluid OPx has ~1,500 fully-vested
+  // recipients whose presence in the per-recipient GROUP BY made this query
+  // 6.5s instead of ~1s (the Cloudflare-524 root cause, 2026-06-16). Filtering
+  // them out keeps the totals byte-identical (verified) and the grouping small.
   const perRecipient = db
     .select({
       chainId:     vestingStreamsCache.chainId,
@@ -787,6 +793,7 @@ async function getTotalLockedByToken(
       and(
         inArray(vestingStreamsCache.chainId, chainIds),
         inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, lowerAddrs),
+        eq(vestingStreamsCache.isFullyVested, false),
       ),
     )
     .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`, sql`lower(${vestingStreamsCache.recipient})`)
