@@ -221,6 +221,13 @@ export interface VestingStream {
    *  falls back to the protocol's web claim UI). */
   claimContract?: string | null;
   claimNativeId?: string | null;
+  /** Extra named claim arguments for protocols whose claim call takes more
+   *  than a single id (added 2026-06, universal-claiming Phase 0). Example:
+   *  LlamaPay's `withdraw(from, to, amountPerSec)` needs `{ from, amountPerSec }`
+   *  (the recipient = `to` comes from `recipient`). A recipe reads EITHER
+   *  `claimNativeId` (single-id protocols) OR `claimArgs` (multi-arg). Values
+   *  are stringified so the payload stays JSON-safe through the cache + API. */
+  claimArgs?: Record<string, string> | null;
 }
 
 // ── Shared math helpers ─────────────────────────────────────────────────────
