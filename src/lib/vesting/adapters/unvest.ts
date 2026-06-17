@@ -245,6 +245,14 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
         shape:       milestones.length > 0 ? "steps" : "linear",
         unlockSteps: milestones.length > 0 ? unlockSteps : undefined,
         lockTxHash:  raw.vestingToken?.transactionHash ?? null,
+        // In-app claiming (verified on-chain 2026-06-17): the vestingToken is
+        // a deployed minimal-proxy VestedERC20; the holder calls its no-arg
+        // `claim()` to receive matured underlying (8/8 random ETH positions
+        // simulated OK from the recipient). claim() takes no id, so
+        // claimNativeId carries the contract too (just to satisfy the mobile
+        // isClaimSupported gate; the recipe ignores it). Absence ⇒ web claim.
+        claimContract: raw.vestingToken?.id ?? null,
+        claimNativeId: raw.vestingToken?.id ?? null,
       };
     });
   }
