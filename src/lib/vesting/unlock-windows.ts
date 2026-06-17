@@ -51,22 +51,26 @@ export interface WindowUnlockGroup {
   streamCount:   number;
   groupKey:      string;
   /** TRUE distinct-recipient count across ALL cached streams for this
-   *  (chainId, tokenAddress) — uncapped. Attached by getTokenScaleCounts in
-   *  the explorer page; undefined until enriched. Fixes the "24 wallets" on
-   *  an 850-vesting token undercount caused by the calendar pool's 2000-row
-   *  global cap. */
+   *  (chainId, tokenAddress) — uncapped. Attached from the token rollup
+   *  (readTokenRollups) in the explorer page; undefined until enriched. Fixes
+   *  the "24 wallets" on an 850-vesting token undercount caused by the
+   *  calendar pool's 2000-row global cap. */
   tokenWalletCount?: number;
   /** TRUE distinct vesting-round count for this token (same key as
    *  rounds.ts groupIntoRounds: protocol|shape|cliffDays|durationDays). */
   tokenRoundCount?:  number;
   /** Whole-token active vesting span (unix sec) — earliest start, latest end.
    *  Drives the explorer "% vested" progress bar. Attached alongside the
-   *  token counts by getTokenScaleCounts; undefined until enriched. */
+   *  token counts from the token rollup; undefined until enriched. */
   vestStart?:        number;
   vestEnd?:          number;
   /** TRUE if any active stream has a meaningful cliff (lump unlock). From
-   *  getTokenScaleCounts; drives the ⚠️ cliff flag in the explorer. */
+   *  the token rollup; drives the ⚠️ cliff flag in the explorer. */
   hasCliff?:         boolean;
+  /** Largest single recipient's share (0–1) of this token's total locked
+   *  amount — concentration / "whale" signal. From the token rollup
+   *  (token_vesting_rollups, cron-maintained); undefined until enriched. */
+  topHolderShare?:   number | null;
   /** USD value of the group's `amount` at render time, or null when the
    *  token has no liquid DEX pair / we couldn't price it. Populated by
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
@@ -804,89 +808,6 @@ async function getTotalLockedByToken(
     let amt = 0n;
     try { amt = BigInt(r.total); } catch { /* keep 0n */ }
     out.set(key, amt);
-  }
-  return out;
-}
-
-/**
- * TRUE per-token wallet + round counts, UNCAPPED.
- *
- * The explorer's calendar groups carry a `walletCount` computed over the
- * 2000-row global pool (soonest-ending first), so a token with more vestings
- * than made the pool is undercounted ("24 wallets" on an 850-vesting token).
- * This counts ALL cached streams for the given (chainId, tokenAddress) pairs:
- *   - wallets = COUNT(DISTINCT recipient)
- *   - rounds  = COUNT(DISTINCT round-key), where the key is replicated from
- *     rounds.ts `groupIntoRounds`: `protocol|shape|cliffDays|durationDays`,
- *     cliffDays = round(((cliffTime ?? startTime) - startTime)/86400),
- *     durationDays = round((endTime - startTime)/86400), clamped ≥ 0.
- *
- * Computed in SQL (one GROUP BY query, no row transfer) so it scales to the
- * biggest tokens. startTime/cliffTime/shape come from the stream_data jsonb;
- * endTime + protocol + recipient are columns. Returns a map keyed
- * `${chainId}:${lowercasedAddress}` — absent entries ⇒ no cached streams.
- */
-export async function getTokenScaleCounts(
-  pairs: ReadonlyArray<{ chainId: number; tokenAddress: string }>,
-): Promise<Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }>> {
-  const out = new Map<string, { wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }>();
-  // DB-touching helper must short-circuit during `next build` (see CLAUDE.md).
-  if (process.env.NEXT_PHASE === "phase-production-build") return out;
-  if (pairs.length === 0) return out;
-
-  const addrs  = [...new Set(pairs.map((p) => p.tokenAddress.toLowerCase()))];
-  const chains = [...new Set(pairs.map((p) => p.chainId))];
-  const wanted = new Set(pairs.map((p) => `${p.chainId}:${p.tokenAddress.toLowerCase()}`));
-
-  // Round-key expression — must match rounds.ts groupIntoRounds exactly.
-  const startSql = sql`(${vestingStreamsCache.streamData}->>'startTime')::numeric`;
-  const cliffSql = sql`COALESCE((${vestingStreamsCache.streamData}->>'cliffTime')::numeric, ${startSql})`;
-  const shapeSql = sql`CASE WHEN ${vestingStreamsCache.streamData}->>'shape' = 'steps' THEN 'steps' ELSE 'linear' END`;
-  const roundKey = sql`${vestingStreamsCache.protocol} || '|' || ${shapeSql} || '|' || GREATEST(0, ROUND((${cliffSql} - ${startSql}) / 86400))::int || '|' || GREATEST(0, ROUND((${vestingStreamsCache.endTime} - ${startSql}) / 86400))::int`;
-
-  let rows: { chainId: number; token: string; wallets: number; rounds: number; firstStart: number; lastEnd: number; hasCliff: boolean }[];
-  try {
-    rows = await db
-      .select({
-        chainId: vestingStreamsCache.chainId,
-        token:   sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
-        wallets: sql<number>`count(distinct lower(${vestingStreamsCache.recipient}))`.mapWith(Number),
-        rounds:  sql<number>`count(distinct ${roundKey})`.mapWith(Number),
-        // Whole-token vesting span (active rows only) → drives the explorer's
-        // "% vested" progress bar and start→end tooltip.
-        firstStart: sql<number>`min(${startSql})`.mapWith(Number),
-        lastEnd:    sql<number>`max(${vestingStreamsCache.endTime})`.mapWith(Number),
-        // Any active stream whose cliff sits meaningfully (>1 day) after its
-        // start = a lump-unlock cliff. Surfaced as a ⚠️ flag in the explorer.
-        hasCliff:   sql<boolean>`bool_or((${cliffSql} - ${startSql}) > 86400)`.mapWith(Boolean),
-      })
-      .from(vestingStreamsCache)
-      .where(and(
-        inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, addrs),
-        inArray(vestingStreamsCache.chainId, chains),
-        // Count only ACTIVE vestings, matching the token-detail page
-        // (fetchActiveStreams also filters is_fully_vested = false). Without
-        // this, a streaming-payment token like Superfluid OPx reported 1,519
-        // lifetime recipients while the token page — correctly — showed the 6
-        // still vesting. The explorer headline must agree with the click-through.
-        eq(vestingStreamsCache.isFullyVested, false),
-      ))
-      .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`);
-  } catch (err) {
-    console.error("[unlock-windows] getTokenScaleCounts failed:", err);
-    return out;
-  }
-
-  for (const r of rows) {
-    const key = `${r.chainId}:${r.token}`;
-    if (!wanted.has(key)) continue; // a token addr can exist on a chain we didn't ask for
-    out.set(key, {
-      wallets:    Number(r.wallets) || 0,
-      rounds:     Number(r.rounds) || 0,
-      firstStart: Number(r.firstStart) || 0,
-      lastEnd:    Number(r.lastEnd) || 0,
-      hasCliff:   Boolean(r.hasCliff),
-    });
   }
   return out;
 }

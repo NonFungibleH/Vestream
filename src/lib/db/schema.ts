@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   numeric,
   primaryKey,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -847,6 +848,31 @@ export const protocolSummaries = pgTable(
     lastIndexedAt:   timestamp("last_indexed_at"),
     computedAt:      timestamp("computed_at").defaultNow().notNull(),
   },
+);
+
+// ── Per-token vesting rollup ──────────────────────────────────────────────────
+// One row per (chainId, lower(tokenAddress)) of the expensive per-token
+// aggregates the explorer used to compute live per render (total locked,
+// top-holder concentration, wallet/round/stream counts, vesting span, cliff).
+// A cron (refresh-token-rollups) maintains it; the explorer reads it in one
+// indexed query instead of live aggregation — the durable fix for the 524s.
+export const tokenVestingRollups = pgTable(
+  "token_vesting_rollups",
+  {
+    chainId:        integer("chain_id").notNull(),
+    tokenAddress:   text("token_address").notNull(),       // lowercased
+    tokenSymbol:    text("token_symbol"),
+    totalLocked:    text("total_locked").notNull().default("0"),     // stringified bigint
+    topHolderShare: doublePrecision("top_holder_share"),            // 0–1
+    walletCount:    integer("wallet_count").notNull().default(0),
+    roundCount:     integer("round_count").notNull().default(0),
+    streamCount:    integer("stream_count").notNull().default(0),
+    firstStart:     bigint("first_start", { mode: "number" }),       // unix sec
+    lastEnd:        bigint("last_end",     { mode: "number" }),      // unix sec
+    hasCliff:       boolean("has_cliff").notNull().default(false),
+    computedAt:     timestamp("computed_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.chainId, t.tokenAddress] })],
 );
 
 // ── Demo web-push subscriptions ───────────────────────────────────────────────

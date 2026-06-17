@@ -43,12 +43,13 @@ export interface ExplorerRow {
   vestStart?:        number | null;   // earliest active start (unix sec) — progress bar
   vestEnd?:          number | null;   // latest active end (unix sec)
   hasCliff?:         boolean;         // any active stream has a lump-unlock cliff → ⚠️
+  topHolderShare?:   number | null;   // largest recipient's share (0–1) of locked — concentration
   eventTime:         number;
   absorptionRatio:   number | null;
   supplyShare:       number | null;
 }
 
-type SortCol = "token" | "amount" | "usd" | "wallets" | "rounds" | "risk" | "progress" | "date";
+type SortCol = "token" | "amount" | "usd" | "wallets" | "concentration" | "rounds" | "risk" | "progress" | "date";
 type SortDir = "asc" | "desc";
 
 // ── Sort accessors ───────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ function sortValue(r: ExplorerRow, col: SortCol): number | string {
     case "amount":  return amountNum(r);
     case "usd":     return r.usdValue ?? -Infinity;       // unpriced sort last (desc) / first (asc)
     case "wallets": return walletsOf(r);
+    case "concentration": return r.topHolderShare ?? -Infinity;  // unknown sorts last (desc)
     case "rounds":  return r.tokenRoundCount ?? 0;
     case "risk":    return riskRank(r);
     case "progress": return progressOf(r) ?? -Infinity;   // unknown span sorts last (desc)
@@ -133,7 +135,7 @@ export function ExplorerTable({
   // 1fr token column hogging all the slack (the empty space). Mobile shows
   // Token · USD · Wallets; the desktop-only cells are display:none below md so
   // they drop out of the 3-col mobile grid.
-  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[2fr_0.9fr_0.9fr_0.7fr_0.6fr_0.6fr_1.3fr_0.95fr] items-center gap-3 px-4 md:px-5";
+  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[1.8fr_0.85fr_0.85fr_0.65fr_0.8fr_0.55fr_0.55fr_1.15fr_0.9fr] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
@@ -151,6 +153,7 @@ export function ExplorerTable({
             <Th label="Amount"      active={col === "amount"}  dir={dir} onClick={() => toggle("amount", "desc")} align="right" className="hidden md:flex" />
             <Th label="USD"         active={col === "usd"}     dir={dir} onClick={() => toggle("usd", "desc")} align="right" minW={64} />
             <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
+            <Th label="Top holder"  active={col === "concentration"} dir={dir} onClick={() => toggle("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
             <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
             <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
             <Th label="Vested"      active={col === "progress"} dir={dir} onClick={() => toggle("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
@@ -263,6 +266,10 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
         <div className="text-right tabular-nums" style={{ minWidth: 56 }}>
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{walletsOf(r).toLocaleString()}</p>
         </div>
+        {/* Top holder concentration (desktop) */}
+        <div className="text-right hidden md:block" style={{ minWidth: 64 }}>
+          <ConcentrationChip r={r} />
+        </div>
         {/* Rounds (desktop) */}
         <div className="text-right tabular-nums hidden md:block">
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "—"}</p>
@@ -327,6 +334,29 @@ function RiskChip({ r }: { r: ExplorerRow }) {
       style={{ background: style.bg, color: style.fg }}
       title={title}>
       {band}
+    </span>
+  );
+}
+
+// ── Top-holder concentration ─────────────────────────────────────────────────
+// Largest single recipient's share of the token's total locked supply — the
+// "whale" / centralisation signal. From the token rollup (cron-maintained).
+// Colour-banded: ≥50% red (one wallet dominates), ≥25% amber, below teal.
+const CONCENTRATION_HELP =
+  "Top holder — the single largest recipient's share of this token's total " +
+  "locked supply.\nHigh concentration (one wallet holding most of the locked " +
+  "tokens) means that wallet's unlock can move the market on its own.\n" +
+  "≥50% = one wallet dominates · ≥25% = concentrated · below = more distributed.";
+
+function ConcentrationChip({ r }: { r: ExplorerRow }) {
+  const s = r.topHolderShare;
+  if (s == null) return <span className="text-sm cursor-help" style={{ color: "var(--preview-text-3)" }} title="No concentration data for this token yet.">—</span>;
+  const pct = Math.round(s * 100);
+  const fg = s >= 0.5 ? "#dc2626" : s >= 0.25 ? "#d97706" : "var(--preview-text-2)";
+  const title = `Top holder owns ${pct}% of locked supply.\n\n${CONCENTRATION_HELP}`;
+  return (
+    <span className="text-sm font-semibold tabular-nums cursor-help" style={{ color: fg }} title={title}>
+      {pct < 1 ? "<1%" : `${pct}%`}
     </span>
   );
 }

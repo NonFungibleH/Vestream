@@ -2,8 +2,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Hourly refresh of the two rollup tables that power /protocols + /status:
 //
-//   - protocol_summaries (powers ProtocolStats on /protocols/[slug])
-//   - status_summary     (powers /api/admin/cache-stats + /status page)
+//   - protocol_summaries     (powers ProtocolStats on /protocols/[slug])
+//   - status_summary         (powers /api/admin/cache-stats + /status page)
+//   - token_vesting_rollups  (powers the Vesting Explorer's per-token
+//                             aggregates — total locked, top-holder %,
+//                             wallet/round counts, span, cliff. Moved OFF
+//                             the request path here to kill the recurring
+//                             Cloudflare 524s; the explorer now reads this
+//                             table instead of aggregating live.)
 //
 // Why this exists separately from seed-cache:
 //   The seed-cache cron used to run daily and call both refresh helpers at
@@ -27,6 +33,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { refreshProtocolSummaries } from "@/lib/vesting/protocol-stats";
 import { refreshStatusSummary } from "@/lib/vesting/cache-stats";
+import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
@@ -54,18 +61,20 @@ async function handle(req: NextRequest) {
     const settled = await Promise.allSettled([
       refreshProtocolSummaries(),
       refreshStatusSummary(),
+      refreshTokenRollups(),
     ]);
     const protocolResult = settled[0].status === "fulfilled" ? settled[0].value : null;
     const statusResult   = settled[1].status === "fulfilled" ? settled[1].value : null;
+    const tokenResult    = settled[2].status === "fulfilled" ? settled[2].value : null;
     for (let i = 0; i < settled.length; i++) {
       const r = settled[i];
       if (r.status === "rejected") {
-        const name = ["refreshProtocolSummaries", "refreshStatusSummary"][i];
+        const name = ["refreshProtocolSummaries", "refreshStatusSummary", "refreshTokenRollups"][i];
         console.error(`[cron/refresh-rollups] ${name} failed:`, r.reason);
       }
     }
     const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
-    console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s — protocol=${protocolResult?.rows ?? "?"} status=${statusResult?.rows ?? "?"}`);
+    console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s — protocol=${protocolResult?.rows ?? "?"} status=${statusResult?.rows ?? "?"} tokens=${tokenResult?.rows ?? "?"}`);
   });
 
   return NextResponse.json({

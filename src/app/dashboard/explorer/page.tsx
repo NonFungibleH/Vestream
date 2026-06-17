@@ -28,11 +28,11 @@ import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import {
   getUnlocksInWindow,
   enrichGroupsWithUsd,
-  getTokenScaleCounts,
   WINDOWS,
   type WindowSlug,
   type WindowUnlockGroup,
 } from "@/lib/vesting/unlock-windows";
+import { readTokenRollups } from "@/lib/vesting/token-rollups";
 import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 import {
   getStreamsForExplorer,
@@ -183,25 +183,26 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     }
     const scalePairs = baseGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }));
 
-    // Price enrichment and the per-token wallet/round counts are independent
-    // (both keyed on the same groups), so run them in PARALLEL — one fewer
-    // serial DB round-trip on every load. enrichGroupsWithUsd reads the
-    // token_prices_cache first (cron-warmed) and only live-prices misses;
-    // getTokenScaleCounts is one uncapped GROUP BY aggregate (the calendar
-    // pool caps at 2000 streams, so group.walletCount undercounts big tokens —
-    // this supplies the true wallet + round counts for display + filter/sort).
-    const [enriched, scale] = await Promise.all([
-      // Live-priced (cache-first, capped + parallel fallback). Safe now that
-      // getTotalLockedByToken is the fast single-SUM again — the earlier 524
-      // was that nested per-recipient query + live-pricing stacked, not the
-      // pricing alone. Cache misses are warmed by the refresh-prices cron.
+    // Price enrichment and the per-token scale metrics are independent (both
+    // keyed on the same groups), so run them in PARALLEL — one fewer serial DB
+    // round-trip on every load. enrichGroupsWithUsd reads the token_prices_cache
+    // first (cron-warmed) and only live-prices misses; readTokenRollups is a
+    // single INDEXED read of token_vesting_rollups (cron-maintained) for the
+    // true wallet/round counts, top-holder concentration, vest span + cliff.
+    //
+    // This REPLACES the old live getTokenScaleCounts + getTotalLockedByToken
+    // aggregates that ran on the request path — those heavy GROUP BYs (the
+    // per-recipient top-holder one took 4s+ under pooler load) were the
+    // recurring Cloudflare-524 root cause. The aggregation now happens once in
+    // the refresh-rollups cron; the explorer just reads the precomputed row.
+    const [enriched, rollups] = await Promise.all([
       enrichGroupsWithUsd(baseGroups),
-      getTokenScaleCounts(scalePairs),
+      readTokenRollups(scalePairs),
     ]);
     calendarGroups = enriched.map((g) => {
-      const sc = scale.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
-      return sc
-        ? { ...g, tokenWalletCount: sc.wallets, tokenRoundCount: sc.rounds, vestStart: sc.firstStart, vestEnd: sc.lastEnd, hasCliff: sc.hasCliff }
+      const r = rollups.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
+      return r
+        ? { ...g, tokenWalletCount: r.walletCount, tokenRoundCount: r.roundCount, vestStart: r.firstStart ?? undefined, vestEnd: r.lastEnd ?? undefined, hasCliff: r.hasCliff, topHolderShare: r.topHolderShare }
         : g;
     });
 
@@ -309,6 +310,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     vestStart:         g.vestStart ?? null,
     vestEnd:           g.vestEnd ?? null,
     hasCliff:          g.hasCliff ?? false,
+    topHolderShare:    g.topHolderShare ?? null,
     eventTime:         g.eventTime,
     absorptionRatio:   g.absorptionRatio ?? null,
     supplyShare:       g.supplyShare ?? null,
