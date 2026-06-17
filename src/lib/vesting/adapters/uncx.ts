@@ -8,6 +8,25 @@ import {
 } from "../types";
 import { resolveSubgraphUrl } from "../graph";
 
+// ─── In-app claim contracts (UNCX TokenVesting V3) ───────────────────────────
+// The per-chain TokenVesting deployment whose `withdraw(uint256 lockID,
+// uint256 shares)` the recipient calls to claim. VERIFIED on-chain 2026-06-17
+// (selector scan + impersonated eth_call from a real lock owner against live
+// positions; `getWithdrawableTokens(lockID)` matched our cached claimableNow
+// within snapshot drift, and a non-owner call reverts with "OWNER"):
+//   ETH  0xdba68f07d1b7ca219f78ae8582c213d975c25caf
+//   BSC  0xeaed594b5926a7d5fbbc61985390baaf936a6b8d
+//   Base 0xa82685520c463a752d5319e6616e4e5fd0215e33
+// Claim is owner-only and the shares arg = getWithdrawableShares(lockID)
+// computed AT CLAIM TIME (passing uint256.max reverts) — the mobile recipe
+// reads it just before the write. Polygon/Arbitrum omitted: their subgraphs
+// have no allocations so we don't index claimable locks there.
+const UNCX_CLAIM_CONTRACTS: Partial<Record<SupportedChainId, string>> = {
+  [CHAIN_IDS.ETHEREUM]: "0xdba68f07d1b7ca219f78ae8582c213d975c25caf",
+  [CHAIN_IDS.BSC]:      "0xeaed594b5926a7d5fbbc61985390baaf936a6b8d",
+  [CHAIN_IDS.BASE]:     "0xa82685520c463a752d5319e6616e4e5fd0215e33",
+};
+
 // ─── Subgraph URLs ─────────────────────────────────────────────────────────────
 // Each chain falls back to building the URL from GRAPH_API_KEY + bare subgraph ID.
 const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
@@ -198,6 +217,11 @@ async function fetchForChain(
       cliffTime,
       isFullyVested,
       nextUnlockTime:  nextUnlockTime(isFullyVested, nowSec, cliffTime, endTime),
+      // In-app claiming: withdraw(lockID, shares) on the per-chain TokenVesting
+      // contract; shares are read on-device at claim time. Only set where we
+      // have a verified contract (ETH/BSC/Base) — absence ⇒ web-claim fallback.
+      claimContract:   UNCX_CLAIM_CONTRACTS[chainId] ?? null,
+      claimNativeId:   raw.lockID,
     };
   });
 }
