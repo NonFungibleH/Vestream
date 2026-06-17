@@ -59,13 +59,19 @@ const redisKey = (chainId: number, address: string) =>
 // Mirror of the chain-slug map in tvl.ts. Kept local so callers don't need
 // the (heavier) tvl.ts import path.
 const DS_CHAIN_SLUG: Record<number, string> = {
-  1:    "ethereum",
-  56:   "bsc",
-  137:  "polygon",
-  8453: "base",
+  1:     "ethereum",
+  56:    "bsc",
+  137:   "polygon",
+  8453:  "base",
+  // Arbitrum + Optimism were MISSING here (fixed 2026-06-17) — every token on
+  // those chains live-priced to "—" in the explorer (e.g. WETH on Arbitrum),
+  // because line ~152 skips any chainId absent from this map. DexScreener's
+  // slugs are the bare "arbitrum"/"optimism" (verified live).
+  42161: "arbitrum",
+  10:    "optimism",
   // Solana — DexScreener uses the chain slug "solana"; chainId 101 is our
   // synthetic ID for the SVM ecosystem.
-  101:  "solana",
+  101:   "solana",
 };
 
 const LIQUIDITY_HIGH      = 10_000;

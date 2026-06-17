@@ -71,11 +71,17 @@ import {
 // ─── Chain slug maps (DexScreener + CoinGecko use different names) ───────────
 
 const DS_CHAIN_SLUG: Record<number, string> = {
-  1:    "ethereum",
-  56:   "bsc",
-  137:  "polygon",
-  8453: "base",
-  101:  "solana",     // DexScreener Solana slug — works for SPL mints
+  1:     "ethereum",
+  56:    "bsc",
+  137:   "polygon",
+  8453:  "base",
+  // Arbitrum + Optimism added 2026-06-17 — DexScreener Pass A skipped them
+  // entirely (only CoinGecko Pass B had them via CG_PLATFORM_SLUG), so the
+  // cron never warmed Arbitrum/Optimism prices and the explorer's live path
+  // (quick-prices, DexScreener-only) showed "—" for all of them.
+  42161: "arbitrum",
+  10:    "optimism",
+  101:   "solana",     // DexScreener Solana slug — works for SPL mints
 };
 
 const CG_PLATFORM_SLUG: Record<number, string> = {
