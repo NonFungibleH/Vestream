@@ -43,7 +43,10 @@ export function RoundsList({
         const isOpen = open === r.key;
         const wallets = isFree ? r.streams.slice(0, rowCap) : r.streams;
         const hidden = r.streams.length - wallets.length;
-        const cadence = r.shape === "steps" ? "Stepped unlocks" : "Continuous (linear)";
+        const cliffOnly = r.durationDays > 0 && r.cliffOffsetDays >= r.durationDays - 3;
+        const cadence = cliffOnly
+          ? "Unlocks in full at the cliff"
+          : r.shape === "steps" ? "Stepped unlocks" : "Continuous (linear)";
         return (
           <div key={r.key} className="rounded-2xl border overflow-hidden"
             style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>

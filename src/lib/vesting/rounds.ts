@@ -31,11 +31,19 @@ export interface Round {
 const DAY = 86_400;
 const roundDays = (s: number) => Math.max(0, Math.round(s / DAY));
 
+// Human-readable duration. Years for anything ≥ 2 years (so an 8-year lock
+// reads "8.2 yr" not "99-mo"), months below that, days for sub-month. One
+// decimal on years unless within ~5% of a whole year.
 function fmtDuration(days: number): string {
   if (days <= 0) return "instant";
-  if (days % 365 === 0) return `${days / 365}-yr`;
-  const months = Math.round(days / 30);
-  return months >= 1 ? `${months}-mo` : `${days}-day`;
+  const months = Math.round(days / 30.44);
+  if (months >= 24) {
+    const years = days / 365.25;
+    const rounded = Math.round(years);
+    return Math.abs(years - rounded) < 0.08 ? `${rounded} yr` : `${years.toFixed(1)} yr`;
+  }
+  if (months >= 1) return `${months} mo`;
+  return `${days} day${days === 1 ? "" : "s"}`;
 }
 
 export function groupIntoRounds(streams: VestingStream[]): Round[] {
@@ -67,14 +75,22 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
         nextUnlockTime = s.nextUnlockTime;
       }
     }
-    const cliffLabel = cliffOffsetDays > 0 ? ` · ${fmtDuration(cliffOffsetDays)} cliff` : "";
+    // Cliff-only = the cliff lands at (or after) the end, so the whole
+    // allocation releases in ONE lump at the cliff — there's no gradual
+    // schedule. Label it plainly instead of "99-mo steps · 99-mo cliff",
+    // which both says "steps" (wrong) and repeats the same number twice.
+    const isCliffOnly = durationDays > 0 && cliffOffsetDays >= durationDays - 3;
+    const label = isCliffOnly
+      ? `Cliff unlock · ${fmtDuration(durationDays)}`
+      : `${shape === "steps" ? "Stepped" : "Linear"} · ${fmtDuration(durationDays)}`
+        + (cliffOffsetDays > 0 ? ` · ${fmtDuration(cliffOffsetDays)} cliff` : "");
     rounds.push({
       key,
       protocol,
       shape: shape as "linear" | "steps",
       cliffOffsetDays,
       durationDays,
-      label: `${fmtDuration(durationDays)} ${shape}${cliffLabel}`,
+      label,
       recipientCount: recipients.size,
       totalLocked: totalLocked.toString(),
       totalAmount: totalAmount.toString(),
