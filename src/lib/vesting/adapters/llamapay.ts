@@ -257,6 +257,18 @@ async function fetchForChain(
         timestamp: Number(ev.createdTimestamp),
         amount:    ev.amount,
       })),
+      // In-app claiming (verified on-chain 2026-06-17): the recipient (or
+      // anyone, tokens route to `to`) calls withdraw(from, to, uint216
+      // amountPerSec) on the per-token LlamaPay contract — the first segment
+      // of the subgraph stream id. No amount arg: the contract releases the
+      // deposit-capped withdrawable. withdraw() simulated OK from the recipient
+      // on funded active streams. The recipe reads claimArgs (no single id).
+      // ⚠️ claimableNow above is time-based (uncapped); the contract caps at
+      // the payer's remaining deposit, so for an exhausted stream our display
+      // can overstate and withdraw() may revert. Safe-ish (amount-less claim
+      // releases the correct sum), but display accuracy is a follow-up.
+      claimContract: s.id.split("-")[0] ?? null,
+      claimArgs:     { from: s.payer.id, amountPerSec: s.amountPerSec },
     };
   });
 }
