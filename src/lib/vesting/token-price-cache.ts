@@ -39,6 +39,9 @@ export interface CachedPrice {
   tokenAddress: string;
   priceUsd:     number;
   liquidityUsd: number | null;
+  /** Circulating market cap in USD (DexScreener marketCap → fdv fallback).
+   *  Null when unknown. Drives the explorer's unlock-risk metric. */
+  marketCap:    number | null;
   source:       PriceSource;
   fetchedAt:    Date;
   /** Seconds since fetchedAt. Computed at read time. */
@@ -99,6 +102,7 @@ export async function readPriceCache(
           tokenAddress: tokenPricesCache.tokenAddress,
           priceUsd:     tokenPricesCache.priceUsd,
           liquidityUsd: tokenPricesCache.liquidityUsd,
+          marketCap:    tokenPricesCache.marketCap,
           source:       tokenPricesCache.source,
           fetchedAt:    tokenPricesCache.fetchedAt,
         })
@@ -119,12 +123,14 @@ export async function readPriceCache(
         if (fetchedAtMs < cutoffMs) continue;  // stale — skip
         const priceUsd     = Number(r.priceUsd);
         const liquidityUsd = r.liquidityUsd === null ? null : Number(r.liquidityUsd);
+        const marketCap    = r.marketCap === null ? null : Number(r.marketCap);
         if (!Number.isFinite(priceUsd) || priceUsd <= 0) continue;
         out.set(key, {
           chainId:      r.chainId,
           tokenAddress: r.tokenAddress.toLowerCase(),
           priceUsd,
           liquidityUsd,
+          marketCap:    marketCap !== null && Number.isFinite(marketCap) ? marketCap : null,
           source:       (r.source as PriceSource),
           fetchedAt:    r.fetchedAt,
           ageSec:       Math.floor((Date.now() - fetchedAtMs) / 1000),
@@ -154,6 +160,7 @@ export async function writePriceCache(
     tokenAddress: string;
     priceUsd:     number;
     liquidityUsd: number | null;
+    marketCap?:   number | null;
     source:       PriceSource;
   }>,
   now: Date = new Date(),
@@ -179,13 +186,17 @@ export async function writePriceCache(
   // ever cached. Filter unsafe entries here and let the rest land.
   const EVM_RE = /^0x[0-9a-f]{40}$/i;
   const SOL_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-  const validRows: Array<{ chainId: number; tokenAddress: string; priceUsd: string; liquidityUsd: string | null; source: PriceSource; fetchedAt: Date }> = [];
+  const validRows: Array<{ chainId: number; tokenAddress: string; priceUsd: string; liquidityUsd: string | null; marketCap: string | null; source: PriceSource; fetchedAt: Date }> = [];
   let droppedInvalid = 0;
   for (const e of dedup.values()) {
     if (!EVM_RE.test(e.tokenAddress) && !SOL_RE.test(e.tokenAddress)) { droppedInvalid++; continue; }
     if (!Number.isFinite(e.priceUsd) || e.priceUsd <= 0) { droppedInvalid++; continue; }
     if (e.liquidityUsd !== null && !Number.isFinite(e.liquidityUsd)) { droppedInvalid++; continue; }
     if (e.source !== "dexscreener" && e.source !== "coingecko" && e.source !== "defillama") { droppedInvalid++; continue; }
+    // marketCap is optional + best-effort — a malformed value just nulls the
+    // column rather than dropping the (otherwise valid) price row.
+    const mc = e.marketCap;
+    const marketCapOk = typeof mc === "number" && Number.isFinite(mc) && mc > 0;
     validRows.push({
       chainId:      e.chainId,
       tokenAddress: e.tokenAddress,
@@ -194,6 +205,7 @@ export async function writePriceCache(
       // tiny memecoin prices. toFixed(scale) keeps full precision.
       priceUsd:     formatNumeric(e.priceUsd, 18),
       liquidityUsd: e.liquidityUsd === null ? null : formatNumeric(e.liquidityUsd, 2),
+      marketCap:    marketCapOk ? formatNumeric(mc, 2) : null,
       source:       e.source,
       fetchedAt:    now,
     });
@@ -223,6 +235,7 @@ export async function writePriceCache(
           set: {
             priceUsd:     sql`excluded.price_usd`,
             liquidityUsd: sql`excluded.liquidity_usd`,
+            marketCap:    sql`excluded.market_cap`,
             source:       sql`excluded.source`,
             fetchedAt:    sql`excluded.fetched_at`,
           },

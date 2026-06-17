@@ -135,6 +135,10 @@ export interface PriceInfo {
   source:       PriceSource;
   confidence:   PriceConfidence;
   liquidityUsd: number | null; // null when source = defillama or coingecko
+  /** Circulating market cap in USD (DexScreener marketCap → fdv). Null for
+   *  defillama/coingecko-sourced rows. Persisted to token_prices_cache to
+   *  power the explorer's unlock-risk metric. */
+  marketCap?:   number | null;
 }
 
 export interface ProtocolTvl {
@@ -228,6 +232,8 @@ interface DexPair {
   priceUsd?:  string;
   volume?:    { h24?: number };
   liquidity?: { usd?: number };
+  marketCap?: number;
+  fdv?:       number;
 }
 
 function confidenceFromLiquidity(liqUsd: number): PriceConfidence | null {
@@ -269,11 +275,15 @@ async function dexScreenerBatch(addresses: string[]): Promise<Map<string, PriceI
       const liqUsd = pair.liquidity?.usd ?? 0;
       const conf   = confidenceFromLiquidity(liqUsd);
       if (!conf) continue;
+      const mc = (typeof pair.marketCap === "number" && pair.marketCap > 0)
+        ? pair.marketCap
+        : (typeof pair.fdv === "number" && pair.fdv > 0 ? pair.fdv : null);
       out.set(key, {
         priceUsd:     parseFloat(pair.priceUsd!),
         source:       "dexscreener",
         confidence:   conf,
         liquidityUsd: liqUsd,
+        marketCap:    mc,
       });
     }
   } catch (err) {
@@ -831,6 +841,7 @@ export async function priceAggregates(
     tokenAddress: string;
     priceUsd:     number;
     liquidityUsd: number | null;
+    marketCap:    number | null;
     source:       PriceSource;
   }> = [];
   for (const a of cacheMisses) {
@@ -843,6 +854,7 @@ export async function priceAggregates(
       tokenAddress: a.tokenAddress,
       priceUsd:     info.priceUsd,
       liquidityUsd: info.liquidityUsd,
+      marketCap:    info.marketCap ?? null,
       source:       info.source,
     });
   }

@@ -313,7 +313,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     topHolderShare:    g.topHolderShare ?? null,
     eventTime:         g.eventTime,
     absorptionRatio:   g.absorptionRatio ?? null,
-    supplyShare:       g.supplyShare ?? null,
+    marketCapShare:    g.marketCapShare ?? null,
   }));
   const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
   const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;

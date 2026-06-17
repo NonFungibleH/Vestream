@@ -42,14 +42,14 @@ export interface ExplorerRow {
   tokenRoundCount?:  number;
   vestStart?:        number | null;   // earliest active start (unix sec) — progress bar
   vestEnd?:          number | null;   // latest active end (unix sec)
-  hasCliff?:         boolean;         // any active stream has a lump-unlock cliff → ⚠️
+  hasCliff?:         boolean;         // any active stream has a lump-unlock cliff (own column)
   topHolderShare?:   number | null;   // largest recipient's share (0–1) of locked — concentration
   eventTime:         number;
   absorptionRatio:   number | null;
-  supplyShare:       number | null;
+  marketCapShare:    number | null;   // unlock value ÷ market cap — the risk basis
 }
 
-type SortCol = "token" | "amount" | "usd" | "wallets" | "concentration" | "rounds" | "risk" | "progress" | "date";
+type SortCol = "token" | "amount" | "usd" | "wallets" | "concentration" | "rounds" | "cliff" | "risk" | "progress" | "date";
 type SortDir = "asc" | "desc";
 
 // ── Sort accessors ───────────────────────────────────────────────────────────
@@ -78,6 +78,7 @@ function sortValue(r: ExplorerRow, col: SortCol): number | string {
     case "wallets": return walletsOf(r);
     case "concentration": return r.topHolderShare ?? -Infinity;  // unknown sorts last (desc)
     case "rounds":  return r.tokenRoundCount ?? 0;
+    case "cliff":   return r.hasCliff ? 1 : 0;
     case "risk":    return riskRank(r);
     case "progress": return progressOf(r) ?? -Infinity;   // unknown span sorts last (desc)
     case "date":    return r.eventTime || Infinity;
@@ -135,7 +136,7 @@ export function ExplorerTable({
   // 1fr token column hogging all the slack (the empty space). Mobile shows
   // Token · USD · Wallets; the desktop-only cells are display:none below md so
   // they drop out of the 3-col mobile grid.
-  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[1.8fr_0.85fr_0.85fr_0.65fr_0.8fr_0.55fr_0.55fr_1.15fr_0.9fr] items-center gap-3 px-4 md:px-5";
+  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[1.7fr_0.8fr_0.8fr_0.6fr_0.75fr_0.5fr_0.5fr_0.5fr_1.05fr_0.85fr] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
@@ -155,6 +156,7 @@ export function ExplorerTable({
             <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
             <Th label="Top holder"  active={col === "concentration"} dir={dir} onClick={() => toggle("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
             <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
+            <Th label="Cliff"       active={col === "cliff"}   dir={dir} onClick={() => toggle("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
             <Th label="Vested"      active={col === "progress"} dir={dir} onClick={() => toggle("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
             <Th label="Next unlock" active={col === "date"}    dir={dir} onClick={() => toggle("date", "asc")} align="right" className="hidden md:flex" />
@@ -229,11 +231,10 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
             {tokenInitial(r.tokenSymbol, r.tokenAddress)}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-sm truncate flex items-center gap-1" style={{ color: "var(--preview-text)" }}>
-              <span className="truncate">{r.tokenSymbol ?? shortAddr(r.tokenAddress)}</span>
-              {r.hasCliff && (
-                <span className="flex-shrink-0 text-[11px] cursor-help" title="Cliff unlock — a lump of tokens unlocks at once rather than gradually." aria-label="Has cliff unlock">⚠️</span>
-              )}
+            {/* Token name — the cliff flag moved to its own column so the name
+                stays clean (the ⚠️ read as a scary catch-all risk marker). */}
+            <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+              {r.tokenSymbol ?? shortAddr(r.tokenAddress)}
             </p>
             <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
               <span style={{ color: accent }}>
@@ -259,7 +260,8 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
               {formatUsdCompact(r.usdValue)}
             </p>
           ) : (
-            <p className="text-sm font-bold" style={{ color: "var(--preview-text-3)" }}>—</p>
+            <p className="text-sm font-bold cursor-help" style={{ color: "var(--preview-text-3)" }}
+              title="No liquid market — this token has no tradeable DEX pair, so there's no price to show.">—</p>
           )}
         </div>
         {/* Wallets */}
@@ -273,6 +275,10 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
         {/* Rounds (desktop) */}
         <div className="text-right tabular-nums hidden md:block">
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "—"}</p>
+        </div>
+        {/* Cliff (desktop) — moved off the token name into its own column */}
+        <div className="hidden md:block">
+          <CliffChip r={r} />
         </div>
         {/* Risk (desktop) */}
         <div className="text-right hidden md:block" style={{ minWidth: 48 }}>
@@ -294,31 +300,37 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
   );
 }
 
-// ── Risk classification (mirrors the server's prior classifyRisk) ────────────
+// ── Risk classification ──────────────────────────────────────────────────────
+// Market-impact risk: how hard would this unlock hit the market? Measured as
+// the unlock's value vs the token's MARKET CAP (primary) and vs its 24h volume
+// (secondary, when we have it). This replaced the old "unlock ÷ locked supply"
+// basis, which flagged every single-wallet token HIGH (its one unlock = ~100%
+// of its own lock). No market cap (and no volume) → not scored (no badge).
 function classifyRisk(r: ExplorerRow): "HIGH" | "MED" | "LOW" | null {
-  const a = r.absorptionRatio;
-  const s = r.supplyShare;
-  if (a == null && s == null) return null;
-  if ((a != null && a >= 0.5) || (s != null && s >= 0.05)) return "HIGH";
-  if ((a != null && a >= 0.1) || (s != null && s >= 0.01)) return "MED";
+  const a = r.absorptionRatio;   // unlock ÷ 24h volume
+  const m = r.marketCapShare;    // unlock ÷ market cap
+  if (a == null && m == null) return null;
+  if ((m != null && m >= 0.10) || (a != null && a >= 1.0)) return "HIGH";
+  if ((m != null && m >= 0.025) || (a != null && a >= 0.25)) return "MED";
   return "LOW";
 }
 
 // Shown on the "Risk" header (hover) so the score is self-explanatory.
 const RISK_METHODOLOGY =
-  "Risk = the worse of two signals for this unlock:\n" +
-  "• Absorption — its USD value vs the token's 24h trading volume\n" +
-  "• Supply share — its size vs all of the token's locked supply\n" +
-  "HIGH: ≥50% of a day's volume or ≥5% of locked supply\n" +
-  "MED: ≥10% of volume or ≥1% of supply · LOW: below that";
+  "Risk = how hard this unlock could hit the market:\n" +
+  "• Market-cap share — its USD value vs the token's market cap\n" +
+  "• Absorption — its USD value vs the token's 24h volume (when known)\n" +
+  "HIGH: ≥10% of market cap (or > a full day's volume)\n" +
+  "MED: ≥2.5% of market cap (or ≥25% of a day's volume) · LOW: below that\n" +
+  "Tokens with no market price aren't scored.";
 
 /** Per-row tooltip — the methodology plus THIS row's actual numbers. */
 function riskTitle(r: ExplorerRow): string {
   const band = classifyRisk(r);
-  if (!band) return "Not scored — no USD price or locked-supply data for this token yet.";
+  if (!band) return "Not scored — no market price / market cap for this token, so unlock impact can't be measured.";
+  const share = r.marketCapShare == null ? "—" : `${(r.marketCapShare * 100).toFixed(r.marketCapShare < 0.01 ? 2 : 1)}% of market cap`;
   const absorption = r.absorptionRatio == null ? "—" : `${Math.round(r.absorptionRatio * 100)}% of a day's volume`;
-  const share = r.supplyShare == null ? "—" : `${(r.supplyShare * 100).toFixed(r.supplyShare < 0.01 ? 2 : 1)}% of locked supply`;
-  return `Risk: ${band}\n\n${RISK_METHODOLOGY}\n\nThis unlock: ${absorption} · ${share}`;
+  return `Risk: ${band}\n\n${RISK_METHODOLOGY}\n\nThis unlock: ${share} · ${absorption}`;
 }
 
 function RiskChip({ r }: { r: ExplorerRow }) {
@@ -334,6 +346,24 @@ function RiskChip({ r }: { r: ExplorerRow }) {
       style={{ background: style.bg, color: style.fg }}
       title={title}>
       {band}
+    </span>
+  );
+}
+
+// ── Cliff flag (own column) ──────────────────────────────────────────────────
+// Moved off the token name (where the ⚠️ read as a generic risk warning) into
+// a dedicated, sortable column. A cliff = a lump unlocks at once vs gradually.
+const CLIFF_HELP =
+  "Cliff unlock — a lump of tokens unlocks at once rather than vesting " +
+  "gradually. The kind of event worth bracing for around its date.";
+
+function CliffChip({ r }: { r: ExplorerRow }) {
+  if (!r.hasCliff) return <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>—</span>;
+  return (
+    <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider cursor-help"
+      style={{ background: "rgba(217,119,6,0.12)", color: "#d97706" }}
+      title={CLIFF_HELP}>
+      Cliff
     </span>
   );
 }

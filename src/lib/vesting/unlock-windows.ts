@@ -81,9 +81,7 @@ export interface WindowUnlockGroup {
   // ── Risk-judgment metrics (populated by enrichGroupsWithUsd) ──────────
   // These let the UI render "is this risky to hold through?" without the
   // user having to do mental math. All are 0-or-positive; null = can't
-  // compute (missing input). Cross-token comparisons of `supplyShare` are
-  // meaningful (it's a ratio of THIS token's locked supply); the other
-  // two are also per-token ratios.
+  // compute (missing input).
 
   /** Share of group `amount` owned by the single largest recipient (0–1).
    *  1.0 = single recipient (a team grant); ≤0.1 = broad distribution. */
@@ -92,10 +90,12 @@ export interface WindowUnlockGroup {
    *  larger than a full day's volume; the market would visibly struggle
    *  to absorb it without slippage. Null when usdValue or volume24h missing. */
   absorptionRatio?:        number | null;
-  /** Share of THIS token's total locked supply (across all schedules,
-   *  active + finished) that this group releases (0–1). 0.05 = "this one
-   *  event releases 5% of all locked supply". */
-  supplyShare?:            number | null;
+  /** unlockValueUsd ÷ the token's market cap — "how much of the tradeable
+   *  token hits the market at once" (0–1). 0.1 = this unlock is 10% of market
+   *  cap. The primary unlock-risk signal. Null when we have no market cap.
+   *  Replaced the old supplyShare (unlock ÷ LOCKED supply), which flagged
+   *  every single-wallet token HIGH. */
+  marketCapShare?:         number | null;
 }
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
@@ -675,21 +675,20 @@ export async function enrichGroupsWithUsd(
   // read the hourly cron keeps warm), and only hit the live DexScreener path
   // (getQuickUsdPrices) for tokens the cache doesn't cover. This keeps every
   // filter/sort re-render snappy instead of doing a live price batch each time.
-  // Cache rows carry liquidity (→ confidence band) but no 24h volume, so the
-  // absorption metric is computed only for live-priced tokens; the risk chip
-  // still works off supply-share for cache-priced ones. Runs parallel to the
-  // per-token total-locked sum (for supply share).
+  // Cache rows carry liquidity (→ confidence band) + market cap (→ unlock-risk
+  // metric) but no 24h volume, so the absorption metric is computed only for
+  // live-priced tokens; the risk chip works off the unlock's share of market
+  // cap for cache-priced ones.
   const { readPriceCache } = await import("./token-price-cache");
   const allPairs = [...pairs.values()];
   const EXPLORER_PRICE_MAX_AGE_SEC = 24 * 60 * 60; // browse tool — day-old prices are fine
 
-  const [cached, totalLockedByToken] = await Promise.all([
-    // Fail-safe: a cache-read error degrades to an empty map → all tokens
-    // become "misses" → live-priced, exactly the pre-change behaviour.
-    readPriceCache(allPairs.map((p) => ({ chainId: p.chainId, tokenAddress: p.address })), EXPLORER_PRICE_MAX_AGE_SEC)
-      .catch(() => new Map<string, { priceUsd: number; liquidityUsd: number | null }>()),
-    getTotalLockedByToken(allPairs),
-  ]);
+  // Fail-safe: a cache-read error degrades to an empty map → all tokens
+  // become "misses" → live-priced, exactly the pre-change behaviour.
+  const cached = await readPriceCache(
+    allPairs.map((p) => ({ chainId: p.chainId, tokenAddress: p.address })),
+    EXPLORER_PRICE_MAX_AGE_SEC,
+  ).catch(() => new Map<string, { priceUsd: number; liquidityUsd: number | null; marketCap: number | null }>());
 
   const priceMap: QuickPriceMap = new Map();
   for (const [key, c] of cached) {
@@ -699,7 +698,7 @@ export async function enrichGroupsWithUsd(
       : liq >= 10_000 ? "high"
       : liq >= 1_000  ? "medium"
       :                 "low";
-    priceMap.set(key, { priceUsd: c.priceUsd, confidence, volume24hUsd: null });
+    priceMap.set(key, { priceUsd: c.priceUsd, confidence, volume24hUsd: null, marketCap: c.marketCap });
   }
   // Live-price the cache misses — UNLESS the caller opts out. The explorer
   // passes liveFallback:false so its render is pure-DB (no DexScreener/Redis
@@ -731,83 +730,17 @@ export async function enrichGroupsWithUsd(
       absorptionRatio = usdValue / vol;
     }
 
-    // Supply share: this group's amount / total locked for this token
-    // (across all active + finished schedules). bigint division scaled
-    // through 1e6 to keep 6 decimals without overflow.
-    let supplyShare: number | null = null;
-    const totalLocked = totalLockedByToken.get(priceKey);
-    if (totalLocked && totalLocked > 0n) {
-      try {
-        const groupAmt = BigInt(g.amount);
-        const scale = 1_000_000n;
-        const ratioScaled = Number((groupAmt * scale) / totalLocked);
-        supplyShare = ratioScaled / 1_000_000;
-      } catch { /* keep null */ }
+    // Market-cap share: this unlock's USD value / the token's market cap —
+    // "how much of the tradeable token is hitting the market at once". This
+    // REPLACES the old supplyShare (unlock ÷ LOCKED supply), which flagged
+    // every single-wallet token as HIGH (its one unlock = ~100% of its own
+    // lock). Null when we have no market cap for the token (→ no risk badge).
+    let marketCapShare: number | null = null;
+    const mc = price?.marketCap;
+    if (usdValue != null && typeof mc === "number" && mc > 0) {
+      marketCapShare = usdValue / mc;
     }
 
-    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare };
+    return { ...g, usdValue, usdConfidence, absorptionRatio, marketCapShare };
   });
-}
-
-/**
- * Sum `lockedAmount` across all rows in vestingStreamsCache for the
- * supplied (chainId, tokenAddress) pairs. Used by the risk column's
- * supply-share metric: "this group releases X% of the token's total
- * locked supply, including not-yet-active and partially-vested schedules".
- *
- * Locked, not total — we want the share of *unreleased* supply being
- * released, not the share of original allocation. A token where 90%
- * has already been claimed wouldn't have a 90% locked-share denominator.
- *
- * One round-trip via UNION ALL, never per-token. Empty input → empty map.
- */
-async function getTotalLockedByToken(
-  pairs: ReadonlyArray<{ chainId: number; address: string }>,
-): Promise<Map<string, bigint>> {
-  const out = new Map<string, bigint>();
-  if (pairs.length === 0) return out;
-  // jsonb numeric: locked_amount lives inside the streamData JSONB.
-  // Group by (chainId, lower(tokenAddress)) so a token bridged to multiple
-  // chains gets one row per chain (matches priceKey shape).
-  const lowered = pairs.map((p) => ({
-    chainId: p.chainId,
-    addr:    normaliseAddress(p.address),
-  }));
-  const lowerAddrs = lowered.map((p) => p.addr);
-  const chainIds = [...new Set(lowered.map((p) => p.chainId))];
-
-  // SINGLE-level GROUP BY (chain, lower(token)) summing lockedAmount — hits the
-  // functional index `vsc_chain_lower_token_idx`. lower() on both sides makes
-  // Solana mints (stored original-case) match a lowercased input.
-  //
-  // This is the FAST path (~600ms). It REPLACED a per-recipient nested
-  // aggregate that also derived the top-holder %: that nested GROUP BY was
-  // 4-6s warm and ballooned under Supabase pooler load → the recurring
-  // Cloudflare 524 (2026-06-17). Top-holder concentration moved off the
-  // explorer list; it returns via a precomputed per-token rollup later.
-  // is_fully_vested=false keeps the scan small (fully-vested rows carry 0
-  // locked, so the total is identical).
-  const rows = await db
-    .select({
-      chainId: vestingStreamsCache.chainId,
-      tok:     sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
-      total:   sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)::text`,
-    })
-    .from(vestingStreamsCache)
-    .where(
-      and(
-        inArray(vestingStreamsCache.chainId, chainIds),
-        inArray(sql`lower(${vestingStreamsCache.tokenAddress})`, lowerAddrs),
-        eq(vestingStreamsCache.isFullyVested, false),
-      ),
-    )
-    .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`);
-
-  for (const r of rows) {
-    const key = `${r.chainId}:${(r.tok ?? "").toLowerCase()}`;
-    let amt = 0n;
-    try { amt = BigInt(r.total); } catch { /* keep 0n */ }
-    out.set(key, amt);
-  }
-  return out;
 }

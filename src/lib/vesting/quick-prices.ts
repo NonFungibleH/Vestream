@@ -85,6 +85,8 @@ interface DexPair {
   priceUsd?:  string;
   volume?:    { h24?: number };
   liquidity?: { usd?: number };
+  marketCap?: number;
+  fdv?:       number;
 }
 
 export interface QuickPrice {
@@ -100,6 +102,10 @@ export interface QuickPrice {
    *  Null when DexScreener didn't return a volume figure for the pair we
    *  selected; the consumer treats null as "can't compute". */
   volume24hUsd?: number | null;
+  /** Circulating market cap (DexScreener marketCap → fdv). Powers the
+   *  explorer's unlock-risk metric (unlock value ÷ market cap). Null when
+   *  DexScreener gave neither. */
+  marketCap?:   number | null;
 }
 
 /**
@@ -290,10 +296,14 @@ export async function getQuickUsdPrices(
       const vol = typeof pair.volume?.h24 === "number" && Number.isFinite(pair.volume.h24)
         ? pair.volume.h24
         : null;
+      const mc = (typeof pair.marketCap === "number" && pair.marketCap > 0)
+        ? pair.marketCap
+        : (typeof pair.fdv === "number" && pair.fdv > 0 ? pair.fdv : null);
       const quickPrice: QuickPrice = {
         priceUsd:    parseFloat(pair.priceUsd!),
         confidence:  conf,
         volume24hUsd: vol,
+        marketCap:   mc,
       };
       out.set(priceKey(matchedPair.chainId, matchedPair.address), quickPrice);
       dexResolved.add(priceKey(matchedPair.chainId, matchedPair.address));

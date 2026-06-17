@@ -1005,6 +1005,10 @@ export const tokenPricesCache = pgTable(
     // DEX-aggregated liquidity in USD. Drives the high/medium/low confidence
     // band assignment in tvl.ts. Null = unknown (e.g. CoinGecko-priced tokens).
     liquidityUsd: numeric("liquidity_usd", { precision: 40, scale: 2 }),
+    // Circulating market cap in USD (DexScreener marketCap, falling back to
+    // fdv). Powers the explorer's unlock-risk metric (unlock value ÷ market
+    // cap). Null = DexScreener didn't return one / CoinGecko-sourced rows.
+    marketCap:    numeric("market_cap", { precision: 40, scale: 2 }),
     // Which API the price came from. Drives confidence semantics downstream.
     source:       text("source").notNull(),  // "dexscreener" | "coingecko"
     // When this entry was written. The refresh cron picks the oldest first.
