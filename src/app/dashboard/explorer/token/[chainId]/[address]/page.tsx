@@ -18,6 +18,8 @@ import { groupIntoRounds } from "@/lib/vesting/rounds";
 import { getCurrentUserTier } from "@/lib/auth/tier";
 import { TokenUnlockChart } from "./TokenUnlockChart";
 import { RoundsList } from "./RoundsList";
+import { HolderDistribution, type HolderRow } from "./HolderDistribution";
+import type { VestingStream } from "@/lib/vesting/types";
 import { CopyButton } from "./CopyButton";
 import { SaveTokenButton } from "./SaveTokenButton";
 import { blockExplorerUrl, blockExplorerName, tokenSnifferUrl, xSearchUrl } from "@/lib/chain-links";
@@ -72,6 +74,22 @@ export default async function ExplorerTokenPage({
     (m, r) => (r.nextUnlockTime != null && (m == null || r.nextUnlockTime < m) ? r.nextUnlockTime : m),
     null,
   );
+
+  // ── Holder distribution + vesting span ───────────────────────────────────
+  // "Who holds the locked supply" is the single biggest informed-decision
+  // signal — a fair launch (many wallets, no whale) reads very differently
+  // from 3 wallets holding 95%. Aggregate locked-by-recipient (cheap: one
+  // token's streams, already loaded) → concentration + a ranked holder list.
+  const dist = computeDistribution(streams, dec, priceUsd);
+  // Whole-token vesting span + how far through it the token is, for the
+  // "lengths" the user asked to surface.
+  const spanStarts = streams.map((s) => s.startTime).filter((t): t is number => !!t);
+  const spanEnds   = streams.map((s) => s.endTime).filter((t): t is number => !!t);
+  const firstStart = spanStarts.length ? Math.min(...spanStarts) : null;
+  const lastEnd    = spanEnds.length ? Math.max(...spanEnds) : null;
+  const spanPct = firstStart != null && lastEnd != null && lastEnd > firstStart
+    ? Math.max(0, Math.min(1, (Math.floor(Date.now() / 1000) - firstStart) / (lastEnd - firstStart)))
+    : null;
 
   // ── #6 enrichments ──────────────────────────────────────────────────────
   // Realisable value of the locked supply (price × locked), with a liquidity
@@ -210,6 +228,19 @@ export default async function ExplorerTokenPage({
         </div>
       ) : (
         <>
+          <HolderDistribution
+            holders={dist.holders}
+            totalHolders={dist.totalHolders}
+            top1={dist.top1}
+            top5={dist.top5}
+            symbol={symbol}
+            firstStart={firstStart}
+            lastEnd={lastEnd}
+            spanPct={spanPct}
+            isFree={isFree}
+            rowCap={FREE_TIER_ROW_CAP}
+          />
+
           <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
             <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>Unlock overview</h2>
             <TokenUnlockChart rounds={rounds} symbol={symbol} />
@@ -223,6 +254,48 @@ export default async function ExplorerTokenPage({
       )}
     </main>
   );
+}
+
+// ── Holder distribution ──────────────────────────────────────────────────
+// Aggregate locked-by-recipient → concentration metrics + a ranked list.
+// Pure JS over the already-loaded streams (one token), so no extra query.
+function computeDistribution(
+  streams: VestingStream[],
+  dec: number,
+  priceUsd: number | null,
+): { holders: HolderRow[]; totalHolders: number; top1: number; top5: number; top10: number } {
+  const byRecip = new Map<string, bigint>();
+  for (const s of streams) {
+    const k = s.recipient.toLowerCase();
+    let v = 0n;
+    try { v = BigInt(s.lockedAmount ?? "0"); } catch { /* keep 0n */ }
+    byRecip.set(k, (byRecip.get(k) ?? 0n) + v);
+  }
+  const entries = [...byRecip.entries()].sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
+  let total = 0n;
+  for (const [, v] of entries) total += v;
+  const totalNum = Number(total);
+  const shareOf = (locked: bigint) => (total > 0n ? Number(locked) / totalNum : 0);
+  const cumShare = (n: number) =>
+    total > 0n ? entries.slice(0, n).reduce((a, [, v]) => a + Number(v), 0) / totalNum : 0;
+
+  const holders: HolderRow[] = entries.map(([recipient, locked]) => {
+    const lockedWhole = Number(locked) / 10 ** dec;
+    return {
+      recipient,
+      lockedWhole,
+      usd:   priceUsd != null ? lockedWhole * priceUsd : null,
+      share: shareOf(locked),
+    };
+  });
+
+  return {
+    holders,
+    totalHolders: entries.length,
+    top1:  entries[0] ? shareOf(entries[0][1]) : 0,
+    top5:  cumShare(5),
+    top10: cumShare(10),
+  };
 }
 
 // ── Due-diligence link row ───────────────────────────────────────────────
