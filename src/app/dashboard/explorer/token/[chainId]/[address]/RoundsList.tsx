@@ -25,6 +25,17 @@ const fmtNum = (n: number) =>
   : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 const fmtDate = (t: number | null | undefined) =>
   t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+// Relative time to an unlock — the at-a-glance differentiator between rounds.
+const relUntil = (t: number | null | undefined): string => {
+  if (!t) return "";
+  const diff = t - Math.floor(Date.now() / 1000);
+  if (diff <= 0) return "now";
+  const days = diff / 86_400;
+  if (days >= 365) { const y = days / 365.25; return `in ${y < 10 ? y.toFixed(1) : Math.round(y)} yr`; }
+  if (days >= 30)  return `in ${Math.round(days / 30.44)} mo`;
+  if (days >= 1)   return `in ${Math.round(days)} d`;
+  return "today";
+};
 const trunc = (a: string) => (a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
 
 export function RoundsList({
@@ -58,10 +69,20 @@ export function RoundsList({
                   {r.label}{" "}
                   <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>· {proto(r.protocol)}</span>
                 </div>
+                {/* Date dropped from here — it now lives in the prominent block on
+                    the right, so near-identical rounds (same protocol/amount/
+                    cadence) are told apart by their unlock date at a glance. */}
                 <div className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-                  {r.recipientCount} wallet{r.recipientCount !== 1 ? "s" : ""} · {fmtNum(whole(r.totalLocked, dec))} {symbol} locked · {cadence} · next {fmtDate(r.nextUnlockTime)}
+                  {r.recipientCount} wallet{r.recipientCount !== 1 ? "s" : ""} · {fmtNum(whole(r.totalLocked, dec))} {symbol} locked · {cadence}
                 </div>
               </div>
+              {/* Prominent unlock-date block — the primary differentiator. */}
+              {r.nextUnlockTime != null && (
+                <div className="text-right flex-shrink-0 mr-1">
+                  <div className="text-xs font-semibold tabular-nums" style={{ color: "var(--preview-text-2)" }}>{fmtDate(r.nextUnlockTime)}</div>
+                  <div className="text-[10px] tabular-nums" style={{ color: c }}>{relUntil(r.nextUnlockTime)}</div>
+                </div>
+              )}
               <span className="text-[11px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>{isOpen ? "▲" : "▼"}</span>
             </button>
 

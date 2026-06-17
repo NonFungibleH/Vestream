@@ -102,7 +102,14 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
   rounds.sort((a, b) => {
     const x = BigInt(a.totalLocked);
     const y = BigInt(b.totalLocked);
-    return y > x ? 1 : y < x ? -1 : 0;
+    if (y !== x) return y > x ? 1 : -1;
+    // Tiebreaker: equal-sized rounds (common when one project locks liquidity
+    // in many identical tranches — e.g. a PinkSale token with 17 single-wallet
+    // cliffs of the same amount) sort by SOONEST next unlock, so they read
+    // top-to-bottom as a chronological timeline instead of jumbled dates.
+    const an = a.nextUnlockTime ?? Infinity;
+    const bn = b.nextUnlockTime ?? Infinity;
+    return an - bn;
   });
   return rounds;
 }
