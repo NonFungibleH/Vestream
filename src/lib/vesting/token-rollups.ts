@@ -78,10 +78,12 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     GROUP BY chain_id, lower(token_address)
   `);
 
-  // Merge by key. db.execute returns array-like rows (postgres-js driver).
-  const concRows = (concentration as unknown as any[]) ?? [];
-  const metaRows = (meta as unknown as any[]) ?? [];
-  const byKey = new Map<string, Record<string, unknown>>();
+  // Merge by key. db.execute returns array-like rows (postgres-js driver) —
+  // type as loose records and coerce each field explicitly below.
+  type Row = Record<string, unknown>;
+  const concRows = (concentration as unknown as Row[]) ?? [];
+  const metaRows = (meta as unknown as Row[]) ?? [];
+  const byKey = new Map<string, Row>();
   for (const r of metaRows) byKey.set(`${r.chainId}:${r.tok}`, { ...r });
   for (const r of concRows) {
     const k = `${r.chainId}:${r.tok}`;
@@ -89,15 +91,15 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
   }
 
   const now = new Date();
-  const values = [...byKey.values()].map((r: any) => {
+  const values = [...byKey.values()].map((r) => {
     let total = 0n, top = 0n;
-    try { total = BigInt(r.total ?? "0"); } catch { /* 0 */ }
-    try { top   = BigInt(r.top   ?? "0"); } catch { /* 0 */ }
+    try { total = BigInt(String(r.total ?? "0")); } catch { /* 0 */ }
+    try { top   = BigInt(String(r.top   ?? "0")); } catch { /* 0 */ }
     const topHolderShare = total > 0n ? Number((top * 1_000_000n) / total) / 1_000_000 : null;
     return {
       chainId:        Number(r.chainId),
       tokenAddress:   String(r.tok),
-      tokenSymbol:    r.symbol ?? null,
+      tokenSymbol:    (r.symbol as string | null) ?? null,
       totalLocked:    total.toString(),
       topHolderShare,
       walletCount:    Number(r.wallets ?? 0),
