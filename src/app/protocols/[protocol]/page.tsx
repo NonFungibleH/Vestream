@@ -50,6 +50,7 @@ import {
   setLastGoodProtocolData,
 } from "@/lib/vesting/page-data-fallback";
 import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
+import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 
 // On-demand ISR with 5-minute revalidation (2026-06-12).
 //
@@ -332,6 +333,11 @@ export default async function ProtocolLandingPage(
   const effectiveTotal  = stats?.totalStreams  ?? 0;
   const effectiveActive = stats?.activeStreams ?? 0;
   const hasData = effectiveTotal > 0;
+  // Continuous-stream protocols (LlamaPay, Sablier Flow) don't have discrete
+  // scheduled "unlocks" — tokens flow per-second and are claimable any time.
+  // The unlock-calendar framing reads as broken for them ("641 indexed / no
+  // upcoming unlocks"), so we relabel the stat + the upcoming card.
+  const isStream = meta.adapterIds.some((id) => PROTOCOL_DEFAULT_CATEGORY[id] === "stream");
   const related = meta.relatedSlugs
     .map((s) => getProtocol(s))
     .filter((p): p is ProtocolMeta => !!p);
@@ -488,7 +494,7 @@ export default async function ProtocolLandingPage(
             color={meta.color}
           />
           <Stat
-            label="Active now"
+            label={isStream ? "Streaming now" : "Active now"}
             value={hasData ? effectiveActive.toLocaleString() : "—"}
             color={meta.color}
           />
@@ -691,6 +697,7 @@ export default async function ProtocolLandingPage(
             bg={meta.bg}
             border={meta.border}
             protocolName={meta.name}
+            isStream={isStream}
           />
         </div>
 
@@ -1104,6 +1111,7 @@ function UnlockCard({
   bg,
   border,
   protocolName,
+  isStream = false,
 }: {
   variant: "latest" | "upcoming";
   unlock: UnlockSummary | null;
@@ -1111,14 +1119,25 @@ function UnlockCard({
   bg: string;
   border: string;
   protocolName: string;
+  isStream?: boolean;
 }) {
-  const title = variant === "latest" ? "Most recent unlock" : "Next scheduled unlock";
-  const emptyTitle = variant === "latest"
-    ? `No recent ${protocolName} unlocks indexed yet`
-    : `No upcoming ${protocolName} unlocks indexed yet`;
-  const emptyBody = variant === "latest"
-    ? `As soon as a tracked wallet has its first ${protocolName} stream complete, it'll appear here — live, on every visit.`
-    : `Add your ${protocolName} wallet and we'll start tracking upcoming releases here.`;
+  // Continuous-stream protocols have no discrete "next unlock" — funds flow
+  // per-second and are claimable any time. Reframe the upcoming card so it
+  // doesn't read as "nothing indexed".
+  const streamUpcoming = isStream && variant === "upcoming";
+  const title = streamUpcoming
+    ? "How claiming works"
+    : variant === "latest" ? "Most recent unlock" : "Next scheduled unlock";
+  const emptyTitle = streamUpcoming
+    ? `${protocolName} streams continuously`
+    : variant === "latest"
+      ? `No recent ${protocolName} unlocks indexed yet`
+      : `No upcoming ${protocolName} unlocks indexed yet`;
+  const emptyBody = streamUpcoming
+    ? `${protocolName} pays per-second — there's no scheduled unlock date. Recipients can claim accrued tokens any time. Track your wallet to watch the balance grow and get alerted as it accrues.`
+    : variant === "latest"
+      ? `As soon as a tracked wallet has its first ${protocolName} stream complete, it'll appear here — live, on every visit.`
+      : `Add your ${protocolName} wallet and we'll start tracking upcoming releases here.`;
 
   if (!unlock) {
     return (
