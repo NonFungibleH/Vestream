@@ -68,8 +68,10 @@ describe("groupIntoRounds", () => {
 
   it("labels by terms including cliff", () => {
     const [r] = groupIntoRounds([mk({ cliffTime: 86400 * 180, endTime: 86400 * 730 })]);
+    // New label convention (capitalised shape + human duration), e.g.
+    // "Linear · 2 yr · 6 mo cliff".
     expect(r.label).toContain("cliff");
-    expect(r.label).toContain("linear");
+    expect(r.label).toContain("Linear");
   });
 
   it("takes the soonest nextUnlockTime in a round", () => {
