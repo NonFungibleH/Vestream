@@ -82,7 +82,11 @@ async function handle(req: NextRequest) {
   //     so without this new active-vesting tokens are never priced ahead of
   //     time and the explorer live-prices them on render (the 524 fan-out).
   //     Capped so the extra API load stays inside free-tier rate windows.
-  const UNCACHED_SEED = 300;
+  // Soonest-unlocking uncached active tokens, seeded each run so the explorer
+  // stops showing "—" for USD/risk. Bumped 300→1000 (2026-06-17) to backfill
+  // the ~7k-token gap in hours not days; the cron can also be hit manually
+  // (?limit=) to accelerate. priceAggregates batches + degrades gracefully.
+  const UNCACHED_SEED = 1000;
   const uncached = await pickUncachedActiveVestingTokens(UNCACHED_SEED);
 
   if (staleEnough.length === 0 && uncached.length === 0) {

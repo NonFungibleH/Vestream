@@ -67,9 +67,6 @@ export interface WindowUnlockGroup {
   /** TRUE if any active stream has a meaningful cliff (lump unlock). From
    *  getTokenScaleCounts; drives the ⚠️ cliff flag in the explorer. */
   hasCliff?:         boolean;
-  /** Largest single recipient's share (0–1) of this token's locked supply —
-   *  concentration signal. Set by enrichGroupsWithUsd via getTotalLockedByToken. */
-  topHolderShare?:   number | null;
   /** USD value of the group's `amount` at render time, or null when the
    *  token has no liquid DEX pair / we couldn't price it. Populated by
    *  enrichGroupsWithUsd(); base getUnlocksInWindow() leaves these null
@@ -734,8 +731,7 @@ export async function enrichGroupsWithUsd(
     // (across all active + finished schedules). bigint division scaled
     // through 1e6 to keep 6 decimals without overflow.
     let supplyShare: number | null = null;
-    const locked = totalLockedByToken.get(priceKey);
-    const totalLocked = locked?.total;
+    const totalLocked = totalLockedByToken.get(priceKey);
     if (totalLocked && totalLocked > 0n) {
       try {
         const groupAmt = BigInt(g.amount);
@@ -745,7 +741,7 @@ export async function enrichGroupsWithUsd(
       } catch { /* keep null */ }
     }
 
-    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare, topHolderShare: locked?.topShare ?? null };
+    return { ...g, usdValue, usdConfidence, absorptionRatio, supplyShare };
   });
 }
 
@@ -763,8 +759,8 @@ export async function enrichGroupsWithUsd(
  */
 async function getTotalLockedByToken(
   pairs: ReadonlyArray<{ chainId: number; address: string }>,
-): Promise<Map<string, { total: bigint; topShare: number | null }>> {
-  const out = new Map<string, { total: bigint; topShare: number | null }>();
+): Promise<Map<string, bigint>> {
+  const out = new Map<string, bigint>();
   if (pairs.length === 0) return out;
   // jsonb numeric: locked_amount lives inside the streamData JSONB.
   // Group by (chainId, lower(tokenAddress)) so a token bridged to multiple
@@ -776,25 +772,22 @@ async function getTotalLockedByToken(
   const lowerAddrs = lowered.map((p) => p.addr);
   const chainIds = [...new Set(lowered.map((p) => p.chainId))];
 
-  // Two-level aggregate, one scan: the inner query sums locked PER RECIPIENT,
-  // the outer sums those (= total locked) AND takes the max (= the single
-  // largest holder's locked). topShare = largest holder / total → the
-  // concentration signal. Matches on lower(token_address) to hit the
-  // functional index `vsc_chain_lower_token_idx` (chain_id, lower(token)).
-  // lower() on both sides also makes Solana mints (stored original-case)
-  // match a lowercased input.
+  // SINGLE-level GROUP BY (chain, lower(token)) summing lockedAmount — hits the
+  // functional index `vsc_chain_lower_token_idx`. lower() on both sides makes
+  // Solana mints (stored original-case) match a lowercased input.
   //
-  // is_fully_vested = false is a PERFORMANCE filter, not a correctness one:
-  // fully-vested rows carry 0 lockedAmount (contribute nothing to sum or max),
-  // but a streaming-payment token like Superfluid OPx has ~1,500 fully-vested
-  // recipients whose presence in the per-recipient GROUP BY made this query
-  // 6.5s instead of ~1s (the Cloudflare-524 root cause, 2026-06-16). Filtering
-  // them out keeps the totals byte-identical (verified) and the grouping small.
-  const perRecipient = db
+  // This is the FAST path (~600ms). It REPLACED a per-recipient nested
+  // aggregate that also derived the top-holder %: that nested GROUP BY was
+  // 4-6s warm and ballooned under Supabase pooler load → the recurring
+  // Cloudflare 524 (2026-06-17). Top-holder concentration moved off the
+  // explorer list; it returns via a precomputed per-token rollup later.
+  // is_fully_vested=false keeps the scan small (fully-vested rows carry 0
+  // locked, so the total is identical).
+  const rows = await db
     .select({
-      chainId:     vestingStreamsCache.chainId,
-      tok:         sql<string>`lower(${vestingStreamsCache.tokenAddress})`.as("tok"),
-      recipLocked: sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)`.as("recip_locked"),
+      chainId: vestingStreamsCache.chainId,
+      tok:     sql<string>`lower(${vestingStreamsCache.tokenAddress})`,
+      total:   sql<string>`COALESCE(SUM((${vestingStreamsCache.streamData} ->> 'lockedAmount')::numeric), 0)::text`,
     })
     .from(vestingStreamsCache)
     .where(
@@ -804,28 +797,13 @@ async function getTotalLockedByToken(
         eq(vestingStreamsCache.isFullyVested, false),
       ),
     )
-    .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`, sql`lower(${vestingStreamsCache.recipient})`)
-    .as("per_recipient");
-
-  const rows = await db
-    .select({
-      chainId: perRecipient.chainId,
-      tok:     perRecipient.tok,
-      total:   sql<string>`SUM(${perRecipient.recipLocked})::text`,
-      top:     sql<string>`MAX(${perRecipient.recipLocked})::text`,
-    })
-    .from(perRecipient)
-    .groupBy(perRecipient.chainId, perRecipient.tok);
+    .groupBy(vestingStreamsCache.chainId, sql`lower(${vestingStreamsCache.tokenAddress})`);
 
   for (const r of rows) {
     const key = `${r.chainId}:${(r.tok ?? "").toLowerCase()}`;
-    let total = 0n, top = 0n;
-    try { total = BigInt(r.total); } catch { /* keep 0n */ }
-    try { top   = BigInt(r.top);   } catch { /* keep 0n */ }
-    // BigInt ratio scaled through 1e6 to avoid Number precision loss on
-    // very large wei totals; the ratio itself is 0–1.
-    const topShare = total > 0n ? Number((top * 1_000_000n) / total) / 1_000_000 : null;
-    out.set(key, { total, topShare });
+    let amt = 0n;
+    try { amt = BigInt(r.total); } catch { /* keep 0n */ }
+    out.set(key, amt);
   }
   return out;
 }

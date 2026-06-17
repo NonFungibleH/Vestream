@@ -191,10 +191,11 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     // pool caps at 2000 streams, so group.walletCount undercounts big tokens —
     // this supplies the true wallet + round counts for display + filter/sort).
     const [enriched, scale] = await Promise.all([
-      // liveFallback:false → cache-only pricing (no DexScreener/Redis on the
-      // render path). Misses show "—" and the refresh-prices cron fills them.
-      // This keeps the explorer render bounded pure-DB (no network timeouts).
-      enrichGroupsWithUsd(baseGroups, { liveFallback: false }),
+      // Live-priced (cache-first, capped + parallel fallback). Safe now that
+      // getTotalLockedByToken is the fast single-SUM again — the earlier 524
+      // was that nested per-recipient query + live-pricing stacked, not the
+      // pricing alone. Cache misses are warmed by the refresh-prices cron.
+      enrichGroupsWithUsd(baseGroups),
       getTokenScaleCounts(scalePairs),
     ]);
     calendarGroups = enriched.map((g) => {
@@ -308,7 +309,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     vestStart:         g.vestStart ?? null,
     vestEnd:           g.vestEnd ?? null,
     hasCliff:          g.hasCliff ?? false,
-    topHolderShare:    g.topHolderShare ?? null,
     eventTime:         g.eventTime,
     absorptionRatio:   g.absorptionRatio ?? null,
     supplyShare:       g.supplyShare ?? null,
