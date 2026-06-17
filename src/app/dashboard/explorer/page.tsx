@@ -26,7 +26,7 @@
 import Link from "next/link";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import {
-  getUnlockGroupsCached,
+  getUnlocksInWindow,
   enrichGroupsWithUsd,
   getTokenScaleCounts,
   WINDOWS,
@@ -160,21 +160,24 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   if (mode === "calendar") {
     let baseGroups: WindowUnlockGroup[] = [];
     try {
-      // 60s-cached pool scan — repeat navigation (e.g. back from a token
-      // page) to the same window+filters skips the ~1.4s query.
-      baseGroups = await getUnlockGroupsCached({
-        startSec:  window.startSec,
-        endSec:    window.endSec,
-        poolLimit: isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
+      // Pure-DB pool scan (~400ms, partial-index backed). No unstable_cache
+      // wrapper: it cached only this query but serialised up to 2000 groups
+      // per miss on a force-dynamic route (rare hits, real overhead) and was a
+      // timeout suspect — not worth it for a 400ms query.
+      const result = await getUnlocksInWindow(
+        window.startSec,
+        window.endSec,
+        isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
         adapterIds,
-        chainIds:  chainIds.length > 0 ? chainIds : undefined,
+        chainIds.length > 0 ? chainIds : undefined,
         // Symbol searches MUST filter in SQL, not on the returned groups:
         // the pool is capped across ALL tokens (soonest-ending first), so a
         // post-hoc filter only sees whichever slice of this token's streams
         // happened to make the global pool. The old post-filter showed
         // "24 wallets" for PYME when the token had 850+ vestings.
-        tokenSymbol: queryKind.kind === "symbol" ? queryKind.symbol : undefined,
-      });
+        queryKind.kind === "symbol" ? queryKind.symbol : undefined,
+      );
+      baseGroups = result.groups;
     } catch {
       baseGroups = [];
     }
@@ -188,7 +191,10 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     // pool caps at 2000 streams, so group.walletCount undercounts big tokens —
     // this supplies the true wallet + round counts for display + filter/sort).
     const [enriched, scale] = await Promise.all([
-      enrichGroupsWithUsd(baseGroups),
+      // liveFallback:false → cache-only pricing (no DexScreener/Redis on the
+      // render path). Misses show "—" and the refresh-prices cron fills them.
+      // This keeps the explorer render bounded pure-DB (no network timeouts).
+      enrichGroupsWithUsd(baseGroups, { liveFallback: false }),
       getTokenScaleCounts(scalePairs),
     ]);
     calendarGroups = enriched.map((g) => {

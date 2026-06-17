@@ -11,7 +11,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, eq, gt, ilike, inArray, lte, notInArray, sql } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 // Ecosystem-aware: lowercases EVM hex, preserves case-SENSITIVE Solana
@@ -636,51 +635,6 @@ export async function getUnlocksInWindow(
 }
 
 /**
- * 60s-cached wrapper around getUnlocksInWindow for the explorer's "Upcoming"
- * tab. Returns ONLY `groups` — each group's `amount` is a stringified bigint,
- * so the payload is JSON-safe for unstable_cache (the full result's
- * `stats.byToken` carries a raw bigint, which would silently break the cache
- * per the CLAUDE.md landmine; the explorer never reads stats anyway).
- *
- * The window start/end are now-relative (change every request), so we BUCKET
- * them to 60s — requests within the same minute + same filters share a cache
- * entry. Back/forward navigation between the explorer and a token page (the
- * common path) then skips the ~1.4s pool scan entirely. getUnlocksInWindow is
- * pure DB (no Upstash), so it's safe inside unstable_cache.
- */
-const UNLOCK_GROUPS_BUCKET_SEC = 60;
-export async function getUnlockGroupsCached(args: {
-  startSec:    number;
-  endSec:      number;
-  poolLimit:   number;
-  adapterIds?: readonly string[];
-  chainIds?:   readonly number[];
-  tokenSymbol?: string;
-}): Promise<WindowUnlockGroup[]> {
-  if (process.env.NEXT_PHASE === "phase-production-build") return [];
-  const startBucket = Math.floor(args.startSec / UNLOCK_GROUPS_BUCKET_SEC) * UNLOCK_GROUPS_BUCKET_SEC;
-  const endBucket   = Math.floor(args.endSec   / UNLOCK_GROUPS_BUCKET_SEC) * UNLOCK_GROUPS_BUCKET_SEC;
-  const adapters = (args.adapterIds ?? []).slice().sort().join(",") || "all";
-  const chains   = (args.chainIds ?? []).slice().sort().join(",") || "all";
-  const keyParts = [
-    "explorer-unlock-groups-v1",
-    String(startBucket), String(endBucket), String(args.poolLimit),
-    adapters, chains, args.tokenSymbol ?? "",
-  ];
-  const run = unstable_cache(
-    async () => {
-      const r = await getUnlocksInWindow(
-        startBucket, endBucket, args.poolLimit, args.adapterIds, args.chainIds, args.tokenSymbol,
-      );
-      return r.groups;
-    },
-    keyParts,
-    { revalidate: UNLOCK_GROUPS_BUCKET_SEC },
-  );
-  return run();
-}
-
-/**
  * Enrich a window-result's groups with USD value via DexScreener.
  *
  * Kept OUT of getUnlocksInWindow() on purpose: half the callers
@@ -699,7 +653,7 @@ export async function getUnlockGroupsCached(args: {
  */
 export async function enrichGroupsWithUsd(
   groups: ReadonlyArray<WindowUnlockGroup>,
-  opts?: { redis?: boolean },
+  opts?: { redis?: boolean; liveFallback?: boolean },
 ): Promise<WindowUnlockGroup[]> {
   if (groups.length === 0) return [...groups];
   const { getQuickUsdPrices, toUsdValue } = await import("./quick-prices");
@@ -746,11 +700,19 @@ export async function enrichGroupsWithUsd(
       :                 "low";
     priceMap.set(key, { priceUsd: c.priceUsd, confidence, volume24hUsd: null });
   }
-  // Live-price only the tokens the cache missed (or that aged out).
-  const misses = allPairs.filter((p) => !priceMap.has(`${p.chainId}:${p.address.toLowerCase()}`));
-  if (misses.length > 0) {
-    const live = await getQuickUsdPrices(misses, opts);
-    for (const [key, qp] of live) priceMap.set(key, qp);
+  // Live-price the cache misses — UNLESS the caller opts out. The explorer
+  // passes liveFallback:false so its render is pure-DB (no DexScreener/Redis
+  // round-trip on the request path): cache misses simply show "—" and the
+  // hourly refresh-prices cron fills them in. This is the fix for the explorer
+  // timeouts — with ~7k active tokens and a still-warming cache, live-pricing
+  // the per-render miss set added unbounded network latency on a user-facing
+  // synchronous render. Other callers (API routes) keep the live fallback.
+  if (opts?.liveFallback !== false) {
+    const misses = allPairs.filter((p) => !priceMap.has(`${p.chainId}:${p.address.toLowerCase()}`));
+    if (misses.length > 0) {
+      const live = await getQuickUsdPrices(misses, opts);
+      for (const [key, qp] of live) priceMap.set(key, qp);
+    }
   }
 
   return groups.map((g) => {
