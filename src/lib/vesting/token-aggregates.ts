@@ -759,9 +759,19 @@ export async function getTokenMarketData(
       const data = (await res.json()) as { pairs?: DexPair[] };
       const dsChain = DS_CHAIN_SLUG[chainId];
       const onChain = (data.pairs ?? []).filter((p) => !dsChain || p.chainId === dsChain);
-      const withPrice = onChain.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0 && (p.liquidity?.usd ?? 0) >= 1000);
+      // No liquidity floor for a per-token DISPLAY — if DexScreener has a
+      // price, show it (the page's thin-liquidity caveat flags low-confidence
+      // ones). The old ≥$1k floor hid the price entirely for tokens like PYME
+      // that DO trade, just thinly — users read the resulting "—" as missing
+      // data, not "low liquidity". Pick the most-liquid priced pair (best
+      // price signal), breaking ties by 24h volume. The TVL aggregate keeps
+      // its own floor + per-token ceiling separately (tvl.ts).
+      const withPrice = onChain.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0);
       if (withPrice.length > 0) {
-        best = withPrice.sort((a, b) => (b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0))[0];
+        best = withPrice.sort((a, b) =>
+          (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)
+          || (b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0),
+        )[0];
       }
     }
   } catch (err) {

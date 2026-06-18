@@ -143,6 +143,15 @@ export default async function ExplorerTokenPage({
                 <p className="text-lg font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
                   ${priceUsd < 0.01 ? priceUsd.toPrecision(2) : priceUsd.toLocaleString("en-US", { maximumFractionDigits: 4 })}
                 </p>
+                {/* Low-liquidity prices ARE shown (DexScreener has a market),
+                    but flagged so the figure reads as a thin-market estimate
+                    rather than a reliable mark. */}
+                {liqUsd != null && liqUsd < 10_000 && (
+                  <p className="text-[10px] font-semibold" style={{ color: "#d97706" }}
+                    title={`Low DEX liquidity (~$${Math.round(liqUsd).toLocaleString()}). The price is real but thin — large size couldn't trade at it.`}>
+                    ⚠ low liquidity
+                  </p>
+                )}
               </div>
             )}
             <SaveTokenButton chainId={cid} address={addr} symbol={symbol} />
