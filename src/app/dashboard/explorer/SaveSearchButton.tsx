@@ -15,7 +15,6 @@ interface Props {
 export function SaveSearchButton({ isPaid }: Props) {
   const sp = useSearchParams();
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [alertsEnabled, setAlerts] = useState(false);
 
   if (!isPaid) {
     return null;
@@ -31,7 +30,9 @@ export function SaveSearchButton({ isPaid }: Props) {
       const r = await fetch("/api/dashboard/explorer/saved", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ params, alertsEnabled }),
+        // alerts intentionally off for now — the "alert on new matches" UI was
+        // removed until the alerts pipeline is configured. Saving still works.
+        body:    JSON.stringify({ params, alertsEnabled: false }),
       });
       if (!r.ok) throw new Error(String(r.status));
       setState("saved");
@@ -50,16 +51,6 @@ export function SaveSearchButton({ isPaid }: Props) {
 
   return (
     <div className="flex items-center gap-2">
-      <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none"
-        style={{ color: "var(--preview-text-2)" }}>
-        <input
-          type="checkbox"
-          checked={alertsEnabled}
-          onChange={(e) => setAlerts(e.target.checked)}
-          className="w-3.5 h-3.5 rounded"
-        />
-        Alert on new matches
-      </label>
       <button
         onClick={save}
         disabled={state === "saving"}

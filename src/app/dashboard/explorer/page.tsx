@@ -371,6 +371,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 <Link
                   key={m}
                   href={href}
+                  title={m === "calendar"
+                    ? "One row per token — which projects have unlocks coming up. Filterable + sortable."
+                    : "One row per individual vesting schedule (a single wallet's position)."}
                   className="px-4 py-2 text-sm font-semibold"
                   style={{
                     color: active ? "#0F8A8A" : "var(--preview-text-2)",
@@ -408,6 +411,15 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             <SaveSearchButton isPaid={!isFree} />
           </div>
         </div>
+
+        {/* What each lens is — the two read the same index differently. */}
+        <p className="text-[11px] mt-2" style={{ color: "var(--preview-text-3)" }}>
+          {mode === "stream"
+            ? "Schedules — one row per individual vesting position (a single wallet's stream). Use this to scan raw schedules."
+            : mode === "wallet"
+            ? "Wallet — every vesting position held by one recipient."
+            : "Upcoming — one row per token (all its wallets/rounds rolled up), sorted by next unlock. Filter + sort to find projects; switch to Schedules for the individual streams."}
+        </p>
 
         {mode === "calendar" && <LensBar sp={sp} />}
 
