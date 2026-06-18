@@ -27,6 +27,12 @@ export interface TokenRollup {
 }
 
 const TESTNET_CHAIN_IDS = [11155111, 84532];
+// Solana is the only case-SENSITIVE address ecosystem we index (base58 mints).
+// EVM addresses are canonicalised to lowercase; Solana addresses must keep
+// their original case or every token deep-link 404s / lands on a blank page
+// (the rollup is the explorer's only address source). See the `addr` column
+// in the meta query below.
+const SOLANA_CHAIN_ID = 101;
 
 /**
  * Recompute the whole rollup from vesting_streams_cache (active rows only) and
@@ -61,6 +67,11 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
   const meta = await db.execute(sql`
     SELECT chain_id AS "chainId",
            lower(token_address) AS "tok",
+           -- Canonical stored address: lowercase for EVM (case-insensitive),
+           -- but ORIGINAL case for Solana — base58 is case-sensitive, so
+           -- lowercasing corrupts the mint and breaks every token deep-link.
+           CASE WHEN chain_id = ${SOLANA_CHAIN_ID} THEN max(token_address)
+                ELSE lower(token_address) END AS "addr",
            max(token_symbol)    AS "symbol",
            count(*)::int        AS "streams",
            count(distinct (
@@ -140,7 +151,9 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     const protocols = Array.isArray(r.protocols) ? (r.protocols as string[]).filter(Boolean) : [];
     return {
       chainId:        Number(r.chainId),
-      tokenAddress:   String(r.tok),
+      // `addr` preserves Solana case; falls back to the lowercased key for any
+      // row that somehow lacks it (e.g. a concentration-only merge).
+      tokenAddress:   String(r.addr ?? r.tok),
       tokenSymbol:    (r.symbol as string | null) ?? null,
       totalLocked:    total.toString(),
       topHolderShare,
