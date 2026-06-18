@@ -299,12 +299,17 @@ export interface ExplorerPageOpts {
   chainIds?:      readonly number[];
   adapterIds?:    readonly string[];
   symbol?:        string;
+  // Range filters — min and/or max each (undefined = open on that side).
   amountUsdMin?:  number;
+  amountUsdMax?:  number;
   minWallets?:    number;
-  /** Minimum distinct vesting rounds (schedules) the token must have. */
+  maxWallets?:    number;
+  /** Distinct vesting rounds (schedules). */
   minRounds?:     number;
-  /** Minimum share of the vesting span elapsed (0–1). e.g. 0.8 = "≥80% vested". */
+  maxRounds?:     number;
+  /** Share of the vesting span elapsed (0–1). e.g. 0.8 = "80% vested". */
   minVestedPct?:  number;
+  maxVestedPct?:  number;
   sort:           ExplorerSortKey;
   dir:            "asc" | "desc";
   page:           number;   // 1-based
@@ -333,22 +338,26 @@ export async function getExplorerPage(
     const esc = opts.symbol.trim().replace(/([%_\\])/g, "\\$1");
     conds.push(sql`token_symbol ILIKE ${esc}`);
   }
+  // USD range. When EITHER bound is set we require a known price (NULL can't
+  // be "in range"); with no USD bound at all, unpriced tokens are kept.
   if (opts.amountUsdMin && opts.amountUsdMin > 0) {
-    // Keep unpriced tokens (NULL) — we don't penalise tokens we can't price,
-    // matching the prior explorer behaviour.
-    conds.push(sql`(locked_value_usd IS NULL OR locked_value_usd >= ${opts.amountUsdMin})`);
+    conds.push(sql`locked_value_usd >= ${opts.amountUsdMin}`);
   }
-  if (opts.minWallets && opts.minWallets > 0) {
-    conds.push(sql`wallet_count >= ${opts.minWallets}`);
+  if (opts.amountUsdMax && opts.amountUsdMax > 0) {
+    conds.push(sql`locked_value_usd <= ${opts.amountUsdMax}`);
   }
-  if (opts.minRounds && opts.minRounds > 0) {
-    conds.push(sql`round_count >= ${opts.minRounds}`);
-  }
+  if (opts.minWallets && opts.minWallets > 0) conds.push(sql`wallet_count >= ${opts.minWallets}`);
+  if (opts.maxWallets && opts.maxWallets > 0) conds.push(sql`wallet_count <= ${opts.maxWallets}`);
+  if (opts.minRounds && opts.minRounds > 0)   conds.push(sql`round_count >= ${opts.minRounds}`);
+  if (opts.maxRounds && opts.maxRounds > 0)   conds.push(sql`round_count <= ${opts.maxRounds}`);
+  // % vested needs a valid span; tokens without one can't satisfy a vested
+  // range, so they're excluded once either bound is set.
+  const vestedExpr = sql`(EXTRACT(EPOCH FROM now()) - first_start)::float / NULLIF(last_end - first_start, 0)`;
   if (opts.minVestedPct && opts.minVestedPct > 0) {
-    // Require a valid span AND elapsed-fraction ≥ threshold. Tokens with no
-    // span can't satisfy a "≥X% vested" filter, so they're excluded.
-    conds.push(sql`(last_end > first_start AND
-      (EXTRACT(EPOCH FROM now()) - first_start)::float / NULLIF(last_end - first_start, 0) >= ${opts.minVestedPct})`);
+    conds.push(sql`(last_end > first_start AND ${vestedExpr} >= ${opts.minVestedPct})`);
+  }
+  if (opts.maxVestedPct != null && opts.maxVestedPct < 1) {
+    conds.push(sql`(last_end > first_start AND ${vestedExpr} <= ${opts.maxVestedPct})`);
   }
   const where = sql.join(conds, sql` AND `);
 

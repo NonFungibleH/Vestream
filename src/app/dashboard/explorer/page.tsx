@@ -67,12 +67,8 @@ const CHAIN_FILTERS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 101,  label: "Solana"    },
 ];
 
-const AMOUNT_FILTERS = [
-  { id: "1k",   label: "$1k+",   threshold:    1000 },
-  { id: "10k",  label: "$10k+",  threshold:   10000 },
-  { id: "100k", label: "$100k+", threshold:  100000 },
-  { id: "1m",   label: "$1M+",   threshold: 1000000 },
-] as const;
+// Amount + wallet/schedule/vested drill-down moved to range SLIDERS
+// (ExplorerSliders) — min/max bounds on indexed rollup columns.
 
 // Wallet/schedule/vested drill-down moved to range SLIDERS (ExplorerSliders),
 // which filter the rollup-backed Upcoming list on indexed columns.
@@ -93,11 +89,11 @@ interface ExplorerSearchParams {
   chain?:    string;   // comma-separated ids
   protocol?: string;   // comma-separated slugs
   date?:     string;   // window slug or "all"
-  amount?:   string;   // amount-filter id
-  wallets?:  string;   // (legacy) wallet-count pill id — superseded by minWallets
-  minWallets?: string; // slider: minimum wallets vested to
-  minRounds?:  string; // slider: minimum schedules (rounds)
-  minVested?:  string; // slider: minimum % vested (0–100)
+  // Range drill-down sliders (min/max each). USD bounds replace the old amount pills.
+  minWallets?: string; maxWallets?: string;
+  minRounds?:  string; maxRounds?:  string;
+  minVested?:  string; maxVested?:  string;   // 0–100
+  usdMin?:     string; usdMax?:     string;   // locked value USD
   sort?:     string;   // calendar sort key (date | usd | amount | wallets | …)
   dir?:      string;   // "asc" | "desc"
   page?:     string;   // 1-based page number (calendar pagination)
@@ -136,12 +132,17 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 
   const chainIds = parseCsvNumbers(sp.chain);
   const protocols = parseCsvStrings(sp.protocol);
-  const amountThreshold = AMOUNT_FILTERS.find((f) => f.id === sp.amount)?.threshold;
-  // Numeric drill-down filters (sliders): minimum wallets, schedules (rounds),
-  // and % vested. All map to indexed rollup columns.
+  // Range drill-down filters (dual sliders): each has an optional min AND max,
+  // all backed by indexed rollup columns. USD bounds replace the old amount
+  // pills. % vested is carried as 0–100 in the URL → 0–1 for SQL.
   const minWallets   = parsePosInt(sp.minWallets);
+  const maxWallets   = parsePosInt(sp.maxWallets);
   const minRounds    = parsePosInt(sp.minRounds);
-  const minVestedPct = parseVestedPct(sp.minVested);  // 0–100 in URL → 0–1
+  const maxRounds    = parsePosInt(sp.maxRounds);
+  const minVestedPct = parseVestedPct(sp.minVested);
+  const maxVestedPct = parseVestedPct(sp.maxVested);
+  const amountUsdMin = parsePosInt(sp.usdMin);
+  const amountUsdMax = parsePosInt(sp.usdMax);
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
@@ -197,10 +198,14 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       chainIds:       chainIds.length > 0 ? chainIds : undefined,
       adapterIds,
       symbol:         queryKind.kind === "symbol" ? queryKind.symbol : undefined,
-      amountUsdMin:   amountThreshold,
+      amountUsdMin,
+      amountUsdMax,
       minWallets,
+      maxWallets,
       minRounds,
+      maxRounds,
       minVestedPct,
+      maxVestedPct,
       sort: sortKey,
       dir:  sortDir,
       page: pageNum,
@@ -270,10 +275,10 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const activeFilters = [
     chainIds.length > 0 ? "chain" : null,
     protocols.length > 0 ? "protocol" : null,
-    sp.amount ? "amount" : null,
-    minWallets ? "wallets" : null,
-    minRounds ? "rounds" : null,
-    minVestedPct ? "vested" : null,
+    (amountUsdMin || amountUsdMax) ? "usd" : null,
+    (minWallets || maxWallets) ? "wallets" : null,
+    (minRounds || maxRounds) ? "rounds" : null,
+    (minVestedPct != null || maxVestedPct != null) ? "vested" : null,
     dateSlug !== "all" ? "date" : null,
   ].filter(Boolean) as string[];
   const overFilterCap = isFree && activeFilters.length > FREE_TIER_FILTER_CAP;
@@ -451,33 +456,27 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 </FilterPill>
               ))}
             </FilterGroup>
-            <FilterGroup label="Amount (locked tokens)">
-              {AMOUNT_FILTERS.map((a) => (
-                <FilterPill
-                  key={a.id}
-                  active={sp.amount === a.id}
-                  href={buildUrl({ ...sp, amount: sp.amount === a.id ? undefined : a.id })}
-                >
-                  {a.label}
-                </FilterPill>
-              ))}
-            </FilterGroup>
-            {/* Numeric drill-down — wallets / schedules / % vested. Sliders
-                (Upcoming mode only; they filter the rollup-backed token list). */}
+            {/* Range drill-down — wallets / locked USD / schedules / % vested.
+                Dual sliders (Upcoming mode only; filter the rollup-backed list). */}
             {mode === "calendar" && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "var(--preview-text-3)" }}>
+                <p className="text-[10px] uppercase tracking-wider font-bold mb-2.5" style={{ color: "var(--preview-text-3)" }}>
                   Drill down
                 </p>
                 <ExplorerSliders
                   params={sp as Record<string, string | undefined>}
-                  minWallets={minWallets ?? 0}
-                  minRounds={minRounds ?? 0}
-                  minVested={Math.round((minVestedPct ?? 0) * 100)}
+                  minWallets={minWallets}
+                  maxWallets={maxWallets}
+                  minRounds={minRounds}
+                  maxRounds={maxRounds}
+                  minVested={minVestedPct != null ? Math.round(minVestedPct * 100) : undefined}
+                  maxVested={maxVestedPct != null ? Math.round(maxVestedPct * 100) : undefined}
+                  usdMin={amountUsdMin}
+                  usdMax={amountUsdMax}
                 />
               </div>
             )}
-            {(chainIds.length > 0 || protocols.length > 0 || sp.amount || minWallets || minRounds || minVestedPct || dateSlug !== "all") && (
+            {(chainIds.length > 0 || protocols.length > 0 || amountUsdMin || amountUsdMax || minWallets || maxWallets || minRounds || maxRounds || minVestedPct || maxVestedPct || dateSlug !== "all") && (
               <Link
                 href={buildUrl({ q: query })}
                 className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"
@@ -974,23 +973,41 @@ function buildUrl(params: Record<string, string | undefined>): string {
 // of what's narrowing the results + one-click reset, which the filter pills
 // in the sidebar didn't surface.
 function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
-  const chips: Array<{ key: string; label: string }> = [];
-  if (sp.q)        chips.push({ key: "q",        label: `“${sp.q}”` });
-  if (sp.chain)    { const n = sp.chain.split(",").length;    chips.push({ key: "chain",    label: `${n} chain${n > 1 ? "s" : ""}` }); }
-  if (sp.protocol) { const n = sp.protocol.split(",").length; chips.push({ key: "protocol", label: `${n} protocol${n > 1 ? "s" : ""}` }); }
-  if (sp.date)     chips.push({ key: "date",    label: DATE_FILTERS.find((d) => d.id === sp.date)?.label ?? "Date" });
-  if (sp.amount)   chips.push({ key: "amount",  label: AMOUNT_FILTERS.find((a) => a.id === sp.amount)?.label ?? "Amount" });
-  if (sp.minWallets && Number(sp.minWallets) > 0) chips.push({ key: "minWallets", label: `${Number(sp.minWallets)}+ wallets` });
-  if (sp.minRounds  && Number(sp.minRounds)  > 0) chips.push({ key: "minRounds",  label: `${Number(sp.minRounds)}+ schedules` });
-  if (sp.minVested  && Number(sp.minVested)  > 0) chips.push({ key: "minVested",  label: `${Number(sp.minVested)}%+ vested` });
+  // Range chip: "30–50 wallets", "≥30 …", "≤50 …". Clears BOTH bounds.
+  const rangeChip = (
+    minRaw: string | undefined, maxRaw: string | undefined,
+    keyMin: string, keyMax: string, noun: string,
+    fmt: (n: number) => string = (n) => `${n}`,
+  ): { keys: string[]; label: string } | null => {
+    const lo = minRaw ? Number(minRaw) : null;
+    const hi = maxRaw ? Number(maxRaw) : null;
+    if (lo == null && hi == null) return null;
+    const label = lo != null && hi != null ? `${fmt(lo)}–${fmt(hi)} ${noun}`
+      : lo != null ? `≥${fmt(lo)} ${noun}` : `≤${fmt(hi!)} ${noun}`;
+    return { keys: [keyMin, keyMax], label };
+  };
+  const fmtUsd = (n: number) => n >= 1e6 ? `$${n / 1e6}M` : n >= 1e3 ? `$${n / 1e3}k` : `$${n}`;
+
+  const chips: Array<{ keys: string[]; label: string }> = [];
+  if (sp.q)        chips.push({ keys: ["q"],        label: `“${sp.q}”` });
+  if (sp.chain)    { const n = sp.chain.split(",").length;    chips.push({ keys: ["chain"],    label: `${n} chain${n > 1 ? "s" : ""}` }); }
+  if (sp.protocol) { const n = sp.protocol.split(",").length; chips.push({ keys: ["protocol"], label: `${n} protocol${n > 1 ? "s" : ""}` }); }
+  if (sp.date)     chips.push({ keys: ["date"],    label: DATE_FILTERS.find((d) => d.id === sp.date)?.label ?? "Date" });
+  const ranges = [
+    rangeChip(sp.usdMin, sp.usdMax, "usdMin", "usdMax", "locked", fmtUsd),
+    rangeChip(sp.minWallets, sp.maxWallets, "minWallets", "maxWallets", "wallets"),
+    rangeChip(sp.minRounds, sp.maxRounds, "minRounds", "maxRounds", "schedules"),
+    rangeChip(sp.minVested, sp.maxVested, "minVested", "maxVested", "vested", (n) => `${n}%`),
+  ].filter(Boolean) as Array<{ keys: string[]; label: string }>;
+  chips.push(...ranges);
   if (chips.length === 0) return null;
   return (
     <div className="flex items-center flex-wrap gap-2 mb-3">
       <span className="text-[10px] font-bold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>Filters</span>
       {chips.map((c) => (
         <Link
-          key={c.key}
-          href={buildUrl({ ...sp, [c.key]: undefined })}
+          key={c.keys.join("-")}
+          href={buildUrl({ ...sp, ...Object.fromEntries(c.keys.map((k) => [k, undefined])) })}
           className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors hover:brightness-105"
           style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
         >
