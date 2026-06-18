@@ -301,6 +301,10 @@ export interface ExplorerPageOpts {
   symbol?:        string;
   amountUsdMin?:  number;
   minWallets?:    number;
+  /** Minimum distinct vesting rounds (schedules) the token must have. */
+  minRounds?:     number;
+  /** Minimum share of the vesting span elapsed (0–1). e.g. 0.8 = "≥80% vested". */
+  minVestedPct?:  number;
   sort:           ExplorerSortKey;
   dir:            "asc" | "desc";
   page:           number;   // 1-based
@@ -336,6 +340,15 @@ export async function getExplorerPage(
   }
   if (opts.minWallets && opts.minWallets > 0) {
     conds.push(sql`wallet_count >= ${opts.minWallets}`);
+  }
+  if (opts.minRounds && opts.minRounds > 0) {
+    conds.push(sql`round_count >= ${opts.minRounds}`);
+  }
+  if (opts.minVestedPct && opts.minVestedPct > 0) {
+    // Require a valid span AND elapsed-fraction ≥ threshold. Tokens with no
+    // span can't satisfy a "≥X% vested" filter, so they're excluded.
+    conds.push(sql`(last_end > first_start AND
+      (EXTRACT(EPOCH FROM now()) - first_start)::float / NULLIF(last_end - first_start, 0) >= ${opts.minVestedPct})`);
   }
   const where = sql.join(conds, sql` AND `);
 

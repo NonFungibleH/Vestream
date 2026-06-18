@@ -50,6 +50,7 @@ import { detectQueryKind } from "./detect-query";
 import { WatchButton } from "./WatchButton";
 import { ExplorerTable, type ExplorerRow } from "./ExplorerTable";
 import { Pagination } from "./Pagination";
+import { ExplorerSliders } from "./ExplorerSliders";
 
 export const dynamic = "force-dynamic";
 
@@ -73,13 +74,8 @@ const AMOUNT_FILTERS = [
   { id: "1m",   label: "$1M+",   threshold: 1000000 },
 ] as const;
 
-// Wallet-count filter — surfaces mass distributions (airdrops, launchpad
-// rounds) vs single-recipient team locks. Group-level, calendar mode only.
-const WALLET_FILTERS = [
-  { id: "10",  label: "10+ wallets",  min: 10  },
-  { id: "25",  label: "25+ wallets",  min: 25  },
-  { id: "100", label: "100+ wallets", min: 100 },
-] as const;
+// Wallet/schedule/vested drill-down moved to range SLIDERS (ExplorerSliders),
+// which filter the rollup-backed Upcoming list on indexed columns.
 
 const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
   { id: "all",       label: "Any time" },
@@ -98,7 +94,10 @@ interface ExplorerSearchParams {
   protocol?: string;   // comma-separated slugs
   date?:     string;   // window slug or "all"
   amount?:   string;   // amount-filter id
-  wallets?:  string;   // wallet-count filter id ("10" | "25" | "100")
+  wallets?:  string;   // (legacy) wallet-count pill id — superseded by minWallets
+  minWallets?: string; // slider: minimum wallets vested to
+  minRounds?:  string; // slider: minimum schedules (rounds)
+  minVested?:  string; // slider: minimum % vested (0–100)
   sort?:     string;   // calendar sort key (date | usd | amount | wallets | …)
   dir?:      string;   // "asc" | "desc"
   page?:     string;   // 1-based page number (calendar pagination)
@@ -130,12 +129,19 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const query   = (sp.q ?? "").trim();
   const mode    = sp.mode ?? "calendar";
-  const dateSlug = (sp.date ?? "30-days") as WindowSlug | "all";
+  // Default to "Any time" so the explorer opens on the FULL browsable universe
+  // (~5k tokens) rather than just the next 30 days (~1.3k) — the date pills
+  // narrow it. (Was "30-days", which made the count look far short of the index.)
+  const dateSlug = (sp.date ?? "all") as WindowSlug | "all";
 
   const chainIds = parseCsvNumbers(sp.chain);
   const protocols = parseCsvStrings(sp.protocol);
   const amountThreshold = AMOUNT_FILTERS.find((f) => f.id === sp.amount)?.threshold;
-  const minWallets = WALLET_FILTERS.find((f) => f.id === sp.wallets)?.min;
+  // Numeric drill-down filters (sliders): minimum wallets, schedules (rounds),
+  // and % vested. All map to indexed rollup columns.
+  const minWallets   = parsePosInt(sp.minWallets);
+  const minRounds    = parsePosInt(sp.minRounds);
+  const minVestedPct = parseVestedPct(sp.minVested);  // 0–100 in URL → 0–1
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
@@ -147,8 +153,10 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // Each mode populates `modeResult` with the raw data it needs, plus a
   // numeric `totalMatches` for the cap UX. Visible/hidden split and the
   // upgrade banner happen below in render.
+  // "Any time" = now → far future (100y), so long-dated locks (e.g. PinkSale
+  // liquidity locked to 2100) are included, not just the next 5 years.
   const window = dateSlug === "all"
-    ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 5 * 365 * 86400 }
+    ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 100 * 365 * 86400 }
     : WINDOWS[dateSlug as WindowSlug].range();
 
   // Pagination + sort for the Upcoming list. Now SERVER-SIDE (we page straight
@@ -191,6 +199,8 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       symbol:         queryKind.kind === "symbol" ? queryKind.symbol : undefined,
       amountUsdMin:   amountThreshold,
       minWallets,
+      minRounds,
+      minVestedPct,
       sort: sortKey,
       dir:  sortDir,
       page: pageNum,
@@ -261,8 +271,10 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     chainIds.length > 0 ? "chain" : null,
     protocols.length > 0 ? "protocol" : null,
     sp.amount ? "amount" : null,
-    sp.wallets ? "wallets" : null,
-    dateSlug !== "30-days" ? "date" : null,
+    minWallets ? "wallets" : null,
+    minRounds ? "rounds" : null,
+    minVestedPct ? "vested" : null,
+    dateSlug !== "all" ? "date" : null,
   ].filter(Boolean) as string[];
   const overFilterCap = isFree && activeFilters.length > FREE_TIER_FILTER_CAP;
 
@@ -450,18 +462,22 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 </FilterPill>
               ))}
             </FilterGroup>
-            <FilterGroup label="Wallets per unlock">
-              {WALLET_FILTERS.map((w) => (
-                <FilterPill
-                  key={w.id}
-                  active={sp.wallets === w.id}
-                  href={buildUrl({ ...sp, wallets: sp.wallets === w.id ? undefined : w.id })}
-                >
-                  {w.label}
-                </FilterPill>
-              ))}
-            </FilterGroup>
-            {(chainIds.length > 0 || protocols.length > 0 || sp.amount || sp.wallets || dateSlug !== "30-days") && (
+            {/* Numeric drill-down — wallets / schedules / % vested. Sliders
+                (Upcoming mode only; they filter the rollup-backed token list). */}
+            {mode === "calendar" && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "var(--preview-text-3)" }}>
+                  Drill down
+                </p>
+                <ExplorerSliders
+                  params={sp as Record<string, string | undefined>}
+                  minWallets={minWallets ?? 0}
+                  minRounds={minRounds ?? 0}
+                  minVested={Math.round((minVestedPct ?? 0) * 100)}
+                />
+              </div>
+            )}
+            {(chainIds.length > 0 || protocols.length > 0 || sp.amount || minWallets || minRounds || minVestedPct || dateSlug !== "all") && (
               <Link
                 href={buildUrl({ q: query })}
                 className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"
@@ -964,7 +980,9 @@ function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
   if (sp.protocol) { const n = sp.protocol.split(",").length; chips.push({ key: "protocol", label: `${n} protocol${n > 1 ? "s" : ""}` }); }
   if (sp.date)     chips.push({ key: "date",    label: DATE_FILTERS.find((d) => d.id === sp.date)?.label ?? "Date" });
   if (sp.amount)   chips.push({ key: "amount",  label: AMOUNT_FILTERS.find((a) => a.id === sp.amount)?.label ?? "Amount" });
-  if (sp.wallets)  chips.push({ key: "wallets", label: WALLET_FILTERS.find((w) => w.id === sp.wallets)?.label ?? "Wallets" });
+  if (sp.minWallets && Number(sp.minWallets) > 0) chips.push({ key: "minWallets", label: `${Number(sp.minWallets)}+ wallets` });
+  if (sp.minRounds  && Number(sp.minRounds)  > 0) chips.push({ key: "minRounds",  label: `${Number(sp.minRounds)}+ schedules` });
+  if (sp.minVested  && Number(sp.minVested)  > 0) chips.push({ key: "minVested",  label: `${Number(sp.minVested)}%+ vested` });
   if (chips.length === 0) return null;
   return (
     <div className="flex items-center flex-wrap gap-2 mb-3">
@@ -1031,6 +1049,17 @@ function parseCsvNumbers(raw: string | undefined): number[] {
 function parseCsvStrings(raw: string | undefined): string[] {
   if (!raw) return [];
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+// Slider params → query values. Undefined when absent/zero so an inactive
+// slider adds no SQL predicate.
+function parsePosInt(raw: string | undefined): number | undefined {
+  const n = Math.floor(Number(raw));
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+function parseVestedPct(raw: string | undefined): number | undefined {
+  const n = Number(raw);                       // URL carries 0–100
+  return Number.isFinite(n) && n > 0 ? Math.min(1, n / 100) : undefined;
 }
 
 function toggleCsvId(raw: string | undefined, id: number): string | undefined {
