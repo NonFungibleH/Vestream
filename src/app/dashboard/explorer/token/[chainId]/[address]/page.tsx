@@ -16,6 +16,7 @@ import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
 import { getTokenStreams, getTokenMarketData, getSmartMoneyHoldersOfToken } from "@/lib/vesting/token-aggregates";
 import { groupIntoRounds } from "@/lib/vesting/rounds";
 import { getCurrentUserTier } from "@/lib/auth/tier";
+import { withTimeout } from "@/lib/with-timeout";
 import { TokenUnlockChart } from "./TokenUnlockChart";
 import { RoundsList } from "./RoundsList";
 import { HolderDistribution, type HolderRow } from "./HolderDistribution";
@@ -57,10 +58,15 @@ export default async function ExplorerTokenPage({
   const tier = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
 
+  // Each call is bounded so a stalled dependency (e.g. a saturated Supabase
+  // pooler connection) degrades to a partial render in seconds instead of
+  // hanging the whole render until Cloudflare's 100s gateway cuts it → a 524
+  // the user sees as "this page couldn't load". Streams get the most headroom
+  // (they're the page's core content); the secondary panels fail fast.
   const [streams, market, smartHolders] = await Promise.all([
-    getTokenStreams(cid, addr),
-    getTokenMarketData(cid, addr).catch(() => null),
-    getSmartMoneyHoldersOfToken(cid, addr).catch(() => []),
+    withTimeout(getTokenStreams(cid, addr), 15_000, [], "token:getTokenStreams"),
+    withTimeout(getTokenMarketData(cid, addr), 8_000, null, "token:getTokenMarketData"),
+    withTimeout(getSmartMoneyHoldersOfToken(cid, addr), 6_000, [], "token:getSmartMoney"),
   ]);
 
   const rounds = groupIntoRounds(streams);

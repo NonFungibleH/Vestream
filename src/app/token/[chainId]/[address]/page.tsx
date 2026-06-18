@@ -55,6 +55,7 @@ import {
   type TokenUpcomingEvent,
   type TokenMarketData,
 } from "@/lib/vesting/token-aggregates";
+import { withTimeout } from "@/lib/with-timeout";
 
 export const revalidate = 1800;
 
@@ -168,17 +169,22 @@ export async function generateMetadata(
   // Same allSettled pattern as the page render below — if metadata
   // generation throws, Next fails the whole page with a 500 instead
   // of rendering. Two fallbacks keep title/description sensible.
+  // Bounded — generateMetadata blocks the response head; a stalled query here
+  // hangs the page just like the body fan-out below.
   const [overviewRes, marketRes] = await Promise.allSettled([
-    getTokenOverview(cid, addr),
-    getTokenMarketData(cid, addr),
+    withTimeout(getTokenOverview(cid, addr), 8_000, null, "pubtoken-meta:overview"),
+    withTimeout(getTokenMarketData(cid, addr), 6_000, null, "pubtoken-meta:market"),
   ]);
   const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
-  const market   = marketRes.status   === "fulfilled" ? marketRes.value   : {
+  // marketRes always fulfils now (withTimeout), but its value can be null on
+  // timeout/error — fall back to the empty shell so downstream `market.x`
+  // access is safe.
+  const market: TokenMarketData = (marketRes.status === "fulfilled" && marketRes.value) ? marketRes.value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
     liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
     website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: null, dexToolsUrl: null,
-  } as TokenMarketData;
+  };
 
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
   const chain   = CHAIN_NAMES[cid];
@@ -234,16 +240,22 @@ export default async function TokenPage(
   // the next 60 seconds. Each fallback keeps the page renderable from
   // whatever data DID load. Same partial-failure-resilience pattern as
   // /protocols/[slug] (commit 8ddabb7).
+  // Each loader is BOUNDED (withTimeout): allSettled waits for every promise
+  // to settle, so without per-call caps one stalled DB query (saturated
+  // pooler connection) hangs the whole render until Cloudflare's 100s gateway
+  // cuts it → a 524 the visitor sees as "this page couldn't load". A cap turns
+  // that into a partial render in seconds — the same graceful-degradation
+  // intent as the allSettled fallbacks, but for HANGS rather than throws.
   const settled = await Promise.allSettled([
-    getTokenOverview(cid, addr),
+    withTimeout(getTokenOverview(cid, addr), 15_000, null, "pubtoken:overview"),
     // Past 12 + next 12 months = 24 monthly buckets. The calendar UI
     // auto-folds the historical half away when it's all zero (fresh tokens
     // with no tranche history to show), so passing monthsBack is safe even
     // on brand-new listings.
-    getTokenUnlockCalendar(cid, addr, { monthsBack: 12, monthsForward: 12 }),
-    getTokenRecipients(cid, addr, 10),
-    getTokenUpcomingEvents(cid, addr, 8),
-    getTokenMarketData(cid, addr),
+    withTimeout(getTokenUnlockCalendar(cid, addr, { monthsBack: 12, monthsForward: 12 }), 12_000, [], "pubtoken:calendar"),
+    withTimeout(getTokenRecipients(cid, addr, 10), 8_000, [], "pubtoken:recipients"),
+    withTimeout(getTokenUpcomingEvents(cid, addr, 8), 8_000, [], "pubtoken:upcoming"),
+    withTimeout(getTokenMarketData(cid, addr), 8_000, null, "pubtoken:market"),
   ]);
 
   // Log every rejection — invisible failures are the whole reason cache
@@ -259,7 +271,9 @@ export default async function TokenPage(
   const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
   const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
   const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
-  const market: TokenMarketData = settled[4].status === "fulfilled" ? settled[4].value : {
+  // settled[4].value can be null on a withTimeout fallback — coerce to the
+  // empty shell so `market.x` access stays safe.
+  const market: TokenMarketData = (settled[4].status === "fulfilled" && settled[4].value) ? settled[4].value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
     liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
     website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
