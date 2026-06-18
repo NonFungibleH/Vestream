@@ -310,6 +310,11 @@ export interface ExplorerPageOpts {
   /** Share of the vesting span elapsed (0–1). e.g. 0.8 = "80% vested". */
   minVestedPct?:  number;
   maxVestedPct?:  number;
+  /** Top-holder concentration (0–1) — largest recipient's share of locked. */
+  minTopHolder?:  number;
+  maxTopHolder?:  number;
+  /** Only tokens with a cliff (lump) unlock. */
+  cliffOnly?:     boolean;
   sort:           ExplorerSortKey;
   dir:            "asc" | "desc";
   page:           number;   // 1-based
@@ -358,6 +363,16 @@ export async function getExplorerPage(
   }
   if (opts.maxVestedPct != null && opts.maxVestedPct < 1) {
     conds.push(sql`(last_end > first_start AND ${vestedExpr} <= ${opts.maxVestedPct})`);
+  }
+  // Top-holder concentration range (requires a known share).
+  if (opts.minTopHolder && opts.minTopHolder > 0) {
+    conds.push(sql`(top_holder_share IS NOT NULL AND top_holder_share >= ${opts.minTopHolder})`);
+  }
+  if (opts.maxTopHolder != null && opts.maxTopHolder < 1) {
+    conds.push(sql`(top_holder_share IS NOT NULL AND top_holder_share <= ${opts.maxTopHolder})`);
+  }
+  if (opts.cliffOnly) {
+    conds.push(sql`has_cliff = true`);
   }
   const where = sql.join(conds, sql` AND `);
 

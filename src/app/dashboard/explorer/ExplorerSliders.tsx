@@ -31,13 +31,14 @@ const fmtUsd   = (n: number) =>
   : `$${n}`;
 
 export function ExplorerSliders({
-  params, minWallets, maxWallets, minRounds, maxRounds, minVested, maxVested, usdMin, usdMax,
+  params, minWallets, maxWallets, minRounds, maxRounds, minVested, maxVested, usdMin, usdMax, topMin, topMax,
 }: {
   params:     Record<string, string | undefined>;
   minWallets: number | undefined; maxWallets: number | undefined;
   minRounds:  number | undefined; maxRounds:  number | undefined;
   minVested:  number | undefined; maxVested:  number | undefined;  // 0–100
   usdMin:     number | undefined; usdMax:     number | undefined;
+  topMin:     number | undefined; topMax:     number | undefined;  // 0–100
 }) {
   return (
     <div className="space-y-4">
@@ -45,6 +46,7 @@ export function ExplorerSliders({
       <RangeSlider label="Locked value"      stops={USD_STOPS}    format={fmtUsd}   valueMin={usdMin}     valueMax={usdMax}     keyMin="usdMin"     keyMax="usdMax"     params={params} />
       <RangeSlider label="Schedules"         stops={ROUND_STOPS}  format={fmtCount} valueMin={minRounds}  valueMax={maxRounds}  keyMin="minRounds"  keyMax="maxRounds"  params={params} />
       <RangeSlider label="Vested"            stops={VESTED_STOPS} format={fmtPct}   valueMin={minVested}  valueMax={maxVested}  keyMin="minVested"  keyMax="maxVested"  params={params} />
+      <RangeSlider label="Top holder"        stops={VESTED_STOPS} format={fmtPct}   valueMin={topMin}     valueMax={topMax}     keyMin="topMin"     keyMax="topMax"     params={params} />
     </div>
   );
 }

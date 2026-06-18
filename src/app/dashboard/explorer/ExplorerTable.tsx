@@ -91,8 +91,15 @@ export function ExplorerTable({
     return (
       <div className="rounded-2xl px-5 py-10 text-center"
         style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-        <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>No upcoming unlocks match your filters.</p>
-        <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>Try widening the date range or clearing a filter.</p>
+        <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>No tokens match these filters.</p>
+        <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)" }}>
+          Your filters are too tight — widen a slider, set the date to “Any time”, or clear everything.
+        </p>
+        <Link href="/dashboard/explorer" scroll={false}
+          className="inline-block text-xs font-semibold px-3 py-1.5 rounded-lg"
+          style={{ background: "#0F8A8A", color: "white" }}>
+          Clear all filters
+        </Link>
       </div>
     );
   }

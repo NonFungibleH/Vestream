@@ -81,6 +81,22 @@ const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
   { id: "90-days",   label: "Next 90 days" },
 ];
 
+// One-click curated views — each is a full filter+sort preset (it replaces the
+// current filters). The `params` are the exact query string a lens applies; a
+// lens shows as active when its discriminating params all match the URL.
+const LENSES: Array<{ id: string; label: string; hint: string; params: Record<string, string> }> = [
+  { id: "imminent-cliffs", label: "Imminent cliffs", hint: "Cliff lumps unlocking in the next 30 days",
+    params: { mode: "calendar", cliff: "1", date: "30-days", sort: "usd", dir: "desc" } },
+  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the locked supply",
+    params: { mode: "calendar", topMin: "50", sort: "concentration", dir: "desc" } },
+  { id: "fair-launches", label: "Fair launches", hint: "Spread across ≥25 wallets, no dominant holder (≤25%)",
+    params: { mode: "calendar", minWallets: "25", topMax: "25", sort: "wallets", dir: "desc" } },
+  { id: "almost-done", label: "Almost done", hint: "≥90% of the vesting span already elapsed",
+    params: { mode: "calendar", minVested: "90", sort: "progress", dir: "desc" } },
+  { id: "biggest-overhang", label: "Biggest overhang", hint: "Largest locked value vs market cap",
+    params: { mode: "calendar", sort: "risk", dir: "desc" } },
+];
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface ExplorerSearchParams {
@@ -94,6 +110,9 @@ interface ExplorerSearchParams {
   minRounds?:  string; maxRounds?:  string;
   minVested?:  string; maxVested?:  string;   // 0–100
   usdMin?:     string; usdMax?:     string;   // locked value USD
+  topMin?:     string; topMax?:     string;   // top-holder concentration 0–100
+  cliff?:      string;                         // "1" = cliff unlocks only
+  size?:       string;                         // page size: 25 | 50 | 100
   sort?:     string;   // calendar sort key (date | usd | amount | wallets | …)
   dir?:      string;   // "asc" | "desc"
   page?:     string;   // 1-based page number (calendar pagination)
@@ -143,6 +162,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const maxVestedPct = parseVestedPct(sp.maxVested);
   const amountUsdMin = parsePosInt(sp.usdMin);
   const amountUsdMax = parsePosInt(sp.usdMax);
+  const minTopHolder = parseVestedPct(sp.topMin);   // 0–100 → 0–1
+  const maxTopHolder = parseVestedPct(sp.topMax);
+  const cliffOnly    = sp.cliff === "1";
 
   const queryKind = query ? detectQueryKind(query) : { kind: "empty" as const };
 
@@ -162,7 +184,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 
   // Pagination + sort for the Upcoming list. Now SERVER-SIDE (we page straight
   // off the rollup), so they live in the URL: ?page= &sort= &dir=.
-  const pageSize = 25;
+  // Per-page size — user-selectable (25/50/100) via ?size=, default 25.
+  const PAGE_SIZES = [25, 50, 100];
+  const pageSize = PAGE_SIZES.includes(Number(sp.size)) ? Number(sp.size) : 25;
   const pageNum  = Math.max(1, Math.floor(Number(sp.page ?? "1")) || 1);
   const VALID_SORTS = new Set<ExplorerSortKey>(["date", "usd", "amount", "wallets", "concentration", "rounds", "cliff", "risk", "progress", "token"]);
   const sortKey: ExplorerSortKey = VALID_SORTS.has(sp.sort as ExplorerSortKey) ? (sp.sort as ExplorerSortKey) : "date";
@@ -206,6 +230,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       maxRounds,
       minVestedPct,
       maxVestedPct,
+      minTopHolder,
+      maxTopHolder,
+      cliffOnly,
       sort: sortKey,
       dir:  sortDir,
       page: pageNum,
@@ -361,10 +388,28 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               );
             })}
           </div>
-          <div className="pb-2">
+          <div className="pb-2 flex items-center gap-3">
+            {/* Per-page size selector. */}
+            <div className="hidden sm:flex items-center gap-1 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+              <span>Per page</span>
+              {PAGE_SIZES.map((s) => (
+                <Link
+                  key={s}
+                  href={buildUrl({ ...sp, size: s === 25 ? undefined : String(s), page: undefined })}
+                  className="px-1.5 py-0.5 rounded font-semibold transition-colors"
+                  style={pageSize === s
+                    ? { background: "#0F8A8A", color: "white" }
+                    : { color: "var(--preview-text-2)" }}
+                >
+                  {s}
+                </Link>
+              ))}
+            </div>
             <SaveSearchButton isPaid={!isFree} />
           </div>
         </div>
+
+        {mode === "calendar" && <LensBar sp={sp} />}
 
         <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>
           {/* Results */}
@@ -473,10 +518,21 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                   maxVested={maxVestedPct != null ? Math.round(maxVestedPct * 100) : undefined}
                   usdMin={amountUsdMin}
                   usdMax={amountUsdMax}
+                  topMin={minTopHolder != null ? Math.round(minTopHolder * 100) : undefined}
+                  topMax={maxTopHolder != null ? Math.round(maxTopHolder * 100) : undefined}
                 />
+                {/* Cliff-only toggle — pairs with the "Imminent cliffs" lens. */}
+                <div className="mt-3">
+                  <FilterPill
+                    active={cliffOnly}
+                    href={buildUrl({ ...sp, cliff: cliffOnly ? undefined : "1", page: undefined })}
+                  >
+                    Cliff unlocks only
+                  </FilterPill>
+                </div>
               </div>
             )}
-            {(chainIds.length > 0 || protocols.length > 0 || amountUsdMin || amountUsdMax || minWallets || maxWallets || minRounds || maxRounds || minVestedPct || maxVestedPct || dateSlug !== "all") && (
+            {(chainIds.length > 0 || protocols.length > 0 || amountUsdMin || amountUsdMax || minWallets || maxWallets || minRounds || maxRounds || minVestedPct || maxVestedPct || minTopHolder || maxTopHolder || cliffOnly || dateSlug !== "all") && (
               <Link
                 href={buildUrl({ q: query })}
                 className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"
@@ -968,6 +1024,36 @@ function buildUrl(params: Record<string, string | undefined>): string {
   return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
 }
 
+// Quick lenses — one-click curated presets. Each REPLACES the current filters
+// with its own (a clean view). Highlighted when its params match the URL.
+function LensBar({ sp }: { sp: ExplorerSearchParams }) {
+  const matches = (params: Record<string, string>) =>
+    Object.entries(params).every(([k, v]) =>
+      k === "mode" ? (sp.mode ?? "calendar") === v : (sp as Record<string, string | undefined>)[k] === v,
+    );
+  return (
+    <div className="flex items-center gap-2 mt-4 flex-wrap">
+      <span className="text-[10px] font-bold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>Quick lenses</span>
+      {LENSES.map((lens) => {
+        const active = matches(lens.params);
+        return (
+          <Link
+            key={lens.id}
+            href={buildUrl(lens.params)}
+            title={lens.hint}
+            className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all"
+            style={active
+              ? { background: "#0F8A8A", color: "white", border: "1px solid #0F8A8A" }
+              : { background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
+          >
+            {lens.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 // Active-filter chip bar — shows every applied filter as a removable chip
 // (✕ link clears just that one) plus a "Clear all". Gives a one-glance view
 // of what's narrowing the results + one-click reset, which the filter pills
@@ -998,8 +1084,10 @@ function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
     rangeChip(sp.minWallets, sp.maxWallets, "minWallets", "maxWallets", "wallets"),
     rangeChip(sp.minRounds, sp.maxRounds, "minRounds", "maxRounds", "schedules"),
     rangeChip(sp.minVested, sp.maxVested, "minVested", "maxVested", "vested", (n) => `${n}%`),
+    rangeChip(sp.topMin, sp.topMax, "topMin", "topMax", "top holder", (n) => `${n}%`),
   ].filter(Boolean) as Array<{ keys: string[]; label: string }>;
   chips.push(...ranges);
+  if (sp.cliff === "1") chips.push({ keys: ["cliff"], label: "Cliff unlocks" });
   if (chips.length === 0) return null;
   return (
     <div className="flex items-center flex-wrap gap-2 mb-3">
