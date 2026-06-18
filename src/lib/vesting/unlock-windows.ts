@@ -330,7 +330,7 @@ export interface WindowResult {
  * before the JS eventTime filter, so each pass is bounded by `poolLimit`
  * (default 5000), giving up to 10 000 candidate rows total.
  */
-const EMPTY_WINDOW_RESULT: WindowResult = {
+export const EMPTY_WINDOW_RESULT: WindowResult = {
   groups: [],
   stats:  { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] },
 };

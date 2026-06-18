@@ -9,7 +9,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow } from "@/lib/vesting/unlock-windows";
+import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT } from "@/lib/vesting/unlock-windows";
+import { withTimeout } from "@/lib/with-timeout";
 
 // Re-render at most every 15 min — counts on the index don't need
 // per-second freshness; the per-window pages have their own ISR.
@@ -29,26 +30,28 @@ export const metadata: Metadata = {
 };
 
 async function getWindowCounts() {
-  // Run all window queries in parallel. Each is bounded by its own date
-  // range so the DB load stays manageable; `getUnlocksInWindow` itself
-  // caps the SQL pool at 500 rows per window. Fail-soft per-window: at
-  // build time CI has no DB access, all queries return -1 → page renders
-  // with "—" everywhere; ISR fills real numbers on first runtime hit.
+  // Run all window queries in parallel. This index only needs the COUNTS, so
+  // cap the SQL pool at 500/window (was an unbounded 5,000 — the comment lied):
+  // with ALL_WINDOW_SLUGS firing concurrently, 8 × 5,000-row two-pass scans on
+  // a cold render could saturate the pooler. 500 keeps each scan cheap; counts
+  // beyond 500 just read as "500+", fine for a marketing index. withTimeout so
+  // a stalled window degrades to "—" instead of hanging the whole page → 524.
   const counts = await Promise.all(
     ALL_WINDOW_SLUGS.map(async (slug) => {
       const def   = WINDOWS[slug];
       const range = def.range();
-      try {
-        const result = await getUnlocksInWindow(range.startSec, range.endSec);
-        return {
-          slug,
-          unlockCount: result.stats.unlockCount,
-          tokenCount:  result.stats.tokenCount,
-          chainCount:  result.stats.chainCount,
-        };
-      } catch {
-        return { slug, unlockCount: -1, tokenCount: -1, chainCount: -1 };
-      }
+      const result = await withTimeout(
+        getUnlocksInWindow(range.startSec, range.endSec, 500),
+        8_000,
+        EMPTY_WINDOW_RESULT,
+        `unlocks-index:${slug}`,
+      );
+      return {
+        slug,
+        unlockCount: result.stats.unlockCount,
+        tokenCount:  result.stats.tokenCount,
+        chainCount:  result.stats.chainCount,
+      };
     }),
   );
   return new Map(counts.map((c) => [c.slug, c]));

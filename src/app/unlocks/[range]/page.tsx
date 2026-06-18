@@ -22,7 +22,9 @@ import {
   WINDOWS,
   WindowSlug,
   getUnlocksInWindow,
+  EMPTY_WINDOW_RESULT,
 } from "@/lib/vesting/unlock-windows";
+import { withTimeout } from "@/lib/with-timeout";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
@@ -158,7 +160,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   // the result for 1h, the cost is negligible.
   let countLine = "";
   try {
-    const result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
+    const result = await withTimeout(getUnlocksInWindow(ranges.startSec, ranges.endSec, 1000), 8_000, EMPTY_WINDOW_RESULT, `unlocks-meta:${range}`);
     if (result.stats.unlockCount > 0) {
       countLine = `${result.stats.unlockCount} unlocks across ${result.stats.tokenCount} tokens. `;
     }
@@ -205,13 +207,17 @@ export default async function WindowPage({ params }: PageParams) {
   const ranges = def.range();
   // Fail-soft: at build time CI has no DB access — render empty state and
   // let ISR refresh on first runtime request.
-  let result;
-  try {
-    result = await getUnlocksInWindow(ranges.startSec, ranges.endSec);
-  } catch (err) {
-    console.warn(`[unlocks-window] DB unavailable for ${range}; rendering empty state:`, err);
-    result = { groups: [], stats: { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] } };
-  }
+  // Cap the pool at 1,000 (the page renders a ~50-row teaser + gated rest) and
+  // bound it with withTimeout so a stalled scan degrades to the empty state in
+  // seconds instead of hanging the ISR render → a 524 (the same guardrail the
+  // token pages got). withTimeout also catches rejects, so the old try/catch
+  // is folded in.
+  const result = await withTimeout(
+    getUnlocksInWindow(ranges.startSec, ranges.endSec, 1000),
+    12_000,
+    EMPTY_WINDOW_RESULT,
+    `unlocks-window:${range}`,
+  );
 
   // Enrich the byToken aggregates with USD value and re-sort by USD (with
   // raw-amount as the tiebreaker for tokens we can't price). Users care
@@ -244,12 +250,9 @@ export default async function WindowPage({ params }: PageParams) {
     if (b.usdValue !== null) return 1;
     return a.amount > b.amount ? -1 : a.amount < b.amount ? 1 : 0;
   });
-  // Replace stats.byToken with the USD-enriched version. The render path
-  // below now consumes USD as the primary "size" signal.
-  result = {
-    ...result,
-    stats: { ...result.stats, byToken: byTokenWithUsd },
-  };
+  // The render path below consumes `byTokenWithUsd` directly (USD-enriched +
+  // sorted). We don't fold it back into `result` — `result` stays the typed,
+  // const fetch payload.
 
   // ItemList JSON-LD — every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
@@ -352,7 +355,7 @@ export default async function WindowPage({ params }: PageParams) {
       </section>
 
       {/* ── Top tokens by amount (only if there are unlocks) ──────────── */}
-      {result.stats.byToken.length > 0 && (
+      {byTokenWithUsd.length > 0 && (
         <section className="px-4 md:px-8 pb-12 max-w-5xl mx-auto w-full">
           <h2 className="text-xl md:text-2xl font-bold mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             Biggest unlocks {def.label.toLowerCase()}
@@ -363,7 +366,7 @@ export default async function WindowPage({ params }: PageParams) {
             Click a token for the per-token unlock schedule.
           </p>
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
-            {result.stats.byToken.slice(0, 10).map((t, i) => {
+            {byTokenWithUsd.slice(0, 10).map((t, i) => {
               return (
                 <Link
                   key={`${t.chainId}-${t.address}`}

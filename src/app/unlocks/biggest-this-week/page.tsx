@@ -14,7 +14,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { WINDOWS, getUnlocksInWindow, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
+import { WINDOWS, getUnlocksInWindow, enrichGroupsWithUsd, EMPTY_WINDOW_RESULT } from "@/lib/vesting/unlock-windows";
+import { withTimeout } from "@/lib/with-timeout";
 import { UnlockListPublic } from "../_components/UnlockListPublic";
 
 export const revalidate = 3600;
@@ -46,7 +47,7 @@ export default async function BiggestThisWeekPage() {
   const win = WINDOWS["this-week"].range();
   let groups: Awaited<ReturnType<typeof enrichGroupsWithUsd>> = [];
   try {
-    const r = await getUnlocksInWindow(win.startSec, win.endSec, 500);
+    const r = await withTimeout(getUnlocksInWindow(win.startSec, win.endSec, 500), 12_000, EMPTY_WINDOW_RESULT, "biggest-this-week");
     groups = await enrichGroupsWithUsd(r.groups, { redis: false });
   } catch (err) {
     console.warn("[biggest-this-week] DB unavailable, rendering empty:", err);

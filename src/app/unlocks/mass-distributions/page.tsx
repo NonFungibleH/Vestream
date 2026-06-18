@@ -12,7 +12,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { getUnlocksInWindow, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
+import { getUnlocksInWindow, enrichGroupsWithUsd, EMPTY_WINDOW_RESULT } from "@/lib/vesting/unlock-windows";
+import { withTimeout } from "@/lib/with-timeout";
 import { UnlockListPublic } from "../_components/UnlockListPublic";
 
 export const revalidate = 3600;
@@ -44,7 +45,7 @@ export default async function MassDistributionsPage() {
 
   let groups: Awaited<ReturnType<typeof enrichGroupsWithUsd>> = [];
   try {
-    const r = await getUnlocksInWindow(now, endSec, 2000);
+    const r = await withTimeout(getUnlocksInWindow(now, endSec, 2000), 12_000, EMPTY_WINDOW_RESULT, "mass-distributions");
     // Filter to mass events FIRST so we only pay DexScreener for tokens
     // we'll actually render. Cuts the priced batch by ~95% (typical
     // result: 5-15 mass events vs 100-500 total groups in the window).
