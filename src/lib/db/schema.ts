@@ -877,6 +877,7 @@ export const tokenVestingRollups = pgTable(
     tokenDecimals:  integer("token_decimals").notNull().default(18),
     lockedValueUsd: doublePrecision("locked_value_usd"),             // total locked × price
     marketCap:      doublePrecision("market_cap"),                   // for the unlock-risk metric
+    unlockCurve:    text("unlock_curve"),                            // 12 cumulative-% samples (comma-joined) → row sparkline
     computedAt:     timestamp("computed_at").defaultNow().notNull(),
   },
   (t) => [

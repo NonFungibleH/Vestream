@@ -1140,6 +1140,7 @@ function toExplorerRow(r: ExplorerPageRow): ExplorerRow {
     vestEnd:          r.lastEnd,
     hasCliff:         r.hasCliff,
     topHolderShare:   r.topHolderShare,
+    unlockCurve:      r.unlockCurve,
     eventTime:        r.nextUnlock ?? 0,
     absorptionRatio:  null,
     marketCapShare,

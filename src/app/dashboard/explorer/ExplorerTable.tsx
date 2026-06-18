@@ -41,6 +41,7 @@ export interface ExplorerRow {
   vestEnd?:          number | null;   // latest active end (unix sec)
   hasCliff?:         boolean;         // any active stream has a lump-unlock cliff (own column)
   topHolderShare?:   number | null;   // largest recipient's share (0–1) of locked — concentration
+  unlockCurve?:      number[] | null; // 12 cumulative-% samples → row sparkline
   eventTime:         number;
   absorptionRatio:   number | null;
   marketCapShare:    number | null;   // unlock value ÷ market cap — the risk basis
@@ -407,9 +408,33 @@ function progressTitle(r: ExplorerRow): string {
 }
 
 function VestingProgress({ r }: { r: ExplorerRow }) {
-  const p = progressOf(r);
-  if (p == null) return <p className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }}>—</p>;
-  const pct = Math.round(p * 100);
+  const p = progressOf(r);                 // 0–1 elapsed (or null)
+  const pct = p == null ? null : Math.round(p * 100);
+  const curve = r.unlockCurve;
+
+  // Sparkline of the cumulative-unlock shape (cliff vs linear vs back-loaded),
+  // with a dashed "now" marker at the elapsed point. Far more informative than
+  // a flat progress bar. Falls back to the bar when no curve is available.
+  if (curve && curve.length >= 2) {
+    const SW = 54, SH = 16, n = curve.length;
+    const xAt = (i: number) => (i / (n - 1)) * SW;
+    const yAt = (v: number) => SH - (Math.max(0, Math.min(100, v)) / 100) * SH;
+    const line = curve.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(" ");
+    const area = `0,${SH} ${line} ${SW},${SH}`;
+    const nowX = p != null ? p * SW : null;
+    return (
+      <div className="flex items-center gap-1.5 cursor-help">
+        <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`} style={{ display: "block", overflow: "visible" }}>
+          <polygon points={area} fill="#0F8A8A" fillOpacity={0.12} />
+          <polyline points={line} fill="none" stroke="#0F8A8A" strokeWidth={1.25} strokeLinejoin="round" />
+          {nowX != null && <line x1={nowX} y1={-1} x2={nowX} y2={SH + 1} stroke="var(--preview-text-3)" strokeWidth={1} strokeDasharray="2 2" />}
+        </svg>
+        {pct != null && <span className="text-[10px] tabular-nums" style={{ color: "var(--preview-text-3)" }}>{pct}%</span>}
+      </div>
+    );
+  }
+
+  if (pct == null) return <p className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }}>—</p>;
   return (
     <div className="flex items-center gap-2 cursor-help">
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
