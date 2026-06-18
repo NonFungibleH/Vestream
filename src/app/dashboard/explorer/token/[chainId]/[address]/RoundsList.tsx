@@ -25,6 +25,10 @@ const fmtNum = (n: number) =>
   : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 const fmtDate = (t: number | null | undefined) =>
   t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+// Compact month-year for date RANGES (staggered cohorts span many months —
+// "Jun 2026 → Apr 2027" reads cleaner than two full dates).
+const fmtMonthYear = (t: number | null | undefined) =>
+  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "—";
 // Relative time to an unlock — the at-a-glance differentiator between rounds.
 const relUntil = (t: number | null | undefined): string => {
   if (!t) return "";
@@ -55,8 +59,17 @@ export function RoundsList({
         const wallets = isFree ? r.streams.slice(0, rowCap) : r.streams;
         const hidden = r.streams.length - wallets.length;
         const cliffOnly = r.durationDays > 0 && r.cliffOffsetDays >= r.durationDays - 3;
-        const cadence = cliffOnly
-          ? "Unlocks in full at the cliff"
+        // Instant = each stream's start == end (a lump on one date). When such
+        // streams have DIFFERENT dates they group into one round by terms, so
+        // it's a STAGGERED cohort — show its date RANGE, not a single date, and
+        // say so in the cadence. This is the CHEEL case users found confusing.
+        const isInstant = r.durationDays === 0;
+        const staggered = isInstant && (r.windowEnd - r.windowStart > 2 * 86400);
+        const cadence =
+          isInstant
+            ? (staggered ? "Each wallet unlocks in full on its own date" : "Unlocks in full at once")
+          : cliffOnly
+            ? "Unlocks in full at the cliff"
           : r.shape === "steps" ? "Stepped unlocks" : "Continuous (linear)";
         return (
           <div key={r.key} className="rounded-2xl border overflow-hidden"
@@ -76,13 +89,23 @@ export function RoundsList({
                   {r.recipientCount} wallet{r.recipientCount !== 1 ? "s" : ""} · {fmtNum(whole(r.totalLocked, dec))} {symbol} locked · {cadence}
                 </div>
               </div>
-              {/* Prominent unlock-date block — the primary differentiator. */}
-              {r.nextUnlockTime != null && (
+              {/* Prominent unlock-date block — the primary differentiator.
+                  Staggered instant cohorts show the date RANGE (each wallet
+                  unlocks on its own date), so "Jun 2026 → Apr 2027" reads as a
+                  window instead of a single misleading "next" date. */}
+              {staggered ? (
+                <div className="text-right flex-shrink-0 mr-1">
+                  <div className="text-xs font-semibold tabular-nums" style={{ color: "var(--preview-text-2)" }}>
+                    {fmtMonthYear(r.windowStart)} → {fmtMonthYear(r.windowEnd)}
+                  </div>
+                  <div className="text-[10px]" style={{ color: c }}>staggered dates</div>
+                </div>
+              ) : r.nextUnlockTime != null ? (
                 <div className="text-right flex-shrink-0 mr-1">
                   <div className="text-xs font-semibold tabular-nums" style={{ color: "var(--preview-text-2)" }}>{fmtDate(r.nextUnlockTime)}</div>
                   <div className="text-[10px] tabular-nums" style={{ color: c }}>{relUntil(r.nextUnlockTime)}</div>
                 </div>
-              )}
+              ) : null}
               <span className="text-[11px] flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>{isOpen ? "▲" : "▼"}</span>
             </button>
 

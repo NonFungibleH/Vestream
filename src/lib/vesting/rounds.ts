@@ -25,6 +25,12 @@ export interface Round {
   totalLocked: string;      // stringified bigint (sum of lockedAmount)
   totalAmount: string;      // stringified bigint (sum of totalAmount)
   nextUnlockTime: number | null;
+  /** Earliest start and latest end across the round's streams. When these
+   *  differ the round is a STAGGERED cohort (e.g. 84 instant unlocks each on
+   *  its own date) — the UI shows this window as a range instead of a single
+   *  misleading "next" date. */
+  windowStart: number;
+  windowEnd: number;
   streams: VestingStream[];
 }
 
@@ -66,6 +72,8 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
     let totalLocked = 0n;
     let totalAmount = 0n;
     let nextUnlockTime: number | null = null;
+    let windowStart = Infinity;
+    let windowEnd = -Infinity;
     const recipients = new Set<string>();
     for (const s of group) {
       totalLocked += BigInt(s.lockedAmount ?? "0");
@@ -74,16 +82,27 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
       if (s.nextUnlockTime && (nextUnlockTime === null || s.nextUnlockTime < nextUnlockTime)) {
         nextUnlockTime = s.nextUnlockTime;
       }
+      if (s.startTime && s.startTime < windowStart) windowStart = s.startTime;
+      if (s.endTime && s.endTime > windowEnd) windowEnd = s.endTime;
     }
-    // Cliff-only = the cliff lands at (or after) the end, so the whole
-    // allocation releases in ONE lump at the cliff — there's no gradual
-    // schedule. Label it plainly instead of "99-mo steps · 99-mo cliff",
-    // which both says "steps" (wrong) and repeats the same number twice.
+    if (!Number.isFinite(windowStart)) windowStart = 0;
+    if (!Number.isFinite(windowEnd)) windowEnd = 0;
+    // Label by terms, picking the clearest phrasing for each shape:
+    //  - Instant (duration 0): start == end, the whole allocation releases in
+    //    one lump on a single date. "Linear · instant" is a contradiction —
+    //    call it "Instant unlock". (When many such streams have DIFFERENT dates
+    //    they still group here by terms; the UI shows the date RANGE so a
+    //    staggered cohort reads as a window, not one date.)
+    //  - Cliff-only: cliff at/after the end → one lump at the cliff.
+    //  - Otherwise: Linear / Stepped over the duration (+ cliff if any).
+    const isInstant   = durationDays === 0;
     const isCliffOnly = durationDays > 0 && cliffOffsetDays >= durationDays - 3;
-    const label = isCliffOnly
-      ? `Cliff unlock · ${fmtDuration(durationDays)}`
-      : `${shape === "steps" ? "Stepped" : "Linear"} · ${fmtDuration(durationDays)}`
-        + (cliffOffsetDays > 0 ? ` · ${fmtDuration(cliffOffsetDays)} cliff` : "");
+    const label = isInstant
+      ? "Instant unlock"
+      : isCliffOnly
+        ? `Cliff unlock · ${fmtDuration(durationDays)}`
+        : `${shape === "steps" ? "Stepped" : "Linear"} · ${fmtDuration(durationDays)}`
+          + (cliffOffsetDays > 0 ? ` · ${fmtDuration(cliffOffsetDays)} cliff` : "");
     rounds.push({
       key,
       protocol,
@@ -95,6 +114,8 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
       totalLocked: totalLocked.toString(),
       totalAmount: totalAmount.toString(),
       nextUnlockTime,
+      windowStart,
+      windowEnd,
       streams: group,
     });
   }
