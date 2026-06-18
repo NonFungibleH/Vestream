@@ -62,6 +62,7 @@ function progressOf(r: ExplorerRow): number | null {
 }
 export function ExplorerTable({
   rows, totalMatches, page, totalPages, pageSize, sort, dir, params,
+  onSort, onPage, onClear,
 }: {
   rows:         ExplorerRow[];
   totalMatches: number;
@@ -70,9 +71,18 @@ export function ExplorerTable({
   pageSize:     number;
   sort:         SortCol;
   dir:          SortDir;
-  /** Current URL search params, so headers + pagination can build hrefs. */
+  /** Current URL search params, so headers + pagination can build hrefs.
+   *  Only used in LINK mode (server-paginated pages). */
   params:       Record<string, string | undefined>;
+  /** CLIENT mode — when provided, headers/pagination/clear become buttons that
+   *  mutate in-memory state instead of navigating (instant, no round-trip).
+   *  The client-side explorer passes these; server pages omit them. */
+  onSort?:      (col: SortCol, dir: SortDir) => void;
+  onPage?:      (page: number) => void;
+  onClear?:     () => void;
 }) {
+  const clientMode = onSort != null;
+
   // Build a URL preserving current params, with overrides (undefined clears).
   const hrefFor = (overrides: Record<string, string | undefined>): string => {
     const usp = new URLSearchParams();
@@ -81,12 +91,17 @@ export function ExplorerTable({
     const qs = usp.toString();
     return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
   };
-  // Header link: set sort col + direction, reset to page 1. Clicking the
-  // active column flips direction.
-  const sortHref = (col: SortCol, defaultDir: SortDir): string => {
-    const nextDir = col === sort ? (dir === "asc" ? "desc" : "asc") : defaultDir;
-    return hrefFor({ sort: col, dir: nextDir, page: undefined });
-  };
+  // Set sort col + direction, reset to page 1. Clicking the active column flips
+  // direction. In client mode → callback; else → href.
+  const nextDirFor = (col: SortCol, defaultDir: SortDir): SortDir =>
+    col === sort ? (dir === "asc" ? "desc" : "asc") : defaultDir;
+  const sortHref = (col: SortCol, defaultDir: SortDir): string =>
+    hrefFor({ sort: col, dir: nextDirFor(col, defaultDir), page: undefined });
+  // Props for a sort header — either { href } (link mode) or { onClick } (client).
+  const sortProps = (col: SortCol, defaultDir: SortDir): { href?: string; onClick?: () => void } =>
+    clientMode
+      ? { onClick: () => onSort!(col, nextDirFor(col, defaultDir)) }
+      : { href: sortHref(col, defaultDir) };
 
   if (rows.length === 0) {
     return (
@@ -96,11 +111,19 @@ export function ExplorerTable({
         <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)" }}>
           Your filters are too tight — widen a slider, set the date to “Any time”, or clear everything.
         </p>
-        <Link href="/dashboard/explorer" scroll={false}
-          className="inline-block text-xs font-semibold px-3 py-1.5 rounded-lg"
-          style={{ background: "#0F8A8A", color: "white" }}>
-          Clear all filters
-        </Link>
+        {clientMode ? (
+          <button type="button" onClick={onClear}
+            className="inline-block text-xs font-semibold px-3 py-1.5 rounded-lg"
+            style={{ background: "#0F8A8A", color: "white" }}>
+            Clear all filters
+          </button>
+        ) : (
+          <Link href="/dashboard/explorer" scroll={false}
+            className="inline-block text-xs font-semibold px-3 py-1.5 rounded-lg"
+            style={{ background: "#0F8A8A", color: "white" }}>
+            Clear all filters
+          </Link>
+        )}
       </div>
     );
   }
@@ -136,16 +159,16 @@ export function ExplorerTable({
         {/* Sortable header — each is a Link that re-queries server-side. */}
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
-            <Th label="Token"       active={sort === "token"}         dir={dir} href={sortHref("token", "asc")} title={TOKEN_HELP} />
-            <Th label="Amount"      active={sort === "amount"}        dir={dir} href={sortHref("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
-            <Th label="USD"         active={sort === "usd"}           dir={dir} href={sortHref("usd", "desc")} align="right" minW={64} title={USD_HELP} />
-            <Th label="Wallets"     active={sort === "wallets"}       dir={dir} href={sortHref("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
-            <Th label="Top holder"  active={sort === "concentration"} dir={dir} href={sortHref("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
-            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} href={sortHref("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
-            <Th label="Cliff"       active={sort === "cliff"}         dir={dir} href={sortHref("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
-            <Th label="Risk"        active={sort === "risk"}          dir={dir} href={sortHref("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
-            <Th label="Vested"      active={sort === "progress"}      dir={dir} href={sortHref("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
-            <Th label="Next unlock" active={sort === "date"}          dir={dir} href={sortHref("date", "asc")} align="right" className="hidden md:flex" title={NEXT_HELP} />
+            <Th label="Token"       active={sort === "token"}         dir={dir} {...sortProps("token", "asc")} title={TOKEN_HELP} />
+            <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
+            <Th label="USD"         active={sort === "usd"}           dir={dir} {...sortProps("usd", "desc")} align="right" minW={64} title={USD_HELP} />
+            <Th label="Wallets"     active={sort === "wallets"}       dir={dir} {...sortProps("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
+            <Th label="Top holder"  active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
+            <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
+            <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
+            <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
+            <Th label="Next unlock" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden md:flex" title={NEXT_HELP} />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
@@ -163,8 +186,17 @@ export function ExplorerTable({
             Showing {from.toLocaleString()}–{to.toLocaleString()} of {totalMatches.toLocaleString()}
           </p>
           <div className="flex items-center gap-1.5">
-            <PageLink href={page > 1 ? hrefFor({ page: page - 1 <= 1 ? undefined : String(page - 1) }) : null}>‹ Prev</PageLink>
-            <PageLink href={page < totalPages ? hrefFor({ page: String(page + 1) }) : null}>Next ›</PageLink>
+            {clientMode ? (
+              <>
+                <PageLink onClick={page > 1 ? () => onPage!(page - 1) : undefined}>‹ Prev</PageLink>
+                <PageLink onClick={page < totalPages ? () => onPage!(page + 1) : undefined}>Next ›</PageLink>
+              </>
+            ) : (
+              <>
+                <PageLink href={page > 1 ? hrefFor({ page: page - 1 <= 1 ? undefined : String(page - 1) }) : null}>‹ Prev</PageLink>
+                <PageLink href={page < totalPages ? hrefFor({ page: String(page + 1) }) : null}>Next ›</PageLink>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -172,22 +204,17 @@ export function ExplorerTable({
   );
 }
 
-// ── Header cell (sort link) ───────────────────────────────────────────────────
+// ── Header cell (sort control) ────────────────────────────────────────────────
+// Renders a Link (server-paginated pages) or a <button> (client-side explorer)
+// depending on whether href or onClick is supplied — identical appearance.
 function Th({
-  label, active, dir, href, align = "left", minW, className = "", title,
+  label, active, dir, href, onClick, align = "left", minW, className = "", title,
 }: {
-  label: string; active: boolean; dir: SortDir; href: string;
+  label: string; active: boolean; dir: SortDir; href?: string; onClick?: () => void;
   align?: "left" | "right"; minW?: number; className?: string; title?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      className={`flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`}
-      style={{ minWidth: minW }}
-      aria-label={`Sort by ${label}`}
-      title={title}
-    >
+  const inner = (
+    <>
       <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors"
         style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
         {label}
@@ -195,18 +222,44 @@ function Th({
       <span className="text-[8px]" style={{ color: active ? "#0F8A8A" : "transparent" }}>
         {active ? (dir === "asc" ? "▲" : "▼") : "▲"}
       </span>
+    </>
+  );
+  const cls = `flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`;
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={cls} style={{ minWidth: minW }}
+        aria-label={`Sort by ${label}`} title={title}>
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <Link href={href ?? "#"} scroll={false} className={cls} style={{ minWidth: minW }}
+      aria-label={`Sort by ${label}`} title={title}>
+      {inner}
     </Link>
   );
 }
 
 // ── Pagination button ─────────────────────────────────────────────────────────
-function PageLink({ href, children }: { href: string | null; children: React.ReactNode }) {
+// Link mode: pass `href` (null = disabled). Client mode: pass `onClick`
+// (undefined = disabled).
+function PageLink({ href, onClick, children }: { href?: string | null; onClick?: () => void; children: React.ReactNode }) {
   const base = "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors";
-  if (!href) {
+  const disabled = href == null && onClick == null;
+  if (disabled) {
     return <span className={base} style={{ color: "var(--preview-text-3)", borderColor: "var(--preview-border)", opacity: 0.5 }}>{children}</span>;
   }
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${base} hover:bg-[var(--preview-muted)]`}
+        style={{ color: "var(--preview-text-2)", borderColor: "var(--preview-border)" }}>
+        {children}
+      </button>
+    );
+  }
   return (
-    <Link href={href} scroll={false} className={`${base} hover:bg-[var(--preview-muted)]`}
+    <Link href={href!} scroll={false} className={`${base} hover:bg-[var(--preview-muted)]`}
       style={{ color: "var(--preview-text-2)", borderColor: "var(--preview-border)" }}>
       {children}
     </Link>

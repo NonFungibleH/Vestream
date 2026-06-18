@@ -31,7 +31,7 @@ const fmtUsd   = (n: number) =>
   : `$${n}`;
 
 export function ExplorerSliders({
-  params, minWallets, maxWallets, minRounds, maxRounds, minVested, maxVested, usdMin, usdMax, topMin, topMax,
+  params, minWallets, maxWallets, minRounds, maxRounds, minVested, maxVested, usdMin, usdMax, topMin, topMax, onCommit,
 }: {
   params:     Record<string, string | undefined>;
   minWallets: number | undefined; maxWallets: number | undefined;
@@ -39,14 +39,18 @@ export function ExplorerSliders({
   minVested:  number | undefined; maxVested:  number | undefined;  // 0–100
   usdMin:     number | undefined; usdMax:     number | undefined;
   topMin:     number | undefined; topMax:     number | undefined;  // 0–100
+  /** CLIENT mode — when set, a slider release calls this with just its two
+   *  changed keys ({ [keyMin], [keyMax] }) instead of navigating. The parent
+   *  merges into in-memory state (instant). Omit for the server-nav pages. */
+  onCommit?:  (delta: Record<string, string | undefined>) => void;
 }) {
   return (
     <div className="space-y-4">
-      <RangeSlider label="Wallets vested to" stops={WALLET_STOPS} format={fmtCount} valueMin={minWallets} valueMax={maxWallets} keyMin="minWallets" keyMax="maxWallets" params={params} />
-      <RangeSlider label="Locked value"      stops={USD_STOPS}    format={fmtUsd}   valueMin={usdMin}     valueMax={usdMax}     keyMin="usdMin"     keyMax="usdMax"     params={params} />
-      <RangeSlider label="Schedules"         stops={ROUND_STOPS}  format={fmtCount} valueMin={minRounds}  valueMax={maxRounds}  keyMin="minRounds"  keyMax="maxRounds"  params={params} />
-      <RangeSlider label="Vested"            stops={VESTED_STOPS} format={fmtPct}   valueMin={minVested}  valueMax={maxVested}  keyMin="minVested"  keyMax="maxVested"  params={params} />
-      <RangeSlider label="Top holder"        stops={VESTED_STOPS} format={fmtPct}   valueMin={topMin}     valueMax={topMax}     keyMin="topMin"     keyMax="topMax"     params={params} />
+      <RangeSlider label="Wallets vested to" stops={WALLET_STOPS} format={fmtCount} valueMin={minWallets} valueMax={maxWallets} keyMin="minWallets" keyMax="maxWallets" params={params} onCommit={onCommit} />
+      <RangeSlider label="Locked value"      stops={USD_STOPS}    format={fmtUsd}   valueMin={usdMin}     valueMax={usdMax}     keyMin="usdMin"     keyMax="usdMax"     params={params} onCommit={onCommit} />
+      <RangeSlider label="Schedules"         stops={ROUND_STOPS}  format={fmtCount} valueMin={minRounds}  valueMax={maxRounds}  keyMin="minRounds"  keyMax="maxRounds"  params={params} onCommit={onCommit} />
+      <RangeSlider label="Vested"            stops={VESTED_STOPS} format={fmtPct}   valueMin={minVested}  valueMax={maxVested}  keyMin="minVested"  keyMax="maxVested"  params={params} onCommit={onCommit} />
+      <RangeSlider label="Top holder"        stops={VESTED_STOPS} format={fmtPct}   valueMin={topMin}     valueMax={topMax}     keyMin="topMin"     keyMax="topMax"     params={params} onCommit={onCommit} />
     </div>
   );
 }
@@ -63,11 +67,12 @@ function nearestIdx(stops: number[], value: number | undefined, fallback: number
 }
 
 function RangeSlider({
-  label, stops, format, valueMin, valueMax, keyMin, keyMax, params,
+  label, stops, format, valueMin, valueMax, keyMin, keyMax, params, onCommit,
 }: {
   label: string; stops: number[]; format: (n: number) => string;
   valueMin: number | undefined; valueMax: number | undefined;
   keyMin: string; keyMax: string; params: Record<string, string | undefined>;
+  onCommit?: (delta: Record<string, string | undefined>) => void;
 }) {
   const router = useRouter();
   const N = stops.length - 1;
@@ -75,13 +80,13 @@ function RangeSlider({
   const [hi, setHi] = useState(() => nearestIdx(stops, valueMax, N));
 
   const commit = (loIdx: number, hiIdx: number) => {
-    router.push(buildUrl({
-      ...params,
-      // min param only when above the bottom stop; max only when below the top.
+    // min param only when above the bottom stop; max only when below the top.
+    const delta = {
       [keyMin]: loIdx > 0 ? String(stops[loIdx]) : undefined,
       [keyMax]: hiIdx < N ? String(stops[hiIdx]) : undefined,
-      page: undefined,
-    }), { scroll: false });
+    };
+    if (onCommit) { onCommit(delta); return; }    // client mode — no navigation
+    router.push(buildUrl({ ...params, ...delta, page: undefined }), { scroll: false });
   };
 
   const active = lo > 0 || hi < N;

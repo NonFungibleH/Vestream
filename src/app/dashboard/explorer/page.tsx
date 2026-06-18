@@ -25,11 +25,8 @@
 
 import Link from "next/link";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
-import {
-  WINDOWS,
-  type WindowSlug,
-} from "@/lib/vesting/unlock-windows";
-import { getExplorerPage, type ExplorerSortKey, type ExplorerPageRow } from "@/lib/vesting/token-rollups";
+import type { WindowSlug } from "@/lib/vesting/unlock-windows";
+import { type ExplorerSortKey } from "@/lib/vesting/token-rollups";
 import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 import {
   getStreamsPage,
@@ -48,10 +45,15 @@ import { SavedTokensStrip } from "./SavedTokensStrip";
 import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
 import { WatchButton } from "./WatchButton";
-import { ExplorerTable, type ExplorerRow } from "./ExplorerTable";
+// Calendar/Upcoming mode is now a fully CLIENT-SIDE island: it loads the whole
+// upcoming-unlock dataset once (CDN-cached) and filters/sorts/paginates in the
+// browser — instant interactions, zero per-click round-trips. The old
+// server-paginated ExplorerTable / ExplorerSliders are still used *inside* that
+// island (in callback mode); the page no longer renders them directly for
+// calendar mode. Stream/Wallet modes remain server-paginated.
 import { Pagination } from "./Pagination";
-import { ExplorerSliders } from "./ExplorerSliders";
 import { ExplorerHelp } from "./ExplorerHelp";
+import { ExplorerCalendarClient } from "./ExplorerCalendarClient";
 
 export const dynamic = "force-dynamic";
 
@@ -82,21 +84,9 @@ const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
   { id: "90-days",   label: "Next 90 days" },
 ];
 
-// One-click curated views — each is a full filter+sort preset (it replaces the
-// current filters). The `params` are the exact query string a lens applies; a
-// lens shows as active when its discriminating params all match the URL.
-const LENSES: Array<{ id: string; label: string; hint: string; params: Record<string, string> }> = [
-  { id: "imminent-cliffs", label: "Imminent cliffs", hint: "Cliff lumps unlocking in the next 30 days",
-    params: { mode: "calendar", cliff: "1", date: "30-days", sort: "usd", dir: "desc" } },
-  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the locked supply",
-    params: { mode: "calendar", topMin: "50", sort: "concentration", dir: "desc" } },
-  { id: "fair-launches", label: "Fair launches", hint: "Spread across ≥25 wallets, no dominant holder (≤25%)",
-    params: { mode: "calendar", minWallets: "25", topMax: "25", sort: "wallets", dir: "desc" } },
-  { id: "almost-done", label: "Almost done", hint: "≥90% of the vesting span already elapsed",
-    params: { mode: "calendar", minVested: "90", sort: "progress", dir: "desc" } },
-  { id: "biggest-overhang", label: "Biggest overhang", hint: "Largest locked value vs market cap",
-    params: { mode: "calendar", sort: "risk", dir: "desc" } },
-];
+// Quick-lens presets live in <ExplorerCalendarClient> now (calendar mode is
+// client-rendered). The old server-side LENSES array + <LensBar> were removed
+// with the move.
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -174,18 +164,13 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     : undefined;
 
   // ── Mode-specific fetch ────────────────────────────────────────────────
-  // Each mode populates `modeResult` with the raw data it needs, plus a
-  // numeric `totalMatches` for the cap UX. Visible/hidden split and the
-  // upgrade banner happen below in render.
-  // "Any time" = now → far future (100y), so long-dated locks (e.g. PinkSale
-  // liquidity locked to 2100) are included, not just the next 5 years.
-  const window = dateSlug === "all"
-    ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 100 * 365 * 86400 }
-    : WINDOWS[dateSlug as WindowSlug].range();
+  // Stream/Wallet modes fetch server-side here. CALENDAR mode does NOT — it's
+  // rendered by <ExplorerCalendarClient>, which loads the whole upcoming-unlock
+  // dataset once (CDN-cached) and filters/sorts/paginates in the browser.
 
-  // Pagination + sort for the Upcoming list. Now SERVER-SIDE (we page straight
-  // off the rollup), so they live in the URL: ?page= &sort= &dir=.
-  // Per-page size — user-selectable (25/50/100) via ?size=, default 25.
+  // Pagination + sort. For calendar these seed the client island's initial
+  // state (from the URL, for shareable links); for stream/wallet they drive the
+  // server query. Per-page size — user-selectable (25/50/100) via ?size=.
   const PAGE_SIZES = [25, 50, 100];
   const pageSize = PAGE_SIZES.includes(Number(sp.size)) ? Number(sp.size) : 25;
   const pageNum  = Math.max(1, Math.floor(Number(sp.page ?? "1")) || 1);
@@ -200,8 +185,6 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const streamSort: StreamSortKey = STREAM_SORTS.has(sp.sort as StreamSortKey) ? (sp.sort as StreamSortKey) : "date";
   const streamDir: "asc" | "desc" = sp.dir === "desc" ? "desc" : sp.dir === "asc" ? "asc" : (streamSort === "date" ? "asc" : "desc");
 
-  let calendarRows:  ExplorerRow[] = [];
-  let calendarTotal = 0;
   let streamRows:    StreamRow[]   = [];
   let streamTotal = 0;
   let walletRows:    StreamRow[]   = [];
@@ -209,39 +192,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   let walletAddress: string | null = null;
   let walletEnsHint: string | null = null;
 
-  if (mode === "calendar") {
-    // ONE indexed, paginated read off the cron-maintained rollup (~34ms page 1,
-    // ~130ms deep). This replaced the old "fetch 2,000 unlock events → enrich
-    // ~923 → render all" approach, which (a) capped browsing at the soonest
-    // ~923 of ~5,000 tokens and (b) re-aggregated/priced the whole pool on every
-    // render. Now we read exactly the 25 tokens on the current page, ordered +
-    // filtered in SQL, and get the true total for pagination. Reaches EVERY
-    // matching token.
-    const { rows, total } = await getExplorerPage({
-      windowStartSec: window.startSec,
-      windowEndSec:   window.endSec,
-      chainIds:       chainIds.length > 0 ? chainIds : undefined,
-      adapterIds,
-      symbol:         queryKind.kind === "symbol" ? queryKind.symbol : undefined,
-      amountUsdMin,
-      amountUsdMax,
-      minWallets,
-      maxWallets,
-      minRounds,
-      maxRounds,
-      minVestedPct,
-      maxVestedPct,
-      minTopHolder,
-      maxTopHolder,
-      cliffOnly,
-      sort: sortKey,
-      dir:  sortDir,
-      page: pageNum,
-      pageSize,
-    });
-    calendarTotal = total;
-    calendarRows  = rows.map(toExplorerRow);
-  } else if (mode === "stream") {
+  if (mode === "stream") {
     // Paginated server-side (25/page) so users browse EVERY matching schedule,
     // not the old ~1000-row cap. Symbol filter is applied in SQL so the count
     // is accurate.
@@ -291,15 +242,13 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     if (walletAllRows.length > 0) walletPortfolio = await buildWalletPortfolio(walletAllRows);
   }
 
-  // Per-mode totals. All three modes paginate server-side now; the total is the
-  // true matching count for the pager.
-  const totalMatches =
-    mode === "calendar" ? calendarTotal :
-    mode === "stream"   ? streamTotal :
-    walletTotal;
+  // Per-mode totals for the server-paginated Stream/Wallet pagers. Calendar's
+  // totals are computed client-side inside <ExplorerCalendarClient>.
+  const totalMatches = mode === "stream" ? streamTotal : mode === "wallet" ? walletTotal : 0;
   const totalPages = Math.max(1, Math.ceil(totalMatches / pageSize));
 
-  // Active-filter count for the free-tier multi-filter cap.
+  // Active-filter count for the free-tier multi-filter cap (Stream mode banner;
+  // Calendar applies the same cap client-side).
   const activeFilters = [
     chainIds.length > 0 ? "chain" : null,
     protocols.length > 0 ? "protocol" : null,
@@ -396,22 +345,25 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             })}
           </div>
           <div className="pb-2 flex items-center gap-3">
-            {/* Per-page size selector. */}
-            <div className="hidden sm:flex items-center gap-1 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              <span>Per page</span>
-              {PAGE_SIZES.map((s) => (
-                <Link
-                  key={s}
-                  href={buildUrl({ ...sp, size: s === 25 ? undefined : String(s), page: undefined })}
-                  className="px-1.5 py-0.5 rounded font-semibold transition-colors"
-                  style={pageSize === s
-                    ? { background: "#0F8A8A", color: "white" }
-                    : { color: "var(--preview-text-2)" }}
-                >
-                  {s}
-                </Link>
-              ))}
-            </div>
+            {/* Per-page size selector — server-nav for Stream/Wallet. Calendar
+                mode renders its own (instant) per-page control client-side. */}
+            {mode !== "calendar" && (
+              <div className="hidden sm:flex items-center gap-1 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                <span>Per page</span>
+                {PAGE_SIZES.map((s) => (
+                  <Link
+                    key={s}
+                    href={buildUrl({ ...sp, size: s === 25 ? undefined : String(s), page: undefined })}
+                    className="px-1.5 py-0.5 rounded font-semibold transition-colors"
+                    style={pageSize === s
+                      ? { background: "#0F8A8A", color: "white" }
+                      : { color: "var(--preview-text-2)" }}
+                  >
+                    {s}
+                  </Link>
+                ))}
+              </div>
+            )}
             <SaveSearchButton isPaid={!isFree} />
           </div>
         </div>
@@ -425,140 +377,118 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             : "Upcoming — one row per token (all its wallets/rounds rolled up), sorted by next unlock. Filter + sort to find projects; switch to Schedules for the individual streams."}
         </p>
 
-        {mode === "calendar" && <LensBar sp={sp} />}
-
-        <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>
-          {/* Results */}
-          <section>
-            <ActiveFilters sp={sp} />
-            {mode === "calendar" && (
-              overFilterCap ? (
-                <UpgradeBanner
-                  title="Combine multiple filters with Pro"
-                  body="Free accounts can filter by one dimension at a time. Pro lets you stack chain + protocol + amount + date for surgical queries."
-                />
-              ) : (
-                <ExplorerTable
-                  rows={calendarRows}
+        {/* CALENDAR / Upcoming — fully client-side island: loads the dataset
+            once (CDN-cached) and filters/sorts/paginates in-browser. Owns its
+            own lenses, active-filter chips, per-page control, results table,
+            and filter sidebar. The URL stays in sync (replaceState) so links
+            remain shareable + re-hydrate this same view on a fresh load. */}
+        {mode === "calendar" ? (
+          <ExplorerCalendarClient
+            isFree={isFree}
+            initial={{
+              q: query,
+              date: dateSlug,
+              chainIds,
+              protocols,
+              minWallets,
+              maxWallets,
+              minRounds,
+              maxRounds,
+              minVestedPct,
+              maxVestedPct,
+              usdMin: amountUsdMin,
+              usdMax: amountUsdMax,
+              minTopHolder,
+              maxTopHolder,
+              cliffOnly,
+              sort: sortKey,
+              dir: sortDir,
+              page: pageNum,
+              pageSize,
+            }}
+          />
+        ) : (
+          <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: "minmax(0, 1fr) 220px" }}>
+            {/* Results */}
+            <section>
+              <ActiveFilters sp={sp} />
+              {mode === "stream" && (
+                <StreamResults
+                  rows={streamRows}
                   totalMatches={totalMatches}
+                  overFilterCap={overFilterCap}
                   page={pageNum}
                   totalPages={totalPages}
                   pageSize={pageSize}
-                  sort={sortKey}
-                  dir={sortDir}
                   params={sp as Record<string, string | undefined>}
                 />
-              )
-            )}
-            {mode === "stream" && (
-              <StreamResults
-                rows={streamRows}
-                totalMatches={totalMatches}
-                overFilterCap={overFilterCap}
-                page={pageNum}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                params={sp as Record<string, string | undefined>}
-              />
-            )}
-            {mode === "wallet" && (
-              <WalletResults
-                rows={walletRows}
-                statsRows={walletAllRows}
-                totalMatches={totalMatches}
-                walletAddress={walletAddress}
-                ensHint={walletEnsHint}
-                queryGiven={query.length > 0}
-                portfolio={walletPortfolio}
-                page={pageNum}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                params={sp as Record<string, string | undefined>}
-              />
-            )}
-          </section>
+              )}
+              {mode === "wallet" && (
+                <WalletResults
+                  rows={walletRows}
+                  statsRows={walletAllRows}
+                  totalMatches={totalMatches}
+                  walletAddress={walletAddress}
+                  ensHint={walletEnsHint}
+                  queryGiven={query.length > 0}
+                  portfolio={walletPortfolio}
+                  page={pageNum}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  params={sp as Record<string, string | undefined>}
+                />
+              )}
+            </section>
 
-          {/* Filter sidebar — collapsible on mobile via summary/details.
-              Sticky so filters stay reachable while scrolling the token list:
-              `self-start` stops the grid cell from stretching (sticky needs a
-              non-stretched item); the max-height + scroll keeps it usable when
-              the filter stack is taller than the viewport. */}
-          <aside className="space-y-4 hidden md:block self-start sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
-            <FilterGroup label="Chain">
-              {CHAIN_FILTERS.map((c) => (
-                <FilterPill
-                  key={c.id}
-                  active={chainIds.includes(c.id)}
-                  href={buildUrl({ ...sp, chain: toggleCsvId(sp.chain, c.id) })}
-                >
-                  {c.label}
-                </FilterPill>
-              ))}
-            </FilterGroup>
-            <FilterGroup label="Protocol">
-              {listProtocols().map((p) => (
-                <FilterPill
-                  key={p.slug}
-                  active={protocols.includes(p.slug)}
-                  href={buildUrl({ ...sp, protocol: toggleCsvSlug(sp.protocol, p.slug) })}
-                >
-                  {p.name}
-                </FilterPill>
-              ))}
-            </FilterGroup>
-            <FilterGroup label="Date range">
-              {DATE_FILTERS.map((d) => (
-                <FilterPill
-                  key={d.id}
-                  active={dateSlug === d.id}
-                  href={buildUrl({ ...sp, date: d.id })}
-                >
-                  {d.label}
-                </FilterPill>
-              ))}
-            </FilterGroup>
-            {/* Range drill-down — wallets / locked USD / schedules / % vested.
-                Dual sliders (Upcoming mode only; filter the rollup-backed list). */}
-            {mode === "calendar" && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider font-bold mb-2.5" style={{ color: "var(--preview-text-3)" }}>
-                  Drill down
-                </p>
-                <ExplorerSliders
-                  params={sp as Record<string, string | undefined>}
-                  minWallets={minWallets}
-                  maxWallets={maxWallets}
-                  minRounds={minRounds}
-                  maxRounds={maxRounds}
-                  minVested={minVestedPct != null ? Math.round(minVestedPct * 100) : undefined}
-                  maxVested={maxVestedPct != null ? Math.round(maxVestedPct * 100) : undefined}
-                  usdMin={amountUsdMin}
-                  usdMax={amountUsdMax}
-                  topMin={minTopHolder != null ? Math.round(minTopHolder * 100) : undefined}
-                  topMax={maxTopHolder != null ? Math.round(maxTopHolder * 100) : undefined}
-                />
-                {/* Cliff-only toggle — pairs with the "Imminent cliffs" lens. */}
-                <div className="mt-3">
+            {/* Filter sidebar (Stream/Wallet). Chain/protocol filters only —
+                the slider drill-downs are Upcoming-only (they live in the
+                calendar client island). */}
+            <aside className="space-y-4 hidden md:block self-start sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
+              <FilterGroup label="Chain">
+                {CHAIN_FILTERS.map((c) => (
                   <FilterPill
-                    active={cliffOnly}
-                    href={buildUrl({ ...sp, cliff: cliffOnly ? undefined : "1", page: undefined })}
+                    key={c.id}
+                    active={chainIds.includes(c.id)}
+                    href={buildUrl({ ...sp, chain: toggleCsvId(sp.chain, c.id) })}
                   >
-                    Cliff unlocks only
+                    {c.label}
                   </FilterPill>
-                </div>
-              </div>
-            )}
-            {(chainIds.length > 0 || protocols.length > 0 || amountUsdMin || amountUsdMax || minWallets || maxWallets || minRounds || maxRounds || minVestedPct || maxVestedPct || minTopHolder || maxTopHolder || cliffOnly || dateSlug !== "all") && (
-              <Link
-                href={buildUrl({ q: query })}
-                className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"
-                style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
-              >
-                Clear filters
-              </Link>
-            )}
-          </aside>
-        </div>
+                ))}
+              </FilterGroup>
+              <FilterGroup label="Protocol">
+                {listProtocols().map((p) => (
+                  <FilterPill
+                    key={p.slug}
+                    active={protocols.includes(p.slug)}
+                    href={buildUrl({ ...sp, protocol: toggleCsvSlug(sp.protocol, p.slug) })}
+                  >
+                    {p.name}
+                  </FilterPill>
+                ))}
+              </FilterGroup>
+              <FilterGroup label="Date range">
+                {DATE_FILTERS.map((d) => (
+                  <FilterPill
+                    key={d.id}
+                    active={dateSlug === d.id}
+                    href={buildUrl({ ...sp, date: d.id })}
+                  >
+                    {d.label}
+                  </FilterPill>
+                ))}
+              </FilterGroup>
+              {(chainIds.length > 0 || protocols.length > 0 || dateSlug !== "all") && (
+                <Link
+                  href={buildUrl({ q: query, mode })}
+                  className="block text-center text-xs font-semibold py-2 rounded-lg transition-colors"
+                  style={{ background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
+                >
+                  Clear filters
+                </Link>
+              )}
+            </aside>
+          </div>
+        )}
       </main>
   );
 }
@@ -1040,42 +970,6 @@ function buildUrl(params: Record<string, string | undefined>): string {
   return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
 }
 
-// Quick lenses — one-click curated presets. Each REPLACES the current filters
-// with its own (a clean view). Highlighted when its params match the URL.
-function LensBar({ sp }: { sp: ExplorerSearchParams }) {
-  const matches = (params: Record<string, string>) =>
-    Object.entries(params).every(([k, v]) =>
-      k === "mode" ? (sp.mode ?? "calendar") === v : (sp as Record<string, string | undefined>)[k] === v,
-    );
-  return (
-    <div className="flex items-center gap-2 mt-4 flex-wrap">
-      <span className="text-[10px] font-bold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>Quick lenses</span>
-      {LENSES.map((lens) => {
-        const active = matches(lens.params);
-        return (
-          <div key={lens.id} className="relative group">
-            <Link
-              href={buildUrl(lens.params)}
-              className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all"
-              style={active
-                ? { background: "#0F8A8A", color: "white", border: "1px solid #0F8A8A" }
-                : { background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
-            >
-              {lens.label}
-            </Link>
-            {/* Richer hover card (CSS-only) — explains the preset. */}
-            <div className="hidden group-hover:block absolute left-0 top-full mt-1.5 z-40 w-56 rounded-lg p-2.5 shadow-lg pointer-events-none"
-              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-              <p className="text-[11px] font-bold mb-0.5" style={{ color: "var(--preview-text)" }}>{lens.label}</p>
-              <p className="text-[11px] leading-snug" style={{ color: "var(--preview-text-2)" }}>{lens.hint}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 // Active-filter chip bar — shows every applied filter as a removable chip
 // (✕ link clears just that one) plus a "Clear all". Gives a one-glance view
 // of what's narrowing the results + one-click reset, which the filter pills
@@ -1136,38 +1030,8 @@ function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
   );
 }
 
-// Map a paginated rollup row → the table's serialisable ExplorerRow. Risk on
-// the explorer list is the token-level "unlock overhang" — locked value as a
-// share of market cap (matches the token page's framing), since the rollup is
-// per-token, not per-unlock-event.
-function toExplorerRow(r: ExplorerPageRow): ExplorerRow {
-  const marketCapShare = r.lockedValueUsd != null && r.marketCap && r.marketCap > 0
-    ? r.lockedValueUsd / r.marketCap
-    : null;
-  return {
-    groupKey:         `${r.chainId}:${r.tokenAddress.toLowerCase()}`,
-    protocol:         r.protocols[0] ?? "",
-    protocolCount:    r.protocols.length,
-    chainId:          r.chainId,
-    tokenSymbol:      r.tokenSymbol,
-    tokenAddress:     r.tokenAddress,
-    tokenDecimals:    r.tokenDecimals,
-    amount:           r.totalLocked,
-    usdValue:         r.lockedValueUsd,
-    usdConfidence:    null,
-    walletCount:      r.walletCount,
-    tokenWalletCount: r.walletCount,
-    tokenRoundCount:  r.roundCount,
-    vestStart:        r.firstStart,
-    vestEnd:          r.lastEnd,
-    hasCliff:         r.hasCliff,
-    topHolderShare:   r.topHolderShare,
-    unlockCurve:      r.unlockCurve,
-    eventTime:        r.nextUnlock ?? 0,
-    absorptionRatio:  null,
-    marketCapShare,
-  };
-}
+// (toExplorerRow moved into ExplorerCalendarClient — the rollup→row mapping now
+// happens client-side off the compact dataset.)
 
 function parseCsvNumbers(raw: string | undefined): number[] {
   if (!raw) return [];

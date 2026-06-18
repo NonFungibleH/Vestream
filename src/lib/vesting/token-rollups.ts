@@ -468,3 +468,75 @@ export async function getExplorerPage(
   }));
   return { rows: out, total };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Full-dataset projection for the CLIENT-SIDE explorer. Instead of one
+// paginated server read per filter/sort/page change (a force-dynamic round-trip
+// — the explorer reads searchParams, so it can never be CDN-cached), we ship
+// the WHOLE upcoming-unlock universe ONCE (compact, ~0.4MB gzipped over ~6.7k
+// rows) and let the browser filter/sort/paginate in-memory. Zero round-trips
+// per interaction → genuinely instant. The shape uses short keys to keep the
+// payload small; the client expands each to the table's ExplorerRow. Served by
+// /api/dashboard/explorer/dataset (public, CDN-cached — it's the same per-token
+// rollup data the public /explore pages already expose).
+// ─────────────────────────────────────────────────────────────────────────────
+export interface ExplorerDatasetRow {
+  c:   number;          // chainId
+  a:   string;          // tokenAddress
+  s:   string | null;   // tokenSymbol
+  d:   number;          // tokenDecimals
+  amt: string;          // total_locked (raw stringified bigint)
+  u:   number | null;   // locked value USD
+  mc:  number | null;   // market cap
+  t:   number | null;   // top-holder share (0–1)
+  w:   number;          // wallet count
+  r:   number;          // round (schedule) count
+  cl:  0 | 1;           // has cliff
+  fs:  number | null;   // first start (unix sec)
+  le:  number | null;   // last end (unix sec)
+  n:   number | null;   // next unlock (unix sec)
+  p:   string[];        // protocols
+  cv:  string | null;   // unlock curve — comma-joined cumulative-% samples (parsed client-side)
+}
+
+export async function getExplorerDataset(): Promise<ExplorerDatasetRow[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  const now = Math.floor(Date.now() / 1000);
+
+  type R = Record<string, unknown>;
+  let rows: R[] = [];
+  try {
+    rows = (await db.execute(sql`
+      SELECT chain_id AS "c", token_address AS "a", token_symbol AS "s",
+             token_decimals AS "d", total_locked AS "amt",
+             locked_value_usd AS "u", market_cap AS "mc", top_holder_share AS "t",
+             wallet_count AS "w", round_count AS "r", has_cliff AS "cl",
+             first_start AS "fs", last_end AS "le", next_unlock AS "n",
+             protocols AS "p", unlock_curve AS "cv"
+      FROM token_vesting_rollups
+      WHERE next_unlock IS NOT NULL AND next_unlock >= ${now}
+    `) as unknown as R[]) ?? [];
+  } catch (err) {
+    console.error("[token-rollups] getExplorerDataset failed:", err);
+    return [];
+  }
+
+  return rows.map((r) => ({
+    c:   Number(r.c),
+    a:   String(r.a),
+    s:   (r.s as string | null) ?? null,
+    d:   Number(r.d ?? 18),
+    amt: String(r.amt ?? "0"),
+    u:   r.u != null ? Number(r.u) : null,
+    mc:  r.mc != null ? Number(r.mc) : null,
+    t:   r.t != null ? Number(r.t) : null,
+    w:   Number(r.w ?? 0),
+    r:   Number(r.r ?? 0),
+    cl:  r.cl ? 1 : 0,
+    fs:  r.fs != null ? Number(r.fs) : null,
+    le:  r.le != null ? Number(r.le) : null,
+    n:   r.n != null ? Number(r.n) : null,
+    p:   Array.isArray(r.p) ? (r.p as string[]) : [],
+    cv:  typeof r.cv === "string" && r.cv.length > 0 ? r.cv : null,
+  }));
+}
