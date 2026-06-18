@@ -14,7 +14,7 @@
 //   - Hidden inputs preserve current filter state for the form fallback —
 //     non-JS submits still work.
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { detectQueryKind, destinationForQuery } from "./detect-query";
 import type { WindowSlug } from "@/lib/vesting/unlock-windows";
@@ -28,12 +28,49 @@ interface Props {
   dateSlug:     WindowSlug | "all";
 }
 
+interface Suggestion {
+  chainId: number; tokenAddress: string; tokenSymbol: string | null;
+  walletCount: number; lockedValueUsd: number | null;
+}
+
+const CHAIN_LABEL: Record<number, string> = { 1: "Ethereum", 56: "BNB", 137: "Polygon", 8453: "Base", 42161: "Arbitrum", 10: "Optimism", 101: "Solana" };
+const fmtUsd = (n: number | null) =>
+  n == null ? "" : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(0)}k` : `$${n.toFixed(0)}`;
+
 export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, dateSlug }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(initialQuery);
   const [isPending, startTransition] = useTransition();
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const detected = detectQueryKind(value);
+
+  // Type-ahead: fetch token suggestions while the user types a symbol/free text
+  // (not for address/ENS/protocol, which route to dedicated destinations).
+  // Debounced 180ms; aborts the in-flight request when the value changes.
+  useEffect(() => {
+    const q = value.trim();
+    const wantSuggest = q.length >= 2 && (detected.kind === "symbol" || detected.kind === "freeform");
+    if (!wantSuggest) { setSuggestions([]); setOpen(false); return; }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/dashboard/explorer/suggest?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+        if (!res.ok) return;
+        const data = await res.json() as { results: Suggestion[] };
+        setSuggestions(data.results ?? []);
+        setOpen((data.results ?? []).length > 0);
+      } catch { /* aborted / network — ignore */ }
+    }, 180);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [value, detected.kind]);
+
+  function selectToken(s: Suggestion) {
+    setOpen(false);
+    startTransition(() => router.push(`/dashboard/explorer/token/${s.chainId}/${s.tokenAddress}`));
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -92,6 +129,9 @@ export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, d
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
+            onBlur={() => { blurTimer.current = setTimeout(() => setOpen(false), 150); }}
+            onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
             placeholder="0x… · vitalik.eth · STRZ · sablier"
             className="w-full pl-10 pr-3 py-3 rounded-xl text-sm font-medium outline-none transition-all"
             style={{
@@ -103,7 +143,41 @@ export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, d
             autoCorrect="off"
             autoCapitalize="off"
             autoComplete="off"
+            role="combobox"
+            aria-expanded={open}
+            aria-autocomplete="list"
           />
+          {/* Type-ahead dropdown */}
+          {open && suggestions.length > 0 && (
+            <ul
+              className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-xl overflow-hidden shadow-lg"
+              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}
+              // Keep focus on mousedown so onBlur doesn't fire before the click.
+              onMouseDown={(e) => { e.preventDefault(); clearTimeout(blurTimer.current); }}
+            >
+              {suggestions.map((s) => (
+                <li key={`${s.chainId}-${s.tokenAddress}`}>
+                  <button
+                    type="button"
+                    onClick={() => selectToken(s)}
+                    className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left transition-colors hover:bg-[var(--preview-muted)]"
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+                        {s.tokenSymbol ?? `${s.tokenAddress.slice(0, 6)}…`}
+                      </span>
+                      <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                        {CHAIN_LABEL[s.chainId] ?? `chain ${s.chainId}`}
+                      </span>
+                    </span>
+                    <span className="text-[11px] tabular-nums flex-shrink-0" style={{ color: "var(--preview-text-3)" }}>
+                      {s.lockedValueUsd != null ? `${fmtUsd(s.lockedValueUsd)} locked` : `${s.walletCount} wallet${s.walletCount === 1 ? "" : "s"}`}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <button
           type="submit"
