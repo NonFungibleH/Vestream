@@ -99,17 +99,17 @@ export function groupIntoRounds(streams: VestingStream[]): Round[] {
     });
   }
 
+  // Chronological by next unlock — a vesting schedule reads as a TIMELINE, so
+  // ordering by date (not allocation size) is what users expect when they scan
+  // "when do unlocks happen". Rounds with no upcoming unlock sort last; ties
+  // break by larger allocation first.
   rounds.sort((a, b) => {
-    const x = BigInt(a.totalLocked);
-    const y = BigInt(b.totalLocked);
-    if (y !== x) return y > x ? 1 : -1;
-    // Tiebreaker: equal-sized rounds (common when one project locks liquidity
-    // in many identical tranches — e.g. a PinkSale token with 17 single-wallet
-    // cliffs of the same amount) sort by SOONEST next unlock, so they read
-    // top-to-bottom as a chronological timeline instead of jumbled dates.
     const an = a.nextUnlockTime ?? Infinity;
     const bn = b.nextUnlockTime ?? Infinity;
-    return an - bn;
+    if (an !== bn) return an - bn;
+    const x = BigInt(a.totalLocked);
+    const y = BigInt(b.totalLocked);
+    return y > x ? 1 : y < x ? -1 : 0;
   });
   return rounds;
 }

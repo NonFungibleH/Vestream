@@ -47,19 +47,26 @@ function fmtSpan(firstStart: number | null, lastEnd: number | null): string {
   return `${Math.round(days)} day${Math.round(days) === 1 ? "" : "s"}`;
 }
 
-// Plain-language read on concentration — the one-line takeaway.
-function verdict(top1: number, top5: number, totalHolders: number): { text: string; tone: "bad" | "warn" | "ok" } {
-  if (top1 >= 0.5) return { text: "Highly concentrated — a single wallet holds the majority of locked supply.", tone: "bad" };
-  if (top5 >= 0.8) return { text: "Concentrated — the top 5 wallets hold most of the locked supply.", tone: "warn" };
-  if (totalHolders >= 25 && top10Below(top5)) return { text: `Well distributed across ${totalHolders.toLocaleString()} wallets — no dominant holder.`, tone: "ok" };
-  return { text: `Moderately distributed across ${totalHolders.toLocaleString()} wallet${totalHolders === 1 ? "" : "s"}.`, tone: "warn" };
+type Tone = "warn" | "ok" | "info";
+
+// Plain-language read on concentration. IMPORTANT: this is concentration WITHIN
+// the vesting (locked) supply — NOT the token's overall holder base. A token can
+// circulate widely with only one or two wallets vesting, so a single vesting
+// position is stated neutrally, never flagged as a centralisation risk. The
+// significance of the vesting (how big it is vs market cap) is shown separately.
+function verdict(top1: number, top5: number, totalHolders: number): { text: string; tone: Tone } {
+  if (totalHolders === 1) {
+    return { text: "A single wallet holds all the vesting supply — this reflects the vesting only, not the token's wider distribution.", tone: "info" };
+  }
+  if (top1 >= 0.5) return { text: `One wallet holds the majority of the vesting supply (across ${totalHolders.toLocaleString()} vesting wallets).`, tone: "warn" };
+  if (top5 >= 0.8) return { text: `The top 5 wallets hold most of the vesting supply (of ${totalHolders.toLocaleString()} vesting wallets).`, tone: "warn" };
+  if (totalHolders >= 25 && top5 < 0.6) return { text: `Vesting is spread across ${totalHolders.toLocaleString()} wallets — no dominant holder.`, tone: "ok" };
+  return { text: `Vesting is split across ${totalHolders.toLocaleString()} wallets.`, tone: "info" };
 }
-// Small helper so the "well distributed" branch reads cleanly above.
-function top10Below(top5: number): boolean { return top5 < 0.6; }
 
 export function HolderDistribution({
   holders, totalHolders, top1, top5, symbol,
-  firstStart, lastEnd, spanPct, isFree, rowCap,
+  firstStart, lastEnd, spanPct, isFree, rowCap, vestingShareOfMktCap,
 }: {
   holders:     HolderRow[];
   totalHolders: number;
@@ -71,10 +78,15 @@ export function HolderDistribution({
   spanPct:     number | null;
   isFree:      boolean;
   rowCap:      number;
+  /** Locked/vesting USD ÷ the token's market cap — how big the vesting overhang
+   *  is relative to the circulating token. The number that tells you whether
+   *  the within-vesting concentration above actually matters. Null if unknown. */
+  vestingShareOfMktCap?: number | null;
 }) {
   if (holders.length === 0) return null;
   const v = verdict(top1, top5, totalHolders);
-  const toneColor = v.tone === "bad" ? "#dc2626" : v.tone === "warn" ? "#d97706" : "#0F8A8A";
+  const toneColor = v.tone === "warn" ? "#d97706" : v.tone === "ok" ? "#0F8A8A" : "var(--preview-text-3)";
+  const single = totalHolders === 1;
   const shown  = isFree ? holders.slice(0, Math.min(rowCap, 10)) : holders.slice(0, 25);
   const hidden = holders.length - shown.length;
   // Bars are scaled to the largest holder (not to 100%) so the distribution
@@ -89,11 +101,13 @@ export function HolderDistribution({
         </h2>
       </div>
 
-      {/* Headline stats */}
+      {/* Headline stats. Top-holder / top-5 are only meaningful with >1 vesting
+          wallet — with a single position they're trivially 100%, so we don't
+          colour them as a warning (that misread as a token-wide risk). */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-        <Stat label="Top holder" value={pct(top1)} tone={top1 >= 0.5 ? "bad" : top1 >= 0.25 ? "warn" : undefined} />
-        <Stat label="Top 5 wallets" value={pct(top5)} tone={top5 >= 0.8 ? "bad" : top5 >= 0.5 ? "warn" : undefined} />
-        <Stat label="Recipients" value={totalHolders.toLocaleString()} />
+        <Stat label="Top vesting wallet" value={pct(top1)} tone={!single && top1 >= 0.5 ? "warn" : undefined} />
+        <Stat label="Top 5 wallets" value={pct(top5)} tone={!single && top5 >= 0.8 ? "warn" : undefined} />
+        <Stat label="Vesting wallets" value={totalHolders.toLocaleString()} />
         <Stat
           label="Vesting span"
           value={fmtSpan(firstStart, lastEnd)}
@@ -101,7 +115,17 @@ export function HolderDistribution({
         />
       </div>
 
-      {/* Verdict */}
+      {/* Significance FIRST: how big the vesting is vs the circulating token —
+          this is what tells you whether the concentration below matters. */}
+      {vestingShareOfMktCap != null && (
+        <p className="text-xs mb-1" style={{ color: "var(--preview-text-2)" }}>
+          Vesting locks ≈{pct(vestingShareOfMktCap)} of {symbol}&apos;s market cap
+          {vestingShareOfMktCap < 0.05 ? " — a small slice of the circulating token." :
+           vestingShareOfMktCap >= 1   ? " — a large overhang relative to what's circulating." : "."}
+        </p>
+      )}
+
+      {/* Within-vesting concentration read. */}
       <p className="text-xs mb-1" style={{ color: toneColor }}>
         {v.tone === "ok" ? "✓ " : "● "}{v.text}
       </p>
@@ -126,7 +150,9 @@ export function HolderDistribution({
             <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
               <div className="h-full rounded-full" style={{
                 width: `${Math.max(2, (h.share / maxShare) * 100)}%`,
-                background: h.share >= 0.5 ? "#dc2626" : h.share >= 0.25 ? "#d97706" : "#0F8A8A",
+                // A lone vesting wallet at 100% isn't a concentration signal —
+                // keep it neutral teal rather than alarm red.
+                background: single ? "#0F8A8A" : h.share >= 0.5 ? "#dc2626" : h.share >= 0.25 ? "#d97706" : "#0F8A8A",
               }} />
             </div>
             <span className="text-[11px] tabular-nums w-12 flex-shrink-0 text-right font-semibold" style={{ color: "var(--preview-text-2)" }}>

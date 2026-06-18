@@ -97,6 +97,12 @@ export default async function ExplorerTokenPage({
   // realisable, so we flag it rather than present it as gospel.
   const lockedValueUsd = priceUsd != null ? totalLockedWhole * priceUsd : null;
   const liqUsd = market?.liquidity ?? null;
+  // How big the vesting overhang is vs the circulating token — the number that
+  // tells you whether the holder concentration below actually matters (a single
+  // wallet holding 100% of a vesting that's 2% of market cap is a non-event).
+  const vestingShareOfMktCap = lockedValueUsd != null && market?.marketCap
+    ? lockedValueUsd / market.marketCap
+    : null;
   const thinLiquidity = lockedValueUsd != null && (liqUsd == null || liqUsd < 10_000);
   // Nearest FUTURE cliff across streams — a cliff is a single lump unlock
   // (distinct from gradual linear/step vesting), the kind worth bracing for.
@@ -239,6 +245,7 @@ export default async function ExplorerTokenPage({
             spanPct={spanPct}
             isFree={isFree}
             rowCap={FREE_TIER_ROW_CAP}
+            vestingShareOfMktCap={vestingShareOfMktCap}
           />
 
           <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
