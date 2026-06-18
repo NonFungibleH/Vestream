@@ -14,7 +14,7 @@
 //     &chain=... &protocol=... &date=... — every view is shareable.
 //
 // Data sources (all already built):
-//   - calendar mode: getUnlocksInWindow()
+//   - calendar mode: getExplorerPage() — one paginated indexed read off the rollup
 //   - stream mode:   getStreamsForExplorer() (lightweight wrapper, this file)
 //   - wallet mode:   /api/vesting (existing endpoint, called server-side)
 //
@@ -26,13 +26,10 @@
 import Link from "next/link";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import {
-  getUnlocksInWindow,
-  enrichGroupsWithUsd,
   WINDOWS,
   type WindowSlug,
-  type WindowUnlockGroup,
 } from "@/lib/vesting/unlock-windows";
-import { readTokenRollups } from "@/lib/vesting/token-rollups";
+import { getExplorerPage, type ExplorerSortKey, type ExplorerPageRow } from "@/lib/vesting/token-rollups";
 import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 import {
   getStreamsForExplorer,
@@ -100,7 +97,9 @@ interface ExplorerSearchParams {
   date?:     string;   // window slug or "all"
   amount?:   string;   // amount-filter id
   wallets?:  string;   // wallet-count filter id ("10" | "25" | "100")
-  sort?:     string;   // calendar sort ("date" | "wallets" | "amount")
+  sort?:     string;   // calendar sort key (date | usd | amount | wallets | …)
+  dir?:      string;   // "asc" | "desc"
+  page?:     string;   // 1-based page number (calendar pagination)
   status?:   string;
 }
 
@@ -150,101 +149,44 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     ? { startSec: Math.floor(Date.now() / 1000), endSec: Math.floor(Date.now() / 1000) + 5 * 365 * 86400 }
     : WINDOWS[dateSlug as WindowSlug].range();
 
-  let calendarGroups: WindowUnlockGroup[] = [];
-  let protoCountByKey = new Map<string, number>(); // distinct protocols per token (post-dedupe)
-  let streamRows:     StreamRow[]         = [];
-  let walletRows:     StreamRow[]         = [];
-  let walletAddress:  string | null       = null;
-  let walletEnsHint:  string | null       = null;
+  // Pagination + sort for the Upcoming list. Now SERVER-SIDE (we page straight
+  // off the rollup), so they live in the URL: ?page= &sort= &dir=.
+  const pageSize = 25;
+  const pageNum  = Math.max(1, Math.floor(Number(sp.page ?? "1")) || 1);
+  const VALID_SORTS = new Set<ExplorerSortKey>(["date", "usd", "amount", "wallets", "concentration", "rounds", "cliff", "risk", "progress", "token"]);
+  const sortKey: ExplorerSortKey = VALID_SORTS.has(sp.sort as ExplorerSortKey) ? (sp.sort as ExplorerSortKey) : "date";
+  const sortDir: "asc" | "desc"  = sp.dir === "desc" ? "desc" : sp.dir === "asc" ? "asc" : (sortKey === "date" ? "asc" : "desc");
+
+  let calendarRows:  ExplorerRow[] = [];
+  let calendarTotal = 0;
+  let streamRows:    StreamRow[]   = [];
+  let walletRows:    StreamRow[]   = [];
+  let walletAddress: string | null = null;
+  let walletEnsHint: string | null = null;
 
   if (mode === "calendar") {
-    let baseGroups: WindowUnlockGroup[] = [];
-    try {
-      // Pure-DB pool scan (~400ms, partial-index backed). No unstable_cache
-      // wrapper: it cached only this query but serialised up to 2000 groups
-      // per miss on a force-dynamic route (rare hits, real overhead) and was a
-      // timeout suspect — not worth it for a 400ms query.
-      const result = await getUnlocksInWindow(
-        window.startSec,
-        window.endSec,
-        isFree ? FREE_TIER_ROW_CAP * 4 : 2000,
-        adapterIds,
-        chainIds.length > 0 ? chainIds : undefined,
-        // Symbol searches MUST filter in SQL, not on the returned groups:
-        // the pool is capped across ALL tokens (soonest-ending first), so a
-        // post-hoc filter only sees whichever slice of this token's streams
-        // happened to make the global pool. The old post-filter showed
-        // "24 wallets" for PYME when the token had 850+ vestings.
-        queryKind.kind === "symbol" ? queryKind.symbol : undefined,
-      );
-      baseGroups = result.groups;
-    } catch {
-      baseGroups = [];
-    }
-    const scalePairs = baseGroups.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }));
-
-    // Price enrichment and the per-token scale metrics are independent (both
-    // keyed on the same groups), so run them in PARALLEL — one fewer serial DB
-    // round-trip on every load. enrichGroupsWithUsd reads the token_prices_cache
-    // first (cron-warmed) and only live-prices misses; readTokenRollups is a
-    // single INDEXED read of token_vesting_rollups (cron-maintained) for the
-    // true wallet/round counts, top-holder concentration, vest span + cliff.
-    //
-    // This REPLACES the old live getTokenScaleCounts + getTotalLockedByToken
-    // aggregates that ran on the request path — those heavy GROUP BYs (the
-    // per-recipient top-holder one took 4s+ under pooler load) were the
-    // recurring Cloudflare-524 root cause. The aggregation now happens once in
-    // the refresh-rollups cron; the explorer just reads the precomputed row.
-    const [enriched, rollups] = await Promise.all([
-      enrichGroupsWithUsd(baseGroups),
-      readTokenRollups(scalePairs),
-    ]);
-    calendarGroups = enriched.map((g) => {
-      const r = rollups.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`);
-      return r
-        ? { ...g, tokenWalletCount: r.walletCount, tokenRoundCount: r.roundCount, vestStart: r.firstStart ?? undefined, vestEnd: r.lastEnd ?? undefined, hasCliff: r.hasCliff, topHolderShare: r.topHolderShare }
-        : g;
+    // ONE indexed, paginated read off the cron-maintained rollup (~34ms page 1,
+    // ~130ms deep). This replaced the old "fetch 2,000 unlock events → enrich
+    // ~923 → render all" approach, which (a) capped browsing at the soonest
+    // ~923 of ~5,000 tokens and (b) re-aggregated/priced the whole pool on every
+    // render. Now we read exactly the 25 tokens on the current page, ordered +
+    // filtered in SQL, and get the true total for pagination. Reaches EVERY
+    // matching token.
+    const { rows, total } = await getExplorerPage({
+      windowStartSec: window.startSec,
+      windowEndSec:   window.endSec,
+      chainIds:       chainIds.length > 0 ? chainIds : undefined,
+      adapterIds,
+      symbol:         queryKind.kind === "symbol" ? queryKind.symbol : undefined,
+      amountUsdMin:   amountThreshold,
+      minWallets,
+      sort: sortKey,
+      dir:  sortDir,
+      page: pageNum,
+      pageSize,
     });
-
-    if (amountThreshold) {
-      // Filter on REAL USD value once priced. Unpriced rows are kept
-      // (we don't penalise tokens DexScreener doesn't cover) — the table
-      // sorts them last in "Largest" mode anyway, so they're easy to tell
-      // apart from the priced ones.
-      calendarGroups = calendarGroups.filter(
-        (g) => g.usdValue == null || g.usdValue >= amountThreshold,
-      );
-    }
-    if (minWallets) {
-      calendarGroups = calendarGroups.filter((g) => (g.tokenWalletCount ?? g.walletCount) >= minWallets);
-    }
-    // getUnlocksInWindow returns soonest-first — the default. All other
-    // sorting is now done client-side by clicking a column header in
-    // <ExplorerTable> (no server round-trip), so there's no server re-sort.
-
-    // ── Dedupe to one row per token contract ───────────────────────────────
-    // The pool is one row per (proto, chain, token, hour-bucket), so a token
-    // with many unlock cohorts (e.g. USDC/Sablier) appears as a dozen
-    // near-identical rows whose Wallets/Rounds columns are token-level and
-    // therefore just repeated. Collapse to one row per (chainId, tokenAddress)
-    // — the same key the token-detail route uses — so each token is a single
-    // source of truth. Groups arrive soonest-first, so the first occurrence
-    // per key IS the token's NEXT unlock; keep it as the representative and
-    // tally how many distinct protocols vest the token (rare, but when it
-    // happens those rows were true duplicates pointing at one token page).
-    {
-      const repByKey   = new Map<string, WindowUnlockGroup>();
-      const protoByKey = new Map<string, Set<string>>();
-      for (const g of calendarGroups) {
-        const key = `${g.chainId}:${g.tokenAddress.toLowerCase()}`;
-        let protos = protoByKey.get(key);
-        if (!protos) protoByKey.set(key, (protos = new Set()));
-        protos.add(g.protocol);
-        if (!repByKey.has(key)) repByKey.set(key, g); // soonest-first → next unlock
-      }
-      calendarGroups  = [...repByKey.values()];
-      protoCountByKey = new Map([...protoByKey].map(([k, s]) => [k, s.size]));
-    }
+    calendarTotal = total;
+    calendarRows  = rows.map(toExplorerRow);
   } else if (mode === "stream") {
     streamRows = await getStreamsForExplorer({
       chainIds:    chainIds.length > 0 ? chainIds : undefined,
@@ -283,38 +225,18 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     walletPortfolio = await buildWalletPortfolio(walletRows);
   }
 
-  // Compute the cap split per mode using the same shape, so render below
-  // can use one banner component.
+  // Per-mode totals. Calendar mode is paginated server-side (calendarTotal =
+  // the full matching-token count); stream/wallet are single-shot lists that
+  // keep the free-tier per-render cap.
   const totalMatches =
-    mode === "calendar" ? calendarGroups.length :
-    mode === "stream"   ? streamRows.length     :
+    mode === "calendar" ? calendarTotal :
+    mode === "stream"   ? streamRows.length :
     walletRows.length;
-  const visibleCount = isFree ? Math.min(totalMatches, FREE_TIER_ROW_CAP) : totalMatches;
-  const hiddenCount  = totalMatches - visibleCount;
-  const visibleCalendar = isFree ? calendarGroups.slice(0, FREE_TIER_ROW_CAP) : calendarGroups;
-  // Flatten to the serialisable shape the client-side sortable table needs.
-  const calendarRows: ExplorerRow[] = visibleCalendar.map((g) => ({
-    groupKey:          g.groupKey,
-    protocol:          g.protocol,
-    protocolCount:     protoCountByKey.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`) ?? 1,
-    chainId:           g.chainId,
-    tokenSymbol:       g.tokenSymbol,
-    tokenAddress:      g.tokenAddress,
-    tokenDecimals:     g.tokenDecimals,
-    amount:            g.amount,
-    usdValue:          g.usdValue ?? null,
-    usdConfidence:     g.usdConfidence ?? null,
-    walletCount:       g.walletCount,
-    tokenWalletCount:  g.tokenWalletCount,
-    tokenRoundCount:   g.tokenRoundCount,
-    vestStart:         g.vestStart ?? null,
-    vestEnd:           g.vestEnd ?? null,
-    hasCliff:          g.hasCliff ?? false,
-    topHolderShare:    g.topHolderShare ?? null,
-    eventTime:         g.eventTime,
-    absorptionRatio:   g.absorptionRatio ?? null,
-    marketCapShare:    g.marketCapShare ?? null,
-  }));
+  const visibleCount = mode === "calendar"
+    ? calendarRows.length
+    : (isFree ? Math.min(totalMatches, FREE_TIER_ROW_CAP) : totalMatches);
+  const hiddenCount  = mode === "calendar" ? 0 : (totalMatches - visibleCount);
+  const totalPages   = Math.max(1, Math.ceil(calendarTotal / pageSize));
   const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
   const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;
 
@@ -422,9 +344,13 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               ) : (
                 <ExplorerTable
                   rows={calendarRows}
-                  isFree={isFree}
                   totalMatches={totalMatches}
-                  hiddenCount={hiddenCount}
+                  page={pageNum}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  sort={sortKey}
+                  dir={sortDir}
+                  params={sp as Record<string, string | undefined>}
                 />
               )
             )}
@@ -1037,6 +963,38 @@ function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
       </Link>
     </div>
   );
+}
+
+// Map a paginated rollup row → the table's serialisable ExplorerRow. Risk on
+// the explorer list is the token-level "unlock overhang" — locked value as a
+// share of market cap (matches the token page's framing), since the rollup is
+// per-token, not per-unlock-event.
+function toExplorerRow(r: ExplorerPageRow): ExplorerRow {
+  const marketCapShare = r.lockedValueUsd != null && r.marketCap && r.marketCap > 0
+    ? r.lockedValueUsd / r.marketCap
+    : null;
+  return {
+    groupKey:         `${r.chainId}:${r.tokenAddress.toLowerCase()}`,
+    protocol:         r.protocols[0] ?? "",
+    protocolCount:    r.protocols.length,
+    chainId:          r.chainId,
+    tokenSymbol:      r.tokenSymbol,
+    tokenAddress:     r.tokenAddress,
+    tokenDecimals:    r.tokenDecimals,
+    amount:           r.totalLocked,
+    usdValue:         r.lockedValueUsd,
+    usdConfidence:    null,
+    walletCount:      r.walletCount,
+    tokenWalletCount: r.walletCount,
+    tokenRoundCount:  r.roundCount,
+    vestStart:        r.firstStart,
+    vestEnd:          r.lastEnd,
+    hasCliff:         r.hasCliff,
+    topHolderShare:   r.topHolderShare,
+    eventTime:        r.nextUnlock ?? 0,
+    absorptionRatio:  null,
+    marketCapShare,
+  };
 }
 
 function parseCsvNumbers(raw: string | undefined): number[] {

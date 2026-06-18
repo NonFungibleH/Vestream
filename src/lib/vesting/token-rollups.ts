@@ -71,7 +71,17 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
            ))::int               AS "rounds",
            min((stream_data->>'startTime')::numeric)::bigint AS "firstStart",
            max(end_time)::bigint AS "lastEnd",
-           bool_or((COALESCE((stream_data->>'cliffTime')::numeric, (stream_data->>'startTime')::numeric) - (stream_data->>'startTime')::numeric) > 86400) AS "hasCliff"
+           bool_or((COALESCE((stream_data->>'cliffTime')::numeric, (stream_data->>'startTime')::numeric) - (stream_data->>'startTime')::numeric) > 86400) AS "hasCliff",
+           -- Soonest FUTURE unlock across the token's streams. Each stream's
+           -- next unlock = its nextUnlockTime (a tranche boundary) or, absent
+           -- that, its end_time. We keep only those still in the future at
+           -- compute time. Drives the explorer "Upcoming" list order + filter.
+           min(
+             CASE WHEN COALESCE((stream_data->>'nextUnlockTime')::numeric, end_time) >= EXTRACT(EPOCH FROM now())
+                  THEN COALESCE((stream_data->>'nextUnlockTime')::numeric, end_time) END
+           )::bigint AS "nextUnlock",
+           array_agg(DISTINCT protocol) AS "protocols",
+           max(COALESCE((stream_data->>'tokenDecimals')::int, 18))::int AS "decimals"
     FROM vesting_streams_cache
     WHERE is_fully_vested = false
       AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
@@ -90,12 +100,44 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     byKey.set(k, { ...(byKey.get(k) ?? { chainId: r.chainId, tok: r.tok }), ...r });
   }
 
+  // Prices — one batch read of the whole price cache for the tokens we rolled
+  // up, so locked_value_usd + market_cap can be precomputed into the rollup
+  // (the explorer's $-amount filter, USD sort, and risk all read them from
+  // here instead of pricing live on render). Keyed `${chainId}:${lowerAddr}`.
+  const priceByKey = new Map<string, { price: number; mcap: number | null }>();
+  try {
+    const priceRows = (await db.execute(sql`
+      SELECT chain_id AS "chainId", lower(token_address) AS "tok",
+             price_usd::double precision AS "price",
+             market_cap::double precision AS "mcap"
+      FROM token_prices_cache
+      WHERE price_usd > 0
+    `) as unknown as Row[]) ?? [];
+    for (const p of priceRows) {
+      priceByKey.set(`${p.chainId}:${p.tok}`, {
+        price: Number(p.price),
+        mcap:  p.mcap != null ? Number(p.mcap) : null,
+      });
+    }
+  } catch (err) {
+    console.warn("[token-rollups] price batch read failed (locked_value_usd left null):", err);
+  }
+
   const now = new Date();
   const values = [...byKey.values()].map((r) => {
     let total = 0n, top = 0n;
     try { total = BigInt(String(r.total ?? "0")); } catch { /* 0 */ }
     try { top   = BigInt(String(r.top   ?? "0")); } catch { /* 0 */ }
     const topHolderShare = total > 0n ? Number((top * 1_000_000n) / total) / 1_000_000 : null;
+    const decimals = Number(r.decimals ?? 18) || 18;
+    const px = priceByKey.get(`${r.chainId}:${r.tok}`);
+    let lockedValueUsd: number | null = null;
+    if (px && total > 0n) {
+      const whole = Number(total) / 10 ** Math.min(decimals, 30);
+      lockedValueUsd = Number.isFinite(whole) ? whole * px.price : null;
+    }
+    // postgres-js returns text[] as a JS array already.
+    const protocols = Array.isArray(r.protocols) ? (r.protocols as string[]).filter(Boolean) : [];
     return {
       chainId:        Number(r.chainId),
       tokenAddress:   String(r.tok),
@@ -108,6 +150,11 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
       firstStart:     r.firstStart != null ? Number(r.firstStart) : null,
       lastEnd:        r.lastEnd != null ? Number(r.lastEnd) : null,
       hasCliff:       Boolean(r.hasCliff),
+      nextUnlock:     r.nextUnlock != null ? Number(r.nextUnlock) : null,
+      protocols,
+      tokenDecimals:  decimals,
+      lockedValueUsd,
+      marketCap:      px?.mcap ?? null,
       computedAt:     now,
     };
   });
@@ -134,6 +181,11 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
           firstStart:     sql`excluded.first_start`,
           lastEnd:        sql`excluded.last_end`,
           hasCliff:       sql`excluded.has_cliff`,
+          nextUnlock:     sql`excluded.next_unlock`,
+          protocols:      sql`excluded.protocols`,
+          tokenDecimals:  sql`excluded.token_decimals`,
+          lockedValueUsd: sql`excluded.locked_value_usd`,
+          marketCap:      sql`excluded.market_cap`,
           computedAt:     sql`excluded.computed_at`,
         },
       });
@@ -193,4 +245,146 @@ export async function readTokenRollups(
     });
   }
   return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paginated explorer list — reads ONE indexed page straight off the rollup
+// (≈34ms for page 1, ≈130ms deep) instead of re-aggregating vesting_streams_cache
+// per request (1.2s warm). This is what lets the explorer page through ALL
+// ~5,000 tokens-with-upcoming-unlocks, 25 at a time, instead of the soonest
+// ~923 the old 2,000-event pool cap allowed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ExplorerSortKey =
+  | "date" | "usd" | "amount" | "wallets" | "concentration" | "rounds" | "cliff" | "risk" | "progress" | "token";
+
+export interface ExplorerPageRow {
+  chainId:        number;
+  tokenAddress:   string;
+  tokenSymbol:    string | null;
+  totalLocked:    string;          // stringified bigint (raw)
+  tokenDecimals:  number;
+  lockedValueUsd: number | null;
+  marketCap:      number | null;
+  topHolderShare: number | null;
+  walletCount:    number;
+  roundCount:     number;
+  hasCliff:       boolean;
+  firstStart:     number | null;
+  lastEnd:        number | null;
+  nextUnlock:     number | null;
+  protocols:      string[];
+}
+
+// Whitelisted sort expressions (no user string ever reaches SQL — the key is
+// matched against this map). NULLS LAST is applied by direction below.
+const EXPLORER_SORT_SQL: Record<ExplorerSortKey, ReturnType<typeof sql>> = {
+  date:          sql`next_unlock`,
+  usd:           sql`locked_value_usd`,
+  amount:        sql`(total_locked)::numeric`,
+  wallets:       sql`wallet_count`,
+  concentration: sql`top_holder_share`,
+  rounds:        sql`round_count`,
+  cliff:         sql`(has_cliff)::int`,
+  risk:          sql`(locked_value_usd / NULLIF(market_cap, 0))`,
+  progress:      sql`CASE WHEN last_end > first_start
+                          THEN (EXTRACT(EPOCH FROM now()) - first_start)::float / (last_end - first_start)
+                          ELSE NULL END`,
+  token:         sql`lower(token_symbol)`,
+};
+
+export interface ExplorerPageOpts {
+  windowStartSec: number;
+  windowEndSec:   number;
+  chainIds?:      readonly number[];
+  adapterIds?:    readonly string[];
+  symbol?:        string;
+  amountUsdMin?:  number;
+  minWallets?:    number;
+  sort:           ExplorerSortKey;
+  dir:            "asc" | "desc";
+  page:           number;   // 1-based
+  pageSize:       number;
+}
+
+export async function getExplorerPage(
+  opts: ExplorerPageOpts,
+): Promise<{ rows: ExplorerPageRow[]; total: number }> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return { rows: [], total: 0 };
+
+  // WHERE — only tokens with an upcoming unlock inside the requested window.
+  const conds: ReturnType<typeof sql>[] = [
+    sql`next_unlock IS NOT NULL`,
+    sql`next_unlock >= ${Math.floor(opts.windowStartSec)}`,
+    sql`next_unlock <= ${Math.floor(opts.windowEndSec)}`,
+  ];
+  if (opts.chainIds && opts.chainIds.length > 0) {
+    conds.push(sql`chain_id IN (${sql.join(opts.chainIds.map((c) => sql`${c}`), sql`, `)})`);
+  }
+  if (opts.adapterIds && opts.adapterIds.length > 0) {
+    // Array overlap: token's protocols intersect the requested adapters.
+    conds.push(sql`protocols && ARRAY[${sql.join(opts.adapterIds.map((a) => sql`${a}`), sql`, `)}]::text[]`);
+  }
+  if (opts.symbol && opts.symbol.trim().length > 0) {
+    const esc = opts.symbol.trim().replace(/([%_\\])/g, "\\$1");
+    conds.push(sql`token_symbol ILIKE ${esc}`);
+  }
+  if (opts.amountUsdMin && opts.amountUsdMin > 0) {
+    // Keep unpriced tokens (NULL) — we don't penalise tokens we can't price,
+    // matching the prior explorer behaviour.
+    conds.push(sql`(locked_value_usd IS NULL OR locked_value_usd >= ${opts.amountUsdMin})`);
+  }
+  if (opts.minWallets && opts.minWallets > 0) {
+    conds.push(sql`wallet_count >= ${opts.minWallets}`);
+  }
+  const where = sql.join(conds, sql` AND `);
+
+  const sortExpr = EXPLORER_SORT_SQL[opts.sort] ?? EXPLORER_SORT_SQL.date;
+  const dir = opts.dir === "asc" ? sql`ASC NULLS LAST` : sql`DESC NULLS LAST`;
+  const pageSize = Math.max(1, Math.min(100, opts.pageSize));
+  const offset = Math.max(0, (Math.max(1, opts.page) - 1) * pageSize);
+
+  type R = Record<string, unknown>;
+  let rows: R[] = [];
+  let total = 0;
+  try {
+    const res = (await db.execute(sql`
+      SELECT chain_id AS "chainId", token_address AS "tokenAddress", token_symbol AS "tokenSymbol",
+             total_locked AS "totalLocked", token_decimals AS "tokenDecimals",
+             locked_value_usd AS "lockedValueUsd", market_cap AS "marketCap",
+             top_holder_share AS "topHolderShare", wallet_count AS "walletCount",
+             round_count AS "roundCount", has_cliff AS "hasCliff",
+             first_start AS "firstStart", last_end AS "lastEnd",
+             next_unlock AS "nextUnlock", protocols AS "protocols"
+      FROM token_vesting_rollups
+      WHERE ${where}
+      ORDER BY ${sortExpr} ${dir}, next_unlock ASC
+      LIMIT ${pageSize} OFFSET ${offset}
+    `) as unknown as R[]) ?? [];
+    rows = res;
+    const cnt = (await db.execute(sql`SELECT count(*)::int AS "count" FROM token_vesting_rollups WHERE ${where}`) as unknown as R[]) ?? [];
+    total = Number(cnt[0]?.count ?? 0);
+  } catch (err) {
+    console.error("[token-rollups] getExplorerPage failed:", err);
+    return { rows: [], total: 0 };
+  }
+
+  const out: ExplorerPageRow[] = rows.map((r) => ({
+    chainId:        Number(r.chainId),
+    tokenAddress:   String(r.tokenAddress),
+    tokenSymbol:    (r.tokenSymbol as string | null) ?? null,
+    totalLocked:    String(r.totalLocked ?? "0"),
+    tokenDecimals:  Number(r.tokenDecimals ?? 18),
+    lockedValueUsd: r.lockedValueUsd != null ? Number(r.lockedValueUsd) : null,
+    marketCap:      r.marketCap != null ? Number(r.marketCap) : null,
+    topHolderShare: r.topHolderShare != null ? Number(r.topHolderShare) : null,
+    walletCount:    Number(r.walletCount ?? 0),
+    roundCount:     Number(r.roundCount ?? 0),
+    hasCliff:       Boolean(r.hasCliff),
+    firstStart:     r.firstStart != null ? Number(r.firstStart) : null,
+    lastEnd:        r.lastEnd != null ? Number(r.lastEnd) : null,
+    nextUnlock:     r.nextUnlock != null ? Number(r.nextUnlock) : null,
+    protocols:      Array.isArray(r.protocols) ? (r.protocols as string[]) : [],
+  }));
+  return { rows: out, total };
 }

@@ -870,9 +870,19 @@ export const tokenVestingRollups = pgTable(
     firstStart:     bigint("first_start", { mode: "number" }),       // unix sec
     lastEnd:        bigint("last_end",     { mode: "number" }),      // unix sec
     hasCliff:       boolean("has_cliff").notNull().default(false),
+    // ── Explorer-list pagination fields (added 2026-06-18) — let the explorer
+    //    page off this table instead of re-aggregating the cache per request. ──
+    nextUnlock:     bigint("next_unlock", { mode: "number" }),        // soonest future unlock (unix sec)
+    protocols:      text("protocols").array().notNull().default([]),  // distinct protocols vesting this token
+    tokenDecimals:  integer("token_decimals").notNull().default(18),
+    lockedValueUsd: doublePrecision("locked_value_usd"),             // total locked × price
+    marketCap:      doublePrecision("market_cap"),                   // for the unlock-risk metric
     computedAt:     timestamp("computed_at").defaultNow().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.chainId, t.tokenAddress] })],
+  (t) => [
+    primaryKey({ columns: [t.chainId, t.tokenAddress] }),
+    index("token_rollups_next_unlock_idx").on(t.nextUnlock),
+  ],
 );
 
 // ── Demo web-push subscriptions ───────────────────────────────────────────────

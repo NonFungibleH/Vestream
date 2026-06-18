@@ -2,25 +2,22 @@
 
 // src/app/dashboard/explorer/ExplorerTable.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Client-side sortable results table for the Vesting Explorer (calendar mode).
+// Results table for the Vesting Explorer (calendar mode), now SERVER-PAGINATED.
 //
-// Why client-side: the page is force-dynamic, so the old top-of-table sort
-// buttons changed the URL → full server re-render → a LIVE DexScreener price
-// batch before anything redrew. Sorting now happens IN-MEMORY here — click a
-// column header and the rows reorder instantly, zero round-trip. Filters
-// (chain/protocol/search/date/amount/wallet) stay server-side because they
-// change WHICH rows load; only sorting + column display moved here.
+// The server reads ONE page (25 tokens) straight off the cron-maintained
+// rollup, ordered + filtered in SQL, plus the true total. So this component
+// just renders the current page: column headers are sort LINKS (clicking
+// re-queries with ?sort=&dir= and resets to page 1), and a footer paginates
+// with ?page=. This replaced the old "load the soonest ~923 and sort in the
+// browser" approach, which both capped browsing at ~1/5 of tokens and made
+// every render re-aggregate/price the whole pool. Sorting across pages can
+// only be correct server-side, hence the move.
 //
-// Columns (all sortable; the narrow ones auto-hide below md):
-//   Token · Locked amount · USD value · Wallets · Rounds · Risk · Next unlock
+// Columns (the narrow ones auto-hide below md):
+//   Token · Amount · USD · Wallets · Top holder · Rounds · Cliff · Risk · Vested · Next
 // Mobile collapses to Token · USD · Wallets.
-//
-// The server passes a flat, serialisable ExplorerRow[] (no bigints as values —
-// `amount` is a stringified bigint). USD + wallet/round counts are already
-// resolved server-side; we just render + sort them.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { getProtocol } from "@/lib/protocol-constants";
@@ -62,58 +59,33 @@ function progressOf(r: ExplorerRow): number | null {
   const now = Date.now() / 1000;
   return Math.max(0, Math.min(1, (now - s) / (e - s)));
 }
-function amountNum(r: ExplorerRow): number {
-  if (!r.amount) return 0;
-  try { return Number(BigInt(r.amount)) / 10 ** Math.min(r.tokenDecimals, 18); } catch { return 0; }
-}
-function riskRank(r: ExplorerRow): number {
-  const b = classifyRisk(r);
-  return b === "HIGH" ? 3 : b === "MED" ? 2 : b === "LOW" ? 1 : 0;
-}
-function sortValue(r: ExplorerRow, col: SortCol): number | string {
-  switch (col) {
-    case "token":   return (r.tokenSymbol ?? r.tokenAddress).toLowerCase();
-    case "amount":  return amountNum(r);
-    case "usd":     return r.usdValue ?? -Infinity;       // unpriced sort last (desc) / first (asc)
-    case "wallets": return walletsOf(r);
-    case "concentration": return r.topHolderShare ?? -Infinity;  // unknown sorts last (desc)
-    case "rounds":  return r.tokenRoundCount ?? 0;
-    case "cliff":   return r.hasCliff ? 1 : 0;
-    case "risk":    return riskRank(r);
-    case "progress": return progressOf(r) ?? -Infinity;   // unknown span sorts last (desc)
-    case "date":    return r.eventTime || Infinity;
-  }
-}
-
 export function ExplorerTable({
-  rows, isFree, totalMatches, hiddenCount,
+  rows, totalMatches, page, totalPages, pageSize, sort, dir, params,
 }: {
   rows:         ExplorerRow[];
-  isFree:       boolean;
   totalMatches: number;
-  hiddenCount:  number;
+  page:         number;
+  totalPages:   number;
+  pageSize:     number;
+  sort:         SortCol;
+  dir:          SortDir;
+  /** Current URL search params, so headers + pagination can build hrefs. */
+  params:       Record<string, string | undefined>;
 }) {
-  // Default: soonest unlock first (matches the server's prior default).
-  const [col, setCol] = useState<SortCol>("date");
-  const [dir, setDir] = useState<SortDir>("asc");
-
-  const sorted = useMemo(() => {
-    const copy = [...rows];
-    copy.sort((a, b) => {
-      const x = sortValue(a, col);
-      const y = sortValue(b, col);
-      let cmp: number;
-      if (typeof x === "string" || typeof y === "string") cmp = String(x).localeCompare(String(y));
-      else cmp = x < y ? -1 : x > y ? 1 : 0;
-      return dir === "asc" ? cmp : -cmp;
-    });
-    return copy;
-  }, [rows, col, dir]);
-
-  function toggle(next: SortCol, defaultDir: SortDir) {
-    if (next === col) { setDir((d) => (d === "asc" ? "desc" : "asc")); }
-    else { setCol(next); setDir(defaultDir); }
-  }
+  // Build a URL preserving current params, with overrides (undefined clears).
+  const hrefFor = (overrides: Record<string, string | undefined>): string => {
+    const usp = new URLSearchParams();
+    const merged = { ...params, ...overrides };
+    for (const [k, v] of Object.entries(merged)) if (v != null && v !== "") usp.set(k, v);
+    const qs = usp.toString();
+    return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
+  };
+  // Header link: set sort col + direction, reset to page 1. Clicking the
+  // active column flips direction.
+  const sortHref = (col: SortCol, defaultDir: SortDir): string => {
+    const nextDir = col === sort ? (dir === "asc" ? "desc" : "asc") : defaultDir;
+    return hrefFor({ sort: col, dir: nextDir, page: undefined });
+  };
 
   if (rows.length === 0) {
     return (
@@ -124,6 +96,9 @@ export function ExplorerTable({
       </div>
     );
   }
+
+  const from = (page - 1) * pageSize + 1;
+  const to   = (page - 1) * pageSize + rows.length;
 
   // Shared grid template: mobile = Token · USD · Wallets (3); desktop adds
   // Amount, Rounds, Risk, Next (7). Desktop-only cells use `hidden md:flex`,
@@ -142,63 +117,64 @@ export function ExplorerTable({
     <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
-          {totalMatches} token{totalMatches === 1 ? "" : "s"}
+          {totalMatches.toLocaleString()} token{totalMatches === 1 ? "" : "s"}
         </p>
+        {totalPages > 1 && (
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Page {page} of {totalPages.toLocaleString()}</p>
+        )}
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-        {/* Sortable header */}
+        {/* Sortable header — each is a Link that re-queries server-side. */}
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
-            <Th label="Token"       active={col === "token"}   dir={dir} onClick={() => toggle("token", "asc")} />
-            <Th label="Amount"      active={col === "amount"}  dir={dir} onClick={() => toggle("amount", "desc")} align="right" className="hidden md:flex" />
-            <Th label="USD"         active={col === "usd"}     dir={dir} onClick={() => toggle("usd", "desc")} align="right" minW={64} />
-            <Th label="Wallets"     active={col === "wallets"} dir={dir} onClick={() => toggle("wallets", "desc")} align="right" minW={56} />
-            <Th label="Top holder"  active={col === "concentration"} dir={dir} onClick={() => toggle("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
-            <Th label="Rounds"      active={col === "rounds"}  dir={dir} onClick={() => toggle("rounds", "desc")} align="right" className="hidden md:flex" />
-            <Th label="Cliff"       active={col === "cliff"}   dir={dir} onClick={() => toggle("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
-            <Th label="Risk"        active={col === "risk"}    dir={dir} onClick={() => toggle("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
-            <Th label="Vested"      active={col === "progress"} dir={dir} onClick={() => toggle("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
-            <Th label="Next unlock" active={col === "date"}    dir={dir} onClick={() => toggle("date", "asc")} align="right" className="hidden md:flex" />
+            <Th label="Token"       active={sort === "token"}         dir={dir} href={sortHref("token", "asc")} />
+            <Th label="Amount"      active={sort === "amount"}        dir={dir} href={sortHref("amount", "desc")} align="right" className="hidden md:flex" />
+            <Th label="USD"         active={sort === "usd"}           dir={dir} href={sortHref("usd", "desc")} align="right" minW={64} />
+            <Th label="Wallets"     active={sort === "wallets"}       dir={dir} href={sortHref("wallets", "desc")} align="right" minW={56} />
+            <Th label="Top holder"  active={sort === "concentration"} dir={dir} href={sortHref("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} href={sortHref("rounds", "desc")} align="right" className="hidden md:flex" />
+            <Th label="Cliff"       active={sort === "cliff"}         dir={dir} href={sortHref("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
+            <Th label="Risk"        active={sort === "risk"}          dir={dir} href={sortHref("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
+            <Th label="Vested"      active={sort === "progress"}      dir={dir} href={sortHref("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
+            <Th label="Next unlock" active={sort === "date"}          dir={dir} href={sortHref("date", "asc")} align="right" className="hidden md:flex" />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
 
-        {/* Rows */}
-        {sorted.map((r, i) => (
+        {/* Rows — already ordered + paginated server-side. */}
+        {rows.map((r, i) => (
           <Row key={r.groupKey} r={r} grid={GRID} showTopBorder={i > 0} />
         ))}
       </div>
 
-      {isFree && hiddenCount > 0 && (
-        <div className="mt-4 rounded-2xl px-5 py-4 text-center"
-          style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)" }}>
-          <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
-            {hiddenCount} more token{hiddenCount === 1 ? "" : "s"} above your free limit
+      {/* Pagination footer */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+            Showing {from.toLocaleString()}–{to.toLocaleString()} of {totalMatches.toLocaleString()}
           </p>
-          <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
-            Pro lifts the per-query cap, adds CSV export, multi-filter compose, and saved-search alerts.
-          </p>
-          <Link href="/pricing" className="inline-block mt-2 text-xs font-semibold" style={{ color: "#0F8A8A" }}>
-            View pricing →
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <PageLink href={page > 1 ? hrefFor({ page: page - 1 <= 1 ? undefined : String(page - 1) }) : null}>‹ Prev</PageLink>
+            <PageLink href={page < totalPages ? hrefFor({ page: String(page + 1) }) : null}>Next ›</PageLink>
+          </div>
         </div>
       )}
     </>
   );
 }
 
-// ── Header cell ──────────────────────────────────────────────────────────────
+// ── Header cell (sort link) ───────────────────────────────────────────────────
 function Th({
-  label, active, dir, onClick, align = "left", minW, className = "", title,
+  label, active, dir, href, align = "left", minW, className = "", title,
 }: {
-  label: string; active: boolean; dir: SortDir; onClick: () => void;
+  label: string; active: boolean; dir: SortDir; href: string;
   align?: "left" | "right"; minW?: number; className?: string; title?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      href={href}
+      scroll={false}
       className={`flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`}
       style={{ minWidth: minW }}
       aria-label={`Sort by ${label}`}
@@ -211,7 +187,21 @@ function Th({
       <span className="text-[8px]" style={{ color: active ? "#0F8A8A" : "transparent" }}>
         {active ? (dir === "asc" ? "▲" : "▼") : "▲"}
       </span>
-    </button>
+    </Link>
+  );
+}
+
+// ── Pagination button ─────────────────────────────────────────────────────────
+function PageLink({ href, children }: { href: string | null; children: React.ReactNode }) {
+  const base = "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors";
+  if (!href) {
+    return <span className={base} style={{ color: "var(--preview-text-3)", borderColor: "var(--preview-border)", opacity: 0.5 }}>{children}</span>;
+  }
+  return (
+    <Link href={href} scroll={false} className={`${base} hover:bg-[var(--preview-muted)]`}
+      style={{ color: "var(--preview-text-2)", borderColor: "var(--preview-border)" }}>
+      {children}
+    </Link>
   );
 }
 
