@@ -54,12 +54,23 @@ type Tone = "warn" | "ok" | "info";
 // circulate widely with only one or two wallets vesting, so a single vesting
 // position is stated neutrally, never flagged as a centralisation risk. The
 // significance of the vesting (how big it is vs market cap) is shown separately.
+// "Excessive" concentration — the ONLY cases we flag (amber). Deliberately a
+// high bar so we don't cry wolf: a single wallet holding the majority, OR a
+// handful dominating DESPITE many wallets. "Top 5 = 100%" when there are only
+// 5-7 vesting wallets is trivially true, not a signal, so it's NOT flagged.
+function isExcessiveTop1(top1: number, totalHolders: number): boolean {
+  return totalHolders > 1 && top1 >= 0.5;
+}
+function isExcessiveTop5(top5: number, totalHolders: number): boolean {
+  return totalHolders >= 8 && top5 >= 0.9;
+}
+
 function verdict(top1: number, top5: number, totalHolders: number): { text: string; tone: Tone } {
   if (totalHolders === 1) {
     return { text: "A single wallet holds all the vesting supply — this reflects the vesting only, not the token's wider distribution.", tone: "info" };
   }
-  if (top1 >= 0.5) return { text: `One wallet holds the majority of the vesting supply (across ${totalHolders.toLocaleString()} vesting wallets).`, tone: "warn" };
-  if (top5 >= 0.8) return { text: `The top 5 wallets hold most of the vesting supply (of ${totalHolders.toLocaleString()} vesting wallets).`, tone: "warn" };
+  if (isExcessiveTop1(top1, totalHolders)) return { text: `One wallet holds ${pct(top1)} of the vesting supply.`, tone: "warn" };
+  if (isExcessiveTop5(top5, totalHolders)) return { text: `Just 5 of ${totalHolders.toLocaleString()} vesting wallets hold ${pct(top5)} of the supply.`, tone: "warn" };
   if (totalHolders >= 25 && top5 < 0.6) return { text: `Vesting is spread across ${totalHolders.toLocaleString()} wallets — no dominant holder.`, tone: "ok" };
   return { text: `Vesting is split across ${totalHolders.toLocaleString()} wallets.`, tone: "info" };
 }
@@ -87,11 +98,55 @@ export function HolderDistribution({
   const v = verdict(top1, top5, totalHolders);
   const toneColor = v.tone === "warn" ? "#d97706" : v.tone === "ok" ? "#0F8A8A" : "var(--preview-text-3)";
   const single = totalHolders === 1;
-  const shown  = isFree ? holders.slice(0, Math.min(rowCap, 10)) : holders.slice(0, 25);
-  const hidden = holders.length - shown.length;
+  const exTop1 = isExcessiveTop1(top1, totalHolders);
+  const exTop5 = isExcessiveTop5(top5, totalHolders);
+
   // Bars are scaled to the largest holder (not to 100%) so the distribution
   // SHAPE is visible even when the top wallet is only a few % of supply.
   const maxShare = holders[0]?.share || 1;
+
+  // Keep the panel SHORT: show the top 5 always, tuck the rest behind a native
+  // <details> expander (no JS). Cap how many we ever render even when expanded
+  // (free → row cap; pro → 100) so an 800-recipient token can't blow up the
+  // page; anything past the cap is summarised, not listed.
+  const TOP_VISIBLE = 5;
+  const renderCap   = isFree ? Math.max(rowCap, TOP_VISIBLE) : 100;
+  const rendered    = holders.slice(0, renderCap);
+  const topRows     = rendered.slice(0, TOP_VISIBLE);
+  const restRows    = rendered.slice(TOP_VISIBLE);
+  const restCount   = holders.length - TOP_VISIBLE;          // total wallets beyond the top 5
+  const restShare   = Math.max(0, 1 - top5);                 // their combined share of vesting
+  const hiddenBeyondCap = holders.length - rendered.length;  // not rendered even when expanded
+
+  const Row = (h: HolderRow, i: number) => (
+    <Link
+      key={h.recipient}
+      href={`/dashboard/explorer?mode=wallet&q=${encodeURIComponent(h.recipient)}`}
+      className="group flex items-center gap-3 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-[var(--preview-muted)]"
+    >
+      <span className="text-[11px] tabular-nums w-5 flex-shrink-0 text-right" style={{ color: "var(--preview-text-3)" }}>{i + 1}</span>
+      <span className="text-xs font-mono w-28 flex-shrink-0 truncate group-hover:underline" style={{ color: "#0F8A8A" }}>
+        {shortAddr(h.recipient)}
+      </span>
+      <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
+        <div className="h-full rounded-full" style={{
+          width: `${Math.max(2, (h.share / maxShare) * 100)}%`,
+          // A lone vesting wallet at 100% isn't a concentration signal —
+          // keep it neutral teal rather than alarm red.
+          background: single ? "#0F8A8A" : h.share >= 0.5 ? "#dc2626" : h.share >= 0.25 ? "#d97706" : "#0F8A8A",
+        }} />
+      </div>
+      <span className="text-[11px] tabular-nums w-12 flex-shrink-0 text-right font-semibold" style={{ color: "var(--preview-text-2)" }}>
+        {pct(h.share)}
+      </span>
+      <span className="text-[11px] tabular-nums w-24 flex-shrink-0 text-right hidden sm:block" style={{ color: "var(--preview-text-3)" }}>
+        {fmtNum(h.lockedWhole)} {symbol}
+      </span>
+      <span className="text-[11px] tabular-nums w-16 flex-shrink-0 text-right hidden md:block" style={{ color: "var(--preview-text-3)" }}>
+        {h.usd != null ? fmtUsd(h.usd) : ""}
+      </span>
+    </Link>
+  );
 
   return (
     <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
@@ -105,8 +160,8 @@ export function HolderDistribution({
           wallet — with a single position they're trivially 100%, so we don't
           colour them as a warning (that misread as a token-wide risk). */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-        <Stat label="Top vesting wallet" value={pct(top1)} tone={!single && top1 >= 0.5 ? "warn" : undefined} />
-        <Stat label="Top 5 wallets" value={pct(top5)} tone={!single && top5 >= 0.8 ? "warn" : undefined} />
+        <Stat label="Top vesting wallet" value={pct(top1)} tone={exTop1 ? "warn" : undefined} />
+        <Stat label="Top 5 wallets" value={pct(top5)} tone={exTop5 ? "warn" : undefined} />
         <Stat label="Vesting wallets" value={totalHolders.toLocaleString()} />
         <Stat
           label="Vesting span"
@@ -135,47 +190,37 @@ export function HolderDistribution({
         </p>
       )}
 
-      {/* Ranked holder bars */}
+      {/* Top 5 always visible */}
       <div className="flex flex-col gap-1.5">
-        {shown.map((h, i) => (
-          <Link
-            key={h.recipient}
-            href={`/dashboard/explorer?mode=wallet&q=${encodeURIComponent(h.recipient)}`}
-            className="group flex items-center gap-3 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-[var(--preview-muted)]"
-          >
-            <span className="text-[11px] tabular-nums w-5 flex-shrink-0 text-right" style={{ color: "var(--preview-text-3)" }}>{i + 1}</span>
-            <span className="text-xs font-mono w-28 flex-shrink-0 truncate group-hover:underline" style={{ color: "#0F8A8A" }}>
-              {shortAddr(h.recipient)}
-            </span>
-            <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
-              <div className="h-full rounded-full" style={{
-                width: `${Math.max(2, (h.share / maxShare) * 100)}%`,
-                // A lone vesting wallet at 100% isn't a concentration signal —
-                // keep it neutral teal rather than alarm red.
-                background: single ? "#0F8A8A" : h.share >= 0.5 ? "#dc2626" : h.share >= 0.25 ? "#d97706" : "#0F8A8A",
-              }} />
-            </div>
-            <span className="text-[11px] tabular-nums w-12 flex-shrink-0 text-right font-semibold" style={{ color: "var(--preview-text-2)" }}>
-              {pct(h.share)}
-            </span>
-            <span className="text-[11px] tabular-nums w-24 flex-shrink-0 text-right hidden sm:block" style={{ color: "var(--preview-text-3)" }}>
-              {fmtNum(h.lockedWhole)} {symbol}
-            </span>
-            <span className="text-[11px] tabular-nums w-16 flex-shrink-0 text-right hidden md:block" style={{ color: "var(--preview-text-3)" }}>
-              {h.usd != null ? fmtUsd(h.usd) : ""}
-            </span>
-          </Link>
-        ))}
+        {topRows.map(Row)}
       </div>
 
-      {hidden > 0 && (
-        <p className="text-[11px] mt-2.5 pt-2.5 border-t" style={{ borderColor: "var(--preview-border-2)", color: "var(--preview-text-3)" }}>
-          {isFree ? (
-            <>+{hidden} more wallet{hidden !== 1 ? "s" : ""} — <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>upgrade to Pro</Link> to see the full distribution.</>
-          ) : (
-            <>Showing the top 25 of {holders.length.toLocaleString()} recipients by locked amount.</>
+      {/* The rest tucked behind a native expander so the panel stays short on
+          tokens with many recipients. Summary carries the headline number:
+          how many more wallets and what % of vesting they hold combined. */}
+      {restCount > 0 && (
+        <details className="group mt-1.5">
+          <summary className="flex items-center gap-2 cursor-pointer list-none py-1.5 text-[11px] font-semibold select-none"
+            style={{ color: "var(--preview-text-2)" }}>
+            <span className="transition-transform group-open:rotate-90" style={{ color: "var(--preview-text-3)" }}>▸</span>
+            <span>
+              + {restCount.toLocaleString()} more wallet{restCount !== 1 ? "s" : ""}
+              <span style={{ color: "var(--preview-text-3)" }}> · {pct(restShare)} of vesting combined</span>
+            </span>
+          </summary>
+          <div className="flex flex-col gap-1.5 mt-1.5">
+            {restRows.map((h, j) => Row(h, j + TOP_VISIBLE))}
+          </div>
+          {hiddenBeyondCap > 0 && (
+            <p className="text-[11px] mt-2.5 pt-2.5 border-t" style={{ borderColor: "var(--preview-border-2)", color: "var(--preview-text-3)" }}>
+              {isFree ? (
+                <>+{hiddenBeyondCap.toLocaleString()} more — <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>upgrade to Pro</Link> to see the full distribution.</>
+              ) : (
+                <>Showing the top {rendered.length.toLocaleString()} of {holders.length.toLocaleString()} recipients by locked amount.</>
+              )}
+            </p>
           )}
-        </p>
+        </details>
       )}
     </div>
   );
