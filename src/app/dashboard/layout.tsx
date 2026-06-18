@@ -28,7 +28,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { cache } from "react";
+import { cache, Suspense } from "react";
+import { RouteProgress } from "@/components/RouteProgress";
 import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { DarkModeProvider } from "@/lib/use-dark-mode";
@@ -136,6 +137,10 @@ export default async function DashboardLayout({
       <DarkModeProvider initialDark={dark}>
         <DashboardSwrProvider>
           <ToastProvider>
+            {/* Top progress bar — instant feedback on every in-app navigation
+                (filters/sort/pagination are force-dynamic server round-trips
+                that Next's loading.tsx doesn't cover). */}
+            <Suspense fallback={null}><RouteProgress /></Suspense>
             <DashboardChrome tier={tier}>{children}</DashboardChrome>
           </ToastProvider>
         </DashboardSwrProvider>
