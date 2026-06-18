@@ -51,6 +51,7 @@ import { WatchButton } from "./WatchButton";
 import { ExplorerTable, type ExplorerRow } from "./ExplorerTable";
 import { Pagination } from "./Pagination";
 import { ExplorerSliders } from "./ExplorerSliders";
+import { ExplorerHelp } from "./ExplorerHelp";
 
 export const dynamic = "force-dynamic";
 
@@ -329,9 +330,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}>
             Vesting Search
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-            Search the vesting universe
-          </h1>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
+              Search the vesting universe
+            </h1>
+            <ExplorerHelp />
+          </div>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
             Query our index by wallet, token, or protocol. Filterable, shareable, and indexed across every supported chain.
           </p>
@@ -1049,17 +1053,23 @@ function LensBar({ sp }: { sp: ExplorerSearchParams }) {
       {LENSES.map((lens) => {
         const active = matches(lens.params);
         return (
-          <Link
-            key={lens.id}
-            href={buildUrl(lens.params)}
-            title={lens.hint}
-            className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all"
-            style={active
-              ? { background: "#0F8A8A", color: "white", border: "1px solid #0F8A8A" }
-              : { background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
-          >
-            {lens.label}
-          </Link>
+          <div key={lens.id} className="relative group">
+            <Link
+              href={buildUrl(lens.params)}
+              className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all"
+              style={active
+                ? { background: "#0F8A8A", color: "white", border: "1px solid #0F8A8A" }
+                : { background: "var(--preview-muted)", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
+            >
+              {lens.label}
+            </Link>
+            {/* Richer hover card (CSS-only) — explains the preset. */}
+            <div className="hidden group-hover:block absolute left-0 top-full mt-1.5 z-40 w-56 rounded-lg p-2.5 shadow-lg pointer-events-none"
+              style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+              <p className="text-[11px] font-bold mb-0.5" style={{ color: "var(--preview-text)" }}>{lens.label}</p>
+              <p className="text-[11px] leading-snug" style={{ color: "var(--preview-text-2)" }}>{lens.hint}</p>
+            </div>
+          </div>
         );
       })}
     </div>

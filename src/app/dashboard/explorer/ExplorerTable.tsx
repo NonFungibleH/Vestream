@@ -136,16 +136,16 @@ export function ExplorerTable({
         {/* Sortable header — each is a Link that re-queries server-side. */}
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
-            <Th label="Token"       active={sort === "token"}         dir={dir} href={sortHref("token", "asc")} />
-            <Th label="Amount"      active={sort === "amount"}        dir={dir} href={sortHref("amount", "desc")} align="right" className="hidden md:flex" />
-            <Th label="USD"         active={sort === "usd"}           dir={dir} href={sortHref("usd", "desc")} align="right" minW={64} />
-            <Th label="Wallets"     active={sort === "wallets"}       dir={dir} href={sortHref("wallets", "desc")} align="right" minW={56} />
+            <Th label="Token"       active={sort === "token"}         dir={dir} href={sortHref("token", "asc")} title={TOKEN_HELP} />
+            <Th label="Amount"      active={sort === "amount"}        dir={dir} href={sortHref("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
+            <Th label="USD"         active={sort === "usd"}           dir={dir} href={sortHref("usd", "desc")} align="right" minW={64} title={USD_HELP} />
+            <Th label="Wallets"     active={sort === "wallets"}       dir={dir} href={sortHref("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
             <Th label="Top holder"  active={sort === "concentration"} dir={dir} href={sortHref("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
-            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} href={sortHref("rounds", "desc")} align="right" className="hidden md:flex" />
+            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} href={sortHref("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
             <Th label="Cliff"       active={sort === "cliff"}         dir={dir} href={sortHref("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={sort === "risk"}          dir={dir} href={sortHref("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
             <Th label="Vested"      active={sort === "progress"}      dir={dir} href={sortHref("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
-            <Th label="Next unlock" active={sort === "date"}          dir={dir} href={sortHref("date", "asc")} align="right" className="hidden md:flex" />
+            <Th label="Next unlock" active={sort === "date"}          dir={dir} href={sortHref("date", "asc")} align="right" className="hidden md:flex" title={NEXT_HELP} />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
@@ -214,6 +214,28 @@ function PageLink({ href, children }: { href: string | null; children: React.Rea
 }
 
 // ── Row ──────────────────────────────────────────────────────────────────────
+// Hover preview — a compact summary of the row's key facts (native title, so
+// it works everywhere without extra JS). The top-holder ADDRESS isn't in the
+// rollup, so we surface the metrics we have; the full breakdown is one click.
+function rowPreview(r: ExplorerRow, chainName: string): string {
+  const sym = r.tokenSymbol ?? shortAddr(r.tokenAddress);
+  const when = r.eventTime ? new Date(r.eventTime * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  const lines = [
+    `${sym} · ${getProtocol(r.protocol)?.name ?? r.protocol} · ${chainName}`,
+    `Next unlock: ${when} (in ${relativeUntil(r.eventTime)})`,
+    r.usdValue != null
+      ? `Locked: ${formatUsdCompact(r.usdValue)} (${fmtAmount(r.amount, r.tokenDecimals)} ${sym})`
+      : `Locked: ${fmtAmount(r.amount, r.tokenDecimals)} ${sym} — no market price`,
+    `Wallets: ${walletsOf(r).toLocaleString()} · Schedules: ${r.tokenRoundCount ?? "—"}`,
+  ];
+  if (r.topHolderShare != null) lines.push(`Top holder: ${Math.round(r.topHolderShare * 100)}% of locked`);
+  const p = progressOf(r);
+  if (p != null) lines.push(`Vested: ${Math.round(p * 100)}%`);
+  if (r.hasCliff) lines.push("⚠ Has a cliff (lump) unlock");
+  lines.push("Click to open the full breakdown →");
+  return lines.join("\n");
+}
+
 function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTopBorder: boolean }) {
   const meta      = getProtocol(r.protocol);
   const accent    = meta?.color ?? "#64748b";
@@ -222,6 +244,7 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
   return (
     <div className="flex items-center" style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link href={`/dashboard/explorer/token/${r.chainId}/${r.tokenAddress}`}
+        title={rowPreview(r, chainName)}
         className={`flex-1 ${grid} py-3 transition-colors hover:bg-[var(--preview-muted)]`}>
         {/* Token */}
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -312,6 +335,14 @@ function classifyRisk(r: ExplorerRow): "HIGH" | "MED" | "LOW" | null {
   if ((m != null && m >= 0.025) || (a != null && a >= 0.25)) return "MED";
   return "LOW";
 }
+
+// Column header tooltips — every column explains itself on hover.
+const TOKEN_HELP   = "The vesting token — symbol, protocol, and chain. Click a row to open its full breakdown.";
+const AMOUNT_HELP  = "Total tokens still locked (not yet vested) across all of this token's schedules.";
+const USD_HELP     = "Locked amount × current price. Dimmed = thin DEX liquidity (estimate); “—” = no tradeable market.";
+const WALLETS_HELP = "Distinct wallets receiving this token's vesting — a fair launch has many, a team grant has few.";
+const ROUNDS_HELP  = "Distinct vesting schedules (terms) — same protocol + shape + cliff + duration = one round.";
+const NEXT_HELP    = "Time until this token's next unlock event. Sorted soonest-first by default.";
 
 // Shown on the "Risk" header (hover) so the score is self-explanatory.
 const RISK_METHODOLOGY =
