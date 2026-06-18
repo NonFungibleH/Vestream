@@ -11,7 +11,7 @@
 // indexed" view; per-user re-fetches happen elsewhere via dbcache.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, inArray, lte, notInArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, ilike, inArray, lte, notInArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import { normaliseAddress } from "../address-validation";
@@ -23,6 +23,116 @@ const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDE
 function isDbUnreachable(): boolean {
   const dbUrl = process.env.DATABASE_URL;
   return !dbUrl || /(\/\/|@)(localhost|127\.0\.0\.1)/.test(dbUrl);
+}
+
+// Shared column set + row mapper so the three stream queries below stay in
+// lockstep (one place to change the shape).
+const STREAM_SELECT = {
+  streamId:      vestingStreamsCache.streamId,
+  protocol:      vestingStreamsCache.protocol,
+  chainId:       vestingStreamsCache.chainId,
+  recipient:     vestingStreamsCache.recipient,
+  tokenSymbol:   vestingStreamsCache.tokenSymbol,
+  tokenAddress:  vestingStreamsCache.tokenAddress,
+  endTime:       vestingStreamsCache.endTime,
+  isFullyVested: vestingStreamsCache.isFullyVested,
+  streamData:    vestingStreamsCache.streamData,
+} as const;
+
+type StreamSelectRow = {
+  streamId: string; protocol: string; chainId: number; recipient: string;
+  tokenSymbol: string | null; tokenAddress: string | null; endTime: number | null;
+  isFullyVested: boolean; streamData: unknown;
+};
+
+function mapStreamRow(r: StreamSelectRow): StreamRow {
+  const sd = r.streamData as Partial<VestingStream>;
+  const next = typeof sd.nextUnlockTime === "number" && sd.nextUnlockTime > 0 ? sd.nextUnlockTime : null;
+  return {
+    streamId:       r.streamId,
+    protocol:       r.protocol === "uncx-vm" ? "uncx" : r.protocol,
+    chainId:        r.chainId,
+    recipient:      r.recipient,
+    tokenSymbol:    r.tokenSymbol,
+    tokenAddress:   normaliseAddress(r.tokenAddress ?? ""),
+    tokenDecimals:  typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
+    endTime:        r.endTime ?? 0,
+    nextUnlockTime: next,
+    amount:         sd.lockedAmount ?? sd.totalAmount ?? null,
+    status:         r.isFullyVested ? ("vested" as const) : ("active" as const),
+  };
+}
+
+// ── Paginated stream/wallet query ──────────────────────────────────────────
+// Powers the explorer's Schedules (stream) + Wallet modes server-side, so they
+// browse the FULL set 25-at-a-time instead of the old ~1000-row cap. Pass
+// `recipient` for wallet mode. Symbol filter is applied in SQL (not JS) so the
+// page count is accurate. Returns the page + the true total for the pager.
+export type StreamSortKey = "date" | "amount" | "next";
+
+const STREAM_SORT_SQL: Record<StreamSortKey, ReturnType<typeof sql> | typeof vestingStreamsCache.endTime> = {
+  date:   vestingStreamsCache.endTime,
+  amount: sql`((${vestingStreamsCache.streamData}->>'lockedAmount')::numeric)`,
+  next:   sql`((${vestingStreamsCache.streamData}->>'nextUnlockTime')::numeric)`,
+};
+
+export async function getStreamsPage(
+  filter: StreamsFilter & { recipient?: string },
+  opts: { page: number; pageSize: number; sort: StreamSortKey; dir: "asc" | "desc" },
+): Promise<{ rows: StreamRow[]; total: number }> {
+  if (isDbUnreachable()) return { rows: [], total: 0 };
+
+  const status = filter.status ?? "active";
+  const wheres = [excludeTestnets];
+  if (status === "active") {
+    wheres.push(eq(vestingStreamsCache.isFullyVested, false));
+    wheres.push(gt(vestingStreamsCache.endTime, Math.floor(Date.now() / 1000) + 60));
+  } else if (status === "vested") {
+    wheres.push(eq(vestingStreamsCache.isFullyVested, true));
+  }
+  if (filter.recipient) {
+    const r = filter.recipient.startsWith("0x") ? filter.recipient.toLowerCase() : filter.recipient;
+    wheres.push(eq(vestingStreamsCache.recipient, r));
+  }
+  if (filter.chainIds && filter.chainIds.length > 0) {
+    wheres.push(inArray(vestingStreamsCache.chainId, [...filter.chainIds]));
+  }
+  if (filter.adapterIds && filter.adapterIds.length > 0) {
+    wheres.push(inArray(vestingStreamsCache.protocol, [...filter.adapterIds]));
+  }
+  if (filter.tokenAddress) {
+    wheres.push(eq(vestingStreamsCache.tokenAddress, normaliseAddress(filter.tokenAddress)));
+  }
+  if (filter.tokenSymbol && filter.tokenSymbol.trim().length > 0) {
+    // Escaped ilike = case-insensitive exact match, in SQL so the count is
+    // accurate (the old getStreamsForExplorer filtered symbol in JS, which
+    // would mis-count once paginated).
+    wheres.push(ilike(vestingStreamsCache.tokenSymbol, filter.tokenSymbol.trim().replace(/([%_\\])/g, "\\$1")));
+  }
+  const whereClause = and(...wheres);
+
+  const pageSize = Math.max(1, Math.min(100, opts.pageSize));
+  const offset   = Math.max(0, (opts.page - 1) * pageSize);
+  const sortExpr = STREAM_SORT_SQL[opts.sort] ?? vestingStreamsCache.endTime;
+  const orderBy  = opts.dir === "desc" ? desc(sortExpr) : asc(sortExpr);
+
+  try {
+    const [rows, totalRes] = await Promise.all([
+      db.select(STREAM_SELECT)
+        .from(vestingStreamsCache)
+        .where(whereClause)
+        // Stable tiebreaker (streamId) so paging is deterministic when the
+        // sort key ties (e.g. many streams ending the same day).
+        .orderBy(orderBy, asc(vestingStreamsCache.streamId))
+        .limit(pageSize)
+        .offset(offset),
+      db.select({ total: count() }).from(vestingStreamsCache).where(whereClause),
+    ]);
+    return { rows: rows.map(mapStreamRow), total: Number(totalRes[0]?.total ?? 0) };
+  } catch (err) {
+    console.error("[explorer-queries] getStreamsPage failed:", err);
+    return { rows: [], total: 0 };
+  }
 }
 
 export interface StreamRow {

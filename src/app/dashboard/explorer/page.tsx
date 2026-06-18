@@ -32,9 +32,10 @@ import {
 import { getExplorerPage, type ExplorerSortKey, type ExplorerPageRow } from "@/lib/vesting/token-rollups";
 import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
 import {
-  getStreamsForExplorer,
+  getStreamsPage,
   getStreamsByRecipient,
   type StreamRow,
+  type StreamSortKey,
 } from "@/lib/vesting/explorer-queries";
 import { resolveEnsName } from "@/lib/ens";
 import { listProtocols, getProtocol } from "@/lib/protocol-constants";
@@ -48,6 +49,7 @@ import { SaveSearchButton } from "./SaveSearchButton";
 import { detectQueryKind } from "./detect-query";
 import { WatchButton } from "./WatchButton";
 import { ExplorerTable, type ExplorerRow } from "./ExplorerTable";
+import { Pagination } from "./Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -157,10 +159,19 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const sortKey: ExplorerSortKey = VALID_SORTS.has(sp.sort as ExplorerSortKey) ? (sp.sort as ExplorerSortKey) : "date";
   const sortDir: "asc" | "desc"  = sp.dir === "desc" ? "desc" : sp.dir === "asc" ? "asc" : (sortKey === "date" ? "asc" : "desc");
 
+  // Stream/Wallet modes paginate per-stream (not per-token). They share the
+  // ?page= param but have their own sort vocabulary (date/amount/next); default
+  // soonest-ending first. Invalid/calendar-only sort keys fall back to "date".
+  const STREAM_SORTS = new Set<StreamSortKey>(["date", "amount", "next"]);
+  const streamSort: StreamSortKey = STREAM_SORTS.has(sp.sort as StreamSortKey) ? (sp.sort as StreamSortKey) : "date";
+  const streamDir: "asc" | "desc" = sp.dir === "desc" ? "desc" : sp.dir === "asc" ? "asc" : (streamSort === "date" ? "asc" : "desc");
+
   let calendarRows:  ExplorerRow[] = [];
   let calendarTotal = 0;
   let streamRows:    StreamRow[]   = [];
+  let streamTotal = 0;
   let walletRows:    StreamRow[]   = [];
+  let walletTotal = 0;
   let walletAddress: string | null = null;
   let walletEnsHint: string | null = null;
 
@@ -188,13 +199,17 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     calendarTotal = total;
     calendarRows  = rows.map(toExplorerRow);
   } else if (mode === "stream") {
-    streamRows = await getStreamsForExplorer({
+    // Paginated server-side (25/page) so users browse EVERY matching schedule,
+    // not the old ~1000-row cap. Symbol filter is applied in SQL so the count
+    // is accurate.
+    const { rows, total } = await getStreamsPage({
       chainIds:    chainIds.length > 0 ? chainIds : undefined,
       adapterIds,
       tokenSymbol: queryKind.kind === "symbol" ? queryKind.symbol : undefined,
       status:      "active",
-      limit:       isFree ? FREE_TIER_ROW_CAP * 4 : 1000,
-    });
+    }, { page: pageNum, pageSize, sort: streamSort, dir: streamDir });
+    streamRows  = rows;
+    streamTotal = total;
   } else if (mode === "wallet") {
     // Resolve ENS to address if needed, then query streams keyed on recipient.
     if (queryKind.kind === "address") {
@@ -204,41 +219,42 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       walletAddress = await resolveEnsName(queryKind.name);
     }
     if (walletAddress) {
-      walletRows = await getStreamsByRecipient(walletAddress, {
+      const { rows, total } = await getStreamsPage({
+        recipient:  walletAddress,
         chainIds:   chainIds.length > 0 ? chainIds : undefined,
         adapterIds,
         status:     "any",
-        limit:      isFree ? FREE_TIER_ROW_CAP * 4 : 1000,
-      });
+      }, { page: pageNum, pageSize, sort: streamSort, dir: streamDir });
+      walletRows  = rows;
+      walletTotal = total;
     }
   }
 
   // ── Wallet-mode portfolio summary ──────────────────────────────────────
-  // "Smart money" signal: when a user lands on a wallet (after clicking a
-  // recipient from a calendar row or round), tell them what else this
-  // wallet is vesting. A whale or fund will hold positions in 5-20 tokens;
-  // a one-off recipient will hold one. That number is the punchline.
-  // Computed purely from `walletRows` (already loaded), so no extra DB
-  // hit; the only side-call is a single price batch for the top 8 tokens.
+  // "Smart money" signal: when a user lands on a wallet, tell them what else
+  // this wallet is vesting. The list above is paginated (25 rows), but the
+  // portfolio needs the wallet's WHOLE book to count distinct tokens — so we
+  // pull a bounded full set (one wallet, capped at 1000 streams) just for the
+  // aggregate. Distinct tokens per wallet is tiny even when stream count isn't.
   let walletPortfolio: WalletPortfolioRow[] = [];
-  if (mode === "wallet" && walletRows.length > 0) {
-    walletPortfolio = await buildWalletPortfolio(walletRows);
+  let walletAllRows: StreamRow[] = [];
+  if (mode === "wallet" && walletAddress) {
+    walletAllRows = await getStreamsByRecipient(walletAddress, {
+      chainIds: chainIds.length > 0 ? chainIds : undefined,
+      adapterIds,
+      status:   "any",
+      limit:    1000,
+    });
+    if (walletAllRows.length > 0) walletPortfolio = await buildWalletPortfolio(walletAllRows);
   }
 
-  // Per-mode totals. Calendar mode is paginated server-side (calendarTotal =
-  // the full matching-token count); stream/wallet are single-shot lists that
-  // keep the free-tier per-render cap.
+  // Per-mode totals. All three modes paginate server-side now; the total is the
+  // true matching count for the pager.
   const totalMatches =
     mode === "calendar" ? calendarTotal :
-    mode === "stream"   ? streamRows.length :
-    walletRows.length;
-  const visibleCount = mode === "calendar"
-    ? calendarRows.length
-    : (isFree ? Math.min(totalMatches, FREE_TIER_ROW_CAP) : totalMatches);
-  const hiddenCount  = mode === "calendar" ? 0 : (totalMatches - visibleCount);
-  const totalPages   = Math.max(1, Math.ceil(calendarTotal / pageSize));
-  const visibleStreams  = isFree ? streamRows.slice(0, FREE_TIER_ROW_CAP) : streamRows;
-  const visibleWallets  = isFree ? walletRows.slice(0, FREE_TIER_ROW_CAP) : walletRows;
+    mode === "stream"   ? streamTotal :
+    walletTotal;
+  const totalPages = Math.max(1, Math.ceil(totalMatches / pageSize));
 
   // Active-filter count for the free-tier multi-filter cap.
   const activeFilters = [
@@ -304,7 +320,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 dedicated tab is redundant. ?mode=wallet links still render. */}
             {(["calendar", "stream"] as const).map((m) => {
               const active = mode === m;
-              const href = buildUrl({ ...sp, mode: m });
+              // Reset pagination + sort when switching lenses — page 7 of
+              // Upcoming has no meaning in Schedules.
+              const href = buildUrl({ ...sp, mode: m, page: undefined, sort: undefined, dir: undefined });
               return (
                 <Link
                   key={m}
@@ -356,23 +374,28 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             )}
             {mode === "stream" && (
               <StreamResults
-                rows={visibleStreams}
+                rows={streamRows}
                 totalMatches={totalMatches}
-                hiddenCount={hiddenCount}
-                isFree={isFree}
                 overFilterCap={overFilterCap}
+                page={pageNum}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                params={sp as Record<string, string | undefined>}
               />
             )}
             {mode === "wallet" && (
               <WalletResults
-                rows={visibleWallets}
+                rows={walletRows}
+                statsRows={walletAllRows}
                 totalMatches={totalMatches}
-                hiddenCount={hiddenCount}
-                isFree={isFree}
                 walletAddress={walletAddress}
                 ensHint={walletEnsHint}
                 queryGiven={query.length > 0}
                 portfolio={walletPortfolio}
+                page={pageNum}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                params={sp as Record<string, string | undefined>}
               />
             )}
           </section>
@@ -456,13 +479,15 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 // ─── Stream-mode results (per-stream rows) ─────────────────────────────────
 
 function StreamResults({
-  rows, totalMatches, hiddenCount, isFree, overFilterCap,
+  rows, totalMatches, overFilterCap, page, totalPages, pageSize, params,
 }: {
   rows:          StreamRow[];
   totalMatches:  number;
-  hiddenCount:   number;
-  isFree:        boolean;
   overFilterCap: boolean;
+  page:          number;
+  totalPages:    number;
+  pageSize:      number;
+  params:        Record<string, string | undefined>;
 }) {
   if (overFilterCap) {
     return (
@@ -489,20 +514,18 @@ function StreamResults({
     <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
-          {totalMatches} stream{totalMatches === 1 ? "" : "s"}
+          {totalMatches.toLocaleString()} schedule{totalMatches === 1 ? "" : "s"}
         </p>
+        {totalPages > 1 && (
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Page {page} of {totalPages.toLocaleString()}</p>
+        )}
       </div>
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         {rows.map((s, i) => (
           <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
         ))}
       </div>
-      {isFree && hiddenCount > 0 && (
-        <UpgradeBanner
-          title={`${hiddenCount} more stream${hiddenCount === 1 ? "" : "s"} above your free limit`}
-          body="Pro lifts the per-query cap, adds CSV export, multi-filter compose, and saved-search alerts."
-        />
-      )}
+      <Pagination page={page} totalPages={totalPages} total={totalMatches} pageSize={pageSize} rowsOnPage={rows.length} params={params} />
     </>
   );
 }
@@ -653,16 +676,22 @@ function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: Wallet
 // ─── Wallet-mode results (positions for a single recipient) ───────────────
 
 function WalletResults({
-  rows, totalMatches, hiddenCount, isFree, walletAddress, ensHint, queryGiven, portfolio,
+  rows, statsRows, totalMatches, walletAddress, ensHint, queryGiven, portfolio,
+  page, totalPages, pageSize, params,
 }: {
   rows:          StreamRow[];
+  /** The wallet's WHOLE position set (bounded fetch) — drives the stats
+   *  panel so protocol/chain spread reflects everything, not just this page. */
+  statsRows:     StreamRow[];
   totalMatches:  number;
-  hiddenCount:   number;
-  isFree:        boolean;
   walletAddress: string | null;
   ensHint:       string | null;
   queryGiven:    boolean;
   portfolio:     WalletPortfolioRow[];
+  page:          number;
+  totalPages:    number;
+  pageSize:      number;
+  params:        Record<string, string | undefined>;
 }) {
   if (!queryGiven) {
     return (
@@ -707,17 +736,19 @@ function WalletResults({
     <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
-          {totalMatches} position{totalMatches === 1 ? "" : "s"} for{" "}
+          {totalMatches.toLocaleString()} position{totalMatches === 1 ? "" : "s"} for{" "}
           <span className="font-mono normal-case" style={{ color: "var(--preview-text-2)" }}>
             {ensHint ?? shortAddr(walletAddress!)}
           </span>
         </p>
+        {totalPages > 1 && (
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Page {page} of {totalPages.toLocaleString()}</p>
+        )}
       </div>
       {/* Wallet analytics — locked value, distinct tokens, protocol/chain
-          spread, and holdings-by-USD. Built purely from rows + portfolio
-          (no extra query). Shown when there's more than one position so it
-          adds signal rather than restating a single row. */}
-      {rows.length > 1 && <WalletStats rows={rows} portfolio={portfolio} />}
+          spread, and holdings-by-USD. Built from the wallet's WHOLE book
+          (statsRows), not just the current page, so the spread is accurate. */}
+      {statsRows.length > 1 && <WalletStats rows={statsRows} portfolio={portfolio} />}
 
       {/* "Also vesting" smart-money strip — what other tokens does this
           wallet receive? Lets users spot whales / funds at a glance. The
@@ -764,12 +795,7 @@ function WalletResults({
           <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
         ))}
       </div>
-      {isFree && hiddenCount > 0 && (
-        <UpgradeBanner
-          title={`${hiddenCount} more position${hiddenCount === 1 ? "" : "s"} above your free limit`}
-          body="Pro shows the full set + saved-search alerts when this wallet's next unlock is imminent."
-        />
-      )}
+      <Pagination page={page} totalPages={totalPages} total={totalMatches} pageSize={pageSize} rowsOnPage={rows.length} params={params} />
     </>
   );
 }
