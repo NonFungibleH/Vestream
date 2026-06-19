@@ -145,7 +145,10 @@ export function ExplorerTable({
   // minmax(0,…) on every track (not bare `fr`) so a wide cell can't blow out
   // its column and shove the others — grid `fr` tracks otherwise floor at their
   // content's min width. Columns stay put when you sort.
-  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.5fr)_minmax(0,0.5fr)_minmax(0,0.5fr)_minmax(0,1.05fr)_minmax(0,0.85fr)] items-center gap-3 px-4 md:px-5";
+  // Token column soaks up the full-width slack (its name + protocol·chain
+  // subtitle can use the room) so the data columns stay packed instead of
+  // spreading into big gaps. Vested tightened (it's just a small sparkline).
+  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,2.4fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.85fr)_minmax(0,0.85fr)] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
@@ -170,7 +173,7 @@ export function ExplorerTable({
             <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
             <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
-            <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} className="hidden md:flex" title={PROGRESS_HELP} />
+            <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} align="right" className="hidden md:flex" title={PROGRESS_HELP} />
             <Th label="Next unlock" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden md:flex" title={NEXT_HELP} />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
@@ -365,7 +368,7 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
           <RiskChip r={r} />
         </div>
         {/* Vesting progress (desktop) */}
-        <div className="hidden md:block" title={progressTitle(r)}>
+        <div className="hidden md:flex justify-end" title={progressTitle(r)}>
           <VestingProgress r={r} />
         </div>
         {/* Next unlock (desktop) */}
