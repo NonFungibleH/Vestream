@@ -49,10 +49,11 @@ function shortAddr(a: string): string {
 }
 
 // ── In-memory column sort ────────────────────────────────────────────────────
-// "rank" is the default — rows arrive rank-ordered (locked-USD desc), so the
-// rank IS the locked-desc order. The three numeric column labels toggle between
-// asc/desc; clicking the active one flips direction, clicking a new one resets
-// to that column's natural default (desc — biggest first).
+// "rank" is the default — rows arrive rank-ordered (the cron's USD-weighted
+// composite of locked value + token breadth), so rank IS the blended order.
+// The three numeric column labels toggle between asc/desc; clicking the active
+// one flips direction, clicking a new one resets to that column's natural
+// default (desc — biggest first).
 type SortCol = "rank" | "locked" | "streams" | "tokens";
 type SortDir = "asc" | "desc";
 
@@ -81,7 +82,7 @@ function isFilter(v: string | null): v is Filter {
 export function SmartMoneyFilter({ rows }: { rows: SnapshotRow[] }) {
   const [filter, setFilter] = useState<Filter>("all");
 
-  // Default sort = rank/locked-desc (rows arrive in that order).
+  // Default sort = rank (the cron's composite order; rows arrive that way).
   const [col, setCol] = useState<SortCol>("rank");
   const [dir, setDir] = useState<SortDir>("asc"); // rank asc = "best first" (see sortValue)
 
@@ -270,10 +271,11 @@ function WalletRow({ row, showTopBorder }: { row: SnapshotRow; showTopBorder: bo
           ))}
         </div>
       </div>
-      {/* Total USD (hidden on mobile to fit) */}
+      {/* Locked USD — one of the two blend axes, so teal like Tokens. Hidden on
+          mobile to fit; "—" when the wallet's tokens are all unpriced. */}
       <div className="text-right hidden md:block tabular-nums">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Locked</p>
-        <p className="text-sm font-bold" style={{ color: "var(--preview-text)" }}>
+        <p className="text-sm font-bold" style={{ color: totalUsd != null && totalUsd > 0 ? "#0F8A8A" : "var(--preview-text-3)" }}>
           {totalUsd != null && totalUsd > 0 ? formatUsdCompact(totalUsd) : "—"}
         </p>
       </div>
@@ -284,7 +286,7 @@ function WalletRow({ row, showTopBorder }: { row: SnapshotRow; showTopBorder: bo
           {row.streamCount.toLocaleString()}
         </p>
       </div>
-      {/* Distinct tokens — the headline metric */}
+      {/* Distinct tokens — the other blend axis */}
       <div className="text-right tabular-nums">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Tokens</p>
         <p className="text-sm font-bold" style={{ color: "#0F8A8A" }}>

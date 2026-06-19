@@ -1,7 +1,8 @@
 // /dashboard/smart-money
 // ─────────────────────────────────────────────────────────────────────────────
-// Smart Money leaderboard — wallets receiving vestings of the most distinct
-// tokens. Cross-protocol, cross-chain, refreshed daily.
+// Smart Money leaderboard — wallets ranked by a USD-weighted blend of locked
+// vesting value and token breadth. Cross-protocol, cross-chain, refreshed
+// daily. (Ranking weights live in /api/cron/smart-money.)
 //
 // Why this page exists: nobody else has cross-protocol recipient data at this
 // scale. A wallet receiving vestings of 200 distinct tokens is clearly a
@@ -129,7 +130,7 @@ export default async function SmartMoneyPage() {
         Who&apos;s vesting everything
       </h1>
       <p className="text-sm mb-6 max-w-2xl" style={{ color: "var(--preview-text-2)" }}>
-        Top 100 wallets by the number of distinct tokens vesting to them. A wallet receiving 100+ tokens is almost certainly a fund, treasury, or launchpad aggregator — the kind of address worth watching. Click any wallet to drill into its full positions.
+        Top 100 wallets ranked by a blend of <strong style={{ color: "var(--preview-text)" }}>locked value</strong> and <strong style={{ color: "var(--preview-text)" }}>token breadth</strong> — surfacing funds, treasuries, and aggregators with real positions, not just dust. Sort by any column, and click a wallet to drill into its full positions.
       </p>
 
       {/* Stats strip */}

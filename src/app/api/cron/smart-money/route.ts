@@ -16,9 +16,12 @@
 //   1. SQL aggregate: top 100 wallets by distinct (chain, token) count,
 //      excluding denylist (burn addresses etc), excluding fully-vested
 //      streams (so we surface ACTIVE smart money, not historical winners).
-//   2. For the top-100, fetch per-wallet token totals + classify ecosystem.
-//   3. Price each wallet's top tokens via DexScreener (batched).
-//   4. DELETE existing snapshot, bulk INSERT new rows in a transaction.
+//      Wider than the leaderboard so the Phase-4 re-rank has room.
+//   2. For the candidates, fetch per-wallet token totals + classify ecosystem.
+//   3. Price each wallet's tokens via DexScreener (batched).
+//   4. Re-rank by a USD-weighted composite (locked-value + token-breadth),
+//      then cut to the leaderboard size.
+//   5. DELETE existing snapshot, bulk INSERT new rows in a transaction.
 //
 // Auth: same Bearer-token gate as the other crons.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +41,23 @@ export const maxDuration = 300; // 5min ceiling — the aggregate alone is ~22s
 
 const LEADERBOARD_SIZE = 100;
 const TOP_TOKENS_PER_WALLET = 3;
+
+// Composite ranking — USD-weighted blend. A wallet's final rank is
+//   0.6·(locked-USD percentile) + 0.4·(distinct-token-count percentile)
+// computed within the candidate pool. USD leads because real locked value is
+// the stronger "smart money" signal, but token-count keeps broad-but-unpriced
+// wallets visible — only ~12% of vesting tokens carry a DEX price, so a
+// pure-USD sort would bury most of the board.
+const USD_WEIGHT = 0.6;
+const COUNT_WEIGHT = 0.4;
+
+// Pull a wider candidate net than the leaderboard size. Phase 1 can only
+// prefilter by token-count (USD isn't known until pricing in Phase 3), so a
+// high-value / moderate-breadth wallet could sit below a pure top-100 cut by
+// count. 4× headroom lets the composite promote it. (A pure single-token whale
+// below this count cutoff still won't appear — acceptable: real funds vest
+// more than one or two tokens.)
+const CANDIDATE_POOL = LEADERBOARD_SIZE * 4;
 
 // Protocols included in the leaderboard. Investor-vesting / streaming
 // protocols only — UNCX, UNCX-VM, PinkSale, and LlamaPay are EXCLUDED
@@ -70,9 +90,11 @@ async function handle(req: NextRequest) {
   const t0 = Date.now();
   const denyArr = [...SMART_MONEY_DENYLIST];
 
-  // ── Phase 1: top-N recipients by distinct token count ────────────────────
+  // ── Phase 1: candidate pool by distinct token count ──────────────────────
   // active streams only (isFullyVested = false). Filter denylist in SQL so
-  // we don't waste a slot on noise that we'd just drop in Phase 2.
+  // we don't waste a slot on noise that we'd just drop in Phase 2. This is a
+  // wide net (CANDIDATE_POOL) — the real ranking happens in Phase 4 once we
+  // have USD values.
   const aggregateRows = await db
     .select({
       recipient:          vestingStreamsCache.recipient,
@@ -91,8 +113,7 @@ async function handle(req: NextRequest) {
     )
     .groupBy(vestingStreamsCache.recipient)
     .orderBy(sql`distinct_token_count DESC`)
-    .limit(LEADERBOARD_SIZE * 2); // Pull 2x then trim — gives us headroom
-                                  // when Phase-2 ecosystem filtering drops any.
+    .limit(CANDIDATE_POOL); // Wide net — Phase 4 composite re-rank trims to LEADERBOARD_SIZE.
 
   const aggregateMs = Date.now() - t0;
   console.log(`[smart-money] phase 1 done: ${aggregateRows.length} rows in ${aggregateMs}ms`);
@@ -105,7 +126,7 @@ async function handle(req: NextRequest) {
   // For each candidate, pull all (chainId, tokenAddress, summed locked
   // amount, decimals, symbol) rows so we can pick the top 3 by USD value.
   // One IN query per batch of candidates — we keep this bounded.
-  const recipients = candidates.map((r) => r.recipient).slice(0, LEADERBOARD_SIZE * 2);
+  const recipients = candidates.map((r) => r.recipient).slice(0, CANDIDATE_POOL);
   if (recipients.length === 0) {
     return NextResponse.json({ ok: true, message: "no candidates", durationMs: Date.now() - t0 });
   }
@@ -233,8 +254,31 @@ async function handle(req: NextRequest) {
     };
   });
 
-  // Final cut to LEADERBOARD_SIZE.
-  const final = bundles.slice(0, LEADERBOARD_SIZE);
+  // ── Composite re-rank: USD-weighted blend ────────────────────────────────
+  // Percentile-rank each wallet on locked-USD and on distinct-token-count
+  // within the candidate pool, then blend 0.6/0.4. Percentile (not raw value)
+  // because dollars and token-counts live on incomparable scales; ranking each
+  // axis to [0,1] lets them combine. Unpriced wallets (totalLockedUsd null) sit
+  // at the bottom of the USD axis but still score via the count axis — so the
+  // board isn't gutted by the ~88% pricing gap. O(n²) over n≈CANDIDATE_POOL is
+  // trivial (≤160k comparisons).
+  const n = bundles.length;
+  const usdValues = bundles.map((b) => b.totalLockedUsd ?? 0);
+  const countValues = bundles.map((b) => b.distinctTokenCount);
+  const percentile = (values: number[], v: number): number => {
+    if (n <= 1) return 1;
+    let lower = 0;
+    for (const x of values) if (x < v) lower++;
+    return lower / (n - 1); // fraction strictly below → ties share a percentile
+  };
+  const scored = bundles.map((b) => ({
+    bundle: b,
+    score:
+      USD_WEIGHT * percentile(usdValues, b.totalLockedUsd ?? 0) +
+      COUNT_WEIGHT * percentile(countValues, b.distinctTokenCount),
+  }));
+  scored.sort((a, z) => z.score - a.score);
+  const final = scored.slice(0, LEADERBOARD_SIZE).map((s) => s.bundle);
 
   // ── Phase 5: replace the snapshot atomically ─────────────────────────────
   // DELETE + INSERT in one transaction so the page never sees an empty or
