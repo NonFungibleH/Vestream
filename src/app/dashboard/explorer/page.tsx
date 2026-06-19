@@ -105,6 +105,7 @@ interface ExplorerSearchParams {
   usdMin?:     string; usdMax?:     string;   // locked value USD
   topMin?:     string; topMax?:     string;   // top-holder concentration 0–100
   cliff?:      string;                         // "1" = cliff unlocks only
+  nostable?:   string;                         // "1" = hide stablecoins
   size?:       string;                         // page size: 25 | 50 | 100
   sort?:     string;   // calendar sort key (date | usd | amount | wallets | …)
   dir?:      string;   // "asc" | "desc"
@@ -419,6 +420,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               minTopHolder,
               maxTopHolder,
               cliffOnly,
+              hideStable: sp.nostable === "1",
               sort: sortKey,
               dir: sortDir,
               page: pageNum,

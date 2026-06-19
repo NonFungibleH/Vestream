@@ -36,6 +36,21 @@ const FREE_TIER_FILTER_CAP = 1;
 const PAGE_SIZES = [25, 50, 100];
 const SEC_DAY = 86400;
 
+// Known stablecoins (symbol, case-insensitive) for the "Hide stablecoins"
+// toggle — the common fiat-pegged tokens + their wrapped/Superfluid variants.
+// Exact-match (not "contains USD") so memecoins like "USDmoon" aren't caught.
+const STABLECOIN_SYMBOLS = new Set<string>([
+  "usdc", "usdt", "dai", "busd", "tusd", "usdp", "gusd", "frax", "lusd", "usdd",
+  "fdusd", "pyusd", "usde", "susd", "crvusd", "gho", "usds", "usdbc", "usd+",
+  "dola", "mim", "usdx", "eurc", "eurt", "eurs", "usdc.e", "usdt.e", "vai",
+  "alusd", "mkusd", "ousd", "cusd", "usdr",
+  // Superfluid / wrapped "x" super-token variants
+  "usdcx", "usdtx", "daix", "busdx",
+]);
+function isStablecoin(symbol: string | null): boolean {
+  return symbol != null && STABLECOIN_SYMBOLS.has(symbol.toLowerCase());
+}
+
 const CHAIN_FILTERS: ReadonlyArray<{ id: number; label: string }> = [
   { id: 1,    label: "Ethereum"  },
   { id: 8453, label: "Base"      },
@@ -82,6 +97,7 @@ interface State {
   usdMin?:     number; usdMax?:     number;
   topMin?:     number; topMax?:     number;   // 0–100
   cliffOnly:  boolean;
+  hideStable: boolean;
   sort:       ExplorerSortKey;
   dir:        "asc" | "desc";
   page:       number;
@@ -100,6 +116,7 @@ export interface ExplorerInitialState {
   usdMin?:      number; usdMax?: number;
   minTopHolder?: number; maxTopHolder?: number;  // 0–1
   cliffOnly:    boolean;
+  hideStable:   boolean;
   sort:         ExplorerSortKey;
   dir:          "asc" | "desc";
   page:         number;
@@ -115,7 +132,7 @@ function fromInitial(i: ExplorerInitialState): State {
     minVested: pct(i.minVestedPct), maxVested: pct(i.maxVestedPct),
     usdMin: i.usdMin, usdMax: i.usdMax,
     topMin: pct(i.minTopHolder), topMax: pct(i.maxTopHolder),
-    cliffOnly: i.cliffOnly, sort: i.sort, dir: i.dir, page: i.page, pageSize: i.pageSize,
+    cliffOnly: i.cliffOnly, hideStable: i.hideStable, sort: i.sort, dir: i.dir, page: i.page, pageSize: i.pageSize,
   };
 }
 
@@ -186,6 +203,7 @@ function matchRow(
   if (st.topMin != null && (row.t == null || row.t * 100 < st.topMin)) return false;
   if (st.topMax != null && (row.t == null || row.t * 100 > st.topMax)) return false;
   if (st.cliffOnly && row.cl !== 1) return false;
+  if (st.hideStable && isStablecoin(row.s)) return false;
   return true;
 }
 
@@ -257,6 +275,7 @@ function toQueryString(st: State): string {
   put("usdMin", st.usdMin);         put("usdMax", st.usdMax);
   put("topMin", st.topMin);         put("topMax", st.topMax);
   if (st.cliffOnly) p.set("cliff", "1");
+  if (st.hideStable) p.set("nostable", "1");
   if (st.pageSize !== 25) p.set("size", String(st.pageSize));
   if (st.sort !== "date") p.set("sort", st.sort);
   if (st.dir) p.set("dir", st.dir);
@@ -305,12 +324,12 @@ export function ExplorerCalendarClient({
   const applyLens = (apply: Partial<State>) =>
     // A lens REPLACES filters — start from a clean slate, keep the search query.
     setState({
-      q: state.q, date: "all", chainIds: [], protocols: [], cliffOnly: false,
+      q: state.q, date: "all", chainIds: [], protocols: [], cliffOnly: false, hideStable: false,
       sort: "date", dir: "desc", page: 1, pageSize: state.pageSize, ...apply,
     });
   const reset = (keepQ: boolean) =>
     setState({
-      q: keepQ ? state.q : "", date: "all", chainIds: [], protocols: [], cliffOnly: false,
+      q: keepQ ? state.q : "", date: "all", chainIds: [], protocols: [], cliffOnly: false, hideStable: false,
       sort: "date", dir: "asc", page: 1, pageSize: state.pageSize,
     });
 
@@ -361,7 +380,7 @@ export function ExplorerCalendarClient({
     state.chainIds.length > 0 || state.protocols.length > 0 || state.usdMin != null || state.usdMax != null ||
     state.minWallets != null || state.maxWallets != null || state.minRounds != null || state.maxRounds != null ||
     state.minVested != null || state.maxVested != null || state.topMin != null || state.topMax != null ||
-    state.cliffOnly || state.date !== "all";
+    state.cliffOnly || state.hideStable || state.date !== "all";
 
   const lensActive = (apply: Partial<State>) =>
     (Object.keys(apply) as (keyof State)[]).every((k) => state[k] === apply[k]);
@@ -488,9 +507,12 @@ export function ExplorerCalendarClient({
               topMin={state.topMin}         topMax={state.topMax}
               onCommit={(delta) => update(deltaToState(delta))}
             />
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               <FilterPill active={state.cliffOnly} onClick={() => update({ cliffOnly: !state.cliffOnly })}>
                 Cliff unlocks only
+              </FilterPill>
+              <FilterPill active={state.hideStable} onClick={() => update({ hideStable: !state.hideStable })}>
+                Hide stablecoins
               </FilterPill>
             </div>
           </div>
@@ -551,6 +573,7 @@ function ActiveChips({ state, update, reset }: {
   const tLbl = range(state.topMin, state.topMax, "top holder", (n) => `${n}%`);
   if (tLbl) chips.push({ key: "top", label: tLbl, clear: { topMin: undefined, topMax: undefined } });
   if (state.cliffOnly) chips.push({ key: "cliff", label: "Cliff unlocks", clear: { cliffOnly: false } });
+  if (state.hideStable) chips.push({ key: "nostable", label: "No stablecoins", clear: { hideStable: false } });
 
   if (chips.length === 0) return null;
   return (
