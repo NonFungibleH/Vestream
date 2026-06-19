@@ -646,7 +646,7 @@ Two daily crons:
 |---|---|---|
 | `/api/cron/seed-cache` | 03:00 UTC daily | Refreshes `vesting_streams_cache` — discover recipients per (adapter, chain), fetch streams, upsert. |
 | `/api/cron/seed-cache?mode=deep` | 04:00 UTC Sundays | Weekly deep seed (DEEP_SEED_LIMIT=5000 vs 500 incremental). |
-| `/api/cron/tvl-snapshot` | 03:15 UTC daily | Writes `protocolTvlSnapshots` rows powering /protocols TVL numbers. |
+| `/api/cron/tvl-snapshot` | **4 grouped entries** 03:15–04:20 UTC daily | Writes `protocolTvlSnapshots` rows powering /protocols TVL numbers. Split by cost (2026-06-19) — the single 300s invocation couldn't finish all protocols, starving the slow ones (pinksale ~191s, jupiter-lock ~86s) and freezing their /status cells. Groups: `?protocol=pinksale` (3:15), `jupiter-lock` (3:50), `uncx,unvest,superfluid` (4:05), `sablier,sablier-flow,hedgey,streamflow,llamapay` (4:20). `?protocol=` accepts a comma list or single slug. Each snapshot row carries a heartbeat (`last_attempt_at`/`last_error`/`consecutive_failures`) so a silently-failing cell shows `⚠×N` on /status instead of just aging. |
 
 #### Seed-cache group pattern
 

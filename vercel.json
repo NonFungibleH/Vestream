@@ -5,8 +5,20 @@
       "schedule": "*/15 * * * *"
     },
     {
-      "path": "/api/cron/tvl-snapshot",
+      "path": "/api/cron/tvl-snapshot?protocol=pinksale",
       "schedule": "15 3 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=jupiter-lock",
+      "schedule": "50 3 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=uncx,unvest,superfluid",
+      "schedule": "5 4 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier,sablier-flow,hedgey,streamflow,llamapay",
+      "schedule": "20 4 * * *"
     },
     {
       "path": "/api/cron/smart-money",

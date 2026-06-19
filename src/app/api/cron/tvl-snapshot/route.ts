@@ -88,7 +88,16 @@ async function runAll(protocolFilter: string | null): Promise<{
   // integrations (e.g. team-finance, May 2026) never get walker calls fired
   // on their behalf, even if a manual `?protocol=team-finance` rerun is
   // attempted. To re-enable, flip `disabled: false` in protocol-constants.ts.
-  const protocols = listProtocols().filter((p) => !protocolFilter || p.slug === protocolFilter);
+  // `?protocol=` accepts a single slug OR a comma-separated list, so the daily
+  // cron can be split into cost-balanced groups (one Vercel function each) —
+  // the slow walkers (pinksale ~191s, jupiter-lock ~86s) blew the single
+  // 300s invocation's budget, starving every protocol later in the loop and
+  // freezing their cells (see /status heartbeat). Mirrors the seed-cache
+  // per-group cron split. A single slug still works for ad-hoc reruns.
+  const filterSet = protocolFilter
+    ? new Set(protocolFilter.split(",").map((s) => s.trim()).filter(Boolean))
+    : null;
+  const protocols = listProtocols().filter((p) => !filterSet || filterSet.has(p.slug));
   if (protocolFilter && protocols.length === 0) {
     console.log(`[cron/tvl-snapshot] no enabled protocol matches "${protocolFilter}" — skipping (may be disabled in protocol-constants.ts)`);
   }
