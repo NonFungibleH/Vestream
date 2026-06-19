@@ -5,7 +5,7 @@
 > not including review/testing/marketing follow-up. Re-rank when priorities
 > change. **This is for internal planning — not a public commitment.**
 >
-> _Last updated: 2026-05-31_
+> _Last updated: 2026-06-19_
 
 ---
 
@@ -47,6 +47,16 @@
 ---
 
 ## Next (this month)
+
+### Smart Money "Also holds" — non-vesting wallet holdings (Part B)
+- **What** — A per-wallet strip on the Smart Money leaderboard showing each wallet's top ~5 *non-vesting* token holdings (priced, above a USD floor), so users can see what else these wallets are moving. Excludes tokens the wallet is already vesting.
+- **Why** — Part A (value-seeded composite ranking) shipped 2026-06-19 and now surfaces real-money wallets; the natural next step is "what else do they hold". User asked for it explicitly ("show what other tokens the wallets hold that aren't vesting so we can see other movements").
+- **Status / blocker** — Designed + prod-probed. EVM balance enumeration works in prod, but ETH+Base-only coverage hit just ~10% of the board (the 38 BSC wallets are blind — we have no BSC balance API). Where holdings exist they're real money ($1–2.6M). Decision taken: use **Moralis** (free tier — wallet-tokens-with-price across eth/bsc/base/polygon/arbitrum/optimism in one call) for full multichain coverage. **BLOCKED on adding `MORALIS_API_KEY` to the Vercel `vestream` project (Production).**
+- **Build once the key is in** — `M` (~1–2 days):
+  1. `also_holds_json` column on `smart_money_snapshot` (idempotent DDL per CLAUDE.md prod-migration rule).
+  2. Holdings fan-out in `/api/cron/smart-money` — Moralis per wallet × chain, exclude vesting tokens + `possible_spam` + stablecoins, realizable-USD cap at our `token_prices_cache` liquidity, top 5.
+  3. "Also holds" strip in `SmartMoneyFilter` row UI (token chips + USD).
+- **Notes** — Solana holdings deferred: `smart_money_snapshot` stores Solana recipients lowercased, but base58 is case-sensitive, so balance APIs reject them — fix the recipient-case path first. The temporary `/api/cron/probe-holdings` route was removed after the probe; its Moralis fetch logic is the reference for the real cron integration (see git history around 2026-06-19).
 
 ### Stickiness trifecta — calendar export + tags
 
