@@ -14,6 +14,7 @@
 import { and, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { tokenVestingRollups } from "../db/schema";
+import { withTimeout } from "../with-timeout";
 
 export interface TokenRollup {
   totalLocked:    bigint;
@@ -519,16 +520,25 @@ export async function getExplorerDataset(): Promise<ExplorerDatasetRow[]> {
   type R = Record<string, unknown>;
   let rows: R[] = [];
   try {
-    rows = (await db.execute(sql`
-      SELECT chain_id AS "c", token_address AS "a", token_symbol AS "s",
-             token_decimals AS "d", total_locked AS "amt",
-             locked_value_usd AS "u", market_cap AS "mc", top_holder_share AS "t",
-             wallet_count AS "w", round_count AS "r", has_cliff AS "cl",
-             first_start AS "fs", last_end AS "le", next_unlock AS "n",
-             protocols AS "p", unlock_curve AS "cv"
-      FROM token_vesting_rollups
-      WHERE next_unlock IS NOT NULL AND next_unlock >= ${now}
-    `) as unknown as R[]) ?? [];
+    // Bounded — this single full-scan feeds the explorer's only data fetch.
+    // If it stalls on a saturated pooler connection, an unbounded await would
+    // hang the route until Cloudflare's 100s cutoff and the explorer would sit
+    // on a skeleton forever. withTimeout degrades to [] in 12s instead.
+    rows = (await withTimeout(
+      db.execute(sql`
+        SELECT chain_id AS "c", token_address AS "a", token_symbol AS "s",
+               token_decimals AS "d", total_locked AS "amt",
+               locked_value_usd AS "u", market_cap AS "mc", top_holder_share AS "t",
+               wallet_count AS "w", round_count AS "r", has_cliff AS "cl",
+               first_start AS "fs", last_end AS "le", next_unlock AS "n",
+               protocols AS "p", unlock_curve AS "cv"
+        FROM token_vesting_rollups
+        WHERE next_unlock IS NOT NULL AND next_unlock >= ${now}
+      `) as unknown as Promise<R[]>,
+      12000,
+      [] as R[],
+      "explorer-dataset",
+    )) ?? [];
   } catch (err) {
     console.error("[token-rollups] getExplorerDataset failed:", err);
     return [];
