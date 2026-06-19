@@ -51,6 +51,7 @@ import {
 } from "@/lib/vesting/page-data-fallback";
 import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
+import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-queries";
 
 // On-demand ISR with 5-minute revalidation (2026-06-12).
 //
@@ -338,6 +339,12 @@ export default async function ProtocolLandingPage(
   // The unlock-calendar framing reads as broken for them ("641 indexed / no
   // upcoming unlocks"), so we relabel the stat + the upcoming card.
   const isStream = meta.adapterIds.some((id) => PROTOCOL_DEFAULT_CATEGORY[id] === "stream");
+  // For continuous-stream protocols, pull a small slice of live streams so the
+  // page shows real activity instead of an empty "streams continuously" card.
+  // (build-phase-guarded inside getStreamingStreams; ISR fills on first hit.)
+  const liveStreams = isStream
+    ? await getStreamingStreams({ protocolIds: meta.adapterIds }, { page: 1, pageSize: 8 })
+    : { rows: [] as StreamingRow[], total: 0 };
   const related = meta.relatedSlugs
     .map((s) => getProtocol(s))
     .filter((p): p is ProtocolMeta => !!p);
@@ -725,6 +732,39 @@ export default async function ProtocolLandingPage(
           </div>
         )}
 
+        {/* ── Live streams (continuous protocols) ─────────────────────────────
+            Continuous flows have no "unlock queue", so instead we surface the
+            most recently created streams with their per-day rate — keeps the
+            page from looking empty and matches the queue layout above. */}
+        {isStream && liveStreams.rows.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: meta.color }}>
+                Live streams
+              </p>
+              <p className="text-xs" style={{ color: "#B8BABD" }}>
+                {liveStreams.total.toLocaleString()} active stream{liveStreams.total === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: `1px solid ${meta.border}` }}>
+              <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+                {liveStreams.rows.map((s) => (
+                  <LiveStreamRow key={s.streamId} s={s} accent={meta.color} />
+                ))}
+              </div>
+            </div>
+            {liveStreams.total > liveStreams.rows.length && (
+              <Link
+                href={`/dashboard/explorer?mode=streaming&protocol=${meta.slug}`}
+                className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold transition-opacity hover:opacity-70"
+                style={{ color: meta.color }}
+              >
+                See all {liveStreams.total.toLocaleString()} {meta.name} streams in the explorer →
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* ── Calendar banner — same shape as the cross-protocol /protocols
             listing's banner so the calendar CTA reads consistently across
             surfaces. Sits HERE (below the Upcoming queue) intentionally:
@@ -1099,6 +1139,59 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   );
   return canLink ? (
     <Link href={`/token/${u.chainId}/${u.tokenAddress}`} className="block">
+      {inner}
+    </Link>
+  ) : inner;
+}
+
+// ── Live-stream row (continuous protocols) ───────────────────────────────────
+// tokens/day from a LlamaPay 20-decimal raw amountPerSec (÷1e20 × 86400).
+function streamRatePerDay(amountPerSecRaw: string | null): number | null {
+  if (!amountPerSecRaw) return null;
+  try { return (Number(BigInt(amountPerSecRaw)) / 1e20) * 86400; } catch { return null; }
+}
+function fmtStreamRate(n: number): string {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  if (n >= 1)   return n.toFixed(2);
+  if (n > 0)    return n.toFixed(4);
+  return "0";
+}
+
+function LiveStreamRow({ s, accent }: { s: StreamingRow; accent: string }) {
+  const streamed = formatAmountCompact(s.streamedAmount, s.tokenSymbol, s.tokenDecimals);
+  const sym      = s.tokenSymbol ?? "";
+  const rate     = streamRatePerDay(s.amountPerSecRaw);
+  const canLink  = !!s.tokenAddress && /^0x[0-9a-f]{40}$/i.test(s.tokenAddress);
+  const inner = (
+    <div className="px-4 md:px-5 py-3 flex items-center gap-3 min-h-[60px] transition-colors hover:bg-slate-50/60">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold truncate min-w-0" style={{ color: "#1A1D20" }}>
+            {streamed} {sym} <span className="font-normal" style={{ color: "#B8BABD" }}>streamed</span>
+          </span>
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
+            style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
+          >
+            {chainLabel(s.chainId)}
+          </span>
+        </div>
+        <div className="text-[10.5px] font-mono truncate mt-0.5" style={{ color: "#B8BABD" }}>
+          for {truncateAddress(s.recipient)}
+        </div>
+      </div>
+      <div
+        className="flex-shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums whitespace-nowrap"
+        style={{ background: `${accent}15`, color: accent }}
+      >
+        {rate != null ? `≈ ${fmtStreamRate(rate)} ${sym}/day` : "live"}
+      </div>
+    </div>
+  );
+  return canLink ? (
+    <Link href={`/token/${s.chainId}/${s.tokenAddress}`} className="block">
       {inner}
     </Link>
   ) : inner;

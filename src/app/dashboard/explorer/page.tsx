@@ -31,7 +31,9 @@ import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/q
 import {
   getStreamsPage,
   getStreamsByRecipient,
+  getStreamingStreams,
   type StreamRow,
+  type StreamingRow,
   type StreamSortKey,
 } from "@/lib/vesting/explorer-queries";
 import { resolveEnsName } from "@/lib/ens";
@@ -92,7 +94,7 @@ const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
 
 interface ExplorerSearchParams {
   q?:        string;
-  mode?:     "calendar" | "stream" | "wallet";
+  mode?:     "calendar" | "stream" | "wallet" | "streaming";
   chain?:    string;   // comma-separated ids
   protocol?: string;   // comma-separated slugs
   date?:     string;   // window slug or "all"
@@ -191,8 +193,21 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   let walletTotal = 0;
   let walletAddress: string | null = null;
   let walletEnsHint: string | null = null;
+  let streamingRows:  StreamingRow[] = [];
+  let streamingTotal = 0;
 
-  if (mode === "stream") {
+  if (mode === "streaming") {
+    // Continuous per-second flows (LlamaPay) — no unlock events, so they live
+    // outside the rollup/Schedules. Surfaced here as ongoing streams, newest
+    // first. The protocol sidebar filter (if any) is intersected with the
+    // continuous set inside the query.
+    const { rows, total } = await getStreamingStreams({
+      chainIds:    chainIds.length > 0 ? chainIds : undefined,
+      protocolIds: protocols.length > 0 ? protocols : undefined,
+    }, { page: pageNum, pageSize });
+    streamingRows  = rows;
+    streamingTotal = total;
+  } else if (mode === "stream") {
     // Paginated server-side (25/page) so users browse EVERY matching schedule,
     // not the old ~1000-row cap. Symbol filter is applied in SQL so the count
     // is accurate.
@@ -244,7 +259,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
 
   // Per-mode totals for the server-paginated Stream/Wallet pagers. Calendar's
   // totals are computed client-side inside <ExplorerCalendarClient>.
-  const totalMatches = mode === "stream" ? streamTotal : mode === "wallet" ? walletTotal : 0;
+  const totalMatches = mode === "stream" ? streamTotal : mode === "wallet" ? walletTotal : mode === "streaming" ? streamingTotal : 0;
   const totalPages = Math.max(1, Math.ceil(totalMatches / pageSize));
 
   // Active-filter count for the free-tier multi-filter cap (Stream mode banner;
@@ -315,18 +330,22 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 searching a wallet address / ENS in the box routes to wallet
                 results automatically (destinationForQuery → ?mode=wallet), so a
                 dedicated tab is redundant. ?mode=wallet links still render. */}
-            {(["calendar", "stream"] as const).map((m) => {
+            {(["calendar", "stream", "streaming"] as const).map((m) => {
               const active = mode === m;
               // Reset pagination + sort when switching lenses — page 7 of
               // Upcoming has no meaning in Schedules.
               const href = buildUrl({ ...sp, mode: m, page: undefined, sort: undefined, dir: undefined });
+              const label = m === "calendar" ? "Upcoming" : m === "stream" ? "Schedules" : "Streaming";
+              const tip = m === "calendar"
+                ? "One row per token — which projects have unlocks coming up. Filterable + sortable."
+                : m === "stream"
+                ? "One row per individual vesting schedule (a single wallet's position)."
+                : "Continuous per-second streams (e.g. LlamaPay payroll) — no fixed unlock, flows live.";
               return (
                 <Link
                   key={m}
                   href={href}
-                  title={m === "calendar"
-                    ? "One row per token — which projects have unlocks coming up. Filterable + sortable."
-                    : "One row per individual vesting schedule (a single wallet's position)."}
+                  title={tip}
                   className="px-4 py-2 text-sm font-semibold"
                   style={{
                     color: active ? "#0F8A8A" : "var(--preview-text-2)",
@@ -334,12 +353,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                     marginBottom: -1,
                   }}
                 >
-                  {/* Renamed from Calendar/Streams to Upcoming/Schedules so
-                      the facets read as distinct lenses rather than
-                      overlapping nouns. URL params (?mode=calendar) kept
-                      unchanged so existing links / SEO / saved searches
-                      don't break. */}
-                  {m === "calendar" ? "Upcoming" : "Schedules"}
+                  {/* URL params (?mode=calendar|stream|streaming) kept stable so
+                      existing links / SEO / saved searches don't break. */}
+                  {label}
                 </Link>
               );
             })}
@@ -374,6 +390,8 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             ? "Schedules — one row per individual vesting position (a single wallet's stream). Use this to scan raw schedules."
             : mode === "wallet"
             ? "Wallet — every vesting position held by one recipient."
+            : mode === "streaming"
+            ? "Streaming — continuous per-second flows (LlamaPay payroll). These never “unlock”; they drip live, so we show streamed-so-far and the per-day rate."
             : "Upcoming — one row per token (all its wallets/rounds rolled up), sorted by next unlock. Filter + sort to find projects; switch to Schedules for the individual streams."}
         </p>
 
@@ -432,6 +450,16 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                   ensHint={walletEnsHint}
                   queryGiven={query.length > 0}
                   portfolio={walletPortfolio}
+                  page={pageNum}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  params={sp as Record<string, string | undefined>}
+                />
+              )}
+              {mode === "streaming" && (
+                <StreamingResults
+                  rows={streamingRows}
+                  totalMatches={totalMatches}
                   page={pageNum}
                   totalPages={totalPages}
                   pageSize={pageSize}
@@ -599,6 +627,114 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
           chainId={row.chainId}
           tokenSymbol={row.tokenSymbol}
         />
+      </div>
+    </div>
+  );
+}
+
+// ─── Streaming-mode results (continuous per-second flows) ───────────────────
+// LlamaPay-style streams have no unlock event — they flow live. We show
+// streamed-so-far + the per-day rate instead of a "next unlock" countdown.
+
+/** tokens/day from a LlamaPay 20-decimal raw amountPerSec (÷1e20 × 86400). */
+function ratePerDay(amountPerSecRaw: string | null): number | null {
+  if (!amountPerSecRaw) return null;
+  try { return (Number(BigInt(amountPerSecRaw)) / 1e20) * 86400; } catch { return null; }
+}
+function fmtRate(n: number): string {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  if (n >= 1)   return n.toFixed(2);
+  if (n > 0)    return n.toFixed(4);
+  return "0";
+}
+
+function StreamingResults({
+  rows, totalMatches, page, totalPages, pageSize, params,
+}: {
+  rows:         StreamingRow[];
+  totalMatches: number;
+  page:         number;
+  totalPages:   number;
+  pageSize:     number;
+  params:       Record<string, string | undefined>;
+}) {
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl px-5 py-10 text-center"
+        style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>No continuous streams match your filters.</p>
+        <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
+          Streaming covers per-second flows like LlamaPay payroll. Try clearing the chain filter.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
+          {totalMatches.toLocaleString()} live stream{totalMatches === 1 ? "" : "s"}
+        </p>
+        {totalPages > 1 && (
+          <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Page {page} of {totalPages.toLocaleString()}</p>
+        )}
+      </div>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+        {rows.map((s, i) => (
+          <StreamingRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
+        ))}
+      </div>
+      <Pagination page={page} totalPages={totalPages} total={totalMatches} pageSize={pageSize} rowsOnPage={rows.length} params={params} />
+    </>
+  );
+}
+
+function StreamingRowItem({ row, showTopBorder }: { row: StreamingRow; showTopBorder: boolean }) {
+  const meta   = getProtocol(row.protocol);
+  const accent = meta?.color ?? "#64748b";
+  const chain  = CHAIN_NAMES[row.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${row.chainId}`;
+  const sym    = row.tokenSymbol ?? shortAddr(row.tokenAddress);
+  const rate   = ratePerDay(row.amountPerSecRaw);
+  return (
+    <div className="flex items-center"
+      style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
+      <Link
+        href={`/dashboard/explorer/token/${row.chainId}/${row.tokenAddress}`}
+        className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+      >
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+          style={{ background: accent }}>
+          {tokenInitial(row.tokenSymbol, row.tokenAddress)}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
+            {fmtAmount(row.streamedAmount, row.tokenDecimals)} {sym} <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>streamed</span>
+          </p>
+          <p className="text-xs truncate" style={{ color: "var(--preview-text-3)" }}>
+            <span style={{ color: accent }}>{meta?.name ?? row.protocol}</span>
+            <span> · </span>
+            {chain}
+            <span> · </span>
+            <span className="font-mono">{shortAddr(row.recipient)}</span>
+          </p>
+        </div>
+        {/* Flow rate — the whole point of a stream */}
+        <div className="text-right">
+          <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+            {rate != null ? `≈ ${fmtRate(rate)} ${sym}/day` : "live"}
+          </p>
+        </div>
+        {/* Started (desktop) */}
+        <div className="text-right hidden md:block">
+          <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
+            {row.startTime ? `since ${fmtDate(row.startTime)}` : "—"}
+          </p>
+        </div>
+      </Link>
+      <div className="pr-3 pl-1">
+        <WatchButton tokenAddress={row.tokenAddress} chainId={row.chainId} tokenSymbol={row.tokenSymbol} />
       </div>
     </div>
   );

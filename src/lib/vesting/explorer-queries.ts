@@ -15,7 +15,16 @@ import { and, asc, count, desc, eq, gt, ilike, inArray, lte, notInArray, sql } f
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import { normaliseAddress } from "../address-validation";
+import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import type { VestingStream } from "./types";
+
+// Continuous-flow protocols (per-second streaming, no discrete unlocks) —
+// derived from the shared category map so a future stream protocol is picked
+// up automatically. These are EXCLUDED from the unlock-centric rollup/explorer
+// and surfaced via the dedicated "Streaming" view instead.
+export const CONTINUOUS_PROTOCOL_IDS: string[] = Object.entries(PROTOCOL_DEFAULT_CATEGORY)
+  .filter(([, c]) => c === "stream")
+  .map(([id]) => id);
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
@@ -147,6 +156,81 @@ export interface StreamRow {
   nextUnlockTime: number | null;
   amount:         string | null;
   status:         "active" | "vested";
+}
+
+// ── Continuous-stream query (the "Streaming" view) ──────────────────────────
+// Continuous protocols (LlamaPay today) flow per-second with no discrete unlock
+// and are modelled as fully-vested "streamed-so-far" snapshots, so they're
+// absent from the rollup AND the Schedules tab (which filters active/unvested).
+// This query surfaces them as ongoing flows: streamed-so-far + per-day rate,
+// ordered most-recently-created first. No is_fully_vested filter (they're
+// always flagged vested by design).
+export interface StreamingRow {
+  streamId:        string;
+  protocol:        string;
+  chainId:         number;
+  recipient:       string;
+  tokenSymbol:     string | null;
+  tokenAddress:    string;
+  tokenDecimals:   number;
+  streamedAmount:  string;          // totalAmount streamed so far (raw bigint)
+  amountPerSecRaw: string | null;   // LlamaPay 20-dec raw rate → tokens/day = /1e20*86400
+  startTime:       number;          // stream creation (unix sec)
+}
+
+function mapStreamingRow(r: StreamSelectRow): StreamingRow {
+  const sd = r.streamData as Partial<VestingStream> & { claimArgs?: { amountPerSec?: string } };
+  return {
+    streamId:        r.streamId,
+    protocol:        r.protocol,
+    chainId:         r.chainId,
+    recipient:       r.recipient,
+    tokenSymbol:     r.tokenSymbol,
+    tokenAddress:    normaliseAddress(r.tokenAddress ?? ""),
+    tokenDecimals:   typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,
+    streamedAmount:  sd.totalAmount ?? "0",
+    amountPerSecRaw: sd.claimArgs?.amountPerSec ?? null,
+    startTime:       typeof sd.startTime === "number" ? sd.startTime : 0,
+  };
+}
+
+export async function getStreamingStreams(
+  filter: { chainIds?: readonly number[]; protocolIds?: readonly string[] },
+  opts: { page: number; pageSize: number },
+): Promise<{ rows: StreamingRow[]; total: number }> {
+  if (process.env.NEXT_PHASE === "phase-production-build" || isDbUnreachable()) return { rows: [], total: 0 };
+
+  // Restrict to continuous protocols. If the caller passed a protocol filter,
+  // intersect with it; otherwise show all continuous protocols.
+  const ids = (filter.protocolIds && filter.protocolIds.length > 0)
+    ? filter.protocolIds.filter((p) => CONTINUOUS_PROTOCOL_IDS.includes(p))
+    : CONTINUOUS_PROTOCOL_IDS;
+  if (ids.length === 0) return { rows: [], total: 0 };
+
+  const wheres = [excludeTestnets, inArray(vestingStreamsCache.protocol, ids)];
+  if (filter.chainIds && filter.chainIds.length > 0) {
+    wheres.push(inArray(vestingStreamsCache.chainId, [...filter.chainIds]));
+  }
+  const whereClause = and(...wheres);
+  const pageSize = Math.max(1, Math.min(100, opts.pageSize));
+  const offset   = Math.max(0, (opts.page - 1) * pageSize);
+  const startExpr = sql`((${vestingStreamsCache.streamData}->>'startTime')::numeric)`;
+
+  try {
+    const [rows, totalRes] = await Promise.all([
+      db.select(STREAM_SELECT)
+        .from(vestingStreamsCache)
+        .where(whereClause)
+        .orderBy(desc(startExpr), asc(vestingStreamsCache.streamId))
+        .limit(pageSize)
+        .offset(offset),
+      db.select({ total: count() }).from(vestingStreamsCache).where(whereClause),
+    ]);
+    return { rows: rows.map(mapStreamingRow), total: Number(totalRes[0]?.total ?? 0) };
+  } catch (err) {
+    console.error("[explorer-queries] getStreamingStreams failed:", err);
+    return { rows: [], total: 0 };
+  }
 }
 
 export interface StreamsFilter {
