@@ -27,7 +27,7 @@ import Link from "next/link";
 import { getCurrentUserTier, type Tier } from "@/lib/auth/tier";
 import type { WindowSlug } from "@/lib/vesting/unlock-windows";
 import { type ExplorerSortKey } from "@/lib/vesting/token-rollups";
-import { formatUsdCompact, getQuickUsdPrices, toUsdValue } from "@/lib/vesting/quick-prices";
+import { formatUsdCompact, getQuickUsdPrices, toUsdValue, type QuickPriceMap } from "@/lib/vesting/quick-prices";
 import {
   getStreamsPage,
   getStreamsByRecipient,
@@ -247,6 +247,9 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // pull a bounded full set (one wallet, capped at 1000 streams) just for the
   // aggregate. Distinct tokens per wallet is tiny even when stream count isn't.
   let walletPortfolio: WalletPortfolioRow[] = [];
+  // Price map covering the wallet's distinct tokens — reused to show per-row
+  // locked USD on each position (computed once, no extra fetch).
+  let walletPriceMap: QuickPriceMap = new Map();
   let walletAllRows: StreamRow[] = [];
   if (mode === "wallet" && walletAddress) {
     walletAllRows = await getStreamsByRecipient(walletAddress, {
@@ -255,7 +258,11 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
       status:   "any",
       limit:    1000,
     });
-    if (walletAllRows.length > 0) walletPortfolio = await buildWalletPortfolio(walletAllRows);
+    if (walletAllRows.length > 0) {
+      const built = await buildWalletPortfolio(walletAllRows);
+      walletPortfolio = built.portfolio;
+      walletPriceMap  = built.priceMap;
+    }
   }
 
   // Per-mode totals for the server-paginated Stream/Wallet pagers. Calendar's
@@ -452,6 +459,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                   ensHint={walletEnsHint}
                   queryGiven={query.length > 0}
                   portfolio={walletPortfolio}
+                  priceMap={walletPriceMap}
                   page={pageNum}
                   totalPages={totalPages}
                   pageSize={pageSize}
@@ -577,17 +585,23 @@ function StreamResults({
   );
 }
 
-function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: boolean }) {
+function StreamRowItem({ row, showTopBorder, priceMap }: { row: StreamRow; showTopBorder: boolean; priceMap?: QuickPriceMap }) {
   const meta   = getProtocol(row.protocol);
   const accent = meta?.color ?? "#64748b";
   const chain  = CHAIN_NAMES[row.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${row.chainId}`;
   const eventTime = row.nextUnlockTime ?? row.endTime;
+  // Locked USD for this position = its locked amount × token price. Reuses the
+  // wallet's already-fetched price map (no extra request); null when the token
+  // is unpriced or no map was passed (stream mode).
+  const lockedUsd = priceMap
+    ? toUsdValue(row.amount ?? "0", row.tokenDecimals, priceMap.get(`${row.chainId}:${row.tokenAddress.toLowerCase()}`))
+    : null;
   return (
     <div className="flex items-center"
       style={{ borderTop: showTopBorder ? "1px solid var(--preview-border-2)" : undefined }}>
       <Link
         href={`/dashboard/explorer/token/${row.chainId}/${row.tokenAddress}`}
-        className="flex-1 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)]"
+        className={`flex-1 grid items-center gap-3 md:gap-5 px-4 md:px-5 py-3 transition-colors hover:bg-[var(--preview-muted)] ${priceMap ? "grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto]" : "grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto]"}`}
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
           style={{ background: accent }}>
@@ -605,6 +619,15 @@ function StreamRowItem({ row, showTopBorder }: { row: StreamRow; showTopBorder: 
             <span className="font-mono">{shortAddr(row.recipient)}</span>
           </p>
         </div>
+        {/* Locked value (USD) — wallet mode only (priceMap present). */}
+        {priceMap && (
+          <div className="text-right hidden md:block">
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Locked</p>
+            <p className="text-sm font-bold tabular-nums" style={{ color: lockedUsd != null && lockedUsd > 0 ? "#0F8A8A" : "var(--preview-text-3)" }}>
+              {lockedUsd != null && lockedUsd > 0 ? formatUsdCompact(lockedUsd) : "—"}
+            </p>
+          </div>
+        )}
         <div className="text-right hidden md:block">
           <p className="text-[10px] uppercase tracking-wider font-bold"
             style={{ color: row.status === "active" ? "#0F8A8A" : "var(--preview-text-3)" }}>
@@ -831,7 +854,7 @@ function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: Wallet
 // ─── Wallet-mode results (positions for a single recipient) ───────────────
 
 function WalletResults({
-  rows, statsRows, totalMatches, walletAddress, ensHint, queryGiven, portfolio,
+  rows, statsRows, totalMatches, walletAddress, ensHint, queryGiven, portfolio, priceMap,
   page, totalPages, pageSize, params,
 }: {
   rows:          StreamRow[];
@@ -843,6 +866,9 @@ function WalletResults({
   ensHint:       string | null;
   queryGiven:    boolean;
   portfolio:     WalletPortfolioRow[];
+  /** Per-token prices (chainId:tokenLower → QuickPrice) for the wallet's
+   *  book — used to show each position's locked USD value. */
+  priceMap:      QuickPriceMap;
   page:          number;
   totalPages:    number;
   pageSize:      number;
@@ -947,7 +973,7 @@ function WalletResults({
       )}
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         {rows.map((s, i) => (
-          <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} />
+          <StreamRowItem key={s.streamId} row={s} showTopBorder={i > 0} priceMap={priceMap} />
         ))}
       </div>
       <Pagination page={page} totalPages={totalPages} total={totalMatches} pageSize={pageSize} rowsOnPage={rows.length} params={params} />
@@ -1033,7 +1059,7 @@ interface WalletPortfolioRow {
   usdValue:      number | null;
 }
 
-async function buildWalletPortfolio(rows: StreamRow[]): Promise<WalletPortfolioRow[]> {
+async function buildWalletPortfolio(rows: StreamRow[]): Promise<{ portfolio: WalletPortfolioRow[]; priceMap: QuickPriceMap }> {
   // Aggregate by (chainId, lower(tokenAddress)). Pure JS — `rows` already
   // came back from getStreamsByRecipient.
   const agg = new Map<string, {
@@ -1066,7 +1092,7 @@ async function buildWalletPortfolio(rows: StreamRow[]): Promise<WalletPortfolioR
     }
   }
   const list = [...agg.values()];
-  if (list.length === 0) return [];
+  if (list.length === 0) return { portfolio: [], priceMap: new Map() };
 
   // Price all of them in one DexScreener batch. Cap at 30 (DexScreener
   // batch size) — if a wallet vests > 30 distinct tokens, the tail won't
@@ -1090,13 +1116,14 @@ async function buildWalletPortfolio(rows: StreamRow[]): Promise<WalletPortfolioR
 
   // Sort: priced rows by USD desc; unpriced rows after, by raw amount
   // (cross-token comparison is approximate but at least deterministic).
-  return enriched.sort((a, b) => {
+  const portfolio = enriched.sort((a, b) => {
     if (a.usdValue != null && b.usdValue != null) return b.usdValue - a.usdValue;
     if (a.usdValue != null) return -1;
     if (b.usdValue != null) return 1;
     const ar = BigInt(a.amountRaw), br = BigInt(b.amountRaw);
     return br > ar ? 1 : br < ar ? -1 : 0;
   });
+  return { portfolio, priceMap };
 }
 
 function buildUrl(params: Record<string, string | undefined>): string {
