@@ -23,6 +23,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { getSession } from "./session";
+import { withTimeout } from "@/lib/with-timeout";
 
 export type Tier = "free" | "mobile" | "pro";
 
@@ -30,11 +31,22 @@ export async function getCurrentUserTier(): Promise<Tier | null> {
   try {
     const session = await getSession();
     if (!session.address) return null;
-    const row = await db
-      .select({ tier: users.tier })
-      .from(users)
-      .where(eq(users.address, session.address.toLowerCase()))
-      .limit(1);
+    // Bound the tier lookup. This runs on EVERY dashboard page render; an
+    // unbounded await here will hang the whole page to a 524 if the query
+    // stalls on a saturated Supabase pooler connection (the recurring
+    // dashboard outage). withTimeout degrades to [] → "free" in 4s — this is
+    // a display/paywall signal, not the access gate (that's the bounded
+    // fail-closed check in the dashboard layout), so "free" on a stall just
+    // shows teaser caps for one render rather than hanging.
+    const row = await withTimeout(
+      db.select({ tier: users.tier })
+        .from(users)
+        .where(eq(users.address, session.address.toLowerCase()))
+        .limit(1),
+      4000,
+      [] as Array<{ tier: string | null }>,
+      "getCurrentUserTier",
+    );
     return normaliseTier(row[0]?.tier);
   } catch {
     return null;
