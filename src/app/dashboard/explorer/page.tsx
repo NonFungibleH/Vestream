@@ -278,7 +278,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // The flex shell + sidebar are provided by src/app/dashboard/layout.tsx
   // (DashboardChrome). We render only the right-hand main content here.
   return (
-      <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto">
+      <main className="flex-1 px-4 md:px-8 py-6 md:py-8 overflow-y-auto">
         {/* Header */}
         <header className="mb-5">
           <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>

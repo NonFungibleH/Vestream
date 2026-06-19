@@ -73,7 +73,7 @@ export default function WatchlistPage() {
   }
 
   return (
-    <main className={`flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 max-w-4xl w-full${dark ? " dark" : ""}`}>
+    <main className={`flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 w-full${dark ? " dark" : ""}`}>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
         <Link href="/dashboard" className="hover:underline">Dashboard</Link>

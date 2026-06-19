@@ -365,7 +365,7 @@ export default function ExportsPage() {
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ background: "var(--preview-bg)" }}>
-      <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 w-full">
 
         {/* Hero */}
         <div className="mb-5">

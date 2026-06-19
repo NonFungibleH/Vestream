@@ -113,7 +113,7 @@ export default async function SmartMoneyPage() {
   const solanaCount = rows.filter((r) => r.chainEcosystem === "solana").length;
 
   return (
-    <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 max-w-6xl w-full">
+    <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 w-full">
       {/* Breadcrumb + hero */}
       <div className="flex items-center gap-2 text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
         <Link href="/dashboard" className="hover:underline">Dashboard</Link>
