@@ -85,11 +85,18 @@ function getRedis(): Redis | null {
  *   - everything failed: return identity rates (1.0 for every currency,
  *     i.e. "show as if it were USD" so the page renders rather than empty)
  */
-export async function getRates(): Promise<RateBundle> {
-  const fallback: RateBundle = {
+/** Identity rates (1.0 for every currency) — "show as if USD". The safe
+ *  fallback when FX can't be fetched, and what callers should hand a
+ *  withTimeout() guard so a stalled FX fetch can't hang the render. */
+export function identityRateBundle(): RateBundle {
+  return {
     rates:     Object.fromEntries(SUPPORTED_CURRENCIES.map((c) => [c.code, 1])),
     fetchedAt: Math.floor(Date.now() / 1000),
   };
+}
+
+export async function getRates(): Promise<RateBundle> {
+  const fallback: RateBundle = identityRateBundle();
 
   const redis = getRedis();
   if (!redis) {

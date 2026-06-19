@@ -34,7 +34,8 @@ import { eq } from "drizzle-orm";
 import { CurrencyProvider } from "@/lib/use-currency";
 import { DarkModeProvider } from "@/lib/use-dark-mode";
 import { DashboardSwrProvider } from "@/components/DashboardSwrProvider";
-import { getRates, getCurrencyFromCookies } from "@/lib/currency";
+import { getRates, getCurrencyFromCookies, identityRateBundle } from "@/lib/currency";
+import { withTimeout } from "@/lib/with-timeout";
 import { getDarkModeFromCookies } from "@/lib/dark-mode";
 import { DashboardChrome } from "@/components/DashboardChrome";
 import { ToastProvider } from "@/components/Toast";
@@ -89,18 +90,17 @@ async function requireDashboardAccess(): Promise<string> {
   // No valid (decryptable) session → not logged in.
   if (!address) redirect("/login");
 
-  let tier = "free";
-  try {
-    tier = await lookupTier(address);
-  } catch {
-    // DB unreachable — fail CLOSED for a security gate. A transient blip
-    // bouncing a real Pro user to /login is recoverable; serving the
-    // dashboard to an unverified session is not.
-    redirect("/login");
-  }
+  // Bound the tier lookup. A try/catch only catches THROWS — a query that
+  // STALLS on a saturated Supabase pooler connection (no per-statement timeout
+  // by default) just hangs the await until Cloudflare's 100s cutoff → a 524 on
+  // EVERY dashboard route (this exact outage happened 2026-06-19). withTimeout
+  // resolves to "free" in 5s on a stall/reject; "free" → not-Pro → /login, so
+  // we stay FAIL-CLOSED: a stalled gate never grants access, it just bounces a
+  // real Pro user to /login (recoverable on retry) instead of 524-ing.
+  const tier = await withTimeout(lookupTier(address), 5000, "free", "dash:lookupTier");
 
   if (!canAccessDashboard(normaliseTier(tier))) {
-    // Valid session but not Pro (e.g. lapsed subscription) → upgrade path.
+    // Not Pro (lapsed subscription), or the lookup stalled/failed → /login.
     redirect("/login");
   }
   return tier;
@@ -115,8 +115,12 @@ export default async function DashboardLayout({
   // unauthenticated / non-Pro request.
   const tier = await requireDashboardAccess();
 
+  // Bound the FX fetch too — getRates() falls back to identity rates on
+  // *failure*, but a stalled Upstash call would hang the render. withTimeout
+  // degrades to identity rates (currency shows 1:1 until next load) in 3s
+  // rather than risking another gate hang.
   const [rateBundle, cookieStore] = await Promise.all([
-    getRates(),
+    withTimeout(getRates(), 3000, identityRateBundle(), "dash:getRates"),
     cookies(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
