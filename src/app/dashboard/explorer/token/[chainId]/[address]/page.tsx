@@ -119,7 +119,7 @@ export default async function ExplorerTokenPage({
   );
 
   return (
-    <main className="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-7xl overflow-y-auto">
+    <main className="flex-1 px-4 md:px-8 py-6 md:py-8 overflow-y-auto w-full">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-[11px] mb-3" style={{ color: "var(--preview-text-3)" }}>
         <Link href="/dashboard" className="hover:underline">Dashboard</Link><span>/</span>
