@@ -750,6 +750,17 @@ export const protocolTvlSnapshots = pgTable(
                      }>>().default([]).notNull(),
     // ── bookkeeping ───────────────────────────────────────────────────────────
     computedAt:   timestamp("computed_at").defaultNow().notNull(),
+    // Heartbeat (2026-06-19): when the cron last ATTEMPTED this cell, vs
+    // computed_at = last SUCCESSFUL value. When a walker times out / errors or
+    // the pricing guard trips, the cron keeps the good tvl + old computed_at, so
+    // the cell would silently freeze with no signal. These columns make it
+    // visible: last_attempt_at advances every run, consecutive_failures climbs
+    // while the cell can't refresh, last_error records why — so the status grid
+    // shows "value frozen · pipeline failing Nd" instead of a misleading
+    // "prices Nd ago". Reset to (now, null, 0) on a successful upsert.
+    lastAttemptAt:       timestamp("last_attempt_at"),
+    lastError:           text("last_error"),
+    consecutiveFailures: integer("consecutive_failures").notNull().default(0),
     // Free-text audit trail — which cron ran this, how long it took, any
     // subgraph errors encountered. Never shown in UI; internal only.
     notes:        text("notes"),

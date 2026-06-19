@@ -26,7 +26,7 @@
 // (via Vercel Data Cache wrapping the whole load — see protocols/page.tsx).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { protocolTvlSnapshots } from "../db/schema";
 import type { SupportedChainId } from "./types";
@@ -92,6 +92,10 @@ async function upsertSnapshot(row: SnapshotRow): Promise<void> {
     methodology:     row.methodology,
     topContributors: row.topContributors,
     computedAt:      new Date(),
+    // A successful upsert IS a successful attempt — reset the heartbeat.
+    lastAttemptAt:       new Date(),
+    lastError:           null,
+    consecutiveFailures: 0,
     notes:           row.notes ?? null,
   };
 
@@ -111,9 +115,59 @@ async function upsertSnapshot(row: SnapshotRow): Promise<void> {
         methodology:     values.methodology,
         topContributors: values.topContributors,
         computedAt:      values.computedAt,
+        lastAttemptAt:       values.lastAttemptAt,
+        lastError:           values.lastError,
+        consecutiveFailures: values.consecutiveFailures,
         notes:           values.notes,
       },
     });
+}
+
+/**
+ * Heartbeat a FAILED/SKIPPED attempt for one (protocol, chainId) cell. Updates
+ * last_attempt_at + last_error and increments consecutive_failures WITHOUT
+ * touching tvl/computed_at — so the good value stays put but the status grid
+ * can tell "frozen because the pipeline keeps failing" from "frozen because
+ * genuinely forgotten". No-ops on a cell that has never produced a row (nothing
+ * to update); that cell legitimately renders "—". Swallows its own errors —
+ * bookkeeping must never fail the snapshot run.
+ */
+async function recordSnapshotFailure(protocol: string, chainId: number, reason: string): Promise<void> {
+  try {
+    await db
+      .update(protocolTvlSnapshots)
+      .set({
+        lastAttemptAt:       new Date(),
+        lastError:           reason.slice(0, 500),
+        consecutiveFailures: sql`${protocolTvlSnapshots.consecutiveFailures} + 1`,
+      })
+      .where(and(
+        eq(protocolTvlSnapshots.protocol, protocol),
+        eq(protocolTvlSnapshots.chainId,  chainId),
+      ));
+  } catch (err) {
+    console.warn(`[snapshot] recordSnapshotFailure ${protocol}/${chainId} failed:`, err);
+  }
+}
+
+/**
+ * Protocol-wide failure heartbeat — used by the DefiLlama-passthrough path,
+ * which on a no-data response doesn't know which chains it would have written.
+ * Heartbeats every existing row for the protocol.
+ */
+async function recordSnapshotFailureForProtocol(protocol: string, reason: string): Promise<void> {
+  try {
+    await db
+      .update(protocolTvlSnapshots)
+      .set({
+        lastAttemptAt:       new Date(),
+        lastError:           reason.slice(0, 500),
+        consecutiveFailures: sql`${protocolTvlSnapshots.consecutiveFailures} + 1`,
+      })
+      .where(eq(protocolTvlSnapshots.protocol, protocol));
+  } catch (err) {
+    console.warn(`[snapshot] recordSnapshotFailureForProtocol ${protocol} failed:`, err);
+  }
 }
 
 /**
@@ -219,6 +273,7 @@ export async function runWalkerSnapshot(
     }> => {
       const walker = await runWalker(protocol, chainId);
       if (!walker) {
+        await recordSnapshotFailure(protocol, chainId, `walker returned null (no walker / scan error)`);
         return {
           chainId,
           walker: null,
@@ -574,6 +629,9 @@ export async function runWalkerSnapshot(
           `(computedAt=${priorRow.computedAt.toISOString()}, tvlUsd=$${priorTvl.toFixed(0)})`,
         );
         skipped = true;
+        // Heartbeat the guard skip so the frozen cell shows "pipeline failing"
+        // rather than silently aging.
+        await recordSnapshotFailure(protocol, chainId, `guard kept prior row: ${reason}`);
       } else if (priorRow && priorIsStale && (!coverageOk || tvlCrashed)) {
         // Loud log so we can see when the stale-prior override kicks in.
         // This is the "guard would have preserved but prior is too old"
@@ -610,6 +668,7 @@ export async function runWalkerSnapshot(
           committed = true;
         } catch (dbErr) {
           console.error(`[snapshot] upsert failed for ${protocol}/${chainId}:`, dbErr);
+          await recordSnapshotFailure(protocol, chainId, `upsert failed: ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`);
         }
       }
 
@@ -689,6 +748,9 @@ export async function runDefiLlamaSnapshot(
   const snap = await fetchDefiLlamaTvl(slug, category);
   if (!snap) {
     summary.error = `DefiLlama returned no data for slug=${JSON.stringify(slug)}`;
+    // Heartbeat all existing rows so the frozen cell shows "pipeline failing"
+    // (this is exactly how Streamflow/Solana silently froze on a DefiLlama gap).
+    await recordSnapshotFailureForProtocol(protocol, summary.error);
     summary.durationMs = Date.now() - started;
     return summary;
   }
@@ -773,6 +835,11 @@ export interface ProtocolSnapshotRow {
   tokensTotal:  number;
   methodology:  string;
   computedAt:   Date;
+  /** Heartbeat fields — populated by readAllSnapshots (the status grid's
+   *  source); omitted by readSnapshotRow (guard-only path doesn't need them). */
+  lastAttemptAt?:       Date | null;
+  lastError?:           string | null;
+  consecutiveFailures?: number;
 }
 
 /** Read all snapshot rows for a protocol (across every chain). */
@@ -889,6 +956,9 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
       tokensTotal:  protocolTvlSnapshots.tokensTotal,
       methodology:  protocolTvlSnapshots.methodology,
       computedAt:   protocolTvlSnapshots.computedAt,
+      lastAttemptAt:       protocolTvlSnapshots.lastAttemptAt,
+      lastError:           protocolTvlSnapshots.lastError,
+      consecutiveFailures: protocolTvlSnapshots.consecutiveFailures,
     })
     .from(protocolTvlSnapshots)
     .then((rows): ProtocolSnapshotRow[] => rows.map((r) => ({
@@ -903,6 +973,9 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
       tokensTotal:  r.tokensTotal,
       methodology:  r.methodology,
       computedAt:   r.computedAt,
+      lastAttemptAt:       r.lastAttemptAt,
+      lastError:           r.lastError,
+      consecutiveFailures: r.consecutiveFailures,
     })))
     .catch((err): ProtocolSnapshotRow[] => {
       console.warn(

@@ -427,7 +427,7 @@ export default async function StatusPage() {
   // 2026-05-26: replaced the per-cell stream count with `tvlComputedAtSec`.
   // The cache-stats endpoint still carries stream counts for callers that
   // need them; this surface intentionally tightens to the freshness signal.
-  const metaMap = new Map<string, { tvlUsd: number; tvlComputedAtSec: number | null }>();
+  const metaMap = new Map<string, { tvlUsd: number; tvlComputedAtSec: number | null; consecutiveFailures: number }>();
   // Seed every (protocol, chain) cell we have a cache-stats row for so the
   // metaMap is non-null for any cell the matrix renders. tvlComputedAtSec
   // stays null until the TVL snapshot overlay fills it in.
@@ -435,6 +435,7 @@ export default async function StatusPage() {
     metaMap.set(`${c.protocol}|${c.chainId}`, {
       tvlUsd:           0,
       tvlComputedAtSec: null,
+      consecutiveFailures: 0,
     });
   }
   // Then overlay TVL snapshot $ values + the computed_at timestamp.
@@ -447,6 +448,10 @@ export default async function StatusPage() {
     metaMap.set(k, {
       tvlUsd:           r.tvlUsd,
       tvlComputedAtSec: Math.floor(new Date(r.computedAt).getTime() / 1000),
+      // >0 means the cron keeps attempting this cell but can't commit a fresh
+      // value (walker fail / timeout / pricing guard). Distinguishes "frozen
+      // because the pipeline is failing" from "frozen because forgotten".
+      consecutiveFailures: r.consecutiveFailures ?? 0,
     });
   }
 
@@ -727,6 +732,17 @@ export default async function StatusPage() {
                                   </span>
                                 ) : (
                                   <span style={{ color: "#94a3b8" }}>—</span>
+                                )}
+                                {/* Heartbeat marker: the cron keeps trying this
+                                    cell but can't commit a fresh value. Tells
+                                    "pipeline failing" apart from "just old". */}
+                                {meta.consecutiveFailures > 0 && (
+                                  <span
+                                    style={{ color: "#dc2626", fontWeight: 700 }}
+                                    title={`Pricing pipeline failing — ${meta.consecutiveFailures} consecutive failed refresh${meta.consecutiveFailures === 1 ? "" : "es"}; showing last good value`}
+                                  >
+                                    {" "}⚠×{meta.consecutiveFailures}
+                                  </span>
                                 )}
                               </span>
                             );
