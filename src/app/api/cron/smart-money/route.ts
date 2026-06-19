@@ -27,6 +27,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { db } from "@/lib/db";
@@ -303,6 +304,11 @@ async function handle(req: NextRequest) {
       })),
     );
   });
+
+  // Bust the page's unstable_cache (tag "smart-money", 1h revalidate) so the
+  // freshly-ranked board shows on the next visit instead of up to an hour
+  // later. The page read is the only consumer of this tag.
+  revalidateTag("smart-money");
 
   const durationMs = Date.now() - t0;
   console.log(`[smart-money] wrote ${final.length} rows in ${durationMs}ms (aggregate alone: ${aggregateMs}ms)`);
