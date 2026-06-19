@@ -64,7 +64,7 @@ function sortValue(r: SnapshotRow, col: SortCol): number {
     case "locked":  return lockedOf(r);
     case "streams": return r.streamCount;
     case "tokens":  return r.distinctTokenCount;
-    case "rank":    return -r.rank; // higher rank# = lower value, so negate → rank asc reads as "best first"
+    case "rank":    return r.rank; // rank 1 = best; asc → #1 first
   }
 }
 
