@@ -58,8 +58,8 @@ const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
 const LENSES: Array<{ id: string; label: string; hint: string; apply: Partial<State> }> = [
   { id: "imminent-cliffs",  label: "Imminent cliffs",  hint: "Cliff lumps unlocking in the next 30 days",
     apply: { cliffOnly: true, date: "30-days", sort: "usd", dir: "desc" } },
-  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the locked supply",
-    apply: { topMin: 50, sort: "concentration", dir: "desc" } },
+  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the lock — across ≥5 recipients (excludes single-recipient tokens)",
+    apply: { topMin: 50, minWallets: 5, sort: "concentration", dir: "desc" } },
   { id: "fair-launches",    label: "Fair launches",    hint: "Spread across ≥25 wallets, no dominant holder (≤25%)",
     apply: { minWallets: 25, topMax: 25, sort: "wallets", dir: "desc" } },
   { id: "almost-done",      label: "Almost done",      hint: "≥90% of the vesting span already elapsed",
@@ -194,7 +194,9 @@ function sortValue(row: ExplorerDatasetRow, key: ExplorerSortKey, now: number): 
     case "usd":           return row.u;
     case "amount":        { try { return Number(BigInt(row.amt)); } catch { return 0; } }
     case "wallets":       return row.w;
-    case "concentration": return row.t;
+    // Single-recipient tokens are tautologically 100% concentrated — push them
+    // last so sorting surfaces genuine multi-holder concentration.
+    case "concentration": return row.w <= 1 ? null : row.t;
     case "rounds":        return row.r;
     case "cliff":         return row.cl;
     case "risk":          return row.u != null && row.mc && row.mc > 0 ? row.u / row.mc : null;

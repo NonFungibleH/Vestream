@@ -163,7 +163,7 @@ export function ExplorerTable({
             <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
             <Th label="USD"         active={sort === "usd"}           dir={dir} {...sortProps("usd", "desc")} align="right" minW={64} title={USD_HELP} />
             <Th label="Wallets"     active={sort === "wallets"}       dir={dir} {...sortProps("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
-            <Th label="Top holder"  active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Concentration" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
             <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
             <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
@@ -281,7 +281,10 @@ function rowPreview(r: ExplorerRow, chainName: string): string {
       : `Locked: ${fmtAmount(r.amount, r.tokenDecimals)} ${sym} — no market price`,
     `Wallets: ${walletsOf(r).toLocaleString()} · Schedules: ${r.tokenRoundCount ?? "—"}`,
   ];
-  if (r.topHolderShare != null) lines.push(`Top holder: ${Math.round(r.topHolderShare * 100)}% of locked`);
+  if (r.topHolderShare != null && walletsOf(r) > 1) {
+    const top = topHolderOfMarketCap(r);
+    lines.push(`Vest concentration: ${Math.round(r.topHolderShare * 100)}% of locked${top != null ? ` (≈ ${(top * 100).toFixed(top < 0.01 ? 2 : 1)}% of mkt cap)` : ""}`);
+  }
   const p = progressOf(r);
   if (p != null) lines.push(`Vested: ${Math.round(p * 100)}%`);
   if (r.hasCliff) lines.push("⚠ Has a cliff (lump) unlock");
@@ -450,22 +453,54 @@ function CliffChip({ r }: { r: ExplorerRow }) {
   );
 }
 
-// ── Top-holder concentration ─────────────────────────────────────────────────
-// Largest single recipient's share of the token's total locked supply — the
-// "whale" / centralisation signal. From the token rollup (cron-maintained).
-// Colour-banded: ≥50% red (one wallet dominates), ≥25% amber, below teal.
+// ── Vest concentration ───────────────────────────────────────────────────────
+// Largest single recipient's share of the token's LOCKED (vesting) supply — NOT
+// total token supply. Two guards stop it over-reading (it used to flag 93% of
+// rows red):
+//   1. A single-recipient token is tautologically 100% — shown "—", not red.
+//   2. Colour is driven by MATERIALITY (the top wallet's unlock as a share of
+//      market cap), not the raw vest %. Concentrated-but-immaterial, or no
+//      market price to judge by → muted, not alarming.
 const CONCENTRATION_HELP =
-  "Top holder — the single largest recipient's share of this token's total " +
-  "locked supply.\nHigh concentration (one wallet holding most of the locked " +
-  "tokens) means that wallet's unlock can move the market on its own.\n" +
-  "≥50% = one wallet dominates · ≥25% = concentrated · below = more distributed.";
+  "Concentration WITHIN this token's vesting — the largest single recipient's " +
+  "share of the LOCKED (vesting) supply, not total token supply.\n" +
+  "• A single-recipient token is always 100%, so it's shown as “—” (not a signal).\n" +
+  "• Coloured by real impact: red/amber only when that wallet's unlock is also a " +
+  "material share of the token's MARKET CAP. Greyed when there's no market price " +
+  "to judge supply impact.";
+
+/** Largest recipient's locked value as a fraction of market cap — the genuine
+ *  "one wallet could move the market" number. null when unknowable. */
+function topHolderOfMarketCap(r: ExplorerRow): number | null {
+  return r.topHolderShare != null && r.marketCapShare != null ? r.topHolderShare * r.marketCapShare : null;
+}
+type ConcBand = "high" | "med" | "muted" | "na";
+function classifyConcentration(r: ExplorerRow): ConcBand {
+  if (r.topHolderShare == null) return "na";
+  if (walletsOf(r) <= 1) return "na";            // tautological — one recipient
+  const top = topHolderOfMarketCap(r);
+  if (top == null) return "muted";               // no market cap → can't judge impact
+  if (top >= 0.05)  return "high";               // one wallet ≥5% of market cap
+  if (top >= 0.015) return "med";
+  return "muted";
+}
 
 function ConcentrationChip({ r }: { r: ExplorerRow }) {
   const s = r.topHolderShare;
-  if (s == null) return <span className="text-sm cursor-help" style={{ color: "var(--preview-text-3)" }} title="No concentration data for this token yet.">—</span>;
-  const pct = Math.round(s * 100);
-  const fg = s >= 0.5 ? "#dc2626" : s >= 0.25 ? "#d97706" : "var(--preview-text-2)";
-  const title = `Top holder owns ${pct}% of locked supply.\n\n${CONCENTRATION_HELP}`;
+  const band = classifyConcentration(r);
+  if (band === "na") {
+    const title = walletsOf(r) <= 1
+      ? "Single recipient — concentration isn't meaningful (one wallet is always 100% of its own vest)."
+      : "No concentration data for this token yet.";
+    return <span className="text-sm cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>—</span>;
+  }
+  const pct = Math.round((s ?? 0) * 100);
+  const fg = band === "high" ? "#dc2626" : band === "med" ? "#d97706" : "var(--preview-text-3)";
+  const top = topHolderOfMarketCap(r);
+  const matLine = top != null
+    ? `That wallet's unlock ≈ ${(top * 100).toFixed(top < 0.01 ? 2 : 1)}% of market cap.`
+    : "No market price — supply impact unknown (shown muted).";
+  const title = `Top recipient holds ${pct}% of the LOCKED (vesting) supply.\n${matLine}\n\n${CONCENTRATION_HELP}`;
   return (
     <span className="text-sm font-semibold tabular-nums cursor-help" style={{ color: fg }} title={title}>
       {pct < 1 ? "<1%" : `${pct}%`}

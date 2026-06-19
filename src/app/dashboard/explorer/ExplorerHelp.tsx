@@ -68,7 +68,7 @@ export function ExplorerHelp() {
 
             <Section title="The columns">
               <Item k="USD">locked tokens × price (dimmed = thin liquidity, “—” = no market).</Item>
-              <Item k="Top holder">the largest wallet’s share of locked supply.</Item>
+              <Item k="Concentration">the largest recipient’s share of the <b>locked</b> supply (not total supply). Single-recipient tokens show “—” (always 100%); coloured red/amber only when that wallet is also a material share of market cap.</Item>
               <Item k="Risk">the unlock’s size vs market cap — how hard it could hit the market.</Item>
               <Item k="Vested">a sparkline of the unlock shape (cliff / linear / back-loaded) with a “now” marker.</Item>
               <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Hover any column header for its definition; hover a row for a quick preview.</span>
