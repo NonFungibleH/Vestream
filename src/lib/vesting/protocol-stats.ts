@@ -74,6 +74,12 @@ export interface UnlockSummary {
    *   - amount itself is missing or zero
    *  Renderers should fall back to the raw amount silently when null. */
   usdValue?:   number | null;
+  /** True when this position vests LINEARLY with no cliff — its dated event is
+   *  a gradual-vest *completion*, not a discrete lump unlock. Renderers use it
+   *  to say "fully vests" instead of "unlocks" (e.g. a Superfluid stream with
+   *  no cliff amount). A stream with steps OR a real cliff lump stays an
+   *  "unlock". */
+  isLinearVest?: boolean;
 }
 
 /**
@@ -130,6 +136,11 @@ function rowToUnlock(row: {
   //   linear:   whole vest remaining (monotonically decreasing over time)
   // Fallback to totalAmount for legacy cache rows without lockedAmount.
   const amount = sd.lockedAmount ?? sd.totalAmount ?? null;
+  // Linear-with-no-cliff → the dated event is a vest completion, not a lump.
+  // `steps` (tranched) or a real cliff lump keep "unlock". Undefined shape is
+  // treated as linear (the common case for pre-shape legacy rows).
+  const hasCliff = typeof sd.cliffTime === "number" && sd.cliffTime > 0;
+  const isLinearVest = (sd.shape == null || sd.shape === "linear") && !hasCliff;
   return {
     streamId:     row.streamId,
     protocol:     row.protocol,
@@ -142,6 +153,7 @@ function rowToUnlock(row: {
     endTime:      row.endTime ?? null,
     amount,
     recipient:    row.recipient,
+    isLinearVest,
   };
 }
 

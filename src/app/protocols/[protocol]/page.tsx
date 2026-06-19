@@ -1218,9 +1218,15 @@ function UnlockCard({
   // per-second and are claimable any time. Reframe the upcoming card so it
   // doesn't read as "nothing indexed".
   const streamUpcoming = isStream && variant === "upcoming";
+  // Shape-aware wording: a linear-with-no-cliff position doesn't "unlock" on a
+  // date — it vests gradually and *completes* on that date (e.g. a Superfluid
+  // stream with no cliff). Reserve "unlock" for cliffs/steps (discrete lumps).
+  const linearVest = !streamUpcoming && !!unlock?.isLinearVest;
   const title = streamUpcoming
     ? "How claiming works"
-    : variant === "latest" ? "Most recent unlock" : "Next scheduled unlock";
+    : variant === "latest"
+      ? (linearVest ? "Most recently fully vested" : "Most recent unlock")
+      : (linearVest ? "Next to fully vest" : "Next scheduled unlock");
   const emptyTitle = streamUpcoming
     ? `${protocolName} streams continuously`
     : variant === "latest"
