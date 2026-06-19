@@ -142,7 +142,10 @@ export function ExplorerTable({
   // 1fr token column hogging all the slack (the empty space). Mobile shows
   // Token · USD · Wallets; the desktop-only cells are display:none below md so
   // they drop out of the 3-col mobile grid.
-  const GRID = "grid grid-cols-[1.7fr_1fr_1fr] md:grid-cols-[1.7fr_0.8fr_0.8fr_0.6fr_0.75fr_0.5fr_0.5fr_0.5fr_1.05fr_0.85fr] items-center gap-3 px-4 md:px-5";
+  // minmax(0,…) on every track (not bare `fr`) so a wide cell can't blow out
+  // its column and shove the others — grid `fr` tracks otherwise floor at their
+  // content's min width. Columns stay put when you sort.
+  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.5fr)_minmax(0,0.5fr)_minmax(0,0.5fr)_minmax(0,1.05fr)_minmax(0,0.85fr)] items-center gap-3 px-4 md:px-5";
 
   return (
     <>
@@ -322,7 +325,7 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
         </div>
         {/* Amount (desktop) */}
         <div className="text-right tabular-nums hidden md:block">
-          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{fmtAmount(r.amount, r.tokenDecimals)}</p>
+          <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text-2)" }}>{fmtAmount(r.amount, r.tokenDecimals)}</p>
         </div>
         {/* USD */}
         <div className="text-right tabular-nums" style={{ minWidth: 64 }}>
@@ -577,10 +580,17 @@ function fmtAmount(raw: string | null, decimals: number): string {
   if (!raw) return "—";
   try {
     const n = Number(BigInt(raw)) / 10 ** Math.min(decimals, 18);
-    if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
-    if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
-    if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-    if (n >= 1)   return n.toFixed(2);
+    if (!Number.isFinite(n)) return "—";
+    // Bound the width. Memecoin supplies reach 1e60+, and .toFixed() silently
+    // falls back to FULL exponential ("1.2000…e+61") above 1e21 — a giant
+    // unbreakable string that shoves the whole table sideways when you sort by
+    // Amount. Cap with a short compact exponential ("1.2e61").
+    if (n >= 1e15) return n.toExponential(1).replace("e+", "e");
+    if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9)  return `${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6)  return `${(n / 1e6).toFixed(2)}M`;
+    if (n >= 1e3)  return `${(n / 1e3).toFixed(1)}K`;
+    if (n >= 1)    return n.toFixed(2);
     return n.toFixed(4);
   } catch {
     return "—";

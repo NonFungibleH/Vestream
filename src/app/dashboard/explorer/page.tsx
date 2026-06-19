@@ -1234,10 +1234,16 @@ function fmtAmount(raw: string | null, decimals: number): string {
   if (!raw) return "—";
   try {
     const n = Number(BigInt(raw)) / 10 ** Math.min(decimals, 18);
-    if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
-    if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
-    if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-    if (n >= 1)   return n.toFixed(2);
+    if (!Number.isFinite(n)) return "—";
+    // Bound the width — memecoin supplies reach 1e60+ and .toFixed() falls back
+    // to full exponential above 1e21, which blows out the layout. See the twin
+    // fmtAmount in ExplorerTable.tsx.
+    if (n >= 1e15) return n.toExponential(1).replace("e+", "e");
+    if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9)  return `${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6)  return `${(n / 1e6).toFixed(2)}M`;
+    if (n >= 1e3)  return `${(n / 1e3).toFixed(1)}K`;
+    if (n >= 1)    return n.toFixed(2);
     return n.toFixed(4);
   } catch {
     return "—";
