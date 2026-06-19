@@ -255,27 +255,29 @@ async function handle(req: NextRequest) {
   });
 
   // ── Composite re-rank: USD-weighted blend ────────────────────────────────
-  // Percentile-rank each wallet on locked-USD and on distinct-token-count
-  // within the candidate pool, then blend 0.6/0.4. Percentile (not raw value)
-  // because dollars and token-counts live on incomparable scales; ranking each
-  // axis to [0,1] lets them combine. Unpriced wallets (totalLockedUsd null) sit
-  // at the bottom of the USD axis but still score via the count axis — so the
-  // board isn't gutted by the ~88% pricing gap. O(n²) over n≈CANDIDATE_POOL is
-  // trivial (≤160k comparisons).
-  const n = bundles.length;
-  const usdValues = bundles.map((b) => b.totalLockedUsd ?? 0);
-  const countValues = bundles.map((b) => b.distinctTokenCount);
-  const percentile = (values: number[], v: number): number => {
-    if (n <= 1) return 1;
-    let lower = 0;
-    for (const x of values) if (x < v) lower++;
-    return lower / (n - 1); // fraction strictly below → ties share a percentile
-  };
+  // Normalize each axis to [0,1], then blend 0.6/0.4.
+  //
+  // USD is LOG-scaled: locked values span many orders of magnitude ($1 →
+  // $600k+), and a linear scale would let one whale flatten everyone else to
+  // ~0. Token-count is linear (it spans a single order, ~1–30).
+  //
+  // We deliberately do NOT percentile-rank here. With ~half the board unpriced
+  // (USD = 0), a percentile hands a $26 wallet roughly the same USD score as a
+  // $400k one — both "above all the zeros" — which lets breadth dominate and
+  // buries the genuine whales (observed: the single highest-value wallet
+  // landed at rank 11 behind ten sub-$100 wallets). Magnitude-normalization
+  // preserves the gap, so real locked value leads as intended.
+  const maxUsd = Math.max(1, ...bundles.map((b) => b.totalLockedUsd ?? 0));
+  const maxCount = Math.max(1, ...bundles.map((b) => b.distinctTokenCount));
+  const logMaxUsd = Math.log10(1 + maxUsd);
+  const usdNorm = (usd: number): number =>
+    logMaxUsd > 0 ? Math.log10(1 + usd) / logMaxUsd : 0;
+  const countNorm = (c: number): number => c / maxCount;
   const scored = bundles.map((b) => ({
     bundle: b,
     score:
-      USD_WEIGHT * percentile(usdValues, b.totalLockedUsd ?? 0) +
-      COUNT_WEIGHT * percentile(countValues, b.distinctTokenCount),
+      USD_WEIGHT * usdNorm(b.totalLockedUsd ?? 0) +
+      COUNT_WEIGHT * countNorm(b.distinctTokenCount),
   }));
   scored.sort((a, z) => z.score - a.score);
   const final = scored.slice(0, LEADERBOARD_SIZE).map((s) => s.bundle);
