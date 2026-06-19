@@ -296,12 +296,12 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           </div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--preview-text)", letterSpacing: "-0.02em" }}>
-              Search the vesting universe
+              Search the vesting explorer
             </h1>
             <ExplorerHelp />
           </div>
           <p className="text-sm" style={{ color: "var(--preview-text-2)" }}>
-            Query our index by wallet, token, or protocol. Filterable, shareable, and indexed across every supported chain.
+            Query our index by wallet, ENS, token, or protocol. Filterable, shareable, and indexed across every supported chain.
           </p>
           <p className="text-xs mt-1.5" style={{ color: "var(--preview-text-3)" }}>
             Need a one-shot live scan of a specific wallet? Use the{" "}

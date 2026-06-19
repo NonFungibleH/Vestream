@@ -163,7 +163,7 @@ export function ExplorerTable({
             <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
             <Th label="USD"         active={sort === "usd"}           dir={dir} {...sortProps("usd", "desc")} align="right" minW={64} title={USD_HELP} />
             <Th label="Wallets"     active={sort === "wallets"}       dir={dir} {...sortProps("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
-            <Th label="Concentration" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Top recipient" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
             <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
             <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
