@@ -13,10 +13,12 @@
 // in schema.ts.
 //
 // Pipeline:
-//   1. SQL aggregate: top 100 wallets by distinct (chain, token) count,
-//      excluding denylist (burn addresses etc), excluding fully-vested
-//      streams (so we surface ACTIVE smart money, not historical winners).
-//      Wider than the leaderboard so the Phase-4 re-rank has room.
+//   1. TWO candidate pools, unioned (excluding denylist + fully-vested streams,
+//      so we surface ACTIVE smart money): (a) by distinct (chain, token) count
+//      — breadth; (b) by approximate locked USD via the price-cache join —
+//      value. Pool (b) is essential: ranking by breadth alone buries the funds,
+//      because a treasury vesting one big liquid position has a tiny token
+//      count. Both pools are wider than the leaderboard so Phase 4 has room.
 //   2. For the candidates, fetch per-wallet token totals + classify ecosystem.
 //   3. Price each wallet's tokens via DexScreener (batched).
 //   4. Re-rank by a USD-weighted composite (locked-value + token-breadth),
@@ -31,11 +33,10 @@ import { revalidateTag } from "next/cache";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { db } from "@/lib/db";
-import { smartMoneySnapshot, vestingStreamsCache } from "@/lib/db/schema";
+import { smartMoneySnapshot, vestingStreamsCache, tokenPricesCache } from "@/lib/db/schema";
 import { sql, eq, and, inArray, notInArray } from "drizzle-orm";
 // (no extra import needed — inArray covers the protocol filter)
 import { isSmartMoneyDenied, SMART_MONEY_DENYLIST } from "@/lib/vesting/smart-money-denylist";
-import { getQuickUsdPrices, toUsdValue, type QuickPriceMap } from "@/lib/vesting/quick-prices";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5min ceiling — the aggregate alone is ~22s
@@ -121,13 +122,66 @@ async function handle(req: NextRequest) {
 
   // Belt-and-suspenders denylist trim (in case the Solana side surfaces
   // anything we want to skip later).
-  const candidates = aggregateRows.filter((r) => r.recipient && !isSmartMoneyDenied(r.recipient));
+  const countRecipients = aggregateRows
+    .map((r) => r.recipient)
+    .filter((r): r is string => !!r && !isSmartMoneyDenied(r));
+
+  // ── Phase 1b: value-seeded candidate pool ────────────────────────────────
+  // The count pool above is selected purely by token breadth, which skews hard
+  // toward Solana pump.fun-style dust aggregators (hundreds of unpriceable
+  // memecoins). That STRUCTURALLY EXCLUDES the funds we actually want: a
+  // treasury vesting one or two large, liquid positions has a tiny token count
+  // and never makes the top-N-by-count cut, so its real USD never enters the
+  // ranking (observed: only ~48/100 of the count-pool board had any priced
+  // value, and the single biggest wallet by USD sat outside the top 10).
+  //
+  // So we add a second pool ranked by approximate locked USD, joining the price
+  // cache. The liquidity floor keeps thin-pair memecoins — whose trillion-unit
+  // balances × a dust price inflate to fake millions — out of the value seed
+  // (the fake-TVL failure mode documented in CLAUDE.md's TVL methodology). We
+  // only take the recipient list here; the DISPLAYED USD is recomputed in
+  // Phase 4 from the same priceMap as every other wallet (single source of
+  // truth — this SQL sum is candidate-selection only).
+  const VALUE_SEED_LIQUIDITY_FLOOR = 1000;
+  // Realizable USD per position = LEAST(price × amount, pool liquidity), summed
+  // per wallet — same cap Phase 4 applies, so the seed and the display agree.
+  const lockedUsdExpr = sql`SUM( LEAST(
+    (${vestingStreamsCache.streamData}->>'lockedAmount')::numeric
+      / power(10, COALESCE(NULLIF(${vestingStreamsCache.streamData}->>'tokenDecimals', '')::int, 18))
+      * ${tokenPricesCache.priceUsd},
+    COALESCE(${tokenPricesCache.liquidityUsd}, 0)
+  ) )`;
+  const valueRows = await db
+    .select({ recipient: vestingStreamsCache.recipient })
+    .from(vestingStreamsCache)
+    .innerJoin(
+      tokenPricesCache,
+      sql`${tokenPricesCache.chainId} = ${vestingStreamsCache.chainId} AND ${tokenPricesCache.tokenAddress} = lower(${vestingStreamsCache.tokenAddress})`,
+    )
+    .where(
+      and(
+        eq(vestingStreamsCache.isFullyVested, false),
+        inArray(vestingStreamsCache.protocol, [...SMART_MONEY_PROTOCOLS]),
+        sql`${tokenPricesCache.priceUsd} > 0`,
+        sql`COALESCE(${tokenPricesCache.liquidityUsd}, 0) >= ${VALUE_SEED_LIQUIDITY_FLOOR}`,
+        // Guard the ::numeric cast — only sum rows whose lockedAmount is digits.
+        sql`${vestingStreamsCache.streamData}->>'lockedAmount' ~ '^[0-9]+$'`,
+        denyArr.length > 0 ? notInArray(vestingStreamsCache.recipient, denyArr) : undefined,
+      ),
+    )
+    .groupBy(vestingStreamsCache.recipient)
+    .orderBy(sql`${lockedUsdExpr} DESC`)
+    .limit(CANDIDATE_POOL);
+  const valueRecipients = valueRows
+    .map((r) => r.recipient)
+    .filter((r): r is string => !!r && !isSmartMoneyDenied(r));
+
+  console.log(`[smart-money] candidate pools: ${countRecipients.length} by-count, ${valueRecipients.length} by-value`);
 
   // ── Phase 2: per-wallet token breakdown + ecosystem classification ───────
-  // For each candidate, pull all (chainId, tokenAddress, summed locked
-  // amount, decimals, symbol) rows so we can pick the top 3 by USD value.
-  // One IN query per batch of candidates — we keep this bounded.
-  const recipients = candidates.map((r) => r.recipient).slice(0, CANDIDATE_POOL);
+  // Union the two pools (dedup), then pull all token rows for the lot so we
+  // can price + composite-rank them together.
+  const recipients = [...new Set([...countRecipients, ...valueRecipients])];
   if (recipients.length === 0) {
     return NextResponse.json({ ok: true, message: "no candidates", durationMs: Date.now() - t0 });
   }
@@ -159,7 +213,11 @@ async function handle(req: NextRequest) {
     lockedRaw:    bigint;
   };
   const aggMap = new Map<string, TokenAgg>();
+  // Raw stream (row) count per recipient — the "Streams" column. Counted
+  // before the tokenAddress guard so it matches Phase 1's COUNT(*) semantics.
+  const streamCountByRecipient = new Map<string, number>();
   for (const r of tokenRows) {
+    streamCountByRecipient.set(r.recipient, (streamCountByRecipient.get(r.recipient) ?? 0) + 1);
     if (!r.tokenAddress) continue;
     const sd = r.streamData as { lockedAmount?: string; totalAmount?: string; tokenDecimals?: number };
     const rawAmount = sd.lockedAmount ?? sd.totalAmount ?? "0";
@@ -181,24 +239,47 @@ async function handle(req: NextRequest) {
     }
   }
 
-  // ── Phase 3: price every distinct (chain, token) in a few batches ────────
-  // getQuickUsdPrices batches at 30 per request internally; we just feed it
-  // the full distinct list and let it do the work. Cron has Redis access
-  // (no ISR constraint here), so the default redis: true is correct.
-  const distinctPairs = new Map<string, { chainId: number; address: string }>();
-  for (const agg of aggMap.values()) {
-    const key = `${agg.chainId}:${agg.tokenAddress.toLowerCase()}`;
-    if (!distinctPairs.has(key)) {
-      distinctPairs.set(key, { chainId: agg.chainId, address: agg.tokenAddress });
-    }
+  // ── Phase 3: value every position from the price cache ───────────────────
+  // We read token_prices_cache (the durable, cron-maintained price table) in
+  // one shot rather than calling the live DexScreener path. Two reasons:
+  //   1. Consistency — the value-seeded candidate pool (Phase 1b) already
+  //      ranks off this table; Phase 4's displayed USD must agree with it.
+  //   2. The live path was throttling to ~1% coverage on this token volume,
+  //      and a single indexed read of ~1.5k cached rows is both faster and
+  //      complete. Tokens absent from the cache are dust (the refresh cron
+  //      skips anything under ~$100 liquidity) → treated as unpriced.
+  // The whole priced table is tiny (~1.5k rows), so we load it all and map it.
+  const priceRows = await db
+    .select({
+      chainId:      tokenPricesCache.chainId,
+      tokenAddress: tokenPricesCache.tokenAddress, // stored lowercased
+      priceUsd:     tokenPricesCache.priceUsd,
+      liquidityUsd: tokenPricesCache.liquidityUsd,
+    })
+    .from(tokenPricesCache)
+    .where(sql`${tokenPricesCache.priceUsd} > 0`);
+  type PriceInfo = { price: number; liquidity: number };
+  const priceInfo = new Map<string, PriceInfo>();
+  for (const r of priceRows) {
+    priceInfo.set(`${r.chainId}:${r.tokenAddress.toLowerCase()}`, {
+      price:     Number(r.priceUsd),
+      liquidity: r.liquidityUsd != null ? Number(r.liquidityUsd) : 0,
+    });
   }
-  console.log(`[smart-money] pricing ${distinctPairs.size} distinct (chain, token) pairs`);
-  let priceMap: QuickPriceMap = new Map();
-  try {
-    priceMap = await getQuickUsdPrices([...distinctPairs.values()]);
-  } catch (err) {
-    console.warn("[smart-money] pricing failed, leaderboard will lack USD values:", err);
-  }
+  console.log(`[smart-money] loaded ${priceInfo.size} cached token prices`);
+
+  // Realizable USD: a vesting position can't be exited for more than the
+  // token's pool depth, so we cap price×amount at the DEX liquidity. This is
+  // the honest valuation — without it, thin-pair memecoins (e.g. a token with
+  // $26k liquidity quoting a $22.96 price) inflate a position to billions of
+  // unrealizable dollars. Mirrors CLAUDE.md's TVL realizable-value rule.
+  const realizableUsd = (lockedRaw: bigint, decimals: number, info: PriceInfo | undefined): number | null => {
+    if (!info) return null;
+    const tokens = Number(lockedRaw) / 10 ** decimals;
+    const gross = tokens * info.price;
+    if (!isFinite(gross) || gross <= 0) return null;
+    return info.liquidity > 0 ? Math.min(gross, info.liquidity) : null;
+  };
 
   // ── Phase 4: build per-wallet bundles → top tokens + totals ──────────────
   type WalletBundle = {
@@ -218,11 +299,11 @@ async function handle(req: NextRequest) {
     tokensByRecipient.set(agg.recipient, list);
   }
 
-  const bundles: WalletBundle[] = candidates.map((c) => {
-    const tokens = tokensByRecipient.get(c.recipient) ?? [];
+  const bundles: WalletBundle[] = recipients.map((recipient) => {
+    const tokens = tokensByRecipient.get(recipient) ?? [];
     const pricedTokens = tokens.map((t) => {
-      const price = priceMap.get(`${t.chainId}:${t.tokenAddress.toLowerCase()}`);
-      const usdValue = toUsdValue(t.lockedRaw.toString(), t.decimals, price);
+      const info = priceInfo.get(`${t.chainId}:${t.tokenAddress.toLowerCase()}`);
+      const usdValue = realizableUsd(t.lockedRaw, t.decimals, info);
       return {
         chainId:      t.chainId,
         tokenAddress: t.tokenAddress,
@@ -244,16 +325,18 @@ async function handle(req: NextRequest) {
     }, null);
     // EVM heuristic: 0x prefix. Solana is base58, no 0x. (Our recipient
     // column carries the normalised form — no cleanup needed.)
-    const chainEcosystem: "evm" | "solana" = c.recipient.startsWith("0x") ? "evm" : "solana";
+    const chainEcosystem: "evm" | "solana" = recipient.startsWith("0x") ? "evm" : "solana";
+    // Counts derived from the pulled token rows — uniform across both candidate
+    // pools (the value-seeded wallets aren't in the Phase-1 count aggregate).
     return {
-      recipient:          c.recipient,
-      distinctTokenCount: Number(c.distinctTokenCount),
-      streamCount:        Number(c.streamCount),
+      recipient,
+      distinctTokenCount: tokens.length,
+      streamCount:        streamCountByRecipient.get(recipient) ?? tokens.length,
       chainEcosystem,
       totalLockedUsd,
       topTokens,
     };
-  });
+  }).filter((b) => b.distinctTokenCount > 0);
 
   // ── Composite re-rank: USD-weighted blend ────────────────────────────────
   // Normalize each axis to [0,1], then blend 0.6/0.4.
@@ -323,7 +406,9 @@ async function handle(req: NextRequest) {
     rowsWritten:      final.length,
     durationMs,
     aggregateMs,
-    pricedTokens:     [...priceMap.keys()].length,
-    distinctTokens:   distinctPairs.size,
+    candidatesByCount: countRecipients.length,
+    candidatesByValue: valueRecipients.length,
+    candidatesUnion:   recipients.length,
+    cachedPrices:      priceInfo.size,
   });
 }
