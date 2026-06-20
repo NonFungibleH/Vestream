@@ -110,6 +110,12 @@ export default async function ExplorerTokenPage({
     ? lockedValueUsd / market.marketCap
     : null;
   const thinLiquidity = lockedValueUsd != null && (liqUsd == null || liqUsd < 10_000);
+  // Absorption: how many days of average 24h volume it would take to trade
+  // through the ENTIRE locked supply. The market's capacity to swallow the
+  // overhang — high = heavy structural sell pressure as the locked supply vests.
+  const absorptionDays = lockedValueUsd != null && market?.volume24h != null && market.volume24h > 0
+    ? lockedValueUsd / market.volume24h
+    : null;
   // Nearest FUTURE cliff across streams — a cliff is a single lump unlock
   // (distinct from gradual linear/step vesting), the kind worth bracing for.
   const nowSec = Math.floor(Date.now() / 1000);
@@ -190,6 +196,11 @@ export default async function ExplorerTokenPage({
             { label: "Market cap", val: market?.marketCap != null ? `$${fmtNum(market.marketCap)}` : "—" },
             { label: "FDV", val: market?.fdv != null ? `$${fmtNum(market.fdv)}` : "—" },
             { label: "24h volume", val: market?.volume24h != null ? `$${fmtNum(market.volume24h)}` : "—" },
+            // Absorption — locked supply ÷ daily volume, in "days of volume".
+            // Amber > 30d, red > 90d: the overhang would take months to clear.
+            { label: "Absorption",
+              val: absorptionDays != null ? (absorptionDays >= 1 ? `${fmtNum(absorptionDays)}d vol` : "<1d vol") : "—",
+              valColor: absorptionDays != null ? (absorptionDays > 90 ? "#dc2626" : absorptionDays > 30 ? "#d97706" : undefined) : undefined },
             { label: "Liquidity", val: liqUsd != null ? `$${fmtNum(liqUsd)}` : "—" },
             { label: "24h change",
               val: market?.change24h != null ? `${market.change24h >= 0 ? "+" : ""}${market.change24h.toFixed(1)}%` : "—",
