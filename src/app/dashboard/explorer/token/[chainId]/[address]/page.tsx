@@ -178,16 +178,26 @@ export default async function ExplorerTokenPage({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
-          {[
+          {([
+            // Vesting stats (our index).
             { label: "Locked value", val: lockedValueUsd != null ? `$${fmtNum(lockedValueUsd)}` : "—" },
             { label: "Total locked", val: `${fmtNum(totalLockedWhole)} ${symbol}` },
             { label: "Recipients", val: recipientCount.toLocaleString() },
             { label: "Rounds", val: String(rounds.length) },
             { label: "Next unlock", val: fmtDate(nextUnlock) },
-          ].map((t) => (
+            // Market stats — already fetched in TokenMarketData (DexScreener),
+            // surfaced here so the page reads as a real token dashboard.
+            { label: "Market cap", val: market?.marketCap != null ? `$${fmtNum(market.marketCap)}` : "—" },
+            { label: "FDV", val: market?.fdv != null ? `$${fmtNum(market.fdv)}` : "—" },
+            { label: "24h volume", val: market?.volume24h != null ? `$${fmtNum(market.volume24h)}` : "—" },
+            { label: "Liquidity", val: liqUsd != null ? `$${fmtNum(liqUsd)}` : "—" },
+            { label: "24h change",
+              val: market?.change24h != null ? `${market.change24h >= 0 ? "+" : ""}${market.change24h.toFixed(1)}%` : "—",
+              valColor: market?.change24h != null ? (market.change24h >= 0 ? "#0F8A8A" : "#dc2626") : undefined },
+          ] as Array<{ label: string; val: string; valColor?: string }>).map((t) => (
             <div key={t.label} className="rounded-xl px-3 py-2.5" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
               <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>{t.label}</p>
-              <p className="text-sm font-bold tabular-nums mt-0.5 truncate" style={{ color: "var(--preview-text)" }}>{t.val}</p>
+              <p className="text-sm font-bold tabular-nums mt-0.5 truncate" style={{ color: t.valColor ?? "var(--preview-text)" }}>{t.val}</p>
             </div>
           ))}
         </div>
