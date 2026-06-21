@@ -13,7 +13,7 @@ import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import Link from "next/link";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
-import { getTokenStreams, getTokenMarketData, getSmartMoneyHoldersOfToken } from "@/lib/vesting/token-aggregates";
+import { getTokenStreams, getTokenMarketData, getSmartMoneyHoldersOfToken, getTokenUpcomingEvents } from "@/lib/vesting/token-aggregates";
 import { groupIntoRounds } from "@/lib/vesting/rounds";
 import { getCurrentUserTier } from "@/lib/auth/tier";
 import { withTimeout } from "@/lib/with-timeout";
@@ -63,10 +63,11 @@ export default async function ExplorerTokenPage({
   // hanging the whole render until Cloudflare's 100s gateway cuts it → a 524
   // the user sees as "this page couldn't load". Streams get the most headroom
   // (they're the page's core content); the secondary panels fail fast.
-  const [streams, market, smartHolders] = await Promise.all([
+  const [streams, market, smartHolders, upcomingEvents] = await Promise.all([
     withTimeout(getTokenStreams(cid, addr), 15_000, [], "token:getTokenStreams"),
     withTimeout(getTokenMarketData(cid, addr), 8_000, null, "token:getTokenMarketData"),
     withTimeout(getSmartMoneyHoldersOfToken(cid, addr), 6_000, [], "token:getSmartMoney"),
+    withTimeout(getTokenUpcomingEvents(cid, addr, 50), 6_000, [], "token:getUpcomingEvents"),
   ]);
 
   const rounds = groupIntoRounds(streams);
@@ -123,6 +124,48 @@ export default async function ExplorerTokenPage({
     (m, s) => (s.cliffTime != null && s.cliffTime > nowSec && (m == null || s.cliffTime < m) ? s.cliffTime : m),
     null,
   );
+
+  // ── End-user enrichments (#1–#3) ─────────────────────────────────────────
+  // #1 % of supply locked. Total supply ≈ FDV ÷ price (DexScreener fields we
+  // already have). The single number a trader scans for: how much of the
+  // whole token is still locked / yet to hit the market.
+  const totalSupplyApprox = market?.fdv != null && priceUsd != null && priceUsd > 0
+    ? market.fdv / priceUsd
+    : null;
+  const pctSupplyLocked = totalSupplyApprox != null && totalSupplyApprox > 0
+    ? totalLockedWhole / totalSupplyApprox
+    : null;
+
+  // #3 Vesting progress — how far through the WHOLE schedule the token is, by
+  // tokens (not time): (totalEver − stillLocked) / totalEver. totalAmount is
+  // the original grant; lockedAmount is what's left. Falls back to locked when
+  // an adapter didn't surface totalAmount (then progress reads 0% — honest).
+  const totalGrantedWhole = streams.reduce((a, s) => {
+    let t = 0;
+    try { t = Number(BigInt(s.totalAmount ?? s.lockedAmount ?? "0")) / 10 ** dec; } catch { /* keep 0 */ }
+    return a + t;
+  }, 0);
+  const vestedPct = totalGrantedWhole > 0
+    ? Math.max(0, Math.min(1, (totalGrantedWhole - totalLockedWhole) / totalGrantedWhole))
+    : null;
+
+  // #2 Forward unlocks — aggregate the per-stream upcoming events by day, so
+  // the user sees concrete "what unlocks next, when, and how big" instead of
+  // just the curve shape. Top 5 nearest dates with token amount, USD, % supply.
+  const unlocksByDay = new Map<number, number>();
+  for (const ev of upcomingEvents) {
+    const day = Math.floor(ev.timestamp / 86_400) * 86_400;
+    unlocksByDay.set(day, (unlocksByDay.get(day) ?? 0) + ev.tokensWhole);
+  }
+  const nextUnlocks = [...unlocksByDay.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .slice(0, 5)
+    .map(([ts, tokens]) => ({
+      ts,
+      tokens,
+      usd:       priceUsd != null ? tokens * priceUsd : null,
+      pctSupply: totalSupplyApprox != null && totalSupplyApprox > 0 ? tokens / totalSupplyApprox : null,
+    }));
 
   return (
     <main className="flex-1 px-4 md:px-8 py-6 md:py-8 overflow-y-auto w-full">
@@ -188,6 +231,13 @@ export default async function ExplorerTokenPage({
             // Vesting stats (our index).
             { label: "Locked value", val: lockedValueUsd != null ? `$${fmtNum(lockedValueUsd)}` : "—" },
             { label: "Total locked", val: `${fmtNum(totalLockedWhole)} ${symbol}` },
+            // % of total supply still locked (≈ totalLocked ÷ FDV/price). The
+            // headline overhang read; ">100%" when our tracked lock exceeds
+            // DexScreener's FDV-implied supply (common for heavily-locked tokens).
+            { label: "% supply locked",
+              val: pctSupplyLocked != null
+                ? (pctSupplyLocked > 1 ? ">100%" : `${(pctSupplyLocked * 100).toFixed(pctSupplyLocked < 0.1 ? 1 : 0)}%`)
+                : "—" },
             { label: "Recipients", val: recipientCount.toLocaleString() },
             { label: "Rounds", val: String(rounds.length) },
             { label: "Next unlock", val: fmtDate(nextUnlock) },
@@ -283,6 +333,50 @@ export default async function ExplorerTokenPage({
             rowCap={FREE_TIER_ROW_CAP}
             vestingShareOfMktCap={vestingShareOfMktCap}
           />
+
+          {/* Vesting progress (#3) + next unlocks (#2) + alert CTA (#4) */}
+          <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Vesting progress &amp; upcoming unlocks</h2>
+              <Link href="/dashboard/alerts"
+                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
+                style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.25)", color: "#0F8A8A" }}>
+                🔔 Alert me before unlocks
+              </Link>
+            </div>
+
+            {vestedPct != null && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-[11px] mb-1" style={{ color: "var(--preview-text-3)" }}>
+                  <span><strong style={{ color: "var(--preview-text)" }}>{(vestedPct * 100).toFixed(0)}%</strong> vested</span>
+                  <span>{((1 - vestedPct) * 100).toFixed(0)}% still locked</span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${vestedPct * 100}%`, background: "#0F8A8A" }} />
+                </div>
+              </div>
+            )}
+
+            {nextUnlocks.length > 0 ? (
+              <div>
+                <p className="text-[10px] uppercase tracking-wide mb-2" style={{ color: "var(--preview-text-3)" }}>Next unlocks</p>
+                <div className="space-y-1">
+                  {nextUnlocks.map((u) => (
+                    <div key={u.ts} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--preview-muted-2)" }}>
+                      <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--preview-text)" }}>{fmtDate(u.ts)}</span>
+                      <span className="text-xs tabular-nums text-right" style={{ color: "var(--preview-text-2)" }}>
+                        {fmtNum(u.tokens)} {symbol}
+                        {u.usd != null && <span style={{ color: "var(--preview-text-3)" }}> · ${fmtNum(u.usd)}</span>}
+                        {u.pctSupply != null && <span style={{ color: "var(--preview-text-3)" }}> · {(u.pctSupply * 100).toFixed(u.pctSupply < 0.1 ? 2 : 1)}% supply</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>No upcoming unlock events indexed for this token.</p>
+            )}
+          </div>
 
           <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
             <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>Unlock overview</h2>
