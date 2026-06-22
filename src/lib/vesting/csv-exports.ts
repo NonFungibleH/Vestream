@@ -74,6 +74,22 @@ function isoDateTime(d: Date): string {
 }
 
 /**
+ * Per-token USD price at the moment of claim = USD value ÷ tokens received.
+ * Derived (claim_events stores only the line total `usdValueAtClaim`), so a
+ * blank/zero on either side yields "". Sub-$1 prices keep 6 significant
+ * figures so micro-cap unit prices ($0.0000123) survive the CSV round-trip;
+ * ≥$1 prices show 4 decimals. Mirrors the on-screen Price column.
+ */
+function unitPriceUsd(r: ClaimRow): string {
+  if (!r.usdValueAtClaim) return "";
+  const usd = Number(r.usdValueAtClaim);
+  const tokens = Number(tokensWhole(r.amount, r.tokenDecimals));
+  if (!Number.isFinite(usd) || !Number.isFinite(tokens) || tokens <= 0) return "";
+  const price = usd / tokens;
+  return price >= 1 ? price.toFixed(4) : price.toPrecision(6);
+}
+
+/**
  * User-supplied per-stream context, threaded into all CSV builders below.
  * Caller passes a `Map<streamId, { customName, notes }>` populated via
  * `getStreamAnnotationsForUser()`. When absent, builders fall back to the
@@ -138,6 +154,7 @@ function buildVestreamGeneric(
     "Token Symbol",
     "Token Address",
     "Amount",
+    "Unit Price USD at Claim",
     "USD Value at Claim",
     "Price Confidence",
     "Recipient Address",
@@ -154,6 +171,7 @@ function buildVestreamGeneric(
     r.tokenSymbol ?? "",
     r.tokenAddress,
     tokensWhole(r.amount, r.tokenDecimals),
+    unitPriceUsd(r),
     r.usdValueAtClaim ?? "",
     r.priceConfidence,
     r.recipient,
@@ -301,6 +319,7 @@ function buildPayrollIncome(
     "Source",                   // free-form: annotation customName, else "<protocol> via <chain>"
     "Token",
     "Amount Received",
+    "Unit Price USD at Receipt", // per-token FMV — Amount Received × this = FMV total
     "FMV USD at Receipt",       // canonical income figure for tax filing
     "Pricing Confidence",       // high / medium / low / missing — auditable
     "Income Type",              // "salary" | "vesting income" | "grant" — derived from stream category
@@ -321,6 +340,7 @@ function buildPayrollIncome(
       source,
       r.tokenSymbol ?? r.tokenAddress.slice(0, 10),
       tokensWhole(r.amount, r.tokenDecimals),
+      unitPriceUsd(r),
       r.usdValueAtClaim ?? "",
       r.priceConfidence,
       incomeType,
