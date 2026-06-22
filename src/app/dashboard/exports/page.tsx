@@ -34,6 +34,7 @@ import useSWR from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
+import { getProtocol } from "@/lib/protocol-constants";
 import { track } from "@/lib/analytics";
 import { useToast } from "@/components/Toast";
 import { CopyButton } from "@/components/CopyButton";
@@ -73,17 +74,33 @@ interface IngestResult {
 }
 
 // ── Claim-table sort (in-memory; mirrors ExplorerTable's pattern) ────────────
-type ClaimSortCol = "date" | "token" | "amount" | "usd" | "protocol" | "chain";
+type ClaimSortCol = "date" | "token" | "amount" | "price" | "usd" | "protocol" | "chain";
 type SortDir      = "asc" | "desc";
 
 function claimAmountNum(e: ClaimEvent): number {
   try { return Number(BigInt(e.amount)) / 10 ** Math.min(e.tokenDecimals, 18); } catch { return 0; }
+}
+
+/** USD price per whole token at the claim date = usdValueAtClaim ÷ tokens
+ *  claimed. Null when the row is unpriced or the amount is zero. */
+function claimUnitPrice(e: ClaimEvent): number | null {
+  if (e.usdValueAtClaim == null) return null;
+  const amt = claimAmountNum(e);
+  if (!(amt > 0)) return null;
+  const p = Number(e.usdValueAtClaim) / amt;
+  return Number.isFinite(p) ? p : null;
+}
+function fmtPrice(p: number | null): string {
+  if (p == null) return "—";
+  if (p < 1) return `$${p.toPrecision(3)}`;
+  return `$${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
 }
 function claimSortValue(e: ClaimEvent, col: ClaimSortCol): number | string {
   switch (col) {
     case "date":     return new Date(e.claimedAt).getTime() || 0;
     case "token":    return (e.tokenSymbol ?? e.tokenAddress).toLowerCase();
     case "amount":   return claimAmountNum(e);
+    case "price":    return claimUnitPrice(e) ?? -Infinity;
     case "usd":      return e.usdValueAtClaim != null ? Number(e.usdValueAtClaim) : -Infinity;
     case "protocol": return e.protocol.toLowerCase();
     case "chain":    return (CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${e.chainId}`).toLowerCase();
@@ -611,6 +628,7 @@ export default function ExportsPage() {
                     <ClaimTh label="Date"         col="date"     active={sortCol} dir={sortDir} onClick={() => toggleSort("date", "desc")} />
                     <ClaimTh label="Token"        col="token"    active={sortCol} dir={sortDir} onClick={() => toggleSort("token", "asc")} />
                     <ClaimTh label="Amount"       col="amount"   active={sortCol} dir={sortDir} onClick={() => toggleSort("amount", "desc")} align="right" />
+                    <ClaimTh label="Price"        col="price"    active={sortCol} dir={sortDir} onClick={() => toggleSort("price", "desc")} align="right" />
                     <ClaimTh label="USD at claim" col="usd"      active={sortCol} dir={sortDir} onClick={() => toggleSort("usd", "desc")} align="right" />
                     <ClaimTh label="Protocol"     col="protocol" active={sortCol} dir={sortDir} onClick={() => toggleSort("protocol", "asc")} />
                     <ClaimTh label="Chain"        col="chain"    active={sortCol} dir={sortDir} onClick={() => toggleSort("chain", "asc")} />
@@ -634,6 +652,9 @@ export default function ExportsPage() {
                       <td className="px-4 py-3 text-right font-mono whitespace-nowrap" style={{ color: "var(--preview-text)" }}>
                         {tokensWhole(e.amount, e.tokenDecimals)}
                       </td>
+                      <td className="px-4 py-3 text-right font-mono whitespace-nowrap" style={{ color: claimUnitPrice(e) != null ? "var(--preview-text-2)" : "var(--preview-text-3)" }}>
+                        {fmtPrice(claimUnitPrice(e))}
+                      </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap" style={{ color: e.usdValueAtClaim ? "var(--preview-text)" : "var(--preview-text-3)" }}>
                         {e.usdValueAtClaim
                           ? `$${Number(e.usdValueAtClaim).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
@@ -645,7 +666,7 @@ export default function ExportsPage() {
                           <span className="ml-1 text-[10px]" title="No historical price found — set cost basis manually" style={{ color: "#B3322E" }}>!</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 capitalize" style={{ color: "var(--preview-text-2)" }}>{e.protocol}</td>
+                      <td className="px-4 py-3" style={{ color: "var(--preview-text-2)" }}>{getProtocol(e.protocol)?.name ?? e.protocol}</td>
                       <td className="px-4 py-3" style={{ color: "var(--preview-text-2)" }}>
                         {CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${e.chainId}`}
                       </td>
@@ -653,7 +674,7 @@ export default function ExportsPage() {
                   ))}
                   {sortedEvents.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: "var(--preview-text-3)" }}>
+                      <td colSpan={7} className="px-4 py-10 text-center text-sm" style={{ color: "var(--preview-text-3)" }}>
                         No claims in this date range.
                       </td>
                     </tr>
