@@ -263,7 +263,9 @@ export default function ExportsPage() {
     summary: Summary | null;
     audienceCategory: string | null;
   }>(swrKey, async (url: string) => {
-    const res = await fetch(url, { credentials: "include" });
+    // no-store: the response varies by ?since/?until — never reuse a cached
+    // body for a different date range (the year-filter "not filtering" bug).
+    const res = await fetch(url, { credentials: "include", cache: "no-store" });
     if (res.status === 401) { router.push("/login"); throw new Error("unauthorized"); }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();

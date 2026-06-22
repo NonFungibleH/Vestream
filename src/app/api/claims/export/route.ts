@@ -21,6 +21,10 @@ import { buildClaimsCsv, csvFilename, type ExportFormat } from "@/lib/vesting/cs
 import { getStreamAnnotationsForUser, getStreamTagsForUser } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
+// Same reason as /api/claims/history: the CSV varies by ?since/?until, so it
+// must never be cached/served stale across date ranges. (2026-06-20)
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 const VALID_FORMATS = new Set<ExportFormat>([
   "vestream-generic",

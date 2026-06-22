@@ -32,6 +32,13 @@ import type { SupportedChainId } from "@/lib/vesting/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel — refresh can take a while across adapters
+// force-dynamic + no-store: this GET varies by ?since/?until (the tax-page date
+// filter). Without it the handler was being cached and served the SAME response
+// for every date range — the year filter looked "broken" because every period
+// returned the all-time result. The SQL/query filter was always correct; the
+// response just wasn't varying per request. (2026-06-20)
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 async function getAuthedUser(): Promise<{
   userId:           string;
@@ -94,7 +101,10 @@ export async function GET(req: NextRequest) {
   // format ordering — workers see payroll-income first, investors see the
   // capital-gains formats first. Null for users who haven't onboarded;
   // page falls back to investor-first ordering in that case.
-  return NextResponse.json({ events, summary, audienceCategory: auth.audienceCategory });
+  return NextResponse.json(
+    { events, summary, audienceCategory: auth.audienceCategory },
+    { headers: { "Cache-Control": "no-store, private" } },
+  );
 }
 
 // ── POST — ingest (manual refresh) ─────────────────────────────────────────
