@@ -254,10 +254,11 @@ export default function ExportsPage() {
   // the cache alive across navigations, so going Dashboard → Tax → Dashboard
   // → Tax renders the second Tax visit instantly. The refresh() POST below
   // mutates the SWR cache directly on success.
-  const sp = new URLSearchParams();
-  if (since) sp.set("since", since);
-  if (until) sp.set("until", until);
-  const swrKey = `/api/claims/history?${sp.toString()}`;
+  // Fetch ALL of the user's claims once with a STABLE key; the date filter is
+  // applied client-side below (instant, no round-trip, and immune to the
+  // server-filtered fetch intermittently not reflecting in the UI). The CSV
+  // export still filters server-side via its own ?since/?until URL.
+  const swrKey = `/api/claims/history`;
   const { data: historyData, isLoading, mutate: mutateHistory } = useSWR<{
     events: ClaimEvent[];
     summary: Summary | null;
@@ -271,16 +272,46 @@ export default function ExportsPage() {
     return res.json();
   });
   const events: ClaimEvent[] = historyData?.events ?? [];
-  const summary: Summary | null = historyData?.summary ?? null;
   const audienceCategory: string | null = historyData?.audienceCategory ?? null;
   const loading = isLoading;
+
+  // ── Client-side date filter (the Report Period) ──────────────────────────
+  // since/until are "YYYY-MM-DD" strings (empty = open-ended). We filter the
+  // already-fetched events here so switching period is instant AND always
+  // reflects in the UI.
+  const filteredEvents = useMemo(() => {
+    if (!since && !until) return events;
+    const lo = since ? new Date(`${since}T00:00:00`).getTime() : -Infinity;
+    const hi = until ? new Date(`${until}T23:59:59.999`).getTime() : Infinity;
+    return events.filter((e) => {
+      const t = new Date(e.claimedAt).getTime();
+      return t >= lo && t <= hi;
+    });
+  }, [events, since, until]);
+
+  // Header totals are recomputed from the FILTERED set so the cards always
+  // match the visible rows (Total claims / Total USD / Years covered).
+  const summary: Summary | null = useMemo(() => {
+    if (!historyData) return null;
+    const byYear: Record<string, { rows: number; usd: number }> = {};
+    let totalUsd = 0;
+    for (const e of filteredEvents) {
+      const usd = e.usdValueAtClaim ? Number(e.usdValueAtClaim) : 0;
+      totalUsd += usd;
+      const y = String(new Date(e.claimedAt).getUTCFullYear());
+      (byYear[y] ??= { rows: 0, usd: 0 });
+      byYear[y].rows += 1;
+      byYear[y].usd  += usd;
+    }
+    return { totalRows: filteredEvents.length, totalUsd, byYear };
+  }, [historyData, filteredEvents]);
 
   // In-memory sort of the claim table — same pattern as the explorer's
   // ExplorerTable (click a header → reorder instantly, zero round-trip).
   const [sortCol, setSortCol] = useState<ClaimSortCol>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const sortedEvents = useMemo(() => {
-    const copy = [...events];
+    const copy = [...filteredEvents];
     copy.sort((a, b) => {
       const x = claimSortValue(a, sortCol);
       const y = claimSortValue(b, sortCol);
@@ -290,7 +321,7 @@ export default function ExportsPage() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return copy;
-  }, [events, sortCol, sortDir]);
+  }, [filteredEvents, sortCol, sortDir]);
   function toggleSort(next: ClaimSortCol, defaultDir: SortDir) {
     if (next === sortCol) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(next); setSortDir(defaultDir); }
@@ -620,6 +651,13 @@ export default function ExportsPage() {
                       </td>
                     </tr>
                   ))}
+                  {sortedEvents.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-sm" style={{ color: "var(--preview-text-3)" }}>
+                        No claims in this date range.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -782,10 +820,12 @@ function ExportFormatCard({
           <div className="text-sm font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{format.name}</div>
           <div className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{format.subtitle}</div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Fixed-width buttons so the Download / Send columns line up across
+            every export row regardless of the platform name's length. */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onDownload}
-            className="text-xs font-semibold px-3 py-2 rounded-lg whitespace-nowrap"
+            className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center w-[116px]"
             style={{ background: "transparent", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
           >
             Download CSV
@@ -793,7 +833,7 @@ function ExportFormatCard({
           {format.importUrl && (
             <button
               onClick={handleGuidedSend}
-              className="text-xs font-semibold px-3 py-2 rounded-lg whitespace-nowrap"
+              className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center w-[168px]"
               style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
             >
               Send to {format.name.replace(" CSV", "")} →
