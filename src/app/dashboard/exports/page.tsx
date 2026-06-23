@@ -544,9 +544,9 @@ export default function ExportsPage() {
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                Verified:{" "}
-                <span style={{ color: "#0F8A8A" }}>Sablier, UNCX, Unvest, Superfluid</span>
-                <span style={{ color: "var(--preview-text-3)" }}> · Hedgey, PinkSale, Streamflow, Jupiter Lock still indexing — verify those before filing</span>
+                Supported:{" "}
+                <span style={{ color: "#0F8A8A" }}>Sablier, Hedgey, UNCX, PinkSale, Unvest, Superfluid</span>
+                <span style={{ color: "var(--preview-text-3)" }}> · Solana (Streamflow &amp; Jupiter Lock) coming soon</span>
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 Hit refresh to index your claim history. Each claim is priced at the date of
