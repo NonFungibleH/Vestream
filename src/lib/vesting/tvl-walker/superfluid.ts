@@ -119,16 +119,25 @@ function getViemChain(chainId: SupportedChainId) {
   }
 }
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 const ERC20_ABI = [
   { name: "symbol",   type: "function" as const, inputs: [], outputs: [{ type: "string" }], stateMutability: "view" as const },
   { name: "decimals", type: "function" as const, inputs: [], outputs: [{ type: "uint8"  }], stateMutability: "view" as const },
+  // Superfluid SuperTokens are 1:1 wrappers — they have no DEX market of their
+  // own, so we price the UNDERLYING (USDCx→USDC, OPx→OP, …). getUnderlyingToken()
+  // returns the wrapped ERC-20, or 0x0 for native SuperTokens (e.g. MATICx/ETHx)
+  // which we fall back to pricing by their own address.
+  { name: "getUnderlyingToken", type: "function" as const, inputs: [], outputs: [{ type: "address" }], stateMutability: "view" as const },
 ] as const;
+
+interface TokenMeta { symbol: string; decimals: number; underlying: string | null }
 
 async function fetchTokenMeta(
   tokenAddresses: string[],
   chainId:        SupportedChainId,
-): Promise<Map<string, { symbol: string; decimals: number }>> {
-  const result = new Map<string, { symbol: string; decimals: number }>();
+): Promise<Map<string, TokenMeta>> {
+  const result = new Map<string, TokenMeta>();
   if (tokenAddresses.length === 0) return result;
 
   const client = createPublicClient({
@@ -137,23 +146,27 @@ async function fetchTokenMeta(
   });
 
   const contracts = tokenAddresses.flatMap((addr) => [
-    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   as const },
-    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "decimals" as const },
+    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"             as const },
+    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "decimals"           as const },
+    { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "getUnderlyingToken" as const },
   ]);
 
   try {
     const results = await client.multicall({ contracts, allowFailure: true });
     for (let i = 0; i < tokenAddresses.length; i++) {
-      const symResult = results[i * 2];
-      const decResult = results[i * 2 + 1];
+      const symResult = results[i * 3];
+      const decResult = results[i * 3 + 1];
+      const ulResult  = results[i * 3 + 2];
+      const ulRaw = ulResult.status === "success" ? String(ulResult.result).toLowerCase() : null;
       result.set(tokenAddresses[i].toLowerCase(), {
-        symbol:   symResult.status === "success" ? String(symResult.result) : "???",
-        decimals: decResult.status === "success" ? Number(decResult.result) : 18,
+        symbol:     symResult.status === "success" ? String(symResult.result) : "???",
+        decimals:   decResult.status === "success" ? Number(decResult.result) : 18,
+        underlying: ulRaw && ulRaw !== ZERO_ADDRESS ? ulRaw : null,
       });
     }
   } catch {
     for (const addr of tokenAddresses) {
-      result.set(addr.toLowerCase(), { symbol: "???", decimals: 18 });
+      result.set(addr.toLowerCase(), { symbol: "???", decimals: 18, underlying: null });
     }
   }
 
@@ -287,10 +300,14 @@ export async function walkSuperfluid(chainId: SupportedChainId): Promise<WalkerR
       existing.lockedAmount = (BigInt(existing.lockedAmount) + locked).toString();
       existing.streamCount += 1;
     } else {
-      const meta = tokenMeta.get(superToken) ?? { symbol: "???", decimals: 18 };
+      const meta = tokenMeta.get(superToken) ?? { symbol: "???", decimals: 18, underlying: null };
+      // Price by the underlying ERC-20 (USDCx→USDC, OPx→OP). SuperTokens are
+      // always 18-dec and 1:1 with their underlying, so the locked amount +
+      // decimals stay as-is — only the address we hand to the pricer changes.
+      // Native SuperTokens (no underlying) fall back to their own address.
       byToken.set(superToken, {
         chainId,
-        tokenAddress:  superToken,
+        tokenAddress:  meta.underlying ?? superToken,
         tokenSymbol:   meta.symbol,
         tokenDecimals: meta.decimals,
         lockedAmount:  locked.toString(),

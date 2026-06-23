@@ -311,9 +311,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     slug: "superfluid",
     adapterIds: ["superfluid"],
     name: "Superfluid",
-    tagline: "Continuous per-second streaming",
+    tagline: "Cliff + continuous per-second streaming",
     description:
-      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. Vestream indexes Superfluid's vesting scheduler across Ethereum, Base, BSC, Polygon, Arbitrum and Optimism.",
+      "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. Each schedule has a discrete start (often a cliff lump) and an end date — the milestones in the upcoming queue — with per-second streaming in between. Vestream indexes Superfluid's vesting scheduler across Ethereum, Base, BSC, Polygon, Arbitrum and Optimism.",
     color: "#28B895",
     bg:    "rgba(40,184,149,0.08)",
     border:"rgba(40,184,149,0.22)",
