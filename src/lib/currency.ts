@@ -12,14 +12,15 @@
 //   - formatMoney(usd, currency, rate): client-side formatter that
 //     converts + formats with the right symbol and locale
 //
-// FX provider: exchangerate.host — free, no API key, JSON response.
-// Cached for 1 hour; outside that window we re-fetch. If the fetch fails
-// we serve stale rates rather than show "—" everywhere.
+// FX provider: Frankfurter (api.frankfurter.dev) — free, no API key, ECB
+// reference rates, supports both latest and dated-historical lookups.
+// (Migrated off exchangerate.host 2026-06 when it began requiring an access
+// key on every endpoint.) Live rates cached 1h; on fetch failure we serve
+// stale rather than show "—".
 //
-// Important: this is for DISPLAY only. Tax exports must use HISTORICAL
-// rates at the date of each event (a UK self-assessment requires GBP at
-// receipt, not GBP at today's rate). The historical-FX layer ships with
-// the Tax-ready claim history feature, not here.
+// Historical rates (getHistoricalRatesForDates, below) power the tax surfaces:
+// a UK self-assessment requires GBP at receipt, not GBP at today's rate, so
+// each claim is converted at the rate ON its claim date.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Redis } from "@upstash/redis";
@@ -127,12 +128,14 @@ export async function getRates(): Promise<RateBundle> {
 }
 
 async function fetchFreshRates(): Promise<RateBundle | null> {
-  // exchangerate.host: free, no API key. Returns JSON like
-  // { base: "USD", rates: { GBP: 0.79, EUR: 0.93, ... } }
-  const symbols = SUPPORTED_CURRENCIES.map((c) => c.code).join(",");
+  // Frankfurter (ECB reference rates): free, no API key. Returns JSON like
+  // { amount: 1, base: "USD", date: "...", rates: { GBP: 0.79, EUR: 0.93 } }.
+  // Replaced exchangerate.host 2026-06 after it began requiring an access key
+  // on every endpoint — which had silently degraded live FX to identity rates.
+  const symbols = SUPPORTED_CURRENCIES.filter((c) => c.code !== "USD").map((c) => c.code).join(",");
   try {
     const res = await fetch(
-      `https://api.exchangerate.host/latest?base=USD&symbols=${symbols}`,
+      `https://api.frankfurter.dev/v1/latest?base=USD&symbols=${symbols}`,
       { signal: AbortSignal.timeout(4_000) },
     );
     if (!res.ok) return null;
@@ -145,6 +148,90 @@ async function fetchFreshRates(): Promise<RateBundle | null> {
   } catch {
     return null;
   }
+}
+
+// ── Historical FX (server-side) ─────────────────────────────────────────────
+//
+// Tax surfaces need the USD→local rate AT THE DATE OF EACH EVENT, not today's
+// rate — a UK self-assessment wants GBP at receipt, an IRS filing wants USD
+// basis but a non-USD résident wants their local value on the income date.
+// (See the module header.) These helpers fetch dated rates and cache them
+// hard: a historical rate for 2025-07-15 never changes, so the cache key is
+// per-(date, currency) with a long TTL.
+
+const HIST_RATE_TTL_SECONDS = 60 * 60 * 24 * 60; // 60 days — historical rates are immutable
+const HIST_FETCH_CONCURRENCY = 8;
+
+/** Fetch one day's USD→currency rate from Frankfurter's dated endpoint.
+ *  Returns null on any failure so the caller can fall back to a live rate.
+ *  Frankfurter serves ECB rates; for a weekend/holiday date it returns the
+ *  nearest prior business day's rate — which is exactly the rate that applies
+ *  for a claim received that day. */
+async function fetchHistoricalRate(date: string, currency: CurrencyCode): Promise<number | null> {
+  // Frankfurter historical form: /v1/YYYY-MM-DD?base=USD&symbols=GBP
+  try {
+    const res = await fetch(
+      `https://api.frankfurter.dev/v1/${date}?base=USD&symbols=${currency}`,
+      { signal: AbortSignal.timeout(4_000) },
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as { rates?: Record<string, number> };
+    const rate = data.rates?.[currency];
+    return typeof rate === "number" && isFinite(rate) && rate > 0 ? rate : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve USD→`currency` rates for a set of claim/event dates (YYYY-MM-DD).
+ * USD short-circuits to all-1. Each date is Redis-cached per-(date, currency)
+ * with a 60-day TTL (historical rates don't move). Misses are fetched in
+ * bounded-concurrency batches; a date that can't be resolved is simply
+ * omitted from the result map — the caller falls back to its live rate.
+ */
+export async function getHistoricalRatesForDates(
+  dates:    string[],
+  currency: CurrencyCode,
+): Promise<Record<string, number>> {
+  const unique = [...new Set(dates.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))];
+  if (currency === "USD") {
+    return Object.fromEntries(unique.map((d) => [d, 1]));
+  }
+
+  const redis  = getRedis();
+  const result: Record<string, number> = {};
+  const misses: string[] = [];
+
+  // Pass 1 — read cache.
+  if (redis) {
+    const keys = unique.map((d) => `vestream:fx:hist:${d}:${currency}`);
+    const cached = keys.length ? await redis.mget<number[]>(...keys) : [];
+    unique.forEach((d, i) => {
+      const v = cached[i];
+      if (typeof v === "number" && isFinite(v) && v > 0) result[d] = v;
+      else misses.push(d);
+    });
+  } else {
+    misses.push(...unique);
+  }
+
+  // Pass 2 — fetch the misses in bounded-concurrency batches.
+  for (let i = 0; i < misses.length; i += HIST_FETCH_CONCURRENCY) {
+    const batch = misses.slice(i, i + HIST_FETCH_CONCURRENCY);
+    const rates = await Promise.all(batch.map((d) => fetchHistoricalRate(d, currency)));
+    await Promise.all(batch.map(async (d, j) => {
+      const rate = rates[j];
+      if (rate == null) return; // unresolved — omit, caller uses live fallback
+      result[d] = rate;
+      if (redis) {
+        try { await redis.set(`vestream:fx:hist:${d}:${currency}`, rate, { ex: HIST_RATE_TTL_SECONDS }); }
+        catch { /* cache write best-effort */ }
+      }
+    }));
+  }
+
+  return result;
 }
 
 // ── Cookie helpers (server-side) ────────────────────────────────────────────

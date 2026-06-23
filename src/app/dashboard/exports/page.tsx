@@ -35,6 +35,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { getProtocol } from "@/lib/protocol-constants";
+import { useCurrency } from "@/lib/use-currency";
+import { formatMoney, getCurrencyMeta } from "@/lib/currency";
 import { track } from "@/lib/analytics";
 import { useToast } from "@/components/Toast";
 import { CopyButton } from "@/components/CopyButton";
@@ -59,11 +61,12 @@ interface ClaimEvent {
   priceConfidence:  "exact" | "nearest" | "missing";
 }
 
-interface YearSummary { rows: number; usd: number }
+interface YearSummary { rows: number; usd: number; local: number }
 interface Summary {
-  totalRows: number;
-  totalUsd:  number;
-  byYear:    Record<string, YearSummary>;
+  totalRows:  number;
+  totalUsd:   number;
+  totalLocal: number; // USD totals converted at each claim's historical FX rate
+  byYear:     Record<string, YearSummary>;
 }
 
 interface IngestResult {
@@ -89,11 +92,6 @@ function claimUnitPrice(e: ClaimEvent): number | null {
   if (!(amt > 0)) return null;
   const p = Number(e.usdValueAtClaim) / amt;
   return Number.isFinite(p) ? p : null;
-}
-function fmtPrice(p: number | null): string {
-  if (p == null) return "—";
-  if (p < 1) return `$${p.toPrecision(3)}`;
-  return `$${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
 }
 function claimSortValue(e: ClaimEvent, col: ClaimSortCol): number | string {
   switch (col) {
@@ -292,6 +290,55 @@ export default function ExportsPage() {
   const audienceCategory: string | null = historyData?.audienceCategory ?? null;
   const loading = isLoading;
 
+  // ── Multi-currency (historical FX) ───────────────────────────────────────
+  // Each claim's USD-at-receipt value is shown in the user's chosen currency
+  // converted AT THE RATE ON THE CLAIM DATE — tax-correct (HMRC wants GBP at
+  // receipt, not today's GBP). We fetch a date→rate map for the distinct claim
+  // dates; a date the provider can't resolve falls back to the live rate. USD
+  // short-circuits to no conversion (rate 1 everywhere).
+  const { currency, rate: liveRate } = useCurrency();
+  const ccyMeta = getCurrencyMeta(currency);
+
+  const claimDates = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of events) s.add(e.claimedAt.slice(0, 10));
+    return [...s].sort();
+  }, [events]);
+
+  const fxKey = currency === "USD" || claimDates.length === 0
+    ? null
+    : `/api/fx/historical?currency=${currency}&dates=${claimDates.join(",")}`;
+  const { data: fxData } = useSWR<{ currency: string; rates: Record<string, number> }>(
+    fxKey,
+    (url: string) => fetch(url, { credentials: "include", cache: "no-store" }).then((r) => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 60_000 },
+  );
+  const fxRates = fxData?.currency === currency ? fxData.rates : undefined;
+
+  // USD→chosen-currency multiplier for a claim date (ISO string). Live rate is
+  // the transient/last-resort fallback while the dated map loads or when the
+  // provider couldn't price that specific day.
+  const rateForDate = useCallback((iso: string): number => {
+    if (currency === "USD") return 1;
+    return fxRates?.[iso.slice(0, 10)] ?? liveRate ?? 1;
+  }, [currency, fxRates, liveRate]);
+
+  // Localised money at a per-date historical rate (value column + summary card).
+  const fmtMoneyAt = useCallback(
+    (usd: number | null | undefined, iso: string): string =>
+      formatMoney(usd ?? null, currency, rateForDate(iso)),
+    [currency, rateForDate],
+  );
+  // Localised unit price — keeps extra precision for sub-unit prices, mirroring
+  // the old USD price format but with the chosen currency's symbol.
+  const fmtPriceAt = useCallback((usd: number | null, iso: string): string => {
+    if (usd == null) return "—";
+    const local = usd * rateForDate(iso);
+    if (local < 1) return `${ccyMeta.symbol}${local.toPrecision(3)}`;
+    return `${ccyMeta.symbol}${local.toLocaleString(ccyMeta.locale, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  }, [rateForDate, ccyMeta]);
+  const isNonUsd = currency !== "USD";
+
   // ── Client-side date filter (the Report Period) ──────────────────────────
   // since/until are "YYYY-MM-DD" strings (empty = open-ended). We filter the
   // already-fetched events here so switching period is instant AND always
@@ -310,18 +357,21 @@ export default function ExportsPage() {
   // match the visible rows (Total claims / Total USD / Years covered).
   const summary: Summary | null = useMemo(() => {
     if (!historyData) return null;
-    const byYear: Record<string, { rows: number; usd: number }> = {};
-    let totalUsd = 0;
+    const byYear: Record<string, YearSummary> = {};
+    let totalUsd = 0, totalLocal = 0;
     for (const e of filteredEvents) {
       const usd = e.usdValueAtClaim ? Number(e.usdValueAtClaim) : 0;
-      totalUsd += usd;
+      const local = usd * rateForDate(e.claimedAt);
+      totalUsd   += usd;
+      totalLocal += local;
       const y = String(new Date(e.claimedAt).getUTCFullYear());
-      (byYear[y] ??= { rows: 0, usd: 0 });
-      byYear[y].rows += 1;
-      byYear[y].usd  += usd;
+      (byYear[y] ??= { rows: 0, usd: 0, local: 0 });
+      byYear[y].rows  += 1;
+      byYear[y].usd   += usd;
+      byYear[y].local += local;
     }
-    return { totalRows: filteredEvents.length, totalUsd, byYear };
-  }, [historyData, filteredEvents]);
+    return { totalRows: filteredEvents.length, totalUsd, totalLocal, byYear };
+  }, [historyData, filteredEvents, rateForDate]);
 
   // In-memory sort of the claim table — same pattern as the explorer's
   // ExplorerTable (click a header → reorder instantly, zero round-trip).
@@ -345,8 +395,8 @@ export default function ExportsPage() {
   }
 
   // Headline figures count up on first paint.
-  const animTotalRows  = useCountUp(summary?.totalRows ?? 0);
-  const animTotalUsd   = useCountUp(summary?.totalUsd  ?? 0);
+  const animTotalRows  = useCountUp(summary?.totalRows  ?? 0);
+  const animTotalLocal = useCountUp(summary?.totalLocal ?? 0);
   const animYears      = useCountUp(summary ? Object.keys(summary.byYear).length : 0);
 
   // Auto-index on first visit if the user has never refreshed before.
@@ -590,14 +640,22 @@ export default function ExportsPage() {
               value={Math.round(animTotalRows).toLocaleString()}
             />
             <SummaryCard
-              label="Total USD at claim"
-              value={`$${Math.round(animTotalUsd).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              label={isNonUsd ? `Total ${currency} at claim` : "Total USD at claim"}
+              value={`${ccyMeta.symbol}${Math.round(animTotalLocal).toLocaleString(ccyMeta.locale, { maximumFractionDigits: 0 })}`}
             />
             <SummaryCard
               label="Years covered"
               value={Math.round(animYears).toString()}
             />
           </div>
+        )}
+
+        {/* Historical-FX note — only when displaying a non-USD currency */}
+        {isNonUsd && summary && summary.totalRows > 0 && (
+          <p className="text-xs mb-3 -mt-2" style={{ color: "var(--preview-text-3)" }}>
+            Amounts shown in {currency}, converted from USD at the FX rate on each
+            claim date (tax-correct). CSV exports remain in USD for import compatibility.
+          </p>
         )}
 
         {/* Table */}
@@ -629,7 +687,7 @@ export default function ExportsPage() {
                     <ClaimTh label="Token"        col="token"    active={sortCol} dir={sortDir} onClick={() => toggleSort("token", "asc")} />
                     <ClaimTh label="Amount"       col="amount"   active={sortCol} dir={sortDir} onClick={() => toggleSort("amount", "desc")} align="right" />
                     <ClaimTh label="Price"        col="price"    active={sortCol} dir={sortDir} onClick={() => toggleSort("price", "desc")} align="right" />
-                    <ClaimTh label="USD at claim" col="usd"      active={sortCol} dir={sortDir} onClick={() => toggleSort("usd", "desc")} align="right" />
+                    <ClaimTh label={isNonUsd ? `${currency} at claim` : "USD at claim"} col="usd" active={sortCol} dir={sortDir} onClick={() => toggleSort("usd", "desc")} align="right" />
                     <ClaimTh label="Protocol"     col="protocol" active={sortCol} dir={sortDir} onClick={() => toggleSort("protocol", "asc")} />
                     <ClaimTh label="Chain"        col="chain"    active={sortCol} dir={sortDir} onClick={() => toggleSort("chain", "asc")} />
                   </tr>
@@ -653,11 +711,11 @@ export default function ExportsPage() {
                         {tokensWhole(e.amount, e.tokenDecimals)}
                       </td>
                       <td className="px-4 py-3 text-right font-mono whitespace-nowrap" style={{ color: claimUnitPrice(e) != null ? "var(--preview-text-2)" : "var(--preview-text-3)" }}>
-                        {fmtPrice(claimUnitPrice(e))}
+                        {fmtPriceAt(claimUnitPrice(e), e.claimedAt)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap" style={{ color: e.usdValueAtClaim ? "var(--preview-text)" : "var(--preview-text-3)" }}>
                         {e.usdValueAtClaim
-                          ? `$${Number(e.usdValueAtClaim).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                          ? fmtMoneyAt(Number(e.usdValueAtClaim), e.claimedAt)
                           : "—"}
                         {e.priceConfidence === "nearest" && (
                           <span className="ml-1 text-[10px]" title="Used nearest available price within ±7 days" style={{ color: "#d97706" }}>~</span>
