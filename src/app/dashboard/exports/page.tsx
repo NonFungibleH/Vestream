@@ -260,6 +260,15 @@ export default function ExportsPage() {
   // and which errored out — instead of having to deduce coverage from the
   // single aggregate totalInserted figure the previous flow showed.
   const [perProtocol, setPerProtocol] = useState<IngestResult[]>([]);
+  // Which export format is currently being built (server takes a few seconds);
+  // drives the per-card spinner so a click gives immediate feedback.
+  const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
+  // View-only filters (protocol / chain / token) for exploring history. These
+  // refine the on-screen table + summary cards ONLY — the downloadable reports
+  // always cover the full Report Period in date order (see downloadCsv).
+  const [fProtocol, setFProtocol] = useState<string>("");
+  const [fChain,    setFChain]    = useState<string>("");
+  const [fToken,    setFToken]    = useState<string>("");
   // Auto-refresh guard — fire once on first mount if no claims are indexed yet.
   // The ref ensures we only auto-trigger once per page visit even if the
   // yearFilter changes and load() re-runs.
@@ -343,15 +352,38 @@ export default function ExportsPage() {
   // since/until are "YYYY-MM-DD" strings (empty = open-ended). We filter the
   // already-fetched events here so switching period is instant AND always
   // reflects in the UI.
+  // Distinct filter options derived from the FULL event set (stable as the
+  // user narrows), each with a display label. Token key is symbol-or-address.
+  const filterOptions = useMemo(() => {
+    const protos = new Map<string, string>();
+    const chains = new Map<string, string>();
+    const tokens = new Map<string, string>();
+    for (const e of events) {
+      protos.set(e.protocol, getProtocol(e.protocol)?.name ?? e.protocol);
+      chains.set(String(e.chainId), CHAIN_NAMES[e.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${e.chainId}`);
+      const tkey = e.tokenSymbol ?? e.tokenAddress;
+      tokens.set(tkey, e.tokenSymbol ?? `${e.tokenAddress.slice(0, 6)}…${e.tokenAddress.slice(-4)}`);
+    }
+    const byLabel = (a: [string, string], b: [string, string]) => a[1].localeCompare(b[1]);
+    return {
+      protos: [...protos].sort(byLabel),
+      chains: [...chains].sort(byLabel),
+      tokens: [...tokens].sort(byLabel),
+    };
+  }, [events]);
+
   const filteredEvents = useMemo(() => {
-    if (!since && !until) return events;
     const lo = since ? new Date(`${since}T00:00:00`).getTime() : -Infinity;
     const hi = until ? new Date(`${until}T23:59:59.999`).getTime() : Infinity;
     return events.filter((e) => {
       const t = new Date(e.claimedAt).getTime();
-      return t >= lo && t <= hi;
+      if (t < lo || t > hi) return false;
+      if (fProtocol && e.protocol !== fProtocol) return false;
+      if (fChain && String(e.chainId) !== fChain) return false;
+      if (fToken && (e.tokenSymbol ?? e.tokenAddress) !== fToken) return false;
+      return true;
     });
-  }, [events, since, until]);
+  }, [events, since, until, fProtocol, fChain, fToken]);
 
   // Header totals are recomputed from the FILTERED set so the cards always
   // match the visible rows (Total claims / Total USD / Years covered).
@@ -440,26 +472,40 @@ export default function ExportsPage() {
     }
   }
 
-  function downloadCsv(format: string) {
+  // Build + download a CSV. Fetched as a blob (not a bare <a download>) so the
+  // button can show a pending spinner until the file is actually ready — the
+  // server spends a few seconds pricing + assembling the CSV, and a plain
+  // <a download> gives the user no signal that anything is happening.
+  // Reports always honour the Report Period (since/until) in date order; the
+  // view-only protocol/chain/token filters never narrow the exported file.
+  async function downloadCsv(format: string) {
+    if (downloadingFormat) return; // one build at a time — ignore double-clicks
     const sp = new URLSearchParams({ format });
     if (since) sp.set("since", since);
     if (until) sp.set("until", until);
     track("cta_clicked", { cta_id: "exports_download", format, since: since || "all", until: until || "all" });
-    // Click a synthetic <a download> instead of navigating via
-    // window.location.href. The old form consumed the click as a
-    // navigation, so a subsequent window.open() in the same handler (the
-    // "Send to {platform}" guided flow) was blocked by the popup gate —
-    // users reported "send to Koinly doesn't open the tab". The <a> form
-    // is explicit (don't navigate this tab), preserves the user gesture
-    // for window.open, and lets the server's Content-Disposition decide
-    // the file name (download="" doesn't override it).
-    const a = document.createElement("a");
-    a.href = `/api/claims/export?${sp.toString()}`;
-    a.download = "";
-    a.rel  = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    setDownloadingFormat(format);
+    try {
+      const res = await fetch(`/api/claims/export?${sp.toString()}`, { credentials: "include", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Honour the server's Content-Disposition filename.
+      const cd = res.headers.get("Content-Disposition") ?? "";
+      const m  = /filename="?([^"]+)"?/i.exec(cd);
+      const filename = m?.[1] ?? `vestream-${format}.csv`;
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Couldn't build that CSV — please try again.");
+    } finally {
+      setDownloadingFormat(null);
+    }
   }
 
 
@@ -632,6 +678,33 @@ export default function ExportsPage() {
           </div>
         )}
 
+        {/* View filters — refine the on-screen table + summary (not the export) */}
+        {events.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="text-[10px] font-semibold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>
+              Filter view
+            </span>
+            <FilterSelect value={fProtocol} onChange={setFProtocol} allLabel="All protocols" options={filterOptions.protos} />
+            <FilterSelect value={fChain}    onChange={setFChain}    allLabel="All chains"    options={filterOptions.chains} />
+            <FilterSelect value={fToken}    onChange={setFToken}    allLabel="All tokens"    options={filterOptions.tokens} />
+            {(fProtocol || fChain || fToken) && (
+              <button
+                type="button"
+                onClick={() => { setFProtocol(""); setFChain(""); setFToken(""); }}
+                className="text-xs underline"
+                style={{ color: "var(--preview-text-2)" }}
+              >
+                Clear
+              </button>
+            )}
+            {(fProtocol || fChain || fToken) && (
+              <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
+                {filteredEvents.length} of {events.length} claims
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Summary card */}
         {summary && summary.totalRows > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -693,6 +766,21 @@ export default function ExportsPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {sortedEvents.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-xs" style={{ color: "var(--preview-text-3)" }}>
+                        No claims match these filters.{" "}
+                        <button
+                          type="button"
+                          onClick={() => { setFProtocol(""); setFChain(""); setFToken(""); }}
+                          className="underline"
+                          style={{ color: "var(--preview-text-2)" }}
+                        >
+                          Clear filters
+                        </button>
+                      </td>
+                    </tr>
+                  )}
                   {sortedEvents.map((e, i) => (
                     <tr key={e.id} style={{ borderTop: i > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
                       <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--preview-text)" }}>
@@ -766,6 +854,7 @@ export default function ExportsPage() {
               <ExportFormatCard
                 key={f.id}
                 format={f}
+                downloading={downloadingFormat === f.id}
                 onDownload={() => downloadCsv(f.id)}
               />
             ))}
@@ -855,6 +944,46 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Small spinning indicator for the "Preparing…" download state.
+function DownloadSpinner() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" className="animate-spin" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Native-select view filter (Protocol / Chain / Token). Styled to match the
+// page; the empty value is the "All …" pass-through.
+function FilterSelect({
+  value, onChange, allLabel, options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  allLabel: string;
+  options: Array<[string, string]>; // [value, label]
+}) {
+  const active = value !== "";
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="text-xs rounded-lg px-2.5 py-1.5 cursor-pointer"
+      style={{
+        background:  "var(--preview-card)",
+        color:       active ? "var(--preview-text)" : "var(--preview-text-2)",
+        border:      `1px solid ${active ? "rgba(28,184,184,0.4)" : "var(--preview-border)"}`,
+      }}
+    >
+      <option value="">{allLabel}</option>
+      {options.map(([v, label]) => (
+        <option key={v} value={v}>{label}</option>
+      ))}
+    </select>
+  );
+}
+
 /**
  * Per-format export card. Two action surfaces:
  *
@@ -872,17 +1001,25 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
  */
 function ExportFormatCard({
   format,
+  downloading,
   onDownload,
 }: {
-  format:     ExportFormat;
-  onDownload: () => void;
+  format:      ExportFormat;
+  downloading: boolean;
+  onDownload:  () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // Formats pre-built for a specific tax tool show ONLY the "Send to <tool>"
+  // action — it downloads the same CSV AND opens the importer, so a separate
+  // "Download CSV" button was redundant. Generic / accountant formats keep the
+  // plain download.
+  const isGuided = Boolean(format.importUrl);
 
   function handleGuidedSend() {
-    // Order matters. Open the import tab FIRST, while the click's user
-    // gesture is still "fresh" — browsers blank out popups initiated
-    // after a programmatic download click. Then trigger the download.
+    // Order matters. Open the import tab FIRST, while the click's user gesture
+    // is still "fresh" — browsers blank out popups initiated after an async
+    // download. window.open is synchronous here, so the gesture is preserved;
+    // the (async) download then runs with its own spinner.
     if (format.importUrl) {
       window.open(format.importUrl, "_blank", "noopener,noreferrer");
     }
@@ -899,23 +1036,28 @@ function ExportFormatCard({
           <div className="text-sm font-semibold mb-0.5" style={{ color: "var(--preview-text)" }}>{format.name}</div>
           <div className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>{format.subtitle}</div>
         </div>
-        {/* Fixed-width buttons so the Download / Send columns line up across
-            every export row regardless of the platform name's length. */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={onDownload}
-            className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center w-[116px]"
-            style={{ background: "transparent", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)" }}
-          >
-            Download CSV
-          </button>
-          {format.importUrl && (
+          {isGuided ? (
             <button
               onClick={handleGuidedSend}
-              className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center w-[168px]"
-              style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)" }}
+              disabled={downloading}
+              className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center gap-1.5 w-[168px]"
+              style={{ background: "rgba(28,184,184,0.12)", color: "#0F8A8A", border: "1px solid rgba(28,184,184,0.25)", cursor: downloading ? "wait" : "pointer", opacity: downloading ? 0.75 : 1 }}
             >
-              Send to {format.name.replace(" CSV", "")} →
+              {downloading
+                ? <><DownloadSpinner /> Preparing…</>
+                : <>Send to {format.name.replace(" CSV", "")} →</>}
+            </button>
+          ) : (
+            <button
+              onClick={onDownload}
+              disabled={downloading}
+              className="text-xs font-semibold py-2 rounded-lg whitespace-nowrap inline-flex items-center justify-center gap-1.5 w-[150px]"
+              style={{ background: "transparent", color: "var(--preview-text-2)", border: "1px solid var(--preview-border)", cursor: downloading ? "wait" : "pointer", opacity: downloading ? 0.75 : 1 }}
+            >
+              {downloading
+                ? <><DownloadSpinner /> Preparing…</>
+                : "Download CSV"}
             </button>
           )}
         </div>
