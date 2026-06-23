@@ -3,34 +3,46 @@
 // PinkSale (PinkLock V2) claim event ingestor.
 //
 // PinkLock has no subgraph (per the comment in the main adapter), so we
-// query the contract's `LockUnlocked` event log directly via viem
+// query the contract's partial-unlock event log directly via viem
 // `getLogs`. Same eth_getLogs pattern as the Hedgey ingestor.
 //
-// Event signature (PinkLock V2):
-//   event LockUnlocked(
-//     uint256 indexed lockId,
-//     address indexed token,
+// Event signature (PinkLock V2) — VERIFIED on-chain (Base contract, June 2026):
+//   event LockVested(
+//     uint256 indexed lockId,   // ONLY lockId is indexed
+//     address token,
 //     address owner,
-//     uint256 amount,
-//     uint256 unlockedAt
+//     uint256 amount,           // tokens unlocked in THIS event (the claim)
+//     uint256 remaining,        // tokens still locked after this unlock
+//     uint256 timestamp         // unix seconds of the unlock
 //   )
+//   selector 0xf93385ff…
 //
-// LockUnlocked fires on every unlock() call. We:
+// The earlier assumed `LockUnlocked(lockId indexed, token indexed, owner,
+// amount, unlockedAt)` does NOT exist on the deployed contract — wrong name
+// AND wrong indexed-topic layout (only lockId is indexed, not token). That
+// mismatch is why this ingestor produced zero rows: the topic0 never matched
+// and viem rejected the second-topic filter with "Invalid parameters".
+//
+// LockVested fires on every unlock() call (TGE + each cycle). We:
 //   1. Get the user's locks via the existing `normalLocksForUser` read
-//   2. For each lock, query LockUnlocked logs filtered by the lock's
-//      indexed token + decode for amount + timestamp
+//   2. For each lock, query LockVested logs filtered by the lock's indexed
+//      lockId + decode amount (field) + timestamp (field)
 //   3. Hand off to upsertClaimEvents()
+//
+// RPC: scans go through the shared multi-RPC pool with forLogs:true so they
+// fall through to dRPC when the env-var provider can't serve archive logs
+// (publicnode rejects historical eth_getLogs). dRPC caps a single getLogs
+// at ~10k blocks, so the scan is chunked — see SCAN_CHUNK below.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
-  createPublicClient,
-  http,
   parseAbi,
   getAddress,
+  type GetLogsReturnType,
 } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
 import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
+import { makeFallbackClient } from "../rpc";
 
 // PinkLock V2 contract addresses now live in a single source of truth.
 // See PINKSALE_CONTRACT_ADDRESSES in src/lib/protocol-constants.ts.
@@ -44,15 +56,13 @@ const DEPLOYMENT_BLOCKS: Partial<Record<SupportedChainId, bigint>> = {
   [CHAIN_IDS.BASE]:     2_500_000n,
 };
 
-const VIEM_CHAINS: Partial<Record<SupportedChainId, typeof mainnet | typeof bsc | typeof polygon | typeof base>> = {
-  [CHAIN_IDS.ETHEREUM]: mainnet,
-  [CHAIN_IDS.BSC]:      bsc,
-  [CHAIN_IDS.POLYGON]:  polygon,
-  [CHAIN_IDS.BASE]:     base,
-};
+// Single getLogs window. dRPC (the canonical forLogs fallback) caps
+// eth_getLogs at ~10k blocks; 9_000 stays safely under that while a paid
+// Alchemy/etc env-var provider handles the same chunks without complaint.
+const SCAN_CHUNK = 9_000n;
 
-const LOCK_UNLOCKED_EVENT = parseAbi([
-  "event LockUnlocked(uint256 indexed lockId, address indexed token, address owner, uint256 amount, uint256 unlockedAt)",
+const LOCK_VESTED_EVENT = parseAbi([
+  "event LockVested(uint256 indexed lockId, address token, address owner, uint256 amount, uint256 remaining, uint256 timestamp)",
 ])[0];
 
 const PINKSALE_READ_ABI = parseAbi([
@@ -66,13 +76,6 @@ const ERC20_ABI = parseAbi([
 
 const SUPPORTED_CHAINS: SupportedChainId[] =
   Object.keys(PINKSALE_CONTRACTS).map(Number) as SupportedChainId[];
-
-// Claims ingestor scans events (eth_getLogs) — pass forLogs:true so the
-// pool excludes publicnode (which prunes historical logs).
-import { getRpcUrl as getRpcUrlPool } from "../rpc";
-function getRpcUrl(chainId: SupportedChainId): string | undefined {
-  return getRpcUrlPool(chainId, { forLogs: true });
-}
 
 const tokenMetaCache = new Map<string, { symbol: string; decimals: number }>();
 
@@ -94,12 +97,15 @@ export async function ingestPinksaleClaimsForUser(
 
   for (const chainId of chainIds) {
     const contractAddress = PINKSALE_CONTRACTS[chainId];
-    const rpcUrl   = getRpcUrl(chainId);
-    const chain    = VIEM_CHAINS[chainId];
     const fromBlk  = DEPLOYMENT_BLOCKS[chainId];
-    if (!contractAddress || !rpcUrl || !chain || !fromBlk) continue;
+    // Log-safe fallback client: tries the env-var provider first, then dRPC
+    // etc. publicnode (which rejects archive eth_getLogs) is excluded by
+    // forLogs and, when it's the env-var provider, viem's fallback transport
+    // advances past its JSON-RPC error to the next URL.
+    const client = makeFallbackClient(chainId, { forLogs: true });
+    if (!contractAddress || !client || !fromBlk) continue;
 
-    const client = createPublicClient({ chain, transport: http(rpcUrl) });
+    const latestBlock = await client.getBlockNumber();
 
     for (const wallet of wallets) {
       try {
@@ -129,23 +135,31 @@ export async function ingestPinksaleClaimsForUser(
         if (locks.length === 0) continue;
 
         // 2) For each lock, fetch unlock events from contract deployment.
-        //    Filter on the lock's id + token (both indexed in the event).
+        //    Only lockId is indexed in LockVested, so we filter on that
+        //    alone. The scan is chunked (SCAN_CHUNK) so the dRPC fallback's
+        //    ~10k-block getLogs cap is respected; per-chunk failures are
+        //    logged but don't abort the lock (partial coverage beats none).
         for (const lock of locks) {
           const lockId  = lock.id;
           const tokenAddress = lock.token;
 
-          let logs;
-          try {
-            logs = await client.getLogs({
-              address: contractAddress,
-              event:   LOCK_UNLOCKED_EVENT,
-              args:    { lockId, token: tokenAddress },
-              fromBlock: fromBlk,
-              toBlock:   "latest",
-            });
-          } catch (err) {
-            console.error(`[pinksale-claims] getLogs failed for lock ${lockId} on chain ${chainId}:`, err);
-            continue;
+          // Typed via the event so `log.args.{amount,timestamp}` decode; a
+          // bare getLogs return type loses the decoded args.
+          const logs: GetLogsReturnType<typeof LOCK_VESTED_EVENT> = [];
+          for (let from = fromBlk; from <= latestBlock; from += SCAN_CHUNK + 1n) {
+            const to = from + SCAN_CHUNK > latestBlock ? latestBlock : from + SCAN_CHUNK;
+            try {
+              const part = await client.getLogs({
+                address: contractAddress,
+                event:   LOCK_VESTED_EVENT,
+                args:    { lockId },
+                fromBlock: from,
+                toBlock:   to,
+              });
+              logs.push(...part);
+            } catch (err) {
+              console.error(`[pinksale-claims] getLogs failed for lock ${lockId} chunk ${from}-${to} on chain ${chainId}:`, err);
+            }
           }
           if (logs.length === 0) continue;
 
@@ -165,24 +179,14 @@ export async function ingestPinksaleClaimsForUser(
             }
           }
 
-          // Block timestamp lookup batched per unique block
-          const uniqueBlocks = [...new Set(logs.map((l) => l.blockNumber!))];
-          const blockTimestamps = new Map<bigint, bigint>();
-          for (const bn of uniqueBlocks) {
-            try {
-              const block = await client.getBlock({ blockNumber: bn });
-              blockTimestamps.set(bn, block.timestamp);
-            } catch {
-              // skip — better to drop the row than emit bogus timestamps
-            }
-          }
-
           const streamId = `pinksale-${chainId}-${lockId.toString()}`;
 
           for (const log of logs) {
-            const blockNumber = log.blockNumber!;
-            const ts = blockTimestamps.get(blockNumber);
-            if (ts == null) continue;
+            // LockVested carries the unlock timestamp in its payload, so no
+            // per-block getBlock round-trip is needed (also dodges
+            // publicnode's archive-getBlock restriction on the fallback path).
+            const ts = log.args.timestamp;
+            if (typeof ts !== "bigint" || ts === 0n) continue;
 
             const amount = log.args.amount;
             if (typeof amount !== "bigint" || amount === 0n) continue;

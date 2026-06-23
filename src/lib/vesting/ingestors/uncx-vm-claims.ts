@@ -30,38 +30,35 @@
 //   4. Map each log → ClaimEventInput and upsert
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http, parseAbi, getAddress } from "viem";
-import { mainnet, bsc, base } from "viem/chains";
+import { parseAbi, getAddress } from "viem";
 import { upsertClaimEvents, type ClaimEventInput } from "./shared";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
+import { makeFallbackClient } from "../rpc";
 
 const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
   contractAddress: `0x${string}`;
   fromBlock:       bigint;
-  chain:           typeof mainnet | typeof bsc | typeof base;
-  getRpcUrl:       () => string | undefined;
 }>> = {
   [CHAIN_IDS.ETHEREUM]: {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n,
-    chain:           mainnet,
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH,
   },
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     fromBlock:       43_187_425n,
-    chain:           base,
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL,
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     fromBlock:       85_818_300n,
-    chain:           bsc,
-    getRpcUrl:       () => process.env.BSC_RPC_URL,
   },
 };
 
-const CHUNK_SIZE = 49_999n;
+// 9_000 keeps every getLogs window under dRPC's ~10k-block cap. dRPC is the
+// canonical forLogs fallback when the env-var RPC can't serve archive logs
+// (publicnode rejects historical eth_getLogs outright — the exact failure
+// that left this ingestor at zero rows). A paid Alchemy provider handles
+// 9k chunks without complaint, so the smaller window is universally safe.
+const CHUNK_SIZE = 9_000n;
 
 // keccak256("TokensReleased(uint256,address,uint256)")
 // Computed from the verified event signature; topic[0] used to filter logs
@@ -106,11 +103,14 @@ export async function ingestUncxVmClaimsForUser(
   for (const chainId of chainIds) {
     const config = CHAIN_CONFIG[chainId];
     if (!config) continue;
-    const rpcUrl = config.getRpcUrl();
-    if (!rpcUrl) continue;
 
-    const { contractAddress, fromBlock, chain } = config;
-    const client = createPublicClient({ chain, transport: http(rpcUrl) });
+    const { contractAddress, fromBlock } = config;
+    // Log-safe fallback pool: env-var provider first, then dRPC etc. This is
+    // the fix for zero-rows — the old raw `process.env.ALCHEMY_RPC_URL_*`
+    // read had no fallback, so a missing or non-archive (publicnode) env
+    // value silently failed every eth_getLogs and yielded nothing.
+    const client = makeFallbackClient(chainId, { forLogs: true });
+    if (!client) continue;
 
     try {
       const latestBlock = await client.getBlockNumber();
