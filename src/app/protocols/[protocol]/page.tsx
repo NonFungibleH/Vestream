@@ -85,6 +85,18 @@ import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-q
 // Redis last-good payload (ISR-safe raw fetch) instead of dashes.
 export const revalidate = 300;
 
+// The cold render runs 4 live cache aggregations + a DexScreener pricing call
+// and takes 4–13s for the heaviest protocols (uncx/hedgey). Without a raised
+// ceiling, the default ~10s function limit KILLS the background ISR
+// regeneration for those slow protocols — so after a deploy (cache reset)
+// they get stuck serving the build-time empty render and never write a fresh
+// entry or a Redis last-good, a vicious cycle that leaves the page blank
+// indefinitely. 60s (Hobby max) gives every protocol's regen room to finish
+// and heal. The proper fix is precomputing the upcoming-unlock aggregates
+// into a rollup (like token_vesting_rollups) so the render is fast — tracked
+// separately; this is the reliability backstop.
+export const maxDuration = 60;
+
 // Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
 // /protocols index. Without this, EVERY visit triggered live subgraph
 // round-trips via getGlobalStats(aid) per adapter (UNCX = 2 adapters,
