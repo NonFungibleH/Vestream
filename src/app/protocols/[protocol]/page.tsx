@@ -1063,11 +1063,22 @@ function formatBigTokenAmount(rawAmount: string, decimals: number, symbol: strin
     return `— ${symbol}`;
   }
   if (!Number.isFinite(n)) return `— ${symbol}`;
-  let display: string;
-  if (n >= 1_000_000_000)      display = `${(n / 1_000_000_000).toFixed(2)}B`;
-  else if (n >= 1_000_000)     display = `${(n / 1_000_000).toFixed(2)}M`;
-  else if (n >= 1_000)         display = `${(n / 1_000).toFixed(1)}K`;
-  else                         display = n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  // Tiered abbreviation up to sextillion so astronomical memecoin supplies
+  // (e.g. PinkSale tokens with 1e21+ units) never fall through to JS's
+  // scientific notation — `.toFixed()` switches to "1.2e+21" at ≥1e21, which
+  // is what produced the unreadable "1.2000000000000001e+..." value.
+  const TIERS: [number, string][] = [
+    [1e21, "Sx"], [1e18, "Qn"], [1e15, "Q"], [1e12, "T"],
+    [1e9, "B"], [1e6, "M"], [1e3, "K"],
+  ];
+  let display = n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  for (const [size, suffix] of TIERS) {
+    if (n >= size) {
+      // 2 sig decimals, trailing zeros trimmed: 1.20B → 1.2B, 5.00T → 5T
+      display = `${(n / size).toFixed(2).replace(/\.?0+$/, "")}${suffix}`;
+      break;
+    }
+  }
   return `${display} ${symbol}`;
 }
 

@@ -39,6 +39,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
+import { protocolBrand } from "@/lib/protocol-constants";
 
 /**
  * Wire shape returned by `/api/unlocks/upcoming`. Each entry is a group of
@@ -83,16 +84,9 @@ const POLL_MS     = 30_000;
 // slice+cap makes this a no-op when the set is smaller.
 const MAX_VISIBLE = 12;
 
-// Protocol colour map matches LiveActivityTicker — keep them in sync or extract.
-const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
-  sablier:        { color: "#F0992E", bg: "rgba(240,153,46,0.08)",  border: "rgba(240,153,46,0.22)",  name: "Sablier" },
-  hedgey:         { color: "#8169E0", bg: "rgba(129,105,224,0.08)",  border: "rgba(129,105,224,0.22)",  name: "Hedgey" },
-  uncx:           { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
-  "uncx-vm":      { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
-  unvest:         { color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.22)",   name: "Unvest" },
-  superfluid:     { color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.22)",   name: "Superfluid" },
-  pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
-};
+// Protocol brand colours come from the single source — protocolBrand() in
+// protocol-constants.ts (replaces the local map this and LiveActivityTicker
+// each duplicated + drifted).
 
 // Use the canonical CHAIN_NAMES map (single source of truth) rather than a
 // local switch — a local copy silently dropped Arbitrum (42161), which
@@ -320,7 +314,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
 }
 
 function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
-  const meta   = PROTOCOL_COLORS[row.protocol] ?? { color: "#64748b", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.2)", name: row.protocol };
+  const meta   = protocolBrand(row.protocol);
   const amount = formatAmount(row.amount, row.tokenSymbol, row.tokenDecimals);
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h

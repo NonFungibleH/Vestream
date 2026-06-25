@@ -67,7 +67,8 @@ const securityHeaders = [
       "connect-src 'self' https://gateway.thegraph.com https://*.publicnode.com https://*.alchemy.com https://eth.merkle.io https://cloudflare-eth.com https://polygon-rpc.com https://*.base.org https://*.drpc.org https://*.walletconnect.com wss://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.org https://*.web3modal.org https://*.supabase.co https://vestream.io https://*.google-analytics.com https://*.googletagmanager.com",
       // Web3Modal occasionally embeds verify.walletconnect.org in an iframe for
       // origin verification on certain wallet flows.
-      "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com",
+      // dexscreener.com — embedded price-chart iframe on /token/[chain]/[address].
+      "frame-src 'self' https://verify.walletconnect.org https://verify.walletconnect.com https://dexscreener.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",

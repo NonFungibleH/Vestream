@@ -587,6 +587,10 @@ export interface TokenMarketData {
   discordUrl:  string | null;
   dexScreenerUrl: string | null;
   dexToolsUrl:    string | null;
+  /** DexScreener URL of the most-liquid PAIR (not the token) — embeddable as
+   *  a price chart iframe. Null when no priced pair exists, which is the
+   *  signal the token page uses to show/hide the chart. */
+  pairUrl:        string | null;
 }
 
 const DS_CHAIN_SLUG: Record<number, string> = {
@@ -742,6 +746,7 @@ export async function getTokenMarketData(
       ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${normaliseAddress(tokenAddress)}` : null,
     dexToolsUrl:    DEXTOOLS_CHAIN_SLUG[chainId]
       ? `https://www.dextools.io/app/en/${DEXTOOLS_CHAIN_SLUG[chainId]}/pair-explorer/${tokenAddress.toLowerCase()}` : null,
+    pairUrl:        null,
   };
 
   let best: DexPair | null = null;
@@ -832,5 +837,6 @@ export async function getTokenMarketData(
     imageUrl:   best.info?.imageUrl   ?? null,
     ...socials,
     dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
+    pairUrl:        best.url ?? null,
   };
 }

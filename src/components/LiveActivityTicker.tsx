@@ -18,6 +18,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
+import { protocolBrand } from "@/lib/protocol-constants";
 
 type Activity = {
   streamId:        string;
@@ -54,15 +55,9 @@ type LiveActivityResponse = {
 const POLL_INTERVAL_MS = 10_000;
 const MAX_VISIBLE_ROWS = 6;
 
-const PROTOCOL_COLORS: Record<string, { color: string; bg: string; border: string; name: string }> = {
-  sablier:        { color: "#F0992E", bg: "rgba(240,153,46,0.08)",  border: "rgba(240,153,46,0.22)",  name: "Sablier" },
-  hedgey:         { color: "#8169E0", bg: "rgba(129,105,224,0.08)",  border: "rgba(129,105,224,0.22)",  name: "Hedgey" },
-  uncx:           { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
-  "uncx-vm":      { color: "#3D7FD0", bg: "rgba(61,127,208,0.08)",   border: "rgba(61,127,208,0.22)",   name: "UNCX" },
-  unvest:         { color: "#0BA0CB", bg: "rgba(11,160,203,0.08)",   border: "rgba(11,160,203,0.22)",   name: "Unvest" },
-  superfluid:     { color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.22)",   name: "Superfluid" },
-  pinksale:       { color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.22)",  name: "PinkSale" },
-};
+// Protocol brand colours come from the single source — protocolBrand() in
+// protocol-constants.ts (this used to be a local map that drifted out of sync
+// and omitted Streamflow / Jupiter Lock / LlamaPay).
 
 // Canonical CHAIN_NAMES map (single source of truth) — a local switch here
 // dropped Arbitrum (42161) and rendered "Chain 42161".
@@ -230,7 +225,7 @@ function Stat({ n, label }: { n: number; label: string }) {
 }
 
 function ActivityRow({ row, nowMs }: { row: Activity; nowMs: number }) {
-  const meta = PROTOCOL_COLORS[row.protocol] ?? { color: "#64748b", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.2)", name: row.protocol };
+  const meta = protocolBrand(row.protocol);
   const amount = formatAmount(row.totalAmount, row.tokenSymbol, row.tokenDecimals);
   const age    = relTime(row.lastRefreshedAt, nowMs);
   // Pulse extra on rows first seen in the last 30 seconds

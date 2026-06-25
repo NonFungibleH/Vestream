@@ -175,9 +175,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "NFT-based team vesting plans",
     description:
       "Hedgey represents every vesting plan as an NFT — portable, on-chain, and fully visible in any wallet. It's the default for team token distribution at dozens of mid-cap projects. Vestream indexes every Hedgey plan across Ethereum, Base, BSC, Polygon and Arbitrum and reminds the beneficiary before each unlock.",
-    color: "#8169E0",
-    bg:    "rgba(129,105,224,0.08)",
-    border:"rgba(129,105,224,0.22)",
+    color: "#33406B",
+    bg:    "rgba(51,64,107,0.08)",
+    border:"rgba(51,64,107,0.22)",
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://hedgey.finance",
     claimUrl:   "https://app.hedgey.finance",
@@ -247,9 +247,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Token vesting and locker suite",
     description:
       "UNCX Network (formerly UniCrypt) runs one of crypto's longest-standing token-locker and vesting suites. Projects use it to lock LP tokens and team allocations with customisable cliff-plus-cycle schedules. Vestream tracks both the classic TokenVesting and newer VestingManager contracts across Ethereum, Base, and BNB Chain.",
-    color: "#3D7FD0",
-    bg:    "rgba(61,127,208,0.08)",
-    border:"rgba(61,127,208,0.22)",
+    color: "#22C55E",
+    bg:    "rgba(34,197,94,0.08)",
+    border:"rgba(34,197,94,0.22)",
     // Polygon dropped May 5 2026 — UNCX's Polygon subgraph
     // (Ln3stVsr8YYQ7YDQf3LhMV4gUaBQWbis5db5hzHgkMD) was deprecated by The
     // Graph network and no replacement has been published. UNCX still
@@ -286,9 +286,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Step and milestone vesting",
     description:
       "Unvest gives token issuers fine-grained control over release schedules — step-by-step milestones, custom cliffs, and per-beneficiary plans. Common for token sales that need deliberate, event-driven release. Vestream indexes every Unvest V3 contract across Ethereum, Base, BSC, Polygon, Arbitrum, and Optimism.",
-    color: "#0BA0CB",
-    bg:    "rgba(11,160,203,0.08)",
-    border:"rgba(11,160,203,0.22)",
+    color: "#2563EB",
+    bg:    "rgba(37,99,235,0.08)",
+    border:"rgba(37,99,235,0.22)",
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://unvest.io",
     claimUrl:   "https://app.unvest.io",
@@ -314,9 +314,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Cliff + continuous per-second streaming",
     description:
       "Superfluid streams tokens per second with a cliff-plus-linear VestingScheduler — the rails behind DAO payroll, real-time subscriptions, and continuous vesting at projects like Aave. Each schedule has a discrete start (often a cliff lump) and an end date — the milestones in the upcoming queue — with per-second streaming in between. Vestream indexes Superfluid's vesting scheduler across Ethereum, Base, BSC, Polygon, Arbitrum and Optimism.",
-    color: "#28B895",
-    bg:    "rgba(40,184,149,0.08)",
-    border:"rgba(40,184,149,0.22)",
+    color: "#16B364",
+    bg:    "rgba(22,179,100,0.08)",
+    border:"rgba(22,179,100,0.22)",
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
     officialUrl: "https://superfluid.finance",
     claimUrl:   "https://app.superfluid.finance",
@@ -350,9 +350,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // for the V1/V2 history and audit trail.
     description:
       "PinkSale is the launchpad many token projects used for their initial offering — and PinkLock is its on-chain token locker for team allocations and LP proofs. Vestream reads every PinkLock contract directly (no subgraph) across Ethereum, Base, BSC and Polygon and lines up each TGE + cycle release in one view.",
-    color: "#E063A0",
-    bg:    "rgba(224,99,160,0.08)",
-    border:"rgba(224,99,160,0.22)",
+    color: "#F23E8C",
+    bg:    "rgba(242,62,140,0.08)",
+    border:"rgba(242,62,140,0.22)",
     chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
     officialUrl: "https://pinksale.finance",
     claimUrl:   "https://www.pinksale.finance/pinklock",
@@ -383,9 +383,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Solana's #1 vesting protocol",
     description:
       "Streamflow is the dominant token-vesting protocol on Solana — the go-to rail for SPL token launches, team vesting and investor unlocks. Vestream indexes Streamflow alongside the EVM ecosystem so cross-chain holders see every unlock — Ethereum, BSC, Polygon, Base and Solana — in one dashboard.",
-    color: "#5DCE9D",         // Solana green
-    bg:    "rgba(93,206,157,0.08)",
-    border:"rgba(93,206,157,0.24)",
+    color: "#2F54EB",         // Streamflow blue
+    bg:    "rgba(47,84,235,0.08)",
+    border:"rgba(47,84,235,0.24)",
     chainIds: [CHAIN_IDS.SOLANA],
     officialUrl: "https://streamflow.finance",
     claimUrl:   "https://app.streamflow.finance/vesting",
@@ -421,9 +421,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "LlamaPay is the leading per-second token streaming protocol — pay or get paid in real time, claim anytime. Used by DAO contributors, remote contractors, grant programmes, and crypto-native payroll. Vestream tracks every stream you receive on Ethereum and Optimism, with accrued-balance updates and tax-ready income exports.",
     // Llama brown — distinctive from the existing palette (no other entry
     // sits in warm neutral). Matches the protocol's literal name + branding.
-    color: "#A26B3F",
-    bg:    "rgba(162,107,63,0.08)",
-    border:"rgba(162,107,63,0.22)",
+    color: "#1FBE9A",
+    bg:    "rgba(31,190,154,0.08)",
+    border:"rgba(31,190,154,0.22)",
     // BSC/Polygon/Arbitrum/Base dropped May 5 2026 — LlamaPay subgraphs on
     // those chains have lost their indexer allocations on The Graph
     // network ("subgraph not found: no allocations" / "bad indexers"
@@ -464,9 +464,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     tagline: "Time-released token vesting on Solana",
     description:
       "Jupiter Lock is the default token-vesting rail in the Jupiter ecosystem — used by JUP's own team-and-investor allocations and the majority of Solana launchpad deals since late 2024. Vestream reads every active VestingEscrow directly from the program so recipients see their cliff, periodic drip, and claimable amount in one view — no need to open the Jupiter UI.",
-    color: "#F0B83D",        // Jupiter orange-gold
-    bg:    "rgba(240,184,61,0.08)",
-    border:"rgba(240,184,61,0.26)",
+    color: "#14B8A6",        // Jupiter teal
+    bg:    "rgba(20,184,166,0.08)",
+    border:"rgba(20,184,166,0.26)",
     chainIds: [CHAIN_IDS.SOLANA],
     officialUrl: "https://lock.jup.ag",
     claimUrl:   "https://lock.jup.ag",
@@ -509,6 +509,32 @@ export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];
 /** Safe lookup helper — returns undefined for unknown slugs. */
 export function getProtocol(slug: string): ProtocolMeta | undefined {
   return PROTOCOLS[slug];
+}
+
+// ── Single source of truth for protocol brand colours ───────────────────────
+// Derived from PROTOCOLS so changing a ProtocolMeta `color`/`bg`/`border`
+// updates EVERY surface (homepage strip, tickers, find-vestings, dashboard,
+// tag editor). Before this, ~10 files each hardcoded their own palette and
+// drifted out of sync. Keyed by slug; `uncx-vm` aliases `uncx`.
+export interface ProtocolBrand { color: string; bg: string; border: string; name: string }
+
+export const PROTOCOL_BRAND: Record<string, ProtocolBrand> = (() => {
+  const m: Record<string, ProtocolBrand> = {};
+  for (const p of Object.values(PROTOCOLS)) {
+    m[p.slug] = { color: p.color, bg: p.bg, border: p.border, name: p.name };
+  }
+  if (m["uncx"]) m["uncx-vm"] = m["uncx"]; // VM variant shares UNCX's brand
+  return m;
+})();
+
+const PROTOCOL_BRAND_FALLBACK: ProtocolBrand = {
+  color: "#64748b", bg: "rgba(148,163,184,0.10)", border: "rgba(148,163,184,0.20)", name: "",
+};
+
+/** Brand colours for a protocol slug. Falls back to a neutral slate (with the
+ *  raw slug as name) for unknown protocols so callers never crash. */
+export function protocolBrand(slug: string): ProtocolBrand {
+  return PROTOCOL_BRAND[slug] ?? { ...PROTOCOL_BRAND_FALLBACK, name: slug };
 }
 
 /**

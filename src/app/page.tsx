@@ -496,15 +496,22 @@ export default async function Home() {
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
               // Canonical palette — matches protocol-constants.ts.
-              { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
-              { name: "Hedgey",       color: "#8169E0", bg: "rgba(129,105,224,0.07)", border: "rgba(129,105,224,0.15)" },
-              { name: "UNCX",         color: "#3D7FD0", bg: "rgba(61,127,208,0.07)",  border: "rgba(61,127,208,0.15)"  },
-              { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
+              // icon: normalised square mark in /public/protocols/icons (Hedgey is
+              // wordmark-only upstream → "" falls back to the monogram tile).
+              { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)", border: "rgba(240,153,46,0.16)", icon: "/protocols/icons/sablier.png"  },
+              { name: "Hedgey",       color: "#33406B", bg: "rgba(51,64,107,0.07)",  border: "rgba(51,64,107,0.16)",  icon: "" },
+              { name: "UNCX",         color: "#22C55E", bg: "rgba(34,197,94,0.07)",  border: "rgba(34,197,94,0.16)",  icon: "/protocols/icons/uncx.png"  },
+              { name: "LlamaPay",     color: "#1FBE9A", bg: "rgba(31,190,154,0.07)", border: "rgba(31,190,154,0.16)", icon: "/protocols/icons/llamapay.png"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
-                  <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+                  {p.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-[3px]" />
+                  ) : (
+                    <span className="font-extrabold text-[16px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
+                  )}
                 </div>
                 <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
               </div>
@@ -516,34 +523,47 @@ export default async function Home() {
               coverage at a glance. */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {[
-              { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
-              { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",   border: "rgba(40,184,149,0.15)"   },
-              { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
-              { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
-              { name: "Jupiter Lock", color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)"  },
+              { name: "Unvest",       color: "#2563EB", bg: "rgba(37,99,235,0.07)",  border: "rgba(37,99,235,0.16)",  icon: "/protocols/icons/unvest.png"  },
+              { name: "Superfluid",   color: "#16B364", bg: "rgba(22,179,100,0.07)", border: "rgba(22,179,100,0.16)", icon: "/protocols/icons/superfluid.png"   },
+              { name: "PinkSale",     color: "#F23E8C", bg: "rgba(242,62,140,0.07)", border: "rgba(242,62,140,0.16)", icon: "/protocols/icons/pinksale.png"  },
+              { name: "Streamflow",   color: "#2F54EB", bg: "rgba(47,84,235,0.08)",  border: "rgba(47,84,235,0.22)",  icon: "/protocols/icons/streamflow.png"  },
+              { name: "Jupiter Lock", color: "#14B8A6", bg: "rgba(20,184,166,0.08)", border: "rgba(20,184,166,0.22)", icon: "/protocols/icons/jupiter-lock.png"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: p.color }}>
-                  <span className="text-white font-bold text-[11px] leading-none">{p.name[0]}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+                  {p.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-[3px]" />
+                  ) : (
+                    <span className="font-extrabold text-[16px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
+                  )}
                 </div>
                 <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#cbd5e1" }}>on</p>
+          {/* Eyebrow heading above the chains — mirrors "Integrated with" above
+              the protocols so the two groups read as distinct sections. */}
+          <p className="text-[10px] font-semibold tracking-widest uppercase mt-8 mb-3 text-center" style={{ color: "#B8BABD" }}>Available on</p>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             {[
-              { name: "Ethereum",  color: "#6366f1", bg: "rgba(28,184,184,0.07)",   border: "rgba(28,184,184,0.16)"   },
-              { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
-              { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
-              { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
-              { name: "Arbitrum",  color: "#28A0F0", bg: "rgba(40,160,240,0.07)",   border: "rgba(40,160,240,0.16)"   },
-              { name: "Optimism",  color: "#FF0420", bg: "rgba(255,4,32,0.07)",     border: "rgba(255,4,32,0.16)"     },
-              { name: "Solana",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",   border: "rgba(93,206,157,0.22)"   },
+              // Brand-accurate chain colours + official marks in /public/chains/icons.
+              { name: "Ethereum",  color: "#627EEA", icon: "/chains/icons/ethereum.png" },
+              { name: "BNB Chain", color: "#F0B90B", icon: "/chains/icons/bnb.png" },
+              { name: "Base",      color: "#0052FF", icon: "/chains/icons/base.png" },
+              { name: "Polygon",   color: "#8247E5", icon: "/chains/icons/polygon.png" },
+              { name: "Arbitrum",  color: "#12AAFF", icon: "/chains/icons/arbitrum.png" },
+              { name: "Optimism",  color: "#FF0420", icon: "/chains/icons/optimism.png" },
+              { name: "Solana",    color: "#9945FF", icon: "/chains/icons/solana.png" },
             ].map((c) => (
-              <div key={c.name} className="flex items-center px-3 py-1 rounded-full"
-                style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+              <div key={c.name} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full"
+                style={{ background: `${c.color}12`, border: `1px solid ${c.color}2e` }}>
+                <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                  style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.icon} alt="" width={18} height={18} className="w-full h-full object-contain p-[1.5px]" />
+                </span>
                 <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
               </div>
             ))}
@@ -682,7 +702,7 @@ export default async function Home() {
                   </p>
                   {[
                     { sym: "NOVA", protocol: "Sablier",  pct: 45, pctColor: "#F0992E", value: "$1,920" },
-                    { sym: "OP",   protocol: "Hedgey",   pct: 60, pctColor: "#8169E0", value: "$1,270" },
+                    { sym: "OP",   protocol: "Hedgey",   pct: 60, pctColor: "#33406B", value: "$1,270" },
                     { sym: "LAYER", protocol: "Unvest",  pct: 25, pctColor: "#0BA0CB", value: "$1,050" },
                   ].map((s) => (
                     <div key={s.sym} className="rounded-lg mb-1.5 p-2"
@@ -874,7 +894,7 @@ export default async function Home() {
                     // `color` is the TOKEN avatar tint (free pick per token),
                     // `proto` is the PROTOCOL badge — must match canonical palette.
                     { token: "NOVA",  protocol: "Sablier",  claimable: "$162", locked: "$1,758", color: "#F0992E", proto: "#F0992E", prog: 15 },
-                    { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#8169E0", prog: 35 },
+                    { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#33406B", prog: 35 },
                     { token: "LAYER", protocol: "Unvest",   claimable: "—",    locked: "$1,050", color: "#0F8A8A", proto: "#0BA0CB", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
@@ -1156,14 +1176,14 @@ export default async function Home() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { name: "Sablier",      color: "#F0992E" },
-                  { name: "Hedgey",       color: "#8169E0" },
-                  { name: "UNCX",         color: "#3D7FD0" },
-                  { name: "Unvest",       color: "#0BA0CB" },
-                  { name: "LlamaPay",     color: "#A26B3F" },
-                  { name: "Superfluid",   color: "#28B895" },
-                  { name: "PinkSale",     color: "#E063A0" },
-                  { name: "Streamflow",   color: "#5DCE9D" },
-                  { name: "Jupiter Lock", color: "#F0B83D" },
+                  { name: "Hedgey",       color: "#33406B" },
+                  { name: "UNCX",         color: "#22C55E" },
+                  { name: "Unvest",       color: "#2563EB" },
+                  { name: "LlamaPay",     color: "#1FBE9A" },
+                  { name: "Superfluid",   color: "#16B364" },
+                  { name: "PinkSale",     color: "#F23E8C" },
+                  { name: "Streamflow",   color: "#2F54EB" },
+                  { name: "Jupiter Lock", color: "#14B8A6" },
                 ].map((p) => (
                   <span
                     key={p.name}
@@ -1215,14 +1235,14 @@ export default async function Home() {
               // renders. Marketing visuals must match in-app reality
               // or the screenshot fails the "same product?" sniff test.
               { protocol: "Sablier",      chain: "Base",       token: "NOVA",  amount: "1,250", color: "#F0992E" },
-              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#8169E0" },
-              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#3D7FD0" },
-              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#0BA0CB" },
-              { protocol: "LlamaPay",     chain: "Arbitrum",   token: "NOVA",  amount: "630",   color: "#A26B3F" },
-              { protocol: "Superfluid",   chain: "Optimism",   token: "VEST",  amount: "310",   color: "#28B895" },
-              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX",  amount: "500",   color: "#E063A0" },
-              { protocol: "Streamflow",   chain: "Solana",     token: "JUP",   amount: "1,800", color: "#5DCE9D" },
-              { protocol: "Jupiter Lock", chain: "Solana",     token: "WEN",   amount: "12,000", color: "#F0B83D" },
+              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#33406B" },
+              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#22C55E" },
+              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#2563EB" },
+              { protocol: "LlamaPay",     chain: "Arbitrum",   token: "NOVA",  amount: "630",   color: "#1FBE9A" },
+              { protocol: "Superfluid",   chain: "Optimism",   token: "VEST",  amount: "310",   color: "#16B364" },
+              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX",  amount: "500",   color: "#F23E8C" },
+              { protocol: "Streamflow",   chain: "Solana",     token: "JUP",   amount: "1,800", color: "#2F54EB" },
+              { protocol: "Jupiter Lock", chain: "Solana",     token: "WEN",   amount: "12,000", color: "#14B8A6" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
