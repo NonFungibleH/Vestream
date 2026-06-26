@@ -209,10 +209,20 @@ const loadProtocolsData = unstable_cache(
       // Caching that — or saving it as last-good — makes the page show "0
       // streams indexed" for 5 min and poisons the fallback. Throw instead:
       // unstable_cache skips the write, the caller keeps the previous last-good
-      // (real counts), and the next request retries fresh. (TVL rows can be
-      // empty legitimately, so we only gate on stats.)
+      // (real counts), and the next request retries fresh.
       if (statsEntries.length > 0 && statsEntries.every(([, s]) => s === null)) {
         throw new Error("all protocol stats null — skipping cache to avoid serving 0 streams");
+      }
+      // Same guard for TVL (2026-06-26). The snapshot read is wrapped in
+      // `.catch(() => [])`, so a transient pooler blip OR the build-phase
+      // short-circuit returns zero rows — which the old code cached as a
+      // "legitimately empty" tvlMap, blanking the TVL bar ("Pricing indexed
+      // tokens…") for the full 5-min TTL. In steady state every protocol has a
+      // snapshot row, so zero rows means a degraded read, never legitimate:
+      // throw to skip the cache and fall back to last-good (now durable in
+      // Postgres — see page-data-fallback.ts) instead of caching emptiness.
+      if (snapshotRows.length === 0) {
+        throw new Error("zero TVL snapshot rows — skipping cache to avoid blanking the TVL bar");
       }
 
       return { statsEntries, tvlMap, methodologyMap, computedAtMap };

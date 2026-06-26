@@ -35,9 +35,63 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Redis } from "@upstash/redis";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { pageFallback } from "@/lib/db/schema";
 
 const KEY_PREFIX        = "vestream:page-fallback:v1";
 const TTL_SECONDS       = 60 * 60 * 24 * 7; // 7 days
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Durable L2 (Postgres). Added 2026-06-26.
+//
+// Redis (the L1 below) is fast but Upstash's Hobby tier EVICTS keys under
+// memory pressure — so the "never empty" net had holes exactly when it was
+// needed: right after a deploy (the page's DB reads short-circuit to empty
+// during `next build`) or on a pooler blip, the Redis last-good was itself
+// gone → users saw the bare empty state ("Pricing indexed tokens…"). Postgres
+// never evicts, so a one-row-per-key table is the durable backing.
+//
+// Build-safety: unlike the landmined DB query helpers (which short-circuit to
+// empty during `next build`), this READ deliberately runs at build time too —
+// its whole job is to bake real last-good HTML instead of an empty page. It's
+// safe at build because a hard 2s race + try/catch means it can only ever
+// resolve to data-or-null, never hang or throw (the precise failure the build
+// short-circuit guards against). WRITES are skipped at build.
+const DB_READ_TIMEOUT_MS = 2_000;
+const isBuildPhase = () => process.env.NEXT_PHASE === "phase-production-build";
+
+async function readFallbackDb<T>(key: string): Promise<T | null> {
+  try {
+    const rows = await Promise.race([
+      db.select({ payload: pageFallback.payload })
+        .from(pageFallback)
+        .where(eq(pageFallback.cacheKey, key))
+        .limit(1),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("page-fallback DB read timeout")), DB_READ_TIMEOUT_MS),
+      ),
+    ]);
+    return (rows[0]?.payload ?? null) as T | null;
+  } catch (err) {
+    console.error(`[page-fallback] DB read failed for ${key}:`, err);
+    return null;
+  }
+}
+
+function writeFallbackDb<T>(key: string, value: T): void {
+  if (isBuildPhase()) return; // never write mid-prerender
+  // Fire-and-forget upsert — don't block the response on DB latency.
+  db.insert(pageFallback)
+    .values({ cacheKey: key, payload: value as object })
+    .onConflictDoUpdate({
+      target: pageFallback.cacheKey,
+      set:    { payload: value as object, updatedAt: new Date() },
+    })
+    .catch((err) => {
+      console.error(`[page-fallback] DB write failed for ${key}:`, err);
+    });
+}
 
 function getRedis(): Redis | null {
   const url   = process.env.UPSTASH_REDIS_REST_URL;
@@ -61,7 +115,7 @@ function getRedis(): Redis | null {
  * staleness is irrelevant for a value whose whole job is "up to 7 days
  * stale beats empty".
  */
-async function readFallback<T>(key: string): Promise<T | null> {
+async function readFallbackRedis<T>(key: string): Promise<T | null> {
   const url   = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
@@ -90,13 +144,31 @@ async function readFallback<T>(key: string): Promise<T | null> {
  * finished. Called on every successful render; over time Redis holds the
  * last known good copy of every protocol page + the index.
  */
-function writeFallback<T>(key: string, value: T): void {
+function writeFallbackRedis<T>(key: string, value: T): void {
   const redis = getRedis();
   if (!redis) return;
   // No await — fire-and-forget. Don't block on Redis latency.
   redis.set(key, value, { ex: TTL_SECONDS }).catch((err) => {
-    console.error(`[page-fallback] write failed for ${key}:`, err);
+    console.error(`[page-fallback] Redis write failed for ${key}:`, err);
   });
+}
+
+// ── Combined L1 (Redis) + L2 (Postgres) ─────────────────────────────────────
+//
+// Read: try Redis first (fast, build-safe REST). On a miss — including the
+// Hobby-tier eviction case that motivated this layer — fall through to the
+// durable Postgres row. Write: persist to BOTH so the fast path stays warm and
+// the durable path can never be empty once a single good render has happened.
+
+async function readFallback<T>(key: string): Promise<T | null> {
+  const fromRedis = await readFallbackRedis<T>(key);
+  if (fromRedis != null) return fromRedis;
+  return readFallbackDb<T>(key);
+}
+
+function writeFallback<T>(key: string, value: T): void {
+  writeFallbackRedis(key, value);
+  writeFallbackDb(key, value);
 }
 
 // ── /protocols/[slug] ──────────────────────────────────────────────────────────

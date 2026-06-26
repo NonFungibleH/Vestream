@@ -1284,3 +1284,15 @@ export const smartMoneySnapshot = pgTable(
     index("smart_money_ecosystem_idx").on(t.chainEcosystem),
   ]
 );
+
+// ── Durable page-fallback cache (2026-06-26) ──────────────────────────────────
+// Last-known-good store for the public marketing pages (/protocols,
+// /protocols/[slug]). Backs page-data-fallback.ts so the "never show users an
+// empty page" net survives Upstash Hobby-tier key eviction — Postgres never
+// evicts. Redis stays the fast L1; this is the durable L2. One row per page
+// key; payload is the rendered page-data object (same shape Redis stored).
+export const pageFallback = pgTable("page_fallback", {
+  cacheKey:  text("cache_key").primaryKey(),
+  payload:   jsonb("payload").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
