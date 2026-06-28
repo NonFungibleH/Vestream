@@ -16,6 +16,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
+import { protocolBrand } from "@/lib/protocol-constants";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
@@ -93,15 +94,7 @@ function clearScanCache(address: string): void {
   } catch { /* ignore */ }
 }
 
-const PROTOCOL_COLOURS: Record<string, string> = {
-  sablier:        "#F0992E",
-  hedgey:         "#a855f7",
-  uncx:           "#0ea5e9",
-  unvest:         "#14b8a6",
-  "team-finance": "#f59e0b",
-  superfluid:     "#2DB36A",
-  pinksale:       "#E063A0",
-};
+// Protocol colours come from the single source of truth (protocol-constants).
 
 function fmtAmount(raw: string, decimals: number): string {
   const bn = BigInt(raw || "0");
@@ -1103,7 +1096,7 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
 }
 
 function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: string }) {
-  const colour = PROTOCOL_COLOURS[group.protocolId] ?? "#8B8E92";
+  const colour = protocolBrand(group.protocolId).color;
 
   // Determine if any token in this group has a claimable balance.
   // Used to choose between "Claim in app →" and "See amounts →".

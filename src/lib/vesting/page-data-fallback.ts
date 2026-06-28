@@ -194,3 +194,19 @@ export function getLastGoodProtocolsData<T>(): Promise<T | null> {
 export function setLastGoodProtocolsData<T>(data: T): void {
   writeFallback(indexKey, data);
 }
+
+// ── /status (durable L2 only) ───────────────────────────────────────────────────
+// /status keeps its own Upstash-SDK Redis as L1 (it's force-dynamic, so the
+// no-store SDK is safe there); these add a durable Postgres L2 underneath so a
+// cold-lambda read timing out — or a Hobby-tier Redis eviction — still renders
+// real data instead of an all-"Pending" empty grid.
+
+const statusKey = `${KEY_PREFIX}:status`;
+
+export function getLastGoodStatusDb<T>(): Promise<T | null> {
+  return readFallbackDb<T>(statusKey);
+}
+
+export function setLastGoodStatusDb<T>(data: T): void {
+  writeFallbackDb(statusKey, data);
+}

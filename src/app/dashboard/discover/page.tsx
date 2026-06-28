@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
+import { PROTOCOL_CHIPS } from "@/lib/protocol-constants";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
@@ -69,15 +70,8 @@ const PROTOCOL_OPTIONS = [
   { id: "pinksale",     label: "PinkSale"      },
 ];
 
-const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.12)",  border: "rgba(240,153,46,0.25)"  },
-  hedgey:         { text: "#1CB8B8", bg: "rgba(28,184,184,0.12)",   border: "rgba(28,184,184,0.25)"   },
-  uncx:           { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  "uncx-vm":      { text: "#F0992E", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.25)"  },
-  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.12)",   border: "rgba(11,160,203,0.25)"   },
-  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.12)",   border: "rgba(40,184,149,0.25)"   },
-  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.12)",  border: "rgba(224,99,160,0.25)"  },
-};
+// Single source of truth — see protocol-constants.ts (PROTOCOL_CHIPS).
+const PROTOCOL_COLORS = PROTOCOL_CHIPS;
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
 

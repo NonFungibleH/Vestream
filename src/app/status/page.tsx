@@ -27,6 +27,7 @@ import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 import { db } from "@/lib/db";
 import { indexerState } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
+import { getLastGoodStatusDb, setLastGoodStatusDb } from "@/lib/vesting/page-data-fallback";
 import { StatusAutoRefresh } from "./StatusAutoRefresh";
 
 // ── Last-known-good persistence ───────────────────────────────────────────────
@@ -138,24 +139,29 @@ function withRedisTimeout<T>(
 }
 
 async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) | null> {
+  type Good = StatusPayload & { capturedAt: number };
+  // L1: Upstash Redis (fast, but evicts on the Hobby tier).
   const redis = maybeRedis();
-  if (!redis) return null;
-  return withRedisTimeout(
-    redis.get<StatusPayload & { capturedAt: number }>(STATUS_CACHE_KEY),
-    null,
-    "redis read",
-  );
+  if (redis) {
+    const fromRedis = await withRedisTimeout(
+      redis.get<Good>(STATUS_CACHE_KEY),
+      null,
+      "redis read",
+    );
+    if (fromRedis) return fromRedis;
+  }
+  // L2: durable Postgres (never evicts) — the real fix for the all-"Pending"
+  // empty grid when a cold-lambda live read times out AND Redis has dropped.
+  return getLastGoodStatusDb<Good>();
 }
 
 async function writeLastGood(payload: StatusPayload): Promise<void> {
+  const withTs = { ...payload, capturedAt: Math.floor(Date.now() / 1000) };
+  setLastGoodStatusDb(withTs); // durable L2 (fire-and-forget)
   const redis = maybeRedis();
   if (!redis) return;
   await withRedisTimeout(
-    redis.set(
-      STATUS_CACHE_KEY,
-      { ...payload, capturedAt: Math.floor(Date.now() / 1000) },
-      { ex: STATUS_CACHE_TTL_SEC },
-    ),
+    redis.set(STATUS_CACHE_KEY, withTs, { ex: STATUS_CACHE_TTL_SEC }),
     null,
     "redis write",
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { protocolBrand, chainBrand } from "@/lib/protocol-constants";
 import { db } from "@/lib/db";
 import {
   waitlist, apiAccessRequests, apiKeys, users, wallets, vestingStreamsCache,
@@ -25,31 +26,8 @@ const CHAIN_NAMES: Record<number, string> = {
   84532:    "Base Sepolia",
 };
 
-const CHAIN_COLORS: Record<number, string> = {
-  1:        "#627eea",
-  56:       "#f3ba2f",
-  137:      "#8247e5",
-  8453:     "#1CB8B8",
-  42161:    "#28A0F0",
-  10:       "#FF0420",
-  101:      "#5DCE9D",
-  11155111: "#B8BABD",
-  84532:    "#9aa0a6",
-};
-
-const PROTOCOL_COLORS: Record<string, string> = {
-  sablier:        "#F0992E",
-  hedgey:         "#3b82f6",
-  "team-finance": "#2563EB",
-  uncx:           "#3D7FD0",
-  "uncx-vm":      "#3D7FD0",
-  unvest:         "#0BA0CB",
-  superfluid:     "#28B895",
-  pinksale:       "#E063A0",
-  streamflow:     "#5DCE9D",
-  "jupiter-lock": "#F0B83D",
-  llamapay:       "#A26B3F",
-};
+// Protocol + chain colours come from the single source of truth
+// (protocol-constants.ts → protocolBrand / chainBrand).
 
 function formatDate(d: Date | null | string) {
   if (!d) return "—";
@@ -383,7 +361,7 @@ export default async function AdminPage() {
                     const label = r.protocol === "team-finance" ? "Team Finance"
                       : r.protocol === "uncx-vm" ? "UNCX VM"
                       : r.protocol.charAt(0).toUpperCase() + r.protocol.slice(1);
-                    const color = PROTOCOL_COLORS[r.protocol] ?? "#4b5563";
+                    const color = protocolBrand(r.protocol).color;
                     return (
                       <HBar key={r.protocol} label={label} value={Number(r.cnt)} max={maxProtocolStreams} color={color} />
                     );
@@ -401,7 +379,7 @@ export default async function AdminPage() {
                 <div className="flex flex-col gap-3">
                   {streamsByChain.map(r => {
                     const label = CHAIN_NAMES[r.chainId] ?? `Chain ${r.chainId}`;
-                    const color = CHAIN_COLORS[r.chainId] ?? "#4b5563";
+                    const color = chainBrand(r.chainId).color;
                     return (
                       <HBar key={r.chainId} label={label} value={Number(r.cnt)} max={maxChainStreams} color={color} />
                     );

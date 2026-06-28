@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { PROTOCOL_CHIPS } from "@/lib/protocol-constants";
 import { useRouter, usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -146,19 +147,8 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 // table. Streamflow / Jupiter Lock / LlamaPay / Sablier-Flow added for
 // completeness so the fallback "#B8BABD grey" never fires on supported
 // protocols.
-const PROTOCOL_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  sablier:        { text: "#F0992E", bg: "rgba(240,153,46,0.10)",  border: "rgba(240,153,46,0.20)"  },
-  "sablier-flow": { text: "#E07B1A", bg: "rgba(224,123,26,0.10)",  border: "rgba(224,123,26,0.20)"  },
-  hedgey:         { text: "#8169E0", bg: "rgba(129,105,224,0.10)", border: "rgba(129,105,224,0.20)" },
-  uncx:           { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
-  "uncx-vm":      { text: "#3D7FD0", bg: "rgba(61,127,208,0.10)",  border: "rgba(61,127,208,0.20)"  },
-  unvest:         { text: "#0BA0CB", bg: "rgba(11,160,203,0.10)",  border: "rgba(11,160,203,0.20)"  },
-  superfluid:     { text: "#28B895", bg: "rgba(40,184,149,0.10)",  border: "rgba(40,184,149,0.20)"  },
-  pinksale:       { text: "#E063A0", bg: "rgba(224,99,160,0.10)",  border: "rgba(224,99,160,0.20)"  },
-  streamflow:     { text: "#5DCE9D", bg: "rgba(93,206,157,0.10)",  border: "rgba(93,206,157,0.20)"  },
-  "jupiter-lock": { text: "#F0B83D", bg: "rgba(240,184,61,0.10)",  border: "rgba(240,184,61,0.20)"  },
-  llamapay:       { text: "#A26B3F", bg: "rgba(162,107,63,0.10)",  border: "rgba(162,107,63,0.20)"  },
-};
+// Single source of truth — see protocol-constants.ts (PROTOCOL_CHIPS).
+const PROTOCOL_COLORS = PROTOCOL_CHIPS;
 
 const CLAIM_LINKS: Record<string, string> = {
   sablier:        "https://app.sablier.com",

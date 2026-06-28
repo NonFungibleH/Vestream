@@ -103,13 +103,20 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
       return null;
     });
 
+  // 6s (was 2s). The status_summary read is a ~48-row indexed SELECT — a few
+  // ms warm — but /status is low-traffic (operator page, noindex), so its
+  // serverless lambda is usually COLD and the first DB connection setup can
+  // exceed 2s. The old 2s budget lost that race → [] → every cell rendered
+  // "Pending" even though the table was full. 6s gives a cold connection room
+  // while staying far under maxDuration=30 and the gateway timeout. The
+  // durable last-good below covers the rare case this still times out.
   const fast = await Promise.race([
     fastPromise,
     new Promise<null>((resolve) =>
       setTimeout(() => {
-        console.warn("[cache-stats] status_summary fast path exceeded 2s — giving up");
+        console.warn("[cache-stats] status_summary fast path exceeded 6s — giving up");
         resolve(null);
-      }, 2000),
+      }, 6000),
     ),
   ]);
 

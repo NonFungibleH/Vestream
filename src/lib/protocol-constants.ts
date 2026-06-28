@@ -537,6 +537,52 @@ export function protocolBrand(slug: string): ProtocolBrand {
   return PROTOCOL_BRAND[slug] ?? { ...PROTOCOL_BRAND_FALLBACK, name: slug };
 }
 
+// ── Protocol "chip" shape ────────────────────────────────────────────────────
+// The dashboard / discover surfaces consume a `{ text, bg, border }` pill shape
+// rather than `{ color, … }`. This adapter + the prebuilt map let those files
+// drop their hardcoded palettes and read from the single source above.
+export interface ProtocolChip { text: string; bg: string; border: string }
+
+export function protocolChip(slug: string): ProtocolChip {
+  const b = protocolBrand(slug);
+  return { text: b.color, bg: b.bg, border: b.border };
+}
+
+/** Prebuilt chip map for every known slug (incl. the `uncx-vm` alias). Callers
+ *  still `?? fallback` for unknowns, so missing keys are safe. */
+export const PROTOCOL_CHIPS: Record<string, ProtocolChip> =
+  Object.fromEntries(Object.keys(PROTOCOL_BRAND).map((s) => [s, protocolChip(s)]));
+
+// ── Single source of truth for chain brand colours ──────────────────────────
+// Mirrors PROTOCOL_BRAND. Colours are the homepage "Available on" set (go-live,
+// brand-accurate). bg/border are derived alpha tints so callers get a full pill
+// without redefining opacities. Keyed by SupportedChainId.
+export interface ChainBrand { color: string; bg: string; border: string; name: string }
+
+const CHAIN_BASE: Record<number, { color: string; name: string }> = {
+  1:        { color: "#627EEA", name: "Ethereum" },
+  56:       { color: "#F0B90B", name: "BNB Chain" },
+  137:      { color: "#8247E5", name: "Polygon" },
+  8453:     { color: "#0052FF", name: "Base" },
+  42161:    { color: "#12AAFF", name: "Arbitrum" },
+  10:       { color: "#FF0420", name: "Optimism" },
+  101:      { color: "#9945FF", name: "Solana" },
+  11155111: { color: "#B8BABD", name: "Sepolia" },
+  84532:    { color: "#9AA0A6", name: "Base Sepolia" },
+};
+
+const CHAIN_BRAND_FALLBACK: ChainBrand = {
+  color: "#64748b", bg: "rgba(148,163,184,0.10)", border: "rgba(148,163,184,0.20)", name: "",
+};
+
+/** Brand colours for a chain id. `bg`/`border` are 8%/20% alpha tints of the
+ *  brand colour. Falls back to neutral slate for unknown chains. */
+export function chainBrand(chainId: number): ChainBrand {
+  const b = CHAIN_BASE[chainId];
+  if (!b) return { ...CHAIN_BRAND_FALLBACK, name: String(chainId) };
+  return { color: b.color, bg: `${b.color}14`, border: `${b.color}33`, name: b.name };
+}
+
 /**
  * All protocols in display order.
  *

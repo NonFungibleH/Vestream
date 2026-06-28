@@ -39,7 +39,7 @@ when X is true."
 ---
 
 ## Stack
-- **Framework**: Next.js pinned to **`16.3.0-canary.19`** exact (no caret). Earlier 16.2.x stable is in the vulnerable range of 7 published advisories (middleware bypass, RSC cache poisoning, SSRF) — the fix only landed in `16.3.0-canary.6+`. Re-pin to 16.3.0 stable as soon as it lands. Don't drop the exact-pin without checking `npm audit` against the new version.
+- **Framework**: Next.js pinned to **`16.3.0-canary.32`** exact (no caret). Earlier 16.2.x stable is in the vulnerable range of 7 published advisories (middleware bypass, RSC cache poisoning, SSRF) — the fix only landed in `16.3.0-canary.6+`. Bumped .19 → .32 on 2026-06-26: Vercel required ≥ canary.32 to deploy once new static files triggered its "immutable static file upload" path (the real fix was disabling Skew Protection — see the `project_vercel_skew_protection` memory). Re-pin to 16.3.0 stable as soon as it lands. Don't drop the exact-pin without checking `npm audit` against the new version.
 - **Styling**: Tailwind CSS v4 + inline `style={{}}` for one-off values (no separate CSS files)
 - **Database**: Postgres via Drizzle ORM + Supabase hosting
 - **Auth (web — desktop dashboard)**: QR pairing only. Pro-tier users open the mobile app → Settings → Connect Desktop → scan the QR shown at `vestream.io/login`. The poll endpoint sets an `iron-session` cookie (`vestr_session`) with the user's address. No email/password, no SIWE. See "Auth model" subsection below.
