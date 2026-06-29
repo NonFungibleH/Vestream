@@ -655,7 +655,7 @@ export default async function TokenPage(
           DexScreener URL; ?embed=1 strips their chrome to just the candles.
           dexscreener.com is allow-listed in the CSP frame-src (next.config.ts). */}
       {market.pairUrl && (
-        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+        <section className="px-4 md:px-8 pb-6 max-w-6xl mx-auto">
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-sm font-semibold" style={{ color: "#1A1D20" }}>Price chart</h2>
             <a
@@ -673,8 +673,8 @@ export default async function TokenPage(
               src={`${market.pairUrl}?embed=1&theme=light&info=0&trades=0`}
               title={`${symbol} price chart on DexScreener`}
               loading="lazy"
-              className="w-full block"
-              style={{ height: 460, border: 0 }}
+              className="w-full block h-[400px] md:h-[520px]"
+              style={{ border: 0 }}
             />
           </div>
         </section>
