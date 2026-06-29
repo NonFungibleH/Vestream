@@ -222,9 +222,10 @@ export default function LoginPage() {
                   <QRCodeSVG
                     value={`vestream://desktop-pair?code=${code}`}
                     size={224}
-                    level="M"
+                    level="H"
                     fgColor="#1A1D20"
                     bgColor="#FFFFFF"
+                    imageSettings={{ src: "/logo-icon.svg", height: 46, width: 46, excavate: true }}
                   />
                 </div>
               )}

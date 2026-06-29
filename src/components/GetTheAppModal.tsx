@@ -136,7 +136,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
                   padding: 14, borderRadius: 14, background: "white",
                   border: "1px solid rgba(0,0,0,0.08)",
                 }}>
-                  <QRCodeSVG value={deepLink} size={196} level="M" />
+                  <QRCodeSVG value={deepLink} size={196} level="H" imageSettings={{ src: "/logo-icon.svg", height: 40, width: 40, excavate: true }} />
                 </div>
               </div>
             )}
