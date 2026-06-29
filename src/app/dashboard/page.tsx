@@ -1938,15 +1938,29 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                             <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--preview-text-3)" }}>{chainName}</p>
                             <p className="text-[9px] font-mono truncate" style={{ color: "var(--preview-text-3)", opacity: 0.65 }}>{shortAddr(s.recipient)}</p>
                             {s.tokenAddress && (
-                              <a href={`/dashboard/explorer/token/${s.chainId}/${s.tokenAddress}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-0.5 mt-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
-                                style={{ color: "#1CB8B8" }}>
-                                <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>
-                                All holders ↗
-                              </a>
+                              <div className="flex items-center gap-2.5 mt-1 flex-wrap">
+                                {/* Public token project page (price chart, recipients,
+                                    FAQ). Logged-in users bypass the soft paywall there. */}
+                                <a href={`/token/${s.chainId}/${s.tokenAddress}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title={`Open the ${s.tokenSymbol} token page`}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                                  style={{ color: "#1CB8B8" }}>
+                                  <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                                  </svg>
+                                  Token page ↗
+                                </a>
+                                <a href={`/dashboard/explorer/token/${s.chainId}/${s.tokenAddress}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                                  style={{ color: "#1CB8B8" }}>
+                                  <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                  </svg>
+                                  All holders ↗
+                                </a>
+                              </div>
                             )}
                           </>
                         );
