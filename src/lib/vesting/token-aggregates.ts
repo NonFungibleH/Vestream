@@ -771,7 +771,18 @@ export async function getTokenMarketData(
       // data, not "low liquidity". Pick the most-liquid priced pair (best
       // price signal), breaking ties by 24h volume. The TVL aggregate keeps
       // its own floor + per-token ceiling separately (tvl.ts).
-      const withPrice = onChain.filter((p) => p.priceUsd && parseFloat(p.priceUsd) > 0);
+      // CRITICAL: only consider pairs where OUR token is the baseToken.
+      // DexScreener's `priceUsd` is ALWAYS the base token's USD price, so a
+      // pair like "ETHx/SUP" (SUP is the quote) reports ETHx's ~$1,613 — not
+      // SUP's ~$0.009. Picking the most-liquid pair without this check
+      // mis-assigned the quote/base's price to our token (SUP rendered a $468B
+      // FDV, polluting every USD figure on the page). Requiring base==ours also
+      // makes `url`/pairUrl point at a pair that actually charts our token.
+      const addrLc = tokenAddress.toLowerCase();
+      const withPrice = onChain.filter((p) =>
+        p.priceUsd && parseFloat(p.priceUsd) > 0 &&
+        p.baseToken?.address?.toLowerCase() === addrLc,
+      );
       if (withPrice.length > 0) {
         best = withPrice.sort((a, b) =>
           (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)

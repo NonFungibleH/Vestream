@@ -664,10 +664,13 @@ export default async function TokenPage(
 
       {/* ── Price chart (DexScreener embed) — sits directly below the market
           stats card (vesting-first: price data is supporting context). Only
-          when a priced pair exists; pairUrl is the most-liquid pair's
-          DexScreener URL; ?embed=1 strips their chrome to just the candles.
+          when a priced pair exists AND it has enough liquidity to actually
+          chart: ultra-thin pairs leave DexScreener stuck on "Loading pair…"
+          forever, so below the floor we skip the embed (the market-stats card
+          still carries a "DexScreener ↗" link). pairUrl is the most-liquid
+          base-token pair; ?embed=1 strips their chrome to just the candles.
           dexscreener.com is allow-listed in the CSP frame-src (next.config.ts). */}
-      {market.pairUrl && (
+      {market.pairUrl && (market.liquidity ?? 0) >= 5_000 && (
         // w-full is REQUIRED here: the page root is `flex flex-col` and this
         // section uses `mx-auto`, which on a flex item cancels the default
         // stretch and shrink-wraps to content. The chart's content is an iframe
