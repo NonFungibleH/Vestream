@@ -31,6 +31,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
+import { blockExplorerUrl } from "@/lib/chain-links";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
@@ -583,14 +584,26 @@ export default async function TokenPage(
             />
           </section>
 
-          {/* ── Protocol mix + top recipients side-by-side ─────────────── */}
-          <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <div className="lg:col-span-2">
+          {/* ── Protocol mix — only when MORE THAN ONE protocol vests this
+              token. For single-protocol tokens (the common case) the panel
+              just restated the breadcrumb + the market-stats line ("locked
+              across N streams · PinkSale"), so it sat there mostly empty.
+              Now it only appears when it actually adds signal. ───────────── */}
+          {overview.protocolMix.length > 1 && (
+            <section className="px-4 md:px-8 pb-4 max-w-5xl mx-auto">
               <ProtocolMix mix={overview.protocolMix} total={overview.lockedTokensWhole} />
-            </div>
-            <div className="lg:col-span-3">
-              <RecipientTable rows={recipients} symbol={symbol} priceUsd={priceUsd} />
-            </div>
+            </section>
+          )}
+
+          {/* ── Top recipients — full width ────────────────────────────── */}
+          <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+            <RecipientTable
+              rows={recipients}
+              symbol={symbol}
+              priceUsd={priceUsd}
+              lockedTotal={overview.lockedTokensWhole}
+              chainId={cid}
+            />
           </section>
 
           {/* ── Upcoming events chronological list ─────────────────────── */}
@@ -668,13 +681,16 @@ export default async function TokenPage(
               via DexScreener ↗
             </a>
           </div>
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff" }}>
+          <div className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff" }}>
             <iframe
               src={`${market.pairUrl}?embed=1&theme=light&info=0&trades=0`}
               title={`${symbol} price chart on DexScreener`}
               loading="lazy"
-              className="w-full block h-[400px] md:h-[520px]"
-              style={{ border: 0 }}
+              // Inline width/height — the iframe was falling back to its ~300px
+              // HTML default (the `w-full` class wasn't winning), which rendered
+              // DexScreener's cramped portrait/mobile layout. Inline width:100%
+              // forces it to fill the max-w-6xl container → wide landscape chart.
+              style={{ display: "block", width: "100%", height: 560, border: 0 }}
             />
           </div>
         </section>
@@ -1357,42 +1373,75 @@ function ProtocolMix({
 }
 
 function RecipientTable({
-  rows, symbol, priceUsd,
-}: { rows: TokenRecipient[]; symbol: string; priceUsd: number | null }) {
+  rows, symbol, priceUsd, lockedTotal, chainId,
+}: { rows: TokenRecipient[]; symbol: string; priceUsd: number | null; lockedTotal: number; chainId: number }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden h-full"
+      className="rounded-2xl overflow-hidden"
       style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
     >
+      {/* Title bar */}
       <div
         className="px-4 md:px-5 py-3 flex items-center justify-between"
-        style={{
-          background: "rgba(0,0,0,0.02)",
-          borderBottom: "1px solid rgba(0,0,0,0.05)",
-        }}
+        style={{ background: "rgba(0,0,0,0.02)", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
       >
         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1A1D20" }}>
           Top recipients
         </span>
         <span className="text-xs" style={{ color: "#B8BABD" }}>{rows.length} shown</span>
       </div>
+
+      {/* Column headings — md+ only (mobile folds protocol into the recipient cell) */}
+      <div
+        className="hidden md:grid grid-cols-12 gap-3 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider"
+        style={{ color: "#B8BABD", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
+      >
+        <div className="col-span-1">#</div>
+        <div className="col-span-3">Recipient</div>
+        <div className="col-span-2">Protocol</div>
+        <div className="col-span-1 text-center">Streams</div>
+        <div className="col-span-2 text-right">Share</div>
+        <div className="col-span-1 text-right">Next</div>
+        <div className="col-span-2 text-right">Locked</div>
+      </div>
+
       <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
         {rows.map((r, idx) => {
           const lockedUsd = priceUsd ? r.lockedTokensWhole * priceUsd : null;
+          const pct       = lockedTotal > 0 ? (r.lockedTokensWhole / lockedTotal) * 100 : 0;
+          const explorer  = blockExplorerUrl(chainId, r.recipient);
           return (
-            <div key={r.recipient} className="px-4 md:px-5 py-3 flex items-center gap-3">
-              <div
-                className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold tabular-nums"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
-              >
-                {idx + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-mono truncate" style={{ color: "#1A1D20" }}>
-                  {truncate(r.recipient)}
+            <div key={r.recipient} className="grid grid-cols-12 gap-3 items-center px-4 md:px-5 py-3">
+              {/* Rank */}
+              <div className="col-span-1">
+                <div
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold tabular-nums"
+                  style={{ background: "rgba(0,0,0,0.04)", color: "#8B8E92" }}
+                >
+                  {idx + 1}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  {r.protocols.slice(0, 3).map((p) => (
+              </div>
+
+              {/* Recipient (links to block explorer) */}
+              <div className="col-span-5 md:col-span-3 min-w-0">
+                {explorer ? (
+                  <a
+                    href={explorer}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs font-mono truncate hover:underline"
+                    style={{ color: "#1A1D20" }}
+                  >
+                    {truncate(r.recipient)}
+                  </a>
+                ) : (
+                  <span className="block text-xs font-mono truncate" style={{ color: "#1A1D20" }}>
+                    {truncate(r.recipient)}
+                  </span>
+                )}
+                {/* Mobile-only meta — protocol chip(s), since that column is hidden < md */}
+                <div className="md:hidden flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  {r.protocols.slice(0, 2).map((p) => (
                     <span
                       key={p}
                       className="text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
@@ -1401,20 +1450,45 @@ function RecipientTable({
                       {protocolName(p)}
                     </span>
                   ))}
-                  <span className="text-[10px]" style={{ color: "#B8BABD" }}>
-                    next {relUntil(r.nextUnlockTime)}
-                  </span>
                 </div>
               </div>
-              <div className="flex-shrink-0 text-right">
+
+              {/* Protocol (md+) */}
+              <div className="hidden md:flex md:col-span-2 items-center gap-1.5 flex-wrap min-w-0">
+                {r.protocols.slice(0, 2).map((p) => (
+                  <span
+                    key={p}
+                    className="text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                    style={{ background: `${protocolColour(p)}22`, color: protocolColour(p) }}
+                  >
+                    {protocolName(p)}
+                  </span>
+                ))}
+              </div>
+
+              {/* Streams (md+) */}
+              <div className="hidden md:block md:col-span-1 text-center text-xs tabular-nums" style={{ color: "#1A1D20" }}>
+                {r.streamCount}
+              </div>
+
+              {/* Share of locked supply (md+) */}
+              <div className="hidden md:block md:col-span-2 text-right text-xs tabular-nums" style={{ color: "#1A1D20" }}>
+                {pct >= 0.1 ? `${pct.toFixed(pct >= 10 ? 0 : 1)}%` : "<0.1%"}
+              </div>
+
+              {/* Next unlock */}
+              <div className="col-span-3 md:col-span-1 text-right text-[11px] tabular-nums" style={{ color: "#8B8E92" }}>
+                {relUntil(r.nextUnlockTime)}
+              </div>
+
+              {/* Locked value */}
+              <div className="col-span-3 md:col-span-2 text-right">
                 <div className="text-sm font-bold tabular-nums" style={{ color: "#1A1D20" }}>
                   {lockedUsd != null ? fmtUsd(lockedUsd) : fmtTokens(r.lockedTokensWhole)}
                 </div>
-                {lockedUsd != null && (
-                  <div className="text-[10px] tabular-nums" style={{ color: "#B8BABD" }}>
-                    {fmtTokens(r.lockedTokensWhole)} {symbol}
-                  </div>
-                )}
+                <div className="text-[10px] tabular-nums" style={{ color: "#B8BABD" }}>
+                  {fmtTokens(r.lockedTokensWhole)} {symbol}
+                </div>
               </div>
             </div>
           );
