@@ -31,7 +31,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
-import { blockExplorerUrl } from "@/lib/chain-links";
+import { blockExplorerAddressUrl } from "@/lib/chain-links";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
@@ -1409,7 +1409,7 @@ function RecipientTable({
         {rows.map((r, idx) => {
           const lockedUsd = priceUsd ? r.lockedTokensWhole * priceUsd : null;
           const pct       = lockedTotal > 0 ? (r.lockedTokensWhole / lockedTotal) * 100 : 0;
-          const explorer  = blockExplorerUrl(chainId, r.recipient);
+          const explorer  = blockExplorerAddressUrl(chainId, r.recipient);
           return (
             <div key={r.recipient} className="grid grid-cols-12 gap-3 items-center px-4 md:px-5 py-3">
               {/* Rank */}

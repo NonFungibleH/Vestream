@@ -48,6 +48,32 @@ export function blockExplorerUrl(chainId: number, address: string): string | nul
 }
 
 /**
+ * Block-explorer URL for a WALLET / account (not a token contract).
+ * EVM: /address/. Solana: /account/. Use this for recipients/holders;
+ * use `blockExplorerUrl` for the token contract itself.
+ */
+export function blockExplorerAddressUrl(chainId: number, address: string): string | null {
+  if (chainId === SOLANA_CHAIN_ID) {
+    if (!isValidSolanaAddress(address)) return null;
+    return `https://solscan.io/account/${address}`;
+  }
+
+  if (!isValidEvmAddress(address)) return null;
+  const addr = address.toLowerCase();
+  switch (chainId) {
+    case 1:        return `https://etherscan.io/address/${addr}`;
+    case 56:       return `https://bscscan.com/address/${addr}`;
+    case 137:      return `https://polygonscan.com/address/${addr}`;
+    case 8453:     return `https://basescan.org/address/${addr}`;
+    case 42161:    return `https://arbiscan.io/address/${addr}`;
+    case 10:       return `https://optimistic.etherscan.io/address/${addr}`;
+    case 11155111: return `https://sepolia.etherscan.io/address/${addr}`;
+    case 84532:    return `https://sepolia.basescan.org/address/${addr}`;
+    default:       return null;
+  }
+}
+
+/**
  * Honeypot / safety scanner URL. EVM chains use TokenSniffer; Solana uses
  * RugCheck (the Solana-native equivalent — scans liquidity locks, mint
  * authority, top-holder concentration). Testnets are unsupported on either
