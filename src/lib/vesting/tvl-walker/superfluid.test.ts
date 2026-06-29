@@ -29,7 +29,14 @@ describe("walkSuperfluid", () => {
     multicallMock.mockImplementation(async ({ contracts }: { contracts: { functionName: string }[] }) => {
       return contracts.map((c) => ({
         status: "success",
-        result: c.functionName === "symbol" ? "SUPER" : 18,
+        // getUnderlyingToken → zero address: these test SuperTokens are native
+        // (no underlying), so aggregation keys by the SuperToken address itself.
+        // Returning a non-address here (the old `: 18` default) poisoned the
+        // underlying lookup added in the 2026-06-23 underlying-pricing change.
+        result:
+          c.functionName === "symbol"             ? "SUPER"
+          : c.functionName === "getUnderlyingToken" ? "0x0000000000000000000000000000000000000000"
+          : 18,
       }));
     });
   });
@@ -113,6 +120,47 @@ describe("walkSuperfluid", () => {
     const st2 = result.tokens.find((t) => t.tokenAddress === "0xst2")!;
     expect(st1.lockedAmount).toBe("1000");
     expect(st2.lockedAmount).toBe("800");
+  });
+
+  it("prices by the underlying ERC-20 when a SuperToken wraps one", async () => {
+    const UNDERLYING = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; // e.g. USDC
+    const sched = {
+      id: "1", superToken: "0xUSDCx", sender: "0xs", receiver: "0xr",
+      startDate:        String(FROZEN_NOW_SEC - 100),
+      cliffAndFlowDate: String(FROZEN_NOW_SEC + 1000), // pre-cliff → all locked
+      cliffAmount: "0", flowRate: "1",
+      endDate:          String(FROZEN_NOW_SEC + 5000),
+      totalAmount: "1000", settledAmount: "0",
+      cliffAndFlowExecutedAt: null, endExecutedAt: null, deletedAt: null,
+    };
+    multicallMock.mockImplementation(async ({ contracts }: { contracts: { functionName: string }[] }) =>
+      contracts.map((c) => ({
+        status: "success",
+        result:
+          c.functionName === "symbol"             ? "USDCx"
+          : c.functionName === "getUnderlyingToken" ? UNDERLYING
+          : 18,
+      })),
+    );
+    let calls = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      calls += 1;
+      return {
+        ok: true,
+        async json() {
+          return calls === 1
+            ? { data: { vestingSchedules: [sched] } }
+            : { data: { vestingSchedules: [] } };
+        },
+      } as unknown as Response;
+    }));
+
+    const result = await walkSuperfluid(CHAIN_IDS.ETHEREUM);
+    expect(result.error).toBeNull();
+    expect(result.tokens).toHaveLength(1);
+    // Priced by the underlying token, not the SuperToken address.
+    expect(result.tokens[0].tokenAddress).toBe(UNDERLYING);
+    expect(result.tokens[0].lockedAmount).toBe("1000");
   });
 
   it("sums multiple schedules for the same SuperToken", async () => {
