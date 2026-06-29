@@ -682,14 +682,19 @@ export default async function TokenPage(
             </a>
           </div>
           <div className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff" }}>
+            {/* Eager load (NOT loading="lazy"): the chart sits below the
+                market-stats card, so lazy-loading meant it didn't even start
+                fetching DexScreener until the user scrolled near it — they'd
+                then stare at DexScreener's narrow "Loading pair…" placeholder
+                for seconds, which reads as a cramped "little window". Loading
+                eagerly starts the fetch on page render so it's ready by the
+                time they reach it, then fills the full-width iframe. */}
             <iframe
               src={`${market.pairUrl}?embed=1&theme=light&info=0&trades=0`}
               title={`${symbol} price chart on DexScreener`}
-              loading="lazy"
               // Inline width/height — the iframe was falling back to its ~300px
-              // HTML default (the `w-full` class wasn't winning), which rendered
-              // DexScreener's cramped portrait/mobile layout. Inline width:100%
-              // forces it to fill the max-w-6xl container → wide landscape chart.
+              // HTML default (the `w-full` class wasn't winning). Inline
+              // width:100% forces it to fill the max-w-6xl container.
               style={{ display: "block", width: "100%", height: 560, border: 0 }}
             />
           </div>
