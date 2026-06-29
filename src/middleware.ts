@@ -133,6 +133,27 @@ export function middleware(req: NextRequest) {
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
+    // Drop a READABLE companion cookie for logged-in users. The real
+    // vestr_session is httpOnly (so JS can't see it), which meant the
+    // token-page soft-paywall's Pro bypass never fired and Pro users got
+    // walled when clicking through from the dashboard / browsing the site.
+    // This flag lets the client-side gate detect a logged-in user. It is NOT
+    // a security control — real data access stays server-gated; this only
+    // unlocks the "3 free token pages" marketing wall. Lifetime matches the
+    // 30-day session and is refreshed on every dashboard visit, so existing
+    // sessions pick it up without re-login. Set ONLY on the dashboard branch —
+    // never on the shared-cached /token responses (which also pass through this
+    // middleware for the lowercase redirect), so the edge cache stays warm and
+    // identical for everyone.
+    const res = NextResponse.next();
+    res.cookies.set("vestr_pro", "1", {
+      httpOnly: false,
+      secure:   process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path:     "/",
+      maxAge:   60 * 60 * 24 * 30,
+    });
+    return res;
   }
 
   return NextResponse.next();

@@ -12,10 +12,13 @@
 //     warm — the cached HTML is identical for every visitor.
 //   - Humans over the limit get the overlay applied post-hydration.
 //
-// Pro bypass: presence of the encrypted `vestr_session` cookie (only Pro users
-// who QR-paired have it) skips the wall entirely. Existence is a sufficient
-// proxy here — this is a soft marketing gate, not a data-access control (those
-// live server-side on the gated APIs).
+// Pro bypass: a logged-in user skips the wall entirely. The real session
+// cookie (`vestr_session`) is httpOnly so client JS can't read it — checking
+// for it here silently never matched, so Pro users got walled. Instead we read
+// `vestr_pro`, a READABLE companion cookie the middleware sets on every
+// authenticated /dashboard visit (see src/middleware.ts). Existence is a
+// sufficient proxy — this is a soft marketing gate, not a data-access control
+// (those live server-side on the gated APIs).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -47,7 +50,10 @@ function writeViewed(keys: string[]): void {
 }
 
 function hasProSession(): boolean {
-  return /(?:^|; )vestr_session=/.test(document.cookie);
+  // vestr_pro is the readable companion to the httpOnly vestr_session — set by
+  // middleware for logged-in users (src/middleware.ts). httpOnly cookies aren't
+  // visible to document.cookie, which is why checking vestr_session never worked.
+  return /(?:^|; )vestr_pro=1/.test(document.cookie);
 }
 
 export function TokenPaywall({
