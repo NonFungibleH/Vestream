@@ -668,7 +668,13 @@ export default async function TokenPage(
           DexScreener URL; ?embed=1 strips their chrome to just the candles.
           dexscreener.com is allow-listed in the CSP frame-src (next.config.ts). */}
       {market.pairUrl && (
-        <section className="px-4 md:px-8 pb-6 max-w-6xl mx-auto">
+        // w-full is REQUIRED here: the page root is `flex flex-col` and this
+        // section uses `mx-auto`, which on a flex item cancels the default
+        // stretch and shrink-wraps to content. The chart's content is an iframe
+        // whose width:100% then can't resolve against an indefinite-width parent
+        // and collapses to the 300px iframe default — dragging the whole section
+        // narrow. w-full gives the section a definite width so width:100% resolves.
+        <section className="w-full px-4 md:px-8 pb-6 max-w-6xl mx-auto">
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-sm font-semibold" style={{ color: "#1A1D20" }}>Price chart</h2>
             <a
