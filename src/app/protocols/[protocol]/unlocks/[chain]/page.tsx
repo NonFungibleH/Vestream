@@ -12,21 +12,17 @@
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProtocol, listProtocols } from "@/lib/protocol-constants";
+import { getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ProtocolUnlocksView, parseChainParam } from "../view";
 
-// Same cadence as the unfiltered base page.
-export const revalidate = 3600;
-
-// REQUIRED for ISR on this canary: without static-params samples,
-// `await params` counts as a request-time API and the route renders
-// per-request. Full (protocol × chain) matrix — ~30 small pages.
-export function generateStaticParams() {
-  return listProtocols().flatMap((p) =>
-    p.chainIds.map((cid) => ({ protocol: p.slug, chain: String(cid) })),
-  );
-}
+// Render on-demand at request time — same fix as the unfiltered base page.
+// Static prerendering baked the EMPTY state at build (DB unreachable during
+// `next build`), and these chain-filtered deep links get even less traffic, so
+// the ISR fill never reliably fired. force-dynamic + the cached data layer
+// (getCachedProtocolUnlocks, 1h) renders real data on every request. See the
+// long comment in ../page.tsx.
+export const dynamic = "force-dynamic";
 
 interface PageParams {
   params: Promise<{ protocol: string; chain: string }>;

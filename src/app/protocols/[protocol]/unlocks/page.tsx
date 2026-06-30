@@ -23,20 +23,26 @@
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProtocol, listProtocols } from "@/lib/protocol-constants";
+import { getProtocol } from "@/lib/protocol-constants";
 import { ProtocolUnlocksView, getCachedProtocolUnlocks } from "./view";
 
-// ISR: 1h refresh — unlocks are time-sensitive but not by-the-second.
-export const revalidate = 3600;
-
-// REQUIRED for ISR on this canary: without static-params samples,
-// `await params` counts as a request-time API and the route silently
-// renders per-request (revalidate becomes dead code). Build prerenders
-// bake the empty state (DB helpers short-circuit at build); the first
-// runtime revalidation fills them — same behaviour this page always had.
-export function generateStaticParams() {
-  return listProtocols().map((p) => ({ protocol: p.slug }));
-}
+// Render on-demand at request time — NOT statically prerendered.
+//
+// Why (2026-06-30): this page WAS ISR (revalidate + generateStaticParams).
+// But the DB is unreachable during `next build` (build-phase guard), so the
+// build baked the EMPTY state into the static HTML for every protocol — and
+// since these are low-traffic deep-link pages, the on-demand ISR revalidation
+// that was meant to fill them rarely fired, and every new deploy re-baked
+// empty. Result: all protocol unlock calendars showed "No upcoming unlocks
+// indexed" despite the cache being full.
+//
+// force-dynamic removes the build-time bake entirely: every request renders at
+// runtime, where the query works. It's NOT a return to the old 9.8s-TTFB
+// problem — the 2000-row query is wrapped in `getCachedProtocolUnlocks`
+// (unstable_cache, 1h, stale-while-revalidate), so requests serve cached data
+// (~50ms) and only a cache miss pays the query. Data cache is independent of
+// the route's render mode.
+export const dynamic = "force-dynamic";
 
 interface PageParams {
   params: Promise<{ protocol: string }>;
