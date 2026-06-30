@@ -1015,7 +1015,13 @@ export default async function ProtocolLandingPage(
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-widest mb-4"
               style={{ background: "white", border: `1px solid ${meta.border}`, color: meta.color }}
             >
-              📱 Mobile alerts for {meta.name}
+              {protocolIcon(meta.slug) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={protocolIcon(meta.slug)!} alt="" width={14} height={14} className="w-3.5 h-3.5 object-contain" />
+              ) : (
+                <span aria-hidden>📱</span>
+              )}
+              Mobile alerts for {meta.name}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
               Never miss another {meta.name} unlock
