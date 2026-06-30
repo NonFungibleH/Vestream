@@ -12,7 +12,7 @@
  *          ?offset=0               (≥0, default 0)
  *
  * Pagination — added because a power user / institutional wallet can have
- * 1000+ streams across our 9 protocols. Returning all of them in one
+ * 1000+ streams across our 10 protocols. Returning all of them in one
  * response (a) blows past Vercel's 4 MB serverless response cap on the
  * tail end and (b) wedges any MCP client trying to serialise the result
  * for an LLM context window. Bounded responses keep the API predictable.

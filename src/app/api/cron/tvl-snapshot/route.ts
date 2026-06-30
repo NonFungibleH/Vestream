@@ -116,7 +116,7 @@ async function runAll(protocolFilter: string | null): Promise<{
   // when coverage is poor), this should hold even when DexScreener has a
   // bad day.
   //
-  // Budget math: 9 protocols × (avg ~20s pricing + 5s delay) = ~225s,
+  // Budget math: 10 protocols × (avg ~20s pricing + 5s delay) = ~225s,
   // fits within Vercel Pro's 300s function limit with margin. If any one
   // protocol exceeds its budget the loop continues to the next — the
   // function only dies if total elapsed exceeds maxDuration.

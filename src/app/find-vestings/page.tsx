@@ -4,7 +4,7 @@
 //
 // Flow:
 //   1. User pastes an address
-//   2. /api/find-vestings scans all 9 protocols × 7 chains (EVM + Solana)
+//   2. /api/find-vestings scans all 10 protocols × 7 chains (EVM + Solana)
 //   3. Results render as a grouped summary (protocol × chain × token)
 //   4. Strong mobile app CTAs prompt them to install for push alerts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ const findVestingsJsonLd = {
       "@id":   "https://www.vestream.io/find-vestings#howto",
       name:    "How to find every token vesting unlock for a wallet",
       description:
-        "Scan any wallet address across 9 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule — cliffs, linear streams, step releases, claimable balances.",
+        "Scan any wallet address across 10 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule — cliffs, linear streams, step releases, claimable balances.",
       totalTime: "PT30S",
       supply:    { "@type": "HowToSupply", name: "An EVM or Solana wallet address" },
       tool:      { "@type": "HowToTool",   name: "A web browser" },
@@ -125,7 +125,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
-          Free · No signup · 9 protocols · 7 chains
+          Free · No signup · 10 protocols · 7 chains
         </div>
 
         <h1

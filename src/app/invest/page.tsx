@@ -26,11 +26,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Vestream Invest — Track every token vesting unlock you're owed",
-  description: "Watch every token vesting unlock you're owed across 9 protocols and 7 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
+  description: "Watch every token vesting unlock you're owed across 10 protocols and 7 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
     title:       "Vestream Invest — Track every vesting unlock",
-    description: "9 protocols. 7 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
+    description: "10 protocols. 7 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
     type:        "website",
     url:         "https://www.vestream.io/invest",
   },

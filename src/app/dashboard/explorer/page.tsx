@@ -882,7 +882,7 @@ function WalletResults({
           Paste a wallet address or ENS name above
         </p>
         <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-          Wallet mode shows every indexed vesting position for one recipient — across all 9 protocols.
+          Wallet mode shows every indexed vesting position for one recipient — across all 10 protocols.
         </p>
       </div>
     );
@@ -908,7 +908,7 @@ function WalletResults({
           No indexed vesting positions for this address yet.
         </p>
         <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
-          Track this wallet in your <Link href="/dashboard" className="underline">dashboard</Link> to live-scan all 9 protocols.
+          Track this wallet in your <Link href="/dashboard" className="underline">dashboard</Link> to live-scan all 10 protocols.
         </p>
       </div>
     );

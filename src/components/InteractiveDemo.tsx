@@ -3,7 +3,7 @@
 // src/components/InteractiveDemo.tsx
 //
 // Three-step interactive walkthrough that mimics the full Vestream product flow:
-//   1. Find   — animated scan across 9 protocols, finds hits on 3 of them
+//   1. Find   — animated scan across 10 protocols, finds hits on 3 of them
 //   2. Alert  — mock phone frame with dashboard + push notification
 //   3. Claim  — mock Sablier-style protocol UI, claim button, tx success
 //

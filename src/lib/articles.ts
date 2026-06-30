@@ -4183,7 +4183,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📊",
         title: "Skip the 6-hour January reconciliation",
-        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 9 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 10 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
       },
     ],
   },

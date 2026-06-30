@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Developer API — Vestream",
     description:
-      "REST + MCP for 9 vesting protocols across 7 chains — EVM and Solana. Normalised JSON, agent-native.",
+      "REST + MCP for 10 vesting protocols across 7 chains — EVM and Solana. Normalised JSON, agent-native.",
     url: "https://www.vestream.io/developer",
     siteName: "Vestream",
     type: "website",
@@ -502,7 +502,7 @@ export default function DeveloperPage() {
                 {[
                   "30 req/min burst · 150/day",
                   "All 3 endpoints",
-                  "9 protocols indexed (EVM + Solana)",
+                  "10 protocols indexed (EVM + Solana)",
                   "Standard JSON responses",
                   { html: <>Email support — <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
                 ].map((f, i) => (
@@ -544,7 +544,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "9 protocols · 7 chains (EVM + Solana)",
+                  "10 protocols · 7 chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

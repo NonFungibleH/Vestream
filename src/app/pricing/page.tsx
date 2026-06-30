@@ -84,7 +84,7 @@ const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
   name:         "Vestream",
-  description:  "Token vesting tracker for crypto investors — track every token unlock across 9 protocols and 7 chains.",
+  description:  "Token vesting tracker for crypto investors — track every token unlock across 10 protocols and 7 chains.",
   brand:        { "@type": "Brand", name: "Vestream" },
   url:          "https://www.vestream.io/pricing",
   image:        "https://www.vestream.io/logo.svg",
@@ -202,7 +202,7 @@ export default function Pricing() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               <FeatureItem text="3 wallets — auto-scanned across all chains" checkColor="#1CB8B8" />
-              <FeatureItem text="All 9 vesting platforms (EVM + Solana)" checkColor="#1CB8B8" />
+              <FeatureItem text="All 10 vesting platforms (EVM + Solana)" checkColor="#1CB8B8" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#1CB8B8" />
               <FeatureItem text="Claimable balance tracking" checkColor="#1CB8B8" />
               <FeatureItem text="Unlock calendar" checkColor="#1CB8B8" />
@@ -293,7 +293,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans up to 3 wallets across every supported chain (including Solana) and all 9 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 10 push notifications per month (resets on the 1st) so you can try mobile alerts. Pro unlocks unlimited push + email alerts, 10 wallets, the web dashboard, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
+              a="The Free plan auto-scans up to 3 wallets across every supported chain (including Solana) and all 10 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 10 push notifications per month (resets on the 1st) so you can try mobile alerts. Pro unlocks unlimited push + email alerts, 10 wallets, the web dashboard, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
             />
             <FAQItem
               q="How do the 10 monthly free push alerts work?"

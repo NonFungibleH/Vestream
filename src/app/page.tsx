@@ -30,7 +30,7 @@ async function getHomepageLiveStats() {
     return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
   }
 
-  // Aggregate across all 9 protocols. Any single-protocol failure must not
+  // Aggregate across all 10 protocols. Any single-protocol failure must not
   // sink the homepage render — silently fall back to nulls.
   try {
     const protocols = listProtocols();
@@ -115,7 +115,7 @@ const homepageJsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Track token vestings across 9+ protocols",
+        "Track token vestings across 10+ protocols",
         "Real-time unlock alerts via push and email",
         "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana",
         "P&L tracking and CSV export",
@@ -193,7 +193,11 @@ export default async function Home() {
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
           style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
-        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 lg:gap-12 lg:items-center">
+        {/* Columns hug their content (text caps at max-w-xl; phone is its
+            natural width) and the pair is centred — previously the left track
+            was `1fr` (greedy), so it stretched to fill and stranded the capped
+            text far from the phone, leaving a cavernous gap between them. */}
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[auto_auto] lg:justify-center gap-10 lg:gap-16 lg:items-center">
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
@@ -231,7 +235,7 @@ export default async function Home() {
               Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              9+ protocols. Seven chains. Mobile app and desktop dashboard.
+              10+ protocols. Seven chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs — app badges lead (mobile is the primary product),
@@ -1204,7 +1208,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "9+ protocols scanned simultaneously - every one listed above",
+                "10+ protocols scanned simultaneously - every one listed above",
                 "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -1258,7 +1262,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>9 vestings found across 9 protocols scanned</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>9 vestings found across 10 protocols scanned</p>
           </div>
         </div>
       </section>

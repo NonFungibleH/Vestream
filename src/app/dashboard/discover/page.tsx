@@ -562,7 +562,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Wallet Scanner</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 9 protocols × 7 chains to find every active vesting for a wallet
+              Scan 10 protocols × 7 chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -629,7 +629,7 @@ export default function DiscoverPage() {
                   Find every vesting on a wallet — live
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Paste any wallet address. We hit all 9 protocols across 7 chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
+                  Paste any wallet address. We hit all 10 protocols across 7 chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
                   Click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   pin individual vestings to your dashboard.
                 </p>
@@ -793,7 +793,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 9 protocols × 7 chains. This may take 10–20 seconds.
+                Checking 10 protocols × 7 chains. This may take 10–20 seconds.
               </p>
             </div>
           )}

@@ -663,7 +663,7 @@ export default async function ProtocolLandingPage(
               Vestream Pro
             </div>
             <p className="text-sm font-medium leading-snug" style={{ color: "#1A1D20" }}>
-              Get push and email alerts before every {meta.name} unlock — plus full portfolio tracking across all 9 protocols.
+              Get push and email alerts before every {meta.name} unlock — plus full portfolio tracking across all 10 protocols.
             </p>
             <p className="text-xs mt-1" style={{ color: "#8B8E92" }}>
               Available to Pro subscribers on iOS &amp; Android.

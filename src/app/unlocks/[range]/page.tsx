@@ -175,7 +175,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const dynLabel = def.dynamicLabel?.() ?? def.label;
   const dynDesc  = def.dynamicDescription?.() ?? def.description;
   const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | Vestream`;
-  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 9 vesting protocols.`;
+  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 10 vesting protocols.`;
   const url    = `https://www.vestream.io/unlocks/${range}`;
 
   return {

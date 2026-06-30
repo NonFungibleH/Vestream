@@ -76,7 +76,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I start using Vestream?",
-        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any wallet — EVM 0x… address or Solana pubkey — and Vestream automatically scans it across all 9 protocols and 7 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
+        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any wallet — EVM 0x… address or Solana pubkey — and Vestream automatically scans it across all 10 protocols and 7 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
       },
       {
         q: "Do I need to connect my wallet to use Vestream?",
@@ -84,7 +84,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Do I need to know what protocol my tokens are vested on?",
-        a: "No. When you add a wallet address, Vestream auto-scans all 9 supported protocols across all 7 chains (EVM + Solana) and surfaces every vesting stream found — you don't need to know in advance which platform your tokens are on.",
+        a: "No. When you add a wallet address, Vestream auto-scans all 10 supported protocols across all 7 chains (EVM + Solana) and surfaces every vesting stream found — you don't need to know in advance which platform your tokens are on.",
       },
     ],
   },
@@ -184,7 +184,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",
-        a: "A wallet is a distinct address you want scanned — EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet — we auto-scan all 9 protocols and all 7 chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
+        a: "A wallet is a distinct address you want scanned — EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet — we auto-scan all 10 protocols and all 7 chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
       },
       {
         q: "Can I cancel my subscription anytime?",
@@ -299,7 +299,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "I added my wallet but no streams are showing up. Why?",
-        a: "Three common causes, in order of likelihood: (1) the wallet genuinely has no vesting streams on any of the 9 supported protocols on any of the 7 chains; (2) the streams exist on a protocol or chain we don't yet support; (3) the data source (subgraph or Solana RPC) is temporarily rate-limited or unreachable. Refresh in 60 seconds, and if you still see nothing, check the address on the protocol's own frontend to confirm streams exist.",
+        a: "Three common causes, in order of likelihood: (1) the wallet genuinely has no vesting streams on any of the 10 supported protocols on any of the 7 chains; (2) the streams exist on a protocol or chain we don't yet support; (3) the data source (subgraph or Solana RPC) is temporarily rate-limited or unreachable. Refresh in 60 seconds, and if you still see nothing, check the address on the protocol's own frontend to confirm streams exist.",
       },
       {
         q: "I'm not receiving email alerts — what should I check?",

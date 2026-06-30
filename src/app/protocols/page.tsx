@@ -1,7 +1,7 @@
 // src/app/protocols/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Index hub for all per-protocol landing pages. Lists every protocol we
-// index (currently 9) with a live "last indexed" stamp per row pulled from
+// index (currently 10) with a live "last indexed" stamp per row pulled from
 // cache — so this page itself is also a freshness signal.
 //
 // Light B2C theme to match the individual per-protocol pages — each card
@@ -72,7 +72,7 @@ import {
 //   CoinGecko pricing pipeline (UNCX, Unvest, Superfluid, Team Finance,
 //   PinkSale, Jupiter Lock). Results land in `protocolTvlSnapshots`.
 //
-// This page reads that table — one SELECT across all 9 protocols × up to 4
+// This page reads that table — one SELECT across all 10 protocols × up to 4
 // chains each, sums per protocol for the headline, preserves per-chain
 // breakdown for the bar, and surfaces the `methodology` + `computedAt`
 // columns to the UI so every TVL number is traceable to how it was derived
@@ -568,7 +568,7 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Paste any address — we&apos;ll scan all 9 protocols across EVM and Solana
+              Paste any address — we&apos;ll scan all 10 protocols across EVM and Solana
               and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link
