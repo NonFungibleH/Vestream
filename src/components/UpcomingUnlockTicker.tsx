@@ -77,12 +77,12 @@ type UpcomingResponse = {
 };
 
 const POLL_MS     = 30_000;
-// Matches the number of protocol rows rendered on the sibling
-// TvlComparisonBar (9: one per supported protocol). Keeping the two
-// columns on /protocols at equal row counts so they line up visually.
-// API is still queried with limit=12 — we cap at MAX_VISIBLE; the
-// slice+cap makes this a no-op when the set is smaller.
-const MAX_VISIBLE = 12;
+// Roughly matches the visual height of the sibling TvlComparisonBar
+// column (10 protocol rows since Team Finance was re-enabled — the TVL
+// rows are taller than these ticker rows, so 15 ticker rows line the
+// two columns up). API is queried with the same limit — we cap at
+// MAX_VISIBLE; the slice+cap makes this a no-op when the set is smaller.
+const MAX_VISIBLE = 15;
 
 // Protocol brand colours come from the single source — protocolBrand() in
 // protocol-constants.ts (replaces the local map this and LiveActivityTicker
@@ -160,7 +160,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
         // observed 2026-05-03). Default fetch caching pairs with the
         // server-side header so the CDN serves repeated calls and origin
         // sees ~one hit per 5min instead of N×visitors per minute.
-        const res = await fetch("/api/unlocks/upcoming?limit=12");
+        const res = await fetch("/api/unlocks/upcoming?limit=15");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const body = (await res.json()) as UpcomingResponse;
         if (!cancelled) { setData(body); setErr(null); }

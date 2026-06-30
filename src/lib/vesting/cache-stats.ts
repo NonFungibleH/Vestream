@@ -103,20 +103,26 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
       return null;
     });
 
-  // 6s (was 2s). The status_summary read is a ~48-row indexed SELECT — a few
-  // ms warm — but /status is low-traffic (operator page, noindex), so its
-  // serverless lambda is usually COLD and the first DB connection setup can
-  // exceed 2s. The old 2s budget lost that race → [] → every cell rendered
-  // "Pending" even though the table was full. 6s gives a cold connection room
-  // while staying far under maxDuration=30 and the gateway timeout. The
-  // durable last-good below covers the rare case this still times out.
+  // 15s (was 6s, was 2s). The status_summary read is a ~48-row indexed SELECT
+  // — a few ms warm — but /status is low-traffic (operator page, noindex), so
+  // its serverless lambda is usually COLD and the cold Supabase pooler
+  // connection setup can spike past several seconds. The 6s budget STILL lost
+  // that race consistently → [] → every cell rendered "Pending" even though the
+  // table was full, AND that empty payload got committed to the 10-min
+  // unstable_cache (and re-committed by every cold background revalidation), so
+  // the page stayed all-Pending indefinitely. Verified 2026-06-30: once the
+  // connection is warm the query returns full data instantly — it is purely the
+  // cold-connect losing the timeout race. 15s gives even a slow cold connection
+  // room to complete while staying under maxDuration=30; unstable_cache shields
+  // users from the latency (only the cold render / background revalidate pays
+  // it). A real data render then populates the durable last-good below.
   const fast = await Promise.race([
     fastPromise,
     new Promise<null>((resolve) =>
       setTimeout(() => {
-        console.warn("[cache-stats] status_summary fast path exceeded 6s — giving up");
+        console.warn("[cache-stats] status_summary fast path exceeded 15s — giving up");
         resolve(null);
-      }, 6000),
+      }, 15000),
     ),
   ]);
 

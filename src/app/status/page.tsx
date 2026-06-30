@@ -320,7 +320,11 @@ const loadStatusData = unstable_cache(
   // v10 bump on 2026-05-26: added activeIndexers to payload (indexer health
   // cross-reference). Forces invalidation of cached v9 payloads that lack
   // the new field — avoids "activeIndexers undefined" on the first render.
-  ["status-page-data-v10"],
+  // v11 bump on 2026-06-30: the v10 cache had captured an empty (all-Pending)
+  // payload from a cold render that lost the 6s status_summary timeout race
+  // (see cache-stats.ts — bumped to 15s the same day). Without this bump the
+  // poisoned empty entry would keep serving for up to 10 min after deploy.
+  ["status-page-data-v11"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
