@@ -64,6 +64,17 @@ export function parseChainParam(raw: string | undefined): number | null {
  */
 export const getCachedProtocolUnlocks = unstable_cache(
   async (slug: string, adapterIds: readonly string[], chainId: number | null) => {
+    // THROW (don't return empty) during the build phase. unstable_cache never
+    // caches a thrown error, so the first runtime request re-runs the query and
+    // caches REAL data. Previously getUnlocksInWindow's own build-phase guard
+    // returned EMPTY_WINDOW_RESULT, which got committed to this Data Cache entry
+    // — and on these low-traffic deep-link pages the empty snapshot was served
+    // ~indefinitely (every protocol's /unlocks page showed "No upcoming unlocks
+    // indexed" despite the cache being full). Mirrors loadProtocolData in
+    // ../page.tsx, which is why the detail page never had this bug.
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      throw new Error("build-phase: skipping unlocks query — ISR fills at runtime");
+    }
     const now = Math.floor(Date.now() / 1000);
     const result = await getUnlocksInWindow(
       now,

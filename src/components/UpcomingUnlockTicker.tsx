@@ -39,7 +39,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
-import { protocolBrand } from "@/lib/protocol-constants";
+import { protocolBrand, protocolIcon } from "@/lib/protocol-constants";
 
 /**
  * Wire shape returned by `/api/unlocks/upcoming`. Each entry is a group of
@@ -327,10 +327,15 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const inner = (
     <div className="px-4 md:px-5 py-2.5 flex items-center gap-3 transition-colors hover:bg-slate-50/60">
       <div
-        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold"
+        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold overflow-hidden"
         style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color }}
       >
-        {meta.name.charAt(0)}
+        {protocolIcon(row.protocol) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={protocolIcon(row.protocol)!} alt="" width={22} height={22} className="w-full h-full object-contain p-0.5" />
+        ) : (
+          meta.name.charAt(0)
+        )}
       </div>
 
       <div className="flex-1 min-w-0">

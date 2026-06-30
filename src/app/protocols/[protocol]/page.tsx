@@ -22,6 +22,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import {
+  chainIcon,
   getProtocol,
   listProtocols,
   protocolIcon,
@@ -358,9 +359,21 @@ export default async function ProtocolLandingPage(
   const liveStreams = isStream
     ? await getStreamingStreams({ protocolIds: meta.adapterIds }, { page: 1, pageSize: 8 })
     : { rows: [] as StreamingRow[], total: 0 };
-  const related = meta.relatedSlugs
+  // Curated related protocols first, then pad from the active registry so the
+  // "Other protocols we index" grid always shows exactly 3 (some protocols'
+  // relatedSlugs resolve to fewer than 3 once disabled/missing ones are dropped
+  // — that's why the footer sometimes showed only 2 cards).
+  const related: ProtocolMeta[] = meta.relatedSlugs
     .map((s) => getProtocol(s))
-    .filter((p): p is ProtocolMeta => !!p);
+    .filter((p): p is ProtocolMeta => !!p && !p.disabled && p.slug !== meta.slug);
+  if (related.length < 3) {
+    for (const p of listProtocols()) {
+      if (related.length >= 3) break;
+      if (p.slug === meta.slug || related.some((r) => r.slug === p.slug)) continue;
+      related.push(p);
+    }
+  }
+  const relatedThree = related.slice(0, 3);
 
   // Stronger tints derived from the base accent — used for hero wash and CTA shadow.
   const accentWash = meta.bg.replace("0.08", "0.12");
@@ -592,7 +605,18 @@ export default async function ProtocolLandingPage(
                   return (
                     <div key={row.chainId}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium" style={{ color: "#334155" }}>
+                        <span className="flex items-center gap-2 text-sm font-medium" style={{ color: "#334155" }}>
+                          {chainIcon(row.chainId) && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={chainIcon(row.chainId)!}
+                              alt=""
+                              width={16}
+                              height={16}
+                              className="w-4 h-4 rounded-full"
+                              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                            />
+                          )}
                           {chainLabel(row.chainId)}
                         </span>
                         <span className="text-sm font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
@@ -929,7 +953,7 @@ export default async function ProtocolLandingPage(
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {related.map((r) => (
+          {relatedThree.map((r) => (
             <Link
               key={r.slug}
               href={`/protocols/${r.slug}`}
@@ -937,10 +961,15 @@ export default async function ProtocolLandingPage(
               style={{ background: "white", border: `1px solid ${r.border}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center mb-4 text-sm font-bold"
+                className="w-9 h-9 rounded-xl flex items-center justify-center mb-4 text-sm font-bold overflow-hidden"
                 style={{ background: r.bg, border: `1px solid ${r.border}`, color: r.color }}
               >
-                {r.name.charAt(0)}
+                {protocolIcon(r.slug) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={protocolIcon(r.slug)!} alt="" width={26} height={26} className="w-full h-full object-contain p-1.5" />
+                ) : (
+                  r.name.charAt(0)
+                )}
               </div>
               <h3 className="text-sm font-semibold mb-1.5" style={{ color: "#1A1D20" }}>{r.name}</h3>
               <p className="text-xs leading-relaxed mb-3" style={{ color: "#8B8E92" }}>

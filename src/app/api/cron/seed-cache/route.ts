@@ -113,9 +113,10 @@ function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null
       // mid-seed snapshot for up to an hour. Tag strings must match the
       // `tags:` on each page's unstable_cache + admin/revalidate-protocols.
       try {
-        revalidateTag("protocols-page", "max");
-        revalidateTag("protocol-page",  "max");
-        revalidateTag("status-page",    "max");
+        revalidateTag("protocols-page",  "max");
+        revalidateTag("protocol-page",   "max");
+        revalidateTag("protocol-unlocks", "max"); // /protocols/[slug]/unlocks calendars
+        revalidateTag("status-page",     "max");
       } catch (err) {
         console.warn(`[cron/seed-cache] revalidateTag failed (non-fatal):`, err);
       }

@@ -34,8 +34,9 @@ export const dynamic = "force-dynamic";
 
 // Tags must stay in sync with the `tags:` option on the corresponding
 // `unstable_cache(...)` calls. If those change, update here too.
-const TAG_PROTOCOL_DETAIL = "protocol-page";   // /protocols/[slug]
-const TAG_PROTOCOLS_INDEX = "protocols-page";  // /protocols
+const TAG_PROTOCOL_DETAIL = "protocol-page";     // /protocols/[slug]
+const TAG_PROTOCOLS_INDEX = "protocols-page";    // /protocols
+const TAG_PROTOCOL_UNLOCKS = "protocol-unlocks"; // /protocols/[slug]/unlocks calendars
 
 function isAuthorized(req: NextRequest): boolean {
   if (isAdminAuthorized(req)) return true;
@@ -69,10 +70,14 @@ export async function POST(req: NextRequest) {
     revalidateTag(TAG_PROTOCOLS_INDEX, "max");
     revalidated.push(TAG_PROTOCOLS_INDEX);
   }
+  if (scope === "all" || scope === "unlocks") {
+    revalidateTag(TAG_PROTOCOL_UNLOCKS, "max");
+    revalidated.push(TAG_PROTOCOL_UNLOCKS);
+  }
 
   if (revalidated.length === 0) {
     return NextResponse.json(
-      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index'.` },
+      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index' | 'unlocks'.` },
       { status: 400 },
     );
   }
