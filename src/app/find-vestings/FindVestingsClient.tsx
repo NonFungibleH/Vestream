@@ -458,6 +458,7 @@ const SCAN_PROTOCOLS = [
   "LlamaPay",
   "UNCX",
   "Unvest",
+  "Team Finance",
   "PinkSale",
   "Streamflow",
   "Jupiter Lock",

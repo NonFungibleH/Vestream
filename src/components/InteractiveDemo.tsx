@@ -82,6 +82,7 @@ const PROTOCOLS = [
   { id: "unvest",       name: "Unvest",        hit: false, count: 0 },
   { id: "superfluid",   name: "Superfluid",    hit: false, count: 0 },
   { id: "pinksale",     name: "PinkSale",      hit: false, count: 0 },
+  { id: "team-finance", name: "Team Finance",  hit: false, count: 0 },
   { id: "streamflow",   name: "Streamflow",    hit: false, count: 0 },
   { id: "jupiter-lock", name: "Jupiter Lock",  hit: false, count: 0 },
 ] as const;

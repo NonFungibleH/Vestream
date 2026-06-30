@@ -271,7 +271,7 @@ export default function AiPage() {
             description="Get all token vesting streams for a wallet (EVM or Solana) across all 10+ supported protocols and 7+ chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
               { name: "address", type: "string", required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, superfluid, pinksale, streamflow, jupiter-lock" },
+              { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, superfluid, team-finance, pinksale, streamflow, jupiter-lock" },
               { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)" },
               { name: "active_only", type: "boolean", required: false, desc: "Only return streams not yet fully vested" },
             ]}

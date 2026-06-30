@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API — Vestream",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana. Normalised JSON, agent-native, ready in minutes.",
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API — Vestream",
@@ -70,7 +70,7 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock —
+            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock —
             across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana.
             Clean REST API with OpenAPI spec and native MCP support.
           </p>
@@ -127,6 +127,7 @@ export default function DeveloperPage() {
               { name: "LlamaPay",      color: "#A26B3F", bg: "rgba(162,107,63,0.08)",  border: "rgba(162,107,63,0.18)",  note: "Streaming + payroll" },
               { name: "Superfluid",    color: "#28B895", bg: "rgba(40,184,149,0.08)",   border: "rgba(40,184,149,0.18)",   note: "Streaming vesting" },
               { name: "PinkSale",      color: "#E063A0", bg: "rgba(224,99,160,0.08)",  border: "rgba(224,99,160,0.18)",  note: "PinkLock locker" },
+              { name: "Team Finance",  color: "#2F6BFF", bg: "rgba(47,107,255,0.08)",  border: "rgba(47,107,255,0.18)",  note: "Team vesting + lock proof" },
               { name: "Streamflow",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)",  note: "Solana vesting" },
               { name: "Jupiter Lock",  color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)",  note: "Solana vesting" },
             ].map(p => (

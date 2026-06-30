@@ -509,7 +509,7 @@ export default async function ArticlePage(
                 Track every token unlock in one dashboard
               </h2>
               <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#8B8E92" }}>
-                Vestream covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across all chains — in a single real-time view. No sign-up forms.
+                Vestream covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across all chains — in a single real-time view. No sign-up forms.
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link

@@ -1109,7 +1109,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -1171,9 +1171,11 @@ export default async function Home() {
               Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
-            {/* Protocol pill grid — explicit list of every platform we scan, each
-                with its brand accent. Matches the 7 rows in the mockup on the right
-                so a visitor can't accidentally assume we've quietly dropped one. */}
+            {/* Protocol pill grid — the canonical, COMPLETE list of every
+                platform we scan, each with its brand accent. This (not the
+                result mockup on the right) is the completeness signal, so it
+                must list all of them. The mockup shows a representative sample
+                of results, not one row per protocol. */}
             <div className="mb-6">
               <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>
                 Protocols scanned on every search
@@ -1184,6 +1186,7 @@ export default async function Home() {
                   { name: "Hedgey",       color: "#33406B" },
                   { name: "UNCX",         color: "#22C55E" },
                   { name: "Unvest",       color: "#2563EB" },
+                  { name: "Team Finance", color: "#2F6BFF" },
                   { name: "LlamaPay",     color: "#1FBE9A" },
                   { name: "Superfluid",   color: "#16B364" },
                   { name: "PinkSale",     color: "#F23E8C" },
@@ -1230,24 +1233,18 @@ export default async function Home() {
               <span style={{ color: "#475569", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(28,184,184,0.14)", color: "#0F8A8A" }}>Scan all</span>
             </div>
-            {/* Result rows — one per supported protocol so a visitor sees all 7
-                integrations represented, not just a convenient subset. */}
+            {/* Result rows — a SHORT representative sample (not one row per
+                protocol; the pill grid on the left already lists all 10, and a
+                full row-per-protocol list was overlong). Chains varied across
+                the sample (Base / Ethereum / BNB / Solana) incl. Team Finance.
+                Colours track the canonical palette in protocol-constants.ts —
+                marketing visuals must match in-app reality. */}
             {[
-              // 2026-05-15: aligned to the canonical palette in
-              // src/lib/protocol-constants.ts. Previous mock had Hedgey
-              // as blue (#3b82f6) and UNCX as orange (same as Sablier),
-              // both collisions that contradicted what the actual app
-              // renders. Marketing visuals must match in-app reality
-              // or the screenshot fails the "same product?" sniff test.
-              { protocol: "Sablier",      chain: "Base",       token: "NOVA",  amount: "1,250", color: "#F0992E" },
-              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX",  amount: "420",   color: "#33406B" },
-              { protocol: "UNCX",         chain: "BNB Chain",  token: "VEST",  amount: "875",   color: "#22C55E" },
-              { protocol: "Unvest",       chain: "Polygon",    token: "KLAR",  amount: "240",   color: "#2563EB" },
-              { protocol: "LlamaPay",     chain: "Arbitrum",   token: "NOVA",  amount: "630",   color: "#1FBE9A" },
-              { protocol: "Superfluid",   chain: "Optimism",   token: "VEST",  amount: "310",   color: "#16B364" },
-              { protocol: "PinkSale",     chain: "BNB Chain",  token: "FLUX",  amount: "500",   color: "#F23E8C" },
-              { protocol: "Streamflow",   chain: "Solana",     token: "JUP",   amount: "1,800", color: "#2F54EB" },
-              { protocol: "Jupiter Lock", chain: "Solana",     token: "WEN",   amount: "12,000", color: "#14B8A6" },
+              { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "1,250",  color: "#F0992E" },
+              { protocol: "Hedgey",       chain: "Ethereum",   token: "FLUX", amount: "420",    color: "#33406B" },
+              { protocol: "Team Finance", chain: "BNB Chain",  token: "VEST", amount: "875",    color: "#2F6BFF" },
+              { protocol: "Streamflow",   chain: "Solana",     token: "JUP",  amount: "1,800",  color: "#2F54EB" },
+              { protocol: "Jupiter Lock", chain: "Solana",     token: "WEN",  amount: "12,000", color: "#14B8A6" },
             ].map((r) => (
               <div key={r.protocol + r.token} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2"
                 style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.07)" }}>
@@ -1262,7 +1259,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>9 vestings found across 10 protocols scanned</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 10 protocols &amp; 7 chains</p>
           </div>
         </div>
       </section>
@@ -1751,7 +1748,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

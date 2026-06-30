@@ -16,7 +16,7 @@ import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
   title: "Find your token vestings — scan any wallet · Vestream",
-  description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
+  description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
   alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };
 
@@ -38,6 +38,7 @@ const PROTOCOLS_ROW_2 = [
   { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
   { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",  border: "rgba(40,184,149,0.15)"  },
   { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
+  { name: "Team Finance", color: "#2F6BFF", bg: "rgba(47,107,255,0.07)",  border: "rgba(47,107,255,0.15)"  },
   { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
   { name: "Jupiter Lock", color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)"  },
 ] as const;
@@ -84,7 +85,7 @@ const findVestingsJsonLd = {
           "@type": "HowToStep",
           position: 2,
           name: "Run the scan",
-          text: "Vestream queries Sablier, Hedgey, UNCX, Unvest, Superfluid, LlamaPay, PinkSale, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
+          text: "Vestream queries Sablier, Hedgey, UNCX, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
           url: "https://www.vestream.io/find-vestings#step-2",
         },
         {

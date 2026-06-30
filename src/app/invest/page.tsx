@@ -42,6 +42,7 @@ const PROTOCOLS = [
   { name: "UNCX",         tagline: "Token vesting + LP locks"  },
   { name: "Unvest",       tagline: "Step / milestone vesting"  },
   { name: "PinkSale",     tagline: "Launchpad TGE locks"       },
+  { name: "Team Finance", tagline: "Team & treasury lock proof" },
   { name: "Streamflow",   tagline: "Solana vesting"            },
   { name: "Jupiter Lock", tagline: "Solana team allocations"   },
 ];

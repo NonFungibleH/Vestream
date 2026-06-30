@@ -241,7 +241,7 @@ function ansTrack(input: BuildFAQInput): string {
   const protocols = overview ? distinctProtocolsByLock(overview.protocolMix).map((p) => p.name) : [];
   const coverageSentence = protocols.length > 0
     ? `Vestream already indexes ${symbol} activity on ${protocols.slice(0, 4).join(", ")}${protocols.length > 4 ? ", and others" : ""}.`
-    : `Vestream indexes Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and Jupiter Lock.`;
+    : `Vestream indexes Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock.`;
   return `Add ${symbol} — or any wallet holding ${symbol} — to your Vestream watchlist to receive push and email notifications ahead of every scheduled unlock. ${coverageSentence}`;
 }
 

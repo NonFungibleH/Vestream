@@ -649,7 +649,7 @@ const articles: Article[] = [
       { type: "h2", text: "How to Track Your Vestings with Vestream" },
       {
         type: "p",
-        html: "Vestream is a dedicated token vesting tracker that covers the major vesting protocols — Sablier, UNCX, Hedgey, Unvest, Superfluid, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, BNB Chain, Base, Arbitrum, and Solana. Here is a step-by-step guide to getting set up:",
+        html: "Vestream is a dedicated token vesting tracker that covers the major vesting protocols — Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, BNB Chain, Base, Arbitrum, and Solana. Here is a step-by-step guide to getting set up:",
       },
       {
         type: "ol",
@@ -744,7 +744,7 @@ const articles: Article[] = [
           },
           {
             q: "What is the best tool for tracking token vesting?",
-            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view — covering Sablier, UNCX, Hedgey, Unvest, Superfluid, PinkSale, Streamflow, and Jupiter Lock across Ethereum, BNB Chain, Base, Arbitrum, and Solana in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
+            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view — covering Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock across Ethereum, BNB Chain, Base, Arbitrum, and Solana in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
           },
           {
             q: "Can I track someone else's token vesting?",
