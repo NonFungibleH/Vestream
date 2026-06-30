@@ -528,6 +528,7 @@ export default async function Home() {
               { name: "PinkSale",     color: "#F23E8C", bg: "rgba(242,62,140,0.07)", border: "rgba(242,62,140,0.16)", icon: "/protocols/icons/pinksale.png"  },
               { name: "Streamflow",   color: "#2F54EB", bg: "rgba(47,84,235,0.08)",  border: "rgba(47,84,235,0.22)",  icon: "/protocols/icons/streamflow.png"  },
               { name: "Jupiter Lock", color: "#14B8A6", bg: "rgba(20,184,166,0.08)", border: "rgba(20,184,166,0.22)", icon: "/protocols/icons/jupiter-lock.png"  },
+              { name: "Team Finance", color: "#2563EB", bg: "rgba(37,99,235,0.07)", border: "rgba(37,99,235,0.16)", icon: "/protocols/icons/team-finance.png" },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>

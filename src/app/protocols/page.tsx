@@ -359,7 +359,7 @@ export default async function UnlocksIndexPage() {
     | { ok: true; nowMs: number; unlocks: Awaited<ReturnType<typeof getUpcomingUnlocksEnriched>> }
     | null = null;
   try {
-    const unlocks = await getUpcomingUnlocksEnriched(12, { redis: false });
+    const unlocks = await getUpcomingUnlocksEnriched(15, { redis: false });
     initialUpcoming = { ok: true, nowMs: Date.now(), unlocks };
   } catch (err) {
     console.warn("[protocols-index] upcoming initial render failed:", err);

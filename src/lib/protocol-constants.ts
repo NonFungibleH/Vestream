@@ -232,12 +232,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // vesting-specific slice ourselves via tvl-walker/team-finance.ts walking
     // the Squid `vestingFactoryVestings` entity.
     //
-    // TEMPORARILY DISABLED — May 1 2026.
-    // The Squid GraphQL endpoint is no longer being called and the protocol is
-    // hidden from /protocols, search, and UI cards. Cache rows are LEFT IN
-    // PLACE so re-enabling is a single `disabled: false` flip + a deep-seed.
-    // Revisit when we're ready to bring it back.
-    disabled: true,
+    // Re-enabled 2026-06-29 — permission to go live granted. Paused May 1 2026;
+    // the Squid GraphQL source, adapter, TVL walker and claim-ingestor were all
+    // kept intact, so re-enabling is this flag flip + a deep-seed to repopulate
+    // the purged cache + TVL rows.
+    disabled: false,
   },
 
   uncx: {
