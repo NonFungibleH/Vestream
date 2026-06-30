@@ -584,7 +584,15 @@ export default async function ProtocolLandingPage(
 
       {/* ── TVL by chain ────────────────────────────────────────────────── */}
       {tvlPerChain.length > 0 && (() => {
-        const totalTvl = tvlPerChain.reduce((s, r) => s + r.tvlUsd, 0);
+        // Only show chains the protocol actually operates on. DefiLlama-sourced
+        // snapshots sometimes carry dust on chains we don't track — e.g.
+        // Streamflow is Solana-only but DefiLlama reported sub-$1 amounts on
+        // Ethereum/BNB/Polygon, which surfaced as bogus extra rows here.
+        const chainTvl = tvlPerChain.filter((r) =>
+          (meta.chainIds as readonly number[]).includes(r.chainId),
+        );
+        if (chainTvl.length === 0) return null;
+        const totalTvl = chainTvl.reduce((s, r) => s + r.tvlUsd, 0);
         return (
           <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
             <div
@@ -600,7 +608,7 @@ export default async function ProtocolLandingPage(
                 </span>
               </div>
               <div className="space-y-2.5">
-                {tvlPerChain.map((row) => {
+                {chainTvl.map((row) => {
                   const pct = totalTvl > 0 ? (row.tvlUsd / totalTvl) * 100 : 0;
                   return (
                     <div key={row.chainId}>

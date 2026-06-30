@@ -1085,6 +1085,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           eq(vestingStreamsCache.isFullyVested, false),
+          excludeTestnets,
         ),
       )
       // Sort BY ::numeric on the stringified bigint inside streamData so
@@ -1107,6 +1108,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           eq(vestingStreamsCache.isFullyVested, false),
+          excludeTestnets,
         ),
       )
       .groupBy(
@@ -1127,6 +1129,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`),
+          excludeTestnets,
         ),
       ),
   ]);
