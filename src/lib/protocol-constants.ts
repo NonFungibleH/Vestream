@@ -552,6 +552,21 @@ export function protocolChip(slug: string): ProtocolChip {
 export const PROTOCOL_CHIPS: Record<string, ProtocolChip> =
   Object.fromEntries(Object.keys(PROTOCOL_BRAND).map((s) => [s, protocolChip(s)]));
 
+// ── Protocol logo icons ──────────────────────────────────────────────────────
+// Normalised square marks live at /public/protocols/icons/<slug>.png. Filenames
+// match the protocol slug exactly. Hedgey has no mark — it (and any future
+// icon-less protocol) falls back to a colour-tinted monogram at the call site,
+// matching how the homepage "Available on" strip renders it.
+const SLUGS_WITH_ICON = new Set([
+  "sablier", "superfluid", "uncx", "team-finance", "unvest",
+  "pinksale", "streamflow", "jupiter-lock", "llamapay",
+]);
+
+/** Path to a protocol's logo icon, or null when there's no mark (→ monogram). */
+export function protocolIcon(slug: string): string | null {
+  return SLUGS_WITH_ICON.has(slug) ? `/protocols/icons/${slug}.png` : null;
+}
+
 // ── Single source of truth for chain brand colours ──────────────────────────
 // Mirrors PROTOCOL_BRAND. Colours are the homepage "Available on" set (go-live,
 // brand-accurate). bg/border are derived alpha tints so callers get a full pill

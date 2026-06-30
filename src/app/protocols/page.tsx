@@ -28,7 +28,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { getUpcomingUnlocksEnriched } from "@/lib/vesting/upcoming-unlocks";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
-import { listProtocols, type ProtocolMeta } from "@/lib/protocol-constants";
+import { listProtocols, protocolIcon, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getAllProtocolStatsMap,
   foldProtocolStats,
@@ -634,6 +634,10 @@ function ProtocolCard({
   // the rgba 0.08 base into a 0.14 halo, purely via CSS.
   const accentHalo = protocol.bg.replace("0.08", "0.18");
 
+  // Logo mark for the avatar tile (matches the homepage "Available on" strip);
+  // null for icon-less protocols (Hedgey) → colour-tinted monogram fallback.
+  const icon = protocolIcon(protocol.slug);
+
   return (
     <Link
       href={`/protocols/${protocol.slug}`}
@@ -653,14 +657,25 @@ function ProtocolCard({
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold overflow-hidden"
             style={{
               background: protocol.bg,
               border: `1px solid ${protocol.border}`,
               color: protocol.color,
             }}
           >
-            {protocol.name.charAt(0)}
+            {icon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={icon}
+                alt=""
+                width={30}
+                height={30}
+                className="w-full h-full object-contain p-1"
+              />
+            ) : (
+              protocol.name.charAt(0)
+            )}
           </div>
           <span
             className="text-[10px] font-semibold tracking-wider uppercase"
