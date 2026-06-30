@@ -24,6 +24,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 import {
   getProtocol,
   listProtocols,
+  protocolIcon,
   type ProtocolMeta,
 } from "@/lib/protocol-constants";
 import {
@@ -454,10 +455,21 @@ export default async function ProtocolLandingPage(
           {/* Protocol logo tile */}
           <div className="flex items-center justify-center mb-4">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold overflow-hidden"
               style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color, boxShadow: `0 6px 20px ${accentWash}` }}
             >
-              {meta.name.charAt(0)}
+              {protocolIcon(meta.slug) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={protocolIcon(meta.slug)!}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain p-2"
+                />
+              ) : (
+                meta.name.charAt(0)
+              )}
             </div>
           </div>
 

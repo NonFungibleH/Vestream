@@ -102,12 +102,19 @@ function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null
       const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
       const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
       console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsed}s —`, summary);
-      // Fresh data landed in vesting_streams_cache. Bust the
-      // /protocols + /status page caches so users see the new freshness
-      // matrix on their next pageview instead of waiting out the 5-min
-      // unstable_cache TTL. Both pages tag this same key.
+      // Fresh data landed in vesting_streams_cache. Bust the page caches so
+      // users see the new freshness matrix / unlock timeline on their next
+      // pageview instead of waiting out the unstable_cache TTL.
+      //   - "protocols-page" → /protocols index + /status (5-min TTL)
+      //   - "protocol-page"  → /protocols/[slug] detail pages (1-HOUR TTL)
+      //   - "status-page"    → /status hero
+      // The detail tag was previously omitted, so a freshly-seeded protocol's
+      // detail page (e.g. Team Finance go-live) kept serving the empty
+      // mid-seed snapshot for up to an hour. Tag strings must match the
+      // `tags:` on each page's unstable_cache + admin/revalidate-protocols.
       try {
         revalidateTag("protocols-page", "max");
+        revalidateTag("protocol-page",  "max");
         revalidateTag("status-page",    "max");
       } catch (err) {
         console.warn(`[cron/seed-cache] revalidateTag failed (non-fatal):`, err);
