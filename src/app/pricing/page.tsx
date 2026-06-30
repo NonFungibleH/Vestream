@@ -166,9 +166,9 @@ export default function Pricing() {
 
         <h1 className="relative text-5xl font-bold tracking-tight mb-4 max-w-2xl"
           style={{ letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-          Start free.{" "}
-          <span style={{ color: "#1CB8B8" }}>
-            Scale when you&apos;re ready.
+          Start free.
+          <span className="block" style={{ color: "#1CB8B8" }}>
+            Upgrade anytime.
           </span>
         </h1>
         <p className="relative text-lg max-w-lg mb-2 leading-relaxed" style={{ color: "#8B8E92" }}>

@@ -193,11 +193,7 @@ export default async function Home() {
         <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
           style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
 
-        {/* Columns hug their content (text caps at max-w-xl; phone is its
-            natural width) and the pair is centred — previously the left track
-            was `1fr` (greedy), so it stretched to fill and stranded the capped
-            text far from the phone, leaving a cavernous gap between them. */}
-        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[auto_auto] lg:justify-center gap-10 lg:gap-16 lg:items-center">
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 lg:gap-12 lg:items-center">
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
