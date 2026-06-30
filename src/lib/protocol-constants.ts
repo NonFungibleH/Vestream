@@ -597,6 +597,25 @@ export function chainBrand(chainId: number): ChainBrand {
   return { color: b.color, bg: `${b.color}14`, border: `${b.color}33`, name: b.name };
 }
 
+// ── Chain logo icons ─────────────────────────────────────────────────────────
+// Official chain marks live at /public/chains/icons/<file>.png. Mainnets only —
+// testnets (Sepolia / Base Sepolia) have no mark and return null (skipped in UI).
+const CHAIN_ICON_FILE: Record<number, string> = {
+  1:     "ethereum",
+  56:    "bnb",
+  137:   "polygon",
+  8453:  "base",
+  42161: "arbitrum",
+  10:    "optimism",
+  101:   "solana",
+};
+
+/** Path to a chain's logo icon, or null for unknown / testnet chains. */
+export function chainIcon(chainId: number): string | null {
+  const f = CHAIN_ICON_FILE[chainId];
+  return f ? `/chains/icons/${f}.png` : null;
+}
+
 /**
  * All protocols in display order.
  *

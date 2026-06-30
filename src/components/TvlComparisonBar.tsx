@@ -19,7 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Link from "next/link";
-import type { ProtocolMeta } from "@/lib/protocol-constants";
+import { protocolIcon, type ProtocolMeta } from "@/lib/protocol-constants";
 import type { ProtocolTvl } from "@/lib/vesting/tvl";
 
 export interface TvlComparisonRow {
@@ -274,14 +274,25 @@ export function TvlComparisonBar({
                   <div className="flex items-center gap-3 mb-1.5">
                     {/* Icon tile */}
                     <div
-                      className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold"
+                      className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold overflow-hidden"
                       style={{
                         background: protocol.bg,
                         border:     `1px solid ${protocol.border}`,
                         color:      protocol.color,
                       }}
                     >
-                      {protocol.name.charAt(0)}
+                      {protocolIcon(protocol.slug) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={protocolIcon(protocol.slug)!}
+                          alt=""
+                          width={20}
+                          height={20}
+                          className="w-full h-full object-contain p-0.5"
+                        />
+                      ) : (
+                        protocol.name.charAt(0)
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-semibold leading-tight" style={{ color: "#1A1D20" }}>

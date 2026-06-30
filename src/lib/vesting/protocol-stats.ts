@@ -12,7 +12,7 @@
 // zeroed stats / null unlocks — the page renders an empty-state.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, desc, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lte, notInArray, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
@@ -128,14 +128,18 @@ function rowToUnlock(row: {
   endTime:      number | null;
   recipient:    string;
   streamData:   Record<string, unknown>;
-}): UnlockSummary {
+}, opts?: { completed?: boolean }): UnlockSummary {
   const sd = row.streamData as Partial<VestingStream>;
-  // `lockedAmount` reflects what's still to vest as of last index — correct
-  // for both shapes:
-  //   stepped:  sum of all future-step amounts still pending
-  //   linear:   whole vest remaining (monotonically decreasing over time)
-  // Fallback to totalAmount for legacy cache rows without lockedAmount.
-  const amount = sd.lockedAmount ?? sd.totalAmount ?? null;
+  // Amount semantics differ by direction:
+  //   • upcoming (default): `lockedAmount` = what's still to vest — correct for
+  //     both shapes (stepped: sum of pending steps; linear: whole vest remaining).
+  //   • completed (opts.completed): a fully-vested stream has lockedAmount == 0,
+  //     so showing it renders "0.0000" — the "most recently fully vested" card
+  //     wants the TOTAL that just finished vesting (totalAmount) instead.
+  // Each falls back to the other for legacy rows missing one field.
+  const amount = opts?.completed
+    ? (sd.totalAmount ?? sd.lockedAmount ?? null)
+    : (sd.lockedAmount ?? sd.totalAmount ?? null);
   // Linear-with-no-cliff → the dated event is a vest completion, not a lump.
   // `steps` (tranched) or a real cliff lump keep "unlock". Undefined shape is
   // treated as linear (the common case for pre-shape legacy rows).
@@ -563,6 +567,14 @@ export async function getLatestUnlock(
 ): Promise<UnlockSummary | null> {
   if (shouldSkipDbAtBuildTime()) return null;
 
+  // Only consider streams whose vest actually COMPLETED in the past. Without
+  // the `endTime <= now` guard this picked the fully-vested row with the
+  // largest endTime — which for some protocols (notably Team Finance) is a
+  // future date (e.g. 2029) flagged isFullyVested=true after an early/withdrawn
+  // close. now − futureEndTime is negative → the card clamped to "0s ago",
+  // so "most recently fully vested" was permanently stuck at 0s.
+  const nowSec = Math.floor(Date.now() / 1000);
+
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -575,11 +587,17 @@ export async function getLatestUnlock(
       streamData:   vestingStreamsCache.streamData,
     })
     .from(vestingStreamsCache)
-    .where(and(adapterFilter(adapterIds), eq(vestingStreamsCache.isFullyVested, true), excludeTestnets))
+    .where(and(
+      adapterFilter(adapterIds),
+      eq(vestingStreamsCache.isFullyVested, true),
+      lte(vestingStreamsCache.endTime, nowSec),
+      excludeTestnets,
+    ))
     .orderBy(desc(vestingStreamsCache.endTime))
     .limit(1);
 
-  return rows[0] ? rowToUnlock(rows[0]) : null;
+  // completed:true → show the TOTAL amount that vested, not lockedAmount (0).
+  return rows[0] ? rowToUnlock(rows[0], { completed: true }) : null;
 }
 
 /**

@@ -28,7 +28,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { getUpcomingUnlocksEnriched } from "@/lib/vesting/upcoming-unlocks";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
-import { listProtocols, protocolIcon, type ProtocolMeta } from "@/lib/protocol-constants";
+import { chainBrand, chainIcon, listProtocols, protocolIcon, type ProtocolMeta } from "@/lib/protocol-constants";
 import {
   getAllProtocolStatsMap,
   foldProtocolStats,
@@ -638,6 +638,12 @@ function ProtocolCard({
   // null for icon-less protocols (Hedgey) → colour-tinted monogram fallback.
   const icon = protocolIcon(protocol.slug);
 
+  // Integrated-chain logos shown along the tile footer. Dedupe, drop testnets
+  // (no icon), preserve declared order.
+  const chainLogos = [...new Set(protocol.chainIds)]
+    .filter((id) => chainIcon(id) !== null)
+    .map((id) => ({ id, icon: chainIcon(id)!, name: chainBrand(id).name }));
+
   return (
     <Link
       href={`/protocols/${protocol.slug}`}
@@ -715,6 +721,25 @@ function ProtocolCard({
             <div style={{ color: "#B8BABD" }}>indexing</div>
           </div>
         </div>
+
+        {/* Integrated chains — small logos (mainnets only; testnets have no mark) */}
+        {chainLogos.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+            {chainLogos.map((c) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={c.id}
+                src={c.icon}
+                alt={c.name}
+                title={c.name}
+                width={18}
+                height={18}
+                className="w-[18px] h-[18px] rounded-full"
+                style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </Link>
   );
