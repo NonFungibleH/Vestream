@@ -264,7 +264,12 @@ const loadProtocolData = unstable_cache(
   // v7 = bump after adding tvlPerChain. Without bumping, the
   // unstable_cache layer would serve old payloads missing the field
   // for up to CACHE_TTL_SECONDS after deploy.
-  ["protocol-page-data-v7"],
+  // v8 = bump on 2026-07-02 so the "Locked value by chain" fix (show $0
+  // integrated chains, e.g. Team Finance on Base) takes effect immediately.
+  // A revalidateTag("protocol-page") flush did NOT reliably evict the v7
+  // entry in prod, so fresh HTML renders kept reading the stale 3-chain
+  // tvlPerChain. The key bump forces loadProtocolData to recompute.
+  ["protocol-page-data-v8"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
