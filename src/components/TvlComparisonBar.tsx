@@ -239,22 +239,19 @@ export function TvlComparisonBar({
           </div>
         ) : (
           <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-            {sorted.map(({ protocol, tvl, activeStreams, indexedChainCount }) => {
+            {sorted.map(({ protocol, tvl, activeStreams }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
               const active      = activeStreams ?? 0;
-              // Sub-label: "{N} active streams · {C} blockchain[s]".
-              // Chain count = chains we actually have indexed data on
-              // (indexedChainCount from stats), falling back to the declared
-              // chainIds only when stats are cold. Using the real count keeps
-              // a declared-but-empty chain (Team Finance on Base) from
-              // inflating the figure past what the detail/unlocks pages show.
-              const chainCount = (indexedChainCount && indexedChainCount > 0)
-                ? indexedChainCount
-                : protocol.chainIds.length;
+              // Sub-label: "{N} active streams · {C} blockchain[s]". Chain count
+              // is the protocol's INTEGRATED chains (declared chainIds), not just
+              // the ones with data today — Team Finance is integrated on Base
+              // even though it has no Base vestings yet, and we want that
+              // coverage reflected (a Base vesting would be picked up on sight).
+              const chainCount = protocol.chainIds.length;
               const chainNoun  = chainCount === 1 ? "blockchain" : "blockchains";
               // Format: "{N} active streams · {C} blockchain[s]"
               // Bullet-separated for fast scanning vs sentence form. Easier

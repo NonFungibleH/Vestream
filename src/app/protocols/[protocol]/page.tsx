@@ -555,11 +555,13 @@ export default async function ProtocolLandingPage(
           />
           <Stat
             label="Chains covered"
-            // Chains we actually have indexed data on – NOT the declared
-            // chainIds. Team Finance declares Base but its Squid indexer has
-            // zero Base data, so declared=4 overstated it; the real figure is
-            // 3 (ETH/BSC/Polygon), matching the /unlocks page + the summary.
-            value={hasData ? (stats!.chainIds?.length ?? 0).toString() : "–"}
+            // Declared chainIds = chains we've INTEGRATED for this protocol, not
+            // just the ones with data today. Team Finance is integrated on Base
+            // (our seeder/walker query it) even though TF's upstream Squid has
+            // no Base vestings yet — so Base still counts as "covered": the
+            // moment a Base vesting appears we pick it up. (The /unlocks page's
+            // "N chains" is a different metric: chains with unlocks in-window.)
+            value={meta.chainIds.length.toString()}
             color={meta.color}
           />
           <Stat
