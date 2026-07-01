@@ -18,6 +18,7 @@ import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import type { VestingStream } from "./types";
+import { normaliseAddress } from "../address-validation";
 
 // Sepolia + Base Sepolia. Public landing-page surfaces (per-protocol stats,
 // /protocols upcoming-unlocks widget, "latest" / "next" unlock cards) hide
@@ -150,7 +151,11 @@ function rowToUnlock(row: {
     protocol:     row.protocol,
     chainId:      row.chainId,
     tokenSymbol:  row.tokenSymbol ?? null,
-    tokenAddress: (row.tokenAddress ?? "").toLowerCase(),
+    // Ecosystem-aware: EVM → lowercase canonical, Solana base58 → PRESERVED.
+    // A raw `.toLowerCase()` corrupts case-sensitive Solana mints (an uppercase
+    // "L" → "l", not a valid base58 char), which made the /token link vanish or
+    // 404 for those tokens on /protocols/streamflow. See chain-links.test.ts.
+    tokenAddress: normaliseAddress(row.tokenAddress ?? ""),
     // Default to 18 for legacy rows that somehow lack tokenDecimals in their
     // streamData blob. Any adapter written since inception sets it.
     tokenDecimals: typeof sd.tokenDecimals === "number" ? sd.tokenDecimals : 18,

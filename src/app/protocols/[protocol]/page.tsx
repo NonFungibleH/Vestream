@@ -55,6 +55,7 @@ import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-queries";
 import { isLinkableTokenAddress } from "@/lib/chain-links";
+import { normaliseAddress } from "@/lib/address-validation";
 
 // On-demand ISR with 5-minute revalidation (2026-06-12).
 //
@@ -1384,7 +1385,7 @@ function UnlockCard({
             them as actionable as every other token row across the site. */}
         {unlock.tokenAddress && (
           <Link
-            href={`/token/${unlock.chainId}/${unlock.tokenAddress.toLowerCase()}`}
+            href={`/token/${unlock.chainId}/${normaliseAddress(unlock.tokenAddress)}`}
             className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:underline"
             style={{ color: accent }}
           >
