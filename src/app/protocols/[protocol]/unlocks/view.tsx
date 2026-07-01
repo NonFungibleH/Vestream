@@ -36,6 +36,9 @@ const CHAIN_SLUG_TO_ID: Record<string, number> = {
   bsc:      56,   bnb: 56,   "bnb-chain": 56,
   polygon:  137,  matic: 137,
   base:     8453,
+  arbitrum: 42161, arb: 42161,
+  optimism: 10,   op: 10,
+  solana:   101,  sol: 101,
 };
 export function parseChainParam(raw: string | undefined): number | null {
   if (!raw) return null;
