@@ -6,20 +6,21 @@
 // page itself isn't thin.
 
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ALL_WINDOW_SLUGS, WINDOWS, getWindowCountsFast } from "@/lib/vesting/unlock-windows";
 
-// ISR (30-min) — renders once per revalidation, NOT per request. The previous
-// force-dynamic version fired 8 heavy window scans on EVERY request, which
-// exhausted the Supabase pooler (ECHECKOUTTIMEOUT) and slowed the whole site
-// (token/protocol pages couldn't get a connection). Counts now use
-// getWindowCountsFast — one cheap indexed count per window, run sequentially —
-// so even the revalidation render holds a single connection and finishes in
-// under a second. Build bakes "–"; the first revalidation after deploy fills
-// the real numbers.
-export const revalidate = 1800;
+// Render on-demand (force-dynamic) so the counts are never baked empty at build
+// and there's no post-deploy "dashes for 30 min" window. This is SAFE now that
+// the counts are cheap: the earlier force-dynamic version fired 8 HEAVY window
+// scans concurrently on every request → pooler exhaustion (ECHECKOUTTIMEOUT) →
+// whole-site slowdown. Now getWindowCountsFast is one cheap indexed count per
+// window, run SEQUENTIALLY, and wrapped in unstable_cache (10-min) so a request
+// reads cached numbers and only a cache miss touches the DB (one connection,
+// ~1s). No throw-on-empty loop.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
@@ -36,23 +37,35 @@ export const metadata: Metadata = {
 
 type WindowCount = { slug: string; unlockCount: number; tokenCount: number; chainCount: number };
 
-async function getWindowCounts(): Promise<Map<string, WindowCount>> {
-  // SEQUENTIAL (not Promise.all) — hold ONE pooler connection at a time. The
-  // concurrent 8-at-once version was a primary cause of the ECHECKOUTTIMEOUT
-  // saturation. Each getWindowCountsFast is a cheap indexed group-by count
-  // (~100ms), so 8 in series is still well under a second, and a per-window
-  // failure degrades to "–" without taking the page down.
-  const out = new Map<string, WindowCount>();
-  for (const slug of ALL_WINDOW_SLUGS) {
-    const range = WINDOWS[slug].range();
-    try {
-      const s = await getWindowCountsFast(range.startSec, range.endSec);
-      out.set(slug, { slug, ...s });
-    } catch {
-      out.set(slug, { slug, unlockCount: 0, tokenCount: 0, chainCount: 0 });
+// Cheap counts, run SEQUENTIALLY (one pooler connection at a time — the
+// concurrent 8-at-once version caused the ECHECKOUTTIMEOUT saturation), wrapped
+// in unstable_cache so most requests read cached numbers. Returns an array
+// (unstable_cache JSON-serialises; a Map wouldn't round-trip).
+const getCachedWindowCounts = unstable_cache(
+  async (): Promise<WindowCount[]> => {
+    const out: WindowCount[] = [];
+    for (const slug of ALL_WINDOW_SLUGS) {
+      const range = WINDOWS[slug].range();
+      try {
+        const s = await getWindowCountsFast(range.startSec, range.endSec);
+        out.push({ slug, ...s });
+      } catch {
+        out.push({ slug, unlockCount: 0, tokenCount: 0, chainCount: 0 });
+      }
     }
+    return out;
+  },
+  ["unlocks-index-window-counts-v3"],
+  { revalidate: 600, tags: ["upcoming-unlocks"] },
+);
+
+async function getWindowCounts(): Promise<Map<string, WindowCount>> {
+  try {
+    const counts = await getCachedWindowCounts();
+    return new Map(counts.map((c) => [c.slug, c]));
+  } catch {
+    return new Map<string, WindowCount>();
   }
-  return out;
 }
 
 export default async function UnlocksIndex() {
