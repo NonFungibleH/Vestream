@@ -6,21 +6,19 @@
 // page itself isn't thin.
 
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ALL_WINDOW_SLUGS, WINDOWS, getWindowCountsFast } from "@/lib/vesting/unlock-windows";
+import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT } from "@/lib/vesting/unlock-windows";
+import { withTimeout } from "@/lib/with-timeout";
 
-// Render on-demand (force-dynamic) so the counts are never baked empty at build
-// and there's no post-deploy "dashes for 30 min" window. This is SAFE now that
-// the counts are cheap: the earlier force-dynamic version fired 8 HEAVY window
-// scans concurrently on every request → pooler exhaustion (ECHECKOUTTIMEOUT) →
-// whole-site slowdown. Now getWindowCountsFast is one cheap indexed count per
-// window, run SEQUENTIALLY, and wrapped in unstable_cache (10-min) so a request
-// reads cached numbers and only a cache miss touches the DB (one connection,
-// ~1s). No throw-on-empty loop.
-export const dynamic = "force-dynamic";
+// ISR (30-min). Renders once per revalidation (background — no request-timeout
+// pressure), NOT per request. The force-dynamic version fired window scans on
+// EVERY request and exhausted the Supabase pooler (ECHECKOUTTIMEOUT), slowing
+// the whole site. Counts now run SEQUENTIALLY (one connection at a time) using
+// the proven getUnlocksInWindow. Build bakes "–"; the first revalidation after
+// deploy fills the real numbers.
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
@@ -37,43 +35,28 @@ export const metadata: Metadata = {
 
 type WindowCount = { slug: string; unlockCount: number; tokenCount: number; chainCount: number };
 
-// Cheap counts, run SEQUENTIALLY (one pooler connection at a time — the
-// concurrent 8-at-once version caused the ECHECKOUTTIMEOUT saturation), wrapped
-// in unstable_cache so most requests read cached numbers. Returns an array
-// (unstable_cache JSON-serialises; a Map wouldn't round-trip).
-const getCachedWindowCounts = unstable_cache(
-  async (): Promise<WindowCount[]> => {
-    const out: WindowCount[] = [];
-    for (const slug of ALL_WINDOW_SLUGS) {
-      const range = WINDOWS[slug].range();
-      try {
-        const s = await getWindowCountsFast(range.startSec, range.endSec);
-        out.push({ slug, ...s });
-      } catch {
-        out.push({ slug, unlockCount: 0, tokenCount: 0, chainCount: 0 });
-      }
-    }
-    // If EVERY window is empty it's a transient failure (a pooler blip during
-    // compute), not reality — there are always thousands of upcoming unlocks.
-    // THROW so unstable_cache never caches the empty; the next request retries.
-    // Safe from the old death-spiral: these are cheap, SEQUENTIAL counts (one
-    // connection, ~1s), not the 8 concurrent heavy scans that caused it.
-    if (out.every((c) => c.unlockCount === 0)) {
-      throw new Error("all unlock windows empty — transient, not caching");
-    }
-    return out;
-  },
-  ["unlocks-index-window-counts-v4"],
-  { revalidate: 600, tags: ["upcoming-unlocks"] },
-);
-
 async function getWindowCounts(): Promise<Map<string, WindowCount>> {
-  try {
-    const counts = await getCachedWindowCounts();
-    return new Map(counts.map((c) => [c.slug, c]));
-  } catch {
-    return new Map<string, WindowCount>();
+  // SEQUENTIAL — one pooler connection at a time (the concurrent 8-at-once
+  // version caused the ECHECKOUTTIMEOUT saturation). Uses the proven
+  // getUnlocksInWindow; each window has a 10s budget and degrades to "–" on
+  // failure without hanging the page.
+  const out = new Map<string, WindowCount>();
+  for (const slug of ALL_WINDOW_SLUGS) {
+    const range = WINDOWS[slug].range();
+    const result = await withTimeout(
+      getUnlocksInWindow(range.startSec, range.endSec, 500),
+      10_000,
+      EMPTY_WINDOW_RESULT,
+      `unlocks-index:${slug}`,
+    );
+    out.set(slug, {
+      slug,
+      unlockCount: result.stats.unlockCount,
+      tokenCount:  result.stats.tokenCount,
+      chainCount:  result.stats.chainCount,
+    });
   }
+  return out;
 }
 
 export default async function UnlocksIndex() {
