@@ -47,15 +47,17 @@ const getCachedWindowCounts = unstable_cache(
       throw new Error("build-phase: skipping unlock-window counts – ISR fills at runtime");
     }
     // Run all window queries in parallel. Cap the SQL pool at 500/window so 8
-    // concurrent scans stay cheap; counts beyond 500 read as "500+". withTimeout
-    // so a stalled window degrades to "–" instead of hanging the page → 524.
-    return Promise.all(
+    // concurrent scans stay cheap; counts beyond 500 read as "500+". 15s
+    // per-window budget (was 8s — a cold pooler under 8 concurrent scans blew
+    // that, so every window degraded to empty and the empty got CACHED for the
+    // full 15-min TTL, showing all-dashes).
+    const counts = await Promise.all(
       ALL_WINDOW_SLUGS.map(async (slug) => {
         const def   = WINDOWS[slug];
         const range = def.range();
         const result = await withTimeout(
           getUnlocksInWindow(range.startSec, range.endSec, 500),
-          8_000,
+          15_000,
           EMPTY_WINDOW_RESULT,
           `unlocks-index:${slug}`,
         );
@@ -67,8 +69,17 @@ const getCachedWindowCounts = unstable_cache(
         };
       }),
     );
+    // If EVERY window is empty, that's a transient failure (cold pooler / all
+    // queries timed out), not reality — there are always thousands of upcoming
+    // unlocks. THROW so unstable_cache never caches the empty (it doesn't cache
+    // throws); the next request retries fresh instead of serving dashes for 15
+    // minutes. getWindowCounts() catches this and renders the empty state once.
+    if (counts.every((c) => c.unlockCount === 0)) {
+      throw new Error("all unlock windows empty — transient failure, not caching");
+    }
+    return counts;
   },
-  ["unlocks-index-window-counts-v1"],
+  ["unlocks-index-window-counts-v2"],
   { revalidate: 900, tags: ["upcoming-unlocks"] },
 );
 

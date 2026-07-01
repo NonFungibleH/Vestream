@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Date-windowed unlock queries powering the /unlocks/[range] SEO landing pages.
 //
-// Designed parallel to `getUpcomingUnlockGroupsAcross()` in protocol-stats.ts —
+// Designed parallel to `getUpcomingUnlockGroupsAcross()` in protocol-stats.ts –
 // same grouping logic (collapse mass distributions to one row per (proto,
 // chain, token, hour-bucket)) but:
 //   - bounded by an explicit [startSec, endSec] window instead of "next N"
@@ -30,7 +30,7 @@ import type { QuickPriceMap } from "./quick-prices";
  *
  * This matters because most real-world vests are multi-year schedules with
  * monthly drips. Filtering by stream-end-time misses every intermediate
- * unlock event — exactly what calendar pages need to surface.
+ * unlock event – exactly what calendar pages need to surface.
  */
 export interface WindowUnlockGroup {
   streamId:      string;
@@ -39,19 +39,19 @@ export interface WindowUnlockGroup {
   tokenSymbol:   string | null;
   tokenAddress:  string;
   tokenDecimals: number;
-  /** Unix seconds — time of the next discrete unlock event for this group. */
+  /** Unix seconds – time of the next discrete unlock event for this group. */
   eventTime:     number;
-  /** Stringified bigint — sum of locked amount across the group, or null
+  /** Stringified bigint – sum of locked amount across the group, or null
    *  if no member contributed a parseable amount. */
   amount:        string | null;
   recipient:     string;
-  /** Distinct recipients IN THIS unlock bucket, over the capped query pool —
+  /** Distinct recipients IN THIS unlock bucket, over the capped query pool –
    *  an undercount for big tokens. Prefer tokenWalletCount for display. */
   walletCount:   number;
   streamCount:   number;
   groupKey:      string;
   /** TRUE distinct-recipient count across ALL cached streams for this
-   *  (chainId, tokenAddress) — uncapped. Attached from the token rollup
+   *  (chainId, tokenAddress) – uncapped. Attached from the token rollup
    *  (readTokenRollups) in the explorer page; undefined until enriched. Fixes
    *  the "24 wallets" on an 850-vesting token undercount caused by the
    *  calendar pool's 2000-row global cap. */
@@ -59,7 +59,7 @@ export interface WindowUnlockGroup {
   /** TRUE distinct vesting-round count for this token (same key as
    *  rounds.ts groupIntoRounds: protocol|shape|cliffDays|durationDays). */
   tokenRoundCount?:  number;
-  /** Whole-token active vesting span (unix sec) — earliest start, latest end.
+  /** Whole-token active vesting span (unix sec) – earliest start, latest end.
    *  Drives the explorer "% vested" progress bar. Attached alongside the
    *  token counts from the token rollup; undefined until enriched. */
   vestStart?:        number;
@@ -68,7 +68,7 @@ export interface WindowUnlockGroup {
    *  the token rollup; drives the ⚠️ cliff flag in the explorer. */
   hasCliff?:         boolean;
   /** Largest single recipient's share (0–1) of this token's total locked
-   *  amount — concentration / "whale" signal. From the token rollup
+   *  amount – concentration / "whale" signal. From the token rollup
    *  (token_vesting_rollups, cron-maintained); undefined until enriched. */
   topHolderShare?:   number | null;
   /** USD value of the group's `amount` at render time, or null when the
@@ -90,7 +90,7 @@ export interface WindowUnlockGroup {
    *  larger than a full day's volume; the market would visibly struggle
    *  to absorb it without slippage. Null when usdValue or volume24h missing. */
   absorptionRatio?:        number | null;
-  /** unlockValueUsd ÷ the token's market cap — "how much of the tradeable
+  /** unlockValueUsd ÷ the token's market cap – "how much of the tradeable
    *  token hits the market at once" (0–1). 0.1 = this unlock is 10% of market
    *  cap. The primary unlock-risk signal. Null when we have no market cap.
    *  Replaced the old supplyShare (unlock ÷ LOCKED supply), which flagged
@@ -121,9 +121,9 @@ export interface WindowDef {
   range: () => { startSec: number; endSec: number };
   /** Optional render-time enrichment. When set, the index page (and per-
    *  range pages) prefer this over `label`. Used by the windows whose
-   *  scope shifts with the current date — "This week" is more useful as
-   *  "This week — ends Sun 4 May" once you know what week you're in;
-   *  "This month" reads better as "This month — April 2026". Both forms
+   *  scope shifts with the current date – "This week" is more useful as
+   *  "This week – ends Sun 4 May" once you know what week you're in;
+   *  "This month" reads better as "This month – April 2026". Both forms
    *  also feed cleaner SEO titles than the generic noun. */
   dynamicLabel?:       () => string;
   dynamicDescription?: () => string;
@@ -141,7 +141,7 @@ function endOfDayUtc(d: Date): number {
 }
 
 function fmtDayShort(d: Date): string {
-  // "Sun 4 May" — short day name, day-of-month, short month. UTC-anchored
+  // "Sun 4 May" – short day name, day-of-month, short month. UTC-anchored
   // because all our windows are UTC-anchored.
   return d.toLocaleDateString("en-GB", {
     weekday: "short",
@@ -197,7 +197,7 @@ export const WINDOWS: Record<WindowSlug, WindowDef> = {
       const daysToSunday = 7 - day;
       const endOfWeek = new Date(now);
       endOfWeek.setUTCDate(now.getUTCDate() + daysToSunday);
-      return `This week — ends ${fmtDayShort(endOfWeek)}`;
+      return `This week – ends ${fmtDayShort(endOfWeek)}`;
     },
     dynamicDescription: () => {
       const now = new Date();
@@ -228,7 +228,7 @@ export const WINDOWS: Record<WindowSlug, WindowDef> = {
     },
     dynamicLabel: () => {
       const now = new Date();
-      return `This month — ${fmtMonthYear(now)}`;
+      return `This month – ${fmtMonthYear(now)}`;
     },
     dynamicDescription: () => {
       const now = new Date();
@@ -277,7 +277,7 @@ export interface WindowAggregateStats {
   chainCount:    number;
   /** Distinct recipient wallets across all groups. */
   walletCount:   number;
-  /** Sum of locked amounts (per-token-per-chain) — reported as a flat list
+  /** Sum of locked amounts (per-token-per-chain) – reported as a flat list
    *  because summing absolute amounts across different tokens would be
    *  meaningless. Keyed by (chainId, address) so a token deployed on
    *  multiple chains gets its own entry per chain (USD pricing differs
@@ -292,7 +292,7 @@ export interface WindowAggregateStats {
   }>;
 }
 
-// ── Window query — returns groups + aggregate stats ─────────────────────────
+// ── Window query – returns groups + aggregate stats ─────────────────────────
 
 export interface WindowResult {
   groups: WindowUnlockGroup[];
@@ -306,7 +306,7 @@ export interface WindowResult {
  * **Filtering happens in app code, not SQL.** Background: most real-world
  * vests are multi-year schedules with periodic unlocks (monthly drips,
  * cliff steps). The stream's `endTime` (when vesting fully completes) is
- * years out — but the *next discrete unlock event* is much closer. SQL-
+ * years out – but the *next discrete unlock event* is much closer. SQL-
  * filtering by endTime misses every intermediate event. So we pull all
  * active streams (capped at poolLimit), compute eventTime per row in JS
  * (= streamData.nextUnlockTime ?? endTime), and filter by that.
@@ -314,16 +314,16 @@ export interface WindowResult {
  * **Two-pass pool (fix for 60-day = 90-day identical counts):**
  * A single `ORDER BY endTime ASC LIMIT N` always saturates with the
  * soonest-expiring streams. When >N streams expire within 60 days, the
- * pool fills entirely with ≤60-day endTimes — multi-year vesting contracts
+ * pool fills entirely with ≤60-day endTimes – multi-year vesting contracts
  * with monthly drips (endTime years out, nextUnlockTime ≤ 90 days) never
  * enter the pool, so 60-day and 90-day windows return identical results.
  *
  * The two-pass fix runs two queries in parallel:
- *   Pass A — streams whose endTime falls *inside* the window
+ *   Pass A – streams whose endTime falls *inside* the window
  *             (endTime > startSec AND endTime ≤ endSec)
- *   Pass B — long-lived streams ending *after* the window
+ *   Pass B – long-lived streams ending *after* the window
  *             (endTime > endSec), ordered by endTime ASC so the ones
- *             soonest-to-expire come first — best proxy for near-term
+ *             soonest-to-expire come first – best proxy for near-term
  *             nextUnlockTime without reading JSONB in SQL
  *
  * Both passes apply the same protocol/chain filters. Results are merged
@@ -339,15 +339,15 @@ export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,
   poolLimit = 5000,
-  /** Optional — if set, restrict to streams with one of these adapter IDs.
+  /** Optional – if set, restrict to streams with one of these adapter IDs.
    *  Used by the per-protocol /protocols/[slug]/unlocks pages. Empty array
    *  is treated as "no filter" (same as undefined). */
   adapterIds?: readonly string[],
-  /** Optional — if set, restrict to streams on one of these chain IDs.
+  /** Optional – if set, restrict to streams on one of these chain IDs.
    *  Used when a chain-filter UI is active (e.g. "Show only Ethereum
    *  unlocks"). Empty array → no filter. */
   chainIds?: readonly number[],
-  /** Optional — if set, restrict to streams of this token symbol
+  /** Optional – if set, restrict to streams of this token symbol
    *  (case-insensitive exact match). MUST be applied here in SQL, not by
    *  the caller on the returned groups: the pool below is capped at
    *  `poolLimit` ACROSS ALL TOKENS (soonest-ending first), so a post-hoc
@@ -359,12 +359,12 @@ export async function getUnlocksInWindow(
 ): Promise<WindowResult> {
   // Build-time short-circuit. Two cases:
   //  (a) CI runs `next build` with a dummy `postgres://ci:ci@localhost:...`
-  //      URL — postgres burns 30-60s per page in connect-retry.
+  //      URL – postgres burns 30-60s per page in connect-retry.
   //  (b) Vercel production builds use the real Supabase URL, BUT the
   //      pooler occasionally drops mid-build (XX000 FATAL). Once that
   //      happens every subsequent query CONNECTION_CLOSEDs and individual
   //      static pages still exhaust their 60s build-attempt budget on
-  //      retries — observed May 2 2026, where /sitemap.xml and
+  //      retries – observed May 2 2026, where /sitemap.xml and
   //      /unlocks/[range] timed out 3× and exited the build.
   // Both cases short-circuit here. ISR + revalidate fills with real data
   // on the first runtime request after deploy.
@@ -390,16 +390,16 @@ export async function getUnlocksInWindow(
     ? ilike(vestingStreamsCache.tokenSymbol, tokenSymbol.trim().replace(/([%_\\])/g, "\\$1"))
     : undefined;
 
-  // Two-pass pool — see JSDoc above for the full rationale.
+  // Two-pass pool – see JSDoc above for the full rationale.
   //
   // Pass A: streams whose endTime falls inside the window.
-  //   `endTime > startSec AND endTime ≤ endSec` — eventTime ≤ endTime,
+  //   `endTime > startSec AND endTime ≤ endSec` – eventTime ≤ endTime,
   //   and endTime ≤ endSec, so every row here is a candidate.
   //
   // Pass B: long-lived streams ending after the window.
-  //   `endTime > endSec` — their endTime alone would disqualify them,
+  //   `endTime > endSec` – their endTime alone would disqualify them,
   //   but nextUnlockTime (in JSONB) can be ≤ endSec. Ordering by
-  //   endTime ASC gets the ones soonest-to-expire first — a reliable
+  //   endTime ASC gets the ones soonest-to-expire first – a reliable
   //   proxy for near-term nextUnlockTime without JSONB SQL access.
   //   The JS filter discards any whose nextUnlockTime is outside the window.
   //
@@ -424,7 +424,7 @@ export async function getUnlocksInWindow(
   ] as const;
 
   const [rowsA, rowsB] = await Promise.all([
-    // Pass A — streams ending within the window
+    // Pass A – streams ending within the window
     db
       .select(selectFields)
       .from(vestingStreamsCache)
@@ -438,7 +438,7 @@ export async function getUnlocksInWindow(
       .orderBy(asc(vestingStreamsCache.endTime))
       .limit(poolLimit),
 
-    // Pass B — long-lived streams ending after the window
+    // Pass B – long-lived streams ending after the window
     db
       .select(selectFields)
       .from(vestingStreamsCache)
@@ -461,7 +461,7 @@ export async function getUnlocksInWindow(
   // STALE-CACHE REPAIR (2026-06-12): the stored `nextUnlockTime` is a
   // snapshot from the last seeder/indexer run. Once that moment elapses,
   // the old `next > 0 ? next : end` logic produced a PAST eventTime and the
-  // stream silently vanished from EVERY window — even though its future
+  // stream silently vanished from EVERY window – even though its future
   // steps are sitting right there in `unlockSteps`. Real-world impact:
   // 828 of PYME's 852 active vestings were invisible to the calendar.
   // When the stored value is behind the window start, re-derive the next
@@ -499,7 +499,7 @@ export async function getUnlocksInWindow(
     amountSum:      bigint;
     hasAmount:      boolean;
     earliestEvent:  number;
-    /** Per-recipient amount totals — drives the risk column's
+    /** Per-recipient amount totals – drives the risk column's
      *  "recipient concentration" metric (largest single share). Same
      *  bigint arithmetic as amountSum so the ratio is exact. */
     recipientAmount: Map<string, bigint>;
@@ -509,7 +509,7 @@ export async function getUnlocksInWindow(
   const allRecipients = new Set<string>();
   // Per-chain-per-token aggregator. Keyed on `${chainId}:${address}` so a
   // token contract that exists on multiple chains (e.g. USDC on ETH/Base/
-  // Polygon) gets one row per chain — distinct prices, distinct explorer
+  // Polygon) gets one row per chain – distinct prices, distinct explorer
   // links, distinct rendering rather than a misleading cross-chain sum.
   const tokenAmountMap = new Map<string, {
     symbol:   string | null;
@@ -618,7 +618,7 @@ export async function getUnlocksInWindow(
   const chainSet  = new Set(ordered.map((g) => g.representative.chainId));
   const tokenSet  = new Set(ordered.map((g) => normaliseAddress(g.representative.tokenAddress ?? "")));
 
-  // Sort by-token aggregates by amount desc — used for "biggest unlocks" lists
+  // Sort by-token aggregates by amount desc – used for "biggest unlocks" lists
   const byToken = Array.from(tokenAmountMap.values())
     .sort((a, b) => (a.amount > b.amount ? -1 : a.amount < b.amount ? 1 : 0))
     .slice(0, 20);
@@ -650,7 +650,7 @@ export async function getUnlocksInWindow(
  * render paths so the Upstash SDK's no-store fetch doesn't poison
  * the route (see quick-prices.ts comment).
  *
- * Returns a NEW array — does not mutate `groups`.
+ * Returns a NEW array – does not mutate `groups`.
  */
 export async function enrichGroupsWithUsd(
   groups: ReadonlyArray<WindowUnlockGroup>,
@@ -660,7 +660,7 @@ export async function enrichGroupsWithUsd(
   const { getQuickUsdPrices, toUsdValue } = await import("./quick-prices");
 
   // Distinct (chainId, normalised address). Drop unpriceable rows
-  // (no amount or no address) early — they can't get a USD value anyway.
+  // (no amount or no address) early – they can't get a USD value anyway.
   const pairs = new Map<string, { chainId: number; address: string }>();
   for (const g of groups) {
     if (!g.amount || !g.tokenAddress) continue;
@@ -671,7 +671,7 @@ export async function enrichGroupsWithUsd(
   }
   if (pairs.size === 0) return groups.map((g) => ({ ...g, usdValue: null, usdConfidence: null }));
 
-  // Pricing — read the persistent token_prices_cache FIRST (a fast local DB
+  // Pricing – read the persistent token_prices_cache FIRST (a fast local DB
   // read the hourly cron keeps warm), and only hit the live DexScreener path
   // (getQuickUsdPrices) for tokens the cache doesn't cover. This keeps every
   // filter/sort re-render snappy instead of doing a live price batch each time.
@@ -681,7 +681,7 @@ export async function enrichGroupsWithUsd(
   // cap for cache-priced ones.
   const { readPriceCache } = await import("./token-price-cache");
   const allPairs = [...pairs.values()];
-  const EXPLORER_PRICE_MAX_AGE_SEC = 24 * 60 * 60; // browse tool — day-old prices are fine
+  const EXPLORER_PRICE_MAX_AGE_SEC = 24 * 60 * 60; // browse tool – day-old prices are fine
 
   // Fail-safe: a cache-read error degrades to an empty map → all tokens
   // become "misses" → live-priced, exactly the pre-change behaviour.
@@ -700,11 +700,11 @@ export async function enrichGroupsWithUsd(
       :                 "low";
     priceMap.set(key, { priceUsd: c.priceUsd, confidence, volume24hUsd: null, marketCap: c.marketCap });
   }
-  // Live-price the cache misses — UNLESS the caller opts out. The explorer
+  // Live-price the cache misses – UNLESS the caller opts out. The explorer
   // passes liveFallback:false so its render is pure-DB (no DexScreener/Redis
-  // round-trip on the request path): cache misses simply show "—" and the
+  // round-trip on the request path): cache misses simply show "–" and the
   // hourly refresh-prices cron fills them in. This is the fix for the explorer
-  // timeouts — with ~7k active tokens and a still-warming cache, live-pricing
+  // timeouts – with ~7k active tokens and a still-warming cache, live-pricing
   // the per-render miss set added unbounded network latency on a user-facing
   // synchronous render. Other callers (API routes) keep the live fallback.
   if (opts?.liveFallback !== false) {
@@ -730,7 +730,7 @@ export async function enrichGroupsWithUsd(
       absorptionRatio = usdValue / vol;
     }
 
-    // Market-cap share: this unlock's USD value / the token's market cap —
+    // Market-cap share: this unlock's USD value / the token's market cap –
     // "how much of the tradeable token is hitting the market at once". This
     // REPLACES the old supplyShare (unlock ÷ LOCKED supply), which flagged
     // every single-wallet token as HIGH (its one unlock = ~100% of its own
