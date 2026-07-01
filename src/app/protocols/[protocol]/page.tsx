@@ -54,6 +54,7 @@ import {
 import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-queries";
+import { isLinkableTokenAddress } from "@/lib/chain-links";
 
 // On-demand ISR with 5-minute revalidation (2026-06-12).
 //
@@ -1158,7 +1159,7 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   const amount = formatAmountCompact(u.amount, u.tokenSymbol, u.tokenDecimals);
   const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
   // Only link when we know a chain+address — otherwise fall back to a plain row.
-  const canLink = !!u.tokenAddress && /^0x[0-9a-f]{40}$/i.test(u.tokenAddress);
+  const canLink = isLinkableTokenAddress(u.tokenAddress);
   // Group rollup line — same shape as the cross-protocol widget on /protocols.
   // Single-stream groups (walletCount=1) keep the legacy "for 0xabcd…" line;
   // multi-wallet groups switch to "N wallets unlock together" so a Hedgey
@@ -1245,7 +1246,7 @@ function LiveStreamRow({ s, accent }: { s: StreamingRow; accent: string }) {
   const streamed = formatAmountCompact(s.streamedAmount, s.tokenSymbol, s.tokenDecimals);
   const sym      = s.tokenSymbol ?? "";
   const rate     = streamRatePerDay(s.amountPerSecRaw);
-  const canLink  = !!s.tokenAddress && /^0x[0-9a-f]{40}$/i.test(s.tokenAddress);
+  const canLink  = isLinkableTokenAddress(s.tokenAddress);
   const inner = (
     <div className="px-4 md:px-5 py-3 flex items-center gap-3 min-h-[60px] transition-colors hover:bg-slate-50/60">
       <div className="flex-1 min-w-0">

@@ -19,6 +19,23 @@ import { isValidEvmAddress, isValidSolanaAddress } from "@/lib/address-validatio
 
 const SOLANA_CHAIN_ID = 101;
 
+// EVM 0x-hex OR Solana base58 (32–44 chars, base58 alphabet). Regex-based so
+// it's safe to use in client components without pulling in @solana/web3.js.
+const EVM_ADDR_RE     = /^0x[0-9a-fA-F]{40}$/;
+const SOLANA_ADDR_RE  = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+/**
+ * True when `addr` is a real on-chain token address we can build a
+ * `/token/[chainId]/[address]` link to — EVM hex or Solana base58. Used to
+ * gate token links so symbol-only / placeholder rows don't navigate to a dead
+ * page. Previously callers hardcoded an EVM-only `/^0x…{40}$/` test, which made
+ * every Solana (Streamflow / Jupiter Lock) token un-clickable.
+ */
+export function isLinkableTokenAddress(addr: string | null | undefined): boolean {
+  if (!addr) return false;
+  return EVM_ADDR_RE.test(addr) || SOLANA_ADDR_RE.test(addr);
+}
+
 /**
  * Block-explorer URL for a contract on a given chain.
  * EVM chains: Etherscan family. Solana: Solscan.

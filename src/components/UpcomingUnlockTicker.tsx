@@ -318,7 +318,12 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const amount = formatAmount(row.amount, row.tokenSymbol, row.tokenDecimals);
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h
-  const canLink  = !!row.tokenAddress && /^0x[0-9a-f]{40}$/i.test(row.tokenAddress);
+  // EVM 0x-hex OR Solana base58 — mirrors isLinkableTokenAddress() in
+  // chain-links.ts (inlined here to keep @solana/web3.js out of the client
+  // bundle). Without the Solana branch every Streamflow / Jupiter Lock token
+  // was un-clickable.
+  const canLink  = !!row.tokenAddress &&
+    (/^0x[0-9a-fA-F]{40}$/.test(row.tokenAddress) || /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(row.tokenAddress));
   // walletCount may be undefined on legacy clients hitting an old API build —
   // default to 1 so the row still renders the single-wallet format. (Once the
   // API and client are deployed together, this is always set.)

@@ -81,6 +81,7 @@ const CHAIN_NAMES: Record<number, string> = {
   8453: "Base",
   42161: "Arbitrum",
   10: "Optimism",
+  101: "Solana",
 };
 
 // Per-chain block-explorer hosts for the public token page. Same convention
