@@ -358,10 +358,13 @@ export async function getWindowCountsFast(
   ) {
     return { unlockCount: 0, tokenCount: 0, chainCount: 0 };
   }
+  // Unquoted snake_case aliases + result[0] — matches the proven db.execute
+  // pattern in dbcache.ts / token-rollups.ts. (Quoted camelCase aliases work
+  // with raw postgres-js but round-tripped oddly through drizzle's db.execute.)
   const rows = await db.execute(sql`
-    SELECT count(*)::int                      AS "unlockCount",
-           count(DISTINCT token_address)::int AS "tokenCount",
-           count(DISTINCT chain_id)::int      AS "chainCount"
+    SELECT count(*)::int                      AS unlock_count,
+           count(DISTINCT token_address)::int AS token_count,
+           count(DISTINCT chain_id)::int      AS chain_count
     FROM (
       SELECT protocol, chain_id, token_address, floor(end_time / 3600) AS hb
       FROM vesting_streams_cache
@@ -372,11 +375,11 @@ export async function getWindowCountsFast(
       GROUP BY protocol, chain_id, token_address, hb
     ) g
   `);
-  const r = (rows as unknown as Array<{ unlockCount: number; tokenCount: number; chainCount: number }>)[0];
+  const r = (rows as unknown as Array<{ unlock_count: number; token_count: number; chain_count: number }>)[0];
   return {
-    unlockCount: Number(r?.unlockCount ?? 0),
-    tokenCount:  Number(r?.tokenCount ?? 0),
-    chainCount:  Number(r?.chainCount ?? 0),
+    unlockCount: Number(r?.unlock_count ?? 0),
+    tokenCount:  Number(r?.token_count ?? 0),
+    chainCount:  Number(r?.chain_count ?? 0),
   };
 }
 
