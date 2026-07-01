@@ -331,6 +331,11 @@ export default async function UnlocksIndexPage() {
       // dollar TVL so the headline reflects scale alongside dollars
       // (Sablier alone manages ~365k positions across our chains).
       activeStreams: stats?.activeStreams ?? null,
+      // Chains we actually have indexed data on (not the declared chainIds).
+      // Team Finance declares Base but has zero Base data, so declared=4
+      // overstated it; the real figure is 3. Falls back to declared when
+      // stats are unavailable (cold cache) so the label never renders blank.
+      indexedChainCount: stats?.chainIds?.length ?? null,
       // Cumulative total — includes ended / fully-withdrawn streams.
       // Helpful context: a protocol with 1k active and 30k total has
       // demonstrably been used at scale, even if claim activity has

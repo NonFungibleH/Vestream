@@ -26,10 +26,13 @@ export interface TvlComparisonRow {
   protocol:      ProtocolMeta;
   tvl:           ProtocolTvl | null;
   /** Indexed-cache active stream count from getProtocolStats. Used in
-   *  the row's sub-label "{N} active streams across {C} blockchains".
-   *  The chain count comes from protocol.chainIds (static metadata) so
-   *  the sub-label stays correct even when a chain's seeder is failing. */
+   *  the row's sub-label "{N} active streams across {C} blockchains". */
   activeStreams?: number | null;
+  /** Number of chains we actually have INDEXED data on (stats.chainIds).
+   *  Preferred over protocol.chainIds (declared) so a declared-but-empty
+   *  chain — e.g. Team Finance on Base — isn't counted. Falls back to the
+   *  declared count when null (cold cache). */
+  indexedChainCount?: number | null;
   /**
    * @deprecated since 2026-05-10 — totalStreams is no longer rendered.
    * Including ended/fully-withdrawn rows inflated the count without
@@ -236,21 +239,22 @@ export function TvlComparisonBar({
           </div>
         ) : (
           <div className="divide-y flex-1 flex flex-col" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-            {sorted.map(({ protocol, tvl, activeStreams }) => {
+            {sorted.map(({ protocol, tvl, activeStreams, indexedChainCount }) => {
               const tvlUsd      = tvl?.tvlUsd ?? 0;
               const coveragePct = tvl ? Math.round(tvl.coverage * 100) : 0;
               const widthPct    = Math.max(2, (tvlUsd / maxTvl) * 100);
               const hasValue    = tvlUsd > 0;
               const isExternal  = externallySourced?.has(protocol.slug) ?? false;
               const active      = activeStreams ?? 0;
-              // Sub-label: "{N} active streams across {C} blockchain[s]".
-              // Dropped the "X active · Y total" form on 2026-05-10 — total
-              // streams included ended/fully-withdrawn rows, which inflated
-              // the headline without reflecting current activity. Chain
-              // count comes straight from the protocol's static metadata
-              // (chainIds), not from cache state, so it stays correct even
-              // if a chain's seeder is temporarily failing.
-              const chainCount = protocol.chainIds.length;
+              // Sub-label: "{N} active streams · {C} blockchain[s]".
+              // Chain count = chains we actually have indexed data on
+              // (indexedChainCount from stats), falling back to the declared
+              // chainIds only when stats are cold. Using the real count keeps
+              // a declared-but-empty chain (Team Finance on Base) from
+              // inflating the figure past what the detail/unlocks pages show.
+              const chainCount = (indexedChainCount && indexedChainCount > 0)
+                ? indexedChainCount
+                : protocol.chainIds.length;
               const chainNoun  = chainCount === 1 ? "blockchain" : "blockchains";
               // Format: "{N} active streams · {C} blockchain[s]"
               // Bullet-separated for fast scanning vs sentence form. Easier

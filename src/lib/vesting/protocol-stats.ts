@@ -717,15 +717,27 @@ export async function getUpcomingUnlockGroupsAcross(
 ): Promise<UnlockGroupSummary[]> {
   if (shouldSkipDbAtBuildTime()) return [];
   const cacheLimit = Math.min(60, Math.max(30, limit * 3));
-  const cached     = await getUpcomingUnlockGroupsAcrossCached(cacheLimit);
   const nowSec     = Math.floor(Date.now() / 1000);
-  // Drop anything whose endTime has now passed. The cached payload
-  // was filtered against an older nowSec (up to 60s ago) so events
-  // that were "in 5s" when the cache populated leak through; this
-  // pass removes them.
-  return cached
-    .filter((g) => g.endTime != null && g.endTime > nowSec)
-    .slice(0, limit);
+  const stillFuture = (g: UnlockGroupSummary) => g.endTime != null && g.endTime > nowSec;
+
+  // Drop anything whose endTime has now passed. The cached payload was filtered
+  // against an older nowSec so events that were near-term when the cache
+  // populated leak through as "now"; this pass removes them.
+  const cached = await getUpcomingUnlockGroupsAcrossCached(cacheLimit);
+  let live = cached.filter(stillFuture);
+
+  // Stale-cache guard: on a low-traffic endpoint the cache can age well past
+  // its 60s revalidate (stale-while-revalidate serves old data between hits).
+  // As it ages, more of the over-fetched groups elapse and get filtered out —
+  // the visible list silently shrinks (we saw it fall from 15 → 5). When the
+  // filtered result comes up short of `limit`, recompute fresh so the list
+  // stays full; the recompute also re-warms the cache for the next caller.
+  if (live.length < limit) {
+    const fresh = await getUpcomingUnlockGroupsAcrossUncached(cacheLimit);
+    live = fresh.filter(stillFuture);
+  }
+
+  return live.slice(0, limit);
 }
 
 const getUpcomingUnlockGroupsAcrossCached = unstable_cache(
