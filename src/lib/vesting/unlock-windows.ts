@@ -335,6 +335,51 @@ export const EMPTY_WINDOW_RESULT: WindowResult = {
   stats:  { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] },
 };
 
+/**
+ * CHEAP window count — just the numbers, for the /unlocks index cards.
+ *
+ * getUnlocksInWindow() fetches up to 1000 rows, groups them in JS, and prices
+ * every token. Firing 8 of those concurrently (one per window) on an on-demand
+ * render exhausted the Supabase pooler (ECHECKOUTTIMEOUT), taking the whole
+ * site down. This does the same grouping in ONE indexed SQL count — no row
+ * fetch, no JS, no pricing — so callers can run the 8 windows sequentially for
+ * a fraction of the load. `unlockCount` = distinct
+ * (protocol, chain, token, hour-bucket) groups, matching the full query.
+ */
+export async function getWindowCountsFast(
+  startSec: number,
+  endSec:   number,
+): Promise<{ unlockCount: number; tokenCount: number; chainCount: number }> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (
+    !dbUrl ||
+    /(\/\/|@)(localhost|127\.0\.0\.1)/.test(dbUrl) ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
+    return { unlockCount: 0, tokenCount: 0, chainCount: 0 };
+  }
+  const rows = await db.execute(sql`
+    SELECT count(*)::int                      AS "unlockCount",
+           count(DISTINCT token_address)::int AS "tokenCount",
+           count(DISTINCT chain_id)::int      AS "chainCount"
+    FROM (
+      SELECT protocol, chain_id, token_address, floor(end_time / 3600) AS hb
+      FROM vesting_streams_cache
+      WHERE is_fully_vested = false
+        AND end_time >  ${startSec}
+        AND end_time <= ${endSec}
+        AND chain_id NOT IN (11155111, 84532)
+      GROUP BY protocol, chain_id, token_address, hb
+    ) g
+  `);
+  const r = (rows as unknown as Array<{ unlockCount: number; tokenCount: number; chainCount: number }>)[0];
+  return {
+    unlockCount: Number(r?.unlockCount ?? 0),
+    tokenCount:  Number(r?.tokenCount ?? 0),
+    chainCount:  Number(r?.chainCount ?? 0),
+  };
+}
+
 export async function getUnlocksInWindow(
   startSec: number,
   endSec:   number,

@@ -6,21 +6,20 @@
 // page itself isn't thin.
 
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT } from "@/lib/vesting/unlock-windows";
-import { withTimeout } from "@/lib/with-timeout";
+import { ALL_WINDOW_SLUGS, WINDOWS, getWindowCountsFast } from "@/lib/vesting/unlock-windows";
 
-// Render on-demand at request time – NOT statically prerendered.
-// Static prerendering baked "–" into every window count (the DB is unreachable
-// during `next build`, so getUnlocksInWindow returns empty), and the 15-min ISR
-// fill was unreliable + reset by every deploy – the index intermittently showed
-// dashes (looked like "empty on mobile"). The counts stay wrapped in
-// unstable_cache (15-min) below so a request reads cached numbers, not 8 live
-// window scans. Mirrors the /protocols/[slug]/unlocks fix.
-export const dynamic = "force-dynamic";
+// ISR (30-min) — renders once per revalidation, NOT per request. The previous
+// force-dynamic version fired 8 heavy window scans on EVERY request, which
+// exhausted the Supabase pooler (ECHECKOUTTIMEOUT) and slowed the whole site
+// (token/protocol pages couldn't get a connection). Counts now use
+// getWindowCountsFast — one cheap indexed count per window, run sequentially —
+// so even the revalidation render holds a single connection and finishes in
+// under a second. Build bakes "–"; the first revalidation after deploy fills
+// the real numbers.
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
@@ -35,63 +34,25 @@ export const metadata: Metadata = {
   },
 };
 
-// Wrapped in unstable_cache (15-min) so the force-dynamic page reads cached
-// counts instead of firing 8 window scans on every request. Returns a plain
-// array (unstable_cache JSON-serialises – a Map wouldn't round-trip); the page
-// rebuilds the Map. THROW during the build phase so the empty result is never
-// cached (unstable_cache doesn't cache throws) – the first runtime request
-// fills real data.
-const getCachedWindowCounts = unstable_cache(
-  async () => {
-    if (process.env.NEXT_PHASE === "phase-production-build") {
-      throw new Error("build-phase: skipping unlock-window counts – ISR fills at runtime");
-    }
-    // Run all window queries in parallel. Cap the SQL pool at 500/window so 8
-    // concurrent scans stay cheap; counts beyond 500 read as "500+". 15s
-    // per-window budget (was 8s — a cold pooler under 8 concurrent scans blew
-    // that, so every window degraded to empty and the empty got CACHED for the
-    // full 15-min TTL, showing all-dashes).
-    const counts = await Promise.all(
-      ALL_WINDOW_SLUGS.map(async (slug) => {
-        const def   = WINDOWS[slug];
-        const range = def.range();
-        const result = await withTimeout(
-          getUnlocksInWindow(range.startSec, range.endSec, 500),
-          15_000,
-          EMPTY_WINDOW_RESULT,
-          `unlocks-index:${slug}`,
-        );
-        return {
-          slug,
-          unlockCount: result.stats.unlockCount,
-          tokenCount:  result.stats.tokenCount,
-          chainCount:  result.stats.chainCount,
-        };
-      }),
-    );
-    // If EVERY window is empty, that's a transient failure (cold pooler / all
-    // queries timed out), not reality — there are always thousands of upcoming
-    // unlocks. THROW so unstable_cache never caches the empty (it doesn't cache
-    // throws); the next request retries fresh instead of serving dashes for 15
-    // minutes. getWindowCounts() catches this and renders the empty state once.
-    if (counts.every((c) => c.unlockCount === 0)) {
-      throw new Error("all unlock windows empty — transient failure, not caching");
-    }
-    return counts;
-  },
-  ["unlocks-index-window-counts-v2"],
-  { revalidate: 900, tags: ["upcoming-unlocks"] },
-);
+type WindowCount = { slug: string; unlockCount: number; tokenCount: number; chainCount: number };
 
-async function getWindowCounts() {
-  try {
-    const counts = await getCachedWindowCounts();
-    return new Map(counts.map((c) => [c.slug, c]));
-  } catch {
-    // Build-phase throw (or a DB blip) – render the empty state; ISR fills it
-    // on the first real request.
-    return new Map<string, { slug: string; unlockCount: number; tokenCount: number; chainCount: number }>();
+async function getWindowCounts(): Promise<Map<string, WindowCount>> {
+  // SEQUENTIAL (not Promise.all) — hold ONE pooler connection at a time. The
+  // concurrent 8-at-once version was a primary cause of the ECHECKOUTTIMEOUT
+  // saturation. Each getWindowCountsFast is a cheap indexed group-by count
+  // (~100ms), so 8 in series is still well under a second, and a per-window
+  // failure degrades to "–" without taking the page down.
+  const out = new Map<string, WindowCount>();
+  for (const slug of ALL_WINDOW_SLUGS) {
+    const range = WINDOWS[slug].range();
+    try {
+      const s = await getWindowCountsFast(range.startSec, range.endSec);
+      out.set(slug, { slug, ...s });
+    } catch {
+      out.set(slug, { slug, unlockCount: 0, tokenCount: 0, chainCount: 0 });
+    }
   }
+  return out;
 }
 
 export default async function UnlocksIndex() {
