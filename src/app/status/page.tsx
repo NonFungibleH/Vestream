@@ -22,7 +22,7 @@ import { Redis } from "@upstash/redis";
 import { SiteNav } from "@/components/SiteNav";
 import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
-import { getCacheStatsCells, getMaxLastRefreshedAt } from "@/lib/vesting/cache-stats";
+import { getCacheStatsCells } from "@/lib/vesting/cache-stats";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 import { db } from "@/lib/db";
 import { indexerState } from "@/lib/db/schema";
@@ -140,6 +140,18 @@ function withRedisTimeout<T>(
 
 async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) | null> {
   type Good = StatusPayload & { capturedAt: number };
+  // A payload is only USABLE if it actually has cells. This guard is the
+  // real fix for the recurring all-"Pending" outage: a single empty payload
+  // (captured when a cold/saturated pooler lost the live-read timeout race)
+  // had been poisoning Redis, and readLastGood returned it verbatim —
+  // short-circuiting BEFORE the healthy durable Postgres L2. Every "v-bump"
+  // in loadStatusData's cache key was a manual flush of that poison. By
+  // skipping empty payloads here, an empty/poisoned L1 falls through to the
+  // durable L2, and an empty L2 returns null (so the caller's own empty
+  // handling runs) instead of masquerading as real data.
+  const isUsable = (p: Good | null | undefined): p is Good =>
+    !!p && Array.isArray(p.cells) && p.cells.length > 0;
+
   // L1: Upstash Redis (fast, but evicts on the Hobby tier).
   const redis = maybeRedis();
   if (redis) {
@@ -148,14 +160,19 @@ async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) 
       null,
       "redis read",
     );
-    if (fromRedis) return fromRedis;
+    if (isUsable(fromRedis)) return fromRedis;
   }
   // L2: durable Postgres (never evicts) – the real fix for the all-"Pending"
   // empty grid when a cold-lambda live read times out AND Redis has dropped.
-  return getLastGoodStatusDb<Good>();
+  const fromDb = await getLastGoodStatusDb<Good>();
+  return isUsable(fromDb) ? fromDb : null;
 }
 
 async function writeLastGood(payload: StatusPayload): Promise<void> {
+  // Never persist an empty payload — an empty last-good is worse than none
+  // (it poisons both the Redis L1 and durable L2 fallbacks). The success-path
+  // caller already gates on cells.length > 0; this is defence in depth.
+  if (!payload.cells || payload.cells.length === 0) return;
   const withTs = { ...payload, capturedAt: Math.floor(Date.now() / 1000) };
   setLastGoodStatusDb(withTs); // durable L2 (fire-and-forget)
   const redis = maybeRedis();
@@ -206,12 +223,24 @@ export const maxDuration = 30;
 const loadStatusData = unstable_cache(
   async (): Promise<StatusResult> => {
     try {
-      const [cells, tvlRows, maxLastRefreshedSec, activeIndexers] = await Promise.all([
+      const [cells, tvlRows, activeIndexers] = await Promise.all([
         getCacheStatsCells(),
         readAllSnapshots(),
-        getMaxLastRefreshedAt(),
         getActiveIndexers(),
       ]);
+
+      // Derive "last indexed" from the cells we already loaded — the max of
+      // their per-cell freshest timestamps. Previously this was a SEPARATE
+      // `getMaxLastRefreshedAt()` query = `SELECT max(last_refreshed_at) FROM
+      // vesting_streams_cache`, an UNINDEXED full-scan over ~100k rows that
+      // measured ~20s and therefore ALWAYS lost its 2s timeout and returned
+      // null — so the "Last indexed" hero line never rendered. status_summary
+      // already carries freshest_sec per (protocol, chain), so the global max
+      // is free here and consistent with the rest of the grid.
+      const maxLastRefreshedSec = cells.reduce<number | null>(
+        (mx, c) => (c.freshestSec != null && (mx == null || c.freshestSec > mx) ? c.freshestSec : mx),
+        null,
+      );
 
       // Empty-result trap (added 2026-05-26): when the seed-cache cron is
       // mid-refreshStatusSummary, the status_summary table is briefly empty.
@@ -324,7 +353,17 @@ const loadStatusData = unstable_cache(
   // payload from a cold render that lost the 6s status_summary timeout race
   // (see cache-stats.ts – bumped to 15s the same day). Without this bump the
   // poisoned empty entry would keep serving for up to 10 min after deploy.
-  ["status-page-data-v11"],
+  // v12 bump on 2026-07-01: the ACTUAL root cause of the recurring all-Pending
+  // outage (all prior v-bumps were manual flushes of the symptom). Two holes:
+  //   (1) readLastGood() returned an empty/poisoned Redis payload verbatim,
+  //       short-circuiting the HEALTHY durable Postgres L2 → empty served even
+  //       though last-good had 48 real cells. Now readLastGood skips empty
+  //       payloads at every layer, so the durable L2 actually rescues the page.
+  //   (2) getMaxLastRefreshedAt() was a ~20s unindexed full-scan; removed here
+  //       in favour of deriving the max from the cells we already load.
+  // With (1) in place an empty payload can no longer be cached (the durable L2
+  // is always served instead), so this should be the LAST v-bump for this class.
+  ["status-page-data-v12"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
