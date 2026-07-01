@@ -1025,8 +1025,14 @@ export async function readSnapshotsForAdapters(
       byChain.set(r.chainId, (byChain.get(r.chainId) ?? 0) + Number(r.tvlUsd));
     }
 
+    // Keep $0 chains: a snapshot row exists only for a (protocol, chain) we
+    // actually walk, so tvl_usd = 0 means "integrated here, nothing locked yet"
+    // — e.g. Team Finance on Base. We want those shown on the detail page's
+    // "Locked value by chain" card (the caller filters to the protocol's
+    // declared chainIds, so untracked-chain dust never slips through). Only
+    // drop genuinely-negative values, which shouldn't occur.
     return Array.from(byChain.entries())
-      .filter(([, usd]) => usd > 0)
+      .filter(([, usd]) => usd >= 0)
       .map(([chainId, tvlUsd]) => ({ chainId, tvlUsd }))
       .sort((a, b) => b.tvlUsd - a.tvlUsd);
   } catch (err) {
