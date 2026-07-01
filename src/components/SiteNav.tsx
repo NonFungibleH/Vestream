@@ -88,7 +88,22 @@ export function SiteNav({ theme = "light" }: Props) {
     <>
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 h-14 md:h-16"
-        style={{ background: navBg, borderBottom: `1px solid ${navBorder}`, backdropFilter: "blur(12px)" }}
+        // `transform: translateZ(0)` forces the fixed bar onto its own GPU
+        // compositing layer. Without it, iOS Safari fails to repaint a
+        // `position: fixed` element that also has `backdrop-filter` during
+        // momentum scroll — the bar detaches and appears to drift with the
+        // page content (reported "menu moves instead of staying stuck"). The
+        // -webkit prefixes cover older iOS. Safe: the mobile dropdown + its
+        // full-screen backdrop are SIBLINGS of <nav>, so promoting the nav to
+        // a containing block doesn't reposition them.
+        style={{
+          background: navBg,
+          borderBottom: `1px solid ${navBorder}`,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+        }}
       >
         {/* Logo */}
         <Link href="/" className="flex items-center hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
