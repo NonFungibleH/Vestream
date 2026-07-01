@@ -53,9 +53,17 @@ const getCachedWindowCounts = unstable_cache(
         out.push({ slug, unlockCount: 0, tokenCount: 0, chainCount: 0 });
       }
     }
+    // If EVERY window is empty it's a transient failure (a pooler blip during
+    // compute), not reality — there are always thousands of upcoming unlocks.
+    // THROW so unstable_cache never caches the empty; the next request retries.
+    // Safe from the old death-spiral: these are cheap, SEQUENTIAL counts (one
+    // connection, ~1s), not the 8 concurrent heavy scans that caused it.
+    if (out.every((c) => c.unlockCount === 0)) {
+      throw new Error("all unlock windows empty — transient, not caching");
+    }
     return out;
   },
-  ["unlocks-index-window-counts-v3"],
+  ["unlocks-index-window-counts-v4"],
   { revalidate: 600, tags: ["upcoming-unlocks"] },
 );
 
