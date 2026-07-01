@@ -31,7 +31,7 @@ interface CurrencyContextValue {
   currency: CurrencyCode;
   /** USD → currency multiplier (1 for USD, 0.79 for GBP, etc) */
   rate:     number;
-  /** Set the user's currency choice — persists + dispatches event */
+  /** Set the user's currency choice – persists + dispatches event */
   setCurrency: (code: CurrencyCode) => void;
   /** Convenience formatters bound to the current currency + rate */
   format:        (usd: number | null | undefined) => string;
@@ -74,7 +74,7 @@ export function CurrencyProvider({ children, rates, initialCurrency }: ProviderP
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrencyState(stored as CurrencyCode);
       }
-    } catch { /* localStorage disabled — use the prop default */ }
+    } catch { /* localStorage disabled – use the prop default */ }
 
     function onChange(e: Event) {
       const detail = (e as CustomEvent<CurrencyCode>).detail;
@@ -113,7 +113,7 @@ export function CurrencyProvider({ children, rates, initialCurrency }: ProviderP
 export function useCurrency(): CurrencyContextValue {
   const ctx = useContext(CurrencyContext);
   if (!ctx) {
-    // Reasonable fallback — components that aren't yet wrapped get USD.
+    // Reasonable fallback – components that aren't yet wrapped get USD.
     // This means we can roll out the provider gradually without breaking
     // pages that haven't been touched yet.
     return {

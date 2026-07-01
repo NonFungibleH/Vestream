@@ -1,11 +1,11 @@
-// /unlocks/mass-distributions — token unlock events with 25+ recipients.
+// /unlocks/mass-distributions – token unlock events with 25+ recipients.
 //
 // SEO target: "airdrop unlocks", "launchpad token vesting", "team round
-// unlocks". The distinguishing feature is walletCount ≥ 25 — that filter
+// unlocks". The distinguishing feature is walletCount ≥ 25 – that filter
 // catches airdrops, launchpad allocations, and seed-round distributions
 // while excluding the long tail of single-recipient team grants.
 //
-// 30-day window — wide enough to cover the typical launchpad cadence
+// 30-day window – wide enough to cover the typical launchpad cadence
 // without diluting the signal with multi-year team vests.
 
 import type { Metadata } from "next";
@@ -22,7 +22,7 @@ const MIN_WALLETS = 25;
 const WINDOW_DAYS = 30;
 
 export const metadata: Metadata = {
-  title:       "Token Mass Distributions — Airdrops & Launchpad Unlocks | Vestream",
+  title:       "Token Mass Distributions – Airdrops & Launchpad Unlocks | Vestream",
   description: `On-chain unlock events with ${MIN_WALLETS}+ recipients in the next ${WINDOW_DAYS} days. Catches airdrops, launchpad rounds, and seed allocations.`,
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {
@@ -94,10 +94,10 @@ export default async function MassDistributionsPage() {
           Mass distributions
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-2" style={{ color: "#475569" }}>
-          Token unlock events with {MIN_WALLETS}+ recipients landing in the next {WINDOW_DAYS} days. Captures airdrops, launchpad rounds, and seed-round distributions — the events most likely to move a token&apos;s circulating supply.
+          Token unlock events with {MIN_WALLETS}+ recipients landing in the next {WINDOW_DAYS} days. Captures airdrops, launchpad rounds, and seed-round distributions – the events most likely to move a token&apos;s circulating supply.
         </p>
         <p className="text-xs" style={{ color: "#8B8E92" }}>
-          Single-recipient team grants are excluded by design — see <Link href="/unlocks/biggest-this-week" className="underline">biggest unlocks this week</Link> for those.
+          Single-recipient team grants are excluded by design – see <Link href="/unlocks/biggest-this-week" className="underline">biggest unlocks this week</Link> for those.
         </p>
       </section>
 

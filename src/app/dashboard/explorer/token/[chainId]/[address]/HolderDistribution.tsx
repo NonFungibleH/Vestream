@@ -1,13 +1,13 @@
 // Holder distribution + vesting-span panel for the token detail page.
 //
-// "Who holds the locked supply, and over what timeframe" — the core
+// "Who holds the locked supply, and over what timeframe" – the core
 // informed-decision signal. A fair launch (many wallets, no dominant holder,
 // long linear vest) reads very differently from 3 wallets holding 95% behind
 // a near-term cliff. Renders concentration headline stats, a plain-language
 // verdict, the whole-token vesting span, and a ranked bar list of the largest
 // recipients (each links to its wallet view).
 //
-// Server component — purely presentational, no interactivity. Data is computed
+// Server component – purely presentational, no interactivity. Data is computed
 // once on the page (computeDistribution) from streams already loaded.
 
 import Link from "next/link";
@@ -32,10 +32,10 @@ const fmtUsd = (n: number) =>
 const shortAddr = (a: string) => (a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
 const pct = (s: number) => (s > 0 && s < 0.01 ? "<1%" : `${Math.round(s * 100)}%`);
 const fmtDate = (t: number | null) =>
-  t ? new Date(t * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—";
+  t ? new Date(t * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "–";
 
 function fmtSpan(firstStart: number | null, lastEnd: number | null): string {
-  if (firstStart == null || lastEnd == null || lastEnd <= firstStart) return "—";
+  if (firstStart == null || lastEnd == null || lastEnd <= firstStart) return "–";
   const days = (lastEnd - firstStart) / 86_400;
   if (days >= 730) {
     const years = days / 365.25;
@@ -50,11 +50,11 @@ function fmtSpan(firstStart: number | null, lastEnd: number | null): string {
 type Tone = "warn" | "ok" | "info";
 
 // Plain-language read on concentration. IMPORTANT: this is concentration WITHIN
-// the vesting (locked) supply — NOT the token's overall holder base. A token can
+// the vesting (locked) supply – NOT the token's overall holder base. A token can
 // circulate widely with only one or two wallets vesting, so a single vesting
 // position is stated neutrally, never flagged as a centralisation risk. The
 // significance of the vesting (how big it is vs market cap) is shown separately.
-// "Excessive" concentration — the ONLY cases we flag (amber). Deliberately a
+// "Excessive" concentration – the ONLY cases we flag (amber). Deliberately a
 // high bar so we don't cry wolf: a single wallet holding the majority, OR a
 // handful dominating DESPITE many wallets. "Top 5 = 100%" when there are only
 // 5-7 vesting wallets is trivially true, not a signal, so it's NOT flagged.
@@ -67,11 +67,11 @@ function isExcessiveTop5(top5: number, totalHolders: number): boolean {
 
 function verdict(top1: number, top5: number, totalHolders: number): { text: string; tone: Tone } {
   if (totalHolders === 1) {
-    return { text: "A single wallet holds all the vesting supply — this reflects the vesting only, not the token's wider distribution.", tone: "info" };
+    return { text: "A single wallet holds all the vesting supply – this reflects the vesting only, not the token's wider distribution.", tone: "info" };
   }
   if (isExcessiveTop1(top1, totalHolders)) return { text: `One wallet holds ${pct(top1)} of the vesting supply.`, tone: "warn" };
   if (isExcessiveTop5(top5, totalHolders)) return { text: `Just 5 of ${totalHolders.toLocaleString()} vesting wallets hold ${pct(top5)} of the supply.`, tone: "warn" };
-  if (totalHolders >= 25 && top5 < 0.6) return { text: `Vesting is spread across ${totalHolders.toLocaleString()} wallets — no dominant holder.`, tone: "ok" };
+  if (totalHolders >= 25 && top5 < 0.6) return { text: `Vesting is spread across ${totalHolders.toLocaleString()} wallets – no dominant holder.`, tone: "ok" };
   return { text: `Vesting is split across ${totalHolders.toLocaleString()} wallets.`, tone: "info" };
 }
 
@@ -89,7 +89,7 @@ export function HolderDistribution({
   spanPct:     number | null;
   isFree:      boolean;
   rowCap:      number;
-  /** Locked/vesting USD ÷ the token's market cap — how big the vesting overhang
+  /** Locked/vesting USD ÷ the token's market cap – how big the vesting overhang
    *  is relative to the circulating token. The number that tells you whether
    *  the within-vesting concentration above actually matters. Null if unknown. */
   vestingShareOfMktCap?: number | null;
@@ -131,7 +131,7 @@ export function HolderDistribution({
       <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
         <div className="h-full rounded-full" style={{
           width: `${Math.max(2, (h.share / maxShare) * 100)}%`,
-          // A lone vesting wallet at 100% isn't a concentration signal —
+          // A lone vesting wallet at 100% isn't a concentration signal –
           // keep it neutral teal rather than alarm red.
           background: single ? "#0F8A8A" : h.share >= 0.5 ? "#dc2626" : h.share >= 0.25 ? "#d97706" : "#0F8A8A",
         }} />
@@ -152,12 +152,12 @@ export function HolderDistribution({
     <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>
-          Holder distribution <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>— who holds the locked supply</span>
+          Holder distribution <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>– who holds the locked supply</span>
         </h2>
       </div>
 
       {/* Headline stats. Top-holder / top-5 are only meaningful with >1 vesting
-          wallet — with a single position they're trivially 100%, so we don't
+          wallet – with a single position they're trivially 100%, so we don't
           colour them as a warning (that misread as a token-wide risk). */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
         <Stat label="Top vesting wallet" value={pct(top1)} tone={exTop1 ? "warn" : undefined} />
@@ -170,13 +170,13 @@ export function HolderDistribution({
         />
       </div>
 
-      {/* Significance FIRST: how big the vesting is vs the circulating token —
+      {/* Significance FIRST: how big the vesting is vs the circulating token –
           this is what tells you whether the concentration below matters. */}
       {vestingShareOfMktCap != null && (
         <p className="text-xs mb-1" style={{ color: "var(--preview-text-2)" }}>
           Vesting locks ≈{pct(vestingShareOfMktCap)} of {symbol}&apos;s market cap
-          {vestingShareOfMktCap < 0.05 ? " — a small slice of the circulating token." :
-           vestingShareOfMktCap >= 1   ? " — a large overhang relative to what's circulating." : "."}
+          {vestingShareOfMktCap < 0.05 ? " – a small slice of the circulating token." :
+           vestingShareOfMktCap >= 1   ? " – a large overhang relative to what's circulating." : "."}
         </p>
       )}
 
@@ -214,7 +214,7 @@ export function HolderDistribution({
           {hiddenBeyondCap > 0 && (
             <p className="text-[11px] mt-2.5 pt-2.5 border-t" style={{ borderColor: "var(--preview-border-2)", color: "var(--preview-text-3)" }}>
               {isFree ? (
-                <>+{hiddenBeyondCap.toLocaleString()} more — <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>upgrade to Pro</Link> to see the full distribution.</>
+                <>+{hiddenBeyondCap.toLocaleString()} more – <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>upgrade to Pro</Link> to see the full distribution.</>
               ) : (
                 <>Showing the top {rendered.length.toLocaleString()} of {holders.length.toLocaleString()} recipients by locked amount.</>
               )}

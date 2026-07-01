@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT-SIDE Vesting Explorer (Upcoming / calendar mode). Loads the WHOLE
 // upcoming-unlock universe ONCE (compact, CDN-cached ~0.4MB gzip over ~6.7k
-// tokens) and then does ALL filtering / sorting / pagination in the browser —
+// tokens) and then does ALL filtering / sorting / pagination in the browser –
 // zero round-trips per interaction, so every filter tweak, sort, and page turn
 // is instant. This replaced the force-dynamic server-paginated page, which
 // re-queried Postgres on every change (the explorer reads searchParams, so it
@@ -16,7 +16,7 @@
 // history.replaceState (no navigation). A shared link re-hydrates the exact
 // same view server-side on first load, then this component takes over.
 //
-// Trade-off (accepted by the user — "speed is most important"): a larger
+// Trade-off (accepted by the user – "speed is most important"): a larger
 // one-time initial payload + data that can be a few minutes stale (bounded by
 // the rollup cron + the 5-min CDN cache). Rows render only the current page
 // (25/50/100), so no virtualization is needed.
@@ -37,7 +37,7 @@ const PAGE_SIZES = [25, 50, 100];
 const SEC_DAY = 86400;
 
 // Known stablecoins (symbol, case-insensitive) for the "Hide stablecoins"
-// toggle — the common fiat-pegged tokens + their wrapped/Superfluid variants.
+// toggle – the common fiat-pegged tokens + their wrapped/Superfluid variants.
 // Exact-match (not "contains USD") so memecoins like "USDmoon" aren't caught.
 const STABLECOIN_SYMBOLS = new Set<string>([
   "usdc", "usdt", "dai", "busd", "tusd", "usdp", "gusd", "frax", "lusd", "usdd",
@@ -67,13 +67,13 @@ const DATE_FILTERS: Array<{ id: WindowSlug | "all"; label: string }> = [
   { id: "90-days",   label: "Next 90 days" },
 ];
 
-// One-click curated views — each REPLACES the current filters with a useful
+// One-click curated views – each REPLACES the current filters with a useful
 // preset (matches LENSES in page.tsx; values are 0–100 for the % fields here
 // since this component carries percentages, not 0–1 fractions).
 const LENSES: Array<{ id: string; label: string; hint: string; apply: Partial<State> }> = [
   { id: "imminent-cliffs",  label: "Imminent cliffs",  hint: "Cliff lumps unlocking in the next 30 days",
     apply: { cliffOnly: true, date: "30-days", sort: "usd", dir: "desc" } },
-  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the lock — across ≥5 recipients (excludes single-recipient tokens)",
+  { id: "whale-controlled", label: "Whale-controlled", hint: "One wallet holds ≥50% of the lock – across ≥5 recipients (excludes single-recipient tokens)",
     apply: { topMin: 50, minWallets: 5, sort: "concentration", dir: "desc" } },
   { id: "fair-launches",    label: "Fair launches",    hint: "Spread across ≥25 wallets, no dominant holder (≤25%)",
     apply: { minWallets: 25, topMax: 25, sort: "wallets", dir: "desc" } },
@@ -186,7 +186,7 @@ function matchRow(
   if (symbol != null && (row.s ?? "").toLowerCase() !== symbol) return false;
   if (st.chainIds.length > 0 && !st.chainIds.includes(row.c)) return false;
   if (adapterIds.length > 0 && !row.p.some((p) => adapterIds.includes(p))) return false;
-  // USD — a bound requires a known price (null can't be "in range").
+  // USD – a bound requires a known price (null can't be "in range").
   if (st.usdMin != null && (row.u == null || row.u < st.usdMin)) return false;
   if (st.usdMax != null && (row.u == null || row.u > st.usdMax)) return false;
   if (st.minWallets != null && row.w < st.minWallets) return false;
@@ -212,7 +212,7 @@ function sortValue(row: ExplorerDatasetRow, key: ExplorerSortKey, now: number): 
     case "usd":           return row.u;
     case "amount":        { try { return Number(BigInt(row.amt)); } catch { return 0; } }
     case "wallets":       return row.w;
-    // Single-recipient tokens are tautologically 100% concentrated — push them
+    // Single-recipient tokens are tautologically 100% concentrated – push them
     // last so sorting surfaces genuine multi-holder concentration.
     case "concentration": return row.w <= 1 ? null : row.t;
     case "rounds":        return row.r;
@@ -292,7 +292,7 @@ export function ExplorerCalendarClient({
 }) {
   const [state, setState] = useState<State>(() => fromInitial(initial));
   const [dataset, setDataset] = useState<ExplorerDatasetRow[] | null>(datasetCache);
-  // "now" lives in state (not a bare Date.now() in render — that's impure and
+  // "now" lives in state (not a bare Date.now() in render – that's impure and
   // makes the filter memo non-idempotent). Lazy-initialised once, then
   // refreshed each minute so date-window filters + relative-time labels stay
   // current in a long session. Hydration-safe: both SSR and the client's first
@@ -312,7 +312,7 @@ export function ExplorerCalendarClient({
     return () => clearInterval(id);
   }, []);
 
-  // Reflect state in the URL for shareability — no navigation (replaceState).
+  // Reflect state in the URL for shareability – no navigation (replaceState).
   useEffect(() => {
     const qs = toQueryString(state);
     window.history.replaceState(null, "", qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer");
@@ -322,7 +322,7 @@ export function ExplorerCalendarClient({
   const update = (partial: Partial<State>) =>
     setState((s) => ({ ...s, ...partial, page: partial.page ?? 1 }));
   const applyLens = (apply: Partial<State>) =>
-    // A lens REPLACES filters — start from a clean slate, keep the search query.
+    // A lens REPLACES filters – start from a clean slate, keep the search query.
     setState({
       q: state.q, date: "all", chainIds: [], protocols: [], cliffOnly: false, hideStable: false,
       sort: "date", dir: "desc", page: 1, pageSize: state.pageSize, ...apply,
@@ -491,7 +491,7 @@ export function ExplorerCalendarClient({
               Drill down
             </p>
             {/* key re-seeds the (uncontrolled) slider handles whenever the
-                values change from OUTSIDE a drag — a lens, "Clear", or removing
+                values change from OUTSIDE a drag – a lens, "Clear", or removing
                 a chip. The key only flips on a committed value, never mid-drag
                 (drag updates internal state only), so it can't interrupt a
                 drag. */}
@@ -532,7 +532,7 @@ export function ExplorerCalendarClient({
   );
 }
 
-// Slider release hands back just its two keys (string|undefined) — map to the
+// Slider release hands back just its two keys (string|undefined) – map to the
 // numeric State fields.
 function deltaToState(delta: Record<string, string | undefined>): Partial<State> {
   const out: Partial<State> = {};

@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 
-/** Server response is intentionally minimal to prevent email enumeration —
+/** Server response is intentionally minimal to prevent email enumeration –
  *  the actual API key (new or existing-key recovery info) lands via email,
  *  not in the browser. See /api/api-access/route.ts for the design note. */
 interface IssueResponse {
@@ -48,7 +48,7 @@ export function ApiAccessForm() {
 
   // ── Success: check your inbox ──────────────────────────────────────────
   // Identical UI regardless of whether a fresh key was issued or an
-  // existing-key recovery email was sent — preserves the enumeration-safe
+  // existing-key recovery email was sent – preserves the enumeration-safe
   // backend response.
   if (status === "success") {
     return (
@@ -63,7 +63,7 @@ export function ApiAccessForm() {
         <h3 className="font-bold text-xl mb-2" style={{ color: "white" }}>Check your inbox</h3>
         <p className="text-sm leading-relaxed max-w-md mx-auto mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
           We&apos;ve sent your API key details to <strong style={{ color: "white" }}>{form.email}</strong>.
-          Keep an eye on your inbox (and spam folder) — it usually arrives within a minute.
+          Keep an eye on your inbox (and spam folder) – it usually arrives within a minute.
         </p>
         <div className="rounded-xl p-4 max-w-md mx-auto mb-4"
           style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.18)" }}>
@@ -128,7 +128,7 @@ export function ApiAccessForm() {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>What are you building? *</label>
         <textarea
-          required rows={4} placeholder="Describe your use case — e.g. an AI agent that monitors vesting schedules for a fund, a wallet app showing unlock timelines..."
+          required rows={4} placeholder="Describe your use case – e.g. an AI agent that monitors vesting schedules for a fund, a wallet app showing unlock timelines..."
           value={form.useCase} onChange={e => setForm(f => ({ ...f, useCase: e.target.value }))}
           className="text-sm px-4 py-3 rounded-xl outline-none transition-all resize-none"
           style={{ background: "#0d0f14", border: "1px solid rgba(255,255,255,0.1)", color: "white", lineHeight: 1.6 }}

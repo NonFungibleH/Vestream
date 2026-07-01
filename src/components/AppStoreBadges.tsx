@@ -6,10 +6,10 @@
 //
 // PRIMARY: the official badge artwork served from /public/badges/. Apple and
 // Google both publish ready-made badges (correct logo + "Download on the App
-// Store" / "Get it on Google Play" lockups) — using their files is the only
+// Store" / "Get it on Google Play" lockups) – using their files is the only
 // brand-guideline-compliant option. Drop them in:
-//     public/badges/app-store.svg     (Apple — https://developer.apple.com/app-store/marketing/guidelines/#section-badges)
-//     public/badges/google-play.png   (Google — https://play.google.com/intl/en_us/badges/)
+//     public/badges/app-store.svg     (Apple – https://developer.apple.com/app-store/marketing/guidelines/#section-badges)
+//     public/badges/google-play.png   (Google – https://play.google.com/intl/en_us/badges/)
 // See public/badges/README.md.
 //
 // FALLBACK: if an official file is missing (404s), each badge gracefully falls
@@ -84,7 +84,7 @@ function StoreBadge({ href, label, badgeSrc, caption, wordmark, icon }: BadgePro
           onError={() => setImgFailed(true)}
         />
       ) : (
-        // Fallback re-creation if the official file is missing — never shows a
+        // Fallback re-creation if the official file is missing – never shows a
         // broken image. Replace by adding the real files to public/badges/.
         <span
           className="relative inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl"

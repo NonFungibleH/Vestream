@@ -1,6 +1,6 @@
 "use client";
 
-// VestingsList — the "vestings-first" headline of the Tax page.
+// VestingsList – the "vestings-first" headline of the Tax page.
 // ─────────────────────────────────────────────────────────────────────────────
 // One row per token the user has a tracked vesting in (from
 // GET /api/claims/vestings). Each row shows claimed-to-date income; clicking it
@@ -61,7 +61,7 @@ function SortTh({
   );
 }
 
-// Shimmer skeleton rows — reserves height to avoid layout jump. Mirrors
+// Shimmer skeleton rows – reserves height to avoid layout jump. Mirrors
 // src/app/dashboard/explorer/loading.tsx.
 function ShimmerRows({ count, cols }: { count: number; cols: number }) {
   return (
@@ -116,12 +116,12 @@ function tokensWhole(amount: string, decimals: number): string {
     const fracStr = frac.toString().padStart(decimals, "0").slice(0, 4).replace(/0+$/, "");
     return fracStr ? `${whole.toLocaleString()}.${fracStr}` : whole.toLocaleString();
   } catch {
-    return "—";
+    return "–";
   }
 }
 
 function usd(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "–";
   return `$${n.toLocaleString(undefined, { maximumFractionDigits: n < 100 ? 2 : 0 })}`;
 }
 
@@ -179,7 +179,7 @@ export function VestingsList() {
   }
 
   if (vestings.length === 0) {
-    // No tracked streams at all — the flat claim table / refresh below still applies.
+    // No tracked streams at all – the flat claim table / refresh below still applies.
     return null;
   }
 
@@ -262,7 +262,7 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
 
   function download(format: string) {
     const sp = new URLSearchParams({ format, tokenAddress: v.tokenAddress });
-    // Same-tab download — window.location.href IS a navigation side effect,
+    // Same-tab download – window.location.href IS a navigation side effect,
     // not a render-time mutation (matches the pattern on the parent page).
     // eslint-disable-next-line react-hooks/immutability
     window.location.href = `/api/claims/export?${sp.toString()}`;
@@ -344,7 +344,7 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
             </div>
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--preview-text-3)" }}>
-            Income — claims (priced at receipt)
+            Income – claims (priced at receipt)
           </p>
           {loading ? (
             <div className="rounded-xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border-2)" }}>
@@ -377,12 +377,12 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
                       <td className="px-3 py-2 text-right whitespace-nowrap" style={{ color: c.usdValueAtClaim ? "var(--preview-text)" : "var(--preview-text-3)" }}>
                         {c.usdValueAtClaim
                           ? `$${Number(c.usdValueAtClaim).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-                          : "—"}
+                          : "–"}
                         {c.priceConfidence === "nearest" && (
                           <span className="ml-1 text-[10px]" title="Nearest available price within ±7 days" style={{ color: "#d97706" }}>~</span>
                         )}
                         {c.priceConfidence === "missing" && (
-                          <span className="ml-1 text-[10px]" title="No historical price found — set cost basis manually" style={{ color: "#B3322E" }}>!</span>
+                          <span className="ml-1 text-[10px]" title="No historical price found – set cost basis manually" style={{ color: "#B3322E" }}>!</span>
                         )}
                       </td>
                     </tr>
@@ -392,7 +392,7 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
             </div>
           )}
 
-          {/* Gains — auto-detected disposals + manual sales ledger */}
+          {/* Gains – auto-detected disposals + manual sales ledger */}
           <SalesSection tokenAddress={v.tokenAddress} tokenSymbol={v.tokenSymbol} chainId={v.chainId} />
         </div>
       )}
@@ -400,7 +400,7 @@ function VestingRow({ v, first }: { v: VestingToken; first: boolean }) {
   );
 }
 
-// Chains sell-detection can scan today — must match SELL_DETECT_CHAINS server-side.
+// Chains sell-detection can scan today – must match SELL_DETECT_CHAINS server-side.
 const SELL_SCAN_CHAINS = [1, 8453];
 
 interface DisposalCandidate {
@@ -453,7 +453,7 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
       if (!res.ok) { setScanMsg(data.error ?? "Scan failed."); toast.error(data.error ?? "Scan failed."); return; }
       setCandidates(data.candidates ?? []);
       const n = (data.candidates ?? []).length;
-      const msg = n === 0 ? "No disposals found on-chain." : `${n} disposal${n === 1 ? "" : "s"} found — confirm the ones that were sales.`;
+      const msg = n === 0 ? "No disposals found on-chain." : `${n} disposal${n === 1 ? "" : "s"} found – confirm the ones that were sales.`;
       setScanMsg(msg);
       toast.success(msg);
     } catch {
@@ -539,7 +539,7 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
     <div className="mt-4">
       <div className="flex items-center justify-between gap-2 mb-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>
-          Gains — sales {entryPrice != null ? `(cost basis $${entryPrice.toLocaleString(undefined, { maximumFractionDigits: 4 })})` : ""}
+          Gains – sales {entryPrice != null ? `(cost basis $${entryPrice.toLocaleString(undefined, { maximumFractionDigits: 4 })})` : ""}
         </p>
         <div className="flex items-center gap-1.5">
           <button
@@ -571,12 +571,12 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
         </p>
       )}
 
-      {/* Detected disposals — confirm the ones that were sales, dismiss the rest. */}
+      {/* Detected disposals – confirm the ones that were sales, dismiss the rest. */}
       {candidates.length > 0 && (
         <div className="mb-3 rounded-xl overflow-hidden" style={{ border: "1px solid var(--preview-border)" }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5"
             style={{ background: "var(--preview-card)", color: "var(--preview-text-3)" }}>
-            Detected on-chain — confirm sales
+            Detected on-chain – confirm sales
           </p>
           {candidates.map((c) => (
             <div key={c.id}
@@ -621,7 +621,7 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
 
       {entryPrice == null && (
         <p className="text-[11px] mb-2" style={{ color: "var(--preview-text-3)" }}>
-          No entry price set for {tokenSymbol} — set one in the dashboard P&amp;L to compute realized gains. Sales below show proceeds only.
+          No entry price set for {tokenSymbol} – set one in the dashboard P&amp;L to compute realized gains. Sales below show proceeds only.
         </p>
       )}
 
@@ -690,7 +690,7 @@ function SalesSection({ tokenAddress, tokenSymbol, chainId }: { tokenAddress: st
                     <td className="px-3 py-2 text-right whitespace-nowrap" style={{ color: "var(--preview-text)" }}>${(s.amount * s.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                     <td className="px-3 py-2 text-right whitespace-nowrap font-semibold"
                       style={{ color: g == null ? "var(--preview-text-3)" : g >= 0 ? "#0F8A8A" : "#B3322E" }}>
-                      {g == null ? "—" : `${g >= 0 ? "+" : "−"}$${Math.abs(g).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                      {g == null ? "–" : `${g >= 0 ? "+" : "−"}$${Math.abs(g).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
                     </td>
                     <td className="px-2 py-2 text-right">
                       <button onClick={() => removeSale(s.id)} title="Remove sale"

@@ -12,7 +12,7 @@ import { isBillingConfigured } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 function formatDate(d: Date | null | string) {
-  if (!d) return "—";
+  if (!d) return "–";
   return new Date(d).toLocaleDateString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
   });
@@ -40,7 +40,7 @@ export default async function DeveloperAccount() {
     .where(eq(apiKeys.id, keyId))
     .limit(1);
 
-  // Key not found or revoked — clear session
+  // Key not found or revoked – clear session
   if (!key || key.revokedAt) redirect("/developer/portal");
 
   const usagePct = Math.min(100, Math.round((key.usageThisMonth / key.monthlyLimit) * 100));
@@ -89,7 +89,7 @@ export default async function DeveloperAccount() {
 
         {/* ── Stats row ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {/* Usage — shows cumulative month-to-date count against the
+          {/* Usage – shows cumulative month-to-date count against the
               monthly budget. The live rate-limit spec (30/min burst +
               150/day on Free) is surfaced in the footnote below so devs
               understand why a request fails before their monthly total
@@ -119,10 +119,10 @@ export default async function DeveloperAccount() {
             </div>
             <p className="text-xs mb-2" style={{ color: isNearLimit ? "#F0992E" : "rgba(255,255,255,0.3)" }}>
               {isNearLimit
-                ? `⚠ ${remaining.toLocaleString()} requests remaining — approaching limit`
+                ? `⚠ ${remaining.toLocaleString()} requests remaining – approaching limit`
                 : `${remaining.toLocaleString()} requests remaining`}
             </p>
-            {/* Rate-limit spec — matches the numbers advertised on
+            {/* Rate-limit spec – matches the numbers advertised on
                 /developer. Free is 30/min burst + 150/day; paid is
                 scoped per contract. Surfacing this so devs don't get
                 blindsided by a 429 well before their monthly total. */}
@@ -182,11 +182,11 @@ export default async function DeveloperAccount() {
           <p className="text-xs mt-3 px-3 py-2 rounded-lg"
             style={{ background: "rgba(245,158,11,0.06)", color: "rgba(240,184,61,0.7)", border: "1px solid rgba(245,158,11,0.12)" }}>
             Your full API key was shown once when issued. Lost it or worried it leaked? Use the
-            management panel below — rotation is instant and self-serve.
+            management panel below – rotation is instant and self-serve.
           </p>
         </div>
 
-        {/* ── Billing — Upgrade CTA for free tier, manage portal for Pro.
+        {/* ── Billing – Upgrade CTA for free tier, manage portal for Pro.
             `billingReady` is true only when all four STRIPE_* env vars
             are set on the host. Until then BillingPanel renders a
             "coming soon" card with a contact link instead of the live
@@ -210,7 +210,7 @@ export default async function DeveloperAccount() {
           {[
             {
               title: "API Documentation",
-              desc: "Interactive Swagger UI — test endpoints with your key",
+              desc: "Interactive Swagger UI – test endpoints with your key",
               href: "/api-docs",
               cta: "Open Docs →",
               color: "#1CB8B8",
@@ -274,7 +274,7 @@ export default async function DeveloperAccount() {
             The /ai landing page and the homepage both talk about the
             MCP integration as a first-class surface, but a developer
             who just received an API key previously had no setup
-            guidance here — they'd have to go back to /ai to find the
+            guidance here – they'd have to go back to /ai to find the
             Claude Desktop / Cursor config. Now the config lives
             alongside the REST quick-start so agent builders can copy
             it without leaving their account. */}
@@ -291,7 +291,7 @@ export default async function DeveloperAccount() {
             </span>
           </div>
           <p className="text-xs mb-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Your API key also works with the Vestream MCP server — three
+            Your API key also works with the Vestream MCP server – three
             agent-native tools (<code style={{ color: "#1CB8B8" }}>get_wallet_vestings</code>,{" "}
             <code style={{ color: "#1CB8B8" }}>get_upcoming_unlocks</code>,{" "}
             <code style={{ color: "#1CB8B8" }}>get_stream</code>) over the

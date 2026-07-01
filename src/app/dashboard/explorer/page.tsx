@@ -1,7 +1,7 @@
 // src/app/dashboard/explorer/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Block-explorer-style vesting search engine. The front door for "find any
-// vesting position across every protocol and chain we index" — distinct
+// vesting position across every protocol and chain we index" – distinct
 // from /dashboard (which is the user's own portfolio) and /dashboard/discover
 // (which is a one-shot wallet scan).
 //
@@ -11,10 +11,10 @@
 //   - Search input is a small client island that detects what the user typed
 //     and routes to the right URL.
 //   - URL is the canonical state: ?q=... &mode=calendar|stream|wallet
-//     &chain=... &protocol=... &date=... — every view is shareable.
+//     &chain=... &protocol=... &date=... – every view is shareable.
 //
 // Data sources (all already built):
-//   - calendar mode: getExplorerPage() — one paginated indexed read off the rollup
+//   - calendar mode: getExplorerPage() – one paginated indexed read off the rollup
 //   - stream mode:   getStreamsForExplorer() (lightweight wrapper, this file)
 //   - wallet mode:   /api/vesting (existing endpoint, called server-side)
 //
@@ -41,7 +41,7 @@ import { listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
 import { SavedTokensStrip } from "./SavedTokensStrip";
-// ExplorerSidebar removed — sidebar is now provided by
+// ExplorerSidebar removed – sidebar is now provided by
 // src/app/dashboard/layout.tsx via the shared DashboardSidebar component.
 // import { ExplorerSidebar } from "./Sidebar";
 import { SaveSearchButton } from "./SaveSearchButton";
@@ -49,7 +49,7 @@ import { detectQueryKind } from "./detect-query";
 import { WatchButton } from "./WatchButton";
 // Calendar/Upcoming mode is now a fully CLIENT-SIDE island: it loads the whole
 // upcoming-unlock dataset once (CDN-cached) and filters/sorts/paginates in the
-// browser — instant interactions, zero per-click round-trips. The old
+// browser – instant interactions, zero per-click round-trips. The old
 // server-paginated ExplorerTable / ExplorerSliders are still used *inside* that
 // island (in callback mode); the page no longer renders them directly for
 // calendar mode. Stream/Wallet modes remain server-paginated.
@@ -73,7 +73,7 @@ const CHAIN_FILTERS: ReadonlyArray<{ id: number; label: string }> = [
 ];
 
 // Amount + wallet/schedule/vested drill-down moved to range SLIDERS
-// (ExplorerSliders) — min/max bounds on indexed rollup columns.
+// (ExplorerSliders) – min/max bounds on indexed rollup columns.
 
 // Wallet/schedule/vested drill-down moved to range SLIDERS (ExplorerSliders),
 // which filter the rollup-backed Upcoming list on indexed columns.
@@ -120,13 +120,13 @@ interface PageProps {
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default async function ExplorerPage({ searchParams }: PageProps) {
-  // Auth gate — middleware enforces vestr_session for all /dashboard/* routes
-  // (see src/middleware.ts). No additional cookie check needed here — any
+  // Auth gate – middleware enforces vestr_session for all /dashboard/* routes
+  // (see src/middleware.ts). No additional cookie check needed here – any
   // authenticated dashboard user (free or pro) can access the explorer.
   // Tier-based caps (FREE_TIER_ROW_CAP, FREE_TIER_FILTER_CAP) are applied
   // below via isFree so free users still see a limited but functional view.
   // Dark-mode theming is owned by <DarkModeProvider> in the dashboard
-  // layout — its single reactive `.dark` wrapper themes this whole
+  // layout – its single reactive `.dark` wrapper themes this whole
   // subtree. We deliberately do NOT add a per-page SSR `.dark` class:
   // that class is non-reactive (only updates after router.refresh
   // completes), so it kept the page dark for a beat after the user
@@ -139,7 +139,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   const query   = (sp.q ?? "").trim();
   const mode    = sp.mode ?? "calendar";
   // Default to "Any time" so the explorer opens on the FULL browsable universe
-  // (~5k tokens) rather than just the next 30 days (~1.3k) — the date pills
+  // (~5k tokens) rather than just the next 30 days (~1.3k) – the date pills
   // narrow it. (Was "30-days", which made the count look far short of the index.)
   const dateSlug = (sp.date ?? "all") as WindowSlug | "all";
 
@@ -167,13 +167,13 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
     : undefined;
 
   // ── Mode-specific fetch ────────────────────────────────────────────────
-  // Stream/Wallet modes fetch server-side here. CALENDAR mode does NOT — it's
+  // Stream/Wallet modes fetch server-side here. CALENDAR mode does NOT – it's
   // rendered by <ExplorerCalendarClient>, which loads the whole upcoming-unlock
   // dataset once (CDN-cached) and filters/sorts/paginates in the browser.
 
   // Pagination + sort. For calendar these seed the client island's initial
   // state (from the URL, for shareable links); for stream/wallet they drive the
-  // server query. Per-page size — user-selectable (25/50/100) via ?size=.
+  // server query. Per-page size – user-selectable (25/50/100) via ?size=.
   const PAGE_SIZES = [25, 50, 100];
   const pageSize = PAGE_SIZES.includes(Number(sp.size)) ? Number(sp.size) : 25;
   const pageNum  = Math.max(1, Math.floor(Number(sp.page ?? "1")) || 1);
@@ -198,7 +198,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   let streamingTotal = 0;
 
   if (mode === "streaming") {
-    // Continuous per-second flows (LlamaPay) — no unlock events, so they live
+    // Continuous per-second flows (LlamaPay) – no unlock events, so they live
     // outside the rollup/Schedules. Surfaced here as ongoing streams, newest
     // first. The protocol sidebar filter (if any) is intersected with the
     // continuous set inside the query.
@@ -243,11 +243,11 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
   // ── Wallet-mode portfolio summary ──────────────────────────────────────
   // "Smart money" signal: when a user lands on a wallet, tell them what else
   // this wallet is vesting. The list above is paginated (25 rows), but the
-  // portfolio needs the wallet's WHOLE book to count distinct tokens — so we
+  // portfolio needs the wallet's WHOLE book to count distinct tokens – so we
   // pull a bounded full set (one wallet, capped at 1000 streams) just for the
   // aggregate. Distinct tokens per wallet is tiny even when stream count isn't.
   let walletPortfolio: WalletPortfolioRow[] = [];
-  // Price map covering the wallet's distinct tokens — reused to show per-row
+  // Price map covering the wallet's distinct tokens – reused to show per-row
   // locked USD on each position (computed once, no extra fetch).
   let walletPriceMap: QuickPriceMap = new Map();
   let walletAllRows: StreamRow[] = [];
@@ -294,7 +294,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             <span>/</span>
             <span>Vesting Explorer</span>
           </div>
-          {/* Hero positioned as the indexed-universe SEARCH surface — distinct
+          {/* Hero positioned as the indexed-universe SEARCH surface – distinct
               from /dashboard/discover which is the live wallet SCANNER. The
               two felt redundant visually before; the badge + tighter copy
               makes the boundary obvious. */}
@@ -340,15 +340,15 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
                 dedicated tab is redundant. ?mode=wallet links still render. */}
             {(["calendar", "stream", "streaming"] as const).map((m) => {
               const active = mode === m;
-              // Reset pagination + sort when switching lenses — page 7 of
+              // Reset pagination + sort when switching lenses – page 7 of
               // Upcoming has no meaning in Schedules.
               const href = buildUrl({ ...sp, mode: m, page: undefined, sort: undefined, dir: undefined });
               const label = m === "calendar" ? "Upcoming" : m === "stream" ? "Schedules" : "Streaming";
               const tip = m === "calendar"
-                ? "One row per token — which projects have unlocks coming up. Filterable + sortable."
+                ? "One row per token – which projects have unlocks coming up. Filterable + sortable."
                 : m === "stream"
                 ? "One row per individual vesting schedule (a single wallet's position)."
-                : "Continuous per-second streams (e.g. LlamaPay payroll) — no fixed unlock, flows live.";
+                : "Continuous per-second streams (e.g. LlamaPay payroll) – no fixed unlock, flows live.";
               return (
                 <Link
                   key={m}
@@ -369,7 +369,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
             })}
           </div>
           <div className="pb-2 flex items-center gap-3">
-            {/* Per-page size selector — server-nav for Stream/Wallet. Calendar
+            {/* Per-page size selector – server-nav for Stream/Wallet. Calendar
                 mode renders its own (instant) per-page control client-side. */}
             {mode !== "calendar" && (
               <div className="hidden sm:flex items-center gap-1 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
@@ -392,18 +392,18 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* What each lens is — the two read the same index differently. */}
+        {/* What each lens is – the two read the same index differently. */}
         <p className="text-[11px] mt-2" style={{ color: "var(--preview-text-3)" }}>
           {mode === "stream"
-            ? "Schedules — one row per individual vesting position (a single wallet's stream). Use this to scan raw schedules."
+            ? "Schedules – one row per individual vesting position (a single wallet's stream). Use this to scan raw schedules."
             : mode === "wallet"
-            ? "Wallet — every vesting position held by one recipient."
+            ? "Wallet – every vesting position held by one recipient."
             : mode === "streaming"
-            ? "Streaming — continuous per-second flows (LlamaPay payroll). These never “unlock”; they drip live, so we show streamed-so-far and the per-day rate."
-            : "Upcoming — one row per token (all its wallets/rounds rolled up), sorted by next unlock. Filter + sort to find projects; switch to Schedules for the individual streams."}
+            ? "Streaming – continuous per-second flows (LlamaPay payroll). These never “unlock”; they drip live, so we show streamed-so-far and the per-day rate."
+            : "Upcoming – one row per token (all its wallets/rounds rolled up), sorted by next unlock. Filter + sort to find projects; switch to Schedules for the individual streams."}
         </p>
 
-        {/* CALENDAR / Upcoming — fully client-side island: loads the dataset
+        {/* CALENDAR / Upcoming – fully client-side island: loads the dataset
             once (CDN-cached) and filters/sorts/paginates in-browser. Owns its
             own lenses, active-filter chips, per-page control, results table,
             and filter sidebar. The URL stays in sync (replaceState) so links
@@ -478,7 +478,7 @@ export default async function ExplorerPage({ searchParams }: PageProps) {
               )}
             </section>
 
-            {/* Filter sidebar (Stream/Wallet). Chain/protocol filters only —
+            {/* Filter sidebar (Stream/Wallet). Chain/protocol filters only –
                 the slider drill-downs are Upcoming-only (they live in the
                 calendar client island). */}
             <aside className="space-y-4 hidden md:block self-start sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
@@ -619,12 +619,12 @@ function StreamRowItem({ row, showTopBorder, priceMap }: { row: StreamRow; showT
             <span className="font-mono">{shortAddr(row.recipient)}</span>
           </p>
         </div>
-        {/* Locked value (USD) — wallet mode only (priceMap present). */}
+        {/* Locked value (USD) – wallet mode only (priceMap present). */}
         {priceMap && (
           <div className="text-right hidden md:block">
             <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Locked</p>
             <p className="text-sm font-bold tabular-nums" style={{ color: lockedUsd != null && lockedUsd > 0 ? "#0F8A8A" : "var(--preview-text-3)" }}>
-              {lockedUsd != null && lockedUsd > 0 ? formatUsdCompact(lockedUsd) : "—"}
+              {lockedUsd != null && lockedUsd > 0 ? formatUsdCompact(lockedUsd) : "–"}
             </p>
           </div>
         )}
@@ -645,7 +645,7 @@ function StreamRowItem({ row, showTopBorder, priceMap }: { row: StreamRow; showT
           </p>
         </div>
       </Link>
-      {/* Watch button — adds token to Token Watchlist without navigating */}
+      {/* Watch button – adds token to Token Watchlist without navigating */}
       <div className="pr-3 pl-1">
         <WatchButton
           tokenAddress={row.tokenAddress}
@@ -658,7 +658,7 @@ function StreamRowItem({ row, showTopBorder, priceMap }: { row: StreamRow; showT
 }
 
 // ─── Streaming-mode results (continuous per-second flows) ───────────────────
-// LlamaPay-style streams have no unlock event — they flow live. We show
+// LlamaPay-style streams have no unlock event – they flow live. We show
 // streamed-so-far + the per-day rate instead of a "next unlock" countdown.
 
 /** tokens/day from a LlamaPay 20-decimal raw amountPerSec (÷1e20 × 86400). */
@@ -745,7 +745,7 @@ function StreamingRowItem({ row, showTopBorder }: { row: StreamingRow; showTopBo
             <span className="font-mono">{shortAddr(row.recipient)}</span>
           </p>
         </div>
-        {/* Flow rate — the whole point of a stream */}
+        {/* Flow rate – the whole point of a stream */}
         <div className="text-right">
           <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
             {rate != null ? `≈ ${fmtRate(rate)} ${sym}/day` : "live"}
@@ -754,7 +754,7 @@ function StreamingRowItem({ row, showTopBorder }: { row: StreamingRow; showTopBo
         {/* Started (desktop) */}
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold" style={{ color: "var(--preview-text-2)" }}>
-            {row.startTime ? `since ${fmtDate(row.startTime)}` : "—"}
+            {row.startTime ? `since ${fmtDate(row.startTime)}` : "–"}
           </p>
         </div>
       </Link>
@@ -768,7 +768,7 @@ function StreamingRowItem({ row, showTopBorder }: { row: StreamingRow; showTopBo
 // ─── Wallet analytics panel ──────────────────────────────────────────────
 // Stats for the wallet-mode view: locked value, token/protocol/chain spread,
 // and a holdings-by-USD breakdown. This is the "what kind of wallet is this"
-// signal — derived entirely from the streams + priced portfolio we already
+// signal – derived entirely from the streams + priced portfolio we already
 // loaded. Scope is intentionally the wallet's VESTING book (not its whole
 // token balance, which we don't index).
 
@@ -782,7 +782,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 }
 
 function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: WalletPortfolioRow[] }) {
-  // uncx-vm is a hidden sub-protocol of uncx — collapse so the breakdown
+  // uncx-vm is a hidden sub-protocol of uncx – collapse so the breakdown
   // matches what users see elsewhere.
   const norm = (p: string) => (p === "uncx-vm" ? "uncx" : p);
 
@@ -802,7 +802,7 @@ function WalletStats({ rows, portfolio }: { rows: StreamRow[]; portfolio: Wallet
   return (
     <div className="rounded-2xl border p-4 mb-3" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        <StatTile label="Locked value" value={totalUsd > 0 ? formatUsdCompact(totalUsd) : "—"} />
+        <StatTile label="Locked value" value={totalUsd > 0 ? formatUsdCompact(totalUsd) : "–"} />
         <StatTile label="Distinct tokens" value={String(portfolio.length)} />
         <StatTile label="Protocols" value={String(protoSet.size)} />
         <StatTile label="Chains" value={String(chainSet.size)} />
@@ -858,7 +858,7 @@ function WalletResults({
   page, totalPages, pageSize, params,
 }: {
   rows:          StreamRow[];
-  /** The wallet's WHOLE position set (bounded fetch) — drives the stats
+  /** The wallet's WHOLE position set (bounded fetch) – drives the stats
    *  panel so protocol/chain spread reflects everything, not just this page. */
   statsRows:     StreamRow[];
   totalMatches:  number;
@@ -867,7 +867,7 @@ function WalletResults({
   queryGiven:    boolean;
   portfolio:     WalletPortfolioRow[];
   /** Per-token prices (chainId:tokenLower → QuickPrice) for the wallet's
-   *  book — used to show each position's locked USD value. */
+   *  book – used to show each position's locked USD value. */
   priceMap:      QuickPriceMap;
   page:          number;
   totalPages:    number;
@@ -882,7 +882,7 @@ function WalletResults({
           Paste a wallet address or ENS name above
         </p>
         <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-          Wallet mode shows every indexed vesting position for one recipient — across all 10 protocols.
+          Wallet mode shows every indexed vesting position for one recipient – across all 10 protocols.
         </p>
       </div>
     );
@@ -926,12 +926,12 @@ function WalletResults({
           <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Page {page} of {totalPages.toLocaleString()}</p>
         )}
       </div>
-      {/* Wallet analytics — locked value, distinct tokens, protocol/chain
+      {/* Wallet analytics – locked value, distinct tokens, protocol/chain
           spread, and holdings-by-USD. Built from the wallet's WHOLE book
           (statsRows), not just the current page, so the spread is accurate. */}
       {statsRows.length > 1 && <WalletStats rows={statsRows} portfolio={portfolio} />}
 
-      {/* "Also vesting" smart-money strip — what other tokens does this
+      {/* "Also vesting" smart-money strip – what other tokens does this
           wallet receive? Lets users spot whales / funds at a glance. The
           ≥2 gate stops it appearing for genuinely single-token recipients
           (where it would just restate the row below). */}
@@ -1060,7 +1060,7 @@ interface WalletPortfolioRow {
 }
 
 async function buildWalletPortfolio(rows: StreamRow[]): Promise<{ portfolio: WalletPortfolioRow[]; priceMap: QuickPriceMap }> {
-  // Aggregate by (chainId, lower(tokenAddress)). Pure JS — `rows` already
+  // Aggregate by (chainId, lower(tokenAddress)). Pure JS – `rows` already
   // came back from getStreamsByRecipient.
   const agg = new Map<string, {
     chainId:       number;
@@ -1071,7 +1071,7 @@ async function buildWalletPortfolio(rows: StreamRow[]): Promise<{ portfolio: Wal
   }>();
   for (const r of rows) {
     if (!r.tokenAddress) continue;
-    // Active vests only — finished schedules aren't "still receiving".
+    // Active vests only – finished schedules aren't "still receiving".
     // StreamRow.status is the normalised flag (set by explorer-queries
     // from vestingStreamsCache.isFullyVested).
     if (r.status !== "active") continue;
@@ -1095,7 +1095,7 @@ async function buildWalletPortfolio(rows: StreamRow[]): Promise<{ portfolio: Wal
   if (list.length === 0) return { portfolio: [], priceMap: new Map() };
 
   // Price all of them in one DexScreener batch. Cap at 30 (DexScreener
-  // batch size) — if a wallet vests > 30 distinct tokens, the tail won't
+  // batch size) – if a wallet vests > 30 distinct tokens, the tail won't
   // show USD but is still listed by raw amount.
   const priceMap = await getQuickUsdPrices(
     list.slice(0, 30).map((t) => ({ chainId: t.chainId, address: t.tokenAddress })),
@@ -1135,7 +1135,7 @@ function buildUrl(params: Record<string, string | undefined>): string {
   return qs ? `/dashboard/explorer?${qs}` : "/dashboard/explorer";
 }
 
-// Active-filter chip bar — shows every applied filter as a removable chip
+// Active-filter chip bar – shows every applied filter as a removable chip
 // (✕ link clears just that one) plus a "Clear all". Gives a one-glance view
 // of what's narrowing the results + one-click reset, which the filter pills
 // in the sidebar didn't surface.
@@ -1195,7 +1195,7 @@ function ActiveFilters({ sp }: { sp: ExplorerSearchParams }) {
   );
 }
 
-// (toExplorerRow moved into ExplorerCalendarClient — the rollup→row mapping now
+// (toExplorerRow moved into ExplorerCalendarClient – the rollup→row mapping now
 // happens client-side off the compact dataset.)
 
 function parseCsvNumbers(raw: string | undefined): number[] {
@@ -1246,7 +1246,7 @@ function expandProtocolsToAdapters(slugs: string[]): string[] {
   return out;
 }
 
-// ─── Formatting helpers (local — these mirror utilities from other pages
+// ─── Formatting helpers (local – these mirror utilities from other pages
 //     because pulling them in cross-cuts the dependency graph for one page) ──
 
 function tokenInitial(symbol: string | null, address: string): string {
@@ -1260,11 +1260,11 @@ function shortAddr(addr: string): string {
 }
 
 function fmtAmount(raw: string | null, decimals: number): string {
-  if (!raw) return "—";
+  if (!raw) return "–";
   try {
     const n = Number(BigInt(raw)) / 10 ** Math.min(decimals, 18);
-    if (!Number.isFinite(n)) return "—";
-    // Bound the width — memecoin supplies reach 1e60+ and .toFixed() falls back
+    if (!Number.isFinite(n)) return "–";
+    // Bound the width – memecoin supplies reach 1e60+ and .toFixed() falls back
     // to full exponential above 1e21, which blows out the layout. See the twin
     // fmtAmount in ExplorerTable.tsx.
     if (n >= 1e15) return n.toExponential(1).replace("e+", "e");
@@ -1275,18 +1275,18 @@ function fmtAmount(raw: string | null, decimals: number): string {
     if (n >= 1)    return n.toFixed(2);
     return n.toFixed(4);
   } catch {
-    return "—";
+    return "–";
   }
 }
 
 function fmtDate(unix: number): string {
-  if (!unix) return "—";
+  if (!unix) return "–";
   const d = new Date(unix * 1000);
   return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
 function relativeUntil(unix: number | null): string {
-  if (!unix) return "—";
+  if (!unix) return "–";
   const diff = Math.max(0, unix - Math.floor(Date.now() / 1000));
   if (diff < 60)      return `${diff}s`;
   if (diff < 3600)    return `${Math.floor(diff / 60)} min`;

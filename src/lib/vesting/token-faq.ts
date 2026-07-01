@@ -4,7 +4,7 @@
 //
 // Every question is a short, natural-language match to a real user search
 // query ("when does $TOKEN unlock", "what is $TOKEN FDV", …). Every answer
-// is synthesised from data the page has already fetched — no separate DB
+// is synthesised from data the page has already fetched – no separate DB
 // calls, no AI, no hallucination risk.
 //
 // Why a module rather than inlined JSX?
@@ -12,14 +12,14 @@
 //     strings. Catches copy regressions in CI.
 //   • Reusable. Same FAQ data feeds the on-page accordion AND the
 //     `<script type="application/ld+json">` FAQPage schema. The FAQPage
-//     JSON-LD is the primary SEO reason this exists — Google's rich-snippet
+//     JSON-LD is the primary SEO reason this exists – Google's rich-snippet
 //     pipeline reads that blob and promotes matching Q&A into search results.
 //
 // Keep answers:
 //   • Short (1-3 sentences). Google's FAQ rich results truncate past ~300 char.
 //   • Factual only. Never opine on "good"/"bad"/"risky". Never recommend buys.
 //   • Symbol-substituted. Every answer mentions $SYMBOL so the content is
-//     unique per token — avoids duplicate-content SEO penalties.
+//     unique per token – avoids duplicate-content SEO penalties.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -44,7 +44,7 @@ export interface BuildFAQInput {
   /** Preferred display symbol. Callers should pass `overview?.tokenSymbol ??
    *  market.tokenName ?? "the token"`. Used inline in every answer. */
   symbol:       string;
-  /** May be null for tokens with no indexed vesting yet — the builder
+  /** May be null for tokens with no indexed vesting yet – the builder
    *  produces graceful "nothing indexed" variants in that case. */
   overview:     TokenOverview | null;
   market:       TokenMarketData;
@@ -53,7 +53,7 @@ export interface BuildFAQInput {
   recipients:   TokenRecipient[];
 }
 
-// ─── Internal formatters (not exported — FAQ-local style) ───────────────────
+// ─── Internal formatters (not exported – FAQ-local style) ───────────────────
 
 function fmtTokens(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "0";
@@ -202,7 +202,7 @@ function ansTopRecipients(input: BuildFAQInput): string {
   const totalLocked = overview?.lockedTokensWhole ?? 0;
   const top = recipients.slice(0, 3);
 
-  // % of locked supply — always computable from our own cache, no external
+  // % of locked supply – always computable from our own cache, no external
   // data needed. We floor to 0.1% so the snippet doesn't fill with noise
   // like "0.0003% of locked supply" for tiny positions.
   const supplyShare = (tokens: number): string => {
@@ -242,12 +242,12 @@ function ansTrack(input: BuildFAQInput): string {
   const coverageSentence = protocols.length > 0
     ? `Vestream already indexes ${symbol} activity on ${protocols.slice(0, 4).join(", ")}${protocols.length > 4 ? ", and others" : ""}.`
     : `Vestream indexes Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock.`;
-  return `Add ${symbol} — or any wallet holding ${symbol} — to your Vestream watchlist to receive push and email notifications ahead of every scheduled unlock. ${coverageSentence}`;
+  return `Add ${symbol} – or any wallet holding ${symbol} – to your Vestream watchlist to receive push and email notifications ahead of every scheduled unlock. ${coverageSentence}`;
 }
 
 function ansCirculatingVsTotal(input: BuildFAQInput): string {
   const { symbol } = input;
-  return `Circulating supply is the amount of ${symbol} that is freely tradable on the open market. Total supply includes every token ever minted — including amounts still locked in vesting contracts, team allocations, treasury reserves, and other non-circulating pools. Vesting unlocks move tokens from the "locked" bucket into circulating supply on a predetermined schedule, which is what Vestream tracks.`;
+  return `Circulating supply is the amount of ${symbol} that is freely tradable on the open market. Total supply includes every token ever minted – including amounts still locked in vesting contracts, team allocations, treasury reserves, and other non-circulating pools. Vesting unlocks move tokens from the "locked" bucket into circulating supply on a predetermined schedule, which is what Vestream tracks.`;
 }
 
 // ─── Public entry point ─────────────────────────────────────────────────────
@@ -257,12 +257,12 @@ function ansCirculatingVsTotal(input: BuildFAQInput): string {
  *
  * Questions are deliberately phrased in conversational Vestream voice
  * rather than the stock "What is the X token vesting schedule?" template
- * that several competitors use — both to read less like a page clone and
+ * that several competitors use – both to read less like a page clone and
  * because the rephrasings match real long-tail search phrasing better
  * (e.g. "next X unlock" beats "When is the next X unlock?" for intent
  * parity with how users actually type).
  *
- * Order is deliberate — soonest-urgency questions first, educational at
+ * Order is deliberate – soonest-urgency questions first, educational at
  * the bottom. The same list feeds both the accordion and the JSON-LD
  * schema so on-page and search-result views stay in sync.
  */

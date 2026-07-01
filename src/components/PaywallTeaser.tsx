@@ -1,7 +1,7 @@
 // Visual signup teaser used on the deep-calendar surfaces
 // (/protocols/[slug]/unlocks, /unlocks/[range]). Renders the rest of the
 // rows blurred behind a centred "Sign up free to see all N" card so
-// visitors see the *shape* of what's hidden — much more compelling than a
+// visitors see the *shape* of what's hidden – much more compelling than a
 // "Show more →" button.
 //
 // Design constraints:
@@ -11,7 +11,7 @@
 //   - The blur is CSS-only (filter: blur, pointer-events: none, aria-hidden)
 //     so screen readers skip it and keyboard users can't tab into the
 //     hidden anchors.
-//   - No JavaScript required — server-rendered, zero client-side cost.
+//   - No JavaScript required – server-rendered, zero client-side cost.
 //   - The CTA goes to the FREE signup flow, not the paid upgrade flow.
 //     Marketing-page funnel logic: a free signup is much easier to get
 //     than a paid upgrade, and the upgrade moment lives inside the
@@ -25,7 +25,7 @@ interface PaywallTeaserProps {
   /** "32 more upcoming unlocks", "all 47 events", etc. */
   hiddenLabel: string;
   /** Where the CTA button points. Defaults to the free-signup funnel
-   *  entry (/find-vestings) — see the file-level note for why. */
+   *  entry (/find-vestings) – see the file-level note for why. */
   ctaHref?:    string;
   /** Caller can override the headline. Defaults to a generic "see all" copy. */
   headline?:   string;

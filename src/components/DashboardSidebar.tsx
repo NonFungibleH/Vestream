@@ -5,8 +5,8 @@
 // Unified left-rail navigation for every page under /dashboard/*.
 //
 // Lives at the LAYOUT level (mounted by `src/app/dashboard/layout.tsx`) so
-// every sub-route — /dashboard, /dashboard/explorer, /dashboard/discover,
-// /dashboard/watchlist, /dashboard/income-statement, /dashboard/exports —
+// every sub-route – /dashboard, /dashboard/explorer, /dashboard/discover,
+// /dashboard/watchlist, /dashboard/income-statement, /dashboard/exports –
 // renders the same nav, in the same order, with the same active-state
 // highlighting.
 //
@@ -14,7 +14,7 @@
 //   - Wallet management (add / remove tracked wallets). That UI is
 //     dashboard-page-specific and renders inside /dashboard/page.tsx's
 //     main content area, not the layout sidebar.
-//   - Feedback button. Same reasoning — surface-specific.
+//   - Feedback button. Same reasoning – surface-specific.
 //
 // Mobile behaviour: collapsed by default below md breakpoint, toggled
 // via a hamburger button in the page header (each page renders its own
@@ -40,7 +40,7 @@ function IconWhale()   { return <svg width={16} height={16} viewBox="0 0 24 24" 
 
 // ─── Nav items ──────────────────────────────────────────────────────────────
 
-// "activePaths" lets one nav item highlight for multiple routes — used for
+// "activePaths" lets one nav item highlight for multiple routes – used for
 // the merged "Tax" item which covers both /exports and /income-statement.
 const NAV_ITEMS: Array<{
   icon: React.ReactNode;
@@ -65,7 +65,7 @@ const NAV_ITEMS: Array<{
 
 interface DashboardSidebarProps {
   /** Kept for back-compat with callers that still pass it. The sidebar
-   *  no longer branches on tier — the dashboard is Pro-only via
+   *  no longer branches on tier – the dashboard is Pro-only via
    *  middleware so this prop is unused inside. Safe to drop from
    *  callers in a future cleanup. */
   tier?:    string;
@@ -78,11 +78,11 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
 
   // Single night-mode control for the WHOLE dashboard. Lives here in the
   // shared sidebar (the one element on every dashboard route) and drives the
-  // shared DarkModeProvider — one toggle, one source of truth.
+  // shared DarkModeProvider – one toggle, one source of truth.
   const { dark, toggle: toggleNightMode } = useDarkMode();
 
   // handleNav + router.push were removed when the nav items switched from
-  // <button onClick={router.push}> to <Link prefetch> — the Link form
+  // <button onClick={router.push}> to <Link prefetch> – the Link form
   // handles navigation natively AND triggers prefetch, the button form did
   // neither. Mobile-drawer close moved to onClick={onClose} on the Link.
 
@@ -91,7 +91,7 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
       className={`fixed md:relative z-50 md:z-auto w-56 flex-shrink-0 h-full md:h-screen flex flex-col transition-transform duration-200 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
-      {/* Logo. Two <img> tags swapped via Tailwind's `dark:` variant — same
+      {/* Logo. Two <img> tags swapped via Tailwind's `dark:` variant – same
           pattern the rest of the dashboard uses. The /dashboard root sets
           `.dark` based on the user's theme preference. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -107,18 +107,18 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
         </div>
       </Link>
 
-      {/* Nav. Active state computed from pathname — Dashboard matches exact
+      {/* Nav. Active state computed from pathname – Dashboard matches exact
           path; everything else uses startsWith so sub-routes (e.g.
           /dashboard/explorer/[token]) keep the parent highlighted.
           Free-tier badge logic was removed because dashboard middleware
           gates the entire `/dashboard/*` tree on the Pro iron-session
-          cookie — free-tier users never reach this component. */}
+          cookie – free-tier users never reach this component. */}
       {/* Nav items render as <Link>, not <button onClick={router.push}>.
           The Link form lets Next prefetch the destination route's JS
           bundle on hover (or in the background on viewport entry on
           mobile), so by the time the user actually clicks, the bundle
           is already loaded. The button + router.push form skipped this
-          entirely — every nav was a cold bundle fetch. The router.push
+          entirely – every nav was a cold bundle fetch. The router.push
           path was kept only as a mobile-drawer-close side effect; that's
           now `onClick` on the Link instead. */}
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
@@ -150,7 +150,7 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Footer — Pro tier badge. The dashboard is Pro-only (middleware
+      {/* Footer – Pro tier badge. The dashboard is Pro-only (middleware
           gates `/dashboard/*` on the iron-session cookie set by QR pair),
           so the only tier that can ever reach this sidebar is "pro".
           Removed the dead `tier === "free"` upgrade-prompt branch +
@@ -177,7 +177,7 @@ export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           aria-label="Toggle night mode"
         >
-          {/* Constant feature label + ON/OFF reflecting the actual mode — the
+          {/* Constant feature label + ON/OFF reflecting the actual mode – the
               old action-style label ("Light mode") with an ON badge read as
               "Light mode ON" while in dark mode. */}
           <span>☽ Night mode</span>

@@ -6,7 +6,7 @@
 //
 // Rotate: revokes the current key + issues a fresh one of the same tier.
 // The new plaintext key is shown ONCE in this component (modal-ish inline
-// panel) — same UX as the initial issuance flow.
+// panel) – same UX as the initial issuance flow.
 //
 // Revoke: terminal. Sets revokedAt, clears the portal cookie, redirects
 // the user back to /developer/portal. They'll need a new key from
@@ -67,7 +67,7 @@ export function KeyManagement() {
         setPhase("error");
         return;
       }
-      // Cookie was cleared server-side — bounce to portal.
+      // Cookie was cleared server-side – bounce to portal.
       router.push("/developer/portal");
     } catch {
       setErrorMsg("Network error. Try again.");
@@ -116,7 +116,7 @@ export function KeyManagement() {
           </button>
         </div>
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-          The page header still shows the old prefix until you reload — refresh after pasting the new key
+          The page header still shows the old prefix until you reload – refresh after pasting the new key
           into your config to see {issued.prefix} reflected here.
         </p>
       </div>
@@ -132,7 +132,7 @@ export function KeyManagement() {
       </p>
       <p className="text-sm leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
         If you suspect this key has leaked, rotate it now. If you&rsquo;re done with the API entirely, revoke
-        it — both are immediate.
+        it – both are immediate.
       </p>
 
       {errorMsg && (

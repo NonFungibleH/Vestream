@@ -14,7 +14,7 @@
 //
 // Reads `?upgrade=success` and `?upgrade=cancelled` query params (set by
 // the Checkout success_url / cancel_url) to flash a one-shot status
-// message on return — no toast library, no client routing magic.
+// message on return – no toast library, no client routing magic.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -111,10 +111,10 @@ export function BillingPanel({ tier, billingReady }: Props) {
     );
   }
 
-  // ── Free tier — Stripe still being verified (early-access waitlist) ──
+  // ── Free tier – Stripe still being verified (early-access waitlist) ──
   // Until all four STRIPE_* env vars land in production, we show a "coming
   // soon" card with a contact path so users know online card payments
-  // aren't broken — they're just not live yet. Pro tier in the meantime
+  // aren't broken – they're just not live yet. Pro tier in the meantime
   // is granted manually for early-access users (we flip the apiKeys.tier
   // column directly).
   if (!billingReady) {
@@ -133,8 +133,8 @@ export function BillingPanel({ tier, billingReady }: Props) {
         </h3>
         <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.65)" }}>
           We&rsquo;re finishing payment-processor verification with our provider. In the meantime,
-          if you need Pro limits — <strong style={{ color: "white" }}>5,000 requests/day plus webhook
-          subscriptions</strong> — drop us an email and we&rsquo;ll provision it manually for early-access users.
+          if you need Pro limits – <strong style={{ color: "white" }}>5,000 requests/day plus webhook
+          subscriptions</strong> – drop us an email and we&rsquo;ll provision it manually for early-access users.
         </p>
         <div className="rounded-xl p-4 mb-4"
           style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.18)" }}>
@@ -144,7 +144,7 @@ export function BillingPanel({ tier, billingReady }: Props) {
           <ul className="text-xs space-y-1" style={{ color: "rgba(255,255,255,0.65)" }}>
             <li>• 120 req/min burst (4× the free tier)</li>
             <li>• 5,000 req/day (33× the free tier)</li>
-            <li>• Webhook subscriptions — push alerts on matching unlocks</li>
+            <li>• Webhook subscriptions – push alerts on matching unlocks</li>
             <li>• Higher monthly quota and priority support</li>
           </ul>
         </div>
@@ -177,7 +177,7 @@ export function BillingPanel({ tier, billingReady }: Props) {
       </h3>
       <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.6)" }}>
         Pro lifts your cap to <strong style={{ color: "white" }}>5,000 requests/day</strong> and unlocks{" "}
-        <strong style={{ color: "white" }}>webhook subscriptions</strong> — server-to-server alerts the
+        <strong style={{ color: "white" }}>webhook subscriptions</strong> – server-to-server alerts the
         moment a matching unlock fires. 14-day free trial, cancel any time.
       </p>
 
@@ -188,7 +188,7 @@ export function BillingPanel({ tier, billingReady }: Props) {
             <path d="M5 12l4 4 10-10" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)" }}>
-            Payment confirmed. Your tier should refresh momentarily — reload this page if you don&rsquo;t see Pro yet.
+            Payment confirmed. Your tier should refresh momentarily – reload this page if you don&rsquo;t see Pro yet.
           </p>
         </div>
       )}
@@ -196,7 +196,7 @@ export function BillingPanel({ tier, billingReady }: Props) {
         <div className="mb-4 px-3 py-2.5 rounded-lg"
           style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Checkout cancelled. You&rsquo;re still on the free tier — start again any time.
+            Checkout cancelled. You&rsquo;re still on the free tier – start again any time.
           </p>
         </div>
       )}

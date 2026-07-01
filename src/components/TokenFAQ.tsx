@@ -8,7 +8,7 @@
 //      keyboard-friendly out of the box.
 //   2. Emit `<script type="application/ld+json">` with schema.org FAQPage
 //      markup. Google reads this and can promote matching Q&A into rich
-//      search results — the primary SEO lever here.
+//      search results – the primary SEO lever here.
 //
 // Pure Server Component. No client-side state, no hooks. The `<details>`
 // element handles open/close entirely in the browser.
@@ -30,7 +30,7 @@ export function TokenFAQ({ items, symbol }: Props) {
 
   // JSON-LD for Google's FAQPage rich result. Important: `name` is the
   // question, `acceptedAnswer.text` is the answer as plain text. Google
-  // will NOT render HTML inside answer.text — always keep this plain.
+  // will NOT render HTML inside answer.text – always keep this plain.
   const jsonLd = {
     "@context":  "https://schema.org",
     "@type":     "FAQPage",
@@ -57,7 +57,7 @@ export function TokenFAQ({ items, symbol }: Props) {
 
       {/* Heading stack: H2 on one line, supporting caption on a dedicated
           row below. On 375px the old inline layout caused the caption to
-          orphan under the H2 with awkward wrapping — a proper two-row
+          orphan under the H2 with awkward wrapping – a proper two-row
           structure reads cleaner. */}
       <div className="mb-4">
         <h2

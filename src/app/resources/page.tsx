@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.vestream.io/resources",
     types: {
-      // RSS feed auto-discovery — feed readers (Inoreader, Feedly), the
+      // RSS feed auto-discovery – feed readers (Inoreader, Feedly), the
       // many crypto-Twitter feed-to-tweet bots, and Slack/Discord webhooks
       // pick this up from the <head> link tag.
       "application/rss+xml": "https://www.vestream.io/resources/rss.xml",
@@ -52,8 +52,8 @@ export default function ResourcesPage() {
   // surface, not a one-off article" and the embedded ItemList tags each
   // entry with its url + position so the catalog can be surfaced as a
   // related-content cluster in AI Overviews. The previous version of this
-  // page had no structured data at all — only the article detail pages
-  // did — which meant the hub didn't appear in rich results even though
+  // page had no structured data at all – only the article detail pages
+  // did – which meant the hub didn't appear in rich results even though
   // the individual articles did.
   const resourcesJsonLd = {
     "@context": "https://schema.org",
@@ -61,7 +61,7 @@ export default function ResourcesPage() {
       {
         "@type": "CollectionPage",
         "@id": "https://www.vestream.io/resources#collection",
-        name: "Vestream Resources — Token Vesting Guides & Insights",
+        name: "Vestream Resources – Token Vesting Guides & Insights",
         description: "In-depth guides on token vesting schedules, cliff periods, unlock tracking, and tokenomics.",
         url: "https://www.vestream.io/resources",
         inLanguage: "en-US",
@@ -92,7 +92,7 @@ export default function ResourcesPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
-      {/* JSON-LD structured data — CollectionPage + ItemList of all articles */}
+      {/* JSON-LD structured data – CollectionPage + ItemList of all articles */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(resourcesJsonLd) }}
@@ -123,7 +123,7 @@ export default function ResourcesPage() {
             <span style={{ color: "#1CB8B8" }}>token vesting</span>
           </h1>
           <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "#8B8E92" }}>
-            In-depth guides for investors, project teams, and Web3 professionals — covering vesting schedules, unlock tracking, tokenomics, and more.
+            In-depth guides for investors, project teams, and Web3 professionals – covering vesting schedules, unlock tracking, tokenomics, and more.
           </p>
         </div>
       </section>
@@ -221,7 +221,7 @@ export default function ResourcesPage() {
                   </span>
                 </div>
 
-                {/* Article cards — horizontal scroll on touch (mobile/tablet)
+                {/* Article cards – horizontal scroll on touch (mobile/tablet)
                     so users can swipe through a category, but cards size to
                     ~85% of viewport on phones so the next card peeks (a
                     visual scroll affordance). On desktop the row reflows
@@ -303,7 +303,7 @@ export default function ResourcesPage() {
             Track your token vestings in one place
           </h2>
           <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#8B8E92" }}>
-            Vestream connects to all major vesting protocols across every supported chain — so you never miss an unlock.
+            Vestream connects to all major vesting protocols across every supported chain – so you never miss an unlock.
           </p>
           <Link
             href="/early-access"

@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
 
-// iOS App Store ID — populated AFTER first eas submit when Apple assigns
+// iOS App Store ID – populated AFTER first eas submit when Apple assigns
 // the 10-digit ID. Until set, the Smart App Banner meta tag is omitted
 // entirely (rendering with a placeholder ID would surface a broken
 // "Open" button in mobile Safari).
@@ -28,17 +28,17 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 
 // Single source of truth for the headline copy used across <title>, <meta
 // description>, OG and Twitter cards. Keeping these as constants makes it
-// obvious when one card drifts from another (the sin we just paid for —
+// obvious when one card drifts from another (the sin we just paid for –
 // Twitter and OG had subtly different descriptions before this commit).
 // Title + description focus on the investor audience (vesting unlocks +
 // tax-ready capital-gains exports). Payroll moved to the roadmap on
-// May 5 2026 — the streaming-payment protocols (Sablier Flow, LlamaPay,
+// May 5 2026 – the streaming-payment protocols (Sablier Flow, LlamaPay,
 // Superfluid) are still indexed and visible inside the app for users
 // who receive that kind of stream, but the marketing surface no longer
 // leads with payroll-as-a-product. /payroll itself is a coming-soon
 // waitlist page, linked from the footer; SEO for "crypto payroll
 // tracker" parks there until we relaunch.
-const SITE_TITLE       = "Vestream — Token Vesting Tracker & Unlock Alerts";
+const SITE_TITLE       = "Vestream – Token Vesting Tracker & Unlock Alerts";
 const SITE_DESCRIPTION =
   "Track every token vesting unlock you're owed across 10 protocols and 7 chains. Push alerts the moment a cliff hits, one-tap claim links, tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
 
@@ -89,7 +89,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* Smart App Banner — Apple's built-in "Open in app" affordance for
+      {/* Smart App Banner – Apple's built-in "Open in app" affordance for
           mobile Safari. Renders only when NEXT_PUBLIC_IOS_APP_ID is set
           (i.e. after first eas submit). app-argument carries the current
           page URL so the deep-link target opens the same content in the
@@ -107,11 +107,11 @@ export default function RootLayout({
       >
         <Providers>{children}</Providers>
         <CookieBanner />
-        {/* Analytics stack — each layer covers a different need:
+        {/* Analytics stack – each layer covers a different need:
               GoogleAnalytics    → traffic sources, demographics, custom events (cookie-gated)
               MicrosoftClarity   → heatmaps + session replay (cookie-gated, free, no quota)
-              VercelAnalytics    → server-side pageviews, ad-blocker-proof, Web Vitals — no cookies
-              SpeedInsights      → Core Web Vitals breakdown for performance budgets — no cookies
+              VercelAnalytics    → server-side pageviews, ad-blocker-proof, Web Vitals – no cookies
+              SpeedInsights      → Core Web Vitals breakdown for performance budgets – no cookies
             Vercel layers don't gate on consent because they're aggregated /
             anonymised at the edge and don't drop a cookie. */}
         <GoogleAnalytics />

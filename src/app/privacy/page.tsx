@@ -60,7 +60,7 @@ export default function Privacy() {
                 <strong>Account identifiers.</strong> When you sign up via the
                 mobile app, we store your email address as your account
                 identifier. We authenticate sessions with a one-time code
-                emailed to that address — no password, and we never request
+                emailed to that address – no password, and we never request
                 or store wallet keys. The desktop dashboard signs you in by
                 scanning a QR code from the mobile app (Pro tier only); your
                 phone authenticates the desktop session.
@@ -81,7 +81,7 @@ export default function Privacy() {
                 a paid plan, we store the corresponding RevenueCat customer
                 and subscription ID. Card details are{" "}
                 <strong style={{ color: "#1A1D20" }}>never</strong> stored on our
-                infrastructure — they are handled by Apple App Store / Google Play
+                infrastructure – they are handled by Apple App Store / Google Play
                 via RevenueCat.
               </li>
               <li>
@@ -108,7 +108,7 @@ export default function Privacy() {
                 not collect passwords, private keys, seed phrases, or any
                 signing credentials
               </strong>
-              . The Service is read-only — we cannot move your tokens or sign
+              . The Service is read-only – we cannot move your tokens or sign
               transactions on your behalf.
             </p>
           </Section>
@@ -137,14 +137,14 @@ export default function Privacy() {
               Vestream maintains an aggregated, anonymised index of public
               vesting positions across the protocols and chains we support
               (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
-              Streamflow, Jupiter Lock — across Ethereum, BNB Chain,
+              Streamflow, Jupiter Lock – across Ethereum, BNB Chain,
               Polygon, Base, Arbitrum, Optimism, and Solana). This index is
               built from publicly available on-chain data and protocol
               subgraphs.
             </p>
             <p>
-              On-chain data — including wallet balances, vesting schedules,
-              token movements — is{" "}
+              On-chain data – including wallet balances, vesting schedules,
+              token movements – is{" "}
               <strong style={{ color: "#1A1D20" }}>inherently public</strong> and
               does not become &quot;your data&quot; by virtue of you tracking a
               wallet on Vestream. We may use this aggregated, anonymised index
@@ -180,18 +180,18 @@ export default function Privacy() {
           <Section title="6. Third-party processors">
             <p>The Service relies on the following sub-processors:</p>
             <ul>
-              <li><strong>Supabase</strong> (Postgres database, EU region — AWS eu-west-1) — stores account, wallet, notification, and indexed-stream data.</li>
-              <li><strong>Vercel</strong> — application hosting and edge CDN.</li>
-              <li><strong>Upstash</strong> — Redis for rate limiting.</li>
-              <li><strong>Resend</strong> — transactional email (sign-in OTP, unlock alerts).</li>
-              <li><strong>Alchemy</strong> — Ethereum, Base, and Solana RPC.</li>
-              <li><strong>BSC and Polygon RPC providers</strong> — chain reads.</li>
-              <li><strong>The Graph</strong> — protocol subgraphs (Sablier, Hedgey, UNCX, Unvest, Superfluid).</li>
-              <li><strong>DefiLlama</strong> — public TVL aggregates for select protocols.</li>
-              <li><strong>DexScreener</strong> and <strong>CoinGecko</strong> — token price data for USD-equivalents shown in the dashboard.</li>
-              <li><strong>RevenueCat</strong> + <strong>Apple App Store / Google Play</strong> — mobile in-app purchases.</li>
-              <li><strong>Google Analytics 4</strong> — anonymised analytics, only with your consent.</li>
-              <li><strong>Sentry</strong> (if enabled) — error reporting; configured to scrub personal data.</li>
+              <li><strong>Supabase</strong> (Postgres database, EU region – AWS eu-west-1) – stores account, wallet, notification, and indexed-stream data.</li>
+              <li><strong>Vercel</strong> – application hosting and edge CDN.</li>
+              <li><strong>Upstash</strong> – Redis for rate limiting.</li>
+              <li><strong>Resend</strong> – transactional email (sign-in OTP, unlock alerts).</li>
+              <li><strong>Alchemy</strong> – Ethereum, Base, and Solana RPC.</li>
+              <li><strong>BSC and Polygon RPC providers</strong> – chain reads.</li>
+              <li><strong>The Graph</strong> – protocol subgraphs (Sablier, Hedgey, UNCX, Unvest, Superfluid).</li>
+              <li><strong>DefiLlama</strong> – public TVL aggregates for select protocols.</li>
+              <li><strong>DexScreener</strong> and <strong>CoinGecko</strong> – token price data for USD-equivalents shown in the dashboard.</li>
+              <li><strong>RevenueCat</strong> + <strong>Apple App Store / Google Play</strong> – mobile in-app purchases.</li>
+              <li><strong>Google Analytics 4</strong> – anonymised analytics, only with your consent.</li>
+              <li><strong>Sentry</strong> (if enabled) – error reporting; configured to scrub personal data.</li>
             </ul>
             <p>
               Each third party operates under its own privacy policy. We

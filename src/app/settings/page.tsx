@@ -31,9 +31,9 @@ const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
 
 // ─── Chain / Protocol options (shared by wallet card + add form) ──────────────
 
-// Four production mainnets — mirrors the chain list the dashboard and
+// Four production mainnets – mirrors the chain list the dashboard and
 // Discover page scan against. Polygon was previously missing here, and
-// Sepolia was included in its place — meaning users couldn't enable
+// Sepolia was included in its place – meaning users couldn't enable
 // Polygon scans from Settings even though everything below the UI
 // supported them. Dropped Sepolia (testnet, not relevant for consumer
 // wallet tracking) and restored Polygon.
@@ -56,7 +56,7 @@ const PROTOCOL_OPTIONS = [
 ];
 
 // All backend protocol IDs (includes uncx-vm which is hidden in UI but treated as part of UNCX).
-// team-finance is omitted — paused, not surfaced to users.
+// team-finance is omitted – paused, not surfaced to users.
 const ALL_BACKEND_PROTOCOL_IDS = ["sablier", "uncx", "uncx-vm", "hedgey", "unvest", "superfluid", "pinksale"];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ function WalletCard({
   const [labelValue,        setLabelValue]        = useState(wallet.label ?? "");
   const [savingLabel,       setSavingLabel]       = useState(false);
 
-  // Chain / protocol config — mirror wallet values, all = null stored as "all selected"
+  // Chain / protocol config – mirror wallet values, all = null stored as "all selected"
   const allChainIds    = CHAIN_OPTIONS.map(c => c.id);
   const allProtocolIds = ALL_BACKEND_PROTOCOL_IDS;
   const [selChains,    setSelChains]    = useState<Set<string>>(
@@ -212,7 +212,7 @@ function WalletCard({
   const [savingTokenAddr,  setSavingTokenAddr]  = useState(false);
 
   // Per-wallet scan config (chains, platforms, token filter) is available
-  // to every tier — differentiation lives on wallet count, Discover, alerts
+  // to every tier – differentiation lives on wallet count, Discover, alerts
   // and API access, not on the wallet-add flow. `tier` is received so this
   // component's prop signature stays aligned with future tier gating
   // without touching the call sites when we eventually need it.
@@ -368,7 +368,7 @@ function WalletCard({
       {/* ── Config: chains + platforms + token filter ── */}
       <div className="px-4 pb-3 space-y-2.5" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
 
-        {/* Chains / platforms multi-select — available on every tier. */}
+        {/* Chains / platforms multi-select – available on every tier. */}
         <div>
           <p className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "var(--preview-text-3)" }}>
             Chains to scan
@@ -475,7 +475,7 @@ function WalletCard({
               ) : (
                 <>
                   <p className="text-[10px] italic" style={{ color: "var(--preview-text-3)" }}>
-                    None — scanning all tokens
+                    None – scanning all tokens
                   </p>
                   <button onClick={() => setEditingTokenAddr(true)}
                     className="text-[10px] flex-shrink-0 underline" style={{ color: "#1CB8B8" }}>
@@ -502,7 +502,7 @@ export default function Settings() {
   const [sessionAddress, setSessionAddress] = useState<string | null>(null);
   const [tier, setTier]                   = useState<string>("free");
   const [walletLimit, setWalletLimit]     = useState<number | null>(1);
-  // Push-alert credit counter — Free has 3 lifetime credits, paid tiers are
+  // Push-alert credit counter – Free has 3 lifetime credits, paid tiers are
   // unmetered (pushAlertsLimit === null). Surfaces the same counter the
   // mobile app shows so users see the same number on every surface.
   const [pushAlertsSent,  setPushAlertsSent]  = useState<number>(0);
@@ -596,7 +596,7 @@ export default function Settings() {
         setProfileSaved(true);
         setTimeout(() => setProfileSaved(false), 1800);
       }
-    } catch { /* network — silent, user can retry */ }
+    } catch { /* network – silent, user can retry */ }
   }
 
   async function handleRemoveWallet(wallet: Wallet) {
@@ -664,11 +664,11 @@ export default function Settings() {
 
   // Sidebar + flex shell are provided by src/app/settings/layout.tsx (which
   // mounts the same DashboardChrome the dashboard layout uses). The legacy
-  // inline sidebar that lived here has been removed — kept inert below to
+  // inline sidebar that lived here has been removed – kept inert below to
   // minimise diff churn until the next focused cleanup pass.
   return (
     <>
-    {/* Inert legacy sidebar — outer wrapper hidden so it never renders.
+    {/* Inert legacy sidebar – outer wrapper hidden so it never renders.
         We don't delete it in this commit because the old <aside> contained
         a tier badge variant that's been migrated to the shared sidebar
         but worth keeping the source visible for one release in case we
@@ -791,7 +791,7 @@ export default function Settings() {
           {/* ── Tracked Wallets ──────────────────────────────────────────── */}
           {activeSection === "wallets" && <Section
             title="Tracked Wallets"
-            description="Choose which chains and platforms to scan for each wallet — Vestream only loads what you need, keeping the dashboard fast."
+            description="Choose which chains and platforms to scan for each wallet – Vestream only loads what you need, keeping the dashboard fast."
           >
             {/* Wallet list */}
             {wallets.length === 0 ? (
@@ -812,7 +812,7 @@ export default function Settings() {
               </ul>
             )}
 
-            {/* Adding wallets lives on the Dashboard now — one add-flow, no
+            {/* Adding wallets lives on the Dashboard now – one add-flow, no
                 duplicate UI. Settings is for managing wallets you already
                 track (which chains/platforms each scans, or removing them). */}
             <div style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "1rem" }}>
@@ -842,7 +842,7 @@ export default function Settings() {
                   <p className="text-sm font-medium" style={{ color: "var(--preview-text)" }}>Enable unlock alerts</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--preview-text-3)" }}>Receive an email before each token unlock event.</p>
                 </div>
-                {/* Toggle switch — standalone button so clicks don't double-fire */}
+                {/* Toggle switch – standalone button so clicks don't double-fire */}
                 <button
                   type="button"
                   role="switch"
@@ -945,10 +945,10 @@ export default function Settings() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Mobile push notifications</p>
                   <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
-                    Get instant push notifications the moment a token unlocks — straight to your phone. Available in the Vestream app.
+                    Get instant push notifications the moment a token unlocks – straight to your phone. Available in the Vestream app.
                   </p>
 
-                  {/* Push-credit counter — Free is 3 lifetime, paid is
+                  {/* Push-credit counter – Free is 3 lifetime, paid is
                       unmetered. Same counter the mobile app surfaces so
                       users see the identical number on every platform
                       (pushAlertsLimit === null ⇒ unmetered). */}
@@ -1016,14 +1016,14 @@ export default function Settings() {
 
           {/* ── Calendar subscription ───────────────────────────────────── */}
           {/* Lives under the Notifications section because the iCal feed is
-              effectively another notification surface — users who'd rather
+              effectively another notification surface – users who'd rather
               see unlocks in Google/Apple/Outlook Calendar than receive push
               alerts. Sub-section (no separate nav entry); rendered when
               the notifications tab is active. */}
           {activeSection === "notifications" && (
             <Section
               title="Calendar export"
-              description="Subscribe to your upcoming token unlocks in any calendar app — Google, Apple, Outlook."
+              description="Subscribe to your upcoming token unlocks in any calendar app – Google, Apple, Outlook."
             >
               <CalendarSubscribeCard />
             </Section>
@@ -1078,7 +1078,7 @@ export default function Settings() {
               <div className="flex flex-col gap-1 text-xs" style={{ color: "var(--preview-text-2)" }}>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: profileMeta.mobileConnected ? "#10b981" : "var(--preview-border)" }} />
-                  <span>{profileMeta.mobileConnected ? "Connected — push notifications enabled" : "Not connected"}</span>
+                  <span>{profileMeta.mobileConnected ? "Connected – push notifications enabled" : "Not connected"}</span>
                 </div>
                 {profileMeta.timezone && <p style={{ color: "var(--preview-text-3)" }}>Time zone: {profileMeta.timezone}</p>}
                 {profileMeta.lastActiveAt && <p style={{ color: "var(--preview-text-3)" }}>Last active: {new Date(profileMeta.lastActiveAt).toLocaleString()}</p>}
@@ -1107,7 +1107,7 @@ export default function Settings() {
                   </div>
                   {isPaid ? (
                     <p className="text-xs leading-relaxed" style={{ color: "var(--preview-text-2)" }}>
-                      You&apos;re on the <strong>Pro</strong> plan — full dashboard, unlimited alerts, Discover, and tax exports.
+                      You&apos;re on the <strong>Pro</strong> plan – full dashboard, unlimited alerts, Discover, and tax exports.
                       Billing is handled through the App Store / Google Play. To see your plan (monthly or yearly),
                       your renewal date, or to cancel, open the <strong>Vestream app → Settings → Manage subscription</strong>.
                     </p>
@@ -1160,7 +1160,7 @@ export default function Settings() {
               <MailingListSignup />
             </div>
 
-            {/* Display currency — purely cosmetic. Every $ figure across the
+            {/* Display currency – purely cosmetic. Every $ figure across the
                 dashboard converts at the current FX rate. Tax exports use
                 historical rates and aren't affected. */}
             <div className="pt-5" style={{ borderTop: "1px solid var(--preview-border-2)" }}>
@@ -1290,7 +1290,7 @@ function MailingListSignup() {
           </button>
         </form>
       )}
-      {state === "error" && <p className="text-xs mt-2" style={{ color: "#B3322E" }}>Couldn&apos;t subscribe — please try again.</p>}
+      {state === "error" && <p className="text-xs mt-2" style={{ color: "#B3322E" }}>Couldn&apos;t subscribe – please try again.</p>}
     </div>
   );
 }
@@ -1348,7 +1348,7 @@ function CurrencyPicker() {
       >
         {SUPPORTED_CURRENCIES.map((c) => (
           <option key={c.code} value={c.code}>
-            {c.symbol} — {c.code}
+            {c.symbol} – {c.code}
           </option>
         ))}
       </select>

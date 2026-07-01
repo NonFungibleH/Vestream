@@ -27,7 +27,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title: "Interactive + live vesting demo · Vestream",
-  description: "Three demos in one page — a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy on Sablier.",
+  description: "Three demos in one page – a 90-second walkthrough of the claim flow, a downloadable app demo to watch a live vesting on your phone, and a build-your-own Sepolia vesting you can deploy on Sablier.",
   alternates: { canonical: "https://www.vestream.io/demo" },
 };
 
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
 // flow, since Team Finance is paused (`disabled: true` in protocol-constants).
 // Sablier's app handles vesting creation on Sepolia and we already index
 // it there, so the stream lands in Vestream automatically. Sablier doesn't
-// have a token mint built in — we hand users to Circle's Sepolia USDC
+// have a token mint built in – we hand users to Circle's Sepolia USDC
 // faucet for a real ERC-20 they can vest, instead of asking them to deploy
 // their own.
 //
 //   SEPOLIA_ETH_FAUCET    → free Sepolia ETH for gas (Google Cloud faucet)
 //   SEPOLIA_USDC_FAUCET   → 10 Sepolia USDC per day from Circle's official
 //                           faucet, a real ERC-20 to vest in step 3
-//   SABLIER_SEPOLIA       → Sablier app — connect, switch chain to Sepolia,
+//   SABLIER_SEPOLIA       → Sablier app – connect, switch chain to Sepolia,
 //                           create a Lockup vesting using the USDC just
 //                           claimed from step 2
 const SEPOLIA_ETH_FAUCET   = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
@@ -83,7 +83,7 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Demo A — Interactive walkthrough ─────────────────────────────── */}
+      {/* ── Demo A – Interactive walkthrough ─────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-10 md:pb-14">
         <DemoIntro
           letter="A"
@@ -105,7 +105,7 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Demo B — Design a vesting, see it live on the app ─────────────── */}
+      {/* ── Demo B – Design a vesting, see it live on the app ─────────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <DemoIntro
           letter="B"
@@ -116,12 +116,12 @@ export default function DemoPage() {
 
         <VestingDemo />
 
-        {/* Guidance — 3 steps that match the new B flow */}
+        {/* Guidance – 3 steps that match the new B flow */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
           <GuideCard
             n="1"
             title="Design your vesting"
-            body="Pick a token symbol, amount, and duration. VEST and NOVA are our canonical demo tokens — whatever you set here will be your sandbox on the app."
+            body="Pick a token symbol, amount, and duration. VEST and NOVA are our canonical demo tokens – whatever you set here will be your sandbox on the app."
           />
           <GuideCard
             n="2"
@@ -164,7 +164,7 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Demo C — Deploy a live Sepolia vesting via Sablier ───────────── */}
+      {/* ── Demo C – Deploy a live Sepolia vesting via Sablier ───────────── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <DemoIntro
           letter="C"
@@ -188,7 +188,7 @@ export default function DemoPage() {
           <DeployStep
             n="2"
             title="Claim test USDC"
-            body="Circle's official Sepolia faucet drops 10 USDC per day to any address — a real ERC-20 you can vest. Connect, paste your wallet, and request — funds land in seconds and you have something to lock up in step 3."
+            body="Circle's official Sepolia faucet drops 10 USDC per day to any address – a real ERC-20 you can vest. Connect, paste your wallet, and request – funds land in seconds and you have something to lock up in step 3."
             href={SEPOLIA_USDC_FAUCET}
             cta="Open the Circle USDC faucet"
             accent="#1CB8B8"
@@ -199,7 +199,7 @@ export default function DemoPage() {
           <DeployStep
             n="3"
             title="Create a Sablier vesting"
-            body="Open Sablier's app, switch chain to Sepolia, and create a Lockup Linear stream with the USDC you just claimed. Pick a recipient + duration and submit. Within a minute Vestream auto-indexes the stream — scan the recipient wallet on /find-vestings to see it live."
+            body="Open Sablier's app, switch chain to Sepolia, and create a Lockup Linear stream with the USDC you just claimed. Pick a recipient + duration and submit. Within a minute Vestream auto-indexes the stream – scan the recipient wallet on /find-vestings to see it live."
             href={SABLIER_SEPOLIA}
             cta="Open Sablier"
             accent="#2DB36A"
@@ -325,7 +325,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <SiteFooter theme="light" note="Demo A + B use illustrative data so you can explore without signing anything. Demo C creates a real Sablier vesting on Sepolia testnet — no real money, no mainnet risk." />
+      <SiteFooter theme="light" note="Demo A + B use illustrative data so you can explore without signing anything. Demo C creates a real Sablier vesting on Sepolia testnet – no real money, no mainnet risk." />
     </main>
   );
 }

@@ -1,4 +1,4 @@
-// Per-article Open Graph image — 1200×630, generated per slug at build time
+// Per-article Open Graph image – 1200×630, generated per slug at build time
 // via generateStaticParams. Same visual language as the protocol OG image:
 // warm-paper background, Vestream wordmark, category-coloured accent.
 //
@@ -34,7 +34,7 @@ export async function generateImageMetadata({
       id:          "og",
       contentType: "image/png",
       size,
-      alt: article ? `${article.title} — Vestream Resources` : "Vestream Resources",
+      alt: article ? `${article.title} – Vestream Resources` : "Vestream Resources",
     },
   ];
 }
@@ -164,7 +164,7 @@ export default async function OG(
           </span>
         </div>
 
-        {/* Footer — reading time + URL */}
+        {/* Footer – reading time + URL */}
         <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 24 }}>
           <div
             style={{

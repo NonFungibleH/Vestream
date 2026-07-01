@@ -54,7 +54,7 @@ export function ExplorerHelp() {
 
             <Section title="The three tabs">
               <Item k="Upcoming">one row per <b>token</b> (all its wallets + schedules rolled up), sorted by next unlock. Use this to find projects.</Item>
-              <Item k="Schedules">one row per <b>individual vesting position</b> — the raw per-wallet streams.</Item>
+              <Item k="Schedules">one row per <b>individual vesting position</b> – the raw per-wallet streams.</Item>
               <Item k="Wallet">every vesting position held by <b>one recipient</b> (paste an address or ENS in the search box).</Item>
             </Section>
 
@@ -63,13 +63,13 @@ export function ExplorerHelp() {
             </Section>
 
             <Section title="Drill-down filters">
-              The right-hand sliders set a <b>min and max</b> for wallets, locked value (USD), schedules, % vested, and top-holder concentration — e.g. “30–50 wallets, $500k–$1M locked”. The count + pages update to your filters.
+              The right-hand sliders set a <b>min and max</b> for wallets, locked value (USD), schedules, % vested, and top-holder concentration – e.g. “30–50 wallets, $500k–$1M locked”. The count + pages update to your filters.
             </Section>
 
             <Section title="The columns">
-              <Item k="USD">locked tokens × price (dimmed = thin liquidity, “—” = no market).</Item>
-              <Item k="Top recipient">the largest recipient’s share of the <b>locked</b> supply (not total supply). Single-recipient tokens show “—” (always 100%); coloured red/amber only when that wallet is also a material share of market cap.</Item>
-              <Item k="Risk">the unlock’s size vs market cap — how hard it could hit the market.</Item>
+              <Item k="USD">locked tokens × price (dimmed = thin liquidity, “–” = no market).</Item>
+              <Item k="Top recipient">the largest recipient’s share of the <b>locked</b> supply (not total supply). Single-recipient tokens show “–” (always 100%); coloured red/amber only when that wallet is also a material share of market cap.</Item>
+              <Item k="Risk">the unlock’s size vs market cap – how hard it could hit the market.</Item>
               <Item k="Vested">a sparkline of the unlock shape (cliff / linear / back-loaded) with a “now” marker.</Item>
               <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Hover any column header for its definition; hover a row for a quick preview.</span>
             </Section>
@@ -99,6 +99,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Item({ k, children }: { k: string; children: React.ReactNode }) {
   return (
-    <p><span className="font-semibold" style={{ color: "var(--preview-text)" }}>{k}</span> — {children}</p>
+    <p><span className="font-semibold" style={{ color: "var(--preview-text)" }}>{k}</span> – {children}</p>
   );
 }

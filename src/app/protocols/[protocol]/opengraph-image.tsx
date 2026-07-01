@@ -1,8 +1,8 @@
-// Per-protocol Open Graph image — 1200×630, generated at request time per
+// Per-protocol Open Graph image – 1200×630, generated at request time per
 // {protocol} slug. Pulls live stream count and TVL from the snapshot table
 // so a fresh share preview reflects current data, not the build-time
 // snapshot. Falls back gracefully to placeholder values if the DB call
-// fails — never let a snapshot outage break a share preview.
+// fails – never let a snapshot outage break a share preview.
 //
 // Why per-protocol OG instead of a single site-wide one for these pages:
 // the share preview is the only thing many people see on Twitter/Discord
@@ -13,7 +13,7 @@ import { ImageResponse } from "next/og";
 import { getProtocol } from "@/lib/protocol-constants";
 import { getProtocolStats } from "@/lib/vesting/protocol-stats";
 
-// Runtime: nodejs (NOT edge) — required because the parent page exports
+// Runtime: nodejs (NOT edge) – required because the parent page exports
 // generateStaticParams to pre-render every protocol slug at build time, and
 // Next.js inherits that contract for the opengraph-image route under the same
 // dynamic segment. Edge runtime + generateStaticParams is incompatible (the
@@ -26,7 +26,7 @@ export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 function compactUsd(n: number): string {
-  if (!isFinite(n) || n <= 0) return "—";
+  if (!isFinite(n) || n <= 0) return "–";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -35,7 +35,7 @@ function compactUsd(n: number): string {
 
 // `generateImageMetadata` lets us set a per-protocol alt-text. Each entry's
 // `id` becomes the last URL segment (`/opengraph-image/{id}`), so we use a
-// stable id ("og") rather than the slug — Next.js takes care of routing the
+// stable id ("og") rather than the slug – Next.js takes care of routing the
 // request to the matching protocol via the `params` we receive.
 export async function generateImageMetadata({
   params,
@@ -47,7 +47,7 @@ export async function generateImageMetadata({
       id:          "og",
       contentType: "image/png",
       size,
-      alt:         meta ? `${meta.name} unlock tracker — Vestream` : "Vestream",
+      alt:         meta ? `${meta.name} unlock tracker – Vestream` : "Vestream",
     },
   ];
 }
@@ -71,13 +71,13 @@ export default async function OG(
     );
   }
 
-  // Live stats — fail-soft to "—" if DB is unreachable
+  // Live stats – fail-soft to "–" if DB is unreachable
   let totalStreams = 0;
   try {
     const stats = await getProtocolStats(meta.adapterIds);
     totalStreams = stats?.totalStreams ?? 0;
   } catch {
-    /* swallow — share preview still useful without the live count */
+    /* swallow – share preview still useful without the live count */
   }
 
   const initial = meta.name.charAt(0);
@@ -109,7 +109,7 @@ export default async function OG(
           }}
         />
 
-        {/* Header — Vestream wordmark */}
+        {/* Header – Vestream wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ width: 44, height: 6, background: "#1A1D20", opacity: 0.35, borderRadius: 2 }} />
@@ -124,7 +124,7 @@ export default async function OG(
           </span>
         </div>
 
-        {/* Body — protocol initial badge + name + tagline */}
+        {/* Body – protocol initial badge + name + tagline */}
         <div
           style={{
             display:        "flex",
@@ -178,7 +178,7 @@ export default async function OG(
           </div>
         </div>
 
-        {/* Footer — live stats pill + URL */}
+        {/* Footer – live stats pill + URL */}
         <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 24 }}>
           <div
             style={{

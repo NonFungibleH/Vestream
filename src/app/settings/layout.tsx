@@ -1,7 +1,7 @@
 // src/app/settings/layout.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Settings is logically a dashboard surface — users navigate to it from
-// the dashboard sidebar — but the route lives at /settings (not
+// Settings is logically a dashboard surface – users navigate to it from
+// the dashboard sidebar – but the route lives at /settings (not
 // /dashboard/settings) for historical / bookmark-stability reasons. We
 // preserve the URL but mount the SAME layout chrome so the left-rail nav
 // stays consistent with every other dashboard sub-route.
@@ -50,10 +50,10 @@ export default async function SettingsLayout({
     getUserTier(),
   ]);
   const initialCurrency = getCurrencyFromCookies(cookieStore);
-  // Mirror the dashboard layout's dark-mode application — see comment there.
+  // Mirror the dashboard layout's dark-mode application – see comment there.
   const dark = getDarkModeFromCookies(cookieStore);
 
-  // DarkModeProvider — same as src/app/dashboard/layout.tsx. Mounting it
+  // DarkModeProvider – same as src/app/dashboard/layout.tsx. Mounting it
   // here is what makes the sidebar's night-mode toggle actually work on
   // /settings: useDarkMode() needs the provider in its tree, otherwise it
   // returns a no-op `toggle` and the SSR `<div className="dark">` below
@@ -61,7 +61,7 @@ export default async function SettingsLayout({
   //
   // The provider's own wrapper `<div className={dark ? "dark" : ""}>` is the
   // single reactive theming hook for the whole subtree, so we DON'T add a
-  // separate SSR-only wrapper here — that would create a non-reactive
+  // separate SSR-only wrapper here – that would create a non-reactive
   // ancestor that stays dark through the brief window after a toggle.
   return (
     <CurrencyProvider rates={rateBundle.rates} initialCurrency={initialCurrency}>

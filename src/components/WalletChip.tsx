@@ -2,7 +2,7 @@
 
 // src/components/WalletChip.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Account chip + dropdown for the dashboard header — shows the signed-in
+// Account chip + dropdown for the dashboard header – shows the signed-in
 // identity (email or wallet address) and a Sign out action. Extracted from
 // the home page so the now-universal <DashboardHeader> (rendered once by
 // DashboardChrome) can own it across every dashboard tab.

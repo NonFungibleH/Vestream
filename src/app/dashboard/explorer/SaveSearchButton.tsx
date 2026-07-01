@@ -30,7 +30,7 @@ export function SaveSearchButton({ isPaid }: Props) {
       const r = await fetch("/api/dashboard/explorer/saved", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        // alerts intentionally off for now — the "alert on new matches" UI was
+        // alerts intentionally off for now – the "alert on new matches" UI was
         // removed until the alerts pipeline is configured. Saving still works.
         body:    JSON.stringify({ params, alertsEnabled: false }),
       });

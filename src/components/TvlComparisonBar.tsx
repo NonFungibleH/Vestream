@@ -1,6 +1,6 @@
 // src/components/TvlComparisonBar.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Server component — horizontal bar chart comparing TVL across every indexed
+// Server component – horizontal bar chart comparing TVL across every indexed
 // protocol, with honest confidence-band reporting.
 //
 // Each row shows:
@@ -11,7 +11,7 @@
 //
 // The header reports both the all-bands total AND the high-confidence subset,
 // so a reader gets directional accuracy without having to trust the long
-// tail. The footer explains the methodology in plain English — two pricing
+// tail. The footer explains the methodology in plain English – two pricing
 // sources (DexScreener + CoinGecko) and the three liquidity bands that
 // determine confidence.
 //
@@ -30,11 +30,11 @@ export interface TvlComparisonRow {
   activeStreams?: number | null;
   /** Number of chains we actually have INDEXED data on (stats.chainIds).
    *  Preferred over protocol.chainIds (declared) so a declared-but-empty
-   *  chain — e.g. Team Finance on Base — isn't counted. Falls back to the
+   *  chain – e.g. Team Finance on Base – isn't counted. Falls back to the
    *  declared count when null (cold cache). */
   indexedChainCount?: number | null;
   /**
-   * @deprecated since 2026-05-10 — totalStreams is no longer rendered.
+   * @deprecated since 2026-05-10 – totalStreams is no longer rendered.
    * Including ended/fully-withdrawn rows inflated the count without
    * reflecting current activity. Kept on the type so callers can keep
    * passing it without a TS error during the rollout; it's ignored.
@@ -43,7 +43,7 @@ export interface TvlComparisonRow {
 }
 
 function compactUsd(n: number): string {
-  if (!Number.isFinite(n) || n <= 0) return "—";
+  if (!Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -79,7 +79,7 @@ export function TvlComparisonBar({
   const totalAll  = sorted.reduce((s, r) => s + (r.tvl?.tvlUsd ?? 0), 0);
   const totalHigh = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.high ?? 0), 0);
   const totalMed  = sorted.reduce((s, r) => s + (r.tvl?.tvlByBand.medium ?? 0), 0);
-  // tvlByBand.low intentionally NOT summed for display — see the sub-header
+  // tvlByBand.low intentionally NOT summed for display – see the sub-header
   // comment block. The thin-band aggregate is forensic-audit data only.
 
   const anyPriced   = sorted.some((r) => (r.tvl?.tokensPriced ?? 0) > 0);
@@ -119,7 +119,7 @@ export function TvlComparisonBar({
             {compactUsd(totalAll)}
           </span>
           <span>across {sorted.length} protocols</span>
-          {/* Methodology info tooltip — `peer` on the icon + `relative`
+          {/* Methodology info tooltip – `peer` on the icon + `relative`
               one level up means the tooltip can anchor to the WIDER
               right-of-strip flex group rather than the 16px icon itself.
               That's the difference between the tooltip overflowing the
@@ -136,7 +136,7 @@ export function TvlComparisonBar({
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
           </span>
-          {/* Tooltip — sibling of the icon (peer-hover/peer-focus driven)
+          {/* Tooltip – sibling of the icon (peer-hover/peer-focus driven)
               and anchored to the parent strip-right group's right edge.
               Width clamps to viewport-2rem so on a 375 phone the tooltip
               is at most 343px wide; with right:0 anchored to the right of
@@ -156,12 +156,12 @@ export function TvlComparisonBar({
             role="tooltip"
           >
               Every number here is <span className="font-semibold" style={{ color: "#1A1D20" }}>vesting-specific TVL</span>
-              {" "}— no LP locks, no launchpad escrows, no staking. Two methodologies, depending on the protocol:
+              {" "}– no LP locks, no launchpad escrows, no staking. Two methodologies, depending on the protocol:
               <br /><br />
-              <span className="font-semibold" style={{ color: "#0F8A8A" }}>via DefiLlama</span> — for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
+              <span className="font-semibold" style={{ color: "#0F8A8A" }}>via DefiLlama</span> – for Sablier, Hedgey, and Streamflow, we use DefiLlama&apos;s
               {" "}<span className="font-mono text-[10px]">chainTvls.vesting</span> aggregate, which they already report as a vesting-only slice.
               <br /><br />
-              <span className="font-semibold" style={{ color: "#1CB8B8" }}>Self-indexed</span> — for every other protocol, we walk the protocol&apos;s data
+              <span className="font-semibold" style={{ color: "#1CB8B8" }}>Self-indexed</span> – for every other protocol, we walk the protocol&apos;s data
               source exhaustively (subgraph, contract events, or Solana program accounts), sum the remaining locked token amounts, and price each
               token via DexScreener with CoinGecko as fallback. Tokens with ≥$10k DEX liquidity are <span className="font-semibold" style={{ color: "#1A1D20" }}>high</span> confidence,
               {" "}$1k–$10k <span className="font-semibold" style={{ color: "#1A1D20" }}>medium</span>, $100–$1k <span className="font-semibold" style={{ color: "#1A1D20" }}>thin</span>. All three bands count toward the headline. To defend
@@ -180,7 +180,7 @@ export function TvlComparisonBar({
         </div>
       </div>
 
-      {/* High-confidence sub-header — reassures the reader the top line isn't
+      {/* High-confidence sub-header – reassures the reader the top line isn't
           inflated by long-tail thin-liquidity entries.
           Note: we deliberately DON'T surface the THIN band total here. It's
           a forensic-audit field (tvl_low column = capped-overflow + thin-
@@ -222,9 +222,9 @@ export function TvlComparisonBar({
         </div>
       )}
 
-      {/* Rows — flex-1 so the card stretches to match the sibling column.
+      {/* Rows – flex-1 so the card stretches to match the sibling column.
           We use divide-y + per-row py-2.5 (instead of space-y-3) to match the
-          row rhythm of the UpcomingUnlockTicker sibling exactly — otherwise
+          row rhythm of the UpcomingUnlockTicker sibling exactly – otherwise
           the two columns on /protocols drift out of alignment by a few pixels
           per row, which compounds to a visible offset over 9 rows. */}
       <div className="flex-1 flex flex-col">
@@ -264,7 +264,7 @@ export function TvlComparisonBar({
                 : null;
               // Rows where we have NO data yet (zero priced tokens, no external
               // source) get the "Indexing…" label instead of a terse "no data"
-              // — makes the empty state feel intentional rather than broken.
+              // – makes the empty state feel intentional rather than broken.
               // Currently only Jupiter Lock (Solana, no DefiLlama entry, cache
               // not yet seeded) lands here.
               const isIndexing = !isExternal && !hasValue;
@@ -317,7 +317,7 @@ export function TvlComparisonBar({
                       className="text-sm font-bold tabular-nums"
                       style={{ color: hasValue ? "#1A1D20" : "#B8BABD" }}
                     >
-                      {isIndexing ? "—" : compactUsd(tvlUsd)}
+                      {isIndexing ? "–" : compactUsd(tvlUsd)}
                     </span>
                     {isExternal ? (
                       <span
@@ -331,7 +331,7 @@ export function TvlComparisonBar({
                       <span
                         className="inline-flex items-center gap-1 text-[10px] font-semibold whitespace-nowrap"
                         style={{ color: protocol.color, minWidth: 66, justifyContent: "flex-end" }}
-                        title="Coverage starting — we're indexing this protocol now"
+                        title="Coverage starting – we're indexing this protocol now"
                       >
                         <span className="relative flex h-1.5 w-1.5">
                           <span
@@ -350,7 +350,7 @@ export function TvlComparisonBar({
                       // via tooltip (for ops + curious users) but DON'T splash
                       // a "11% priced" label that reads as "broken" to the
                       // average user. The 89% are usually pre-launch dust with
-                      // no DEX listing — that's expected, not missing data.
+                      // no DEX listing – that's expected, not missing data.
                       // Show "self-indexed" instead, mirroring the "via
                       // DefiLlama" pattern as a methodology attribution.
                       <span
@@ -382,7 +382,7 @@ export function TvlComparisonBar({
         )}
       </div>
 
-      {/* Footer intentionally removed — methodology moved into the (i) tooltip
+      {/* Footer intentionally removed – methodology moved into the (i) tooltip
           next to the header total. Keeps the card visually balanced with its
           UpcomingUnlockTicker sibling in the /protocols grid, and the detail
           stays one hover away for anyone who wants it. */}

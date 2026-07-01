@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Route-level Suspense fallback for the WHOLE /dashboard/* tree. App Router
 // shows this INSTANTLY on navigation to any dashboard tab while that tab's
-// server component renders — so clicking e.g. Smart Money no longer freezes
+// server component renders – so clicking e.g. Smart Money no longer freezes
 // for 5s with nothing on screen. The server-rendered pages (smart-money,
 // explorer, exports) do per-request DB work and the dashboard layout reads
 // cookies (which dynamicises the tree), so without this boundary the nav had

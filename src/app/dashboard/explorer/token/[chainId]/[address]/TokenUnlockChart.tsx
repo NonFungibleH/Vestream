@@ -1,10 +1,10 @@
 "use client";
 
 // Overview graph with two lenses, toggled by the user:
-//   • Cumulative — total unlocked over time, stacked area by round (the
+//   • Cumulative – total unlocked over time, stacked area by round (the
 //     "how much is out by date X" view).
-//   • Per period — how much unlocks in each time bucket, stacked bars by round
-//     (the "when do tokens actually hit" view — far more intuitive for spotting
+//   • Per period – how much unlocks in each time bucket, stacked bars by round
+//     (the "when do tokens actually hit" view – far more intuitive for spotting
 //     unlock cliffs/waves).
 // Pure inline SVG (matches the codebase's other charts), coloured to match the
 // rounds list below.
@@ -137,7 +137,7 @@ export function TokenUnlockChart({ rounds, symbol }: { rounds: Round[]; symbol: 
         ))}
       </svg>
 
-      {/* legend (rounds — same colours in both modes) */}
+      {/* legend (rounds – same colours in both modes) */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
         {rounds.map((r, i) => (
           <div key={r.key} className="flex items-center gap-1.5">

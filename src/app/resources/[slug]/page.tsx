@@ -329,7 +329,7 @@ export default async function ArticlePage(
   // 2026-05-17 SEO: graph now includes BreadcrumbList alongside Article +
   // (optional) FAQPage. The visible breadcrumb already lives in the page
   // header but Google's rich-result eligibility checker needs the
-  // structured form too — without it Search shows the bare URL in the
+  // structured form too – without it Search shows the bare URL in the
   // SERP instead of the "Home › Resources › Tokenomics" trail. Cheap win.
   const jsonLd = {
     "@context": "https://schema.org",
@@ -411,7 +411,7 @@ export default async function ArticlePage(
             <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7 flex-shrink-0" />
             <span className="font-bold text-base tracking-tight" style={{ color: "#1A1D20" }}>Vestream</span>
           </Link>
-          {/* Mid-nav links hidden on phones — Resources/Pricing are reachable
+          {/* Mid-nav links hidden on phones – Resources/Pricing are reachable
               via the breadcrumb + footer, and the cramped row was forcing
               the Launch App CTA to overflow on <375px screens. */}
           <div className="flex items-center gap-3 sm:gap-5">
@@ -509,7 +509,7 @@ export default async function ArticlePage(
                 Track every token unlock in one dashboard
               </h2>
               <p className="text-sm mb-5 max-w-sm mx-auto" style={{ color: "#8B8E92" }}>
-                Vestream covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across all chains — in a single real-time view. No sign-up forms.
+                Vestream covers Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across all chains – in a single real-time view. No sign-up forms.
               </p>
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <Link

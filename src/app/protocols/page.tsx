@@ -2,9 +2,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Index hub for all per-protocol landing pages. Lists every protocol we
 // index (currently 10) with a live "last indexed" stamp per row pulled from
-// cache — so this page itself is also a freshness signal.
+// cache – so this page itself is also a freshness signal.
 //
-// Light B2C theme to match the individual per-protocol pages — each card
+// Light B2C theme to match the individual per-protocol pages – each card
 // preserves its own protocol-brand accent so the grid feels like a rainbow
 // of real integrations rather than generic tiles.
 //
@@ -20,7 +20,7 @@ import { unstable_cache } from "next/cache";
 import { after } from "next/server";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-// LiveActivityTicker intentionally removed from this page — it polls
+// LiveActivityTicker intentionally removed from this page – it polls
 // /api/unlocks/live-activity and renders recent-activity rows. Pre-launch we
 // don't have enough platform traffic to make the feed feel alive, and an empty
 // "Reconnecting to the live feed…" placeholder undermines the rest of the
@@ -44,17 +44,17 @@ import {
 
 // ISR with 5-minute revalidation (2026-06-12). This page was force-dynamic
 // for a long stretch, relying on src/middleware.ts to inject an SWR
-// Cache-Control header for edge caching — but on Next 16.3.0-canary.19 the
+// Cache-Control header for edge caching – but on Next 16.3.0-canary.19 the
 // framework's `private, no-cache, no-store` for dynamic routes overrides
 // middleware-set Cache-Control (verified live: /protocols served no-store +
 // x-vercel-cache MISS while static /unlocks kept the header). Net effect:
-// ZERO HTTP caching — every visitor executed the lambda, and any cold
+// ZERO HTTP caching – every visitor executed the lambda, and any cold
 // Data-Cache window stalled long enough for Cloudflare to kill the
 // connection (the recurring QUIC-error / 524 reports).
 //
 // ISR makes the framework emit `s-maxage=300, stale-while-revalidate`
 // natively, so Vercel's edge + Cloudflare serve cached HTML instantly and
-// revalidate in the background — users never wait on a render. The DB-at-
+// revalidate in the background – users never wait on a render. The DB-at-
 // build-time problem that originally motivated force-dynamic is handled by
 // the NEXT_PHASE short-circuits in the query helpers; the build-phase
 // degraded result throws (see loader guard below) and the catch bakes the
@@ -64,25 +64,25 @@ import {
 // /protocols data" payload is wrapped in unstable_cache, stored in Vercel's
 // Data Cache (shared across instances AND persisted across deploys).
 //
-// TVL data model (April 2026 rewrite — honest-TVL pass):
+// TVL data model (April 2026 rewrite – honest-TVL pass):
 //   TVL no longer gets computed at page-render time. The daily cron
-//   `/api/cron/tvl-snapshot` runs at 03:15 UTC — it dispatches per-protocol
+//   `/api/cron/tvl-snapshot` runs at 03:15 UTC – it dispatches per-protocol
 //   to either (a) the DefiLlama vesting-aggregate passthrough (Sablier,
 //   Hedgey, Streamflow), or (b) our own exhaustive walker + DexScreener/
 //   CoinGecko pricing pipeline (UNCX, Unvest, Superfluid, Team Finance,
 //   PinkSale, Jupiter Lock). Results land in `protocolTvlSnapshots`.
 //
-// This page reads that table — one SELECT across all 10 protocols × up to 4
+// This page reads that table – one SELECT across all 10 protocols × up to 4
 // chains each, sums per protocol for the headline, preserves per-chain
 // breakdown for the bar, and surfaces the `methodology` + `computedAt`
 // columns to the UI so every TVL number is traceable to how it was derived
 // and when. See CLAUDE.md "TVL Methodology" section for the full rules.
 //
 // Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
-// (Data Cache hit) is ~50-100ms — and with ISR, no visitor ever waits on
+// (Data Cache hit) is ~50-100ms – and with ISR, no visitor ever waits on
 // either: renders happen in the background revalidation, off the user path.
 export const revalidate = 300;
-// 1800s (30 min) — was 300s. Bumped 2026-05-10 as part of the egress-
+// 1800s (30 min) – was 300s. Bumped 2026-05-10 as part of the egress-
 // reduction pass after Supabase Free's 5 GB/month quota was exceeded.
 // /protocols data (per-protocol stream counts + TVL snapshots) is updated
 // by the daily cron at 03:00/03:15 UTC; intra-day movement is bounded by
@@ -94,12 +94,12 @@ const CACHE_TTL_SECONDS = 1800;
 
 /**
  * All DB work the /protocols page needs, wrapped in Vercel Data Cache. Pure
- * DB reads — no external API calls on the render path.
+ * DB reads – no external API calls on the render path.
  *
  * Hardened: the entire body runs inside a try/catch so a DB outage,
  * snapshot-table-missing, or any other downstream failure can NEVER crash
  * the page render. Worst case the user sees the marketing layout with
- * placeholder values for stream counts and TVL — which is strictly better
+ * placeholder values for stream counts and TVL – which is strictly better
  * than a Server Components hard error.
  */
 const loadProtocolsData = unstable_cache(
@@ -111,7 +111,7 @@ const loadProtocolsData = unstable_cache(
   }> => {
     const protocols = listProtocols();
 
-    // Empty-shape default — returned on any failure so the render path
+    // Empty-shape default – returned on any failure so the render path
     // always receives a valid object. The page handles missing tvl rows
     // gracefully via `tvlMap[slug] ?? null` everywhere.
     const empty = {
@@ -142,7 +142,7 @@ const loadProtocolsData = unstable_cache(
       const statsEntries: Array<readonly [string, ProtocolStats | null]> =
         protocols.map((p) => [p.slug, foldProtocolStats(summariesMap, p.adapterIds)] as const);
 
-      // Aggregate snapshot rows by protocol — sum across chains.
+      // Aggregate snapshot rows by protocol – sum across chains.
       const tvlMap: Record<string, ProtocolTvl> = {};
       const methodologyMap: Record<string, string> = {};
       const computedAtMap: Record<string, string> = {};
@@ -178,7 +178,7 @@ const loadProtocolsData = unstable_cache(
           if (!latestComputedAt || r.computedAt > latestComputedAt) {
             latestComputedAt = r.computedAt;
           }
-          // Prefer the less-precise methodology tag for display — if we have
+          // Prefer the less-precise methodology tag for display – if we have
           // both defillama and walker rows for the same protocol, the walker
           // methodology is the more "accurate" label to show.
           if (r.methodology !== "defillama-vesting") methodology = r.methodology;
@@ -191,7 +191,7 @@ const loadProtocolsData = unstable_cache(
           adapterIds:      p.adapterIds,
           tvlUsd,
           tvlByBand:       { high: tvlHigh, medium: tvlMedium, low: tvlLow },
-          pricingSources:  { dexscreener: 0, defillama: 0, coingecko: 0 }, // aggregate-level — per-token not stored
+          pricingSources:  { dexscreener: 0, defillama: 0, coingecko: 0 }, // aggregate-level – per-token not stored
           perChain:        Array.from(perChainMap.entries())
             .map(([chainId, usd]) => ({ chainId, tvlUsd: usd }))
             .sort((a, b) => b.tvlUsd - a.tvlUsd),
@@ -206,33 +206,33 @@ const loadProtocolsData = unstable_cache(
 
       // Guard against caching a degraded result. If the bulk summaries read
       // failed (caught → empty map), every foldProtocolStats() returns null.
-      // Caching that — or saving it as last-good — makes the page show "0
+      // Caching that – or saving it as last-good – makes the page show "0
       // streams indexed" for 5 min and poisons the fallback. Throw instead:
       // unstable_cache skips the write, the caller keeps the previous last-good
       // (real counts), and the next request retries fresh.
       if (statsEntries.length > 0 && statsEntries.every(([, s]) => s === null)) {
-        throw new Error("all protocol stats null — skipping cache to avoid serving 0 streams");
+        throw new Error("all protocol stats null – skipping cache to avoid serving 0 streams");
       }
       // Same guard for TVL (2026-06-26). The snapshot read is wrapped in
       // `.catch(() => [])`, so a transient pooler blip OR the build-phase
-      // short-circuit returns zero rows — which the old code cached as a
+      // short-circuit returns zero rows – which the old code cached as a
       // "legitimately empty" tvlMap, blanking the TVL bar ("Pricing indexed
       // tokens…") for the full 5-min TTL. In steady state every protocol has a
       // snapshot row, so zero rows means a degraded read, never legitimate:
       // throw to skip the cache and fall back to last-good (now durable in
-      // Postgres — see page-data-fallback.ts) instead of caching emptiness.
+      // Postgres – see page-data-fallback.ts) instead of caching emptiness.
       if (snapshotRows.length === 0) {
-        throw new Error("zero TVL snapshot rows — skipping cache to avoid blanking the TVL bar");
+        throw new Error("zero TVL snapshot rows – skipping cache to avoid blanking the TVL bar");
       }
 
       return { statsEntries, tvlMap, methodologyMap, computedAtMap };
     } catch (err) {
-      // Throw — don't cache this empty result. unstable_cache doesn't
+      // Throw – don't cache this empty result. unstable_cache doesn't
       // persist thrown errors, so the next request retries fresh. The
       // page component catches this and falls back to last-known-good
       // from Redis (page-data-fallback.ts). See /protocols/[slug] page
       // for the matching pattern.
-      console.error("[unlocks] loadProtocolsData fatal — throwing to skip cache write:", err);
+      console.error("[unlocks] loadProtocolsData fatal – throwing to skip cache write:", err);
       throw err instanceof Error ? err : new Error(String(err));
     }
   },
@@ -252,12 +252,12 @@ const loadProtocolsData = unstable_cache(
 );
 
 export const metadata: Metadata = {
-  title: "Token unlock trackers — Vestream",
+  title: "Token unlock trackers – Vestream",
   description:
-    "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow and Jupiter Lock — across Ethereum, Base, BSC, Polygon and Solana.",
+    "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow and Jupiter Lock – across Ethereum, Base, BSC, Polygon and Solana.",
   alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
-    title: "Token unlock trackers — Vestream",
+    title: "Token unlock trackers – Vestream",
     description:
       "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
     url: "https://www.vestream.io/protocols",
@@ -265,11 +265,11 @@ export const metadata: Metadata = {
     type: "website",
   },
   // 2026-05-17: added Twitter card for parity with per-protocol pages.
-  // Without this, Twitter falls back to the root-layout fallback card —
+  // Without this, Twitter falls back to the root-layout fallback card –
   // generic homepage hero instead of the protocols-index branding.
   twitter: {
     card:        "summary_large_image",
-    title:       "Token unlock trackers — Vestream",
+    title:       "Token unlock trackers – Vestream",
     description: "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
   },
 };
@@ -277,7 +277,7 @@ export const metadata: Metadata = {
 export default async function UnlocksIndexPage() {
   const protocols = listProtocols();
 
-  // Load from Vercel Data Cache — wraps a single SELECT over the
+  // Load from Vercel Data Cache – wraps a single SELECT over the
   // protocolTvlSnapshots table + per-protocol stream counts. The snapshot
   // table itself is populated daily by /api/cron/tvl-snapshot at 03:15 UTC;
   // render path is pure DB, no DefiLlama/subgraph/RPC calls.
@@ -303,7 +303,7 @@ export default async function UnlocksIndexPage() {
     after(() => setLastGoodProtocolsData(goodData));
   } catch (err) {
     console.warn("[protocols-index] loadProtocolsData threw, trying last-good:", err);
-    // ISR-safe raw-fetch read — at build time this bakes the last-good
+    // ISR-safe raw-fetch read – at build time this bakes the last-good
     // payload into the prerendered HTML instead of dashes (the build-phase
     // NEXT_PHASE short-circuits make the loader throw via its degraded
     // guard, landing here).
@@ -313,7 +313,7 @@ export default async function UnlocksIndexPage() {
   const { statsEntries, tvlMap, methodologyMap, computedAtMap } = pageData;
   const statsMap = new Map(statsEntries);
 
-  // Rows whose snapshot methodology is "defillama-vesting" — the UI surfaces
+  // Rows whose snapshot methodology is "defillama-vesting" – the UI surfaces
   // these with a "via DefiLlama" attribution tag. Everything else was
   // computed by our own walker + pricing pipeline.
   const externallySourced = new Set<string>();
@@ -326,7 +326,7 @@ export default async function UnlocksIndexPage() {
     return {
       protocol:      p,
       tvl:           tvlMap[p.slug] ?? null,
-      // Active stream count from indexed-cache stats — same number that
+      // Active stream count from indexed-cache stats – same number that
       // populates the per-protocol detail page. Surfaced next to the
       // dollar TVL so the headline reflects scale alongside dollars
       // (Sablier alone manages ~365k positions across our chains).
@@ -336,7 +336,7 @@ export default async function UnlocksIndexPage() {
       // overstated it; the real figure is 3. Falls back to declared when
       // stats are unavailable (cold cache) so the label never renders blank.
       indexedChainCount: stats?.chainIds?.length ?? null,
-      // Cumulative total — includes ended / fully-withdrawn streams.
+      // Cumulative total – includes ended / fully-withdrawn streams.
       // Helpful context: a protocol with 1k active and 30k total has
       // demonstrably been used at scale, even if claim activity has
       // settled down.
@@ -357,7 +357,7 @@ export default async function UnlocksIndexPage() {
   // Server-render the FIRST paint of the upcoming-unlocks panel so it shows
   // data instantly instead of a client fetch-after-mount skeleton (the "not
   // instant" report). The widget still polls /api/unlocks/upcoming every 30s
-  // for liveness — this just seeds the initial render. redis:false because
+  // for liveness – this just seeds the initial render. redis:false because
   // this is an ISR render path (see upcoming-unlocks.ts). Best-effort: on
   // failure the widget falls back to its own client fetch (no regression).
   let initialUpcoming:
@@ -371,7 +371,7 @@ export default async function UnlocksIndexPage() {
   }
 
   // Stream counts come from our indexed cache only. Historically we also
-  // queried every subgraph for a "global" count and took the max — but that
+  // queried every subgraph for a "global" count and took the max – but that
   // doubled the page's cold-start latency and the cache number is the one
   // that actually matches everything else on the site.
   function effectiveTotal(slug: string): number {
@@ -425,7 +425,7 @@ export default async function UnlocksIndexPage() {
               color: "#1CB8B8",
             }}
           >
-            {/* Radar-style pulsing dot — same pattern as TvlComparisonBar
+            {/* Radar-style pulsing dot – same pattern as TvlComparisonBar
                 + UpcomingUnlockTicker so the "live" signal looks consistent
                 across every surface. The expanding ring makes the live-ness
                 obvious; a static `animate-pulse` opacity fade reads as
@@ -456,7 +456,7 @@ export default async function UnlocksIndexPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#8B8E92" }}
           >
-            Every major vesting schedule across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism and Solana — indexed in real time. Pick a protocol below to see live activity.
+            Every major vesting schedule across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism and Solana – indexed in real time. Pick a protocol below to see live activity.
           </p>
         </div>
       </section>
@@ -504,7 +504,7 @@ export default async function UnlocksIndexPage() {
       </section>
 
       {/* ── Cross-link to full unlock calendar ──────────────────────────── */}
-      {/* Sits BELOW the protocol grid intentionally — by the time a visitor
+      {/* Sits BELOW the protocol grid intentionally – by the time a visitor
           has scrolled past every protocol, they're in deep-dive mode and a
           link to "every upcoming unlock by window" is the natural next
           surface. Above-the-fold placement competed with the TVL bar and
@@ -536,7 +536,7 @@ export default async function UnlocksIndexPage() {
                 See the full unlock calendar
               </p>
               <p className="text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
-                Browse upcoming unlocks by window — today, this week, this month, or rolling 30/60/90 days.
+                Browse upcoming unlocks by window – today, this week, this month, or rolling 30/60/90 days.
               </p>
             </div>
           </div>
@@ -573,7 +573,7 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Paste any address — we&apos;ll scan all 10 protocols across EVM and Solana
+              Paste any address – we&apos;ll scan all 10 protocols across EVM and Solana
               and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link
@@ -599,7 +599,7 @@ export default async function UnlocksIndexPage() {
 // ─── Card ────────────────────────────────────────────────────────────────────
 
 function compactUsd(n: number): string {
-  if (!Number.isFinite(n) || n <= 0) return "—";
+  if (!Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -615,18 +615,18 @@ function ProtocolCard({
   protocol:         ProtocolMeta;
   stats:            ProtocolStats | null;
   /** Aggregated TVL for this protocol (sum across chains) from the daily
-   *  snapshot table — populated for DefiLlama-sourced AND walker-sourced
+   *  snapshot table – populated for DefiLlama-sourced AND walker-sourced
    *  protocols. Undefined / 0 when the protocol has no snapshot yet. */
   tvlUsd?:          number;
   /** True for DefiLlama-passthrough protocols (Sablier, Hedgey, Streamflow);
-   *  drives the "via DefiLlama" attribution label only — not the layout. */
+   *  drives the "via DefiLlama" attribution label only – not the layout. */
   isExternalSource: boolean;
 }) {
-  // All cards use the SAME bottom-row layout: TVL · chains · "Live" — the
+  // All cards use the SAME bottom-row layout: TVL · chains · "Live" – the
   // top-right uppercase badge handles source/freshness nuance instead.
   // Stream counts intentionally omitted: DefiLlama-sourced protocols don't
   // populate vestingStreamsCache (per-user-query cache, not a global index),
-  // so "— streams" alongside real TVL would undersell those protocols. TVL
+  // so "– streams" alongside real TVL would undersell those protocols. TVL
   // is the universally-comparable metric.
   const hasTvl = typeof tvlUsd === "number" && tvlUsd > 0;
   const liveLabel = isExternalSource
@@ -635,7 +635,7 @@ function ProtocolCard({
       ? `Indexed ${relativeFreshness(stats.lastIndexedAt)}`
       : `${protocol.chainIds.length} chain${protocol.chainIds.length === 1 ? "" : "s"}`;
 
-  // Protocol-colour hover accent — we intensify the tint on hover by upgrading
+  // Protocol-colour hover accent – we intensify the tint on hover by upgrading
   // the rgba 0.08 base into a 0.14 halo, purely via CSS.
   const accentHalo = protocol.bg.replace("0.08", "0.18");
 
@@ -709,7 +709,7 @@ function ProtocolCard({
         >
           <div>
             <div className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-              {hasTvl ? compactUsd(tvlUsd!) : "—"}
+              {hasTvl ? compactUsd(tvlUsd!) : "–"}
             </div>
             <div style={{ color: "#B8BABD" }}>TVL</div>
           </div>
@@ -727,7 +727,7 @@ function ProtocolCard({
           </div>
         </div>
 
-        {/* Integrated chains — small logos (mainnets only; testnets have no mark) */}
+        {/* Integrated chains – small logos (mainnets only; testnets have no mark) */}
         {chainLogos.length > 0 && (
           <div className="flex items-center gap-1.5 mt-3 pt-3" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
             {chainLogos.map((c) => (

@@ -4,7 +4,7 @@
 // grouped into rounds (by terms), plotted on one overview graph, and lets the
 // user expand a round to see every wallet receiving tokens.
 //
-// Server component — renders with data in the HTML (no client-side fetch
+// Server component – renders with data in the HTML (no client-side fetch
 // spinner). Reads the cache via getTokenStreams(); Pro-gated by the
 // /dashboard layout (requireDashboardAccess).
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ const fmtNum = (n: number) =>
   : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 const shortAddr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const fmtDate = (t: number | null) =>
-  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "–";
 
 export default async function ExplorerTokenPage({
   params,
@@ -45,7 +45,7 @@ export default async function ExplorerTokenPage({
   const { chainId, address } = await params;
   const cid = Number(chainId);
   // Ecosystem-aware (2026-06-12): the old EVM-only regex + blanket
-  // .toLowerCase() 404'd every Solana token (Streamflow / Jupiter Lock) —
+  // .toLowerCase() 404'd every Solana token (Streamflow / Jupiter Lock) –
   // base58 mints are case-SENSITIVE and don't match /^0x.../.
   const addr = normaliseAddress(decodeURIComponent(address));
   if (!CHAIN_NAMES[cid as SupportedChainId] || !isValidWalletAddress(addr)) {
@@ -53,7 +53,7 @@ export default async function ExplorerTokenPage({
   }
 
   // Dark-mode theming is owned by <DarkModeProvider> in the dashboard
-  // layout — see the comment on the parent /dashboard/explorer page for
+  // layout – see the comment on the parent /dashboard/explorer page for
   // the full why-no-per-page-dark-class rationale. 2026-06-12.
   const tier = await getCurrentUserTier();
   const isFree = tier === "free" || tier == null;
@@ -84,7 +84,7 @@ export default async function ExplorerTokenPage({
 
   // ── Holder distribution + vesting span ───────────────────────────────────
   // "Who holds the locked supply" is the single biggest informed-decision
-  // signal — a fair launch (many wallets, no whale) reads very differently
+  // signal – a fair launch (many wallets, no whale) reads very differently
   // from 3 wallets holding 95%. Aggregate locked-by-recipient (cheap: one
   // token's streams, already loaded) → concentration + a ranked holder list.
   const dist = computeDistribution(streams, dec, priceUsd);
@@ -104,7 +104,7 @@ export default async function ExplorerTokenPage({
   // realisable, so we flag it rather than present it as gospel.
   const lockedValueUsd = priceUsd != null ? totalLockedWhole * priceUsd : null;
   const liqUsd = market?.liquidity ?? null;
-  // How big the vesting overhang is vs the circulating token — the number that
+  // How big the vesting overhang is vs the circulating token – the number that
   // tells you whether the holder concentration below actually matters (a single
   // wallet holding 100% of a vesting that's 2% of market cap is a non-event).
   const vestingShareOfMktCap = lockedValueUsd != null && market?.marketCap
@@ -113,11 +113,11 @@ export default async function ExplorerTokenPage({
   const thinLiquidity = lockedValueUsd != null && (liqUsd == null || liqUsd < 10_000);
   // Absorption: how many days of average 24h volume it would take to trade
   // through the ENTIRE locked supply. The market's capacity to swallow the
-  // overhang — high = heavy structural sell pressure as the locked supply vests.
+  // overhang – high = heavy structural sell pressure as the locked supply vests.
   const absorptionDays = lockedValueUsd != null && market?.volume24h != null && market.volume24h > 0
     ? lockedValueUsd / market.volume24h
     : null;
-  // Nearest FUTURE cliff across streams — a cliff is a single lump unlock
+  // Nearest FUTURE cliff across streams – a cliff is a single lump unlock
   // (distinct from gradual linear/step vesting), the kind worth bracing for.
   const nowSec = Math.floor(Date.now() / 1000);
   const nextCliff = streams.reduce<number | null>(
@@ -136,10 +136,10 @@ export default async function ExplorerTokenPage({
     ? totalLockedWhole / totalSupplyApprox
     : null;
 
-  // #3 Vesting progress — how far through the WHOLE schedule the token is, by
+  // #3 Vesting progress – how far through the WHOLE schedule the token is, by
   // tokens (not time): (totalEver − stillLocked) / totalEver. totalAmount is
   // the original grant; lockedAmount is what's left. Falls back to locked when
-  // an adapter didn't surface totalAmount (then progress reads 0% — honest).
+  // an adapter didn't surface totalAmount (then progress reads 0% – honest).
   const totalGrantedWhole = streams.reduce((a, s) => {
     let t = 0;
     try { t = Number(BigInt(s.totalAmount ?? s.lockedAmount ?? "0")) / 10 ** dec; } catch { /* keep 0 */ }
@@ -149,7 +149,7 @@ export default async function ExplorerTokenPage({
     ? Math.max(0, Math.min(1, (totalGrantedWhole - totalLockedWhole) / totalGrantedWhole))
     : null;
 
-  // #2 Forward unlocks — aggregate the per-stream upcoming events by day, so
+  // #2 Forward unlocks – aggregate the per-stream upcoming events by day, so
   // the user sees concrete "what unlocks next, when, and how big" instead of
   // just the curve shape. Top 5 nearest dates with token amount, USD, % supply.
   const unlocksByDay = new Map<number, number>();
@@ -203,14 +203,14 @@ export default async function ExplorerTokenPage({
                     rather than a reliable mark. */}
                 {liqUsd != null && liqUsd < 10_000 && (
                   <p className="text-[10px] font-semibold" style={{ color: "#d97706" }}
-                    title={`Low DEX liquidity (~$${Math.round(liqUsd).toLocaleString()}). The price is real but thin — large size couldn't trade at it.`}>
+                    title={`Low DEX liquidity (~$${Math.round(liqUsd).toLocaleString()}). The price is real but thin – large size couldn't trade at it.`}>
                     ⚠ low liquidity
                   </p>
                 )}
               </div>
             )}
             <SaveTokenButton chainId={cid} address={addr} symbol={symbol} />
-            {/* Link to the public, shareable token page (no auth) — same token,
+            {/* Link to the public, shareable token page (no auth) – same token,
                 but the marketing/SEO surface with the social-share + FAQ. The
                 two pages are deliberately different audiences (this is the
                 gated analyst tool; that one is public + shareable). */}
@@ -229,7 +229,7 @@ export default async function ExplorerTokenPage({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
           {([
             // Vesting stats (our index).
-            { label: "Locked value", val: lockedValueUsd != null ? `$${fmtNum(lockedValueUsd)}` : "—" },
+            { label: "Locked value", val: lockedValueUsd != null ? `$${fmtNum(lockedValueUsd)}` : "–" },
             { label: "Total locked", val: `${fmtNum(totalLockedWhole)} ${symbol}` },
             // % of total supply still locked (≈ totalLocked ÷ FDV/price). The
             // headline overhang read; ">100%" when our tracked lock exceeds
@@ -237,23 +237,23 @@ export default async function ExplorerTokenPage({
             { label: "% supply locked",
               val: pctSupplyLocked != null
                 ? (pctSupplyLocked > 1 ? ">100%" : `${(pctSupplyLocked * 100).toFixed(pctSupplyLocked < 0.1 ? 1 : 0)}%`)
-                : "—" },
+                : "–" },
             { label: "Recipients", val: recipientCount.toLocaleString() },
             { label: "Rounds", val: String(rounds.length) },
             { label: "Next unlock", val: fmtDate(nextUnlock) },
-            // Market stats — already fetched in TokenMarketData (DexScreener),
+            // Market stats – already fetched in TokenMarketData (DexScreener),
             // surfaced here so the page reads as a real token dashboard.
-            { label: "Market cap", val: market?.marketCap != null ? `$${fmtNum(market.marketCap)}` : "—" },
-            { label: "FDV", val: market?.fdv != null ? `$${fmtNum(market.fdv)}` : "—" },
-            { label: "24h volume", val: market?.volume24h != null ? `$${fmtNum(market.volume24h)}` : "—" },
-            // Absorption — locked supply ÷ daily volume, in "days of volume".
+            { label: "Market cap", val: market?.marketCap != null ? `$${fmtNum(market.marketCap)}` : "–" },
+            { label: "FDV", val: market?.fdv != null ? `$${fmtNum(market.fdv)}` : "–" },
+            { label: "24h volume", val: market?.volume24h != null ? `$${fmtNum(market.volume24h)}` : "–" },
+            // Absorption – locked supply ÷ daily volume, in "days of volume".
             // Amber > 30d, red > 90d: the overhang would take months to clear.
             { label: "Absorption",
-              val: absorptionDays != null ? (absorptionDays >= 1 ? `${fmtNum(absorptionDays)}d vol` : "<1d vol") : "—",
+              val: absorptionDays != null ? (absorptionDays >= 1 ? `${fmtNum(absorptionDays)}d vol` : "<1d vol") : "–",
               valColor: absorptionDays != null ? (absorptionDays > 90 ? "#dc2626" : absorptionDays > 30 ? "#d97706" : undefined) : undefined },
-            { label: "Liquidity", val: liqUsd != null ? `$${fmtNum(liqUsd)}` : "—" },
+            { label: "Liquidity", val: liqUsd != null ? `$${fmtNum(liqUsd)}` : "–" },
             { label: "24h change",
-              val: market?.change24h != null ? `${market.change24h >= 0 ? "+" : ""}${market.change24h.toFixed(1)}%` : "—",
+              val: market?.change24h != null ? `${market.change24h >= 0 ? "+" : ""}${market.change24h.toFixed(1)}%` : "–",
               valColor: market?.change24h != null ? (market.change24h >= 0 ? "#0F8A8A" : "#dc2626") : undefined },
           ] as Array<{ label: string; val: string; valColor?: string }>).map((t) => (
             <div key={t.label} className="rounded-xl px-3 py-2.5" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
@@ -266,20 +266,20 @@ export default async function ExplorerTokenPage({
             above is more notional than realisable. */}
         {thinLiquidity && (
           <p className="text-[11px] mt-2" style={{ color: "var(--preview-text-3)" }}>
-            ⚠ Locked value is notional — under $10k DEX liquidity, this size couldn&apos;t be realised at the quoted price.
+            ⚠ Locked value is notional – under $10k DEX liquidity, this size couldn&apos;t be realised at the quoted price.
           </p>
         )}
-        {/* Next-cliff callout — a lump unlock, distinct from gradual vesting. */}
+        {/* Next-cliff callout – a lump unlock, distinct from gradual vesting. */}
         {nextCliff != null && (
           <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg text-xs"
             style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.30)", color: "#b45309" }}>
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
               <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <span><strong>Cliff unlock {fmtDate(nextCliff)}</strong> — a lump unlocks at once, not gradually.</span>
+            <span><strong>Cliff unlock {fmtDate(nextCliff)}</strong> – a lump unlocks at once, not gradually.</span>
           </div>
         )}
-        {/* Smart-money-on-token — top-100 wallets that vest this token among
+        {/* Smart-money-on-token – top-100 wallets that vest this token among
             their largest positions. The "the smart money is in this" signal. */}
         {smartHolders.length > 0 && (
           <div className="mt-3 px-3 py-2.5 rounded-lg" style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.22)" }}>
@@ -300,11 +300,11 @@ export default async function ExplorerTokenPage({
           </div>
         )}
 
-        {/* Due-diligence row — project social/data links to help users
+        {/* Due-diligence row – project social/data links to help users
             assess the token. All sourced from DexScreener except the
             block explorer + TokenSniffer (chain-deterministic) and the
             X-search (always available). Links missing from DexScreener
-            simply don't render — no awkward "—" placeholders. 2026-06-12. */}
+            simply don't render – no awkward "–" placeholders. 2026-06-12. */}
         <DueDiligenceRow
           chainId={cid}
           tokenAddress={addr}
@@ -384,7 +384,7 @@ export default async function ExplorerTokenPage({
           </div>
 
           <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--preview-text)" }}>
-            Vesting rounds <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>— click a round to see its wallets</span>
+            Vesting rounds <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>– click a round to see its wallets</span>
           </h2>
           <RoundsList rounds={rounds} symbol={symbol} isFree={isFree} rowCap={FREE_TIER_ROW_CAP} />
         </>
@@ -438,7 +438,7 @@ function computeDistribution(
 // ── Due-diligence link row ───────────────────────────────────────────────
 // Renders only what we actually have. Themed via CSS vars so it tracks the
 // dashboard's dark-mode reactively (the explorer's whole tree sits inside
-// the DarkModeProvider's reactive `.dark` wrapper — see use-dark-mode.tsx).
+// the DarkModeProvider's reactive `.dark` wrapper – see use-dark-mode.tsx).
 // Order is by user intent: project surfaces first (the things you'd visit
 // to read about the project), market/data surfaces second (where you'd
 // check liquidity + traders), security/explorer last.

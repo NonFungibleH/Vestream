@@ -11,7 +11,7 @@ import {
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
 
-// ISR — re-render at most once every 10 minutes. Bumped 60→600 on
+// ISR – re-render at most once every 10 minutes. Bumped 60→600 on
 // 2026-05-10 as part of the egress-reduction pass after Supabase Free
 // hit 244% of its 5 GB/month quota. Homepage live stats (total streams,
 // last-indexed timestamp) move on minute-to-hour scale; serving a 10-min-
@@ -21,17 +21,17 @@ export const revalidate = 600;
 
 async function getHomepageLiveStats() {
   // Skip DB work during the build phase. Postgres-js hangs for 60s on
-  // ECONNREFUSED / mid-build connection drops (e.g. May 2 2026 build —
+  // ECONNREFUSED / mid-build connection drops (e.g. May 2 2026 build –
   // FATAL XX000 mid-collect, then `/page: /` retried 3× and exited 1).
   // Returning the empty shape lets the build finish in seconds; ISR fills
   // it with real data on the first runtime request after deploy. Same
-  // pattern as /protocols/[protocol] — see its loadProtocolData comment.
+  // pattern as /protocols/[protocol] – see its loadProtocolData comment.
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
   }
 
   // Aggregate across all 10 protocols. Any single-protocol failure must not
-  // sink the homepage render — silently fall back to nulls.
+  // sink the homepage render – silently fall back to nulls.
   try {
     const protocols = listProtocols();
     const results = await Promise.all(
@@ -126,7 +126,7 @@ const homepageJsonLd = {
       ? [{
           "@type":             "MobileApplication",
           "@id":               "https://www.vestream.io/#ios-app",
-          name:                "Vestream — Token Vesting Tracker",
+          name:                "Vestream – Token Vesting Tracker",
           url:                 iosAppUrl,
           installUrl:          iosAppUrl,
           applicationCategory: "FinanceApplication",
@@ -140,7 +140,7 @@ const homepageJsonLd = {
       ? [{
           "@type":             "MobileApplication",
           "@id":               "https://www.vestream.io/#android-app",
-          name:                "Vestream — Token Vesting Tracker",
+          name:                "Vestream – Token Vesting Tracker",
           url:                 androidAppUrl,
           installUrl:          androidAppUrl,
           applicationCategory: "FinanceApplication",
@@ -178,10 +178,10 @@ export default async function Home() {
           Split-layout hero: copy left, phone-mockup right. Per the May 5
           2026 design pass:
             - Original copy restored ("Every token you're owed, in one
-              place" + the two original subheads — the experimental
+              place" + the two original subheads – the experimental
               loss-aversion variant moved to a follow-up A/B test rather
               than the default).
-            - Floating side widgets removed — they cluttered a centred
+            - Floating side widgets removed – they cluttered a centred
               composition and are anyway a duplicate of the dashboard
               preview shown deeper down the page.
             - Mobile (<lg) stacks: copy on top, phone below.
@@ -197,7 +197,7 @@ export default async function Home() {
 
           {/* ── Left: copy + CTAs ───────────────────────────────────── */}
           <div className="text-center lg:text-left">
-            {/* Live indicator — small pulsing pill above the H1 signals
+            {/* Live indicator – small pulsing pill above the H1 signals
                 "active product, currently watching the chains" without
                 returning to the institutional stat-flex of the previous
                 "1.4M streams indexed" strip. The dot animates via the
@@ -234,7 +234,7 @@ export default async function Home() {
               10+ protocols. Seven chains. Mobile app and desktop dashboard.
             </p>
 
-            {/* CTAs — app badges lead (mobile is the primary product),
+            {/* CTAs – app badges lead (mobile is the primary product),
                 scanner below as the no-install discovery path. */}
             <div className="flex flex-col items-center lg:items-start gap-5">
               <div className="flex flex-col items-center lg:items-start gap-2">
@@ -265,7 +265,7 @@ export default async function Home() {
 
           {/* ── Right: phone mockup ─────────────────────────────────────
               Stylized iPhone frame with a Vestream lock-screen
-              notification rendered inside. CSS-only — no image asset, so
+              notification rendered inside. CSS-only – no image asset, so
               stays sharp at every density and tracks theme changes.
 
               Sized to MATCH the text column's natural height (~440px).
@@ -273,13 +273,13 @@ export default async function Home() {
               `items-center` to centre-vertically, which orphaned the
               text at the top of an oversized row with empty space below.
               At 220×440 with `items-start` (set on the grid container),
-              the text and phone now sit alongside each other — both
-              top-aligned — exactly the "two columns of equal weight"
+              the text and phone now sit alongside each other – both
+              top-aligned – exactly the "two columns of equal weight"
               hero pattern Apple / Linear / Things use. */}
           {/* Phone visible on every viewport. On <md it stacks below the
               text (single-column grid); on md+ it sits to the right.
               Slight tilt (rotate(4deg)) gives the device-shot energy
-              Apple / Linear / Things use in their hero phones — without
+              Apple / Linear / Things use in their hero phones – without
               it the rectangle reads as too-flat / engineered, with it
               the page feels alive. */}
           <div className="flex flex-col items-center lg:justify-self-end">
@@ -305,7 +305,7 @@ export default async function Home() {
                   overflow: "hidden",
                 }}
               >
-                {/* iOS-style status bar — signal/wifi/battery glyphs at
+                {/* iOS-style status bar – signal/wifi/battery glyphs at
                     the top right. Subtle but tells the eye "real phone
                     UI" before the brain reads anything. */}
                 <div
@@ -346,20 +346,20 @@ export default async function Home() {
                   </div>
                 </div>
 
-                {/* Date + giant time — rendered by a client component so
+                {/* Date + giant time – rendered by a client component so
                     it always reflects the visitor's current date/time. */}
                 <PhoneClock />
 
                 {/* ── Notification stack ─────────────────────────────────
                     Three iOS lock-screen cards:
-                      1. (now)        Vestream — NOVA unlocked just now
-                      2. (5m)         Vestream — Unlock in 5 minutes
-                      3. (yesterday)  Vestream Mail — Email · 24h preview sent
+                      1. (now)        Vestream – NOVA unlocked just now
+                      2. (5m)         Vestream – Unlock in 5 minutes
+                      3. (yesterday)  Vestream Mail – Email · 24h preview sent
                     Removed from the App Store ref: the 7-day heads-up and
-                    the 1-hour-to-unlock email — keep the stack short
+                    the 1-hour-to-unlock email – keep the stack short
                     enough to read at hero size. */}
                 <div className="absolute left-2 right-2 flex flex-col gap-1.5" style={{ top: 168 }}>
-                  {/* Primary card — VESTREAM · NOVA unlocked just now */}
+                  {/* Primary card – VESTREAM · NOVA unlocked just now */}
                   <div
                     style={{
                       background: "rgba(255,255,255,0.96)",
@@ -391,13 +391,13 @@ export default async function Home() {
                           NOVA unlocked just now
                         </div>
                         <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3, marginTop: 1 }}>
-                          $4,200 streaming to 0x3f5C — tap to claim
+                          $4,200 streaming to 0x3f5C – tap to claim
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Card 2 — VESTREAM · Unlock in 5 minutes */}
+                  {/* Card 2 – VESTREAM · Unlock in 5 minutes */}
                   <div
                     style={{
                       background: "rgba(255,255,255,0.92)",
@@ -435,7 +435,7 @@ export default async function Home() {
                     </div>
                   </div>
 
-                  {/* Card 3 — VESTREAM MAIL · Email · 24h preview sent.
+                  {/* Card 3 – VESTREAM MAIL · Email · 24h preview sent.
                       Orange envelope icon distinguishes the email channel
                       from push notifications above. */}
                   <div
@@ -484,18 +484,18 @@ export default async function Home() {
 
         </div>
 
-        {/* Protocol strip — centred under the hero grid (text + phone).
+        {/* Protocol strip – centred under the hero grid (text + phone).
             Lives inside the same hero <section> so the radial-gradient
             backgrounds bleed underneath it. mt-16 gives clear visual
             separation from the hero so it reads as its own block, not
             an appendage to the right column. */}
         <div className="relative mt-16">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#B8BABD" }}>Integrated with</p>
-          {/* Row 1 — text-name cards. (Logo wall reverted 2026-06-05 pending
+          {/* Row 1 – text-name cards. (Logo wall reverted 2026-06-05 pending
               uniform square icons; the images live in /public/protocols/.) */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
             {[
-              // Canonical palette — matches protocol-constants.ts.
+              // Canonical palette – matches protocol-constants.ts.
               // icon: normalised square mark in /public/protocols/icons (Hedgey is
               // wordmark-only upstream → "" falls back to the monogram tile).
               { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)", border: "rgba(240,153,46,0.16)", icon: "/protocols/icons/sablier.png"  },
@@ -517,7 +517,7 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          {/* Row 2 — 5 cards (Unvest / Superfluid / PinkSale / Streamflow /
+          {/* Row 2 – 5 cards (Unvest / Superfluid / PinkSale / Streamflow /
               Jupiter Lock). Streamflow + Jupiter Lock use Solana-ecosystem
               accent colours (Solana green, Jupiter gold) to signal non-EVM
               coverage at a glance. */}
@@ -544,7 +544,7 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          {/* Eyebrow heading above the chains — mirrors "Integrated with" above
+          {/* Eyebrow heading above the chains – mirrors "Integrated with" above
               the protocols so the two groups read as distinct sections. */}
           <p className="text-[10px] font-semibold tracking-widest uppercase mt-8 mb-3 text-center" style={{ color: "#B8BABD" }}>Available on</p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -575,13 +575,13 @@ export default async function Home() {
       {/* ── Mobile App section ─────────────────────────────────────────────
           The first of two surface-specific feature blocks (the second is
           the desktop dashboard further down). Tells the user "Vestream
-          lives on your phone first" — push alerts, live countdowns,
+          lives on your phone first" – push alerts, live countdowns,
           one-tap claim links, calendar view. Phone mockup on the right
           (or stacked below on mobile) shows a Portfolio-tab screenshot
           mock so the visual matches the words.
 
           The `id="download"` anchor is the scroll target the pricing-
-          card "Get Mobile" / "Get Pro" CTAs point at — both plans
+          card "Get Mobile" / "Get Pro" CTAs point at – both plans
           require the mobile app to subscribe (RevenueCat IAP), so the
           buttons send users straight to where they can pick their
           platform. */}
@@ -608,7 +608,7 @@ export default async function Home() {
             </h2>
 
             <p className="text-base md:text-lg max-w-xl mb-8 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
-              Vestream is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page — all in your pocket.
+              Vestream is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page – all in your pocket.
             </p>
 
             <ul className="space-y-3 mb-8 max-w-md mx-auto lg:mx-0 text-left">
@@ -629,7 +629,7 @@ export default async function Home() {
 
           </div>
 
-          {/* Right: phone mockup — Portfolio-tab snapshot, distinct from
+          {/* Right: phone mockup – Portfolio-tab snapshot, distinct from
               the lock-screen-flavoured hero phone. Same outer frame
               (consistency) but the inner content is the Portfolio screen
               mock: greeting, big "$ vesting" headline, two stat cards,
@@ -669,7 +669,7 @@ export default async function Home() {
                   </p>
                 </div>
 
-                {/* Hero card — same gradient as the real PortfolioHero */}
+                {/* Hero card – same gradient as the real PortfolioHero */}
                 <div className="mx-3 mt-4 rounded-xl p-3"
                   style={{ background: "linear-gradient(135deg, #0F8A8A 0%, #1CB8B8 100%)" }}>
                   <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.65)" }}>
@@ -803,9 +803,9 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Mock dashboard — light theme to match the actual app */}
+          {/* Mock dashboard – light theme to match the actual app */}
           <div className="flex" style={{ background: "white", minHeight: 280 }}>
-            {/* Sidebar — hidden on mobile */}
+            {/* Sidebar – hidden on mobile */}
             <div className="hidden md:flex w-44 flex-shrink-0 flex-col" style={{ background: "#FAFAFA", borderRight: "1px solid rgba(21,23,26,0.07)" }}>
               <div className="px-4 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
                 <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "#1CB8B8" }}>
@@ -838,7 +838,7 @@ export default async function Home() {
 
             {/* Main content */}
             <div className="flex-1 p-4 space-y-3 overflow-hidden">
-              {/* PortfolioHero gradient card — kept as the brand-defining element */}
+              {/* PortfolioHero gradient card – kept as the brand-defining element */}
               <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#0F8A8A 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Your vestings</p>
                 <p className="text-2xl font-bold text-white tabular-nums">$4,238</p>
@@ -893,10 +893,10 @@ export default async function Home() {
                   </div>
                   {[
                     // `color` is the TOKEN avatar tint (free pick per token),
-                    // `proto` is the PROTOCOL badge — must match canonical palette.
+                    // `proto` is the PROTOCOL badge – must match canonical palette.
                     { token: "NOVA",  protocol: "Sablier",  claimable: "$162", locked: "$1,758", color: "#F0992E", proto: "#F0992E", prog: 15 },
                     { token: "OP",    protocol: "Hedgey",   claimable: "$53",  locked: "$1,217", color: "#1CB8B8", proto: "#33406B", prog: 35 },
-                    { token: "LAYER", protocol: "Unvest",   claimable: "—",    locked: "$1,050", color: "#0F8A8A", proto: "#0BA0CB", prog: 5  },
+                    { token: "LAYER", protocol: "Unvest",   claimable: "–",    locked: "$1,050", color: "#0F8A8A", proto: "#0BA0CB", prog: 5  },
                   ].map((row, i) => (
                     <div key={row.token} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderTop: i > 0 ? "1px solid rgba(21,23,26,0.06)" : undefined }}>
@@ -912,11 +912,11 @@ export default async function Home() {
                           <div style={{ width: `${row.prog}%`, height: "3px", borderRadius: "3px", background: row.color }} />
                         </div>
                       </div>
-                      <span className="text-[9px] tabular-nums w-12 text-right flex-shrink-0" style={{ color: row.claimable === "—" ? "#B8BABD" : "#0F8A4A" }}>{row.claimable}</span>
+                      <span className="text-[9px] tabular-nums w-12 text-right flex-shrink-0" style={{ color: row.claimable === "–" ? "#B8BABD" : "#0F8A4A" }}>{row.claimable}</span>
                       <div className="w-9 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{ background: row.claimable !== "—" ? `linear-gradient(135deg,${row.color},${row.color}aa)` : "rgba(21,23,26,0.06)" }}>
-                        <span className="text-[7px] font-bold" style={{ color: row.claimable !== "—" ? "white" : "#B8BABD" }}>
-                          {row.claimable !== "—" ? "Claim" : "View"}
+                        style={{ background: row.claimable !== "–" ? `linear-gradient(135deg,${row.color},${row.color}aa)` : "rgba(21,23,26,0.06)" }}>
+                        <span className="text-[7px] font-bold" style={{ color: row.claimable !== "–" ? "white" : "#B8BABD" }}>
+                          {row.claimable !== "–" ? "Claim" : "View"}
                         </span>
                       </div>
                     </div>
@@ -936,7 +936,7 @@ export default async function Home() {
             Built for the full lifecycle
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
-            From the first cliff to the final claim — forecast cashflows, track every sale, and export your records.
+            From the first cliff to the final claim – forecast cashflows, track every sale, and export your records.
           </p>
         </div>
 
@@ -951,7 +951,7 @@ export default async function Home() {
             <div className="px-4 pb-4">
               {/* Cashflow numbers calibrated to the everyday-investor
                   audience (Maya persona, ~$4k vesting). Previous values
-                  ranged $12k–$52k/month — implied a wealthy investor
+                  ranged $12k–$52k/month – implied a wealthy investor
                   unlocking tens of thousands per cliff. Realistic
                   individual values: $200–$1,200/month. The display
                   formats both ranges identically (`$Xk` if ≥$1k, plain
@@ -1047,7 +1047,7 @@ export default async function Home() {
               <span style={{ background: "rgba(28,184,184,0.10)", border: "1px solid rgba(28,184,184,0.22)", color: "#0F8A8A", fontSize: "8px", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: "999px" }}>Pro</span>
             </div>
             <div className="px-4 pb-4 space-y-2">
-              {/* Tax-year summary — single-line so the panel total height
+              {/* Tax-year summary – single-line so the panel total height
                   matches the surrounding P&L Tracker / Monthly Forecast
                   cards (was 320px vs 255px when this was 2-line). */}
               <div style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.06)", borderRadius: "9px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1055,7 +1055,7 @@ export default async function Home() {
                 <span style={{ color: "#0F8A4A", fontSize: "13px", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>$12,580</span>
               </div>
 
-              {/* Example claim events (cost-basis at receipt) — single-line
+              {/* Example claim events (cost-basis at receipt) – single-line
                   rows to match the surrounding panels' compact rhythm. */}
               {[
                 { date: "15 Jan", sym: "NOVA", amt: "1,000 @ $1.00",  usd: "+$1,000", color: "#F0992E" },
@@ -1105,19 +1105,19 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
               color: "#0F8A8A", bg: "rgba(15,138,138,0.08)", border: "rgba(15,138,138,0.14)",
               title: "Push + email alerts",
-              body: "Native push notifications on iOS & Android, plus email — so you always know when a token is ready to claim, before you open the app.",
+              body: "Native push notifications on iOS & Android, plus email – so you always know when a token is ready to claim, before you open the app.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.14)",
               title: "Mobile app + web dashboard",
-              body: "Track unlocks on the go with the iOS & Android app, then go deeper on the web dashboard — advanced filters, exports, and P&L analysis.",
+              body: "Track unlocks on the go with the iOS & Android app, then go deeper on the web dashboard – advanced filters, exports, and P&L analysis.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
@@ -1129,13 +1129,13 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#0369a1", bg: "rgba(3,105,161,0.07)", border: "rgba(3,105,161,0.13)",
               title: "P&L tracker",
-              body: "Log your purchase price and individual sales. Vestream splits your P&L into realized and unrealized — all stored locally.",
+              body: "Log your purchase price and individual sales. Vestream splits your P&L into realized and unrealized – all stored locally.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
               color: "#b45309", bg: "rgba(180,83,9,0.07)", border: "rgba(180,83,9,0.13)",
               title: "CSV &amp; PDF export",
-              body: "Download a full CSV of vesting positions and sell transactions — or print a PDF report — directly from the dashboard.",
+              body: "Download a full CSV of vesting positions and sell transactions – or print a PDF report – directly from the dashboard.",
             },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
@@ -1164,10 +1164,10 @@ export default async function Home() {
               Find every vesting in one search
             </h2>
             <p className="text-base leading-relaxed mb-7" style={{ color: "#8B8E92" }}>
-              Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains — returning every active vesting in seconds. No switching between platforms, no missed positions.
+              Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains – returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
-            {/* Protocol pill grid — the canonical, COMPLETE list of every
+            {/* Protocol pill grid – the canonical, COMPLETE list of every
                 platform we scan, each with its brand accent. This (not the
                 result mockup on the right) is the completeness signal, so it
                 must list all of them. The mockup shows a representative sample
@@ -1229,11 +1229,11 @@ export default async function Home() {
               <span style={{ color: "#475569", fontSize: 12, fontFamily: "monospace" }}>0x3f5CE...8b2e</span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: "rgba(28,184,184,0.14)", color: "#0F8A8A" }}>Scan all</span>
             </div>
-            {/* Result rows — a SHORT representative sample (not one row per
+            {/* Result rows – a SHORT representative sample (not one row per
                 protocol; the pill grid on the left already lists all 10, and a
                 full row-per-protocol list was overlong). Chains varied across
                 the sample (Base / Ethereum / BNB / Solana) incl. Team Finance.
-                Colours track the canonical palette in protocol-constants.ts —
+                Colours track the canonical palette in protocol-constants.ts –
                 marketing visuals must match in-app reality. */}
             {[
               { protocol: "Sablier",      chain: "Base",       token: "NOVA", amount: "1,250",  color: "#F0992E" },
@@ -1273,7 +1273,7 @@ export default async function Home() {
               See who else is vesting your token
             </h2>
             <p className="text-base leading-relaxed" style={{ color: "#8B8E92" }}>
-              Search any token and see the complete global picture — every wallet, every protocol, every upcoming unlock. Large unlock events create selling pressure. Spotting a cluster 30 days out lets you hedge, hold, or exit with conviction — not guesswork.
+              Search any token and see the complete global picture – every wallet, every protocol, every upcoming unlock. Large unlock events create selling pressure. Spotting a cluster 30 days out lets you hedge, hold, or exit with conviction – not guesswork.
             </p>
           </div>
           {/* Mockup */}
@@ -1281,7 +1281,7 @@ export default async function Home() {
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p style={{ color: "#1A1D20", fontSize: 13, fontWeight: 700 }}>NOVA — All Vestings</p>
+                <p style={{ color: "#1A1D20", fontSize: 13, fontWeight: 700 }}>NOVA – All Vestings</p>
                 <p style={{ color: "#8B8E92", fontSize: 11 }}>Global unlock schedule</p>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "rgba(179,50,46,0.10)", color: "#B3322E" }}>
@@ -1315,11 +1315,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Income mode — stablecoin payroll tracking ────────────────────────
+      {/* ── Income mode – stablecoin payroll tracking ────────────────────────
           Pitches the new Investment vs Income segmentation. Targets the
           freelancer / DAO contributor / remote-worker segment who get
           paid in USDC and need to track salary for taxes. Same product,
-          different lens — one toggle switches the whole app.
+          different lens – one toggle switches the whole app.
           2026-05-15 */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto overflow-hidden">
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
@@ -1333,10 +1333,10 @@ export default async function Home() {
               Get paid in stablecoins? Track it like a salary.
             </h2>
             <p className="text-base leading-relaxed mb-6" style={{ color: "#8B8E92" }}>
-              Flip Vestream into <span className="font-semibold" style={{ color: "#1A1D20" }}>Income mode</span> with one tap. Sablier, Superfluid, LlamaPay streams paying USDC, USDT, DAI — all filtered into one view. Monthly income, 30-day forecast, year-to-date totals. Tag each source — Salary, Contract, Bonus, Grant — and the breakdown surfaces automatically.
+              Flip Vestream into <span className="font-semibold" style={{ color: "#1A1D20" }}>Income mode</span> with one tap. Sablier, Superfluid, LlamaPay streams paying USDC, USDT, DAI – all filtered into one view. Monthly income, 30-day forecast, year-to-date totals. Tag each source – Salary, Contract, Bonus, Grant – and the breakdown surfaces automatically.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
-              Tax-ready CSV when filing time comes. Switch back to Investment mode any time — same wallets, different lens.
+              Tax-ready CSV when filing time comes. Switch back to Investment mode any time – same wallets, different lens.
             </p>
           </div>
           {/* Mockup */}
@@ -1417,7 +1417,7 @@ export default async function Home() {
         <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
           style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(28,184,184,0.25)" }}>
 
-          {/* Gradient glow — teal halo on the right where the phone sits, so the
+          {/* Gradient glow – teal halo on the right where the phone sits, so the
               device shadow reads against the warm-ink-to-teal field. */}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: "radial-gradient(ellipse 55% 60% at 85% 50%, rgba(28,184,184,0.22) 0%, transparent 70%)",
@@ -1434,10 +1434,10 @@ export default async function Home() {
               Your vestings, in your pocket
             </h2>
             <p className="text-base leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
-              The Vestream mobile app tracks every token unlock in real time — and sends push notifications to your phone the moment a claim is ready.
+              The Vestream mobile app tracks every token unlock in real time – and sends push notifications to your phone the moment a claim is ready.
             </p>
             <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
-              Sign up for early access to the web dashboard — the mobile app is included with your account.
+              Sign up for early access to the web dashboard – the mobile app is included with your account.
             </p>
             <ul className="flex flex-col gap-3.5">
               {[
@@ -1465,7 +1465,7 @@ export default async function Home() {
                   <stop offset="1" stopColor="#0F8A8A"/>
                 </linearGradient>
               </defs>
-              {/* Phone body — light frame to match the actual mobile app */}
+              {/* Phone body – light frame to match the actual mobile app */}
               <rect x="4" y="4" width="142" height="302" rx="26" fill="#F5F5F3" stroke="rgba(28,184,184,0.55)" strokeWidth="1.5"/>
               {/* Side button (right) */}
               <rect x="146" y="95" width="3" height="38" rx="1.5" fill="rgba(28,184,184,0.45)"/>
@@ -1474,18 +1474,18 @@ export default async function Home() {
               <rect x="1" y="114" width="3" height="22" rx="1.5" fill="rgba(28,184,184,0.45)"/>
               {/* Screen */}
               <rect x="10" y="10" width="130" height="290" rx="20" fill="#FAFAFA"/>
-              {/* Dynamic Island — stays dark, it's a hardware element */}
+              {/* Dynamic Island – stays dark, it's a hardware element */}
               <rect x="51" y="17" width="48" height="12" rx="6" fill="#1A1D20"/>
               {/* App bar */}
               <rect x="10" y="40" width="130" height="34" fill="white"/>
               <line x1="10" y1="74" x2="140" y2="74" stroke="rgba(21,23,26,0.06)" strokeWidth="1"/>
-              {/* App icon — slab mark on a white tile to match current
+              {/* App icon – slab mark on a white tile to match current
                   brand. Three stacked parallelograms; bottom one teal. */}
               <rect x="18" y="47" width="20" height="20" rx="5" fill="white" stroke="rgba(21,23,26,0.10)" strokeWidth="0.75"/>
               <path d="M22 53 L31 53 L33 55 L22 55 Z" fill="#1A1D20" fillOpacity="0.35"/>
               <path d="M22 57.5 L33 57.5 L35 59.5 L22 59.5 Z" fill="#1A1D20" fillOpacity="0.65"/>
               <path d="M22 62 L35 62 L37 64 L22 64 Z" fill="#1CB8B8"/>
-              {/* App title — single-fill ink to match the lockup */}
+              {/* App title – single-fill ink to match the lockup */}
               <text x="42" y="60" fontSize="10.5" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Vestream</text>
               {/* Notification banner */}
               <rect x="14" y="82" width="122" height="46" rx="10" fill="white" stroke="rgba(28,184,184,0.32)" strokeWidth="1"/>
@@ -1496,7 +1496,7 @@ export default async function Home() {
               <path d="M30.5 99h3a1.5 1.5 0 0 1-3 0z" fill="#0F8A8A"/>
               {/* Notification text */}
               <text x="49" y="98" fontSize="8" fontWeight="700" fill="#1A1D20" fontFamily="system-ui">Token Unlock</text>
-              {/* Short copy required — the banner has ~87px of inner space
+              {/* Short copy required – the banner has ~87px of inner space
                   for this line (after the icon + "now" stamp on the right).
                   Previous "NOVA · 12,500 ready to claim" overflowed and got
                   clipped to "...ready to clai" on narrow phones. */}
@@ -1546,20 +1546,20 @@ export default async function Home() {
               color: "#1CB8B8", bg: "rgba(28,184,184,0.07)", border: "rgba(28,184,184,0.12)",
               audience: "Investors & Community Members",
               description: "You hold token allocations from projects you backed or contributed to. Whether you're a retail investor, community participant, or early supporter, you shouldn't need to read smart contracts to know when you can claim.",
-              bullets: ["Check claimable balance across every major protocol in seconds", "See exact unlock dates — cliff events, streaming rates, tranches", "Get notified before every unlock event by email"],
+              bullets: ["Check claimable balance across every major protocol in seconds", "See exact unlock dates – cliff events, streaming rates, tranches", "Get notified before every unlock event by email"],
             },
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.07)", border: "rgba(5,150,105,0.12)",
               audience: "Advisors & Contributors",
               description: "You've worked with multiple projects and hold token grants across different wallets and protocols. Manually checking each protocol dashboard every month isn't a system.",
-              bullets: ["All your vesting grants in one unified view — across any wallet", "Label each wallet and add notes to stay organised", "Export to CSV for your accountant or tax records"],
+              bullets: ["All your vesting grants in one unified view – across any wallet", "Label each wallet and add notes to stay organised", "Export to CSV for your accountant or tax records"],
             },
             {
               icon: <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#0F8A8A", bg: "rgba(15,138,138,0.07)", border: "rgba(15,138,138,0.12)",
               audience: "VCs & Funds",
-              description: "Your portfolio spans dozens of projects, chains, and wallets. Missing a liquidity event or miscalculating claimable balances isn't an option — you need a system that scales.",
+              description: "Your portfolio spans dozens of projects, chains, and wallets. Missing a liquidity event or miscalculating claimable balances isn't an option – you need a system that scales.",
               bullets: ["Track every portfolio wallet and token allocation in one place", "Real-time claimable value with entry price and P&L tracking", "Bulk CSV export for compliance, LP reporting, and audit trails"],
             },
           ].map((card) => (
@@ -1587,7 +1587,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* B2B / Developer callout removed — the homepage is now strictly B2C.
+      {/* B2B / Developer callout removed – the homepage is now strictly B2C.
           Developer and AI-agent audiences land directly on /developer and /ai
           via the top nav + footer, so a dark navy section in the middle of the
           retail narrative was off-theme. Those pages still exist unchanged. */}
@@ -1621,7 +1621,7 @@ export default async function Home() {
               {
                 step: "02", color: "#0F8A8A", bg: "rgba(15,138,138,0.08)", border: "rgba(15,138,138,0.18)",
                 title: "Paste a wallet address",
-                body: "Add any wallet you want to track — yours, your team's, an investor's. We instantly scan every chain and protocol for active vestings.",
+                body: "Add any wallet you want to track – yours, your team's, an investor's. We instantly scan every chain and protocol for active vestings.",
                 icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M8 14h4"/></svg>,
               },
               {
@@ -1650,7 +1650,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Tax exports — mid-page, below hero/features/onboarding.
+      {/* ── Tax exports – mid-page, below hero/features/onboarding.
             Deliberately not in the hero: the headline value of Vestream is
             tracking, not taxes. Tax is the secondary feature that turns
             tracking users into yearly returners. Surface it where readers
@@ -1670,7 +1670,7 @@ export default async function Home() {
                 Six hours of January spreadsheets, in 60 seconds.
               </h2>
               <p className="text-base mb-7 leading-relaxed" style={{ color: "#5C6066" }}>
-                Every vesting claim, valued in USD at the moment it hit your wallet —
+                Every vesting claim, valued in USD at the moment it hit your wallet –
                 ready to drop into Koinly, CoinTracker or TurboTax.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -1687,7 +1687,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="hidden md:block">
-              {/* Mock report card — purely illustrative, no real data. */}
+              {/* Mock report card – purely illustrative, no real data. */}
               <div className="rounded-2xl p-5"
                 style={{ background: "white", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 8px 24px rgba(28,184,184,0.10)" }}>
                 <div className="flex items-center justify-between mb-3">
@@ -1732,31 +1732,31 @@ export default async function Home() {
           {[
             {
               q: "Do I need to connect a wallet to use Vestream?",
-              a: "No wallet connection required. Paste any address into Find My Vestings to scan it free — no signup. To save wallets and get unlock alerts, install the mobile app and sign in with email — we'll send a one-time code, no password needed. You never sign transactions or expose any keys.",
+              a: "No wallet connection required. Paste any address into Find My Vestings to scan it free – no signup. To save wallets and get unlock alerts, install the mobile app and sign in with email – we'll send a one-time code, no password needed. You never sign transactions or expose any keys.",
             },
             {
               q: "How do I get to the desktop dashboard?",
-              a: "The desktop dashboard is part of the Pro plan. Subscribe in the iOS or Android app, then visit vestream.io/login on your computer and scan the QR code from the app's Settings → Connect Desktop. No password, no email — your phone authenticates the desktop session.",
+              a: "The desktop dashboard is part of the Pro plan. Subscribe in the iOS or Android app, then visit vestream.io/login on your computer and scan the QR code from the app's Settings → Connect Desktop. No password, no email – your phone authenticates the desktop session.",
             },
             {
               q: "Can Vestream access or move my funds?",
-              a: "Never. Vestream is strictly read-only. We only read publicly available on-chain data — we never request your private key, can't initiate transactions, and have no ability to move tokens. The mobile app authenticates with email; we never see your wallet's keys.",
+              a: "Never. Vestream is strictly read-only. We only read publicly available on-chain data – we never request your private key, can't initiate transactions, and have no ability to move tokens. The mobile app authenticates with email; we never see your wallet's keys.",
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) — on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
-              a: "Push notifications are core to the mobile app — every tier gets them (Free gets 10 per calendar month, resets on the 1st; Pro is unlimited). You configure timing per token in the Alerts tab — anything from 'live unlock' to '24 hours before'. Email alerts are a Pro-only feature; enable them in the Alerts tab and enter the address you want notifications sent to.",
+              a: "Push notifications are core to the mobile app – every tier gets them (Free gets 10 per calendar month, resets on the 1st; Pro is unlimited). You configure timing per token in the Alerts tab – anything from 'live unlock' to '24 hours before'. Email alerts are a Pro-only feature; enable them in the Alerts tab and enter the address you want notifications sent to.",
             },
             {
               q: "What is the P&L Tracker?",
-              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales — date, token amount, and sell price or total USD received. Vestream automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). Available on the mobile app's token detail screen and on the Pro web dashboard.",
+              a: "The P&L Tracker lets you log your token purchase price (entry price) and any individual sales – date, token amount, and sell price or total USD received. Vestream automatically splits your P&L into realized (already sold) and unrealized (remaining vesting tokens at current market price). Available on the mobile app's token detail screen and on the Pro web dashboard.",
             },
             {
               q: "Can I export my data?",
-              a: "Yes — Pro plan only. From the desktop dashboard's Tax Reports section you can download CSV files in formats ready for Koinly, CoinTracker, or TurboTax, plus a year-end PDF report and a vesting income statement. Free tier doesn't include exports — they're a Pro feature.",
+              a: "Yes – Pro plan only. From the desktop dashboard's Tax Reports section you can download CSV files in formats ready for Koinly, CoinTracker, or TurboTax, plus a year-end PDF report and a vesting income statement. Free tier doesn't include exports – they're a Pro feature.",
             },
             {
               q: "How accurate are the token prices?",
@@ -1764,15 +1764,15 @@ export default async function Home() {
             },
             {
               q: "Can I track wallets that aren't mine?",
-              a: "Yes. You can add any wallet address you want to monitor — useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. Free tier: 3 wallets. Pro tier: 10 wallets.",
+              a: "Yes. You can add any wallet address you want to monitor – useful for tracking team vesting wallets, investor allocations, or advisor grants. All data is public on-chain. Free tier: 3 wallets. Pro tier: 10 wallets.",
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year — saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year – saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
-              a: "Yes. The Vestream REST API and our MCP server give you programmatic access to the same vesting data that powers the dashboard — cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
+              a: "Yes. The Vestream REST API and our MCP server give you programmatic access to the same vesting data that powers the dashboard – cross-protocol, cross-chain, real-time. See the Developer page or contact us about Enterprise access.",
             },
           ].map((item, i) => (
             <FAQItem key={i} q={item.q} a={item.a} />
@@ -1791,11 +1791,11 @@ export default async function Home() {
             Start free. Scale when you&apos;re ready.
           </h2>
           <p className="text-base" style={{ color: "#8B8E92" }}>
-            From solo investors to investment funds — a plan for every stage.
+            From solo investors to investment funds – a plan for every stage.
           </p>
         </div>
 
-        {/* Tier cards — Free / Pro (May 2026 pricing simplification).
+        {/* Tier cards – Free / Pro (May 2026 pricing simplification).
             The 3-tier Free/Mobile/Pro split was retired: the middle
             "Mobile" tier fractured the conversion funnel for ~$5/mo
             difference, and "3 lifetime push alerts" on the previous
@@ -1815,7 +1815,7 @@ export default async function Home() {
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
               {[
                 "3 wallets on the mobile app",
-                "Free web wallet scanner — any address",
+                "Free web wallet scanner – any address",
                 "All 10+ vesting protocols",
                 "Claimable balance + unlock calendar",
                 "10 push alerts / month (resets monthly)",
@@ -1829,7 +1829,7 @@ export default async function Home() {
             </ul>
           </div>
 
-          {/* Pro (featured) — single paid tier with the full feature set. */}
+          {/* Pro (featured) – single paid tier with the full feature set. */}
           <div className="relative rounded-2xl p-4 md:p-7 min-w-0 mt-3 md:mt-0" style={{ background: "white", border: "2px solid #1CB8B8", boxShadow: "0 8px 32px rgba(28,184,184,0.18), 0 4px 12px rgba(21,23,26,0.10)" }}>
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-[11px] md:text-xs font-bold text-white whitespace-nowrap"
@@ -1842,7 +1842,7 @@ export default async function Home() {
               $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <p className="text-sm mb-1 mt-2" style={{ color: "#8B8E92" }}>
-              Or <span className="font-semibold" style={{ color: "#0F8A8A" }}>$74.99/year</span> — save 37%.
+              Or <span className="font-semibold" style={{ color: "#0F8A8A" }}>$74.99/year</span> – save 37%.
             </p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Everything you need to track every unlock.</p>
             <Link href="#download" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all mb-6"
@@ -1858,7 +1858,7 @@ export default async function Home() {
                 "Web dashboard access (QR sign-in)",
                 "Token Vesting Explorer (Discover)",
                 "Search any wallet's holdings",
-                "Income mode — track stablecoin salary, contracts, grants",
+                "Income mode – track stablecoin salary, contracts, grants",
                 "Tax-ready CSV exports (Koinly / CoinTracker / TurboTax)",
                 "Vesting income statement (P&L)",
                 "Year-end PDF tax report",
@@ -1872,7 +1872,7 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* How signup + desktop access works — explainer beneath the
+        {/* How signup + desktop access works – explainer beneath the
             tier cards. Subscriptions happen through the App Store /
             Play Store (RevenueCat IAP); the web dashboard is unlocked
             by scanning a QR from the mobile app. New tier scheme means
@@ -1891,11 +1891,11 @@ export default async function Home() {
             <Link href="/login" className="font-semibold underline" style={{ color: "#0F8A8A" }}>
               vestream.io/login
             </Link>{" "}
-            — scan a QR from your phone to sign in. No email passwords.
+            – scan a QR from your phone to sign in. No email passwords.
           </p>
         </div>
 
-        {/* B2B / developer nudge — replaces the dropped Enterprise card.
+        {/* B2B / developer nudge – replaces the dropped Enterprise card.
             Same audience (builders, funds, agents) gets the same path
             via the developer page; the homepage just doesn't push
             them through a dedicated tier card. */}

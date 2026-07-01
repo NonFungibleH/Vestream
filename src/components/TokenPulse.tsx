@@ -1,6 +1,6 @@
 // src/components/TokenPulse.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Pulse summary card — sits near the top of /token/[chainId]/[address].
+// Pulse summary card – sits near the top of /token/[chainId]/[address].
 //
 // Shows 3-4 bulleted insights about the token's current vesting state,
 // with an expandable "See more" region that reveals a longer narrative
@@ -8,7 +8,7 @@
 // SSR-correct and works without client-side React.
 //
 // Deliberate naming decision: this card is labelled "Pulse", NOT
-// "AI Insights" — competitors use that label and we want to stay visually
+// "AI Insights" – competitors use that label and we want to stay visually
 // distinct. Pulse also lines up with Vestream's "Live TVL / Live activity"
 // vocabulary elsewhere on the site.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function TokenPulse({ pulse, symbol }: Props) {
-  // Nothing to say — don't render an empty card.
+  // Nothing to say – don't render an empty card.
   if (pulse.bullets.length === 0) return null;
 
   return (
@@ -34,7 +34,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
         boxShadow:  "0 4px 24px rgba(28,184,184,0.06)",
       }}
     >
-      {/* Header strip — blue/purple gradient matching the rest of the site's
+      {/* Header strip – blue/purple gradient matching the rest of the site's
           "live" surfaces (TVL bar, upcoming unlocks). Uses a dot+ping pulse
           icon so the card visually signals "live data" consistent with the
           Live TVL and Upcoming Unlocks widgets on /protocols. */}
@@ -63,7 +63,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
             Pulse · {symbol}
           </span>
         </div>
-        {/* Long-form caption hidden on mobile — the pulsing dot + "Pulse"
+        {/* Long-form caption hidden on mobile – the pulsing dot + "Pulse"
             label already communicates "live data". Showing the full
             sentence alongside on a 375px viewport wraps to a second line
             and crowds the pill. */}
@@ -72,10 +72,10 @@ export function TokenPulse({ pulse, symbol }: Props) {
         </span>
       </div>
 
-      {/* Bullet body — scannable, 3-4 rows max. Each bullet is a single
+      {/* Bullet body – scannable, 3-4 rows max. Each bullet is a single
           complete sentence so even a quick-skim visitor gets a full insight.
           The "See more" extended narrative that used to live below is
-          removed for now — the bullets carry the insight and the extended
+          removed for now – the bullets carry the insight and the extended
           paragraph didn't add enough on top to justify the extra UI. If we
           later wire Pulse to a real LLM, the extended surface can come
           back with genuinely richer content. */}

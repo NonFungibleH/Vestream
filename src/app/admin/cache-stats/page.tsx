@@ -1,6 +1,6 @@
 // src/app/admin/cache-stats/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Admin diagnostic — per-(protocol × chain) rollup of the vesting streams
+// Admin diagnostic – per-(protocol × chain) rollup of the vesting streams
 // cache. Pivot layout: rows = protocols, columns = chains, cells = stream
 // counts + quality signals.
 //
@@ -30,7 +30,7 @@ const CHAIN_ORDER: { id: number; label: string }[] = [
   { id: 11155111,  label: "Sepolia"  },
 ];
 
-// Protocol display order — matches the /protocols page ordering (biggest by TVL
+// Protocol display order – matches the /protocols page ordering (biggest by TVL
 // first, roughly) for consistency. Unknown protocols appear at the end in
 // whatever order the DB returns them.
 const PROTOCOL_ORDER = [
@@ -59,7 +59,7 @@ function protocolLabel(id: string): string {
 }
 
 function relSince(unixSec: number | null, nowMs: number): string {
-  if (!unixSec) return "—";
+  if (!unixSec) return "–";
   const diffSec = Math.max(0, Math.floor(nowMs / 1000) - unixSec);
   if (diffSec < 60)    return `${diffSec}s ago`;
   if (diffSec < 3600)  return `${Math.floor(diffSec / 60)} min ago`;
@@ -107,7 +107,7 @@ export default async function CacheStatsPage() {
   // event-driven indexers (uncx-vm, hedgey); seeder_state covers the
   // batch-seeder protocols (pinksale, sablier, unvest, superfluid,
   // llamapay, streamflow, jupiter-lock, etc). Together they cover every
-  // cell on the grid — letting us distinguish "no new events" from
+  // cell on the grid – letting us distinguish "no new events" from
   // "broken" everywhere, not just on indexed protocols.
   const [cells, indexerRows, seederRows] = await Promise.all([
     getCacheStatsCells(),
@@ -131,7 +131,7 @@ export default async function CacheStatsPage() {
 
   // Build a lookup map keyed by "protocol:chainId". seeder_state is
   // written second so it wins on protocols that have BOTH an indexer
-  // and a seeder during the cutover (e.g. hedgey, uncx-vm) — the seeder
+  // and a seeder during the cutover (e.g. hedgey, uncx-vm) – the seeder
   // ran more recently in practice and the user-visible "checked" should
   // reflect whichever signal is fresher.
   const checkedMap = new Map<string, number | null>();
@@ -141,7 +141,7 @@ export default async function CacheStatsPage() {
   for (const r of seederRows) {
     const key  = `${r.protocol}:${r.chainId}`;
     const prev = checkedMap.get(key) ?? null;
-    // Take whichever timestamp is more recent — guards against the case
+    // Take whichever timestamp is more recent – guards against the case
     // where the indexer ran later than the seeder (or vice versa).
     if (prev === null || (r.lastAttemptSec ?? 0) > prev) {
       checkedMap.set(key, r.lastAttemptSec);
@@ -246,7 +246,7 @@ export default async function CacheStatsPage() {
                       const cell = rowMap.get(c.id);
                       return (
                         <td key={c.id} className="text-right px-3 py-3 tabular-nums whitespace-nowrap">
-                          {cell ? <CellContent cell={cell} nowMs={nowMs} /> : <span style={{ color: "#cbd5e1" }}>—</span>}
+                          {cell ? <CellContent cell={cell} nowMs={nowMs} /> : <span style={{ color: "#cbd5e1" }}>–</span>}
                         </td>
                       );
                     })}
@@ -294,16 +294,16 @@ export default async function CacheStatsPage() {
           <div>
             <strong>Top number:</strong> total cached streams for that (protocol, chain).
             {" "}<strong>Second line:</strong> active streams (not fully vested).
-            {" "}<strong>Symbol %:</strong> share with a resolved tokenSymbol — a low value here usually means the token-metadata reads failed on that chain.
+            {" "}<strong>Symbol %:</strong> share with a resolved tokenSymbol – a low value here usually means the token-metadata reads failed on that chain.
             {" "}<strong>Tokens:</strong> distinct token contracts seen.
           </div>
           <div className="mt-2">
-            <strong>changed X ago:</strong> when stream data last actually moved (the <code>lastRefreshedAt</code> semantic — unchanged rows do not update this timestamp).
-            {" "}<strong>checked X ago</strong> <span style={{ color: "#2DB36A" }}>(green)</span>: when the event-driven indexer last attempted a scan — only shown for Hedgey and UNCX-VM which have per-run state. Green = recent ({"<"}1h). <span style={{ color: "#B3322E" }}>Red</span> = indexer hasn&apos;t run in over an hour — investigate.
+            <strong>changed X ago:</strong> when stream data last actually moved (the <code>lastRefreshedAt</code> semantic – unchanged rows do not update this timestamp).
+            {" "}<strong>checked X ago</strong> <span style={{ color: "#2DB36A" }}>(green)</span>: when the event-driven indexer last attempted a scan – only shown for Hedgey and UNCX-VM which have per-run state. Green = recent ({"<"}1h). <span style={{ color: "#B3322E" }}>Red</span> = indexer hasn&apos;t run in over an hour – investigate.
             {" "}<em>changed old + checked recent = healthy</em> (no new events on that chain). <em>changed old + no checked = seeder-only protocol</em> (Sablier, PinkSale etc.), check seed-cache Vercel logs instead.
           </div>
           <div className="mt-2">
-            A cell showing <span style={{ color: "#cbd5e1" }}>—</span> means <em>zero rows cached</em>. If you expected data on that chain, check the seed-cache per-job results in Vercel logs for that (protocol, chain) pair.
+            A cell showing <span style={{ color: "#cbd5e1" }}>–</span> means <em>zero rows cached</em>. If you expected data on that chain, check the seed-cache per-job results in Vercel logs for that (protocol, chain) pair.
           </div>
         </div>
       </div>
@@ -331,7 +331,7 @@ function CellContent({ cell, nowMs }: { cell: GridCell; nowMs: number }) {
   const symbolPct = cell.streams > 0
     ? Math.round((cell.withTokenSymbol / cell.streams) * 100)
     : 0;
-  // Highlight low tokenSymbol coverage — the classic "RPC flaked, rows are
+  // Highlight low tokenSymbol coverage – the classic "RPC flaked, rows are
   // in the DB but we couldn't read symbols" signal.
   const symbolColor = symbolPct >= 90 ? "#2DB36A"
     : symbolPct >= 70 ? "#F0992E"
@@ -340,9 +340,9 @@ function CellContent({ cell, nowMs }: { cell: GridCell; nowMs: number }) {
   const changed  = relSince(cell.freshestSec,    nowMs);
   const checked  = relSince(cell.lastCheckedSec, nowMs);
 
-  // Flag cells where "checked" is recent but "changed" is old — the normal
+  // Flag cells where "checked" is recent but "changed" is old – the normal
   // "indexer is healthy, no new events" pattern. Flag cells where "checked"
-  // itself is old — that's a broken indexer.
+  // itself is old – that's a broken indexer.
   const checkedStale = cell.lastCheckedSec !== null
     && (nowMs / 1000 - cell.lastCheckedSec) > 3600; // >1h since last attempt
 

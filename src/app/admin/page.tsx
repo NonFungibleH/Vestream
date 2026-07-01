@@ -30,7 +30,7 @@ const CHAIN_NAMES: Record<number, string> = {
 // (protocol-constants.ts → protocolBrand / chainBrand).
 
 function formatDate(d: Date | null | string) {
-  if (!d) return "—";
+  if (!d) return "–";
   return new Date(d).toLocaleDateString("en-GB", {
     day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
@@ -98,7 +98,7 @@ export default async function AdminPage() {
       .groupBy(sql`date_trunc('day', created_at)::date`).orderBy(sql`date_trunc('day', created_at)::date`)),
 
     // ── Index Health (12: unique recipients excl. testnets) ──────────────────
-    // The headline marketing number — distinct wallets vested-to across all
+    // The headline marketing number – distinct wallets vested-to across all
     // active mainnet protocols. Exclude testnets so the count is credible.
     withTimeout(db.select({
       uniqueWallets: sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
@@ -106,7 +106,7 @@ export default async function AdminPage() {
 
     // ── Index Health (13: USD value indexed) ────────────────────────────────
     // Sum the latest TVL snapshot rows per (protocol, chainId). Each row is
-    // already the result of the daily TVL cron — credible methodology
+    // already the result of the daily TVL cron – credible methodology
     // (DefiLlama-vesting passthrough or our own walker + DexScreener pricing
     // with confidence bands). See CLAUDE.md "TVL Methodology" for details.
     withTimeout(db.select({
@@ -123,7 +123,7 @@ export default async function AdminPage() {
     }).from(streamAnnotations)),
 
     // ── Index Health (15: mobile push adoption) ─────────────────────────────
-    // Live (non-expired) mobile bearer tokens — proxy for installed-and-
+    // Live (non-expired) mobile bearer tokens – proxy for installed-and-
     // signed-in mobile users. Each device gets one token, so this also
     // approximates the device count.
     withTimeout(db.select({ cnt: count() })
@@ -132,7 +132,7 @@ export default async function AdminPage() {
 
     // ── Index Health (16: cache freshness rollup) ───────────────────────────
     // How many (protocol, chain) cells have been refreshed in the last
-    // 24h vs are stale. Quick health-check — surfaces silently-broken
+    // 24h vs are stale. Quick health-check – surfaces silently-broken
     // pipelines like the Hedgey BSC/Polygon/Base 8.85-day staleness we
     // hit on May 2.
     withTimeout(db.select({
@@ -140,7 +140,7 @@ export default async function AdminPage() {
       chainId:  vestingStreamsCache.chainId,
       streams:  count(),
       // Treat lastRefreshedAt as "last time any row in this cell moved"
-      // (semantic shift from `df6a6b3` setWhere optimisation — see
+      // (semantic shift from `df6a6b3` setWhere optimisation – see
       // CLAUDE.md). For a "did the cron run?" signal use Vercel logs.
       freshestSec: sql<number>`extract(epoch from max(${vestingStreamsCache.lastRefreshedAt}))::int`,
     }).from(vestingStreamsCache)
@@ -149,13 +149,13 @@ export default async function AdminPage() {
 
     // ── Index Health (17: streams added in last 24h) ─────────────────────────
     // Count rows where firstSeenAt is within the last 24h. Direct measure of
-    // index growth — how much new data did yesterday's cron pull in.
+    // index growth – how much new data did yesterday's cron pull in.
     withTimeout(db.select({ cnt: count() })
       .from(vestingStreamsCache)
       .where(sql`first_seen_at >= now() - interval '24 hours' AND chain_id NOT IN (11155111, 84532)`)),
   ]);
 
-  // Unwrap allSettled results — fall back to empty arrays so timed-out queries degrade gracefully
+  // Unwrap allSettled results – fall back to empty arrays so timed-out queries degrade gracefully
   function ok<T>(r: PromiseSettledResult<T>, fallback: T): T {
     return r.status === "fulfilled" ? r.value : (console.error("admin query failed:", (r as PromiseRejectedResult).reason), fallback);
   }
@@ -188,7 +188,7 @@ export default async function AdminPage() {
   const mobileDevices      = Number(mobileTokenCount[0]?.cnt ?? 0);
   const newStreamsLast24h  = Number(newStreams24h[0]?.cnt ?? 0);
 
-  // Cache freshness rollup — count cells fresh / stale by 6h, 24h, 7d windows.
+  // Cache freshness rollup – count cells fresh / stale by 6h, 24h, 7d windows.
   const nowSec = Math.floor(Date.now() / 1000);
   const SIX_H  = 6 * 60 * 60;
   const ONE_D  = 24 * 60 * 60;
@@ -213,7 +213,7 @@ export default async function AdminPage() {
   const emailAlerts   = Number(emailAlertsCount[0]?.cnt ?? 0);
   const avgRating     = feedbackRows.filter(f => f.rating).length > 0
     ? (feedbackRows.filter(f => f.rating).reduce((s, f) => s + (f.rating ?? 0), 0) / feedbackRows.filter(f => f.rating).length).toFixed(1)
-    : "—";
+    : "–";
 
   const maxProtocolStreams = Math.max(...streamsByProtocol.map(r => Number(r.cnt)), 1);
   const maxChainStreams    = Math.max(...streamsByChain.map(r => Number(r.cnt)), 1);
@@ -286,7 +286,7 @@ export default async function AdminPage() {
             <StatCard label="Streams cached" value={totalStreams.toLocaleString()} sub={`${Number(activeStreams).toLocaleString()} active`} accent="#2563EB" />
             <StatCard label="Email alerts" value={emailAlerts} sub={`${Math.round((emailAlerts / Math.max(totalUsers, 1)) * 100)}% adoption`} accent="#F0992E" />
             <StatCard label="Waitlist" value={waitlistRows.length} sub="all time" />
-            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "—" ? `avg ${avgRating}★` : "no ratings yet"} accent="#F0992E" />
+            <StatCard label="Feedback" value={feedbackRows.length} sub={avgRating !== "–" ? `avg ${avgRating}★` : "no ratings yet"} accent="#F0992E" />
           </div>
 
           {/* Row 2: beta cap bar + sign-up trend */}
@@ -457,7 +457,7 @@ export default async function AdminPage() {
                 <div className="flex items-center gap-1">
                   {[1,2,3,4,5].map(n => (
                     <span key={n} className="text-sm"
-                      style={{ color: avgRating !== "—" && n <= Math.round(Number(avgRating)) ? "#F0992E" : "#1e2330" }}>★</span>
+                      style={{ color: avgRating !== "–" && n <= Math.round(Number(avgRating)) ? "#F0992E" : "#1e2330" }}>★</span>
                   ))}
                   <span className="text-xs ml-1" style={{ color: "#9ca3af" }}>{avgRating}</span>
                 </div>
@@ -508,7 +508,7 @@ export default async function AdminPage() {
             </span>
           </div>
 
-          {/* Headline metrics — investor-deck row */}
+          {/* Headline metrics – investor-deck row */}
           <div className="grid grid-cols-6 gap-3 mb-6">
             <StatCard
               label="Unique recipients"
@@ -558,7 +558,7 @@ export default async function AdminPage() {
             />
           </div>
 
-          {/* Cache freshness panel — per-cell breakdown so we can spot the
+          {/* Cache freshness panel – per-cell breakdown so we can spot the
               "Hedgey BSC stuck for 8 days" pattern at a glance. Cells are
               sorted oldest-first so the most concerning ones float to the
               top of the list. */}
@@ -621,7 +621,7 @@ export default async function AdminPage() {
             <p className="text-[10px] mt-4" style={{ color: "#4b5563" }}>
               Freshness = max(last_refreshed_at) per cell. Since the May 2026
               setWhere optimisation, this means &ldquo;last time data actually
-              moved&rdquo; — frozen cells could mean genuinely-quiet protocols
+              moved&rdquo; – frozen cells could mean genuinely-quiet protocols
               OR silently broken pipelines. Cross-check with Vercel cron logs
               for cells stuck &gt; 24h.
             </p>

@@ -7,13 +7,13 @@
 // new rows sliding in from the top.
 //
 // Design goals:
-//   - Always show *something* moving — even if the latest-indexed rows haven't
+//   - Always show *something* moving – even if the latest-indexed rows haven't
 //     changed, a "live monitoring" dot pulses and a "seconds ago" clock
 //     increments every second on the client.
-//   - Degrade gracefully — zero results → "No activity indexed in the last
-//     hour — but we're watching 10 protocols across 7 chains" state, not
+//   - Degrade gracefully – zero results → "No activity indexed in the last
+//     hour – but we're watching 10 protocols across 7 chains" state, not
 //     a blank box.
-//   - Keep it cheap — 10s poll interval, edge-cached, <1kB of payload.
+//   - Keep it cheap – 10s poll interval, edge-cached, <1kB of payload.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useState } from "react";
@@ -55,11 +55,11 @@ type LiveActivityResponse = {
 const POLL_INTERVAL_MS = 10_000;
 const MAX_VISIBLE_ROWS = 6;
 
-// Protocol brand colours come from the single source — protocolBrand() in
+// Protocol brand colours come from the single source – protocolBrand() in
 // protocol-constants.ts (this used to be a local map that drifted out of sync
 // and omitted Streamflow / Jupiter Lock / LlamaPay).
 
-// Canonical CHAIN_NAMES map (single source of truth) — a local switch here
+// Canonical CHAIN_NAMES map (single source of truth) – a local switch here
 // dropped Arbitrum (42161) and rendered "Chain 42161".
 function chainLabel(id: number): string {
   return CHAIN_NAMES[id as SupportedChainId] ?? `Chain ${id}`;
@@ -70,10 +70,10 @@ function truncAddr(a: string): string {
 }
 
 function formatAmount(raw: string | null, symbol: string | null, decimals = 18): string {
-  if (!raw) return symbol ?? "—";
+  if (!raw) return symbol ?? "–";
   let whole: number;
   try { whole = Number(BigInt(raw)) / 10 ** decimals; }
-  catch { return symbol ?? "—"; }
+  catch { return symbol ?? "–"; }
   const sym = symbol ? ` ${symbol}` : "";
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
@@ -165,7 +165,7 @@ export function LiveActivityTicker() {
         )}
       </div>
 
-      {/* Rows — animate new entries in */}
+      {/* Rows – animate new entries in */}
       <div className="divide-y" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
         {err && !data && (
           <div className="px-4 md:px-5 py-6 text-center text-sm" style={{ color: "#94a3b8" }}>

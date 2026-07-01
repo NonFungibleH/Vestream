@@ -1,4 +1,4 @@
-// Site-default Open Graph image — 1200×630 generated from JSX via next/og.
+// Site-default Open Graph image – 1200×630 generated from JSX via next/og.
 // Used as the share preview anywhere we don't override with a per-route
 // opengraph-image.tsx (see src/app/protocols/[protocol]/opengraph-image.tsx
 // for the dynamic per-protocol variant).
@@ -7,7 +7,7 @@
 //   - Warm-paper background (#F5F5F3) matches the homepage hero
 //   - Single-line headline so the image reads at thumbnail sizes (320px
 //     wide is common in WhatsApp / iMessage previews)
-//   - Teal pill chip for the value-prop — same component family used
+//   - Teal pill chip for the value-prop – same component family used
 //     on /protocols cards so the visual language carries through
 //   - System-stack typography (no custom font load) to keep cold-build
 //     edge time predictable
@@ -15,7 +15,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime  = "edge";
-export const alt      = "Vestream — Free Token Vesting Tracker for 9 Protocols";
+export const alt      = "Vestream – Free Token Vesting Tracker for 9 Protocols";
 export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

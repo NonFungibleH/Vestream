@@ -1,7 +1,7 @@
 // src/app/explore/[chainId]/[tokenAddress]/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Legacy Pro-gated token explorer route. Superseded by the public DexTools-style
-// page at /token/[chainId]/[address] — both were drifting into near-identical
+// page at /token/[chainId]/[address] – both were drifting into near-identical
 // 600-line client components.
 //
 // Kept as a 308 permanent redirect so:
@@ -29,7 +29,7 @@ export default async function LegacyExploreRedirect({
 }) {
   const { chainId, tokenAddress } = await params;
 
-  // Basic shape validation — if the URL is malformed, send to the
+  // Basic shape validation – if the URL is malformed, send to the
   // find-vestings search page rather than producing a broken /token/ URL.
   const chainIdNum = Number.parseInt(chainId, 10);
   const isValidChain   = Number.isFinite(chainIdNum) && chainIdNum > 0;
@@ -39,6 +39,6 @@ export default async function LegacyExploreRedirect({
     redirect("/find-vestings");
   }
 
-  // 308 permanent — browsers + search engines cache this and won't re-hit us.
+  // 308 permanent – browsers + search engines cache this and won't re-hit us.
   permanentRedirect(`/token/${chainIdNum}/${tokenAddress.toLowerCase()}`);
 }

@@ -4,18 +4,18 @@ import { ApiAccessForm } from "@/components/ApiAccessForm";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
-// OpenGraph metadata — was missing from this page entirely (the /ai page
+// OpenGraph metadata – was missing from this page entirely (the /ai page
 // has it, /developer slipped through). Adds LinkedIn/Twitter/Slack unfurl
 // consistency with the rest of the site.
 export const metadata: Metadata = {
-  title: "Developer API — Vestream",
+  title: "Developer API – Vestream",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana. Normalised JSON, agent-native, ready in minutes.",
+    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana. Normalised JSON, agent-native, ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
-    title: "Developer API — Vestream",
+    title: "Developer API – Vestream",
     description:
-      "REST + MCP for 10 vesting protocols across 7 chains — EVM and Solana. Normalised JSON, agent-native.",
+      "REST + MCP for 10 vesting protocols across 7 chains – EVM and Solana. Normalised JSON, agent-native.",
     url: "https://www.vestream.io/developer",
     siteName: "Vestream",
     type: "website",
@@ -70,7 +70,7 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock —
+            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock –
             across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana.
             Clean REST API with OpenAPI spec and native MCP support.
           </p>
@@ -142,7 +142,7 @@ export default function DeveloperPage() {
               </div>
             ))}
           </div>
-          {/* Shared chain coverage — applies to all protocols above */}
+          {/* Shared chain coverage – applies to all protocols above */}
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Available on</span>
             {["Ethereum", "BNB Chain", "Base", "Polygon", "Solana"].map((chain) => (
@@ -173,7 +173,7 @@ export default function DeveloperPage() {
                 bg: "rgba(28,184,184,0.08)",
                 border: "rgba(28,184,184,0.18)",
                 title: "Normalised schema",
-                description: "Every protocol speaks a different language on-chain. We translate everything into one consistent VestingStream format — same field names, same units, same structure, regardless of protocol.",
+                description: "Every protocol speaks a different language on-chain. We translate everything into one consistent VestingStream format – same field names, same units, same structure, regardless of protocol.",
                 points: ["Unified token amounts (raw + USD)", "Consistent cliff, start, end timestamps", "Cross-protocol claim history", "Protocol-agnostic stream IDs"],
               },
               {
@@ -182,7 +182,7 @@ export default function DeveloperPage() {
                 bg: "rgba(15,138,138,0.08)",
                 border: "rgba(15,138,138,0.18)",
                 title: "REST API + OpenAPI",
-                description: "Three clean endpoints that return structured JSON instantly from our persistent index. Interactive Swagger docs, full OpenAPI 3.1 spec, and standard Bearer auth — exactly what developers and integrations expect.",
+                description: "Three clean endpoints that return structured JSON instantly from our persistent index. Interactive Swagger docs, full OpenAPI 3.1 spec, and standard Bearer auth – exactly what developers and integrations expect.",
                 points: ["Instant responses from DB cache", "Standard Bearer token auth", "Rate limit headers on every response", "Interactive Swagger UI at /api-docs"],
               },
               {
@@ -191,7 +191,7 @@ export default function DeveloperPage() {
                 bg: "rgba(11,160,203,0.08)",
                 border: "rgba(11,160,203,0.18)",
                 title: "AI agent-native (MCP)",
-                description: "Published as an MCP server so AI agents — Claude, GPT, LangChain, CrewAI — can call our API as a native tool with zero custom integration code. One config block and your agent understands vesting.",
+                description: "Published as an MCP server so AI agents – Claude, GPT, LangChain, CrewAI – can call our API as a native tool with zero custom integration code. One config block and your agent understands vesting.",
                 points: ["Anthropic MCP server included", "OpenAPI spec for function calling", "Structured JSON for LLM parsing", "Forecast + unlock tools built in"],
               },
             ].map(p => (
@@ -348,45 +348,45 @@ export default function DeveloperPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
-                // CPU/chip with antenna — AI agent surface.
+                // CPU/chip with antenna – AI agent surface.
                 icon: <UseCaseIcon><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></UseCaseIcon>,
                 title: "AI Portfolio Agents",
-                description: "Give your agent real-time vesting intelligence. Ask \"when does my next unlock happen?\" or \"how much have I claimed this year?\" — answered instantly from structured data.",
+                description: "Give your agent real-time vesting intelligence. Ask \"when does my next unlock happen?\" or \"how much have I claimed this year?\" – answered instantly from structured data.",
                 tags: ["MCP-native", "OpenAPI spec", "Unlock forecasting"],
               },
               {
-                // Wallet — flap + card slot.
+                // Wallet – flap + card slot.
                 icon: <UseCaseIcon><path d="M3 6a2 2 0 0 1 2-2h12l4 4v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z"/><path d="M16 14h2"/><path d="M3 10h18"/></UseCaseIcon>,
                 title: "Wallet Applications",
                 description: "Show users their complete vesting picture without building protocol-specific integrations for each chain. One API call replaces five.",
                 tags: ["Multi-protocol", "Multi-chain", "Normalised schema"],
               },
               {
-                // Bar chart — analytics surface.
+                // Bar chart – analytics surface.
                 icon: <UseCaseIcon><line x1="3" y1="20" x2="21" y2="20"/><rect x="6" y="11" width="3" height="9"/><rect x="11" y="6" width="3" height="14"/><rect x="16" y="14" width="3" height="6"/></UseCaseIcon>,
                 title: "Analytics Platforms",
                 description: "Enrich your on-chain analytics with structured vesting data. Track team and investor unlock schedules, historical claims, and token release patterns.",
                 tags: ["Historical data", "Claim events", "Protocol breakdown"],
               },
               {
-                // Shield with check — compliance / regulator-friendly surface.
+                // Shield with check – compliance / regulator-friendly surface.
                 icon: <UseCaseIcon><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></UseCaseIcon>,
                 title: "Compliance & Fund Tools",
                 description: "Monitor vesting obligations across a portfolio. Flag upcoming unlocks, track claimed amounts, and generate structured reports for investors or regulators.",
                 tags: ["Compliance flags", "Audit trail", "Structured export"],
               },
               {
-                // Gear / cog — DeFi protocol integration.
+                // Gear / cog – DeFi protocol integration.
                 icon: <UseCaseIcon><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></UseCaseIcon>,
                 title: "DeFi Protocol Integrations",
-                description: "Build vesting-aware features into your protocol — show users their locked/claimable balances without reinventing the indexing layer.",
+                description: "Build vesting-aware features into your protocol – show users their locked/claimable balances without reinventing the indexing layer.",
                 tags: ["REST API", "Bearer auth", "Rate limit headers"],
               },
               {
-                // Coin / token — issuer & DAO surface.
+                // Coin / token – issuer & DAO surface.
                 icon: <UseCaseIcon><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M9.5 9h3a2 2 0 0 1 0 4h-3v4"/></UseCaseIcon>,
                 title: "Token Issuers & DAOs",
-                description: "Give your team and investors a transparent view of the vesting schedule. No custom dashboard needed — your data is already indexed.",
+                description: "Give your team and investors a transparent view of the vesting schedule. No custom dashboard needed – your data is already indexed.",
                 tags: ["Team vesting", "Investor tracking", "Unlock calendar"],
               },
             ].map(u => (
@@ -434,13 +434,13 @@ export default function DeveloperPage() {
                   Works natively with Claude and any MCP-compatible agent
                 </h2>
                 <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  Add Vestream to any AI agent in seconds. Our MCP server exposes three tools —
-                  get vestings, upcoming unlocks, and stream details — that agents call natively
+                  Add Vestream to any AI agent in seconds. Our MCP server exposes three tools –
+                  get vestings, upcoming unlocks, and stream details – that agents call natively
                   without any custom glue code.
                 </p>
                 <div className="rounded-xl p-4 font-mono text-xs leading-relaxed"
                   style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.07)", color: "#B8BABD" }}>
-                  {/* Inline JSON snippet — wrapping the raw ASCII comment in a JSX expression
+                  {/* Inline JSON snippet – wrapping the raw ASCII comment in a JSX expression
                       prevents eslint's react/jsx-no-comment-textnodes rule from mistaking it
                       for a misplaced JS comment, and escaping the quotes satisfies
                       react/no-unescaped-entities. */}
@@ -485,7 +485,7 @@ export default function DeveloperPage() {
           </div>
 
           {/* Two tiers: Free (self-serve) + Paid (contact for pricing). The
-              developer API doesn't have a public price yet — we're working
+              developer API doesn't have a public price yet – we're working
               with early partners to shape it. The consumer-app $9.99 price
               on the homepage is for retail investors, not for API builders;
               don't conflate them. */}
@@ -505,7 +505,7 @@ export default function DeveloperPage() {
                   "All 3 endpoints",
                   "10 protocols indexed (EVM + Solana)",
                   "Standard JSON responses",
-                  { html: <>Email support — <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
+                  { html: <>Email support – <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
                 ].map((f, i) => (
                   <li key={typeof f === "string" ? f : i} className="flex items-start gap-2.5">
                     <Check />
@@ -522,7 +522,7 @@ export default function DeveloperPage() {
               </a>
             </div>
 
-            {/* Paid — contact-for-pricing. Combines what the earlier draft
+            {/* Paid – contact-for-pricing. Combines what the earlier draft
                 split into Pro + Enterprise: there's one real commercial
                 conversation until we publish a rate card. */}
             <div className="rounded-2xl p-8 relative"
@@ -563,13 +563,13 @@ export default function DeveloperPage() {
                 Contact sales
               </Link>
               <p className="text-[10px] text-center mt-3" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Online card checkout coming soon — reach out and we&rsquo;ll provision early-access Pro keys
+                Online card checkout coming soon – reach out and we&rsquo;ll provision early-access Pro keys
                 manually in the meantime.
               </p>
             </div>
           </div>
 
-          {/* Support strip — always visible directly under the pricing grid so
+          {/* Support strip – always visible directly under the pricing grid so
               developers stuck on a 4xx/5xx know exactly where to go without
               having to hunt through a contact page or scroll to the footer. */}
           <div className="mt-8 rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
@@ -579,7 +579,7 @@ export default function DeveloperPage() {
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
                 <span style={{ color: "white", fontWeight: 600 }}>Stuck?</span>{" "}
                 Email <a href="mailto:team@vestream.io?subject=API%20support" className="underline" style={{ color: "#1CB8B8" }}>team@vestream.io</a>{" "}
-                — we typically respond within a business day.
+                – we typically respond within a business day.
               </p>
             </div>
             <Link href="/status" className="text-xs font-semibold whitespace-nowrap underline" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -600,7 +600,7 @@ export default function DeveloperPage() {
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
               No approval queue. Tell us a bit about what you&apos;re building and we&apos;ll
               issue your key on submit. Free tier gives you 150 requests/day across all 9
-              protocols — plenty for prototyping. Upgrade to Pro when you&apos;re ready.
+              protocols – plenty for prototyping. Upgrade to Pro when you&apos;re ready.
             </p>
           </div>
 
@@ -626,7 +626,7 @@ export default function DeveloperPage() {
 // ─── Inline icon helper ────────────────────────────────────────────────────
 // Use-case cards previously rendered emojis ("🤖 👛 📊 …") which read as
 // AI-generated / Notion-template aesthetic. Replaced with stroke-based SVG
-// icons that pick up the page's teal accent — same visual weight as the
+// icons that pick up the page's teal accent – same visual weight as the
 // rest of the site's iconography (cf. SiteNav and footer) so the page
 // reads as a single design rather than emojis pasted in.
 function UseCaseIcon({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,5 @@
 // Shared pagination footer for the explorer's Schedules + Wallet lists.
-// Server component — just renders Prev/Next Links that preserve the current
+// Server component – just renders Prev/Next Links that preserve the current
 // filters/sort and change ?page=. Mirrors the inline footer in ExplorerTable
 // (the calendar list) so all three modes paginate identically.
 

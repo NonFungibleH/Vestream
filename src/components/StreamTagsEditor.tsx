@@ -105,7 +105,7 @@ export function StreamTagsEditor({ streamId }: Props) {
       return;
     }
     if (cleaned.length > TAG_MAX_LEN) {
-      setError(`Tag too long — ${TAG_MAX_LEN} chars max`);
+      setError(`Tag too long – ${TAG_MAX_LEN} chars max`);
       return;
     }
     if (tags.length >= TAGS_PER_STREAM) {

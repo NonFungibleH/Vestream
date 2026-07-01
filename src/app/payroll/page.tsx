@@ -5,23 +5,23 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /payroll — Vestream for crypto payroll recipients.
+// /payroll – Vestream for crypto payroll recipients.
 //
 // Audience: DAO contributors, remote workers, contractors paid via Sablier
 // Flow, LlamaPay, or Superfluid. The "payroll brand" is now backed by real
-// protocol support — these streams are already indexed and appear in the app
+// protocol support – these streams are already indexed and appear in the app
 // alongside vesting positions.
 //
 // Updated 2026-06-01: removed "coming soon" framing. The feature is live.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Crypto Payroll Tracker — Sablier Flow, LlamaPay & Superfluid | Vestream",
+  title:       "Crypto Payroll Tracker – Sablier Flow, LlamaPay & Superfluid | Vestream",
   description: "Track your crypto salary in real time. Vestream indexes Sablier Flow, LlamaPay, and Superfluid streams so DAO contributors and crypto contractors see every accrued balance, upcoming stream end, and income export in one dashboard.",
   alternates:  { canonical: "https://www.vestream.io/payroll" },
   openGraph: {
     title:       "Crypto Payroll Tracker | Vestream",
-    description: "One dashboard for your Sablier Flow, LlamaPay and Superfluid salary streams — live balances, alerts, and tax exports.",
+    description: "One dashboard for your Sablier Flow, LlamaPay and Superfluid salary streams – live balances, alerts, and tax exports.",
     type:        "website",
     url:         "https://www.vestream.io/payroll",
   },
@@ -35,7 +35,7 @@ const PROTOCOLS = [
     bg:      "rgba(240,153,46,0.08)",
     border:  "rgba(240,153,46,0.22)",
     tagline: "Per-second streaming for salaries and grants",
-    detail:  "Sablier Flow drips tokens continuously per second — the most common protocol for DAO contributor pay and payroll streams. Vestream shows your live accrued-but-unclaimed balance, next stream end date, and push alerts when your stream is about to expire.",
+    detail:  "Sablier Flow drips tokens continuously per second – the most common protocol for DAO contributor pay and payroll streams. Vestream shows your live accrued-but-unclaimed balance, next stream end date, and push alerts when your stream is about to expire.",
     href:    "/protocols/sablier-flow",
   },
   {
@@ -53,7 +53,7 @@ const PROTOCOLS = [
     bg:      "rgba(40,184,149,0.08)",
     border:  "rgba(40,184,149,0.22)",
     tagline: "Real-time money streams with cliff scheduling",
-    detail:  "Superfluid's vesting scheduler wraps its streaming primitives with cliff + linear release — often used for team token allocations that also function as a streaming payroll. Vestream tracks both the cliff date and the running stream balance.",
+    detail:  "Superfluid's vesting scheduler wraps its streaming primitives with cliff + linear release – often used for team token allocations that also function as a streaming payroll. Vestream tracks both the cliff date and the running stream balance.",
     href:    "/protocols/superfluid",
   },
 ];
@@ -67,7 +67,7 @@ const FEATURES = [
       </svg>
     ),
     title:  "Live accrued balance",
-    body:   "See exactly how many tokens have streamed to you right now — not at the last claim, right now. Updates every time you open the app.",
+    body:   "See exactly how many tokens have streamed to you right now – not at the last claim, right now. Updates every time you open the app.",
   },
   {
     icon: (
@@ -77,7 +77,7 @@ const FEATURES = [
       </svg>
     ),
     title:  "Push alerts before it matters",
-    body:   "Get notified before your stream runs dry or a cliff unlocks. Set alerts at 30d, 7d, 24h, or 1h out — you choose the cadence.",
+    body:   "Get notified before your stream runs dry or a cliff unlocks. Set alerts at 30d, 7d, 24h, or 1h out – you choose the cadence.",
   },
   {
     icon: (
@@ -102,7 +102,7 @@ const FEATURES = [
       </svg>
     ),
     title:  "Tax-ready income exports",
-    body:   "Export your streaming income as a Koinly or CoinTracker CSV, or as a Vestream income statement — with token symbol, date, and USD value at time of receipt.",
+    body:   "Export your streaming income as a Koinly or CoinTracker CSV, or as a Vestream income statement – with token symbol, date, and USD value at time of receipt.",
   },
 ];
 
@@ -145,7 +145,7 @@ export default function PayrollPage() {
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
             Vestream tracks Sablier Flow, LlamaPay, and Superfluid streams for DAO contributors,
-            crypto contractors, and remote workers — live accrued balance, push alerts, and
+            crypto contractors, and remote workers – live accrued balance, push alerts, and
             tax-ready income exports. Free on iOS and Android.
           </p>
 
@@ -257,7 +257,7 @@ export default function PayrollPage() {
               },
               {
                 label: "Crypto contractors",
-                body:  "You invoice in USDC or ETH and receive payment as a Superfluid stream. Vestream gives you an income statement at year-end — no spreadsheet needed.",
+                body:  "You invoice in USDC or ETH and receive payment as a Superfluid stream. Vestream gives you an income statement at year-end – no spreadsheet needed.",
               },
               {
                 label: "Grant recipients",

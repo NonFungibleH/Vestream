@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title:       "Terms of Service | Vestream",
-  description: "Terms governing your use of Vestream — operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
+  description: "Terms governing your use of Vestream – operated by 3UILD LLC. Covers the website, dashboard, mobile app, developer API, and MCP server.",
   alternates:  { canonical: "https://www.vestream.io/terms" },
 };
 
@@ -117,7 +117,7 @@ export default function Terms() {
           <Section title="6. Subscriptions, payments &amp; trials">
             <ul>
               <li>The Free tier requires no payment.</li>
-              <li>The Pro tier ($9.99/month or $74.99/year — saves 37%) is sold via the Vestream mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing is shown at the point of sale within the app.</li>
+              <li>The Pro tier ($9.99/month or $74.99/year – saves 37%) is sold via the Vestream mobile app using Apple In-App Purchase / Google Play Billing (managed by RevenueCat). Pricing is shown at the point of sale within the app.</li>
               <li>Larger usage (funds, teams, agencies needing more than 10 wallets, or commercial API/MCP volume) is sold by contract; pricing and terms are provided separately. Contact us via the website to discuss.</li>
               <li>Free trials, where offered, automatically convert to paid subscriptions at the end of the trial period unless cancelled. You may cancel at any time before trial end via your Apple / Google subscription settings (mobile).</li>
               <li>Subscriptions auto-renew at the end of each billing period unless cancelled. Refund eligibility follows the rules of the relevant payment processor (Apple / Google).</li>
@@ -139,9 +139,9 @@ export default function Terms() {
 
           <Section title="8. No financial, legal, or tax advice">
             <p>
-              Information shown on the Service — including vesting
+              Information shown on the Service – including vesting
               schedules, USD valuations, unlock timelines, and aggregated
-              statistics — is for informational purposes only. It is{" "}
+              statistics – is for informational purposes only. It is{" "}
               <strong style={{ color: "#1A1D20" }}>not</strong> investment,
               legal, accounting, or tax advice. Token values may be derived
               from third-party price oracles (DexScreener, CoinGecko) and
@@ -207,8 +207,8 @@ export default function Terms() {
               <Link href="/privacy" style={{ color: "#1CB8B8" }}>Privacy &amp; Cookie Policy</Link>.
             </p>
             <p>
-              On-chain data — wallet balances, vesting positions, token
-              movements — is{" "}
+              On-chain data – wallet balances, vesting positions, token
+              movements – is{" "}
               <strong style={{ color: "#1A1D20" }}>inherently public</strong> and
               not your property by virtue of you tracking a wallet on
               Vestream.
@@ -270,13 +270,13 @@ export default function Terms() {
           <Section title="17. Termination">
             <p>
               We may suspend or terminate your access to the Service at
-              any time, with or without notice, for any reason — including
+              any time, with or without notice, for any reason – including
               breach of these Terms, suspected abuse, or non-payment. You
               may terminate your account at any time by signing out and
               deleting your account from the dashboard. Sections that by
-              their nature should survive termination — including
+              their nature should survive termination – including
               Sections 11 (IP), 14 (warranties), 15 (liability), 16
-              (indemnity), and 18 (governing law) — survive termination.
+              (indemnity), and 18 (governing law) – survive termination.
             </p>
           </Section>
 

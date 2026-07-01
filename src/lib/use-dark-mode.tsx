@@ -42,7 +42,7 @@ export function DarkModeProvider({
 
   // Keep in sync if the server-resolved value changes (router.refresh,
   // navigation, another tab). This is the official React pattern for
-  // "adjust state when a prop changes" — track the last-seen prop in a
+  // "adjust state when a prop changes" – track the last-seen prop in a
   // ref and call setState during render when it changes. Using useEffect
   // for the same purpose trips react-hooks/set-state-in-effect (rightly:
   // it causes an extra render) and was previously failing CI.
@@ -64,7 +64,7 @@ export function DarkModeProvider({
 
   return (
     <DarkModeContext.Provider value={{ dark, toggle }}>
-      {/* Single `.dark` wrapper — themes the entire dashboard tree instantly
+      {/* Single `.dark` wrapper – themes the entire dashboard tree instantly
           on toggle, no flash waiting for the server round-trip. */}
       <div className={dark ? "dark" : ""}>{children}</div>
     </DarkModeContext.Provider>

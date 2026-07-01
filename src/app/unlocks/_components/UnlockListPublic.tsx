@@ -1,12 +1,12 @@
 // src/app/unlocks/_components/UnlockListPublic.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared list renderer for the public /unlocks/* ranking pages
-// (biggest-this-week, mass-distributions). Server component — takes
+// (biggest-this-week, mass-distributions). Server component – takes
 // already-enriched WindowUnlockGroup[] and renders them with the same
 // teaser-gated table treatment users see on /unlocks/[range].
 //
 // Kept deliberately minimal: NO data fetching, NO metric computation,
-// NO sort decisions. Those happen in the page that owns the route — this
+// NO sort decisions. Those happen in the page that owns the route – this
 // is the bottom of the food chain. /unlocks/[range] still has its own
 // inlined renderer for now (it predates this); converging the two is a
 // future cleanup.
@@ -49,7 +49,7 @@ function tokenInitial(symbol: string | null, address: string): string {
 }
 
 function fmtTokenAmount(amount: string | null, decimals: number): string {
-  if (!amount) return "—";
+  if (!amount) return "–";
   try {
     const n = Number(BigInt(amount)) / Math.pow(10, decimals);
     if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
@@ -57,7 +57,7 @@ function fmtTokenAmount(amount: string | null, decimals: number): string {
     if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
     if (n >= 1)   return n.toFixed(2);
     return n.toFixed(4);
-  } catch { return "—"; }
+  } catch { return "–"; }
 }
 
 function fmtDateUtc(unix: number): string {
@@ -67,7 +67,7 @@ function fmtDateUtc(unix: number): string {
 }
 
 function relativeTimeUntil(unix: number | null): string {
-  if (!unix) return "—";
+  if (!unix) return "–";
   const diff = unix - Math.floor(Date.now() / 1000);
   if (diff <= 0)    return "now";
   if (diff < 3600)  return `in ${Math.round(diff / 60)}m`;
@@ -78,7 +78,7 @@ function relativeTimeUntil(unix: number | null): string {
 interface Props {
   groups:        WindowUnlockGroup[];
   emptyMessage:  string;
-  /** Headline above the list — different per ranking page so the SEO
+  /** Headline above the list – different per ranking page so the SEO
    *  intent is in the H2 (e.g. "Biggest unlocks this week"). */
   heading:       string;
   /** Optional rendering of the linkable target on each row. Defaults to
@@ -143,12 +143,12 @@ export function UnlockListPublic({ groups, emptyMessage, heading, rowHrefFor }: 
               {formatUsdCompact(g.usdValue)}
             </p>
           ) : (
-            <p className="text-sm font-semibold" style={{ color: "#B8BABD" }}>—</p>
+            <p className="text-sm font-semibold" style={{ color: "#B8BABD" }}>–</p>
           )}
         </div>
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-            {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
+            {g.eventTime ? fmtDateUtc(g.eventTime) : "–"}
           </p>
         </div>
         <div className="text-right">

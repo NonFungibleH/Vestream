@@ -3,8 +3,8 @@
 // src/app/contact/ContactFormCard.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // The interactive form card embedded on /contact. Mirrors the modal version
-// in `components/ContactModal.tsx` — same POST shape (/api/contact), same
-// validation rules — but rendered as a full-width page card instead of a
+// in `components/ContactModal.tsx` – same POST shape (/api/contact), same
+// validation rules – but rendered as a full-width page card instead of a
 // centred modal. Kept as a separate client component so the page shell
 // (`page.tsx`) can stay server-rendered for SEO.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ export function ContactFormCard() {
           Message sent!
         </h2>
         <p className="text-sm leading-relaxed mb-6 max-w-sm mx-auto" style={{ color: "#8B8E92" }}>
-          Thanks for reaching out. We&apos;ll get back to you within one business day — usually sooner.
+          Thanks for reaching out. We&apos;ll get back to you within one business day – usually sooner.
         </p>
         <button
           type="button"
@@ -165,7 +165,7 @@ export function ContactFormCard() {
             rows={6}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Tell us about your use case — how many wallets, which chains, API volume, custom integration needs..."
+            placeholder="Tell us about your use case – how many wallets, which chains, API volume, custom integration needs..."
             className="w-full px-3.5 py-3 rounded-xl text-sm transition-all outline-none resize-y focus:ring-2 focus:ring-blue-100"
             style={{
               background: "#F5F5F3",

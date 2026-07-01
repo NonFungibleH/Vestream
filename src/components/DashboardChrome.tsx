@@ -130,7 +130,7 @@ export function useDashboardChrome(): ChromeContextValue {
 
 interface DashboardChromeProps {
   children: ReactNode;
-  /** User's tier — passed through from layout server-side fetch. */
+  /** User's tier – passed through from layout server-side fetch. */
   tier?: string;
 }
 
@@ -146,7 +146,7 @@ export function DashboardChrome({ children, tier }: DashboardChromeProps) {
   return (
     <ChromeContext.Provider value={value}>
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--preview-bg)" }}>
-        {/* Mobile sidebar overlay — backdrop click closes the drawer */}
+        {/* Mobile sidebar overlay – backdrop click closes the drawer */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-40 md:hidden"
@@ -162,7 +162,7 @@ export function DashboardChrome({ children, tier }: DashboardChromeProps) {
         />
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Universal top bar — rendered once here so every dashboard tab
+          {/* Universal top bar – rendered once here so every dashboard tab
               shares the same header (title + wallet count + account menu),
               instead of it living only on the home page. */}
           <DashboardHeader />
@@ -170,13 +170,13 @@ export function DashboardChrome({ children, tier }: DashboardChromeProps) {
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-[60px] md:pb-0">
             {children}
           </div>
-          {/* Slim dashboard-wide footer (desktop only — mobile uses MobileNav).
+          {/* Slim dashboard-wide footer (desktop only – mobile uses MobileNav).
               Pinned below the scrollable content; themes via --preview vars. */}
           <DashboardFooter />
         </div>
       </div>
 
-      {/* Mobile bottom nav — visible on small screens, hidden on md+ where the sidebar handles nav */}
+      {/* Mobile bottom nav – visible on small screens, hidden on md+ where the sidebar handles nav */}
       <MobileNav />
     </ChromeContext.Provider>
   );

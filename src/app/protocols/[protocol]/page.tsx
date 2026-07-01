@@ -2,13 +2,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-protocol SEO landing page.
 //
-// Theme: B2C light (matches the homepage `/` — #F5F5F3 page, white cards).
-// Brand nod: each page is dominated by the protocol's own accent colour —
+// Theme: B2C light (matches the homepage `/` – #F5F5F3 page, white cards).
+// Brand nod: each page is dominated by the protocol's own accent colour –
 // the primary CTA, hero gradient, live-dot, stat highlights and unlock card
 // borders all take their cue from PROTOCOLS[slug].color. Vestream stays the
 // container; the protocol gets the visual attention.
 //
-// Rendering: on-demand ISR with revalidate=300 — see the directive comment
+// Rendering: on-demand ISR with revalidate=300 – see the directive comment
 // below for the full force-dynamic → ISR history. Unknown slugs 404 via the
 // page-body getProtocol() guard.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,18 +59,18 @@ import { isLinkableTokenAddress } from "@/lib/chain-links";
 // On-demand ISR with 5-minute revalidation (2026-06-12).
 //
 // History, because this page has been around the block:
-//   1. `revalidate = 60` ISR — broke when getQuickUsdPrices started doing
+//   1. `revalidate = 60` ISR – broke when getQuickUsdPrices started doing
 //      Upstash Redis calls: the SDK hardcodes `cache: "no-store"` on its
 //      fetches, and Next 16.3.0-canary.19 hard-errors on a no-store fetch
 //      inside a route that exports `revalidate`.
-//   2. `force-dynamic` + middleware-injected SWR Cache-Control header —
+//   2. `force-dynamic` + middleware-injected SWR Cache-Control header –
 //      the header silently never stuck: this canary's framework-set
 //      `private, no-cache, no-store` for dynamic routes overrides
-//      middleware headers (verified live 2026-06-12 — dynamic routes
+//      middleware headers (verified live 2026-06-12 – dynamic routes
 //      served no-store + x-vercel-cache MISS while static routes kept the
 //      header). Every visitor executed the lambda; cold Data-Cache windows
 //      stalled past Cloudflare's patience → the QUIC-error / 524 reports.
-//   3. NOW: back to real ISR, with the Redis poison removed — the pricing
+//   3. NOW: back to real ISR, with the Redis poison removed – the pricing
 //      call passes `{ redis: false }` (its DexScreener fetch uses
 //      next.revalidate, ISR-safe) and the last-good write runs in
 //      `after()`. The framework emits `s-maxage=300, stale-while-
@@ -81,7 +81,7 @@ import { isLinkableTokenAddress } from "@/lib/chain-links";
 // `await params` counts as a request-time API unless the route provides
 // static-params samples (docs: 01-getting-started/08-caching.md), so
 // without it the route silently renders per-request and `revalidate` is
-// dead code — verified locally via byte-diff (the minute-granular
+// dead code – verified locally via byte-diff (the minute-granular
 // countdown string changed across back-to-back requests). The empty-bake
 // problem that tempted us to drop it is solved differently: the loader
 // THROWS during the build phase, and the page's catch path bakes the
@@ -91,24 +91,24 @@ export const revalidate = 300;
 // The cold render runs 4 live cache aggregations + a DexScreener pricing call
 // and takes 4–13s for the heaviest protocols (uncx/hedgey). Without a raised
 // ceiling, the default ~10s function limit KILLS the background ISR
-// regeneration for those slow protocols — so after a deploy (cache reset)
+// regeneration for those slow protocols – so after a deploy (cache reset)
 // they get stuck serving the build-time empty render and never write a fresh
 // entry or a Redis last-good, a vicious cycle that leaves the page blank
 // indefinitely. 60s (Hobby max) gives every protocol's regen room to finish
 // and heal. The proper fix is precomputing the upcoming-unlock aggregates
-// into a rollup (like token_vesting_rollups) so the render is fast — tracked
+// into a rollup (like token_vesting_rollups) so the render is fast – tracked
 // separately; this is the reliability backstop.
 export const maxDuration = 60;
 
-// Per-slug data load wrapped in Vercel Data Cache. 5-min TTL — same as
+// Per-slug data load wrapped in Vercel Data Cache. 5-min TTL – same as
 // /protocols index. Without this, EVERY visit triggered live subgraph
 // round-trips via getGlobalStats(aid) per adapter (UNCX = 2 adapters,
 // each ~5-10s on cold lambdas). User-facing symptom: clicking a protocol
-// card on /protocols felt like the browser hung — page just sat there
+// card on /protocols felt like the browser hung – page just sat there
 // for 10-20s before rendering.
 //
 // getGlobalStats has been DROPPED entirely (same as the /protocols index
-// rewrite) — the cache count from getProtocolStats is the canonical
+// rewrite) – the cache count from getProtocolStats is the canonical
 // source. Subgraph live counts were redundant + slow.
 // Bumped 300 → 3600 (1h) on May 4 2026. The protocol detail pages were
 // hitting the Cloudflare 100s ceiling under deploy-cache-reset conditions
@@ -124,7 +124,7 @@ interface ProtocolPageData {
   latest:       UnlockSummary | null;
   upcoming:     UnlockSummary | null;
   upcomingList: UnlockGroupSummary[];
-  /** 2026-05-14: fun-fact stats — biggest active stream, most popular
+  /** 2026-05-14: fun-fact stats – biggest active stream, most popular
    *  token on this protocol, new-streams count for the past 24h. */
   funStats:     ProtocolFunStats | null;
   /** 2026-06-01: per-chain TVL breakdown from protocolTvlSnapshots. */
@@ -154,7 +154,7 @@ const loadProtocolData = unstable_cache(
     if (process.env.NEXT_PHASE === "phase-production-build") {
       // THROW rather than return empty: unstable_cache doesn't cache thrown
       // errors, and the page's catch path reads the Redis last-good payload
-      // via an ISR/build-safe raw fetch — so build prerenders bake REAL
+      // via an ISR/build-safe raw fetch – so build prerenders bake REAL
       // data (last successful render) instead of dashes.
       throw new Error("build-phase: skipping DB, page falls back to last-good");
     }
@@ -163,7 +163,7 @@ const loadProtocolData = unstable_cache(
     // to render with the three successful results, NOT discard everything
     // and serve all-dashes. The previous Promise.all + try/catch returned
     // EMPTY_PROTOCOL_DATA on any single failure, which then got cached for
-    // 5 minutes by the surrounding unstable_cache — turning a single 200ms
+    // 5 minutes by the surrounding unstable_cache – turning a single 200ms
     // hiccup into 5 minutes of empty-page UX. Production-incident
     // pattern observed when the deep seed cron ran concurrently with
     // page renders: random query slowdowns cascaded into oscillating
@@ -197,7 +197,7 @@ const loadProtocolData = unstable_cache(
     const allEmpty       = !stats && !latest && !upcoming && upcomingList.length === 0;
 
     if (allEmpty && rejectionCount > 0) {
-      // THROW — don't cache an empty result that came from failures. The
+      // THROW – don't cache an empty result that came from failures. The
       // unstable_cache layer doesn't cache thrown errors, so the next
       // request retries fresh. The page component catches this and falls
       // back to last-known-good from Redis (page-data-fallback.ts).
@@ -206,7 +206,7 @@ const loadProtocolData = unstable_cache(
       );
     }
 
-    // Skip pricing entirely if EVERY query genuinely returned empty —
+    // Skip pricing entirely if EVERY query genuinely returned empty –
     // saves an unnecessary DexScreener round-trip.
     if (allEmpty) {
       return EMPTY_PROTOCOL_DATA;
@@ -214,8 +214,8 @@ const loadProtocolData = unstable_cache(
 
     // Attach USD values to the cards. We batch-price every distinct
     // (chain, address) across the latest + next + upcoming list so the
-    // card renderer doesn't need to know about pricing — it just reads
-    // `unlock.usdValue` and shows "—" when null.
+    // card renderer doesn't need to know about pricing – it just reads
+    // `unlock.usdValue` and shows "–" when null.
     const tokensToPrice: Array<{ chainId: number; address: string }> = [];
     const pushToken = (u: UnlockSummary | null) => {
       if (u && u.tokenAddress) {
@@ -228,13 +228,13 @@ const loadProtocolData = unstable_cache(
     // Pricing call gets a hard 5s ceiling. DexScreener occasionally hangs
     // under load and a stalled fetch cascades into the Cloudflare 100s
     // gateway timeout. Better to render without USD values than serve a
-    // 504 — the unlock card still shows the token amount + symbol.
+    // 504 – the unlock card still shows the token amount + symbol.
     // Promise.race because AbortSignal in fetch's `init` disables Next's
     // data cache (CLAUDE.md landmine).
     let priceMap;
     try {
       priceMap = await Promise.race([
-        // redis:false — this runs inside an ISR render (via unstable_cache
+        // redis:false – this runs inside an ISR render (via unstable_cache
         // revalidation); the Upstash SDK's no-store fetch hard-errors there.
         // The DexScreener fetch inside uses next.revalidate and is ISR-safe.
         getQuickUsdPrices(tokensToPrice, { redis: false }),
@@ -267,7 +267,7 @@ const loadProtocolData = unstable_cache(
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
-// Required for ISR — see the revalidate comment above. Build prerenders
+// Required for ISR – see the revalidate comment above. Build prerenders
 // bake last-good data (the loader throws at build phase; the catch path
 // reads Redis last-good). Disabled protocols (e.g. team-finance) are
 // excluded here AND 404 via the getProtocol().disabled page-body guard.
@@ -284,7 +284,7 @@ export async function generateMetadata(
   const meta = getProtocol(protocol);
   if (!meta || meta.disabled) return { title: "Not found" };
 
-  const title = `${meta.name} unlock tracker & alerts — Vestream`;
+  const title = `${meta.name} unlock tracker & alerts – Vestream`;
   const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;
@@ -318,7 +318,7 @@ export default async function ProtocolLandingPage(
   const meta = getProtocol(protocol);
   if (!meta || meta.disabled) notFound();
 
-  // Single-cached fetch for the page's data — see CACHE_TTL_SECONDS comment.
+  // Single-cached fetch for the page's data – see CACHE_TTL_SECONDS comment.
   //
   // Three-layer resilience for "never empty" UX:
   //   1. loadProtocolData throws on degraded result (Promise.allSettled
@@ -328,7 +328,7 @@ export default async function ProtocolLandingPage(
   //      previous successful render exists (almost always after the
   //      first deploy), we render with that instead of dashes.
   //   3. After a successful render, we write to last-good (fire-and-
-  //      forget — non-blocking). Each render keeps the fallback fresh.
+  //      forget – non-blocking). Each render keeps the fallback fresh.
   let pageData: ProtocolPageData;
   try {
     pageData = await loadProtocolData(meta.adapterIds);
@@ -344,13 +344,13 @@ export default async function ProtocolLandingPage(
   }
   const { stats, latest, upcoming, upcomingList, funStats, tvlPerChain } = pageData;
 
-  // Stream counts now come from cache only (getGlobalStats was dropped —
+  // Stream counts now come from cache only (getGlobalStats was dropped –
   // see the loadProtocolData comment for the why).
   const effectiveTotal  = stats?.totalStreams  ?? 0;
   const effectiveActive = stats?.activeStreams ?? 0;
   const hasData = effectiveTotal > 0;
   // Continuous-stream protocols (LlamaPay, Sablier Flow) don't have discrete
-  // scheduled "unlocks" — tokens flow per-second and are claimable any time.
+  // scheduled "unlocks" – tokens flow per-second and are claimable any time.
   // The unlock-calendar framing reads as broken for them ("641 indexed / no
   // upcoming unlocks"), so we relabel the stat + the upcoming card.
   const isStream = meta.adapterIds.some((id) => PROTOCOL_DEFAULT_CATEGORY[id] === "stream");
@@ -363,7 +363,7 @@ export default async function ProtocolLandingPage(
   // Curated related protocols first, then pad from the active registry so the
   // "Other protocols we index" grid always shows exactly 3 (some protocols'
   // relatedSlugs resolve to fewer than 3 once disabled/missing ones are dropped
-  // — that's why the footer sometimes showed only 2 cards).
+  // – that's why the footer sometimes showed only 2 cards).
   const related: ProtocolMeta[] = meta.relatedSlugs
     .map((s) => getProtocol(s))
     .filter((p): p is ProtocolMeta => !!p && !p.disabled && p.slug !== meta.slug);
@@ -376,7 +376,7 @@ export default async function ProtocolLandingPage(
   }
   const relatedThree = related.slice(0, 3);
 
-  // Stronger tints derived from the base accent — used for hero wash and CTA shadow.
+  // Stronger tints derived from the base accent – used for hero wash and CTA shadow.
   const accentWash = meta.bg.replace("0.08", "0.12");
   const accentHalo = meta.bg.replace("0.08", "0.22");
 
@@ -425,7 +425,7 @@ export default async function ProtocolLandingPage(
           background: `linear-gradient(90deg, transparent, ${meta.color}80, transparent)`,
         }} />
 
-        {/* Breadcrumb — left-aligned, sits inside the protocol's halo so it
+        {/* Breadcrumb – left-aligned, sits inside the protocol's halo so it
             shares the branded ground with the headline below. Pairs with
             the BreadcrumbList JSON-LD for SEO. */}
         <nav
@@ -504,7 +504,7 @@ export default async function ProtocolLandingPage(
           </p>
 
           <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-            {/* Primary CTA uses the protocol's brand colour — strongest brand nod */}
+            {/* Primary CTA uses the protocol's brand colour – strongest brand nod */}
             <Link
               href="/find-vestings"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
@@ -512,7 +512,7 @@ export default async function ProtocolLandingPage(
             >
               Track your {meta.name} wallet →
             </Link>
-            {/* Calendar CTA moved out of the hero — too many side-by-side
+            {/* Calendar CTA moved out of the hero – too many side-by-side
                 buttons made the hero feel cluttered. It now sits as a
                 full-width banner directly below the Upcoming queue, where
                 visitors are already in calendar-discovery mode. */}
@@ -535,36 +535,36 @@ export default async function ProtocolLandingPage(
         >
           <Stat
             label="Streams indexed"
-            value={hasData ? effectiveTotal.toLocaleString() : "—"}
+            value={hasData ? effectiveTotal.toLocaleString() : "–"}
             color={meta.color}
           />
           <Stat
             label={isStream ? "Streaming now" : "Active now"}
-            value={hasData ? effectiveActive.toLocaleString() : "—"}
+            value={hasData ? effectiveActive.toLocaleString() : "–"}
             color={meta.color}
           />
           <Stat
             label="Recipients"
-            value={hasData ? (stats!.recipientCount ?? 0).toLocaleString() : "—"}
+            value={hasData ? (stats!.recipientCount ?? 0).toLocaleString() : "–"}
             color={meta.color}
           />
           <Stat
             label="Tokens tracked"
-            value={hasData ? (stats!.tokensTracked ?? 0).toLocaleString() : "—"}
+            value={hasData ? (stats!.tokensTracked ?? 0).toLocaleString() : "–"}
             color={meta.color}
           />
           <Stat
             label="Chains covered"
-            // Chains we actually have indexed data on — NOT the declared
+            // Chains we actually have indexed data on – NOT the declared
             // chainIds. Team Finance declares Base but its Squid indexer has
             // zero Base data, so declared=4 overstated it; the real figure is
             // 3 (ETH/BSC/Polygon), matching the /unlocks page + the summary.
-            value={hasData ? (stats!.chainIds?.length ?? 0).toString() : "—"}
+            value={hasData ? (stats!.chainIds?.length ?? 0).toString() : "–"}
             color={meta.color}
           />
           <Stat
             label="Last indexed"
-            value={stats?.lastIndexedAt ? relativeFreshness(stats.lastIndexedAt) : "—"}
+            value={stats?.lastIndexedAt ? relativeFreshness(stats.lastIndexedAt) : "–"}
             color={meta.color}
           />
         </div>
@@ -574,14 +574,14 @@ export default async function ProtocolLandingPage(
           // is UPSERT-only and never gets wiped during reindex (verified
           // src/lib/vesting/dbcache.ts:127-137). If the stat strip is empty,
           // it means the seeder has not yet successfully populated this
-          // protocol/chain combo — usually a one-time bootstrap issue
+          // protocol/chain combo – usually a one-time bootstrap issue
           // (RPC config, subgraph URL, GRAPH_API_KEY) rather than a
           // periodic indexing window. Tell users that honestly + tell
           // them their personal wallet results are unaffected.
           <p className="text-xs text-center mt-3" style={{ color: "#94A3B8" }}>
-            We don&apos;t have indexed data for this protocol yet — our seed scanner
+            We don&apos;t have indexed data for this protocol yet – our seed scanner
             is working through it. If you arrived from a wallet search, your
-            specific results are unaffected — those come from a live on-chain
+            specific results are unaffected – those come from a live on-chain
             read, not this cache.
           </p>
         )}
@@ -590,7 +590,7 @@ export default async function ProtocolLandingPage(
       {/* ── TVL by chain ────────────────────────────────────────────────── */}
       {tvlPerChain.length > 0 && (() => {
         // Only show chains the protocol actually operates on. DefiLlama-sourced
-        // snapshots sometimes carry dust on chains we don't track — e.g.
+        // snapshots sometimes carry dust on chains we don't track – e.g.
         // Streamflow is Solana-only but DefiLlama reported sub-$1 amounts on
         // Ethereum/BNB/Polygon, which surfaced as bogus extra rows here.
         const chainTvl = tvlPerChain.filter((r) =>
@@ -668,7 +668,7 @@ export default async function ProtocolLandingPage(
               Vestream Pro
             </div>
             <p className="text-sm font-medium leading-snug" style={{ color: "#1A1D20" }}>
-              Get push and email alerts before every {meta.name} unlock — plus full portfolio tracking across all 10 protocols.
+              Get push and email alerts before every {meta.name} unlock – plus full portfolio tracking across all 10 protocols.
             </p>
             <p className="text-xs mt-1" style={{ color: "#8B8E92" }}>
               Available to Pro subscribers on iOS &amp; Android.
@@ -682,11 +682,11 @@ export default async function ProtocolLandingPage(
 
       {/* ── Spotlight stats (fun-fact row) ──────────────────────────────────
           2026-05-14: surfaces three "interesting things" beyond the raw
-          stream counts above — biggest active stream, most-streamed
+          stream counts above – biggest active stream, most-streamed
           token on this protocol, recent indexer pulse. Designed to make
           the protocol page feel ALIVE for retail visitors who arrived
           from /find-vestings or organic search. Hidden entirely when
-          the protocol has no active streams (don't show "—" stats). */}
+          the protocol has no active streams (don't show "–" stats). */}
       {funStats && (funStats.biggestStream || funStats.mostPopularToken || funStats.newStreamsLast24h > 0) && (
         <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
@@ -745,7 +745,7 @@ export default async function ProtocolLandingPage(
             What&apos;s happening on {meta.name} right now
           </h2>
           <p className="text-sm max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
-            Pulled from Vestream&apos;s index — refreshed regularly as new vesting activity is detected.
+            Pulled from Vestream&apos;s index – refreshed regularly as new vesting activity is detected.
           </p>
         </div>
 
@@ -795,7 +795,7 @@ export default async function ProtocolLandingPage(
 
         {/* ── Live streams (continuous protocols) ─────────────────────────────
             Continuous flows have no "unlock queue", so instead we surface the
-            most recently created streams with their per-day rate — keeps the
+            most recently created streams with their per-day rate – keeps the
             page from looking empty and matches the queue layout above. */}
         {isStream && liveStreams.rows.length > 0 && (
           <div className="mt-6">
@@ -826,7 +826,7 @@ export default async function ProtocolLandingPage(
           </div>
         )}
 
-        {/* ── Calendar banner — same shape as the cross-protocol /protocols
+        {/* ── Calendar banner – same shape as the cross-protocol /protocols
             listing's banner so the calendar CTA reads consistently across
             surfaces. Sits HERE (below the Upcoming queue) intentionally:
             visitors who've scrolled past the hero into the queue are in
@@ -859,7 +859,7 @@ export default async function ProtocolLandingPage(
                   See the full {meta.name} unlock calendar
                 </p>
                 <p className="text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
-                  Every upcoming {meta.name} unlock — sorted, filterable by chain, deep-link to each token.
+                  Every upcoming {meta.name} unlock – sorted, filterable by chain, deep-link to each token.
                 </p>
               </div>
             </div>
@@ -1032,10 +1032,10 @@ export default async function ProtocolLandingPage(
               Never miss another {meta.name} unlock
             </h2>
             <p className="text-sm md:text-base mb-8 max-w-xl mx-auto" style={{ color: "#475569" }}>
-              Add your wallet to Vestream and get a push notification the moment any {meta.name} tranche becomes claimable — across every chain you hold on. No checking dashboards. No missed deadlines.
+              Add your wallet to Vestream and get a push notification the moment any {meta.name} tranche becomes claimable – across every chain you hold on. No checking dashboards. No missed deadlines.
             </p>
 
-            {/* Store badges — primary CTA */}
+            {/* Store badges – primary CTA */}
             <AppStoreBadges align="center" />
 
             {/* Secondary: web scanner */}
@@ -1050,7 +1050,7 @@ export default async function ProtocolLandingPage(
             </div>
 
             <p className="text-xs mt-6 max-w-lg mx-auto" style={{ color: "#B8BABD" }}>
-              Claims still happen on the audited {meta.name} contract — Vestream never touches your tokens. We&apos;re the alert layer above it.
+              Claims still happen on the audited {meta.name} contract – Vestream never touches your tokens. We&apos;re the alert layer above it.
             </p>
           </div>
         </div>
@@ -1064,7 +1064,7 @@ export default async function ProtocolLandingPage(
 // ─── Small sub-components ────────────────────────────────────────────────────
 
 // 2026-05-14: bigger card pattern for the new "spotlight" stats row.
-// Different layout from `Stat` — meant to sit one-per-row at md+ rather
+// Different layout from `Stat` – meant to sit one-per-row at md+ rather
 // than packing 6 into a strip. Optional href converts the card into a
 // link to the token page (or wherever else the caller passes).
 function SpotlightCard({
@@ -1108,7 +1108,7 @@ function SpotlightCard({
 }
 
 // Compact whole-token formatter for the spotlight cards. Inputs come
-// from streamData as a stringified bigint + decimals — the page already
+// from streamData as a stringified bigint + decimals – the page already
 // has `formatTokenAmount` elsewhere but it lives in dashboard-land and
 // imports react. This trimmed-down version is server-safe.
 function formatBigTokenAmount(rawAmount: string, decimals: number, symbol: string): string {
@@ -1120,12 +1120,12 @@ function formatBigTokenAmount(rawAmount: string, decimals: number, symbol: strin
     // b) BigInt-divided-by-BigInt loses fractional precision anyway.
     n = Number(bi) / Math.pow(10, decimals);
   } catch {
-    return `— ${symbol}`;
+    return `– ${symbol}`;
   }
-  if (!Number.isFinite(n)) return `— ${symbol}`;
+  if (!Number.isFinite(n)) return `– ${symbol}`;
   // Tiered abbreviation up to sextillion so astronomical memecoin supplies
   // (e.g. PinkSale tokens with 1e21+ units) never fall through to JS's
-  // scientific notation — `.toFixed()` switches to "1.2e+21" at ≥1e21, which
+  // scientific notation – `.toFixed()` switches to "1.2e+21" at ≥1e21, which
   // is what produced the unreadable "1.2000000000000001e+..." value.
   const TIERS: [number, string][] = [
     [1e21, "Sx"], [1e18, "Qn"], [1e15, "Q"], [1e12, "T"],
@@ -1157,10 +1157,10 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 
 function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   const amount = formatAmountCompact(u.amount, u.tokenSymbol, u.tokenDecimals);
-  const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "—";
-  // Only link when we know a chain+address — otherwise fall back to a plain row.
+  const ttl    = u.endTime ? relativeTimeUntil(u.endTime) : "–";
+  // Only link when we know a chain+address – otherwise fall back to a plain row.
   const canLink = isLinkableTokenAddress(u.tokenAddress);
-  // Group rollup line — same shape as the cross-protocol widget on /protocols.
+  // Group rollup line – same shape as the cross-protocol widget on /protocols.
   // Single-stream groups (walletCount=1) keep the legacy "for 0xabcd…" line;
   // multi-wallet groups switch to "N wallets unlock together" so a Hedgey
   // mass distribution doesn't crowd out genuinely distinct events.
@@ -1168,7 +1168,7 @@ function UpcomingRow({ u, accent }: { u: UnlockGroupSummary; accent: string }) {
   // Row layout pinned to a consistent two-line shape (amount + chain on top,
   // recipient/group caption below). Previously the top line could wrap on
   // mobile because of `flex-wrap` + the optional "view token" hint, which
-  // gave each row a different height — fine on desktop, looked ragged on a
+  // gave each row a different height – fine on desktop, looked ragged on a
   // 375px phone. `flex-nowrap` + `min-w-0 truncate` on the amount keeps the
   // top line at exactly one line; "view token" → a chevron arrow on mobile
   // (saves ~70px of horizontal space) and full text only on sm+.
@@ -1297,12 +1297,12 @@ function UnlockCard({
   protocolName: string;
   isStream?: boolean;
 }) {
-  // Continuous-stream protocols have no discrete "next unlock" — funds flow
+  // Continuous-stream protocols have no discrete "next unlock" – funds flow
   // per-second and are claimable any time. Reframe the upcoming card so it
   // doesn't read as "nothing indexed".
   const streamUpcoming = isStream && variant === "upcoming";
   // Shape-aware wording: a linear-with-no-cliff position doesn't "unlock" on a
-  // date — it vests gradually and *completes* on that date (e.g. a Superfluid
+  // date – it vests gradually and *completes* on that date (e.g. a Superfluid
   // stream with no cliff). Reserve "unlock" for cliffs/steps (discrete lumps).
   const linearVest = !streamUpcoming && !!unlock?.isLinearVest;
   const title = streamUpcoming
@@ -1316,9 +1316,9 @@ function UnlockCard({
       ? `No recent ${protocolName} unlocks indexed yet`
       : `No upcoming ${protocolName} unlocks indexed yet`;
   const emptyBody = streamUpcoming
-    ? `${protocolName} pays per-second — there's no scheduled unlock date. Recipients can claim accrued tokens any time. Track your wallet to watch the balance grow and get alerted as it accrues.`
+    ? `${protocolName} pays per-second – there's no scheduled unlock date. Recipients can claim accrued tokens any time. Track your wallet to watch the balance grow and get alerted as it accrues.`
     : variant === "latest"
-      ? `As soon as a tracked wallet has its first ${protocolName} stream complete, it'll appear here — live, on every visit.`
+      ? `As soon as a tracked wallet has its first ${protocolName} stream complete, it'll appear here – live, on every visit.`
       : `Add your ${protocolName} wallet and we'll start tracking upcoming releases here.`;
 
   if (!unlock) {
@@ -1339,10 +1339,10 @@ function UnlockCard({
   }
 
   const relative = variant === "latest"
-    ? (unlock.endTime ? relativeTimeSince(new Date(unlock.endTime * 1000)) : "—")
+    ? (unlock.endTime ? relativeTimeSince(new Date(unlock.endTime * 1000)) : "–")
     : relativeTimeUntil(unlock.endTime);
 
-  // UnlockSummary now carries tokenDecimals — pulled from the cached JSONB
+  // UnlockSummary now carries tokenDecimals – pulled from the cached JSONB
   // blob. Previously this was hardcoded to 18, which rendered USDC/USDT
   // (6-decimal stablecoins) as "0.0000 USDC" on the Upcoming Unlocks panel.
   const amountDisplay = formatAmountCompact(unlock.amount, unlock.tokenSymbol, unlock.tokenDecimals);
@@ -1377,7 +1377,7 @@ function UnlockCard({
         <p className="text-xs mb-4" style={{ color: "#8B8E92" }}>
           for <code style={{ fontFamily: "monospace", color: "#334155" }}>{truncateAddress(unlock.recipient)}</code> · {relative}
         </p>
-        {/* View token CTA — these unlock cards are featured prominently but
+        {/* View token CTA – these unlock cards are featured prominently but
             had no way to drill into the per-token page. Adding a link makes
             them as actionable as every other token row across the site. */}
         {unlock.tokenAddress && (

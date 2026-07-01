@@ -1,4 +1,4 @@
-// 404 page — designed to retain visitors instead of bouncing them.
+// 404 page – designed to retain visitors instead of bouncing them.
 //
 // Old design was a dead-end: 404 + "Go to dashboard" / "Back to home". Two
 // buttons, the dashboard one gated behind an auth cookie most 404 hitters
@@ -20,7 +20,7 @@ import { listProtocols } from "@/lib/protocol-constants";
 import { getAllArticles } from "@/lib/articles";
 
 export const metadata = {
-  title: "Page not found — Vestream",
+  title: "Page not found – Vestream",
   // Keep noindex: 404 pages should never rank.
   robots: { index: false, follow: true },
 };
@@ -34,7 +34,7 @@ export default function NotFound() {
 
       <SiteNav theme="light" />
 
-      {/* Subtle dot grid — same texture as homepage */}
+      {/* Subtle dot grid – same texture as homepage */}
       <div className="fixed inset-0 pointer-events-none -z-10" style={{
         backgroundImage: `radial-gradient(circle, rgba(21,23,26,0.06) 1px, transparent 1px)`,
         backgroundSize: "28px 28px",
@@ -61,7 +61,7 @@ export default function NotFound() {
         {/* ── Destination cards ───────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mb-10">
 
-          {/* Card 1 — Find vestings (primary action) */}
+          {/* Card 1 – Find vestings (primary action) */}
           <Link
             href="/find-vestings"
             className="rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-0.5"
@@ -86,7 +86,7 @@ export default function NotFound() {
                 Find your vestings
               </h2>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
-                Paste any wallet — we scan 10 protocols across 7 chains in seconds.
+                Paste any wallet – we scan 10 protocols across 7 chains in seconds.
               </p>
               <span className="inline-flex items-center gap-1 mt-4 text-xs font-semibold" style={{ color: "white" }}>
                 Scan a wallet →
@@ -94,7 +94,7 @@ export default function NotFound() {
             </div>
           </Link>
 
-          {/* Card 2 — Protocols */}
+          {/* Card 2 – Protocols */}
           <Link
             href="/protocols"
             className="rounded-2xl p-6 transition-all hover:-translate-y-0.5"
@@ -121,7 +121,7 @@ export default function NotFound() {
             </span>
           </Link>
 
-          {/* Card 3 — Articles */}
+          {/* Card 3 – Articles */}
           <Link
             href="/resources"
             className="rounded-2xl p-6 transition-all hover:-translate-y-0.5"
@@ -150,14 +150,14 @@ export default function NotFound() {
 
         </div>
 
-        {/* ── Tertiary — was the link broken? ─────────────────────────── */}
+        {/* ── Tertiary – was the link broken? ─────────────────────────── */}
         <div
           className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 max-w-2xl w-full"
           style={{ background: "rgba(21,23,26,0.03)", border: "1px solid rgba(21,23,26,0.06)" }}
         >
           <p className="text-xs flex-1" style={{ color: "#8B8E92" }}>
             <span style={{ color: "#1A1D20", fontWeight: 600 }}>Think this is broken?</span>{" "}
-            We&rsquo;d like to know — broken links are usually a deploy mistake on our side.
+            We&rsquo;d like to know – broken links are usually a deploy mistake on our side.
           </p>
           <Link
             href="/contact"

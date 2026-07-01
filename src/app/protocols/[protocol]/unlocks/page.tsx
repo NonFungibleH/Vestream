@@ -1,4 +1,4 @@
-// /protocols/[slug]/unlocks — protocol-specific unlock calendar.
+// /protocols/[slug]/unlocks – protocol-specific unlock calendar.
 //
 // Sits one level beneath the protocol detail page (/protocols/[slug]) and
 // targets the long-tail commercial-intent queries:
@@ -10,10 +10,10 @@
 // with its own search volume.
 //
 // Rendering (2026-06-12): on-demand ISR, 1h revalidation. This page used
-// to read the chain filter from `searchParams` — a request-time API that
+// to read the chain filter from `searchParams` – a request-time API that
 // silently made the route fully dynamic (the old `revalidate = 3600` was
 // dead code), so the 2000-row unlock query ran live on EVERY request
-// (9.8s TTFB measured in prod) with `no-store` headers — a direct feeder
+// (9.8s TTFB measured in prod) with `no-store` headers – a direct feeder
 // of the Cloudflare QUIC-kill timeouts. Chain filters are now path
 // segments handled by ./[chain]/page.tsx; this base page renders the
 // unfiltered calendar and never touches a request-time API. Legacy
@@ -26,11 +26,11 @@ import { notFound } from "next/navigation";
 import { getProtocol } from "@/lib/protocol-constants";
 import { ProtocolUnlocksView, getCachedProtocolUnlocks } from "./view";
 
-// Render on-demand at request time — NOT statically prerendered.
+// Render on-demand at request time – NOT statically prerendered.
 //
 // Why (2026-06-30): this page WAS ISR (revalidate + generateStaticParams).
 // But the DB is unreachable during `next build` (build-phase guard), so the
-// build baked the EMPTY state into the static HTML for every protocol — and
+// build baked the EMPTY state into the static HTML for every protocol – and
 // since these are low-traffic deep-link pages, the on-demand ISR revalidation
 // that was meant to fill them rarely fired, and every new deploy re-baked
 // empty. Result: all protocol unlock calendars showed "No upcoming unlocks
@@ -38,7 +38,7 @@ import { ProtocolUnlocksView, getCachedProtocolUnlocks } from "./view";
 //
 // force-dynamic removes the build-time bake entirely: every request renders at
 // runtime, where the query works. It's NOT a return to the old 9.8s-TTFB
-// problem — the 2000-row query is wrapped in `getCachedProtocolUnlocks`
+// problem – the 2000-row query is wrapped in `getCachedProtocolUnlocks`
 // (unstable_cache, 1h, stale-while-revalidate), so requests serve cached data
 // (~50ms) and only a cache miss pays the query. Data cache is independent of
 // the route's render mode.
@@ -68,8 +68,8 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     }
   } catch { /* fall through */ }
 
-  const title = `${meta.name} Unlock Calendar — Upcoming Token Unlocks | Vestream`;
-  const desc  = `${countLine}Live ${meta.name} unlock calendar — every upcoming token unlock with per-token amounts, dates, and recipient counts.`.slice(0, 160);
+  const title = `${meta.name} Unlock Calendar – Upcoming Token Unlocks | Vestream`;
+  const desc  = `${countLine}Live ${meta.name} unlock calendar – every upcoming token unlock with per-token amounts, dates, and recipient counts.`.slice(0, 160);
 
   return {
     title,

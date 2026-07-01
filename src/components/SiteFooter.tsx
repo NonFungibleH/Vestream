@@ -3,14 +3,14 @@
 // src/components/SiteFooter.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared footer for every public page. Ensures the same set of links and
-// visual style across light / navy / dark themed pages — so the footer never
+// visual style across light / navy / dark themed pages – so the footer never
 // drifts page-to-page as it has historically.
 //
 // "use client" because the social buttons and link columns use onMouseEnter/
 // onMouseLeave for theme-driven hover colours. Inline style= doesn't support
 // :hover, and the hover tints are driven by the palette (different per theme)
 // so Tailwind hover: utilities can't express them statically. Client
-// components render fine when imported by server-component pages — Next.js
+// components render fine when imported by server-component pages – Next.js
 // handles the boundary automatically.
 //
 // Themes match SiteNav exactly:
@@ -24,7 +24,7 @@
 //       • Platform:   Protocols · Demo · Pricing · Resources · FAQ · Contact
 //       • Developers: Developer API · AI Agents
 //       • Legal:      Privacy Policy · Terms of Service
-//   - A tiny "·" admin escape-hatch lives adjacent to the copyright — faint
+//   - A tiny "·" admin escape-hatch lives adjacent to the copyright – faint
 //     enough not to draw attention but available if you ever need to find
 //     your way back to /admin.
 //
@@ -37,7 +37,7 @@
 import Link from "next/link";
 
 interface Props {
-  /** Colour theme — matches the page background. */
+  /** Colour theme – matches the page background. */
   theme?: "light" | "navy" | "dark";
   /** Optional extra copy line (e.g. "Results may take 10s"). */
   note?: string;
@@ -45,7 +45,7 @@ interface Props {
   recessed?: boolean;
 }
 
-// Grouped link structure. Order matters within each column — matches the
+// Grouped link structure. Order matters within each column – matches the
 // order the user approved: Protocols, Demo, Pricing, Resources for Platform;
 // Developer API, AI Agents for Developers; Privacy, Terms for Legal.
 // Column order: Platform → Developers → Corporate → Legal.
@@ -88,7 +88,7 @@ const LINK_GROUPS = [
   },
 ] as const;
 
-// Social — real account handles. The trailing underscore on the X handle
+// Social – real account handles. The trailing underscore on the X handle
 // is intentional (vestream/Vestream were both taken; @Vestream_ is ours).
 // Pre-rebrand handle preserved until @Vestream is acquired.
 const SOCIAL = [
@@ -105,7 +105,7 @@ const SOCIAL = [
   },
   {
     // 2026-05-22: community support / launch channel. Handle is
-    // @vestream (no underscore — we got the canonical handle here,
+    // @vestream (no underscore – we got the canonical handle here,
     // unlike X where @Vestream was taken and we use @Vestream_).
     label: "Telegram",
     href:  "https://t.me/vestream",
@@ -189,7 +189,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
       <div className="max-w-5xl mx-auto">
         {/* Single grid: brand stack (logo / tagline / socials / copyright) on
             the left, link columns on the right. No separate lower strip and
-            no dividing rule — copyright tucks directly under the socials
+            no dividing rule – copyright tucks directly under the socials
             inside the brand stack to keep the footer as one cohesive block. */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 md:gap-12">
           {/* Brand stack */}
@@ -218,7 +218,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
               ))}
             </div>
 
-            {/* Copyright — directly under the socials, no divider. The admin
+            {/* Copyright – directly under the socials, no divider. The admin
                 dot sits inline with the copyright so it stays discoverable
                 without needing its own row. */}
             <div className="flex items-center gap-2 mt-2">
@@ -243,7 +243,7 @@ export function SiteFooter({ theme = "light", note, recessed = false }: Props) {
               into the right column underneath each other so there's no
               whitespace gap waiting for Platform to finish.
               md+: classic 4-column row.
-              `row-span-3 md:row-span-1` is the trick — on mobile, Platform
+              `row-span-3 md:row-span-1` is the trick – on mobile, Platform
               eats all three implicit rows of column 1, forcing the other
               three groups to fill column 2 row-by-row. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">

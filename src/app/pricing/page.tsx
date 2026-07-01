@@ -6,20 +6,20 @@ import PricingCta from "@/components/PricingCta";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 
 export const metadata: Metadata = {
-  title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
-  description: "Vestream is free for 3 wallets and 10 push alerts per month. Pro at $9.99/mo ($74.99/yr — save 37%) unlocks unlimited push + email alerts, 10 wallets, the web dashboard, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax.",
+  title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
+  description: "Vestream is free for 3 wallets and 10 push alerts per month. Pro at $9.99/mo ($74.99/yr – save 37%) unlocks unlimited push + email alerts, 10 wallets, the web dashboard, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax.",
   alternates:  { canonical: "https://www.vestream.io/pricing" },
   openGraph: {
-    title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
-    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year — save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
+    title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
+    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year – save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
     url:         "https://www.vestream.io/pricing",
     siteName:    "Vestream",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Pricing — Vestream Pro from $9.99/mo, Free Forever Tier",
-    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year — save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
+    title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
+    description: "Free for 3 wallets + 10 push alerts/month. Pro $9.99/mo (or $74.99/year – save 37%) for unlimited push + email alerts, 10 wallets, and tax-ready exports for Koinly / CoinTracker / TurboTax.",
   },
 };
 
@@ -84,7 +84,7 @@ const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
   name:         "Vestream",
-  description:  "Token vesting tracker for crypto investors — track every token unlock across 10 protocols and 7 chains.",
+  description:  "Token vesting tracker for crypto investors – track every token unlock across 10 protocols and 7 chains.",
   brand:        { "@type": "Brand", name: "Vestream" },
   url:          "https://www.vestream.io/pricing",
   image:        "https://www.vestream.io/logo.svg",
@@ -121,7 +121,7 @@ const pricingJsonLd = {
       priceCurrency: "USD",
       url:           "https://www.vestream.io/pricing",
       availability:  "https://schema.org/InStock",
-      description:   "Pro features billed annually — saves ~37% vs monthly.",
+      description:   "Pro features billed annually – saves ~37% vs monthly.",
       priceSpecification: {
         "@type":            "UnitPriceSpecification",
         price:              "74.99",
@@ -136,7 +136,7 @@ const pricingJsonLd = {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Pricing() {
-  // Web checkout removed — subscriptions are App Store IAP via RevenueCat only.
+  // Web checkout removed – subscriptions are App Store IAP via RevenueCat only.
   // Pricing is shown for transparency; the CTA routes paying users to the
   // mobile app rather than to a web checkout.
   return (
@@ -172,7 +172,7 @@ export default function Pricing() {
           </span>
         </h1>
         <p className="relative text-lg max-w-lg mb-2 leading-relaxed" style={{ color: "#8B8E92" }}>
-          From solo investors to investment funds — a plan for every stage.
+          From solo investors to investment funds – a plan for every stage.
         </p>
       </section>
 
@@ -201,7 +201,7 @@ export default function Pricing() {
 
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#B8BABD" }}>Includes</p>
             <ul style={{ display: "flex", flexDirection: "column", gap: "10px", listStyle: "none", padding: 0, margin: 0 }}>
-              <FeatureItem text="3 wallets — auto-scanned across all chains" checkColor="#1CB8B8" />
+              <FeatureItem text="3 wallets – auto-scanned across all chains" checkColor="#1CB8B8" />
               <FeatureItem text="All 10 vesting platforms (EVM + Solana)" checkColor="#1CB8B8" />
               <FeatureItem text="Real-time vesting dashboard" checkColor="#1CB8B8" />
               <FeatureItem text="Claimable balance tracking" checkColor="#1CB8B8" />
@@ -238,7 +238,7 @@ export default function Pricing() {
               <p className="text-sm" style={{ color: "#8B8E92" }}>
                 Or{" "}
                 <span className="font-semibold" style={{ color: "#1CB8B8" }}>$74.99/year</span>
-                {" "}— save 37%
+                {" "}– save 37%
               </p>
             </div>
 
@@ -255,9 +255,9 @@ export default function Pricing() {
               <FeatureItem text="Unlimited push alerts before every unlock" checkColor="#1CB8B8" />
               <FeatureItem text="Email unlock alerts" checkColor="#1CB8B8" />
               <FeatureItem text="Web dashboard (QR sign-in from the app)" checkColor="#1CB8B8" />
-              <FeatureItem text="Token Vesting Explorer — Discover any stream on-chain" checkColor="#1CB8B8" />
+              <FeatureItem text="Token Vesting Explorer – Discover any stream on-chain" checkColor="#1CB8B8" />
               <FeatureItem text="Priority data refresh (60s)" checkColor="#1CB8B8" />
-              <FeatureItem text="Tax-ready CSV exports — Koinly, CoinTracker, TurboTax" checkColor="#1CB8B8" />
+              <FeatureItem text="Tax-ready CSV exports – Koinly, CoinTracker, TurboTax" checkColor="#1CB8B8" />
               <FeatureItem text="Vesting income statement (P&L view)" checkColor="#1CB8B8" />
               <FeatureItem text="Year-end PDF tax report" checkColor="#1CB8B8" />
               <FeatureItem text="Ticketing support" checkColor="#1CB8B8" />
@@ -289,11 +289,11 @@ export default function Pricing() {
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <FAQItem
               q="Do I need a credit card to start?"
-              a="No. The Free plan requires no payment details at all — just sign up with your email and start tracking. You only need to add a card when you choose to upgrade."
+              a="No. The Free plan requires no payment details at all – just sign up with your email and start tracking. You only need to add a card when you choose to upgrade."
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
-              a="The Free plan auto-scans up to 3 wallets across every supported chain (including Solana) and all 10 vesting platforms — exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 10 push notifications per month (resets on the 1st) so you can try mobile alerts. Pro unlocks unlimited push + email alerts, 10 wallets, the web dashboard, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
+              a="The Free plan auto-scans up to 3 wallets across every supported chain (including Solana) and all 10 vesting platforms – exactly the same data coverage as Pro. You get the full dashboard, unlock calendar, claimable tracking, and 10 push notifications per month (resets on the 1st) so you can try mobile alerts. Pro unlocks unlimited push + email alerts, 10 wallets, the web dashboard, the Token Vesting Explorer (Discover), and the entire tax-prep stack: tax-ready CSV exports for Koinly / CoinTracker / TurboTax, the vesting income statement (P&L view of every claim), and one-click year-end PDF reports for your accountant."
             />
             <FAQItem
               q="How do the 10 monthly free push alerts work?"
@@ -301,14 +301,14 @@ export default function Pricing() {
             />
             <FAQItem
               q="Can I cancel anytime?"
-              a="Yes — cancel from your settings page at any time. You'll retain access until the end of your current billing period, then revert to Free."
+              a="Yes – cancel from your settings page at any time. You'll retain access until the end of your current billing period, then revert to Free."
             />
             <FAQItem
               q="How does annual billing work?"
-              a="Pro annual is charged upfront for 12 months at $74.99/year (~$6.25/mo) — saves 37% vs paying monthly. You can switch between monthly and annual at renewal."
+              a="Pro annual is charged upfront for 12 months at $74.99/year (~$6.25/mo) – saves 37% vs paying monthly. You can switch between monthly and annual at renewal."
             />
             <FAQItem
-              q="I track more than 10 wallets — what do I do?"
+              q="I track more than 10 wallets – what do I do?"
               a="The Pro plan caps at 10 wallets, which covers nearly every individual investor. If you run a fund or team with more, email team@vestream.io and we'll find the right setup for you."
             />
           </div>

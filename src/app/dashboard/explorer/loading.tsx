@@ -1,13 +1,13 @@
 // src/app/dashboard/explorer/loading.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Suspense skeleton for the Vesting Explorer. The page is force-dynamic and
-// does heavy blocking work on every render — a 2000-row window scan, a LIVE
-// DexScreener price batch, and the wallet/round count aggregate — so each
+// does heavy blocking work on every render – a 2000-row window scan, a LIVE
+// DexScreener price batch, and the wallet/round count aggregate – so each
 // navigation/filter/sort previously left the screen frozen for seconds with
 // no feedback. This renders instantly while that work runs.
 //
 // (The deeper fix for sort latency is to make sorting client-side so it
-// doesn't round-trip the server at all — tracked separately.)
+// doesn't round-trip the server at all – tracked separately.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function ExplorerLoading() {

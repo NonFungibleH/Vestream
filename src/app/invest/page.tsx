@@ -5,11 +5,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// /invest — Vestream Invest landing page.
+// /invest – Vestream Invest landing page.
 //
 // Audience: token holders / investors / founders / contributors waiting on
 // vesting cliffs, TGE unlocks, linear releases. The dollar-per-event mental
-// model. Pairs with the "Vestream Invest" mode in the mobile app — same
+// model. Pairs with the "Vestream Invest" mode in the mobile app – same
 // naming, same promise, separate funnel.
 //
 // SEO target: queries like "track token vesting", "vesting unlock alerts",
@@ -25,11 +25,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Vestream Invest — Track every token vesting unlock you're owed",
+  title:       "Vestream Invest – Track every token vesting unlock you're owed",
   description: "Watch every token vesting unlock you're owed across 10 protocols and 7 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
-    title:       "Vestream Invest — Track every vesting unlock",
+    title:       "Vestream Invest – Track every vesting unlock",
     description: "10 protocols. 7 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
     type:        "website",
     url:         "https://www.vestream.io/invest",

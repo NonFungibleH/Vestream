@@ -3,7 +3,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // Outer default export wraps the form in a Suspense boundary. Required
-// because `useSearchParams()` is a CSR-bailout hook — without a Suspense
+// because `useSearchParams()` is a CSR-bailout hook – without a Suspense
 // boundary, Next.js refuses to prerender the page and the build fails
 // with "missing-suspense-with-csr-bailout". The fallback renders a no-
 // op skeleton at the same size so there's no layout shift while the
@@ -29,7 +29,7 @@ function AdminLoginForm() {
 
   // Honour the ?next= param set by middleware when the user was
   // redirected here from a protected admin URL. Validate it strictly to
-  // avoid an open-redirect — only paths that stay inside /admin are
+  // avoid an open-redirect – only paths that stay inside /admin are
   // accepted. Anything else (external URLs, javascript: scheme, etc)
   // falls back to /admin.
   const rawNext = searchParams.get("next");

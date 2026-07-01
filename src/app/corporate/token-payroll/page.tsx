@@ -1,14 +1,14 @@
 // src/app/corporate/token-payroll/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Corporate → Token Payroll — B2B landing page for companies paying their
+// Corporate → Token Payroll – B2B landing page for companies paying their
 // employees, contractors, and KOLs in stablecoins or project tokens.
 //
-// Positioning (important — this is NOT a full payroll setup tool):
+// Positioning (important – this is NOT a full payroll setup tool):
 //
 //   Vestream does NOT create vesting contracts. Companies already create
 //   vestings on the protocol of their choice (Sablier, Hedgey, UNCX, Unvest,
 //   Team Finance, Superfluid, PinkSale). What Vestream provides is the
-//   EMPLOYEE-FACING LAYER — a branded mobile app their recipients use to
+//   EMPLOYEE-FACING LAYER – a branded mobile app their recipients use to
 //   see their salary vest live, get notifications before each unlock, and
 //   convert to their local currency anywhere in the world.
 //
@@ -17,7 +17,7 @@
 //   now makes clear the split: you set up vestings wherever you already do,
 //   we make them consumable by the people receiving them.
 //
-// Theme: "professional in-between" — slate-100 bg, deep navy / indigo
+// Theme: "professional in-between" – slate-100 bg, deep navy / indigo
 // accents, green accent for payroll/money. Sits between retail's bright
 // light theme and developer's deep navy.
 //
@@ -34,7 +34,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Live salary feed for crypto payroll · Vestream",
   description:
-    "Give your employees, contractors, and KOLs a real-time view of their vesting salary. Live to the second, with push notifications before every unlock and local-currency conversion anywhere in the world — regardless of which protocol you used to set up the vestings.",
+    "Give your employees, contractors, and KOLs a real-time view of their vesting salary. Live to the second, with push notifications before every unlock and local-currency conversion anywhere in the world – regardless of which protocol you used to set up the vestings.",
   alternates: { canonical: "https://www.vestream.io/corporate/token-payroll" },
   openGraph: {
     title: "Live salary feed for crypto payroll · Vestream",
@@ -47,17 +47,17 @@ export const metadata: Metadata = {
 };
 
 const THEME = {
-  pageBg:         "#f1f5f9",         // slate-100 — between retail white and dev navy
+  pageBg:         "#f1f5f9",         // slate-100 – between retail white and dev navy
   surface:        "white",
   navyDeep:       "#1A1D20",
   navyMid:        "#1e293b",
   slateBody:      "#475569",
   slateFaint:     "#B8BABD",
   border:         "rgba(15,23,42,0.08)",
-  accentIndigo:   "#2DB36A",         // enterprise / trust — forest green for premium signal
+  accentIndigo:   "#2DB36A",         // enterprise / trust – forest green for premium signal
   accentIndigoBg: "rgba(45,179,106,0.08)",
   accentIndigoBr: "rgba(45,179,106,0.22)",
-  accentGreen:    "#0F8A8A",         // payroll / money — deep teal pairs with brand
+  accentGreen:    "#0F8A8A",         // payroll / money – deep teal pairs with brand
   accentGreenBg:  "rgba(15,138,138,0.08)",
   accentGreenBr:  "rgba(15,138,138,0.22)",
   heroGradFrom:   "#1A1D20",
@@ -67,7 +67,7 @@ const THEME = {
 
 // ─── Icon primitives (inline SVG, stroke-based lucide-style) ────────────────
 //
-// Swapping emojis for these feels measurable on the eye — an emoji renders
+// Swapping emojis for these feels measurable on the eye – an emoji renders
 // at font-size so it fights for vertical alignment with the surrounding
 // text; a sized stroke-icon lives inside a 48×48 tile that controls its
 // own rhythm. Also renders consistently across OSes (Android / Windows
@@ -76,7 +76,7 @@ const THEME = {
 function IconPulse({ size = 24, color }: { size?: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      {/* Live-pulse signal — matches the "live TVL" dot vocabulary */}
+      {/* Live-pulse signal – matches the "live TVL" dot vocabulary */}
       <path d="M3 12h3l2-6 4 12 2-6h3" />
       <circle cx="20" cy="12" r="1.5" fill={color} />
     </svg>
@@ -116,7 +116,7 @@ export default function TokenPayrollPage() {
     <main className="min-h-screen flex flex-col" style={{ background: THEME.pageBg, color: THEME.navyDeep }}>
       <SiteNav theme="light" />
 
-      {/* ── Hero — "live salary feed" is the wow factor ───────────────────── */}
+      {/* ── Hero – "live salary feed" is the wow factor ───────────────────── */}
       <section className="relative overflow-hidden pt-24 md:pt-32 pb-16 md:pb-24 px-4 md:px-8">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -165,7 +165,7 @@ export default function TokenPayrollPage() {
           >
             The wow factor of crypto payroll: your employees, contractors, and
             KOLs can watch their salary vest in real time, from anywhere in
-            the world — with push notifications before every unlock and
+            the world – with push notifications before every unlock and
             local-currency conversion built in. You set up the vestings on
             whichever protocol you already use. We make them readable.
           </p>
@@ -196,34 +196,34 @@ export default function TokenPayrollPage() {
           </div>
 
           <p className="text-xs mt-6" style={{ color: THEME.slateFaint }}>
-            Early access — not publicly launched yet. Tell us about your team
+            Early access – not publicly launched yet. Tell us about your team
             and we&rsquo;ll get in touch.
           </p>
         </div>
       </section>
 
-      {/* ── Three-column value prop — employee-view, not vesting-creation ── */}
+      {/* ── Three-column value prop – employee-view, not vesting-creation ── */}
       <section className="px-4 md:px-8 max-w-5xl mx-auto pb-16 md:pb-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ValueCard
             icon={<IconPulse size={24} color={THEME.accentIndigo} />}
             title="Live, per-second visibility"
-            body="Your team opens the app and sees their vesting tick up live — balance, next unlock, claimable right now. No spreadsheet, no Etherscan, no guessing which day tokens land."
+            body="Your team opens the app and sees their vesting tick up live – balance, next unlock, claimable right now. No spreadsheet, no Etherscan, no guessing which day tokens land."
           />
           <ValueCard
             icon={<IconBell size={24} color={THEME.accentIndigo} />}
             title="Push alerts before every unlock"
-            body="Native mobile notifications fire 24 hours before a cliff or tranche. Your people never miss a claim, and never have to check just in case — we do it for them."
+            body="Native mobile notifications fire 24 hours before a cliff or tranche. Your people never miss a claim, and never have to check just in case – we do it for them."
           />
           <ValueCard
             icon={<IconGlobe size={24} color={THEME.accentIndigo} />}
             title="Anywhere, any currency"
-            body="Contractors in Lagos, Manila, or São Paulo see their salary in GBP, EUR, PHP, BRL — whichever local currency they set. On-chain in USDC or your token; readable in the money they actually spend."
+            body="Contractors in Lagos, Manila, or São Paulo see their salary in GBP, EUR, PHP, BRL – whichever local currency they set. On-chain in USDC or your token; readable in the money they actually spend."
           />
         </div>
       </section>
 
-      {/* ── What we DO and DON'T do — positioning clarity ──────────────── */}
+      {/* ── What we DO and DON'T do – positioning clarity ──────────────── */}
       <section className="px-4 md:px-8 max-w-4xl mx-auto pb-16 md:pb-24">
         <div
           className="rounded-2xl overflow-hidden"
@@ -245,7 +245,7 @@ export default function TokenPayrollPage() {
                 The employee-facing layer for your existing payroll stack
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: THEME.slateBody }}>
-                You keep using whichever vesting protocol fits your setup —
+                You keep using whichever vesting protocol fits your setup –
                 Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
                 or any combination. Vestream indexes what you&rsquo;ve
                 already deployed and gives your team a branded mobile app to
@@ -284,7 +284,7 @@ export default function TokenPayrollPage() {
               <p className="text-sm leading-relaxed" style={{ color: THEME.slateBody }}>
                 We don&rsquo;t create vestings, hold funds, or charge gas to
                 deploy contracts. Your existing process for setting those up
-                stays exactly as it is — whether that&rsquo;s your legal
+                stays exactly as it is – whether that&rsquo;s your legal
                 counsel on Sablier, your CFO on Hedgey, or your payroll
                 stack on Superfluid or LlamaPay. We&rsquo;re purely the UX layer
                 the moment after.
@@ -294,10 +294,10 @@ export default function TokenPayrollPage() {
         </div>
       </section>
 
-      {/* ── Who this is for — personas ──────────────────────────────────
+      {/* ── Who this is for – personas ──────────────────────────────────
           Widens the audience in the reader's head. "Payroll" reads like
           full-time employees, but the real use case is anyone your org
-          pays on a schedule — contractors, advisors, KOLs, grant recipients.
+          pays on a schedule – contractors, advisors, KOLs, grant recipients.
           Four cards, one per persona, each with a concrete scenario. */}
       <section className="px-4 md:px-8 max-w-5xl mx-auto pb-16 md:pb-24">
         <div className="text-center mb-10">
@@ -309,7 +309,7 @@ export default function TokenPayrollPage() {
           </h2>
           <p className="text-base max-w-2xl mx-auto" style={{ color: THEME.slateBody }}>
             &ldquo;Payroll&rdquo; is shorthand. If your org is sending a vesting
-            schedule to anyone, they&rsquo;re your recipients — and they need
+            schedule to anyone, they&rsquo;re your recipients – and they need
             a way to see it.
           </p>
         </div>
@@ -338,7 +338,7 @@ export default function TokenPayrollPage() {
         </div>
       </section>
 
-      {/* ── How it works — presumes vestings already exist ──────────────── */}
+      {/* ── How it works – presumes vestings already exist ──────────────── */}
       <section id="how-it-works" className="px-4 md:px-8 max-w-5xl mx-auto pb-16 md:pb-24 scroll-mt-24">
         <div className="text-center mb-12 md:mb-16">
           <div
@@ -378,17 +378,17 @@ export default function TokenPayrollPage() {
           <StepCard
             n={3}
             title="Customise the app (optional)"
-            body="Set your company logo, brand colours, and welcome message. Your team sees Acme Corp branding on the loading screen and throughout the app — not ours."
+            body="Set your company logo, brand colours, and welcome message. Your team sees Acme Corp branding on the loading screen and throughout the app – not ours."
           />
           <StepCard
             n={4}
             title="Your team downloads and goes live"
-            body="Every recipient gets an invite to download the Vestream Corporate app. 24/7 access to their vesting live feed, push notifications before every unlock, and local-currency conversion — whether they're at their desk or on a plane."
+            body="Every recipient gets an invite to download the Vestream Corporate app. 24/7 access to their vesting live feed, push notifications before every unlock, and local-currency conversion – whether they're at their desk or on a plane."
           />
         </div>
       </section>
 
-      {/* ── 24/7 access — replaces the old "Monday morning" section ─────── */}
+      {/* ── 24/7 access – replaces the old "Monday morning" section ─────── */}
       <section className="px-4 md:px-8 max-w-5xl mx-auto pb-16 md:pb-24">
         <div
           className="rounded-3xl overflow-hidden relative"
@@ -439,7 +439,7 @@ export default function TokenPayrollPage() {
                   Current vesting balance, live-counting by the second
                 </EmployeeBullet>
                 <EmployeeBullet>
-                  Next unlock countdown — push-alerted 24 hours out
+                  Next unlock countdown – push-alerted 24 hours out
                 </EmployeeBullet>
                 <EmployeeBullet>
                   Local-currency conversion (GBP, EUR, PHP, BRL, MXN…)
@@ -448,7 +448,7 @@ export default function TokenPayrollPage() {
                   One-tap claim the moment tokens unlock
                 </EmployeeBullet>
                 <EmployeeBullet>
-                  Full vesting schedule — past 12 and next 12 months
+                  Full vesting schedule – past 12 and next 12 months
                 </EmployeeBullet>
                 <EmployeeBullet>
                   Tax-ready export at year end (CSV, PDF)
@@ -456,7 +456,7 @@ export default function TokenPayrollPage() {
               </ul>
             </div>
 
-            {/* Phone mockup — branded with a placeholder company, showing
+            {/* Phone mockup – branded with a placeholder company, showing
                 the live-feed panel that's the hero of this pitch. */}
             <div className="flex items-center justify-center">
               <div
@@ -537,7 +537,7 @@ export default function TokenPayrollPage() {
         </div>
       </section>
 
-      {/* ── Security posture — pre-empts the #1 B2B objection ───────────
+      {/* ── Security posture – pre-empts the #1 B2B objection ───────────
           "We're not adding another custodian" is the single biggest
           concern a finance / security team will have. Address it head-on
           with a dedicated section so the reader doesn't have to infer it
@@ -582,12 +582,12 @@ export default function TokenPayrollPage() {
           <SecurityPoint
             label="03"
             title="Contract is source of truth"
-            body="Every number in the app reconciles to a call against the original vesting contract. When audits happen, the chain shows the truth — we show a readable view of it."
+            body="Every number in the app reconciles to a call against the original vesting contract. When audits happen, the chain shows the truth – we show a readable view of it."
           />
         </div>
       </section>
 
-      {/* ── Why now — market moment ────────────────────────────────────── */}
+      {/* ── Why now – market moment ────────────────────────────────────── */}
       <section className="px-4 md:px-8 max-w-4xl mx-auto pb-16 md:pb-24">
         <div className="text-center mb-10">
           <h2
@@ -598,7 +598,7 @@ export default function TokenPayrollPage() {
           </h2>
           <p className="text-base max-w-2xl mx-auto" style={{ color: THEME.slateBody }}>
             Stablecoin payroll is already standard at remote-first crypto teams.
-            The bottleneck isn&rsquo;t the on-chain part — it&rsquo;s giving
+            The bottleneck isn&rsquo;t the on-chain part – it&rsquo;s giving
             recipients a way to actually live with it.
           </p>
         </div>
@@ -610,7 +610,7 @@ export default function TokenPayrollPage() {
           />
           <RationaleCard
             title="Cross-border reach"
-            body="A contractor in Lagos or Manila sees their USDC in minutes — in their local currency, at a price feed they can trust — not $40 eaten at each end of a SWIFT wire five days later."
+            body="A contractor in Lagos or Manila sees their USDC in minutes – in their local currency, at a price feed they can trust – not $40 eaten at each end of a SWIFT wire five days later."
           />
           <RationaleCard
             title="Compliance-ready"
@@ -618,14 +618,14 @@ export default function TokenPayrollPage() {
           />
           <RationaleCard
             title="Zero added trust"
-            body="Vestream never holds funds or custody. The on-chain vesting contract remains the source of truth. We're a read-only viewer with a great UI — not a new party between you and your team."
+            body="Vestream never holds funds or custody. The on-chain vesting contract remains the source of truth. We're a read-only viewer with a great UI – not a new party between you and your team."
           />
         </div>
       </section>
 
-      {/* ── Common questions — pre-empt the blockers that stop enquiries
+      {/* ── Common questions – pre-empt the blockers that stop enquiries
           before they happen. Kept tight (5 items) so the page doesn't
-          turn into a help doc — serious questions belong in a follow-up
+          turn into a help doc – serious questions belong in a follow-up
           conversation. Uses native <details> for accessible accordion. */}
       <section className="px-4 md:px-8 max-w-3xl mx-auto pb-16 md:pb-24">
         <div className="text-center mb-10">
@@ -640,7 +640,7 @@ export default function TokenPayrollPage() {
             <Link href="/contact?subject=token-payroll" className="font-semibold" style={{ color: THEME.accentIndigo }}>
               ask us
             </Link>
-            {" "}— we&rsquo;ll reply in under two business days.
+            {" "}– we&rsquo;ll reply in under two business days.
           </p>
         </div>
 
@@ -650,15 +650,15 @@ export default function TokenPayrollPage() {
         >
           <FaqItem
             q="Which vesting protocols do you support?"
-            a="Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, and PinkSale across Ethereum, Base, BSC, and Polygon, plus Streamflow + Jupiter Lock on Solana. If you're using a protocol we don't index yet, tell us — we'll quote a timeline."
+            a="Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, and PinkSale across Ethereum, Base, BSC, and Polygon, plus Streamflow + Jupiter Lock on Solana. If you're using a protocol we don't index yet, tell us – we'll quote a timeline."
           />
           <FaqItem
             q="Can we use this without Vestream touching our payroll?"
-            a="Yes. You keep your existing process for creating vestings — legal, finance, whichever protocol fits. Vestream only reads what's already on-chain. You can stop using us at any time without touching a vesting contract."
+            a="Yes. You keep your existing process for creating vestings – legal, finance, whichever protocol fits. Vestream only reads what's already on-chain. You can stop using us at any time without touching a vesting contract."
           />
           <FaqItem
             q="How long to go live once we sign up?"
-            a="Typical setup is 3–5 working days after we receive your wallet list and branding. Faster if you don't need custom branding — we can have the stock Vestream Corporate app active for your recipients within 24 hours."
+            a="Typical setup is 3–5 working days after we receive your wallet list and branding. Faster if you don't need custom branding – we can have the stock Vestream Corporate app active for your recipients within 24 hours."
           />
           <FaqItem
             q="What does it cost?"
@@ -666,17 +666,17 @@ export default function TokenPayrollPage() {
           />
           <FaqItem
             q="What happens to our recipients' data?"
-            a="Wallet addresses and display preferences are stored in our database. Local-currency conversions happen client-side using public price feeds — we don't track spend patterns. No KYC, no identity verification unless you explicitly configure it for your use case."
+            a="Wallet addresses and display preferences are stored in our database. Local-currency conversions happen client-side using public price feeds – we don't track spend patterns. No KYC, no identity verification unless you explicitly configure it for your use case."
           />
           <FaqItem
             q="Can we white-label the app for our company?"
-            a="Yes. Logo and brand colours on the loading screen and throughout the app's surfaces. Full custom domain for the invite link is available on the business tier. Native app stores still list it as Vestream Corporate — we're not yet shipping per-company app-store builds."
+            a="Yes. Logo and brand colours on the loading screen and throughout the app's surfaces. Full custom domain for the invite link is available on the business tier. Native app stores still list it as Vestream Corporate – we're not yet shipping per-company app-store builds."
             isLast
           />
         </div>
       </section>
 
-      {/* ── Final CTA — waitlist / interest-capture, not "book a demo" ── */}
+      {/* ── Final CTA – waitlist / interest-capture, not "book a demo" ── */}
       <section className="px-4 md:px-8 max-w-3xl mx-auto pb-24 md:pb-32">
         <div
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
@@ -716,11 +716,11 @@ export default function TokenPayrollPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: THEME.slateBody }}
             >
-              Token Payroll isn&rsquo;t publicly launched yet — we&rsquo;re
+              Token Payroll isn&rsquo;t publicly launched yet – we&rsquo;re
               working with a small group of companies to shape it. If live
               salary visibility sounds like something your team would use,
               leave your details and we&rsquo;ll get in touch. No demo call,
-              no sales pitch — just a 10-minute read-out on whether we&rsquo;d
+              no sales pitch – just a 10-minute read-out on whether we&rsquo;d
               be a fit and when you could be live.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -738,7 +738,7 @@ export default function TokenPayrollPage() {
             </div>
             <p className="text-xs mt-5" style={{ color: THEME.slateFaint }}>
               Typical response: within 2 business days. We&rsquo;re not gated
-              on enterprise contracts — small teams welcome.
+              on enterprise contracts – small teams welcome.
             </p>
           </div>
         </div>
@@ -763,7 +763,7 @@ function ValueCard({
         boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
       }}
     >
-      {/* Icon tile — sized container gives the stroke icon visual weight
+      {/* Icon tile – sized container gives the stroke icon visual weight
           consistent with the H3 below. Same pattern used on the /developer
           and /ai pages so these cards feel like Vestream, not a stock
           template. */}

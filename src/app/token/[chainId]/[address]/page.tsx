@@ -1,6 +1,6 @@
 // src/app/token/[chainId]/[address]/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// CONCEPT — DexTools-style token explorer, vesting-first.
+// CONCEPT – DexTools-style token explorer, vesting-first.
 //
 // This page is the canonical landing surface for "is $TOKEN safe given what's
 // unlocking?" queries. It combines:
@@ -9,16 +9,16 @@
 // into a single SEO-friendly Server Component.
 //
 // Three key numbers live above the fold:
-//   • Locked USD / % of FDV — the overhang metric
-//   • 30-day unlock pressure — near-term sell risk
-//   • Recipient concentration — who holds the locked bag
+//   • Locked USD / % of FDV – the overhang metric
+//   • 30-day unlock pressure – near-term sell risk
+//   • Recipient concentration – who holds the locked bag
 //
 // Below that, a 12-month stacked-bar unlock schedule and a top-recipient
 // table. Each recipient row links back to their wallet view (future).
 //
 // Revalidates every 30 minutes. Was 60s until 2026-05-10; bumped as part
 // of the egress-reduction pass after Supabase Free hit 244% of its 5 GB
-// quota. The token page is the heaviest egress source in the app — each
+// quota. The token page is the heaviest egress source in the app – each
 // render fans out into 5 cache reads (overview, calendar, recipients,
 // upcoming, market data), each potentially returning hundreds of stream
 // rows. With 60s revalidation, popular tokens were producing thousands
@@ -62,12 +62,12 @@ export const revalidate = 1800;
 
 // REQUIRED for ISR on this canary (2026-06-12): without at least one
 // static-params sample, `await params` counts as a request-time API and
-// the route silently renders per-request — which is exactly what was
+// the route silently renders per-request – which is exactly what was
 // happening in prod (this page served `private, no-cache, no-store`
 // despite the revalidate above, and every visit ran the full DB fan-out
 // live). One stable sample is enough to flip `params` prerender-safe;
 // every other token renders on demand and is then ISR-cached. USDC on
-// Ethereum — guaranteed to exist forever.
+// Ethereum – guaranteed to exist forever.
 export function generateStaticParams() {
   return [{ chainId: "1", address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }];
 }
@@ -85,7 +85,7 @@ const CHAIN_NAMES: Record<number, string> = {
 };
 
 // Per-chain block-explorer hosts for the public token page. Same convention
-// as the dashboard's BLOCK_EXPLORERS — duplicated here because the public
+// as the dashboard's BLOCK_EXPLORERS – duplicated here because the public
 // page is a Server Component that doesn't import the dashboard module.
 // 2026-05-14: shipped alongside lockTxHash plumbing so the upcoming-events
 // list can link each event to its originating creation tx.
@@ -104,7 +104,7 @@ function truncate(a: string, n = 4): string {
 }
 
 function fmtUsd(n: number | null, compact = true): string {
-  if (n == null || !Number.isFinite(n) || n <= 0) return "—";
+  if (n == null || !Number.isFinite(n) || n <= 0) return "–";
   if (compact) {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -116,7 +116,7 @@ function fmtUsd(n: number | null, compact = true): string {
 }
 
 function fmtTokens(n: number): string {
-  if (!Number.isFinite(n) || n <= 0) return "—";
+  if (!Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -124,12 +124,12 @@ function fmtTokens(n: number): string {
 }
 
 function fmtPct(n: number | null): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "–";
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
 function relUntil(ts: number | null): string {
-  if (!ts) return "—";
+  if (!ts) return "–";
   const delta = ts - Math.floor(Date.now() / 1000);
   if (delta <= 0) return "now";
   if (delta < 3600) return `in ${Math.floor(delta / 60)} min`;
@@ -166,12 +166,12 @@ export async function generateMetadata(
   const { chainId, address } = await params;
   const cid  = Number(chainId);
   const addr = normaliseAddress(decodeURIComponent(address));
-  if (!CHAIN_NAMES[cid]) return { title: "Token not found — Vestream" };
+  if (!CHAIN_NAMES[cid]) return { title: "Token not found – Vestream" };
 
-  // Same allSettled pattern as the page render below — if metadata
+  // Same allSettled pattern as the page render below – if metadata
   // generation throws, Next fails the whole page with a 500 instead
   // of rendering. Two fallbacks keep title/description sensible.
-  // Bounded — generateMetadata blocks the response head; a stalled query here
+  // Bounded – generateMetadata blocks the response head; a stalled query here
   // hangs the page just like the body fan-out below.
   const [overviewRes, marketRes] = await Promise.allSettled([
     withTimeout(getTokenOverview(cid, addr), 8_000, null, "pubtoken-meta:overview"),
@@ -179,7 +179,7 @@ export async function generateMetadata(
   ]);
   const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
   // marketRes always fulfils now (withTimeout), but its value can be null on
-  // timeout/error — fall back to the empty shell so downstream `market.x`
+  // timeout/error – fall back to the empty shell so downstream `market.x`
   // access is safe.
   const market: TokenMarketData = (marketRes.status === "fulfilled" && marketRes.value) ? marketRes.value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
@@ -191,7 +191,7 @@ export async function generateMetadata(
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
   const chain   = CHAIN_NAMES[cid];
   const locked  = overview ? fmtTokens(overview.lockedTokensWhole) : "0";
-  const title   = `${symbol} unlocks on ${chain} — Vestream`;
+  const title   = `${symbol} unlocks on ${chain} – Vestream`;
   const desc    = overview
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
     : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
@@ -237,7 +237,7 @@ export default async function TokenPage(
 
   // Promise.allSettled (not Promise.all): each loader hits a different
   // dependency (4 × DB query, 1 × DexScreener fetch). If any one throws
-  // — a transient pool exhaustion, a DexScreener 5xx, an RPC blip — we
+  // – a transient pool exhaustion, a DexScreener 5xx, an RPC blip – we
   // do NOT want the whole render to fail and ISR-cache an empty page for
   // the next 60 seconds. Each fallback keeps the page renderable from
   // whatever data DID load. Same partial-failure-resilience pattern as
@@ -246,7 +246,7 @@ export default async function TokenPage(
   // to settle, so without per-call caps one stalled DB query (saturated
   // pooler connection) hangs the whole render until Cloudflare's 100s gateway
   // cuts it → a 524 the visitor sees as "this page couldn't load". A cap turns
-  // that into a partial render in seconds — the same graceful-degradation
+  // that into a partial render in seconds – the same graceful-degradation
   // intent as the allSettled fallbacks, but for HANGS rather than throws.
   const settled = await Promise.allSettled([
     withTimeout(getTokenOverview(cid, addr), 15_000, null, "pubtoken:overview"),
@@ -260,7 +260,7 @@ export default async function TokenPage(
     withTimeout(getTokenMarketData(cid, addr), 8_000, null, "pubtoken:market"),
   ]);
 
-  // Log every rejection — invisible failures are the whole reason cache
+  // Log every rejection – invisible failures are the whole reason cache
   // poisoning bit us before. Production observability lives in logs.
   settled.forEach((s, i) => {
     if (s.status === "rejected") {
@@ -273,7 +273,7 @@ export default async function TokenPage(
   const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
   const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
   const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
-  // settled[4].value can be null on a withTimeout fallback — coerce to the
+  // settled[4].value can be null on a withTimeout fallback – coerce to the
   // empty shell so `market.x` access stays safe.
   const market: TokenMarketData = (settled[4].status === "fulfilled" && settled[4].value) ? settled[4].value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
@@ -295,7 +295,7 @@ export default async function TokenPage(
   // Pick the dominant protocol for this token (the one with the largest locked
   // share). Used as the third breadcrumb so visitors landing on a token page
   // can navigate up to the protocol whose schedule dominates that token's
-  // vesting — usually what they were browsing before finding the token.
+  // vesting – usually what they were browsing before finding the token.
   const dominantProtocol = (() => {
     const mix = overview?.protocolMix ?? [];
     if (mix.length === 0) return null;
@@ -306,7 +306,7 @@ export default async function TokenPage(
   })();
 
   // BreadcrumbList JSON-LD. Google uses this to render the breadcrumb
-  // trail directly in search results (rich-snippet format) — the structured
+  // trail directly in search results (rich-snippet format) – the structured
   // signal also reinforces the site hierarchy for ranking. Positions are
   // 1-indexed and run Home → Protocols → [Protocol] → [Token].
   const breadcrumbs = [
@@ -332,7 +332,7 @@ export default async function TokenPage(
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
 
-      {/* BreadcrumbList JSON-LD — rendered first so crawlers see the
+      {/* BreadcrumbList JSON-LD – rendered first so crawlers see the
           hierarchy before parsing anything else on the page. */}
       <script
         type="application/ld+json"
@@ -341,10 +341,10 @@ export default async function TokenPage(
 
       {/* ── Breadcrumbs ─────────────────────────────────────────────────────
           Visible trail directly under the nav. Two jobs:
-            1. UX — visitors who landed on a deep token page have a way back
+            1. UX – visitors who landed on a deep token page have a way back
                up the hierarchy instead of hunting for the nav "Protocols"
                link. Also gives them context about where they are.
-            2. SEO — the structured-data version above helps Google render
+            2. SEO – the structured-data version above helps Google render
                a breadcrumb trail in search results. The visible version
                provides the matching HTML links Google cross-references.
          ───────────────────────────────────────────────────────────────── */}
@@ -431,7 +431,7 @@ export default async function TokenPage(
               {priceUsd != null && priceUsd > 0 && (
                 <>
                   <span className="font-bold tabular-nums" style={{ color: "#1A1D20" }}>
-                    {/* Sub-cent prices round to "$0" in the 2-dp format — show
+                    {/* Sub-cent prices round to "$0" in the 2-dp format – show
                         "<$0.01" so a low-priced token doesn't read as broken. */}
                     {priceUsd < 0.01 ? "<$0.01" : fmtUsd(priceUsd, false)}
                   </span>
@@ -453,7 +453,7 @@ export default async function TokenPage(
               in one consistent row (explorer, website, X, TokenSniffer, …). */}
         </div>
 
-        {/* Share actions — always visible, helps projects share the page */}
+        {/* Share actions – always visible, helps projects share the page */}
         <div className="mt-4 flex items-center gap-2 flex-wrap">
           <TokenShareRow
             pageUrl={`https://www.vestream.io/token/${cid}/${addr}`}
@@ -469,7 +469,7 @@ export default async function TokenPage(
       </section>
 
       {/* ──────────────────────────────────────────────────────────────────
-          Page ordering rationale — vesting-first, market-data later.
+          Page ordering rationale – vesting-first, market-data later.
           Vestream is a vesting platform first; price/liquidity are
           supporting context. Visitors who came here via a search for an
           unlock date should get the vesting answer before scrolling.
@@ -481,18 +481,18 @@ export default async function TokenPage(
             5. Protocol mix + top recipients                    ← vesting
             6. Upcoming events chronological list               ← vesting
             7. Market stats + external links (price/liquidity/FDV)
-            8. Price chart (DexScreener) — supporting context, below the stats
+            8. Price chart (DexScreener) – supporting context, below the stats
             9. Token FAQ
            10. Conversion CTA
          ───────────────────────────────────────────────────────────────── */}
 
-      {/* ── 4 hero stats (highest priority — vesting platform first) ─────── */}
+      {/* ── 4 hero stats (highest priority – vesting platform first) ─────── */}
       <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <HeroStat
             label="Locked"
-            value={lockedUsd != null ? fmtUsd(lockedUsd) : (overview ? `${fmtTokens(overview.lockedTokensWhole)} ${symbol}` : "—")}
-            sub={overhangPct != null ? `${overhangPct.toFixed(1)}% of FDV` : (market.fdv ? "—" : "no price data")}
+            value={lockedUsd != null ? fmtUsd(lockedUsd) : (overview ? `${fmtTokens(overview.lockedTokensWhole)} ${symbol}` : "–")}
+            sub={overhangPct != null ? `${overhangPct.toFixed(1)}% of FDV` : (market.fdv ? "–" : "no price data")}
             accent="#1CB8B8"
           />
           <HeroStat
@@ -517,7 +517,7 @@ export default async function TokenPage(
           />
           <HeroStat
             label="Recipients"
-            value={overview ? overview.recipientCount.toLocaleString() : "—"}
+            value={overview ? overview.recipientCount.toLocaleString() : "–"}
             sub={overview ? `${overview.streamCount} active streams` : ""}
             accent="#0BA0CB"
           />
@@ -525,7 +525,7 @@ export default async function TokenPage(
       </section>
 
       {/* ── Pulse summary (3-4 bullets, no See more). Hidden when there's
-          nothing substantive to say — TokenPulse returns null on empty. */}
+          nothing substantive to say – TokenPulse returns null on empty. */}
       {overview && (
         <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
           <TokenPulse
@@ -585,7 +585,7 @@ export default async function TokenPage(
             />
           </section>
 
-          {/* ── Protocol mix — only when MORE THAN ONE protocol vests this
+          {/* ── Protocol mix – only when MORE THAN ONE protocol vests this
               token. For single-protocol tokens (the common case) the panel
               just restated the breadcrumb + the market-stats line ("locked
               across N streams · PinkSale"), so it sat there mostly empty.
@@ -596,7 +596,7 @@ export default async function TokenPage(
             </section>
           )}
 
-          {/* ── Top recipients — full width ────────────────────────────── */}
+          {/* ── Top recipients – full width ────────────────────────────── */}
           <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
             <RecipientTable
               rows={recipients}
@@ -617,7 +617,7 @@ export default async function TokenPage(
       )}
 
       {/* ── Pro upsell strip ────────────────────────────────────────────────
-          Sits between the data and the market stats — high-intent position.
+          Sits between the data and the market stats – high-intent position.
           Visitors who've seen the calendar + recipients are already qualified;
           this is the moment to convert them into app installs. */}
       {hasVesting && (
@@ -649,7 +649,7 @@ export default async function TokenPage(
 
       {/* ── Market stats + external links (price/liquidity/volume/FDV +
           explorer/website/X/TokenSniffer). Positioned LOWER than the
-          vesting block because Vestream's value prop is vesting-first —
+          vesting block because Vestream's value prop is vesting-first –
           price data is supporting context, not the headline. */}
       {overview && (
         <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
@@ -663,7 +663,7 @@ export default async function TokenPage(
         </section>
       )}
 
-      {/* ── Price chart (DexScreener embed) — sits directly below the market
+      {/* ── Price chart (DexScreener embed) – sits directly below the market
           stats card (vesting-first: price data is supporting context). Only
           when a priced pair exists AND it has enough liquidity to actually
           chart: ultra-thin pairs leave DexScreener stuck on "Loading pair…"
@@ -676,7 +676,7 @@ export default async function TokenPage(
         // section uses `mx-auto`, which on a flex item cancels the default
         // stretch and shrink-wraps to content. The chart's content is an iframe
         // whose width:100% then can't resolve against an indefinite-width parent
-        // and collapses to the 300px iframe default — dragging the whole section
+        // and collapses to the 300px iframe default – dragging the whole section
         // narrow. w-full gives the section a definite width so width:100% resolves.
         <section className="w-full px-4 md:px-8 pb-6 max-w-6xl mx-auto">
           <div className="flex items-baseline justify-between mb-2">
@@ -694,7 +694,7 @@ export default async function TokenPage(
           <div className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff" }}>
             {/* Eager load (NOT loading="lazy"): the chart sits below the
                 market-stats card, so lazy-loading meant it didn't even start
-                fetching DexScreener until the user scrolled near it — they'd
+                fetching DexScreener until the user scrolled near it – they'd
                 then stare at DexScreener's narrow "Loading pair…" placeholder
                 for seconds, which reads as a cramped "little window". Loading
                 eagerly starts the fetch on page render so it's ready by the
@@ -702,7 +702,7 @@ export default async function TokenPage(
             <iframe
               src={`${market.pairUrl}?embed=1&theme=light&info=0&trades=0`}
               title={`${symbol} price chart on DexScreener`}
-              // Inline width/height — the iframe was falling back to its ~300px
+              // Inline width/height – the iframe was falling back to its ~300px
               // HTML default (the `w-full` class wasn't winning). Inline
               // width:100% forces it to fill the max-w-6xl container.
               style={{ display: "block", width: "100%", height: 560, border: 0 }}
@@ -712,7 +712,7 @@ export default async function TokenPage(
       )}
 
       {/* ── SEO FAQ ───────────────────────────────────────────────────────
-          Rendered even when hasVesting is false — questions like "what is
+          Rendered even when hasVesting is false – questions like "what is
           $TOKEN worth fully diluted today" still have valid answers, and
           the FAQPage JSON-LD is the main SEO win regardless of whether a
           vesting schedule exists. For a not-yet-indexed token the answers
@@ -731,10 +731,10 @@ export default async function TokenPage(
         })}
       />
 
-      {/* ── Conversion CTA — the funnel entry point at the bottom of every
+      {/* ── Conversion CTA – the funnel entry point at the bottom of every
           token page. Visitors who scrolled this far are high-intent: they
           read the Pulse, the calendar, the FAQ. This is the moment to
-          offer the one action we actually want — put the wallet on their
+          offer the one action we actually want – put the wallet on their
           watchlist so they get notified before every future unlock. */}
       <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
         <div
@@ -762,8 +762,8 @@ export default async function TokenPage(
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
               Get a push and email notification the moment {symbol} tokens
-              are ready to claim — plus coverage for every other wallet you
-              track, across all 10 protocols and 7 chains — EVM and Solana.
+              are ready to claim – plus coverage for every other wallet you
+              track, across all 10 protocols and 7 chains – EVM and Solana.
             </p>
             <AppStoreBadges align="center" />
             <div className="mt-5">
@@ -781,7 +781,7 @@ export default async function TokenPage(
 
       <SiteFooter theme="light" />
 
-      {/* Soft paywall — client-side, applied only for human visitors over the
+      {/* Soft paywall – client-side, applied only for human visitors over the
           free limit. The full page above always server-renders (SEO intact);
           this just overlays a blurred "get the app" gate post-hydration. */}
       <TokenPaywall chainId={cid} address={addr} symbol={symbol} />
@@ -820,7 +820,7 @@ function UnlockCalendar({
   calendar:    UnlockCalendarBucket[];
   priceUsd:    number | null;
   symbol:      string;
-  /** Current locked-supply total — used to compute "share of locked supply
+  /** Current locked-supply total – used to compute "share of locked supply
    *  unlocking in the forward window" in the stats footer. */
   lockedTotal: number;
 }) {
@@ -838,7 +838,7 @@ function UnlockCalendar({
 
   // ── Derived series ────────────────────────────────────────────────────
   const maxBucket  = Math.max(1, ...visible.map((b) => b.totalTokensWhole));
-  // Forward-only totals power the stats strip — we care about "what's
+  // Forward-only totals power the stats strip – we care about "what's
   // coming" not "what already released" for the KPI readout.
   //
   // 2026-05-15: switched from .totalTokensWhole to .futureTokensWhole.
@@ -852,7 +852,7 @@ function UnlockCalendar({
   const grandTotal = forward.reduce((s, b) => s + b.futureTokensWhole, 0);
 
   // Cumulative running total across the visible window (past + future).
-  // Drives the overlay curve — turns the chart from independent months
+  // Drives the overlay curve – turns the chart from independent months
   // into a release trajectory reading at a glance.
   const cumulativeRaw: number[] = visible.reduce<number[]>((acc, b) => {
     const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
@@ -861,8 +861,8 @@ function UnlockCalendar({
   }, []);
   const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1;
 
-  // Peak FUTURE month — stats strip asks "biggest unlock ahead".
-  // Peak month — uses futureTokensWhole for the same reason as grandTotal.
+  // Peak FUTURE month – stats strip asks "biggest unlock ahead".
+  // Peak month – uses futureTokensWhole for the same reason as grandTotal.
   // A bucket whose past-this-month portion would have been the largest is
   // no longer falsely crowned "peak month" when its future-this-month
   // portion is actually small.
@@ -878,9 +878,9 @@ function UnlockCalendar({
   // 2026-05-15: track the RAW ratio separately so we can detect anomalous
   // cases where the per-step amount sum exceeds the parent stream's
   // lockedAmount (e.g. PinkSale cycle-based vesting producing overlapping
-  // step events in token-aggregates expandUnlockEvents — investigated
+  // step events in token-aggregates expandUnlockEvents – investigated
   // separately). When the ratio is suspiciously high (>105%) we render
-  // the stat as "—" rather than clamp to a confident-looking 100% with
+  // the stat as "–" rather than clamp to a confident-looking 100% with
   // a negative "still locked beyond" subtitle.
   const unlockRatioRaw = lockedTotal > 0
     ? (grandTotal / lockedTotal) * 100
@@ -891,8 +891,8 @@ function UnlockCalendar({
   const fullyVestedIn12mo   = !isAnomalous && unlockRatioRaw >= 99;
   const remainingBeyond     = Math.max(0, lockedTotal - grandTotal);
 
-  // Last non-empty forward bucket — drives "Last unlock ahead". Uses
-  // futureTokensWhole for consistency with grandTotal/peak — a current-
+  // Last non-empty forward bucket – drives "Last unlock ahead". Uses
+  // futureTokensWhole for consistency with grandTotal/peak – a current-
   // month bucket whose only events already fired this month doesn't
   // qualify as a "future unlock".
   const lastActiveForwardIdx = (() => {
@@ -911,7 +911,7 @@ function UnlockCalendar({
     value: maxBucket * frac,
   }));
 
-  // ── Cumulative overlay coordinates — an SVG polyline drawn over the bars.
+  // ── Cumulative overlay coordinates – an SVG polyline drawn over the bars.
   // viewBox is 0→100 horizontal, 0→100 vertical; preserveAspectRatio=none
   // stretches to fill the bar grid so the line aligns with bar tops.
   //
@@ -928,7 +928,7 @@ function UnlockCalendar({
   // Final cumulative Y always lands at the top since maxCum === last entry.
   const finalCumY = 0;
 
-  // X position of the "now" divider in viewBox units — sits at the left
+  // X position of the "now" divider in viewBox units – sits at the left
   // edge of the first future bar (so the past side ends where future
   // begins).
   const nowDividerX = hasAnyPast
@@ -991,7 +991,7 @@ function UnlockCalendar({
         </div>
       </div>
 
-      {/* Chart body — Y-axis column on the left, bars + overlay on the right.
+      {/* Chart body – Y-axis column on the left, bars + overlay on the right.
           The chart's internal min-widths (y-axis column + ~34px × 12 or 24
           bars) exceed 375px, so the overflow-x-auto lets mobile visitors
           scroll horizontally. A right-edge fade gradient (position=relative
@@ -1001,7 +1001,7 @@ function UnlockCalendar({
       <div className="px-4 md:px-5 py-4 overflow-x-auto">
         <div className="flex items-stretch gap-2" style={{ minHeight: 180 }}>
           {/* Y-axis labels (peak-month scale). We keep these on the left so
-              the bars can line up against known reference rows — feels a lot
+              the bars can line up against known reference rows – feels a lot
               more like a chart and less like a decorative graphic. */}
           <div
             className="flex flex-col justify-between pr-2 flex-shrink-0"
@@ -1017,7 +1017,7 @@ function UnlockCalendar({
 
           {/* Bars + overlay curve stacked in the same grid */}
           <div className="flex-1 relative">
-            {/* Horizontal gridlines — pure decoration but makes the chart read
+            {/* Horizontal gridlines – pure decoration but makes the chart read
                 as a chart. Drawn as stacked flex rows matching the Y labels. */}
             <div
               className="absolute inset-x-0 pointer-events-none"
@@ -1037,12 +1037,12 @@ function UnlockCalendar({
               ))}
             </div>
 
-            {/* Bars themselves — iterate `visible` so the history fallback
+            {/* Bars themselves – iterate `visible` so the history fallback
                 works correctly. Past bars render at 50% opacity to visually
                 recede vs. the forward-looking buckets.
                 Heights use explicit pixels (not height:100% chains) so the
                 bars render correctly even when all data lands in a single
-                month — CSS percentage heights in a flex-end context can
+                month – CSS percentage heights in a flex-end context can
                 silently resolve to zero when the intermediate column div
                 has no explicit height (reproducer: $HOUND on Base, 2026-06-01). */}
             <div className="flex items-end gap-1 md:gap-2" style={{ height: 130 }}>
@@ -1062,7 +1062,7 @@ function UnlockCalendar({
                         height:   barPx,
                         position: "relative",
                         // Past bars render muted so the eye is pulled to
-                        // future months — which is the decision-relevant
+                        // future months – which is the decision-relevant
                         // part. We keep them visible (not invisible) so the
                         // cumulative curve has context on both sides.
                         opacity:  b.isPast ? 0.35 : 1,
@@ -1091,7 +1091,7 @@ function UnlockCalendar({
                         })
                       )}
                     </div>
-                    {/* "NOW" pill on the first FUTURE bucket — divider
+                    {/* "NOW" pill on the first FUTURE bucket – divider
                         between the historical and forward halves. */}
                     {isThisMonth && (
                       <div
@@ -1114,7 +1114,7 @@ function UnlockCalendar({
 
             {/* Cumulative overlay. Same bounding box as the bars so y=0
                 lines up with the x-axis baseline and y=100 with the peak
-                bucket top. preserveAspectRatio=none is critical — we WANT
+                bucket top. preserveAspectRatio=none is critical – we WANT
                 the line to stretch to fill the container on any width. */}
             <svg
               viewBox="0 0 100 100"
@@ -1123,7 +1123,7 @@ function UnlockCalendar({
               style={{ width: "100%", height: 130 }}
               aria-hidden
             >
-              {/* Vertical "now" divider — sits at the boundary between past
+              {/* Vertical "now" divider – sits at the boundary between past
                   and future buckets. Drawn before the polyline so the curve
                   stays on top visually. */}
               {nowDividerX !== null && (
@@ -1189,9 +1189,9 @@ function UnlockCalendar({
       />
       </div>
 
-      {/* Stats strip — four technical metrics pulled from the same data.
+      {/* Stats strip – four technical metrics pulled from the same data.
           When NOTHING unlocks in the forward 12-month window every tile
-          would render "—" / "0.0%" — a wall of dashes that reads as
+          would render "–" / "0.0%" – a wall of dashes that reads as
           missing data rather than the real signal ("it's all locked
           further out"). Collapse to one honest line in that case. */}
       {grandTotal <= 0 ? (
@@ -1201,7 +1201,7 @@ function UnlockCalendar({
         >
           Nothing unlocks in the next 12 months
           {remainingBeyond > 0 && (
-            <> — <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
+            <> – <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
               {fmtTokens(remainingBeyond)} {symbol}
             </span> still locked beyond</>
           )}
@@ -1213,7 +1213,7 @@ function UnlockCalendar({
       >
         <CalendarStat
           label="Peak month"
-          value={peak && peak.futureTokensWhole > 0 ? peak.label : "—"}
+          value={peak && peak.futureTokensWhole > 0 ? peak.label : "–"}
           sub={peak && peak.futureTokensWhole > 0 ? `${fmtTokens(peak.futureTokensWhole)} ${symbol}` : ""}
         />
         <CalendarStat
@@ -1221,31 +1221,31 @@ function UnlockCalendar({
           value={fmtTokens(grandTotal)}
           sub={priceUsd ? fmtUsd(grandTotal * priceUsd) : `${symbol}`}
         />
-        {/* 2026-05-15: re-worked from "100% — — MOONMOON still locked beyond"
+        {/* 2026-05-15: re-worked from "100% – – MOONMOON still locked beyond"
             into three explicit states:
-              - anomalous (step amounts sum > locked total): "—" + diagnostic copy
+              - anomalous (step amounts sum > locked total): "–" + diagnostic copy
               - fully vested in 12mo: 100% + "vesting complete within 12mo"
               - partial: percentage + "X still locked beyond 12mo"
             Last case is the common one; the first two were rendering
-            as a confusing "100% / — MOONMOON still locked beyond" combo
+            as a confusing "100% / – MOONMOON still locked beyond" combo
             for low-circulation tokens with step-vested PinkSale schedules. */}
         <CalendarStat
           label="of locked supply"
           value={
-            lockedTotal === 0    ? "—" :
-            isAnomalous          ? "—" :
+            lockedTotal === 0    ? "–" :
+            isAnomalous          ? "–" :
             `${unlockShareOfLocked.toFixed(1)}%`
           }
           sub={
             lockedTotal === 0    ? "" :
-            isAnomalous          ? "schedule data overlapping — see chart" :
+            isAnomalous          ? "schedule data overlapping – see chart" :
             fullyVestedIn12mo    ? `vesting complete within 12mo` :
             `${fmtTokens(remainingBeyond)} ${symbol} still locked beyond`
           }
         />
         <CalendarStat
           label="Last unlock ahead"
-          value={lastActiveForwardIdx >= 0 ? visible[lastActiveForwardIdx].label : "—"}
+          value={lastActiveForwardIdx >= 0 ? visible[lastActiveForwardIdx].label : "–"}
           sub={lastActiveMonthsOut >= 0
             ? (lastActiveMonthsOut === 0
                 ? "this month"
@@ -1406,7 +1406,7 @@ function RecipientTable({
         <span className="text-xs" style={{ color: "#B8BABD" }}>{rows.length} shown</span>
       </div>
 
-      {/* Column headings — md+ only (mobile folds protocol into the recipient cell) */}
+      {/* Column headings – md+ only (mobile folds protocol into the recipient cell) */}
       <div
         className="hidden md:grid grid-cols-12 gap-3 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider"
         style={{ color: "#B8BABD", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
@@ -1454,7 +1454,7 @@ function RecipientTable({
                     {truncate(r.recipient)}
                   </span>
                 )}
-                {/* Mobile-only meta — protocol chip(s), since that column is hidden < md */}
+                {/* Mobile-only meta – protocol chip(s), since that column is hidden < md */}
                 <div className="md:hidden flex items-center gap-1.5 mt-0.5 flex-wrap">
                   {r.protocols.slice(0, 2).map((p) => (
                     <span
@@ -1552,7 +1552,7 @@ function UpcomingEvents({
                   <span>{protocolName(e.protocol)} · {truncate(e.recipient)}</span>
                   {/* 2026-05-14: per-event "tx ↗" pill. Links straight to the
                       originating lock transaction on the chain's block
-                      explorer — the on-chain anchor a retail buyer can
+                      explorer – the on-chain anchor a retail buyer can
                       verify themselves. Hidden when adapter didn't expose
                       the hash (PinkSale + Solana adapters currently). */}
                   {e.lockTxHash && e.chainId && (

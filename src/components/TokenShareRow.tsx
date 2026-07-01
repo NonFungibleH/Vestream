@@ -1,8 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────────────────────
-// Share actions row for token pages — two small icon buttons:
-//   1. "Share on X" — opens a tweet intent with pre-filled text
-//   2. "Copy link" — copies the page URL to clipboard
+// Share actions row for token pages – two small icon buttons:
+//   1. "Share on X" – opens a tweet intent with pre-filled text
+//   2. "Copy link" – copies the page URL to clipboard
 //
 // This is a client component so it can use clipboard APIs and window.location.
 // The token page is a server component; it passes the props in at render time.
@@ -11,7 +11,7 @@
 import { useState, useCallback } from "react";
 
 interface Props {
-  /** Full page URL — e.g. https://www.vestream.io/token/1/0x... */
+  /** Full page URL – e.g. https://www.vestream.io/token/1/0x... */
   pageUrl:     string;
   /** Token symbol, used in the tweet text. */
   symbol:      string;
@@ -33,8 +33,8 @@ export function TokenShareRow({ pageUrl, symbol, chainName, lockedSummary }: Pro
   }, [pageUrl]);
 
   const tweetText = lockedSummary
-    ? `Track $${symbol} unlocks on @Vestream_ — ${lockedSummary} still vesting on ${chainName}. Full schedule:`
-    : `Track $${symbol} token vesting on @Vestream_ — live unlock calendar and alerts on ${chainName}.`;
+    ? `Track $${symbol} unlocks on @Vestream_ – ${lockedSummary} still vesting on ${chainName}. Full schedule:`
+    : `Track $${symbol} token vesting on @Vestream_ – live unlock calendar and alerts on ${chainName}.`;
 
   const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(pageUrl)}`;
 

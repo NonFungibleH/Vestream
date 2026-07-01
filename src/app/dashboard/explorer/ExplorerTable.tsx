@@ -37,14 +37,14 @@ export interface ExplorerRow {
   walletCount:       number;          // per-bucket fallback
   tokenWalletCount?: number;          // true uncapped count
   tokenRoundCount?:  number;
-  vestStart?:        number | null;   // earliest active start (unix sec) — progress bar
+  vestStart?:        number | null;   // earliest active start (unix sec) – progress bar
   vestEnd?:          number | null;   // latest active end (unix sec)
   hasCliff?:         boolean;         // any active stream has a lump-unlock cliff (own column)
-  topHolderShare?:   number | null;   // largest recipient's share (0–1) of locked — concentration
+  topHolderShare?:   number | null;   // largest recipient's share (0–1) of locked – concentration
   unlockCurve?:      number[] | null; // 12 cumulative-% samples → row sparkline
   eventTime:         number;
   absorptionRatio:   number | null;
-  marketCapShare:    number | null;   // unlock value ÷ market cap — the risk basis
+  marketCapShare:    number | null;   // unlock value ÷ market cap – the risk basis
 }
 
 type SortCol = "token" | "amount" | "usd" | "wallets" | "concentration" | "rounds" | "cliff" | "risk" | "progress" | "date";
@@ -74,7 +74,7 @@ export function ExplorerTable({
   /** Current URL search params, so headers + pagination can build hrefs.
    *  Only used in LINK mode (server-paginated pages). */
   params:       Record<string, string | undefined>;
-  /** CLIENT mode — when provided, headers/pagination/clear become buttons that
+  /** CLIENT mode – when provided, headers/pagination/clear become buttons that
    *  mutate in-memory state instead of navigating (instant, no round-trip).
    *  The client-side explorer passes these; server pages omit them. */
   onSort?:      (col: SortCol, dir: SortDir) => void;
@@ -97,7 +97,7 @@ export function ExplorerTable({
     col === sort ? (dir === "asc" ? "desc" : "asc") : defaultDir;
   const sortHref = (col: SortCol, defaultDir: SortDir): string =>
     hrefFor({ sort: col, dir: nextDirFor(col, defaultDir), page: undefined });
-  // Props for a sort header — either { href } (link mode) or { onClick } (client).
+  // Props for a sort header – either { href } (link mode) or { onClick } (client).
   const sortProps = (col: SortCol, defaultDir: SortDir): { href?: string; onClick?: () => void } =>
     clientMode
       ? { onClick: () => onSort!(col, nextDirFor(col, defaultDir)) }
@@ -109,7 +109,7 @@ export function ExplorerTable({
         style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
         <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>No tokens match these filters.</p>
         <p className="text-xs mt-1 mb-3" style={{ color: "var(--preview-text-3)" }}>
-          Your filters are too tight — widen a slider, set the date to “Any time”, or clear everything.
+          Your filters are too tight – widen a slider, set the date to “Any time”, or clear everything.
         </p>
         {clientMode ? (
           <button type="button" onClick={onClear}
@@ -137,13 +137,13 @@ export function ExplorerTable({
   // the 3-column template.
   // Proportional `fr` columns (NOT auto): the template is deterministic, so
   // the header grid and every row grid resolve to identical column widths and
-  // line up — `auto` sized each grid to its own content, which is why headers
+  // line up – `auto` sized each grid to its own content, which is why headers
   // and values drifted. `fr` units also fill the width evenly instead of one
   // 1fr token column hogging all the slack (the empty space). Mobile shows
   // Token · USD · Wallets; the desktop-only cells are display:none below md so
   // they drop out of the 3-col mobile grid.
   // minmax(0,…) on every track (not bare `fr`) so a wide cell can't blow out
-  // its column and shove the others — grid `fr` tracks otherwise floor at their
+  // its column and shove the others – grid `fr` tracks otherwise floor at their
   // content's min width. Columns stay put when you sort.
   // Token column soaks up the full-width slack (its name + protocol·chain
   // subtitle can use the room) so the data columns stay packed instead of
@@ -162,7 +162,7 @@ export function ExplorerTable({
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
-        {/* Sortable header — each is a Link that re-queries server-side. */}
+        {/* Sortable header – each is a Link that re-queries server-side. */}
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
             <Th label="Token"       active={sort === "token"}         dir={dir} {...sortProps("token", "asc")} title={TOKEN_HELP} />
@@ -179,7 +179,7 @@ export function ExplorerTable({
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
 
-        {/* Rows — already ordered + paginated server-side. */}
+        {/* Rows – already ordered + paginated server-side. */}
         {rows.map((r, i) => (
           <Row key={r.groupKey} r={r} grid={GRID} showTopBorder={i > 0} />
         ))}
@@ -212,7 +212,7 @@ export function ExplorerTable({
 
 // ── Header cell (sort control) ────────────────────────────────────────────────
 // Renders a Link (server-paginated pages) or a <button> (client-side explorer)
-// depending on whether href or onClick is supplied — identical appearance.
+// depending on whether href or onClick is supplied – identical appearance.
 function Th({
   label, active, dir, href, onClick, align = "left", minW, className = "", title,
 }: {
@@ -273,19 +273,19 @@ function PageLink({ href, onClick, children }: { href?: string | null; onClick?:
 }
 
 // ── Row ──────────────────────────────────────────────────────────────────────
-// Hover preview — a compact summary of the row's key facts (native title, so
+// Hover preview – a compact summary of the row's key facts (native title, so
 // it works everywhere without extra JS). The top-holder ADDRESS isn't in the
 // rollup, so we surface the metrics we have; the full breakdown is one click.
 function rowPreview(r: ExplorerRow, chainName: string): string {
   const sym = r.tokenSymbol ?? shortAddr(r.tokenAddress);
-  const when = r.eventTime ? new Date(r.eventTime * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  const when = r.eventTime ? new Date(r.eventTime * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "–";
   const lines = [
     `${sym} · ${getProtocol(r.protocol)?.name ?? r.protocol} · ${chainName}`,
     `Next unlock: ${when} (in ${relativeUntil(r.eventTime)})`,
     r.usdValue != null
       ? `Locked: ${formatUsdCompact(r.usdValue)} (${fmtAmount(r.amount, r.tokenDecimals)} ${sym})`
-      : `Locked: ${fmtAmount(r.amount, r.tokenDecimals)} ${sym} — no market price`,
-    `Wallets: ${walletsOf(r).toLocaleString()} · Schedules: ${r.tokenRoundCount ?? "—"}`,
+      : `Locked: ${fmtAmount(r.amount, r.tokenDecimals)} ${sym} – no market price`,
+    `Wallets: ${walletsOf(r).toLocaleString()} · Schedules: ${r.tokenRoundCount ?? "–"}`,
   ];
   if (r.topHolderShare != null && walletsOf(r) > 1) {
     const top = topHolderOfMarketCap(r);
@@ -314,7 +314,7 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
             {tokenInitial(r.tokenSymbol, r.tokenAddress)}
           </div>
           <div className="min-w-0">
-            {/* Token name — the cliff flag moved to its own column so the name
+            {/* Token name – the cliff flag moved to its own column so the name
                 stays clean (the ⚠️ read as a scary catch-all risk marker). */}
             <p className="font-semibold text-sm truncate" style={{ color: "var(--preview-text)" }}>
               {r.tokenSymbol ?? shortAddr(r.tokenAddress)}
@@ -339,12 +339,12 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
                 fontStyle: r.usdConfidence === "low" ? "italic" : "normal",
                 opacity:   r.usdConfidence === "low" ? 0.65 : r.usdConfidence === "medium" ? 0.8 : 1,
               }}
-              title={r.usdConfidence === "low" ? "Low liquidity — estimate" : r.usdConfidence === "medium" ? "Medium liquidity — DEX pool < $10k" : undefined}>
+              title={r.usdConfidence === "low" ? "Low liquidity – estimate" : r.usdConfidence === "medium" ? "Medium liquidity – DEX pool < $10k" : undefined}>
               {formatUsdCompact(r.usdValue)}
             </p>
           ) : (
             <p className="text-sm font-bold cursor-help" style={{ color: "var(--preview-text-3)" }}
-              title="No liquid market — this token has no tradeable DEX pair, so there's no price to show.">—</p>
+              title="No liquid market – this token has no tradeable DEX pair, so there's no price to show.">–</p>
           )}
         </div>
         {/* Wallets */}
@@ -357,9 +357,9 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
         </div>
         {/* Rounds (desktop) */}
         <div className="text-right tabular-nums hidden md:block">
-          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "—"}</p>
+          <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "–"}</p>
         </div>
-        {/* Cliff (desktop) — moved off the token name into its own column */}
+        {/* Cliff (desktop) – moved off the token name into its own column */}
         <div className="hidden md:block">
           <CliffChip r={r} />
         </div>
@@ -398,36 +398,36 @@ function classifyRisk(r: ExplorerRow): "HIGH" | "MED" | "LOW" | null {
   return "LOW";
 }
 
-// Column header tooltips — every column explains itself on hover.
-const TOKEN_HELP   = "The vesting token — symbol, protocol, and chain. Click a row to open its full breakdown.";
+// Column header tooltips – every column explains itself on hover.
+const TOKEN_HELP   = "The vesting token – symbol, protocol, and chain. Click a row to open its full breakdown.";
 const AMOUNT_HELP  = "Total tokens still locked (not yet vested) across all of this token's schedules.";
-const USD_HELP     = "Locked amount × current price. Dimmed = thin DEX liquidity (estimate); “—” = no tradeable market.";
-const WALLETS_HELP = "Distinct wallets receiving this token's vesting — a fair launch has many, a team grant has few.";
-const ROUNDS_HELP  = "Distinct vesting schedules (terms) — same protocol + shape + cliff + duration = one round.";
+const USD_HELP     = "Locked amount × current price. Dimmed = thin DEX liquidity (estimate); “–” = no tradeable market.";
+const WALLETS_HELP = "Distinct wallets receiving this token's vesting – a fair launch has many, a team grant has few.";
+const ROUNDS_HELP  = "Distinct vesting schedules (terms) – same protocol + shape + cliff + duration = one round.";
 const NEXT_HELP    = "Time until this token's next unlock event. Sorted soonest-first by default.";
 
 // Shown on the "Risk" header (hover) so the score is self-explanatory.
 const RISK_METHODOLOGY =
   "Risk = how hard this unlock could hit the market:\n" +
-  "• Market-cap share — its USD value vs the token's market cap\n" +
-  "• Absorption — its USD value vs the token's 24h volume (when known)\n" +
+  "• Market-cap share – its USD value vs the token's market cap\n" +
+  "• Absorption – its USD value vs the token's 24h volume (when known)\n" +
   "HIGH: ≥10% of market cap (or > a full day's volume)\n" +
   "MED: ≥2.5% of market cap (or ≥25% of a day's volume) · LOW: below that\n" +
   "Tokens with no market price aren't scored.";
 
-/** Per-row tooltip — the methodology plus THIS row's actual numbers. */
+/** Per-row tooltip – the methodology plus THIS row's actual numbers. */
 function riskTitle(r: ExplorerRow): string {
   const band = classifyRisk(r);
-  if (!band) return "Not scored — no market price / market cap for this token, so unlock impact can't be measured.";
-  const share = r.marketCapShare == null ? "—" : `${(r.marketCapShare * 100).toFixed(r.marketCapShare < 0.01 ? 2 : 1)}% of market cap`;
-  const absorption = r.absorptionRatio == null ? "—" : `${Math.round(r.absorptionRatio * 100)}% of a day's volume`;
+  if (!band) return "Not scored – no market price / market cap for this token, so unlock impact can't be measured.";
+  const share = r.marketCapShare == null ? "–" : `${(r.marketCapShare * 100).toFixed(r.marketCapShare < 0.01 ? 2 : 1)}% of market cap`;
+  const absorption = r.absorptionRatio == null ? "–" : `${Math.round(r.absorptionRatio * 100)}% of a day's volume`;
   return `Risk: ${band}\n\n${RISK_METHODOLOGY}\n\nThis unlock: ${share} · ${absorption}`;
 }
 
 function RiskChip({ r }: { r: ExplorerRow }) {
   const band = classifyRisk(r);
   const title = riskTitle(r);
-  if (!band) return <span className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>—</span>;
+  if (!band) return <span className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>–</span>;
   const style =
     band === "HIGH" ? { bg: "rgba(220,38,38,0.12)", fg: "#dc2626" } :
     band === "MED"  ? { bg: "rgba(217,119,6,0.12)", fg: "#d97706" } :
@@ -445,11 +445,11 @@ function RiskChip({ r }: { r: ExplorerRow }) {
 // Moved off the token name (where the ⚠️ read as a generic risk warning) into
 // a dedicated, sortable column. A cliff = a lump unlocks at once vs gradually.
 const CLIFF_HELP =
-  "Cliff unlock — a lump of tokens unlocks at once rather than vesting " +
+  "Cliff unlock – a lump of tokens unlocks at once rather than vesting " +
   "gradually. The kind of event worth bracing for around its date.";
 
 function CliffChip({ r }: { r: ExplorerRow }) {
-  if (!r.hasCliff) return <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>—</span>;
+  if (!r.hasCliff) return <span className="text-xs" style={{ color: "var(--preview-text-3)" }}>–</span>;
   return (
     <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider cursor-help"
       style={{ background: "rgba(217,119,6,0.12)", color: "#d97706" }}
@@ -460,22 +460,22 @@ function CliffChip({ r }: { r: ExplorerRow }) {
 }
 
 // ── Vest concentration ───────────────────────────────────────────────────────
-// Largest single recipient's share of the token's LOCKED (vesting) supply — NOT
+// Largest single recipient's share of the token's LOCKED (vesting) supply – NOT
 // total token supply. Two guards stop it over-reading (it used to flag 93% of
 // rows red):
-//   1. A single-recipient token is tautologically 100% — shown "—", not red.
+//   1. A single-recipient token is tautologically 100% – shown "–", not red.
 //   2. Colour is driven by MATERIALITY (the top wallet's unlock as a share of
 //      market cap), not the raw vest %. Concentrated-but-immaterial, or no
 //      market price to judge by → muted, not alarming.
 const CONCENTRATION_HELP =
-  "Concentration WITHIN this token's vesting — the largest single recipient's " +
+  "Concentration WITHIN this token's vesting – the largest single recipient's " +
   "share of the LOCKED (vesting) supply, not total token supply.\n" +
-  "• A single-recipient token is always 100%, so it's shown as “—” (not a signal).\n" +
+  "• A single-recipient token is always 100%, so it's shown as “–” (not a signal).\n" +
   "• Coloured by real impact: red/amber only when that wallet's unlock is also a " +
   "material share of the token's MARKET CAP. Greyed when there's no market price " +
   "to judge supply impact.";
 
-/** Largest recipient's locked value as a fraction of market cap — the genuine
+/** Largest recipient's locked value as a fraction of market cap – the genuine
  *  "one wallet could move the market" number. null when unknowable. */
 function topHolderOfMarketCap(r: ExplorerRow): number | null {
   return r.topHolderShare != null && r.marketCapShare != null ? r.topHolderShare * r.marketCapShare : null;
@@ -483,7 +483,7 @@ function topHolderOfMarketCap(r: ExplorerRow): number | null {
 type ConcBand = "high" | "med" | "muted" | "na";
 function classifyConcentration(r: ExplorerRow): ConcBand {
   if (r.topHolderShare == null) return "na";
-  if (walletsOf(r) <= 1) return "na";            // tautological — one recipient
+  if (walletsOf(r) <= 1) return "na";            // tautological – one recipient
   const top = topHolderOfMarketCap(r);
   if (top == null) return "muted";               // no market cap → can't judge impact
   if (top >= 0.05)  return "high";               // one wallet ≥5% of market cap
@@ -496,16 +496,16 @@ function ConcentrationChip({ r }: { r: ExplorerRow }) {
   const band = classifyConcentration(r);
   if (band === "na") {
     const title = walletsOf(r) <= 1
-      ? "Single recipient — concentration isn't meaningful (one wallet is always 100% of its own vest)."
+      ? "Single recipient – concentration isn't meaningful (one wallet is always 100% of its own vest)."
       : "No concentration data for this token yet.";
-    return <span className="text-sm cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>—</span>;
+    return <span className="text-sm cursor-help" style={{ color: "var(--preview-text-3)" }} title={title}>–</span>;
   }
   const pct = Math.round((s ?? 0) * 100);
   const fg = band === "high" ? "#dc2626" : band === "med" ? "#d97706" : "var(--preview-text-3)";
   const top = topHolderOfMarketCap(r);
   const matLine = top != null
     ? `That wallet's unlock ≈ ${(top * 100).toFixed(top < 0.01 ? 2 : 1)}% of market cap.`
-    : "No market price — supply impact unknown (shown muted).";
+    : "No market price – supply impact unknown (shown muted).";
   const title = `Top recipient holds ${pct}% of the LOCKED (vesting) supply.\n${matLine}\n\n${CONCENTRATION_HELP}`;
   return (
     <span className="text-sm font-semibold tabular-nums cursor-help" style={{ color: fg }} title={title}>
@@ -517,11 +517,11 @@ function ConcentrationChip({ r }: { r: ExplorerRow }) {
 // ── Vesting progress (whole-token span elapsed) ──────────────────────────────
 // Shown on the "Vested" header (hover).
 const PROGRESS_HELP =
-  "How far through its full vesting span the token is — from the earliest " +
+  "How far through its full vesting span the token is – from the earliest " +
   "active start to the latest active end.\n0% = just started · 100% = fully unlocked.";
 
 function fmtMonthYear(sec: number | null | undefined): string {
-  if (!sec) return "—";
+  if (!sec) return "–";
   return new Date(sec * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
@@ -559,7 +559,7 @@ function VestingProgress({ r }: { r: ExplorerRow }) {
     );
   }
 
-  if (pct == null) return <p className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }}>—</p>;
+  if (pct == null) return <p className="text-xs cursor-help" style={{ color: "var(--preview-text-3)" }}>–</p>;
   return (
     <div className="flex items-center gap-2 cursor-help">
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--preview-muted-2)" }}>
@@ -580,12 +580,12 @@ function shortAddr(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 function fmtAmount(raw: string | null, decimals: number): string {
-  if (!raw) return "—";
+  if (!raw) return "–";
   try {
     const n = Number(BigInt(raw)) / 10 ** Math.min(decimals, 18);
-    if (!Number.isFinite(n)) return "—";
+    if (!Number.isFinite(n)) return "–";
     // Bound the width. Memecoin supplies reach 1e60+, and .toFixed() silently
-    // falls back to FULL exponential ("1.2000…e+61") above 1e21 — a giant
+    // falls back to FULL exponential ("1.2000…e+61") above 1e21 – a giant
     // unbreakable string that shoves the whole table sideways when you sort by
     // Amount. Cap with a short compact exponential ("1.2e61").
     if (n >= 1e15) return n.toExponential(1).replace("e+", "e");
@@ -596,13 +596,13 @@ function fmtAmount(raw: string | null, decimals: number): string {
     if (n >= 1)    return n.toFixed(2);
     return n.toFixed(4);
   } catch {
-    return "—";
+    return "–";
   }
 }
-// Inlined (not imported from quick-prices.ts — that module pulls in the
+// Inlined (not imported from quick-prices.ts – that module pulls in the
 // Upstash Redis SDK, which must not enter the client bundle).
 function formatUsdCompact(usd: number | null | undefined): string {
-  if (usd == null || !Number.isFinite(usd) || usd <= 0) return "—";
+  if (usd == null || !Number.isFinite(usd) || usd <= 0) return "–";
   if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)}B`;
   if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
   if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;
@@ -610,7 +610,7 @@ function formatUsdCompact(usd: number | null | undefined): string {
   return `$${usd.toFixed(4)}`;
 }
 function relativeUntil(unix: number | null): string {
-  if (!unix) return "—";
+  if (!unix) return "–";
   const diff = Math.max(0, unix - Math.floor(Date.now() / 1000));
   if (diff < 60)    return `${diff}s`;
   if (diff < 3600)  return `${Math.floor(diff / 60)} min`;

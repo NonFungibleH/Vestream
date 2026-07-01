@@ -15,12 +15,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
-  title: "Find your token vestings — scan any wallet · Vestream",
+  title: "Find your token vestings – scan any wallet · Vestream",
   description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
   alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };
 
-// Display order mirrors the homepage "Integrated with" strip — same colours,
+// Display order mirrors the homepage "Integrated with" strip – same colours,
 // same row-1 / row-2 split, same chain pills. Single source of truth for the
 // visual would be nice but for now consistent literal lists keep the two
 // pages tightly aligned.
@@ -69,7 +69,7 @@ const findVestingsJsonLd = {
       "@id":   "https://www.vestream.io/find-vestings#howto",
       name:    "How to find every token vesting unlock for a wallet",
       description:
-        "Scan any wallet address across 10 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule — cliffs, linear streams, step releases, claimable balances.",
+        "Scan any wallet address across 10 vesting protocols and 7 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana) to surface every unlock schedule – cliffs, linear streams, step releases, claimable balances.",
       totalTime: "PT30S",
       supply:    { "@type": "HowToSupply", name: "An EVM or Solana wallet address" },
       tool:      { "@type": "HowToTool",   name: "A web browser" },
@@ -137,10 +137,10 @@ export default function FindVestingsPage() {
           <span style={{ color: "#1CB8B8" }}>to your wallet</span>
         </h1>
         <p className="text-base md:text-lg max-w-xl mx-auto mb-8" style={{ color: "#8B8E92", lineHeight: 1.6 }}>
-          Paste any address. We&rsquo;ll scan every major vesting protocol across EVM and Solana — instantly.
+          Paste any address. We&rsquo;ll scan every major vesting protocol across EVM and Solana – instantly.
         </p>
 
-        {/* Protocol + chain pills — mirrors the homepage "Integrated with"
+        {/* Protocol + chain pills – mirrors the homepage "Integrated with"
             strip so the visual treatment is consistent across the funnel. */}
         <div className="mt-2">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>

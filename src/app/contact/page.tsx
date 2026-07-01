@@ -1,6 +1,6 @@
 // src/app/contact/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Standalone /contact page — replacement for the old mailto link that used to
+// Standalone /contact page – replacement for the old mailto link that used to
 // live in the footer. Re-uses the existing /api/contact route (same POST
 // shape as the ContactModal component), so CRM wiring happens in one place
 // regardless of which surface submitted the form.
@@ -17,9 +17,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ContactFormCard } from "./ContactFormCard";
 
 export const metadata: Metadata = {
-  title: "Contact — Vestream",
+  title: "Contact – Vestream",
   description:
-    "Get in touch with Vestream. Questions about the product, API access, Enterprise pricing, partnerships, or anything else — we reply within one business day.",
+    "Get in touch with Vestream. Questions about the product, API access, Enterprise pricing, partnerships, or anything else – we reply within one business day.",
   alternates: { canonical: "https://www.vestream.io/contact" },
   openGraph: {
     title: "Contact Vestream",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
 };
 
-// ContactPoint JSON-LD — surfaces a machine-readable contact method for
+// ContactPoint JSON-LD – surfaces a machine-readable contact method for
 // search engines and AI agents. We deliberately don't expose a public email
 // here (that gets scraped instantly); the form is the canonical channel.
 const CONTACT_JSON_LD = {
@@ -98,7 +98,7 @@ export default function ContactPage() {
             style={{ color: "#8B8E92" }}
           >
             Questions about the product, developer API access, Enterprise pricing,
-            partnerships, or something we haven&apos;t thought of — we reply within
+            partnerships, or something we haven&apos;t thought of – we reply within
             one business day.
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function ContactPage() {
           {/* Form */}
           <ContactFormCard />
 
-          {/* Why contact us — signals to visitor what this form is for */}
+          {/* Why contact us – signals to visitor what this form is for */}
           <aside className="flex flex-col gap-4">
             <ReasonCard
               title="Enterprise pricing"

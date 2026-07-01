@@ -97,7 +97,7 @@ function ChatGPTTab() {
     <div>
       <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.65)" }}>
         ChatGPT doesn&rsquo;t speak MCP natively yet. Use a <strong style={{ color: "white" }}>Custom GPT Action</strong>{" "}
-        pointed at our OpenAPI spec — same three endpoints, native function-calling.
+        pointed at our OpenAPI spec – same three endpoints, native function-calling.
       </p>
 
       <ol className="text-sm space-y-3 mb-4 pl-5" style={{ color: "rgba(255,255,255,0.7)", listStyle: "decimal" }}>

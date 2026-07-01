@@ -1,4 +1,4 @@
-// /login — QR-based desktop sign-in for the Pro-tier dashboard.
+// /login – QR-based desktop sign-in for the Pro-tier dashboard.
 //
 // Flow (matches the Phase 2 pairing endpoints):
 //   1. Page mount → POST /api/auth/desktop-pair/init → mints a UUID code,
@@ -12,7 +12,7 @@
 //      - "expired" → start over (fetch a fresh code, re-render QR).
 //
 // Replaces the legacy email-OTP login. Email/password auth is no longer
-// available for desktop — only Pro-tier users with the mobile app can
+// available for desktop – only Pro-tier users with the mobile app can
 // reach the dashboard.
 
 "use client";
@@ -97,17 +97,17 @@ export default function LoginPage() {
             clearTimers();
             return;
           }
-          if (!r.ok) return; // transient — keep polling
+          if (!r.ok) return; // transient – keep polling
           const data = await r.json() as { status: string; redirect?: string };
           if (data.status === "confirmed" && data.redirect) {
             setStatus("confirmed");
             clearTimers();
-            // Tiny delay so the success state flashes for a beat —
+            // Tiny delay so the success state flashes for a beat –
             // reads as "done" instead of an unexplained reload.
             setTimeout(() => { window.location.href = data.redirect!; }, 600);
           }
         } catch {
-          // network blip — keep polling, no need to surface
+          // network blip – keep polling, no need to surface
         }
       }, POLL_INTERVAL_MS);
     } catch (err) {
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col" style={{ background: "#F5F5F3" }}>
-      {/* Slim nav — just logo. Login page is a focused single-column. */}
+      {/* Slim nav – just logo. Login page is a focused single-column. */}
       <nav className="flex items-center justify-between px-6 md:px-8 h-16 bg-white"
         style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         <Link href="/" className="flex items-center gap-2.5">
@@ -182,7 +182,7 @@ export default function LoginPage() {
               </p>
 
               {/* No-app fallback. The deep link above only works if the Vestream
-                  app is installed — without it, "Open in Vestream" silently does
+                  app is installed – without it, "Open in Vestream" silently does
                   nothing and the mobile visitor is stuck. Give them a way out:
                   install the app, then re-tap the button (the code is still
                   valid for its 5-min TTL). */}
@@ -196,7 +196,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* QR card — shown on desktop, or mobile when no code yet */}
+          {/* QR card – shown on desktop, or mobile when no code yet */}
           {(!isMobile || !code || status !== "waiting") && (
           <div
             className="rounded-2xl p-6 md:p-8 mb-5"
@@ -233,7 +233,7 @@ export default function LoginPage() {
               {status === "confirmed" && (
                 <div className="flex flex-col items-center gap-3" style={{ color: "#0F8A8A" }}>
                   <CheckIcon />
-                  <span className="text-sm font-semibold">Signed in — redirecting…</span>
+                  <span className="text-sm font-semibold">Signed in – redirecting…</span>
                 </div>
               )}
 
@@ -258,14 +258,14 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* TTL countdown — only while waiting */}
+            {/* TTL countdown – only while waiting */}
             {status === "waiting" && (
               <div className="text-center text-xs" style={{ color: "#B8BABD" }}>
                 Code expires in <span className="font-mono font-semibold">{ttlLabel}</span>
               </div>
             )}
 
-            {/* Retry CTA — only after expiry / error */}
+            {/* Retry CTA – only after expiry / error */}
             {(status === "expired" || status === "error") && (
               <button
                 onClick={startPairing}
@@ -305,7 +305,7 @@ export default function LoginPage() {
             </ol>
           </div>
 
-          {/* "I don't have the app yet" fallback — for users who hit /login
+          {/* "I don't have the app yet" fallback – for users who hit /login
               via search or shared link without the mobile app installed.
               Without this they were dead-ended at the QR card. The fallback
               card surfaces the two real paths (try the free scanner, or get
@@ -321,7 +321,7 @@ export default function LoginPage() {
               Don&apos;t have the app yet?
             </p>
             <p className="text-xs mb-4" style={{ color: "#5C6066", lineHeight: 1.55 }}>
-              The web dashboard is part of the Pro plan. The mobile app is how you subscribe and how you sign desktop sessions in. Try the free scanner first if you want to see what Vestream finds in your wallet — no install needed.
+              The web dashboard is part of the Pro plan. The mobile app is how you subscribe and how you sign desktop sessions in. Try the free scanner first if you want to see what Vestream finds in your wallet – no install needed.
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
               <Link

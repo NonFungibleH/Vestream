@@ -2,7 +2,7 @@
 
 // /dashboard/income-statement
 // ─────────────────────────────────────────────────────────────────────────────
-// Vesting Income Statement — the headline showcase of the Phase 2 claim
+// Vesting Income Statement – the headline showcase of the Phase 2 claim
 // ingestor pipeline. A consolidated P&L-style view of every vesting claim
 // the user has received, segmented by tax year, protocol, and token.
 //
@@ -10,7 +10,7 @@
 //   - The Exports tab gives users a transactional list + CSV downloads.
 //     Useful for accountants. Not a pleasant view for the user themselves.
 //   - The Income Statement gives them a "what did vesting actually pay me
-//     this year, and where did it come from" answer at a glance — the
+//     this year, and where did it come from" answer at a glance – the
 //     thing they want to look at on January 1st before doing taxes, on
 //     April 1st when the bill comes due, and quarterly to check pacing.
 //   - It also surfaces our pricing-confidence mix so users know which
@@ -18,7 +18,7 @@
 //
 // All amounts USD-anchored at claim time (the canonical tax-event basis).
 // The CurrencyProvider (wired into the dashboard layout) lets users see
-// the totals in their local currency at TODAY's rate — useful for
+// the totals in their local currency at TODAY's rate – useful for
 // situational awareness, not a substitute for the historical-rate
 // settlement that tax software needs.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ interface IncomeStatement {
   audienceCategory?: string | null;
 }
 
-/** Centralised copy table — keeps the three audience modes labelled
+/** Centralised copy table – keeps the three audience modes labelled
  *  consistently across both the interactive page and the print page.
  *  Investor framing emphasises capital assets / cliff events; worker
  *  framing emphasises ordinary income / continuous receipt. "Both"
@@ -75,7 +75,7 @@ function copyForAudience(category: string | null | undefined): {
       eyebrow:  "Crypto income",
       title:    "Crypto income statement",
       subtitle: (currency) =>
-        `Ordinary income received from streams, grants, and contributor pay — broken down by tax year, payer, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
+        `Ordinary income received from streams, grants, and contributor pay – broken down by tax year, payer, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
     };
   }
   if (audience === "both") {
@@ -83,7 +83,7 @@ function copyForAudience(category: string | null | undefined): {
       eyebrow:  "Token income",
       title:    "Token income statement",
       subtitle: (currency) =>
-        `Every token you've received — vesting unlocks, salary streams, and grant disbursements — broken down by tax year, source, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
+        `Every token you've received – vesting unlocks, salary streams, and grant disbursements – broken down by tax year, source, and token. All amounts USD-anchored at the moment of each on-chain receipt${currency !== "USD" ? `, displayed in ${currency} at today's rate` : ""}.`,
     };
   }
   // investor (default / null)
@@ -144,7 +144,7 @@ function protocolValue(r: ProtocolRow, col: ProtocolCol): number | string {
 }
 
 // byToken's `units` is a stringified bigint sum that we can't divide by
-// decimals without parsing — but for ordering, comparing the raw bigint-as-
+// decimals without parsing – but for ordering, comparing the raw bigint-as-
 // number is monotonic enough across the top-25 set (overflow only matters at
 // extreme magnitudes, where relative ordering is preserved). Token symbol
 // sorts lexicographically.
@@ -157,7 +157,7 @@ function tokenValue(r: TokenRow, col: TokenCol): number | string {
   }
 }
 
-/** Sortable table header cell — ▲/▼ shows on the active column; inactive
+/** Sortable table header cell – ▲/▼ shows on the active column; inactive
  *  columns reserve the indicator's width with a transparent ▲ so the layout
  *  doesn't shift. Matches the Explorer table's Th. */
 function Th({
@@ -185,7 +185,7 @@ function Th({
   );
 }
 
-/** Pulsing placeholder block — copied from the Explorer loading skeleton
+/** Pulsing placeholder block – copied from the Explorer loading skeleton
  *  (background var(--preview-muted) + the pulse keyframes injected below). */
 function Shimmer({ w, h, rounded = 6, className = "", delay = "0s" }: {
   w: string | number; h: number; rounded?: number; className?: string; delay?: string;
@@ -239,7 +239,7 @@ function TableSkeleton({ title, rows = 5 }: { title: string; rows?: number }) {
 
 export default function IncomeStatementPage() {
   const { format, formatCompact, currency } = useCurrency();
-  // Report period — empty string = open-ended. Replaces the old year-only
+  // Report period – empty string = open-ended. Replaces the old year-only
   // dropdown with preset chips + a custom from/to range (the same UX the Tax
   // Exports tab uses). The /api/claims/income-statement endpoint already
   // accepts since/until, so this is purely a UI change. "All time" = both
@@ -308,7 +308,7 @@ export default function IncomeStatementPage() {
 
   // ── In-memory sort state for the four data tables ──────────────────────────
   // Click a header to sort; click again to flip direction. Sorting is purely
-  // client-side (the data is already here) — no re-fetch. Mirrors the
+  // client-side (the data is already here) – no re-fetch. Mirrors the
   // Explorer table's Th + useMemo pattern.
   const [yearSort,     setYearSort]     = useState<{ col: YearCol;     dir: SortDir }>({ col: "year",   dir: "desc" });
   const [protocolSort, setProtocolSort] = useState<{ col: ProtocolCol; dir: SortDir }>({ col: "usd",    dir: "desc" });
@@ -392,7 +392,7 @@ export default function IncomeStatementPage() {
           })()}
         </div>
 
-        {/* Sub-tab nav — matches the Tax Exports tab */}
+        {/* Sub-tab nav – matches the Tax Exports tab */}
         <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit"
           style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border)" }}>
           <Link href="/dashboard/exports"
@@ -406,7 +406,7 @@ export default function IncomeStatementPage() {
           </span>
         </div>
 
-        {/* Jurisdiction caveat — UK / AU users may need to map claim-date data
+        {/* Jurisdiction caveat – UK / AU users may need to map claim-date data
             to unlock-date tax events. Surfaced inline so it's not buried at
             the bottom of the page where the user might miss it. */}
         <div className="mb-6 rounded-lg p-3 text-[11px] flex gap-2.5 items-start"
@@ -421,14 +421,14 @@ export default function IncomeStatementPage() {
           <span>
             <strong>Tax basis note:</strong> we capture <em>claim-date</em> events. That&apos;s the
             correct receipt event for US, Canada, Germany, and most of the EU. UK (HMRC) and
-            Australia (ATO) filers may owe income tax at the <em>unlock</em> date instead — your
+            Australia (ATO) filers may owe income tax at the <em>unlock</em> date instead – your
             accountant can map claim records to unlock dates using the per-stream schedules on
             the <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>main dashboard</Link>.{" "}
             <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>Read the full guide →</Link>
           </span>
         </div>
 
-        {/* Report period — preset chips + custom from/to range (mirrors the
+        {/* Report period – preset chips + custom from/to range (mirrors the
             Tax Exports tab). Calendar years + UK tax years (Apr 6–Apr 5);
             anything else goes in the From/To inputs. The endpoint already
             takes since/until, so this is purely a UI change. */}
@@ -564,7 +564,7 @@ export default function IncomeStatementPage() {
               This page shows income once your on-chain claim history has been indexed.
             </p>
             <p className="text-xs mb-4" style={{ color: "var(--preview-text-3)" }}>
-              Head to Tax Reports and hit <strong>&ldquo;Refresh claims&rdquo;</strong> — Vestream will pull your
+              Head to Tax Reports and hit <strong>&ldquo;Refresh claims&rdquo;</strong> – Vestream will pull your
               Sablier claim history automatically. Income + totals populate immediately after.
             </p>
             <Link href="/dashboard/exports"
@@ -575,7 +575,7 @@ export default function IncomeStatementPage() {
           </div>
         )}
 
-        {/* Loading skeletons — reserve the table area so the page doesn't
+        {/* Loading skeletons – reserve the table area so the page doesn't
             pop/jump when real data arrives. */}
         {loading && (
           <>
@@ -674,7 +674,7 @@ export default function IncomeStatementPage() {
                 <tbody>
                   {sortedByToken.map((t, i) => {
                     // Convert stringified bigint sum → human units, capped to 4 decimals.
-                    let humanUnits = "—";
+                    let humanUnits = "–";
                     try {
                       const big = BigInt(t.units);
                       const divisor = 10n ** BigInt(t.tokenDecimals);
@@ -703,7 +703,7 @@ export default function IncomeStatementPage() {
           </div>
         )}
 
-        {/* Year × Protocol pivot — only meaningful in "all time" view */}
+        {/* Year × Protocol pivot – only meaningful in "all time" view */}
         {!loading && data && isAllTime && data.byYear.length > 1 && protocolsInPivot.length > 0 && (
           <div className="rounded-2xl mb-5 overflow-hidden"
             style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
@@ -731,7 +731,7 @@ export default function IncomeStatementPage() {
                         return (
                           <td key={p} className="px-3 py-3 text-right text-xs"
                             style={{ color: v > 0 ? "var(--preview-text)" : "var(--preview-text-3)" }}>
-                            {v > 0 ? formatCompact(v) : "—"}
+                            {v > 0 ? formatCompact(v) : "–"}
                           </td>
                         );
                       })}
@@ -767,7 +767,7 @@ export default function IncomeStatementPage() {
             <p className="text-[11px] mt-3" style={{ color: "var(--preview-text-3)" }}>
               Exact-day prices come from CoinGecko historical at the claim&apos;s UTC date. Nearest-day means
               the price on the closest available day (within a 7-day window). Missing means CoinGecko had no
-              data for that token — your accountant or tax software will need a manual cost basis entered.
+              data for that token – your accountant or tax software will need a manual cost basis entered.
             </p>
           </div>
         )}
@@ -775,10 +775,10 @@ export default function IncomeStatementPage() {
         <p className="text-[10px] mt-6 text-center" style={{ color: "var(--preview-text-3)" }}>
           USD values are anchored at the moment of each on-chain claim. This is the canonical
           tax basis for the US (IRS), Canada (CRA), Germany, and most of the EU. UK (HMRC) and
-          Australia (ATO) filers should verify with an accountant — their tax basis can be the
+          Australia (ATO) filers should verify with an accountant – their tax basis can be the
           unlock date rather than the claim date.
           {currency !== "USD" && (
-            <> Display in {currency} uses today&apos;s exchange rate (situational awareness only —
+            <> Display in {currency} uses today&apos;s exchange rate (situational awareness only –
               tax software needs historical-rate settlement at each event date).</>
           )}
         </p>

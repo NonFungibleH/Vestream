@@ -3,7 +3,7 @@
 // /dashboard/watchlist
 // ─────────────────────────────────────────────────────────────────────────────
 // The user's saved tokens. These are tokens saved from the Vesting Index via
-// the ☆ Save button on a token's drill-down page — NOT tracked wallets (that's
+// the ☆ Save button on a token's drill-down page – NOT tracked wallets (that's
 // the dashboard) and NOT a live scan (that's the Wallet Scanner). It's a
 // read-only shortcut list: jump straight back to a token's vesting overview.
 //
@@ -90,7 +90,7 @@ export default function WatchlistPage() {
       <p className="text-sm mb-6" style={{ color: "var(--preview-text-2)" }}>
         Tokens you&apos;ve saved from the{" "}
         <Link href="/dashboard/explorer" className="underline" style={{ color: "#0F8A8A" }}>Vesting Explorer</Link>{" "}
-        — one click back to each token&apos;s vesting overview, rounds, and unlock schedule. Save any token with the{" "}
+        – one click back to each token&apos;s vesting overview, rounds, and unlock schedule. Save any token with the{" "}
         <strong>☆ Save</strong> button on its page. (Tracking your own wallets is the{" "}
         <Link href="/dashboard" className="underline" style={{ color: "#0F8A8A" }}>Dashboard</Link>; a one-shot scan is the{" "}
         <Link href="/dashboard/discover" className="underline" style={{ color: "#0F8A8A" }}>Wallet Scanner</Link>.)

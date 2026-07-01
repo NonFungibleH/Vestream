@@ -6,12 +6,12 @@
 //      under /dashboard/* can call useCurrency() + re-render when the user
 //      switches currency in /settings.
 //
-//   2. Render the unified <DashboardChrome> shell — a single shared sidebar
+//   2. Render the unified <DashboardChrome> shell – a single shared sidebar
 //      that's identical on every dashboard sub-page. Previously, /dashboard,
 //      /discover, and /explorer each had their own inline sidebar copies
 //      (with subtly different NAV_ITEMS lists), and /watchlist /
 //      /income-statement / /exports had no sidebar at all. User reported
-//      this as "the menu is inconsistent across pages" — this layout is
+//      this as "the menu is inconsistent across pages" – this layout is
 //      the fix.
 //
 // Server-side concerns:
@@ -51,20 +51,20 @@ import { users } from "@/lib/db/schema";
  *   - middleware blocks visitors with NO `vestr_session` cookie.
  *   - this layout DECRYPTS the iron-session and confirms a real address +
  *     Pro tier. A stripped, expired, or non-Pro cookie reaches here, fails
- *     the check, and gets bounced — the middleware can't do this because it
+ *     the check, and gets bounced – the middleware can't do this because it
  *     can't decrypt the cookie at the edge.
  *
  * Build-phase guard: skip DB/session work during `next build` (no request
- * context) so static generation doesn't crash — see CLAUDE.md landmine.
+ * context) so static generation doesn't crash – see CLAUDE.md landmine.
  * Returns the validated tier for the sidebar's upgrade-prompt rendering.
  */
 /**
  * Look up the tier for one user address. Wrapped in React's `cache()` so
- * multiple callers within the SAME server render dedupe to one DB hit —
+ * multiple callers within the SAME server render dedupe to one DB hit –
  * the layout was previously running this query top-level + the chrome
  * could trigger another in nested components. Now it's once per request.
  *
- * This is render-scoped, not cross-request — we deliberately don't add
+ * This is render-scoped, not cross-request – we deliberately don't add
  * an `unstable_cache` layer here because tier changes (subscribe, lapse)
  * must reflect on the next page load, not 60s later. A user paying
  * \$9.99 who lapses must hit /login on their VERY NEXT nav.
@@ -90,7 +90,7 @@ async function requireDashboardAccess(): Promise<string> {
   // No valid (decryptable) session → not logged in.
   if (!address) redirect("/login");
 
-  // Bound the tier lookup. A try/catch only catches THROWS — a query that
+  // Bound the tier lookup. A try/catch only catches THROWS – a query that
   // STALLS on a saturated Supabase pooler connection (no per-statement timeout
   // by default) just hangs the await until Cloudflare's 100s cutoff → a 524 on
   // EVERY dashboard route (this exact outage happened 2026-06-19). withTimeout
@@ -111,11 +111,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Gate FIRST — redirect() throws, so nothing below renders for an
+  // Gate FIRST – redirect() throws, so nothing below renders for an
   // unauthenticated / non-Pro request.
   const tier = await requireDashboardAccess();
 
-  // Bound the FX fetch too — getRates() falls back to identity rates on
+  // Bound the FX fetch too – getRates() falls back to identity rates on
   // *failure*, but a stalled Upstash call would hang the render. withTimeout
   // degrades to identity rates (currency shows 1:1 until next load) in 3s
   // rather than risking another gate hang.
@@ -127,7 +127,7 @@ export default async function DashboardLayout({
   // SSR-read the night-mode cookie and hand it to DarkModeProvider, which
   // owns the single `.dark` wrapper for the whole dashboard tree and exposes
   // { dark, toggle } to client components. This is the single source of truth
-  // — pages no longer keep their own dark state, and there's one toggle
+  // – pages no longer keep their own dark state, and there's one toggle
   // (the sidebar). First-byte correct (no flash), reactive on toggle.
   const dark = getDarkModeFromCookies(cookieStore);
 
@@ -141,7 +141,7 @@ export default async function DashboardLayout({
       <DarkModeProvider initialDark={dark}>
         <DashboardSwrProvider>
           <ToastProvider>
-            {/* Top progress bar — instant feedback on every in-app navigation
+            {/* Top progress bar – instant feedback on every in-app navigation
                 (filters/sort/pagination are force-dynamic server round-trips
                 that Next's loading.tsx doesn't cover). */}
             <Suspense fallback={null}><RouteProgress /></Suspense>

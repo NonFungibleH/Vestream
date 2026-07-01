@@ -2,8 +2,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Streamed loading skeleton for /protocols/[slug]/unlocks (and the per-chain
 // child /unlocks/[chain]). Without this, the page blocked on
-// getUnlocksInWindow() — a two-pass scan over the protocol's full active-stream
-// set (Sablier alone is ~20k rows) — and on a cold Data Cache miss the user
+// getUnlocksInWindow() – a two-pass scan over the protocol's full active-stream
+// set (Sablier alone is ~20k rows) – and on a cold Data Cache miss the user
 // saw a BLANK page for up to ~10s before any HTML arrived. (Reported live:
 // Sablier upcoming-unlocks showed nothing for ~10s, then snapped in.)
 //
@@ -32,7 +32,7 @@ export default function ProtocolUnlocksLoading() {
         <Bar w="60%" h={16} delay="0.2s" />
       </section>
 
-      {/* Stat card — UNLOCKS / TOKENS / CHAINS / WALLETS in a 2×2 grid */}
+      {/* Stat card – UNLOCKS / TOKENS / CHAINS / WALLETS in a 2×2 grid */}
       <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto w-full">
         <div className="rounded-2xl p-6"
           style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
@@ -62,7 +62,7 @@ export default function ProtocolUnlocksLoading() {
         </div>
       </section>
 
-      {/* Unlock list — stub rows */}
+      {/* Unlock list – stub rows */}
       <section className="px-4 md:px-8 pb-20 max-w-5xl mx-auto w-full">
         <div className="rounded-2xl overflow-hidden"
           style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>

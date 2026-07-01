@@ -2,19 +2,19 @@
 
 // /dashboard/alerts
 // ─────────────────────────────────────────────────────────────────────────────
-// Web alerts management — token-first, mirroring the mobile app's Alerts tab.
+// Web alerts management – token-first, mirroring the mobile app's Alerts tab.
 //
 // 2026-06-15 rebuild: the page is now TOKEN-FIRST. You pick a token (stream)
-// at the top, then see + configure that token's three alert slots below —
+// at the top, then see + configure that token's three alert slots below –
 // exactly the mental model the mobile app uses. This replaced the old
 // "global push defaults + a list of per-stream override rows" layout.
 //
 // Why the change went deeper than cosmetics:
 //   - The notification scheduler (src/lib/notifications/scheduler.ts) REQUIRES
-//     a per-stream prefs entry to send anything (`if (!perStream) continue` —
+//     a per-stream prefs entry to send anything (`if (!perStream) continue` –
 //     a 2026-05-20 privacy fix). The old page's prominent "Global push" event
 //     toggles (notifyCliff / notifyStreamEnd / notifyMonthly / notifyNextClaim)
-//     were read by ZERO firing code — dead UI implying alerts that never sent.
+//     were read by ZERO firing code – dead UI implying alerts that never sent.
 //     They're removed here. The only globals that still matter are the email
 //     enable + address (kept below) and `hoursBeforeUnlock` (a stored default
 //     timing, now set per-slot so it never needs a global control).
@@ -22,19 +22,19 @@
 //     per-stream and opt-in.
 //
 // Data model is shared with mobile: both write `streamPrefs[streamId]` (a JSONB
-// bag keyed by streamId) — toggle on either surface, see it on both. Web writes
+// bag keyed by streamId) – toggle on either surface, see it on both. Web writes
 // via PUT /api/notifications/preferences; mobile via POST /api/mobile/notifications.
 //
 // Layout (top → bottom):
 //   1. Header.
-//   2. TOKEN SELECTOR — pills (≤4 active streams) or dropdown (>4), each with an
+//   2. TOKEN SELECTOR – pills (≤4 active streams) or dropdown (>4), each with an
 //      "armed" alert-count badge. Active = non-fully-vested.
-//   3. SELECTED TOKEN CONFIG — 3 alert slots; each slot is a toggle + a trigger
+//   3. SELECTED TOKEN CONFIG – 3 alert slots; each slot is a toggle + a trigger
 //      picker (timing chips / event chips / value chips). Continuous streams
 //      (Superfluid / LlamaPay) only offer value triggers.
 //   4. EMAIL alerts (global enable + address).
 //   5. TEST push.
-//   6. HISTORY — last 50 notifications.
+//   6. HISTORY – last 50 notifications.
 //
 // Every trigger offered here is verified to fire in the scheduler:
 //   before-unlock, vesting-start, cliff, stream-end (resolveAlertSpecs) and
@@ -59,7 +59,7 @@ interface StreamSlotPref {
   thresholdUsd?:      number | null;
 }
 
-/** Local UI shape — flat per-slot. Server stores a per-slot scattered
+/** Local UI shape – flat per-slot. Server stores a per-slot scattered
  *  set of keys (alert1TriggerType, alert2TriggerType, thresholdUsd1…)
  *  for back-compat with the mobile-first schema; we normalise to/from
  *  this on read/write. */
@@ -139,7 +139,7 @@ const EVENT_LABELS: Record<string, string> = {
   "stream-end":    "Stream end",
 };
 
-// Protocols with continuous (per-second) streaming and no discrete unlock —
+// Protocols with continuous (per-second) streaming and no discrete unlock –
 // timing/event triggers don't apply, only value-crosses.
 const CONTINUOUS_PROTOCOLS = new Set(["superfluid", "llamapay"]);
 
@@ -244,7 +244,7 @@ export default function AlertsPage() {
   const { dark: _dark } = useDarkMode();
   // `dark` is unused inside the markup (CSS vars own all theming via the
   // provider's wrapper) but we keep the hook call so the provider's
-  // reactive subscription stays mounted — drops the lint warning without
+  // reactive subscription stays mounted – drops the lint warning without
   // changing behaviour.
   void _dark;
 
@@ -252,7 +252,7 @@ export default function AlertsPage() {
   const [error,    setError]    = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // SWR caches — each survives navigation away/back (60s dedupe via the
+  // SWR caches – each survives navigation away/back (60s dedupe via the
   // dashboard's SWRConfig provider), so revisiting /dashboard/alerts after a
   // short detour is instant. The fetcher pushes 401s through the /login bounce.
   const onAuthFail = useCallback(() => { router.push("/login"); }, [router]);
@@ -267,7 +267,7 @@ export default function AlertsPage() {
     "/api/notifications/preferences",
     authFetcher,
   );
-  // /api/vesting REQUIRES a `wallets` param — calling it bare returns 400.
+  // /api/vesting REQUIRES a `wallets` param – calling it bare returns 400.
   // Fetch the user's tracked wallets first, then build the scoped URL. No
   // wallets → skip the call (vestingUrl stays null) and the streams memo below
   // resolves to [] so the empty state shows.
@@ -323,7 +323,7 @@ export default function AlertsPage() {
     [historyRaw],
   );
 
-  // Active (alertable) streams — non-fully-vested, like the mobile app.
+  // Active (alertable) streams – non-fully-vested, like the mobile app.
   const activeStreams = useMemo(
     () => (streams ?? []).filter((s) => !s.isFullyVested),
     [streams],
@@ -419,7 +419,7 @@ export default function AlertsPage() {
         Notification alerts
       </h1>
       <p className="text-sm mb-2" style={{ color: "var(--preview-text-2)" }}>
-        Pick a token, then set exactly how you want to hear about it — before an unlock, at the cliff, at full vest, or when its claimable value crosses a number. Everything here is shared with the mobile app.
+        Pick a token, then set exactly how you want to hear about it – before an unlock, at the cliff, at full vest, or when its claimable value crosses a number. Everything here is shared with the mobile app.
       </p>
       <div className="inline-flex items-center gap-1.5 mb-6 text-[11px]" style={{ color: "var(--preview-text-3)" }}>
         <span style={{ width: 6, height: 6, borderRadius: 3, background: "#0F8A8A", display: "inline-block" }} />
@@ -534,7 +534,7 @@ function NoStreamsBlock({ hasStreams }: { hasStreams: boolean }) {
         </p>
         <p className="text-xs mb-3" style={{ color: "var(--preview-text-3)" }}>
           {hasStreams
-            ? "All your tracked vestings are fully vested — there's nothing left to count down to. Add a wallet with active positions to set up alerts."
+            ? "All your tracked vestings are fully vested – there's nothing left to count down to. Add a wallet with active positions to set up alerts."
             : "Alert controls appear here once your tracked wallets have vesting positions. Add a wallet from the Dashboard or scan one with the Wallet Scanner."}
         </p>
         <div className="flex justify-center gap-2">
@@ -727,7 +727,7 @@ function StreamAlertConfig({
           </p>
           <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
             {isContinuous
-              ? "Streams continuously — alert by claimable value."
+              ? "Streams continuously – alert by claimable value."
               : "Choose up to three independent alerts for this token."}
           </p>
         </div>
@@ -867,7 +867,7 @@ function TriggerPicker({
       </ChipGroup>
       <p className="text-[10.5px]" style={{ color: "var(--preview-text-3)" }}>
         {isContinuous
-          ? "This token streams continuously, so there's no unlock to count down to — get alerted when its claimable value passes an amount instead."
+          ? "This token streams continuously, so there's no unlock to count down to – get alerted when its claimable value passes an amount instead."
           : "“Value crosses” fires once when this token's claimable value passes the amount."}
       </p>
     </div>
@@ -970,7 +970,7 @@ function HistoryRow({
 }
 
 // ── Global email prefs ──────────────────────────────────────────────────────
-// Writes to /api/notifications/preferences (PUT) — the SAME row the mobile app
+// Writes to /api/notifications/preferences (PUT) – the SAME row the mobile app
 // writes via /api/mobile/notifications. Toggle on either surface, see on both.
 
 type MutatePrefsFn = (
@@ -1146,7 +1146,7 @@ function TestPushSection({
         return;
       }
       setStatus("sent");
-      setHint("Test push sent. Check your mobile device — it should arrive within a few seconds.");
+      setHint("Test push sent. Check your mobile device – it should arrive within a few seconds.");
       toast.success("Test push sent");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to send";
@@ -1169,7 +1169,7 @@ function TestPushSection({
               Send a test push to your phone
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-              Confirms permissions, your push token, and the relay are wired up — without waiting for a real unlock. Requires the mobile app installed and signed in to this account.
+              Confirms permissions, your push token, and the relay are wired up – without waiting for a real unlock. Requires the mobile app installed and signed in to this account.
             </p>
           </div>
           <button

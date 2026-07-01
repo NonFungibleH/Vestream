@@ -24,12 +24,12 @@ const fmtNum = (n: number) =>
   : n >= 1e3 ? `${(n / 1e3).toFixed(2)}K`
   : n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 const fmtDate = (t: number | null | undefined) =>
-  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
-// Compact month-year for date RANGES (staggered cohorts span many months —
+  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "–";
+// Compact month-year for date RANGES (staggered cohorts span many months –
 // "Jun 2026 → Apr 2027" reads cleaner than two full dates).
 const fmtMonthYear = (t: number | null | undefined) =>
-  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "—";
-// Relative time to an unlock — the at-a-glance differentiator between rounds.
+  t ? new Date(t * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "–";
+// Relative time to an unlock – the at-a-glance differentiator between rounds.
 const relUntil = (t: number | null | undefined): string => {
   if (!t) return "";
   const diff = t - Math.floor(Date.now() / 1000);
@@ -61,7 +61,7 @@ export function RoundsList({
         const cliffOnly = r.durationDays > 0 && r.cliffOffsetDays >= r.durationDays - 3;
         // Instant = each stream's start == end (a lump on one date). When such
         // streams have DIFFERENT dates they group into one round by terms, so
-        // it's a STAGGERED cohort — show its date RANGE, not a single date, and
+        // it's a STAGGERED cohort – show its date RANGE, not a single date, and
         // say so in the cadence. This is the CHEEL case users found confusing.
         const isInstant = r.durationDays === 0;
         const staggered = isInstant && (r.windowEnd - r.windowStart > 2 * 86400);
@@ -82,14 +82,14 @@ export function RoundsList({
                   {r.label}{" "}
                   <span className="font-normal" style={{ color: "var(--preview-text-3)" }}>· {proto(r.protocol)}</span>
                 </div>
-                {/* Date dropped from here — it now lives in the prominent block on
+                {/* Date dropped from here – it now lives in the prominent block on
                     the right, so near-identical rounds (same protocol/amount/
                     cadence) are told apart by their unlock date at a glance. */}
                 <div className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
                   {r.recipientCount} wallet{r.recipientCount !== 1 ? "s" : ""} · {fmtNum(whole(r.totalLocked, dec))} {symbol} locked · {cadence}
                 </div>
               </div>
-              {/* Prominent unlock-date block — the primary differentiator.
+              {/* Prominent unlock-date block – the primary differentiator.
                   Staggered instant cohorts show the date RANGE (each wallet
                   unlocks on its own date), so "Jun 2026 → Apr 2027" reads as a
                   window instead of a single misleading "next" date. */}
@@ -114,7 +114,7 @@ export function RoundsList({
                 <WalletTable wallets={wallets} dec={dec} />
                 {hidden > 0 && (
                   <div className="px-4 md:px-5 py-2.5 text-[11px] border-t" style={{ borderColor: "var(--preview-border-2)", color: "var(--preview-text-3)" }}>
-                    +{hidden} more wallet{hidden !== 1 ? "s" : ""} —{" "}
+                    +{hidden} more wallet{hidden !== 1 ? "s" : ""} –{" "}
                     <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>upgrade to Pro</Link> to see all.
                   </div>
                 )}
@@ -128,7 +128,7 @@ export function RoundsList({
 }
 
 // ── Sortable wallet table (per expanded round) ──────────────────────────────
-// In-memory sort over the round's wallets — clicking a header reorders rows
+// In-memory sort over the round's wallets – clicking a header reorders rows
 // instantly with zero round-trip (mirrors ExplorerTable's pattern).
 
 type WalletSortCol = "amount" | "start" | "cliff" | "end" | "claimed" | "claimable";
@@ -189,7 +189,7 @@ function WalletTable({ wallets, dec }: { wallets: VestingStream[]; dec: number }
             </td>
             <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text)" }}>{fmtNum(whole(s.totalAmount, dec))}</td>
             <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.startTime)}</td>
-            <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{s.cliffTime ? fmtDate(s.cliffTime) : "—"}</td>
+            <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{s.cliffTime ? fmtDate(s.cliffTime) : "–"}</td>
             <td className="px-2 py-2" style={{ color: "var(--preview-text-2)" }}>{fmtDate(s.endTime)}</td>
             <td className="text-right px-2 py-2 tabular-nums" style={{ color: "var(--preview-text-3)" }}>{fmtNum(whole(s.withdrawnAmount, dec))}</td>
             <td className="text-right px-4 md:px-5 py-2 tabular-nums" style={{ color: "#3FA568" }}>{fmtNum(whole(s.claimableNow, dec))}</td>

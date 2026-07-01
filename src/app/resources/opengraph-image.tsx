@@ -1,11 +1,11 @@
-// Resources index Open Graph image — 1200×630, static.
+// Resources index Open Graph image – 1200×630, static.
 // Used as the share preview for vestream.io/resources.
-// Edge runtime is fine here — no generateStaticParams or DB calls.
+// Edge runtime is fine here – no generateStaticParams or DB calls.
 
 import { ImageResponse } from "next/og";
 
 export const runtime  = "edge";
-export const alt      = "Vestream Resources — Token Vesting Guides & Insights";
+export const alt      = "Vestream Resources – Token Vesting Guides & Insights";
 export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

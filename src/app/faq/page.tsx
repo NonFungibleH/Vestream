@@ -1,6 +1,6 @@
 // src/app/faq/page.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Comprehensive FAQ page — primarily a Search/AI Optimisation surface. The
+// Comprehensive FAQ page – primarily a Search/AI Optimisation surface. The
 // homepage carries a short 10-question FAQ aimed at scanners; this page goes
 // deeper with grouped categories, self-contained long-form answers, and
 // schema.org FAQPage JSON-LD so Google and AI search engines can parse each
@@ -10,7 +10,7 @@
 //   - Keep each answer self-contained: a reader (human or LLM) should be able
 //     to quote a single Q&A and have it make sense without the rest of the
 //     page.
-//   - Avoid marketing hype in answers — concrete specifics beat adjectives
+//   - Avoid marketing hype in answers – concrete specifics beat adjectives
 //     for both ranking and user trust. Numbers, chain names, protocol names,
 //     prices should appear verbatim.
 //   - Rename categories or reorder only if you also update the `FAQ_DATA`
@@ -26,14 +26,14 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "FAQ — Vestream | Token vesting, unlock alerts, developer API",
+  title: "FAQ – Vestream | Token vesting, unlock alerts, developer API",
   description:
     "Answers to every common question about Vestream: supported protocols and chains, how unlock alerts work, pricing, security, the developer REST API and MCP server, mobile app, account management, and more.",
   alternates: { canonical: "https://www.vestream.io/faq" },
   openGraph: {
     title: "Vestream FAQ",
     description:
-      "Everything you need to know about tracking token vesting with Vestream — supported protocols, unlock alerts, pricing, developer API, and more.",
+      "Everything you need to know about tracking token vesting with Vestream – supported protocols, unlock alerts, pricing, developer API, and more.",
     url: "https://www.vestream.io/faq",
     siteName: "Vestream",
     type: "website",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Vestream FAQ",
     description:
-      "Supported protocols, unlock alerts, pricing, developer API, mobile app — answered in depth.",
+      "Supported protocols, unlock alerts, pricing, developer API, mobile app – answered in depth.",
   },
 };
 
@@ -68,7 +68,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is Vestream?",
-        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from ten major platforms — Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
+        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from ten major platforms – Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
       },
       {
         q: "Who is Vestream for?",
@@ -76,15 +76,15 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I start using Vestream?",
-        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any wallet — EVM 0x… address or Solana pubkey — and Vestream automatically scans it across all 10 protocols and 7 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
+        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any wallet – EVM 0x… address or Solana pubkey – and Vestream automatically scans it across all 10 protocols and 7 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
       },
       {
         q: "Do I need to connect my wallet to use Vestream?",
-        a: "No. Vestream is strictly a read-only, address-watching tracker — you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. Email OTP is the only login required.",
+        a: "No. Vestream is strictly a read-only, address-watching tracker – you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. Email OTP is the only login required.",
       },
       {
         q: "Do I need to know what protocol my tokens are vested on?",
-        a: "No. When you add a wallet address, Vestream auto-scans all 10 supported protocols across all 7 chains (EVM + Solana) and surfaces every vesting stream found — you don't need to know in advance which platform your tokens are on.",
+        a: "No. When you add a wallet address, Vestream auto-scans all 10 supported protocols across all 7 chains (EVM + Solana) and surfaces every vesting stream found – you don't need to know in advance which platform your tokens are on.",
       },
     ],
   },
@@ -103,7 +103,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How does Vestream get the vesting data?",
-        a: "For five EVM protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest) we query each protocol's official subgraph on The Graph Network — same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. Streamflow + Jupiter Lock are read directly from Solana via the protocols' SDKs and getProgramAccounts. LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
+        a: "For five EVM protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest) we query each protocol's official subgraph on The Graph Network – same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. Streamflow + Jupiter Lock are read directly from Solana via the protocols' SDKs and getProgramAccounts. LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
       },
       {
         q: "How fresh is the data?",
@@ -111,11 +111,11 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Will you add more protocols?",
-        a: "Yes. The roadmap prioritises protocols with public subgraphs or well-documented contract interfaces. Vote for what you want by emailing us via the contact page — volume of requests genuinely drives prioritisation.",
+        a: "Yes. The roadmap prioritises protocols with public subgraphs or well-documented contract interfaces. Vote for what you want by emailing us via the contact page – volume of requests genuinely drives prioritisation.",
       },
       {
         q: "Can I propose a new chain or protocol?",
-        a: "Yes — use the contact form and tell us the protocol name, contract addresses, and (if known) the subgraph ID or where the schedule data lives on-chain. If it has a subgraph we can usually prototype an adapter in a day.",
+        a: "Yes – use the contact form and tell us the protocol name, contract addresses, and (if known) the subgraph ID or where the schedule data lives on-chain. If it has a subgraph we can usually prototype an adapter in a day.",
       },
     ],
   },
@@ -126,23 +126,23 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "How do unlock alerts work?",
-        a: "Turn on alerts in Settings and pick your preferences — email, push, or both, and a lead time (1 hour to 3 days before each unlock). A background cron job scans every tracked wallet against the next 30 days of unlocks, compares against a dedup log, and fires a notification at the chosen lead time. You get one alert per unlock event; we never spam.",
+        a: "Turn on alerts in Settings and pick your preferences – email, push, or both, and a lead time (1 hour to 3 days before each unlock). A background cron job scans every tracked wallet against the next 30 days of unlocks, compares against a dedup log, and fires a notification at the chosen lead time. You get one alert per unlock event; we never spam.",
       },
       {
         q: "What counts as an unlock event?",
-        a: "Any scheduled time at which a vesting stream moves tokens from locked to claimable — linear stream end, tranche boundary in a stepped vest, cliff release, or scheduled cycle unlock on PinkSale. A continuously streaming Superfluid vest is treated as \"fully unlocked at end time\" for alert purposes.",
+        a: "Any scheduled time at which a vesting stream moves tokens from locked to claimable – linear stream end, tranche boundary in a stepped vest, cliff release, or scheduled cycle unlock on PinkSale. A continuously streaming Superfluid vest is treated as \"fully unlocked at end time\" for alert purposes.",
       },
       {
         q: "Will I get alerts for unlocks that have already happened?",
-        a: "No. Notifications only fire for unlock events strictly in the future as of the scan time. If you add a wallet that has an unlock tomorrow, you'll get the alert. If it had an unlock yesterday, you won't be notified — that event is already in the past.",
+        a: "No. Notifications only fire for unlock events strictly in the future as of the scan time. If you add a wallet that has an unlock tomorrow, you'll get the alert. If it had an unlock yesterday, you won't be notified – that event is already in the past.",
       },
       {
         q: "How many push alerts can I send on the Free plan?",
-        a: "Three lifetime push alerts on Free. Email alerts have no such cap on any tier — free accounts get unlimited email alerts from day one. Pro and Enterprise have unlimited push alerts.",
+        a: "Three lifetime push alerts on Free. Email alerts have no such cap on any tier – free accounts get unlimited email alerts from day one. Pro and Enterprise have unlimited push alerts.",
       },
       {
         q: "Can I get alerts for a wallet that isn't mine?",
-        a: "Yes. You can add any Ethereum address — a team treasury, a founder's wallet, an advisor allocation — and receive alerts on it. The data is all public on-chain anyway. You authenticate with your own email; the addresses you track are just configuration.",
+        a: "Yes. You can add any Ethereum address – a team treasury, a founder's wallet, an advisor allocation – and receive alerts on it. The data is all public on-chain anyway. You authenticate with your own email; the addresses you track are just configuration.",
       },
     ],
   },
@@ -153,7 +153,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is the P&L Tracker?",
-        a: "An optional layer on top of your vesting positions where you log your purchase price (entry) and any individual sales (date, token amount, sell price or total USD received). Vestream automatically splits your P&L into realised (already sold) and unrealised (remaining vested tokens at current market price). All P&L data is stored locally in your browser — it's never transmitted to Vestream or any third party.",
+        a: "An optional layer on top of your vesting positions where you log your purchase price (entry) and any individual sales (date, token amount, sell price or total USD received). Vestream automatically splits your P&L into realised (already sold) and unrealised (remaining vested tokens at current market price). All P&L data is stored locally in your browser – it's never transmitted to Vestream or any third party.",
       },
       {
         q: "What is the Discover page?",
@@ -161,7 +161,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Can I export my data?",
-        a: "Yes. The Export button on the dashboard generates a CSV of every tracked stream including protocol, chain, token, amounts (total, vested, withdrawn, locked), cliff/start/end times, and your logged sell transactions. For printed reports, use your browser's print-to-PDF — the dashboard has print-specific CSS so you get a clean, human-readable document.",
+        a: "Yes. The Export button on the dashboard generates a CSV of every tracked stream including protocol, chain, token, amounts (total, vested, withdrawn, locked), cliff/start/end times, and your logged sell transactions. For printed reports, use your browser's print-to-PDF – the dashboard has print-specific CSS so you get a clean, human-readable document.",
       },
       {
         q: "How accurate are the token prices?",
@@ -169,7 +169,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Can I see on-chain claim history?",
-        a: "Yes — where the source subgraph exposes withdrawal events (most do), the Vestream stream detail view lists every historical claim with timestamp and amount. PinkSale is the exception: since there's no subgraph, we can only show the scheduled unlock plan, not historical withdrawals.",
+        a: "Yes – where the source subgraph exposes withdrawal events (most do), the Vestream stream detail view lists every historical claim with timestamp and amount. PinkSale is the exception: since there's no subgraph, we can only show the scheduled unlock plan, not historical withdrawals.",
       },
     ],
   },
@@ -184,7 +184,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",
-        a: "A wallet is a distinct address you want scanned — EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet — we auto-scan all 10 protocols and all 7 chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
+        a: "A wallet is a distinct address you want scanned – EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet – we auto-scan all 10 protocols and all 7 chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
       },
       {
         q: "Can I cancel my subscription anytime?",
@@ -199,7 +199,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Can Vestream access or move my funds?",
-        a: "No — never. Vestream is strictly read-only. We never request your private key or seed phrase, we don't ask you to connect a wallet, and we have no capability to initiate a transaction. Adding a wallet to your dashboard is typing its public address into a text field; the address is publicly visible on-chain anyway.",
+        a: "No – never. Vestream is strictly read-only. We never request your private key or seed phrase, we don't ask you to connect a wallet, and we have no capability to initiate a transaction. Adding a wallet to your dashboard is typing its public address into a text field; the address is publicly visible on-chain anyway.",
       },
       {
         q: "What personal data do you store?",
@@ -207,7 +207,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Where is my data stored?",
-        a: "In a Postgres database hosted on Supabase (EU region by default). API secrets live in Vercel environment variables. Email delivery goes through Resend. Push delivery goes through Expo (for the mobile app) and Web Push (for PWAs). Payment data never touches our servers — Apple, Google, and RevenueCat handle card details directly.",
+        a: "In a Postgres database hosted on Supabase (EU region by default). API secrets live in Vercel environment variables. Email delivery goes through Resend. Push delivery goes through Expo (for the mobile app) and Web Push (for PWAs). Payment data never touches our servers – Apple, Google, and RevenueCat handle card details directly.",
       },
       {
         q: "Is the site open source?",
@@ -215,7 +215,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Do you use cookies or trackers?",
-        a: "We use a single first-party session cookie for authentication (iron-session, HttpOnly, same-site) and nothing for third-party tracking. No Google Analytics, no Facebook Pixel, no retargeting trackers. The cookie banner you may see is a safety net for GDPR compliance — you can decline all optional cookies with no impact on functionality.",
+        a: "We use a single first-party session cookie for authentication (iron-session, HttpOnly, same-site) and nothing for third-party tracking. No Google Analytics, no Facebook Pixel, no retargeting trackers. The cookie banner you may see is a safety net for GDPR compliance – you can decline all optional cookies with no impact on functionality.",
       },
     ],
   },
@@ -226,15 +226,15 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Does Vestream have a developer API?",
-        a: "Yes — a public REST API at /api/v1/ with three primary endpoints: GET /api/v1/wallet/{address}/vestings returns every stream for a wallet; GET /api/v1/wallet/{address}/upcoming-unlocks returns scheduled unlocks within a configurable window; GET /api/v1/stream/{id} returns full detail for a single stream by composite ID. See /api-docs for the Swagger UI and live request builder.",
+        a: "Yes – a public REST API at /api/v1/ with three primary endpoints: GET /api/v1/wallet/{address}/vestings returns every stream for a wallet; GET /api/v1/wallet/{address}/upcoming-unlocks returns scheduled unlocks within a configurable window; GET /api/v1/stream/{id} returns full detail for a single stream by composite ID. See /api-docs for the Swagger UI and live request builder.",
       },
       {
         q: "How do I get an API key?",
-        a: "Request access via /early-access or the contact form. API keys have the format vstr_live_{32 hex chars}, are shown once at creation time, and are stored as SHA-256 hashes — we can never recover a lost key, so copy it into your secret manager immediately. Use the Authorization: Bearer vstr_live_... header on every request.",
+        a: "Request access via /early-access or the contact form. API keys have the format vstr_live_{32 hex chars}, are shown once at creation time, and are stored as SHA-256 hashes – we can never recover a lost key, so copy it into your secret manager immediately. Use the Authorization: Bearer vstr_live_... header on every request.",
       },
       {
         q: "What is the MCP server?",
-        a: "@vestream/mcp is a Model Context Protocol server published to npm. It exposes three tools to AI agents — get_wallet_vestings, get_upcoming_unlocks, and get_stream — so Claude Desktop, Cursor, or any MCP-compatible client can query Vestream data natively without you writing glue code. See the AI Agents page at /ai for a quick-start config.",
+        a: "@vestream/mcp is a Model Context Protocol server published to npm. It exposes three tools to AI agents – get_wallet_vestings, get_upcoming_unlocks, and get_stream – so Claude Desktop, Cursor, or any MCP-compatible client can query Vestream data natively without you writing glue code. See the AI Agents page at /ai for a quick-start config.",
       },
       {
         q: "What are the rate limits on the API?",
@@ -242,7 +242,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Do you offer webhooks?",
-        a: "Not yet — the current API is pull-based. Webhook support (fire-on-unlock delivery) is on the Enterprise roadmap. If that's blocking your use case, tell us via the contact form and we'll prioritise it.",
+        a: "Not yet – the current API is pull-based. Webhook support (fire-on-unlock delivery) is on the Enterprise roadmap. If that's blocking your use case, tell us via the contact form and we'll prioritise it.",
       },
     ],
   },
@@ -253,7 +253,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Is there a mobile app?",
-        a: "An iOS and Android app is in beta as of April 2026. It's a React Native / Expo companion to the web dashboard — same account, same wallets, same notification preferences, plus native push notifications (instead of web push) for reliable delivery when the app is backgrounded.",
+        a: "An iOS and Android app is in beta as of April 2026. It's a React Native / Expo companion to the web dashboard – same account, same wallets, same notification preferences, plus native push notifications (instead of web push) for reliable delivery when the app is backgrounded.",
       },
       {
         q: "What can I do in the mobile app that I can't on the web?",
@@ -261,11 +261,11 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I sign in on mobile?",
-        a: "Same email OTP as web — enter your email, receive a 6-digit code, enter it. The mobile app uses an Authorization: Bearer token in the HTTP header (not a cookie) so sessions persist across app restarts without you having to re-verify.",
+        a: "Same email OTP as web – enter your email, receive a 6-digit code, enter it. The mobile app uses an Authorization: Bearer token in the HTTP header (not a cookie) so sessions persist across app restarts without you having to re-verify.",
       },
       {
         q: "How do I manage my subscription on mobile?",
-        a: "Through your device's native subscription management — iOS Settings → Apple ID → Subscriptions, or Google Play → Subscriptions. This is required by Apple and Google for in-app purchases. Web subscriptions are managed in your Vestream account settings.",
+        a: "Through your device's native subscription management – iOS Settings → Apple ID → Subscriptions, or Google Play → Subscriptions. This is required by Apple and Google for in-app purchases. Web subscriptions are managed in your Vestream account settings.",
       },
     ],
   },
@@ -276,19 +276,19 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "How do I change my email?",
-        a: "Email is your account identifier and changing it requires confirming ownership of both the old and new addresses. Contact support via the form and we'll walk you through it — takes a couple of minutes.",
+        a: "Email is your account identifier and changing it requires confirming ownership of both the old and new addresses. Contact support via the form and we'll walk you through it – takes a couple of minutes.",
       },
       {
         q: "How do I delete my account?",
-        a: "Contact support via the form and request deletion. All your data — wallets, notification preferences, any stored P&L data (if any) — is permanently removed from our database within 7 days. Subscriptions are cancelled as part of the same request.",
+        a: "Contact support via the form and request deletion. All your data – wallets, notification preferences, any stored P&L data (if any) – is permanently removed from our database within 7 days. Subscriptions are cancelled as part of the same request.",
       },
       {
         q: "What payment methods do you accept?",
-        a: "Subscriptions go through Apple App Store (iOS) or Google Play (Android) at this stage — pay with whatever payment method you have on file with the platform store, including Apple Pay and Google Pay. No crypto payments currently — adding USDC checkout is on the roadmap but not committed.",
+        a: "Subscriptions go through Apple App Store (iOS) or Google Play (Android) at this stage – pay with whatever payment method you have on file with the platform store, including Apple Pay and Google Pay. No crypto payments currently – adding USDC checkout is on the roadmap but not committed.",
       },
       {
         q: "Do you offer refunds?",
-        a: "Yes, within 14 days of the initial subscription purchase if you haven't used the paid features substantively. Contact support and we'll process it — no questions, no hoops. In-app purchase refunds go through Apple or Google per their policies.",
+        a: "Yes, within 14 days of the initial subscription purchase if you haven't used the paid features substantively. Contact support and we'll process it – no questions, no hoops. In-app purchase refunds go through Apple or Google per their policies.",
       },
     ],
   },
@@ -302,16 +302,16 @@ const FAQ_DATA: FaqCategory[] = [
         a: "Three common causes, in order of likelihood: (1) the wallet genuinely has no vesting streams on any of the 10 supported protocols on any of the 7 chains; (2) the streams exist on a protocol or chain we don't yet support; (3) the data source (subgraph or Solana RPC) is temporarily rate-limited or unreachable. Refresh in 60 seconds, and if you still see nothing, check the address on the protocol's own frontend to confirm streams exist.",
       },
       {
-        q: "I'm not receiving email alerts — what should I check?",
-        a: "First, check your spam folder — new sender domains often land there until you mark them safe. Second, confirm the email in Settings is correct and that the \"Email alerts\" toggle is on. Third, note that alerts only fire for unlocks in the future and at the lead time you configured; if the next unlock is 10 days out and you set \"1 hour before\", you won't hear anything for 9 days and 23 hours.",
+        q: "I'm not receiving email alerts – what should I check?",
+        a: "First, check your spam folder – new sender domains often land there until you mark them safe. Second, confirm the email in Settings is correct and that the \"Email alerts\" toggle is on. Third, note that alerts only fire for unlocks in the future and at the lead time you configured; if the next unlock is 10 days out and you set \"1 hour before\", you won't hear anything for 9 days and 23 hours.",
       },
       {
-        q: "The dashboard shows \"Pricing indexed tokens…\" — what does that mean?",
-        a: "That state appears when the TVL bar is loading token prices from DexScreener, or when the price cache is briefly stale during a cold deploy. It clears within 10-30 seconds. If it persists more than a minute, refresh — our CDN layer may be holding a stale version from before the last deploy.",
+        q: "The dashboard shows \"Pricing indexed tokens…\" – what does that mean?",
+        a: "That state appears when the TVL bar is loading token prices from DexScreener, or when the price cache is briefly stale during a cold deploy. It clears within 10-30 seconds. If it persists more than a minute, refresh – our CDN layer may be holding a stale version from before the last deploy.",
       },
       {
         q: "I forgot my sign-in email and can't log in.",
-        a: "Contact support via the form and we'll help verify your identity (via wallet signature or other means) and recover account access. For obvious reasons we can't just send account details to whoever claims to be you in a chat — but we can always help legitimate account owners regain access.",
+        a: "Contact support via the form and we'll help verify your identity (via wallet signature or other means) and recover account access. For obvious reasons we can't just send account details to whoever claims to be you in a chat – but we can always help legitimate account owners regain access.",
       },
     ],
   },
@@ -392,7 +392,7 @@ export default function FaqPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#8B8E92" }}
           >
-            Everything about how Vestream works — protocols, chains, alerts, pricing,
+            Everything about how Vestream works – protocols, chains, alerts, pricing,
             the API, mobile, security, and the things that occasionally go wrong.
           </p>
         </div>
@@ -460,7 +460,7 @@ export default function FaqPage() {
             Still have a question?
           </h2>
           <p className="text-sm md:text-base mb-6 max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
-            If your question isn&apos;t answered above, send us a note — we reply within one business day.
+            If your question isn&apos;t answered above, send us a note – we reply within one business day.
           </p>
           <Link
             href="/contact"
@@ -483,7 +483,7 @@ export default function FaqPage() {
 
 // ── FaqEntry: one Q&A, semantic <details>/<summary> for accessibility + SEO ──
 // We render each pair as a <details> so it's collapsible for visual scanning
-// but the answer text is still in the DOM — crawlers and LLMs see it
+// but the answer text is still in the DOM – crawlers and LLMs see it
 // regardless of whether a user has expanded it.
 
 function FaqEntry({ q, a }: FaqItem) {

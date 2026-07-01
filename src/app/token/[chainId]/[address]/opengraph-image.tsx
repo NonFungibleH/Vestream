@@ -1,8 +1,8 @@
-// Per-token Open Graph image — 1200×630, generated at request time per
+// Per-token Open Graph image – 1200×630, generated at request time per
 // (chainId, address). Pulls live overview from the streams cache so a fresh
 // share preview shows: symbol, chain, locked tokens, protocol count, and a
 // 30-day unlock-pressure hint. Falls back to a generic Vestream card if the
-// token isn't indexed yet or the DB call blips — never let a fetch failure
+// token isn't indexed yet or the DB call blips – never let a fetch failure
 // break a share preview.
 //
 // Why per-token OG (the highest-volume surface): we serve thousands of token
@@ -36,7 +36,7 @@ function compactUsd(n: number | null): string | null {
 }
 
 function truncate(addr: string | null | undefined): string {
-  if (!addr || addr.length < 10) return addr ?? "—";
+  if (!addr || addr.length < 10) return addr ?? "–";
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
@@ -51,7 +51,7 @@ export async function generateImageMetadata({
       id:          "og",
       contentType: "image/png",
       size,
-      alt:         `Token unlock tracker for ${truncate(address)} on ${chain} — Vestream`,
+      alt:         `Token unlock tracker for ${truncate(address)} on ${chain} – Vestream`,
     },
   ];
 }
@@ -64,7 +64,7 @@ export default async function OG(
   const addr = address.toLowerCase();
   const chain = (CHAIN_NAMES as Record<number, string>)[cid];
 
-  // Bail to generic card on invalid chain — keeps share fetcher happy
+  // Bail to generic card on invalid chain – keeps share fetcher happy
   // while the page itself 404s.
   if (!chain) {
     return new ImageResponse(
@@ -77,7 +77,7 @@ export default async function OG(
     );
   }
 
-  // Live stats — fail-soft to a minimal card if either DB or DexScreener errors
+  // Live stats – fail-soft to a minimal card if either DB or DexScreener errors
   const [overviewRes, marketRes] = await Promise.allSettled([
     getTokenOverview(cid, addr),
     getTokenMarketData(cid, addr),
@@ -126,7 +126,7 @@ export default async function OG(
           }}
         />
 
-        {/* Header — Vestream wordmark */}
+        {/* Header – Vestream wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ width: 44, height: 6, background: "#1A1D20", opacity: 0.35, borderRadius: 2 }} />
@@ -141,7 +141,7 @@ export default async function OG(
           </span>
         </div>
 
-        {/* Body — token symbol badge + name + chain */}
+        {/* Body – token symbol badge + name + chain */}
         <div style={{ display: "flex", alignItems: "center", gap: 36, flex: 1 }}>
           <div
             style={{
@@ -184,7 +184,7 @@ export default async function OG(
           </div>
         </div>
 
-        {/* Footer — upcoming pill + URL */}
+        {/* Footer – upcoming pill + URL */}
         <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 24 }}>
           {upcomingUsd || upcoming30 > 0 ? (
             <div

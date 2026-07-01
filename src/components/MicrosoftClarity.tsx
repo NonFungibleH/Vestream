@@ -13,7 +13,7 @@ declare global {
 }
 
 /**
- * Microsoft Clarity loader — heatmaps, session replay, and rage-click /
+ * Microsoft Clarity loader – heatmaps, session replay, and rage-click /
  * dead-click detection. Free forever; no per-event quota.
  *
  * Privacy: Clarity auto-redacts every form field and any element marked

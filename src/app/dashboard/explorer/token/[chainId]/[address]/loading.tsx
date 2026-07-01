@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Suspense skeleton for the explorer token-detail page. The page is server-
 // rendered inside the auth-gated (dynamic) dashboard tree and blocks on a
-// Promise.all before first paint — getTokenStreams + getTokenMarketData (a
+// Promise.all before first paint – getTokenStreams + getTokenMarketData (a
 // LIVE DexScreener call) + getSmartMoneyHoldersOfToken (page.tsx:58-62). This
 // page is the click-target of nearly every explorer/discover/smart-money row,
 // so the blank-during-render gap is high-traffic. The tree-wide
@@ -37,7 +37,7 @@ export default function TokenDetailLoading() {
           </div>
         </div>
 
-        {/* 5-tile stat grid — Locked value / Total locked / Recipients / Rounds / Next unlock */}
+        {/* 5-tile stat grid – Locked value / Total locked / Recipients / Rounds / Next unlock */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-xl px-3 py-2.5" style={{ background: "var(--preview-muted-2)", border: "1px solid var(--preview-border-2)" }}>
@@ -51,7 +51,7 @@ export default function TokenDetailLoading() {
       {/* Unlock overview chart card */}
       <div className="rounded-2xl border p-4 md:p-5 mb-5" style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
         <Bar w={120} h={13} delay="0.4s" className="mb-4" />
-        {/* Chart placeholder — a row of bars suggesting an unlock curve. */}
+        {/* Chart placeholder – a row of bars suggesting an unlock curve. */}
         <div className="flex items-end gap-1.5" style={{ height: 160 }}>
           {[40, 62, 55, 78, 70, 92, 84, 60, 48, 66, 58, 74].map((h, i) => (
             <div key={i} className="flex-1 rounded-t"

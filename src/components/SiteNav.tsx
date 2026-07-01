@@ -5,20 +5,20 @@ import { useState } from "react";
 
 interface Props {
   /**
-   * "light"  = white/grey consumer pages (default) — homepage, pricing, resources
-   * "navy"   = dark navy developer page — /developer
-   * "dark"   = near-black AI/technical pages — /ai
+   * "light"  = white/grey consumer pages (default) – homepage, pricing, resources
+   * "navy"   = dark navy developer page – /developer
+   * "dark"   = near-black AI/technical pages – /ai
    */
   theme?: "light" | "navy" | "dark";
 }
 
-// "Find Vestings" lives in the CTA slot below — it's the primary funnel
+// "Find Vestings" lives in the CTA slot below – it's the primary funnel
 // entry point so it gets the loud gradient button rather than a regular
 // nav link. Keeping it out of NAV_LINKS prevents it appearing twice.
 //
 // May 5 2026 strategy reset: focusing the marketing surface on vesting
 // while Payroll moves to the roadmap. Top nav drops the Invest / Payroll
-// dual links — /invest still exists as a vesting-focused SEO landing
+// dual links – /invest still exists as a vesting-focused SEO landing
 // page, /payroll redirects to a coming-soon waitlist (linked from the
 // footer instead of the nav).
 const NAV_LINKS = [
@@ -76,13 +76,13 @@ export function SiteNav({ theme = "light" }: Props) {
 
   const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileMenuShadow, mobileBackdropBg, mobileActiveBg, logo } = THEME[theme];
 
-  // Primary funnel CTA — drives users to paste a wallet, see their vestings,
+  // Primary funnel CTA – drives users to paste a wallet, see their vestings,
   // then convert via the in-results "Open in app" CTA. App is publicly live
   // (no longer early-access gated) so /find-vestings is the right top-of-
   // funnel target, not /early-access.
   const ctaHref       = "/find-vestings";
   const ctaLabel      = "Find My Vestings →";
-  const ctaLabelShort = "Find Vestings";   // mobile — narrower button
+  const ctaLabelShort = "Find Vestings";   // mobile – narrower button
 
   return (
     <>
@@ -123,7 +123,7 @@ export function SiteNav({ theme = "light" }: Props) {
             })}
           </div>
 
-          {/* "Log in" sits to the LEFT of the gradient CTA — same nav slot
+          {/* "Log in" sits to the LEFT of the gradient CTA – same nav slot
               that's been free since SIWE was demoted. Returning users get a
               clear way back to /dashboard without competing with the
               acquisition CTA visually. */}
@@ -135,7 +135,7 @@ export function SiteNav({ theme = "light" }: Props) {
             Log in
           </Link>
 
-          {/* CTA — min-h-[40px] ensures a WCAG-compliant tap target (44px
+          {/* CTA – min-h-[40px] ensures a WCAG-compliant tap target (44px
               target counting natural padding). Previously `py-1.5` alone
               gave ~32px, below the 44px accessibility floor. */}
           <a
@@ -147,7 +147,7 @@ export function SiteNav({ theme = "light" }: Props) {
           </a>
         </div>
 
-        {/* Mobile right — CTA button + hamburger. Both bumped to min-h-[40px]
+        {/* Mobile right – CTA button + hamburger. Both bumped to min-h-[40px]
             / w-11 h-11 for touch accessibility. */}
         <div className="flex md:hidden items-center gap-2">
           <a
@@ -184,7 +184,7 @@ export function SiteNav({ theme = "light" }: Props) {
         </div>
       </nav>
 
-      {/* Mobile dropdown menu — sits as a floating panel below the nav,
+      {/* Mobile dropdown menu – sits as a floating panel below the nav,
           inset from the edges with rounded corners and a soft shadow so
           it reads as a layer on top of the page rather than a tonally
           identical strip that "gets lost". */}
@@ -224,7 +224,7 @@ export function SiteNav({ theme = "light" }: Props) {
             );
           })}
 
-          {/* Returning-user login — visually separated from the navigation
+          {/* Returning-user login – visually separated from the navigation
               links above with a hairline, so it reads as account action
               rather than another product page. */}
           <div className="pt-2 mt-2" style={{ borderTop: `1px solid ${navBorder}` }}>
@@ -245,7 +245,7 @@ export function SiteNav({ theme = "light" }: Props) {
         </div>
       )}
 
-      {/* Backdrop — dims the page so the panel reads as elevated and
+      {/* Backdrop – dims the page so the panel reads as elevated and
           gives the user an obvious tap-target to dismiss the menu. */}
       {open && (
         <div

@@ -1,14 +1,14 @@
 "use client";
 
 // Thin top-of-viewport progress bar for in-app navigations. The dashboard is
-// force-dynamic, so every filter/sort/page click is a server round-trip — and
+// force-dynamic, so every filter/sort/page click is a server round-trip – and
 // Next's loading.tsx only shows on FULL loads, not soft same-route navigations
 // (changing ?page=/?sort= etc.). Without feedback those clicks feel "frozen"
 // even when the query is ~40ms. This bar starts on any in-app link click and
 // completes when the URL settles, so interactions FEEL instant.
 //
 // Dependency-free: a capture-phase click listener detects same-origin <a>
-// navigations (covers every <Link> — pills, sort headers, pagination, lenses,
+// navigations (covers every <Link> – pills, sort headers, pagination, lenses,
 // tabs); a pathname+search effect finishes the bar when navigation lands.
 
 import { useEffect, useRef, useState } from "react";

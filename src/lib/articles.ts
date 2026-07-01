@@ -39,11 +39,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Token vesting is one of the most consequential mechanisms in crypto — and one of the least understood. Whether you received tokens as an early investor, a founding team member, an advisor, or through a community airdrop, your ability to access those tokens is almost certainly governed by a vesting schedule. Understanding how vesting works is not optional; it shapes your cash flow, your tax obligations, and your understanding of a project's long-term incentive structure.",
+        html: "Token vesting is one of the most consequential mechanisms in crypto – and one of the least understood. Whether you received tokens as an early investor, a founding team member, an advisor, or through a community airdrop, your ability to access those tokens is almost certainly governed by a vesting schedule. Understanding how vesting works is not optional; it shapes your cash flow, your tax obligations, and your understanding of a project's long-term incentive structure.",
       },
       {
         type: "p",
-        html: "This guide is written for <strong>token holders of all kinds</strong> — from first-time crypto investors who just received their first token allocation, to experienced fund managers overseeing vesting positions across dozens of projects. We cover everything: what vesting is, why it exists, the terminology you need to know, how smart contracts enforce it, and how to find out exactly when your tokens unlock.",
+        html: "This guide is written for <strong>token holders of all kinds</strong> – from first-time crypto investors who just received their first token allocation, to experienced fund managers overseeing vesting positions across dozens of projects. We cover everything: what vesting is, why it exists, the terminology you need to know, how smart contracts enforce it, and how to find out exactly when your tokens unlock.",
       },
 
       { type: "h2", text: "What Is Token Vesting?" },
@@ -55,7 +55,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📌",
         title: "Simple definition",
-        body:  "Token vesting = a time-locked release of tokens. Instead of receiving everything at once, you receive your allocation piece by piece over a set period — enforced by a smart contract.",
+        body:  "Token vesting = a time-locked release of tokens. Instead of receiving everything at once, you receive your allocation piece by piece over a set period – enforced by a smart contract.",
       },
       {
         type: "p",
@@ -65,7 +65,7 @@ const articles: Article[] = [
       { type: "h2", text: "Why Token Vesting Exists" },
       {
         type: "p",
-        html: "Vesting solves a fundamental problem in token economies: the misalignment between short-term and long-term incentives. Without vesting, every team member, investor, and advisor would receive their full token allocation at the moment of the Token Generation Event (TGE). The rational short-term move for many of these recipients would be to sell immediately — creating enormous selling pressure at the worst possible time for a nascent project.",
+        html: "Vesting solves a fundamental problem in token economies: the misalignment between short-term and long-term incentives. Without vesting, every team member, investor, and advisor would receive their full token allocation at the moment of the Token Generation Event (TGE). The rational short-term move for many of these recipients would be to sell immediately – creating enormous selling pressure at the worst possible time for a nascent project.",
       },
       {
         type: "ul",
@@ -110,12 +110,12 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Vesting period:</strong> The total duration over which your token allocation unlocks. A 24-month vesting period means your tokens release over two years.",
-          "<strong>Cliff period:</strong> A minimum holding duration before any tokens unlock. During the cliff, zero tokens vest — then at the cliff date, a lump sum unlocks (often the pro-rata share for the cliff period).",
-          "<strong>Vesting schedule:</strong> The specific timeline and formula governing how tokens unlock — for example, 'monthly linear over 24 months after a 6-month cliff'.",
-          "<strong>TGE (Token Generation Event):</strong> The moment a token is first created and distributed. Some schedules include a TGE unlock — a percentage of your allocation released immediately at launch.",
+          "<strong>Cliff period:</strong> A minimum holding duration before any tokens unlock. During the cliff, zero tokens vest – then at the cliff date, a lump sum unlocks (often the pro-rata share for the cliff period).",
+          "<strong>Vesting schedule:</strong> The specific timeline and formula governing how tokens unlock – for example, 'monthly linear over 24 months after a 6-month cliff'.",
+          "<strong>TGE (Token Generation Event):</strong> The moment a token is first created and distributed. Some schedules include a TGE unlock – a percentage of your allocation released immediately at launch.",
           "<strong>Unlock event:</strong> Any moment when a tranche of locked tokens becomes accessible to the recipient.",
           "<strong>Claimable balance:</strong> The quantity of tokens that have vested and are available to withdraw from the vesting contract right now.",
-          "<strong>Locked amount:</strong> Tokens still subject to vesting — not yet accessible.",
+          "<strong>Locked amount:</strong> Tokens still subject to vesting – not yet accessible.",
           "<strong>Stream:</strong> A term used by platforms like Sablier and Unvest for a continuous, real-time token vesting position. Instead of monthly steps, tokens unlock per second.",
           "<strong>Tranche:</strong> A batch of tokens that unlocks at a specific point in time, as opposed to continuous streaming.",
           "<strong>Fully vested:</strong> The point at which 100% of an allocation has unlocked and the vesting schedule is complete.",
@@ -125,11 +125,11 @@ const articles: Article[] = [
       { type: "h2", text: "How Token Vesting Is Enforced On-Chain" },
       {
         type: "p",
-        html: "In the early days of crypto, vesting agreements existed only as legal documents — off-chain contracts with no technical enforcement. A team member who wanted to sell before their vest date could simply do so, and the only recourse was litigation.",
+        html: "In the early days of crypto, vesting agreements existed only as legal documents – off-chain contracts with no technical enforcement. A team member who wanted to sell before their vest date could simply do so, and the only recourse was litigation.",
       },
       {
         type: "p",
-        html: "Today, the industry has moved decisively to <strong>smart contract-enforced vesting</strong>. Tokens are deposited into an audited smart contract at the time of allocation. The contract holds the tokens and releases them to the recipient's wallet address automatically, according to the schedule — without any human involvement. No one can override the schedule, including the project team.",
+        html: "Today, the industry has moved decisively to <strong>smart contract-enforced vesting</strong>. Tokens are deposited into an audited smart contract at the time of allocation. The contract holds the tokens and releases them to the recipient's wallet address automatically, according to the schedule – without any human involvement. No one can override the schedule, including the project team.",
       },
       {
         type: "p",
@@ -148,7 +148,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🔒",
         title: "Why on-chain enforcement matters",
-        body:  "When vesting is enforced by a smart contract, you can verify your exact unlock schedule on a block explorer at any time. No trust required — the contract code is the agreement.",
+        body:  "When vesting is enforced by a smart contract, you can verify your exact unlock schedule on a block explorer at any time. No trust required – the contract code is the agreement.",
       },
 
       { type: "h2", text: "Token Vesting vs Token Lockup: What's the Difference?" },
@@ -159,8 +159,8 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Vesting</strong> describes a gradual release over time — tokens trickle out according to a schedule.",
-          "<strong>Lockup</strong> typically refers to a hard lock for a fixed period with a single release at the end — all tokens unlock on one date.",
+          "<strong>Vesting</strong> describes a gradual release over time – tokens trickle out according to a schedule.",
+          "<strong>Lockup</strong> typically refers to a hard lock for a fixed period with a single release at the end – all tokens unlock on one date.",
         ],
       },
       {
@@ -182,16 +182,16 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Month 0 (TGE):</strong> Token lists. You receive 0 tokens — the TGE unlock for your tranche is 0%.",
+          "<strong>Month 0 (TGE):</strong> Token lists. You receive 0 tokens – the TGE unlock for your tranche is 0%.",
           "<strong>Months 1–12 post-TGE:</strong> Cliff period. Your tokens are locked. You watch the price but cannot sell.",
           "<strong>Month 12 (cliff unlocks):</strong> You receive the first vested tranche. With a cliff + linear structure, you receive approximately 1/24th of your total allocation (roughly 416,666 tokens) on the cliff date.",
-          "<strong>Months 13–35:</strong> Each month, another 1/24th unlocks — approximately 416,666 tokens per month.",
+          "<strong>Months 13–35:</strong> Each month, another 1/24th unlocks – approximately 416,666 tokens per month.",
           "<strong>Month 36:</strong> Final tranche unlocks. You are now fully vested and hold unrestricted access to all 10,000,000 tokens.",
         ],
       },
       {
         type: "p",
-        html: "Over the 36-month post-TGE vesting period, you received your full allocation in 24 equal monthly instalments. At no point before the cliff could you access a single token — regardless of the market price.",
+        html: "Over the 36-month post-TGE vesting period, you received your full allocation in 24 equal monthly instalments. At no point before the cliff could you access a single token – regardless of the market price.",
       },
 
       { type: "h2", text: "How to Find Your Token Vesting Schedule" },
@@ -206,18 +206,18 @@ const articles: Article[] = [
           "<strong>Read your investment agreement:</strong> For private round participants, your SAFT (Simple Agreement for Future Tokens) or token purchase agreement specifies your exact vesting terms.",
           "<strong>Use a block explorer:</strong> If you know the vesting contract address, you can inspect it on Etherscan, BscScan, or Basescan to see your locked balance and schedule.",
           "<strong>Use a protocol-native dashboard:</strong> Platforms like Sablier and Hedgey all provide dashboards where you can connect your wallet and view active positions.",
-          "<strong>Use a dedicated vesting tracker:</strong> Tools like Vestream aggregate positions from all major vesting platforms across all chains in one dashboard — saving significant time if you hold positions on multiple protocols.",
+          "<strong>Use a dedicated vesting tracker:</strong> Tools like Vestream aggregate positions from all major vesting platforms across all chains in one dashboard – saving significant time if you hold positions on multiple protocols.",
         ],
       },
 
       { type: "h2", text: "What Happens When Tokens Fully Vest?" },
       {
         type: "p",
-        html: "When your tokens are fully vested, they become freely transferable. In smart contract terms, the contract has no more hold over them — you can withdraw them to your wallet and do whatever you choose: hold, sell, delegate, or stake.",
+        html: "When your tokens are fully vested, they become freely transferable. In smart contract terms, the contract has no more hold over them – you can withdraw them to your wallet and do whatever you choose: hold, sell, delegate, or stake.",
       },
       {
         type: "p",
-        html: "One important note: <strong>vesting is a taxable event in many jurisdictions.</strong> In the US, UK, and EU, receiving tokens through an employment or service relationship may create ordinary income tax liability at the point of vesting — not just when you sell. Token investors in financial instruments may have different treatment. Always consult a qualified tax professional familiar with digital assets.",
+        html: "One important note: <strong>vesting is a taxable event in many jurisdictions.</strong> In the US, UK, and EU, receiving tokens through an employment or service relationship may create ordinary income tax liability at the point of vesting – not just when you sell. Token investors in financial instruments may have different treatment. Always consult a qualified tax professional familiar with digital assets.",
       },
 
       {
@@ -229,7 +229,7 @@ const articles: Article[] = [
           },
           {
             q: "What is a vesting cliff in crypto?",
-            a: "A vesting cliff is a minimum waiting period before any tokens unlock. During the cliff — typically 6 or 12 months — the recipient receives nothing. At the cliff date, a lump sum unlocks (usually the pro-rata share for the cliff period), and then regular vesting continues afterward.",
+            a: "A vesting cliff is a minimum waiting period before any tokens unlock. During the cliff – typically 6 or 12 months – the recipient receives nothing. At the cliff date, a lump sum unlocks (usually the pro-rata share for the cliff period), and then regular vesting continues afterward.",
           },
           {
             q: "How long does token vesting usually last?",
@@ -237,11 +237,11 @@ const articles: Article[] = [
           },
           {
             q: "Can vested tokens be taken back?",
-            a: "Once tokens have vested and been claimed from the smart contract, they are owned by the recipient and cannot be clawed back. Unvested tokens in a smart contract may be clawable in some implementations if the contract includes a revocation function — though this is less common in public-facing vesting contracts.",
+            a: "Once tokens have vested and been claimed from the smart contract, they are owned by the recipient and cannot be clawed back. Unvested tokens in a smart contract may be clawable in some implementations if the contract includes a revocation function – though this is less common in public-facing vesting contracts.",
           },
           {
             q: "What is TGE in token vesting?",
-            a: "TGE stands for Token Generation Event — the moment a token is first created and begins distribution. Many vesting schedules include a 'TGE unlock percentage', meaning some portion of the allocation is released immediately at launch. For example, 'TGE: 10%, then 12-month linear' means 10% is available immediately and the remaining 90% unlocks over 12 months.",
+            a: "TGE stands for Token Generation Event – the moment a token is first created and begins distribution. Many vesting schedules include a 'TGE unlock percentage', meaning some portion of the allocation is released immediately at launch. For example, 'TGE: 10%, then 12-month linear' means 10% is available immediately and the remaining 90% unlocks over 12 months.",
           },
           {
             q: "Is token vesting the same as token staking?",
@@ -253,15 +253,15 @@ const articles: Article[] = [
           },
           {
             q: "Can I sell my unvested tokens?",
-            a: "Generally, no. Unvested tokens are held in a smart contract and are not in your wallet — you cannot transfer or sell them until they unlock. Some protocols do support transferring the vesting position itself (as an NFT), which allows secondary market trading of unvested claims, but this varies by platform and carries significant risks.",
+            a: "Generally, no. Unvested tokens are held in a smart contract and are not in your wallet – you cannot transfer or sell them until they unlock. Some protocols do support transferring the vesting position itself (as an NFT), which allows secondary market trading of unvested claims, but this varies by platform and carries significant risks.",
           },
           {
             q: "What happens to unvested tokens if a project fails?",
-            a: "If a project shuts down but the vesting smart contract continues to run, tokens may still vest on schedule — but they may be worthless. In cases where the team controlled the contract, unvested tokens might be returned to the treasury. This varies entirely by contract design; always review the specific contract terms.",
+            a: "If a project shuts down but the vesting smart contract continues to run, tokens may still vest on schedule – but they may be worthless. In cases where the team controlled the contract, unvested tokens might be returned to the treasury. This varies entirely by contract design; always review the specific contract terms.",
           },
           {
             q: "What is the difference between linear and cliff vesting?",
-            a: "Linear vesting releases tokens evenly over time — for example, 1/12th of your allocation every month for 12 months. Cliff vesting (or a 'cliff' in a hybrid schedule) means nothing unlocks until a specific date, after which vesting begins. Most real-world schedules combine both: a cliff period with no unlocks, followed by linear monthly vesting.",
+            a: "Linear vesting releases tokens evenly over time – for example, 1/12th of your allocation every month for 12 months. Cliff vesting (or a 'cliff' in a hybrid schedule) means nothing unlocks until a specific date, after which vesting begins. Most real-world schedules combine both: a cliff period with no unlocks, followed by linear monthly vesting.",
           },
         ],
       },
@@ -272,7 +272,7 @@ const articles: Article[] = [
   {
     slug:        "token-vesting-schedules-explained",
     title:       "Token Vesting Schedules Explained: Cliff, Linear, and Stepped Vesting",
-    excerpt:     "A deep-dive into the three main types of token vesting schedules — cliff, linear, and stepped — with real examples, comparison tables, and the red flags every investor should know.",
+    excerpt:     "A deep-dive into the three main types of token vesting schedules – cliff, linear, and stepped – with real examples, comparison tables, and the red flags every investor should know.",
     publishedAt: "2026-03-11",
     updatedAt:   "2026-03-11",
     readingTime: "14 min read",
@@ -281,7 +281,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "When a blockchain project raises capital or rewards contributors, one of the most important decisions it makes is the <strong>token vesting schedule</strong>: the exact timeline and formula by which locked tokens become accessible. Get it right and you align long-term incentives for everyone involved. Get it wrong — with too short a schedule, too-large a TGE unlock, or no cliff — and you create the conditions for an insider dump that destroys token value.",
+        html: "When a blockchain project raises capital or rewards contributors, one of the most important decisions it makes is the <strong>token vesting schedule</strong>: the exact timeline and formula by which locked tokens become accessible. Get it right and you align long-term incentives for everyone involved. Get it wrong – with too short a schedule, too-large a TGE unlock, or no cliff – and you create the conditions for an insider dump that destroys token value.",
       },
       {
         type: "p",
@@ -296,7 +296,7 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "The <strong>start date</strong> (when vesting begins — often TGE or a fixed date prior)",
+          "The <strong>start date</strong> (when vesting begins – often TGE or a fixed date prior)",
           "The <strong>end date</strong> (when the full allocation becomes available)",
           "The <strong>release pattern</strong> (continuously, monthly, quarterly, or at milestones)",
           "Any <strong>cliff period</strong> (a waiting period before the first unlock)",
@@ -305,7 +305,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "All of this is typically encoded in a smart contract at the time the allocation is created. The contract enforces the schedule without any human intermediary — not even the project team can override it (assuming the contract has no admin key).",
+        html: "All of this is typically encoded in a smart contract at the time the allocation is created. The contract enforces the schedule without any human intermediary – not even the project team can override it (assuming the contract has no admin key).",
       },
 
       { type: "h2", text: "The Three Main Types of Token Vesting Schedules" },
@@ -313,13 +313,13 @@ const articles: Article[] = [
       { type: "h3", text: "1. Linear Vesting" },
       {
         type: "p",
-        html: "Linear vesting is the simplest and most predictable schedule. Tokens unlock at a constant rate over the vesting period — either continuously (per second, using platforms like Sablier) or in equal periodic batches (monthly is most common).",
+        html: "Linear vesting is the simplest and most predictable schedule. Tokens unlock at a constant rate over the vesting period – either continuously (per second, using platforms like Sablier) or in equal periodic batches (monthly is most common).",
       },
       {
         type: "callout",
         emoji: "📐",
         title: "Linear vesting formula",
-        body:  "Tokens unlocked at time T = (Total allocation × elapsed time) ÷ total vesting duration. If you have 1,200,000 tokens vesting over 12 months, you unlock exactly 100,000 tokens per month — or ~3,333 per day in a continuous stream.",
+        body:  "Tokens unlocked at time T = (Total allocation × elapsed time) ÷ total vesting duration. If you have 1,200,000 tokens vesting over 12 months, you unlock exactly 100,000 tokens per month – or ~3,333 per day in a continuous stream.",
       },
       {
         type: "p",
@@ -330,11 +330,11 @@ const articles: Article[] = [
         headers: ["Feature", "Detail"],
         rows: [
           ["Release pattern", "Equal amounts at each interval"],
-          ["Predictability", "Very high — recipient knows exactly what unlocks when"],
-          ["Sell pressure", "Consistent and gradual — easier for markets to absorb"],
+          ["Predictability", "Very high – recipient knows exactly what unlocks when"],
+          ["Sell pressure", "Consistent and gradual – easier for markets to absorb"],
           ["Common interval", "Monthly (most common), daily, or continuous (per-second)"],
           ["Best for", "Team members, long-term investors, protocol treasuries"],
-          ["Downside", "No cliff means tokens start releasing from day one — a risk for projects pre-product-market-fit"],
+          ["Downside", "No cliff means tokens start releasing from day one – a risk for projects pre-product-market-fit"],
         ],
       },
 
@@ -345,13 +345,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The <strong>one-year cliff</strong> became standard in startup equity vesting after it was found that many early hires leave within the first year — and a 12-month cliff ensures they demonstrate real commitment before receiving any equity. Crypto adopted this convention wholesale.",
+        html: "The <strong>one-year cliff</strong> became standard in startup equity vesting after it was found that many early hires leave within the first year – and a 12-month cliff ensures they demonstrate real commitment before receiving any equity. Crypto adopted this convention wholesale.",
       },
       {
         type: "callout",
         emoji: "🧱",
         title: "Why the 1-year cliff is standard",
-        body:  "The cliff protects against contributors who take an allocation and immediately disengage. It aligns team members and investors across the most volatile period of a project's life — typically the first year post-launch, when direction and execution matter most.",
+        body:  "The cliff protects against contributors who take an allocation and immediately disengage. It aligns team members and investors across the most volatile period of a project's life – typically the first year post-launch, when direction and execution matter most.",
       },
       {
         type: "p",
@@ -363,7 +363,7 @@ const articles: Article[] = [
         rows: [
           ["Release pattern", "Nothing during cliff; lump sum at cliff; regular thereafter"],
           ["Cliff duration", "6 months (advisors), 12 months (team/investors) most common"],
-          ["Alignment signal", "Very strong — recipient must stay committed through the cliff"],
+          ["Alignment signal", "Very strong – recipient must stay committed through the cliff"],
           ["Market impact", "Cliff unlock can create short-term sell pressure on the cliff date"],
           ["Best for", "Team members, seed/private round investors, core contributors"],
           ["Risk", "Large unlock at cliff date is visible on vesting trackers and often anticipated by market"],
@@ -373,7 +373,7 @@ const articles: Article[] = [
       { type: "h3", text: "3. Stepped / Milestone Vesting" },
       {
         type: "p",
-        html: "Stepped (also called 'graded' or 'tranche') vesting releases tokens in discrete batches at scheduled intervals — quarterly is common — rather than continuously. Milestone vesting is a variant where unlocks are triggered by project achievements (mainnet launch, TVL target, user growth) rather than calendar dates.",
+        html: "Stepped (also called 'graded' or 'tranche') vesting releases tokens in discrete batches at scheduled intervals – quarterly is common – rather than continuously. Milestone vesting is a variant where unlocks are triggered by project achievements (mainnet launch, TVL target, user growth) rather than calendar dates.",
       },
       {
         type: "p",
@@ -384,7 +384,7 @@ const articles: Article[] = [
         headers: ["Feature", "Detail"],
         rows: [
           ["Release pattern", "Equal batches at fixed intervals (quarterly, semi-annual, annual)"],
-          ["Predictability", "High — unlock dates are known in advance"],
+          ["Predictability", "High – unlock dates are known in advance"],
           ["Market impact", "Unlock events are discrete and can cause price volatility on the dates"],
           ["Milestone variant", "Unlocks tied to product/growth targets rather than calendar"],
           ["Best for", "Advisors, strategic partners, ecosystem grants"],
@@ -413,7 +413,7 @@ const articles: Article[] = [
       { type: "h2", text: "Industry Benchmark Vesting Schedules by Recipient Type" },
       {
         type: "p",
-        html: "The following benchmarks reflect the norms that have emerged across institutional token deals from 2021 through 2024. These are starting points for negotiation — not fixed rules — but deviating significantly from them in a less restrictive direction should raise questions.",
+        html: "The following benchmarks reflect the norms that have emerged across institutional token deals from 2021 through 2024. These are starting points for negotiation – not fixed rules – but deviating significantly from them in a less restrictive direction should raise questions.",
       },
       {
         type: "table",
@@ -508,7 +508,7 @@ const articles: Article[] = [
           },
           {
             q: "Can vesting schedules be changed after they are set?",
-            a: "In properly structured smart contract-enforced vesting, no. The schedule is immutable once the contract is deployed. However, some contracts include admin functions that allow the deployer to modify terms — this is a risk factor that should be disclosed and ideally removed before tokens are distributed.",
+            a: "In properly structured smart contract-enforced vesting, no. The schedule is immutable once the contract is deployed. However, some contracts include admin functions that allow the deployer to modify terms – this is a risk factor that should be disclosed and ideally removed before tokens are distributed.",
           },
           {
             q: "What is the difference between vesting and a lock-up period?",
@@ -520,7 +520,7 @@ const articles: Article[] = [
           },
           {
             q: "Is continuous (per-second) vesting better than monthly vesting?",
-            a: "Continuous vesting (offered by platforms like Sablier) is more flexible — recipients can claim any amount at any time rather than waiting for a monthly date. It creates no discrete 'unlock events' for the market to anticipate. However, the economic outcome over a full vesting period is identical to monthly linear vesting.",
+            a: "Continuous vesting (offered by platforms like Sablier) is more flexible – recipients can claim any amount at any time rather than waiting for a monthly date. It creates no discrete 'unlock events' for the market to anticipate. However, the economic outcome over a full vesting period is identical to monthly linear vesting.",
           },
         ],
       },
@@ -531,7 +531,7 @@ const articles: Article[] = [
   {
     slug:        "how-to-track-token-vesting",
     title:       "How to Track Your Token Vesting: A Complete Guide for Investors and Teams",
-    excerpt:     "From manual block explorer lookups to dedicated multi-protocol dashboards, this guide covers every method for tracking token vesting schedules — and how to make sure you never miss an unlock.",
+    excerpt:     "From manual block explorer lookups to dedicated multi-protocol dashboards, this guide covers every method for tracking token vesting schedules – and how to make sure you never miss an unlock.",
     publishedAt: "2026-03-12",
     updatedAt:   "2026-03-12",
     readingTime: "11 min read",
@@ -540,7 +540,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Token vesting is easy to forget about — until you realise you missed a claim window, failed to account for an unlock in your portfolio planning, or discovered that three protocols have been accumulating claimable balances in your wallet for months. For anyone managing a serious position in vested tokens, tracking is not a nice-to-have. It is essential.",
+        html: "Token vesting is easy to forget about – until you realise you missed a claim window, failed to account for an unlock in your portfolio planning, or discovered that three protocols have been accumulating claimable balances in your wallet for months. For anyone managing a serious position in vested tokens, tracking is not a nice-to-have. It is essential.",
       },
       {
         type: "p",
@@ -557,16 +557,16 @@ const articles: Article[] = [
         items: [
           "<strong>Unclaimed balances:</strong> Tokens that have vested but remain unclaimed earn nothing and are at risk if the underlying contract is ever deprecated or exploited.",
           "<strong>Missed planning:</strong> Portfolio managers need to know when significant token tranches unlock to plan hedging, liquidation, or reinvestment strategies.",
-          "<strong>Tax obligations:</strong> In many jurisdictions, vesting events create taxable income at the point of vesting — not just at sale. Missing these events means missed tax filings.",
-          "<strong>Project monitoring:</strong> Tracking when major team and investor vestings unlock for a project you hold is essential due diligence — large unlock events consistently correlate with increased sell-side pressure.",
-          "<strong>Fragmentation:</strong> A single wallet may have active positions on Sablier and Hedgey simultaneously — across Ethereum, BSC, and Base. Without a unified view, this is nearly impossible to manage manually.",
+          "<strong>Tax obligations:</strong> In many jurisdictions, vesting events create taxable income at the point of vesting – not just at sale. Missing these events means missed tax filings.",
+          "<strong>Project monitoring:</strong> Tracking when major team and investor vestings unlock for a project you hold is essential due diligence – large unlock events consistently correlate with increased sell-side pressure.",
+          "<strong>Fragmentation:</strong> A single wallet may have active positions on Sablier and Hedgey simultaneously – across Ethereum, BSC, and Base. Without a unified view, this is nearly impossible to manage manually.",
         ],
       },
 
       { type: "h2", text: "The Problem: Token Vesting Is Fragmented" },
       {
         type: "p",
-        html: "Unlike traditional equity vesting — where a single brokerage account shows your entire position — crypto vesting is spread across:",
+        html: "Unlike traditional equity vesting – where a single brokerage account shows your entire position – crypto vesting is spread across:",
       },
       {
         type: "ul",
@@ -574,7 +574,7 @@ const articles: Article[] = [
           "<strong>Multiple protocols:</strong> Sablier, UNCX, Hedgey, Unvest, and custom contracts each have their own dashboards and data formats",
           "<strong>Multiple blockchains:</strong> The same wallet address may hold vestings on Ethereum mainnet, BNB Chain, Base, and testnets simultaneously",
           "<strong>Multiple wallets:</strong> Fund managers and project teams often manage dozens of beneficiary wallets",
-          "<strong>No universal standard:</strong> There is no shared data format or API across vesting protocols — each must be queried separately",
+          "<strong>No universal standard:</strong> There is no shared data format or API across vesting protocols – each must be queried separately",
         ],
       },
       {
@@ -635,9 +635,9 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Multi-protocol coverage:</strong> Should cover all major vesting platforms — Sablier, UNCX, Hedgey, Unvest at minimum",
+          "<strong>Multi-protocol coverage:</strong> Should cover all major vesting platforms – Sablier, UNCX, Hedgey, Unvest at minimum",
           "<strong>Multi-chain coverage:</strong> Ethereum, BNB Chain, Base, and any chains where you hold positions",
-          "<strong>Real-time data:</strong> Claimable balances change every second on streaming protocols — the tool should reflect current on-chain state",
+          "<strong>Real-time data:</strong> Claimable balances change every second on streaming protocols – the tool should reflect current on-chain state",
           "<strong>Unlock calendar:</strong> A calendar view of upcoming unlock events so you can plan ahead",
           "<strong>Unlock alerts:</strong> Email or push notifications when tranches are about to unlock",
           "<strong>Multi-wallet support:</strong> Ability to track multiple addresses in one account",
@@ -649,7 +649,7 @@ const articles: Article[] = [
       { type: "h2", text: "How to Track Your Vestings with Vestream" },
       {
         type: "p",
-        html: "Vestream is a dedicated token vesting tracker that covers the major vesting protocols — Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock — across Ethereum, BNB Chain, Base, Arbitrum, and Solana. Here is a step-by-step guide to getting set up:",
+        html: "Vestream is a dedicated token vesting tracker that covers the major vesting protocols – Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, BNB Chain, Base, Arbitrum, and Solana. Here is a step-by-step guide to getting set up:",
       },
       {
         type: "ol",
@@ -658,7 +658,7 @@ const articles: Article[] = [
           "<strong>Add your wallet address(es):</strong> Navigate to Settings → Tracked Wallets and add the addresses you want to monitor. You can specify which chains and protocols to track per wallet, or track all.",
           "<strong>View your dashboard:</strong> The dashboard aggregates all active vesting positions from all tracked wallets and protocols. You'll see locked amount, claimable balance, protocol, chain, and token for every stream.",
           "<strong>Check your unlock timeline:</strong> The Timeline section shows a visual calendar of upcoming unlock events across all your positions.",
-          "<strong>Use Discover for unknown wallets:</strong> The Discover tab lets you scan any wallet address and find all vesting positions across all protocols and chains — useful for due diligence or tracking a wallet you've been given by a client.",
+          "<strong>Use Discover for unknown wallets:</strong> The Discover tab lets you scan any wallet address and find all vesting positions across all protocols and chains – useful for due diligence or tracking a wallet you've been given by a client.",
           "<strong>Set up alerts:</strong> Configure email notifications for upcoming unlocks in Settings → Notifications.",
           "<strong>Export data:</strong> Use the CSV export function in the dashboard for accounting records.",
         ],
@@ -667,17 +667,17 @@ const articles: Article[] = [
       { type: "h2", text: "Tracking Token Vestings for Due Diligence" },
       {
         type: "p",
-        html: "Savvy investors don't just track <em>their own</em> vestings — they also track the vestings of <strong>team wallets and investor allocations</strong> for projects they hold. Large unlock events for insiders are consistently associated with increased sell-side pressure, and knowing when they occur gives you information to act on.",
+        html: "Savvy investors don't just track <em>their own</em> vestings – they also track the vestings of <strong>team wallets and investor allocations</strong> for projects they hold. Large unlock events for insiders are consistently associated with increased sell-side pressure, and knowing when they occur gives you information to act on.",
       },
       {
         type: "p",
-        html: "Using the Discover feature on Vestream, you can scan any public wallet address and immediately see all active vesting positions — including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
+        html: "Using the Discover feature on Vestream, you can scan any public wallet address and immediately see all active vesting positions – including protocol, chain, claimable balance, and the unlock schedule. For known project team wallets (often disclosed in audit reports or DAO governance), this provides direct visibility into when key insiders might be able to sell.",
       },
       {
         type: "callout",
         emoji: "💡",
         title: "Pro tip: Watch project treasury wallets",
-        body:  "Many DAOs publicly disclose their treasury multisig and vesting wallet addresses. Tracking these gives you advance notice of unlock events that affect circulating supply — information that professional traders use for position sizing.",
+        body:  "Many DAOs publicly disclose their treasury multisig and vesting wallet addresses. Tracking these gives you advance notice of unlock events that affect circulating supply – information that professional traders use for position sizing.",
       },
 
       { type: "h2", text: "Setting Up Unlock Alerts" },
@@ -701,7 +701,7 @@ const articles: Article[] = [
       { type: "h2", text: "Exporting Vesting Data for Tax and Accounting" },
       {
         type: "p",
-        html: "Token vesting events can be taxable in multiple jurisdictions — particularly if you received tokens as compensation for services (employment, advisory, or development work). In those cases, each vesting event may create ordinary income at the fair market value of the tokens on the vesting date.",
+        html: "Token vesting events can be taxable in multiple jurisdictions – particularly if you received tokens as compensation for services (employment, advisory, or development work). In those cases, each vesting event may create ordinary income at the fair market value of the tokens on the vesting date.",
       },
       {
         type: "p",
@@ -718,7 +718,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Vestream's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values — or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
+        html: "Vestream's CSV export provides the vesting event data you need. You will still need historical price data from a source like CoinGecko or CoinMarketCap to calculate fiat values – or use a dedicated crypto tax tool like Koinly or CoinTracker, and import the CSV for the vesting events.",
       },
 
       { type: "h2", text: "Best Practices for Token Vesting Management" },
@@ -744,7 +744,7 @@ const articles: Article[] = [
           },
           {
             q: "What is the best tool for tracking token vesting?",
-            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view — covering Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock across Ethereum, BNB Chain, Base, Arbitrum, and Solana in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
+            a: "A dedicated multi-protocol vesting tracker like Vestream provides the most comprehensive view – covering Sablier, UNCX, Hedgey, Unvest, Superfluid, Team Finance, PinkSale, Streamflow, and Jupiter Lock across Ethereum, BNB Chain, Base, Arbitrum, and Solana in one dashboard. For single-protocol users, the protocol's own dashboard (e.g., Sablier app) is sufficient.",
           },
           {
             q: "Can I track someone else's token vesting?",
@@ -756,19 +756,19 @@ const articles: Article[] = [
           },
           {
             q: "Do I need to claim vested tokens manually?",
-            a: "On most platforms, yes — vested tokens accumulate in the smart contract until you actively claim (withdraw) them. Platforms like Sablier allow you to claim the continuously-streamed amount at any time. Some protocols support automated claiming via scripts or third-party services, but manual claiming is the norm.",
+            a: "On most platforms, yes – vested tokens accumulate in the smart contract until you actively claim (withdraw) them. Platforms like Sablier allow you to claim the continuously-streamed amount at any time. Some protocols support automated claiming via scripts or third-party services, but manual claiming is the norm.",
           },
           {
             q: "What happens if I don't claim my vested tokens?",
-            a: "Unclaimed vested tokens remain in the smart contract. They do not expire in most well-designed vesting contracts — you can claim them at any time after they vest. However, leaving large balances unclaimed introduces smart contract risk, and in some edge cases (contract upgrades, protocol deprecation), you may need to migrate positions. Claim regularly.",
+            a: "Unclaimed vested tokens remain in the smart contract. They do not expire in most well-designed vesting contracts – you can claim them at any time after they vest. However, leaving large balances unclaimed introduces smart contract risk, and in some edge cases (contract upgrades, protocol deprecation), you may need to migrate positions. Claim regularly.",
           },
           {
             q: "Is token vesting income taxable?",
-            a: "In most major jurisdictions (US, UK, EU), token vesting that results from employment, services, or advisory work is taxable as ordinary income at the point of vesting — based on the fair market value of the tokens on the vesting date. Token vesting from investment contracts (SAFTs) may be treated differently. Always consult a qualified crypto-specialist tax advisor.",
+            a: "In most major jurisdictions (US, UK, EU), token vesting that results from employment, services, or advisory work is taxable as ordinary income at the point of vesting – based on the fair market value of the tokens on the vesting date. Token vesting from investment contracts (SAFTs) may be treated differently. Always consult a qualified crypto-specialist tax advisor.",
           },
           {
             q: "How do I track vestings across multiple blockchains?",
-            a: "Use a multi-chain vesting tracker. Vestream supports Ethereum, BNB Chain, Base, and Sepolia simultaneously — the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
+            a: "Use a multi-chain vesting tracker. Vestream supports Ethereum, BNB Chain, Base, and Sepolia simultaneously – the same wallet address is monitored across all chains. You can also track different wallets on different chains under a single account.",
           },
         ],
       },
@@ -778,7 +778,7 @@ const articles: Article[] = [
   {
     slug:        "shadow-liquidity-vesting-token-price",
     title:       "Shadow Liquidity: How Vesting Schedules Quietly Control Token Price Floors",
-    excerpt:     "Everyone tracks circulating supply. Almost no one models the shadow liquidity layer underneath it — the predictable, time-released sell pressure baked into every vesting schedule. Here is how it works and why it matters more than any chart pattern.",
+    excerpt:     "Everyone tracks circulating supply. Almost no one models the shadow liquidity layer underneath it – the predictable, time-released sell pressure baked into every vesting schedule. Here is how it works and why it matters more than any chart pattern.",
     publishedAt: "2026-03-13",
     updatedAt:   "2026-03-13",
     readingTime: "13 min read",
@@ -787,17 +787,17 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "When analysts discuss a token's price action, they reach for the usual toolkit: order book depth, RSI, on-chain volume, whale movements, macro sentiment. Almost universally, one factor gets ignored — or mentioned only in passing when something goes wrong. Vesting schedules. The structured, time-locked release of insider allocations is not just a governance mechanism; it is a <strong>forward-looking supply schedule</strong> that sophisticated market participants model months in advance. Those who understand it have a structural informational edge over those who don't.",
+        html: "When analysts discuss a token's price action, they reach for the usual toolkit: order book depth, RSI, on-chain volume, whale movements, macro sentiment. Almost universally, one factor gets ignored – or mentioned only in passing when something goes wrong. Vesting schedules. The structured, time-locked release of insider allocations is not just a governance mechanism; it is a <strong>forward-looking supply schedule</strong> that sophisticated market participants model months in advance. Those who understand it have a structural informational edge over those who don't.",
       },
       {
         type: "p",
-        html: "This piece is for <strong>traders and fund managers</strong> who want to understand why unlock events consistently move markets, <strong>investors evaluating new projects</strong> who want to stress-test reported supply metrics, and <strong>protocol teams</strong> designing vesting structures and wondering how the market will react. We are going to go deep on a concept we call shadow liquidity — and why it is arguably more important to token price dynamics than anything on a price chart.",
+        html: "This piece is for <strong>traders and fund managers</strong> who want to understand why unlock events consistently move markets, <strong>investors evaluating new projects</strong> who want to stress-test reported supply metrics, and <strong>protocol teams</strong> designing vesting structures and wondering how the market will react. We are going to go deep on a concept we call shadow liquidity – and why it is arguably more important to token price dynamics than anything on a price chart.",
       },
 
       { type: "h2", text: "What Is Shadow Liquidity?" },
       {
         type: "p",
-        html: "Shadow liquidity is the supply of tokens that does not yet appear in official circulating supply metrics but is committed to enter circulation on a known, predictable schedule. It lives in vesting smart contracts — technically locked, but mathematically certain to unlock.",
+        html: "Shadow liquidity is the supply of tokens that does not yet appear in official circulating supply metrics but is committed to enter circulation on a known, predictable schedule. It lives in vesting smart contracts – technically locked, but mathematically certain to unlock.",
       },
       {
         type: "callout",
@@ -807,7 +807,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The key insight is that shadow liquidity is not random. It is <em>deterministic</em>. A vesting contract deployed at TGE specifies exactly how many tokens unlock on exactly which dates for the entire vesting duration. This makes token supply dynamics fundamentally different from equity markets, where future share issuance is subject to board votes and market windows. In crypto, the supply curve is already written — it is just hidden in contract state.",
+        html: "The key insight is that shadow liquidity is not random. It is <em>deterministic</em>. A vesting contract deployed at TGE specifies exactly how many tokens unlock on exactly which dates for the entire vesting duration. This makes token supply dynamics fundamentally different from equity markets, where future share issuance is subject to board votes and market windows. In crypto, the supply curve is already written – it is just hidden in contract state.",
       },
 
       { type: "h2", text: "How Vesting Schedules Create Predictable Sell Pressure Curves" },
@@ -826,13 +826,13 @@ const articles: Article[] = [
           ["Public sale",   "5%",  "40%", "0 months",  "6 months"],
           ["Ecosystem fund","20%", "0%",  "12 months", "36 months"],
           ["Treasury",      "15%", "0%",  "6 months",  "48 months"],
-          ["Liquidity",     "8%",  "100%","—",         "—"],
+          ["Liquidity",     "8%",  "100%","–",         "–"],
           ["Community",     "10%", "20%", "3 months",  "12 months"],
         ],
       },
       {
         type: "p",
-        html: "Mapping these allocations to a monthly unlock curve produces something dramatic: <strong>months 9–15 post-TGE represent the single most dangerous window for sell pressure</strong>. Advisors start unlocking at month 6. Private round recipients unlock their remaining 95% starting at month 9. Seed and team cliff at month 12 — simultaneously. The ecosystem fund cliff also hits at month 12. This is not a coincidence; it is simply the consequence of standard vesting terms, but the compounded effect is a supply tsunami that most retail investors are completely unprepared for.",
+        html: "Mapping these allocations to a monthly unlock curve produces something dramatic: <strong>months 9–15 post-TGE represent the single most dangerous window for sell pressure</strong>. Advisors start unlocking at month 6. Private round recipients unlock their remaining 95% starting at month 9. Seed and team cliff at month 12 – simultaneously. The ecosystem fund cliff also hits at month 12. This is not a coincidence; it is simply the consequence of standard vesting terms, but the compounded effect is a supply tsunami that most retail investors are completely unprepared for.",
       },
       {
         type: "callout",
@@ -861,7 +861,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Whale wallets — particularly those associated with VC firms or early investors — are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and Vestream's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
+        html: "Whale wallets – particularly those associated with VC firms or early investors – are often tracked by on-chain analysts. When a known seed round wallet begins moving newly unlocked tokens toward an exchange deposit address, it functions as an observable leading indicator of sell pressure. Tools like Nansen, Arkham, and Vestream's Discover feature make this kind of monitoring accessible beyond the institutional tier.",
       },
       {
         type: "p",
@@ -871,7 +871,7 @@ const articles: Article[] = [
       { type: "h2", text: "The Concept of True Circulating Supply" },
       {
         type: "p",
-        html: "Reported circulating supply — the figure that appears on CoinMarketCap, CoinGecko, and in research reports — is legally required to exclude locked tokens. But this creates a systematic distortion: it understates the supply pressure that is deterministically incoming.",
+        html: "Reported circulating supply – the figure that appears on CoinMarketCap, CoinGecko, and in research reports – is legally required to exclude locked tokens. But this creates a systematic distortion: it understates the supply pressure that is deterministically incoming.",
       },
       {
         type: "p",
@@ -885,13 +885,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The delta between reported and true circulating supply is largest immediately after TGE (when all insider allocations are locked) and narrows progressively as vesting progresses. For many tokens in their first 18 months post-launch, true circulating supply is 3–8× the reported figure — meaning the reported market cap and FDV comparisons used to evaluate valuation are built on a foundation that systematically misrepresents supply.",
+        html: "The delta between reported and true circulating supply is largest immediately after TGE (when all insider allocations are locked) and narrows progressively as vesting progresses. For many tokens in their first 18 months post-launch, true circulating supply is 3–8× the reported figure – meaning the reported market cap and FDV comparisons used to evaluate valuation are built on a foundation that systematically misrepresents supply.",
       },
 
       { type: "h2", text: "How to Visualise the Vesting Pressure Curve" },
       {
         type: "p",
-        html: "A vesting pressure curve is a chart of monthly incremental token unlocks — not cumulative supply, but the <em>new supply entering circulation each month</em>. It is the derivative of the cumulative unlock chart, and it is what actually matters for price impact.",
+        html: "A vesting pressure curve is a chart of monthly incremental token unlocks – not cumulative supply, but the <em>new supply entering circulation each month</em>. It is the derivative of the cumulative unlock chart, and it is what actually matters for price impact.",
       },
       {
         type: "p",
@@ -908,7 +908,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The resulting chart immediately reveals the months of peak supply pressure — the periods where a disproportionate share of total supply is entering circulation. <strong>These are the months to watch for price support tests or breakdowns.</strong> Projects that have done this analysis well often stagger their vesting terms across different categories specifically to smooth the pressure curve.",
+        html: "The resulting chart immediately reveals the months of peak supply pressure – the periods where a disproportionate share of total supply is entering circulation. <strong>These are the months to watch for price support tests or breakdowns.</strong> Projects that have done this analysis well often stagger their vesting terms across different categories specifically to smooth the pressure curve.",
       },
 
       { type: "h2", text: "Case Studies: When Unlock Events Acted as Support or Breakdown Levels" },
@@ -920,12 +920,12 @@ const articles: Article[] = [
         type: "h3", text: "Pattern 1: The anticipated sell-off that didn't materialise" },
       {
         type: "p",
-        html: "In strong bull markets, major unlock events often fail to produce the expected sell-off. Holders who have waited 12–18 months for their cliff to expire face a decision: sell into strength and potentially miss further upside, or hold and extend their position. When market sentiment is decisively bullish, many choose to hold. The price weakness that was expected around the unlock date instead becomes a brief consolidation, and the lack of selling becomes itself a bullish signal — confirming holder conviction.",
+        html: "In strong bull markets, major unlock events often fail to produce the expected sell-off. Holders who have waited 12–18 months for their cliff to expire face a decision: sell into strength and potentially miss further upside, or hold and extend their position. When market sentiment is decisively bullish, many choose to hold. The price weakness that was expected around the unlock date instead becomes a brief consolidation, and the lack of selling becomes itself a bullish signal – confirming holder conviction.",
       },
       { type: "h3", text: "Pattern 2: The double-cliff convergence breakdown" },
       {
         type: "p",
-        html: "The most reliably bearish unlock scenario involves multiple major stakeholder categories reaching their cliff simultaneously during a bear market. When seed investors (12%), team (18%), and an ecosystem fund (20%) all unlock in the same 30-day window, representing 50% of total supply becoming liquid, the combined sell pressure often exceeds what any level of buy-side demand can absorb. Price support levels — particularly psychological round numbers — often fail in these windows, triggering stop cascades that extend the move beyond what fundamental supply math would predict.",
+        html: "The most reliably bearish unlock scenario involves multiple major stakeholder categories reaching their cliff simultaneously during a bear market. When seed investors (12%), team (18%), and an ecosystem fund (20%) all unlock in the same 30-day window, representing 50% of total supply becoming liquid, the combined sell pressure often exceeds what any level of buy-side demand can absorb. Price support levels – particularly psychological round numbers – often fail in these windows, triggering stop cascades that extend the move beyond what fundamental supply math would predict.",
       },
       { type: "h3", text: "Pattern 3: The unlock calendar as a floor" },
       {
@@ -990,7 +990,7 @@ const articles: Article[] = [
           },
           {
             q: "What is a vesting pressure curve?",
-            a: "A vesting pressure curve charts the monthly incremental new supply entering circulation from vesting unlocks — not cumulative supply, but the new tokens unlocking each month. It is the most useful visual tool for identifying periods of peak sell-side risk in a token's lifecycle.",
+            a: "A vesting pressure curve charts the monthly incremental new supply entering circulation from vesting unlocks – not cumulative supply, but the new tokens unlocking each month. It is the most useful visual tool for identifying periods of peak sell-side risk in a token's lifecycle.",
           },
         ],
       },
@@ -1001,7 +1001,7 @@ const articles: Article[] = [
   {
     slug:        "zombie-supply-unclaimed-vesting-tokens",
     title:       "Zombie Supply: The Hidden Impact of Unclaimed Vesting Tokens",
-    excerpt:     "There is a category of tokens that have technically vested but will never trade, never vote, and never show up in any meaningful metric. Zombie supply distorts everything — circulating supply, FDV, governance, and liquidity models. Here is what it is and why protocols need to start measuring it.",
+    excerpt:     "There is a category of tokens that have technically vested but will never trade, never vote, and never show up in any meaningful metric. Zombie supply distorts everything – circulating supply, FDV, governance, and liquidity models. Here is what it is and why protocols need to start measuring it.",
     publishedAt: "2026-03-14",
     updatedAt:   "2026-03-14",
     readingTime: "12 min read",
@@ -1010,17 +1010,17 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "In every token ecosystem, there exists a category of supply that is technically alive but functionally dead. These are tokens that have fully vested — unlocked from their smart contracts, available to claim — but whose intended recipients have never claimed them, and likely never will. The wallet is inactive. The keys may be lost. The holder has moved on. The tokens sit in limbo: neither locked nor truly circulating, neither voting nor transferring. We call this <strong>zombie supply</strong>.",
+        html: "In every token ecosystem, there exists a category of supply that is technically alive but functionally dead. These are tokens that have fully vested – unlocked from their smart contracts, available to claim – but whose intended recipients have never claimed them, and likely never will. The wallet is inactive. The keys may be lost. The holder has moved on. The tokens sit in limbo: neither locked nor truly circulating, neither voting nor transferring. We call this <strong>zombie supply</strong>.",
       },
       {
         type: "p",
-        html: "Zombie supply is not a theoretical edge case. It affects every protocol with significant vesting, particularly those that conducted broad airdrops or community distributions. Its consequences ripple through every metric that investors, analysts, and governance participants rely on. And almost nobody talks about it — because almost nobody measures it.",
+        html: "Zombie supply is not a theoretical edge case. It affects every protocol with significant vesting, particularly those that conducted broad airdrops or community distributions. Its consequences ripple through every metric that investors, analysts, and governance participants rely on. And almost nobody talks about it – because almost nobody measures it.",
       },
 
       { type: "h2", text: "What Is Zombie Supply?" },
       {
         type: "p",
-        html: "Zombie supply is the aggregate of claimable vested tokens that have not been claimed and show strong evidence of never being claimed — due to wallet inactivity, lost private keys, disengaged recipients, or deceased holders.",
+        html: "Zombie supply is the aggregate of claimable vested tokens that have not been claimed and show strong evidence of never being claimed – due to wallet inactivity, lost private keys, disengaged recipients, or deceased holders.",
       },
       {
         type: "callout",
@@ -1030,13 +1030,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The phenomenon is closely related to — but distinct from — the well-known problem of lost Bitcoin (estimated at 3–4 million BTC). Bitcoin loss is permanent: private keys are gone forever. Zombie supply is more ambiguous: the tokens could theoretically be claimed tomorrow if the recipient re-appears. In practice, for positions that have been claimable for more than 12–24 months with no on-chain activity from the recipient wallet, the effective probability of claiming approaches zero.",
+        html: "The phenomenon is closely related to – but distinct from – the well-known problem of lost Bitcoin (estimated at 3–4 million BTC). Bitcoin loss is permanent: private keys are gone forever. Zombie supply is more ambiguous: the tokens could theoretically be claimed tomorrow if the recipient re-appears. In practice, for positions that have been claimable for more than 12–24 months with no on-chain activity from the recipient wallet, the effective probability of claiming approaches zero.",
       },
 
       { type: "h2", text: "How Unclaimed Tokens Distort Circulating Supply" },
       {
         type: "p",
-        html: "Standard circulating supply calculations count all tokens that are not locked in smart contracts as 'circulating'. This is operationally sensible — there is no reliable way to distinguish between a token held by an active investor and one held by a wallet whose owner lost access five years ago. The problem is that this produces a circulating supply figure that <em>overstates effective supply</em>.",
+        html: "Standard circulating supply calculations count all tokens that are not locked in smart contracts as 'circulating'. This is operationally sensible – there is no reliable way to distinguish between a token held by an active investor and one held by a wallet whose owner lost access five years ago. The problem is that this produces a circulating supply figure that <em>overstates effective supply</em>.",
       },
       {
         type: "p",
@@ -1055,13 +1055,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This is not a hypothetical. Claim rate analysis of major protocol airdrops consistently shows that 20–40% of airdrop recipients never claim their full allocation. For team and investor vestings, the numbers are better — financial motivation is higher — but even here, advisor wallets, small early contributors, and participants who left the ecosystem can accumulate years of unclaimed vested tokens.",
+        html: "This is not a hypothetical. Claim rate analysis of major protocol airdrops consistently shows that 20–40% of airdrop recipients never claim their full allocation. For team and investor vestings, the numbers are better – financial motivation is higher – but even here, advisor wallets, small early contributors, and participants who left the ecosystem can accumulate years of unclaimed vested tokens.",
       },
 
       { type: "h2", text: "The FDV Problem: Why It Is Even More Misleading Than You Think" },
       {
         type: "p",
-        html: "Fully Diluted Valuation (FDV) — the market cap if all tokens were in circulation at the current price — is already a controversial metric because it treats locked tokens as economically equivalent to liquid ones. Zombie supply makes this worse by introducing a third category: tokens that are neither locked nor truly liquid, but are counted as liquid.",
+        html: "Fully Diluted Valuation (FDV) – the market cap if all tokens were in circulation at the current price – is already a controversial metric because it treats locked tokens as economically equivalent to liquid ones. Zombie supply makes this worse by introducing a third category: tokens that are neither locked nor truly liquid, but are counted as liquid.",
       },
       {
         type: "p",
@@ -1077,7 +1077,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Sophisticated valuation analysts sometimes attempt to adjust for this by estimating 'effective circulating supply' — active wallets only, excluding dust wallets, long-dormant addresses, and known custodial holding patterns. This is labour-intensive but produces materially more accurate valuations.",
+        html: "Sophisticated valuation analysts sometimes attempt to adjust for this by estimating 'effective circulating supply' – active wallets only, excluding dust wallets, long-dormant addresses, and known custodial holding patterns. This is labour-intensive but produces materially more accurate valuations.",
       },
 
       { type: "h2", text: "Wallet Inactivity and Lost Keys: The Scale of the Problem" },
@@ -1089,24 +1089,24 @@ const articles: Article[] = [
         type: "table",
         headers: ["Wallet category", "Likelihood of claiming", "Zombie supply contribution"],
         rows: [
-          ["Airdrop recipient: never claimed", "Very low (15–25%)", "High — never activated vesting contract"],
-          ["Airdrop recipient: claimed once, then silent", "Low (30–40%)", "Medium — partial claim, remainder zombie"],
-          ["Early testnet contributor, inactive since mainnet", "Low", "High — often received vesting but left ecosystem"],
-          ["Advisor with lost/inaccessible wallet", "Negligible", "High — full allocation becomes zombie"],
-          ["Exchange wallet that received allocation", "Moderate", "Varies — depends on exchange policy"],
-          ["DAO treasury with deprecated multisig", "Low", "High — governance friction prevents claim"],
-          ["Deceased holder", "Very low", "High — key management rarely transferred"],
+          ["Airdrop recipient: never claimed", "Very low (15–25%)", "High – never activated vesting contract"],
+          ["Airdrop recipient: claimed once, then silent", "Low (30–40%)", "Medium – partial claim, remainder zombie"],
+          ["Early testnet contributor, inactive since mainnet", "Low", "High – often received vesting but left ecosystem"],
+          ["Advisor with lost/inaccessible wallet", "Negligible", "High – full allocation becomes zombie"],
+          ["Exchange wallet that received allocation", "Moderate", "Varies – depends on exchange policy"],
+          ["DAO treasury with deprecated multisig", "Low", "High – governance friction prevents claim"],
+          ["Deceased holder", "Very low", "High – key management rarely transferred"],
         ],
       },
       {
         type: "p",
-        html: "The advisor category deserves special attention. Advisors in early-stage crypto projects frequently hold positions across dozens of projects, received tokens years ago on hardware wallets they no longer have, or used browser extension wallets that were tied to machines they have since replaced. Advisor allocations — typically 2–5% of supply — can be disproportionate contributors to zombie supply.",
+        html: "The advisor category deserves special attention. Advisors in early-stage crypto projects frequently hold positions across dozens of projects, received tokens years ago on hardware wallets they no longer have, or used browser extension wallets that were tied to machines they have since replaced. Advisor allocations – typically 2–5% of supply – can be disproportionate contributors to zombie supply.",
       },
 
       { type: "h2", text: "The Governance Vacuum: Voting Power That Never Shows Up" },
       {
         type: "p",
-        html: "In governance token systems, zombie supply creates a structural democratic deficit. If 25% of circulating governance tokens are zombie supply — claimable but held by inactive wallets — then the governance system is effectively operating at 75% participation capacity even before you account for voluntary voter apathy.",
+        html: "In governance token systems, zombie supply creates a structural democratic deficit. If 25% of circulating governance tokens are zombie supply – claimable but held by inactive wallets – then the governance system is effectively operating at 75% participation capacity even before you account for voluntary voter apathy.",
       },
       {
         type: "p",
@@ -1115,7 +1115,7 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Quorum thresholds become harder to reach:</strong> If a governance proposal requires 10% of circulating supply to vote for quorum, and 25% of that supply is zombie, then the effective quorum threshold is 13.3% of actively controlled supply — significantly harder to achieve.",
+          "<strong>Quorum thresholds become harder to reach:</strong> If a governance proposal requires 10% of circulating supply to vote for quorum, and 25% of that supply is zombie, then the effective quorum threshold is 13.3% of actively controlled supply – significantly harder to achieve.",
           "<strong>Vote concentration risk increases:</strong> When zombie supply is large, the effective voting power of active token holders is higher than nominal. A whale holding 5% of circulating supply may effectively control 6.5–7% of realistic votes.",
           "<strong>Governance attack surface widens:</strong> Quorum requirements calibrated against stated circulating supply may be inadequate against the true distribution of active holders.",
           "<strong>Treasury management is distorted:</strong> Treasury proposals are evaluated relative to total circulating supply, when the economically relevant denominator is active supply.",
@@ -1125,7 +1125,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🗳️",
         title: "Governance quorum math with zombie supply",
-        body:  "If a protocol has 100M circulating tokens, and 22M are zombie supply, the governance system functionally has 78M active tokens. A 10% quorum threshold means getting 10M votes — but that represents 12.8% of active supply. Quorums calibrated to stated circulating supply systematically underestimate the difficulty of reaching meaningful participation.",
+        body:  "If a protocol has 100M circulating tokens, and 22M are zombie supply, the governance system functionally has 78M active tokens. A 10% quorum threshold means getting 10M votes – but that represents 12.8% of active supply. Quorums calibrated to stated circulating supply systematically underestimate the difficulty of reaching meaningful participation.",
       },
 
       { type: "h2", text: "Protocol-Level Consequences Beyond Governance" },
@@ -1137,10 +1137,10 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<strong>Liquidity ratios:</strong> The ratio of DEX liquidity to market cap looks healthier than it is, because market cap is inflated by zombie supply that will never trade",
-          "<strong>Staking participation rates:</strong> Staking rates calculated as a percentage of circulating supply are understated — zombie supply never stakes, inflating the denominator",
+          "<strong>Staking participation rates:</strong> Staking rates calculated as a percentage of circulating supply are understated – zombie supply never stakes, inflating the denominator",
           "<strong>Exchange listing requirements:</strong> Some exchanges have minimum free-float requirements; zombie supply may artificially satisfy these requirements",
           "<strong>Collateralisation models:</strong> Lending protocols that accept governance tokens as collateral may over-collateralise based on circulating supply figures that include zombie tokens",
-          "<strong>Vesting contract audit risk:</strong> Tokens sitting unclaimed in vesting contracts for years become an underappreciated smart contract security risk — old contracts may contain vulnerabilities or be targeted for deprecated contract attacks",
+          "<strong>Vesting contract audit risk:</strong> Tokens sitting unclaimed in vesting contracts for years become an underappreciated smart contract security risk – old contracts may contain vulnerabilities or be targeted for deprecated contract attacks",
         ],
       },
 
@@ -1156,15 +1156,15 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Active supply ratio:</strong> The percentage of vested tokens that have actually been claimed by recipients — a proxy for effective circulating supply",
+          "<strong>Active supply ratio:</strong> The percentage of vested tokens that have actually been claimed by recipients – a proxy for effective circulating supply",
           "<strong>Ecosystem engagement signal:</strong> Falling claim rates are an early warning signal for recipient disengagement, particularly for community and airdrop allocations",
-          "<strong>Zombie accumulation rate:</strong> The rate at which claimable tokens are accumulating without being claimed — the higher this rate, the more zombie supply is building in the protocol",
+          "<strong>Zombie accumulation rate:</strong> The rate at which claimable tokens are accumulating without being claimed – the higher this rate, the more zombie supply is building in the protocol",
           "<strong>Governance health indicator:</strong> In governance token systems, claim rate correlates with governance participation capacity",
         ],
       },
       {
         type: "p",
-        html: "This metric is entirely computable from on-chain data. Vesting contracts store both the total vested amount and the amount claimed. The difference is unclaimed vested supply — the raw material for zombie supply analysis. Protocols that surface this data on their analytics dashboards are providing a level of transparency that is currently rare but should become standard.",
+        html: "This metric is entirely computable from on-chain data. Vesting contracts store both the total vested amount and the amount claimed. The difference is unclaimed vested supply – the raw material for zombie supply analysis. Protocols that surface this data on their analytics dashboards are providing a level of transparency that is currently rare but should become standard.",
       },
 
       { type: "h2", text: "How to Identify Zombie Supply in Any Protocol" },
@@ -1176,7 +1176,7 @@ const articles: Article[] = [
         type: "ol",
         items: [
           "<strong>Identify the vesting contracts:</strong> Use a protocol's documentation, deployment records, or a tool like Vestream's Discover feature to locate active vesting positions for the token",
-          "<strong>Query claimed vs deposited amounts:</strong> Most vesting contracts expose a function to query total deposited and total withdrawn for each position — the delta is unclaimed vested supply",
+          "<strong>Query claimed vs deposited amounts:</strong> Most vesting contracts expose a function to query total deposited and total withdrawn for each position – the delta is unclaimed vested supply",
           "<strong>Cross-reference against wallet activity:</strong> For the wallets holding unclaimed positions, check their last transaction date on a block explorer. Wallets inactive for 12+ months are strong zombie supply candidates",
           "<strong>Segment by allocation category:</strong> Airdrop and community allocation positions will typically show higher unclaim rates than team and investor positions",
           "<strong>Estimate a zombie supply range:</strong> Conservative (90-day inactive wallets), moderate (180-day), and aggressive (365-day) thresholds each produce different zombie supply estimates",
@@ -1191,9 +1191,9 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Implement auto-claim mechanisms:</strong> Some vesting contracts support push-based distribution rather than pull-based claiming — tokens are sent to recipient wallets rather than waiting to be claimed. This eliminates the claiming friction that contributes to zombie accumulation.",
+          "<strong>Implement auto-claim mechanisms:</strong> Some vesting contracts support push-based distribution rather than pull-based claiming – tokens are sent to recipient wallets rather than waiting to be claimed. This eliminates the claiming friction that contributes to zombie accumulation.",
           "<strong>Set unclaim expiry windows:</strong> Contractually, unclaimed positions that exceed a defined inactivity threshold (e.g., 24 months after vesting) could be subject to governance vote for reallocation. This requires careful legal and contract design but has precedent in traditional equity (abandoned property laws).",
-          "<strong>Build recipient re-engagement campaigns:</strong> Regular email and social outreach to allocation recipients — particularly for community rounds — with clear instructions on claiming can recover meaningful amounts of would-be zombie supply.",
+          "<strong>Build recipient re-engagement campaigns:</strong> Regular email and social outreach to allocation recipients – particularly for community rounds – with clear instructions on claiming can recover meaningful amounts of would-be zombie supply.",
           "<strong>Use claimed vs claimable in tokenomics disclosures:</strong> Publishing this ratio builds trust with sophisticated investors and acknowledges the reality that stated circulating supply overstates effective supply.",
           "<strong>Monitor and disclose in real time:</strong> A live claimed vs claimable dashboard, built on top of vesting contract data, is a powerful transparency signal that very few projects currently provide.",
         ],
@@ -1212,15 +1212,15 @@ const articles: Article[] = [
           },
           {
             q: "Does zombie supply affect token price?",
-            a: "Zombie supply affects token price indirectly by distorting the metrics used to evaluate it. Circulating supply overstatement makes market cap appear larger than effective liquidity justifies. More directly, zombie supply that is counted as circulating but will never trade removes real sell-side pressure that would otherwise exist — which is actually a mild positive for price stability, but introduces governance and metric distortion.",
+            a: "Zombie supply affects token price indirectly by distorting the metrics used to evaluate it. Circulating supply overstatement makes market cap appear larger than effective liquidity justifies. More directly, zombie supply that is counted as circulating but will never trade removes real sell-side pressure that would otherwise exist – which is actually a mild positive for price stability, but introduces governance and metric distortion.",
           },
           {
             q: "What is the claimed vs claimable metric?",
-            a: "Claimed vs claimable is the ratio of tokens that have been claimed from vesting contracts to the total tokens that have vested and are available to claim. It is a direct measure of recipient engagement and a proxy for effective circulating supply. A 70% claim rate means 30% of vested tokens are sitting unclaimed — potential zombie supply.",
+            a: "Claimed vs claimable is the ratio of tokens that have been claimed from vesting contracts to the total tokens that have vested and are available to claim. It is a direct measure of recipient engagement and a proxy for effective circulating supply. A 70% claim rate means 30% of vested tokens are sitting unclaimed – potential zombie supply.",
           },
           {
             q: "Can zombie supply tokens ever be recovered?",
-            a: "If the private key to the wallet is still accessible, yes — the recipient can claim at any time. If keys are permanently lost, the tokens are effectively destroyed (like lost Bitcoin). Some vesting contracts include expiry mechanisms or governance-controlled reclamation after long inactivity periods, but this is uncommon and legally complex.",
+            a: "If the private key to the wallet is still accessible, yes – the recipient can claim at any time. If keys are permanently lost, the tokens are effectively destroyed (like lost Bitcoin). Some vesting contracts include expiry mechanisms or governance-controlled reclamation after long inactivity periods, but this is uncommon and legally complex.",
           },
           {
             q: "Why don't protocols track zombie supply?",
@@ -1235,7 +1235,7 @@ const articles: Article[] = [
   {
     slug:        "vesting-unlock-frequency-investor-psychology",
     title:       "Micro-Cadences: How Unlock Frequency Shapes Investor Psychology and Market Dynamics",
-    excerpt:     "It is not just how many tokens unlock — it is how often. The frequency of unlock events drives measurable differences in sell pressure patterns, recipient decision-making, and token price stability that most vesting designs completely overlook.",
+    excerpt:     "It is not just how many tokens unlock – it is how often. The frequency of unlock events drives measurable differences in sell pressure patterns, recipient decision-making, and token price stability that most vesting designs completely overlook.",
     publishedAt: "2026-03-15",
     updatedAt:   "2026-03-15",
     readingTime: "11 min read",
@@ -1248,13 +1248,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Almost no one asks the third question: <em>how often?</em> The unlock cadence — whether tokens release daily, weekly, monthly, quarterly, or continuously — turns out to have outsized effects on recipient behaviour, market dynamics, and the long-term health of a token ecosystem. This piece is an attempt to map those effects rigorously, for <strong>protocol designers choosing their vesting parameters</strong>, <strong>investors evaluating tokenomics</strong>, and <strong>traders modelling unlock event timing</strong>.",
+        html: "Almost no one asks the third question: <em>how often?</em> The unlock cadence – whether tokens release daily, weekly, monthly, quarterly, or continuously – turns out to have outsized effects on recipient behaviour, market dynamics, and the long-term health of a token ecosystem. This piece is an attempt to map those effects rigorously, for <strong>protocol designers choosing their vesting parameters</strong>, <strong>investors evaluating tokenomics</strong>, and <strong>traders modelling unlock event timing</strong>.",
       },
 
       { type: "h2", text: "What Is Unlock Cadence?" },
       {
         type: "p",
-        html: "Unlock cadence is the frequency at which vesting events occur — the intervals between successive releases of locked tokens. A vesting contract releases tokens on a schedule that can range from continuous (per-second streaming) to annual (single cliff unlock).",
+        html: "Unlock cadence is the frequency at which vesting events occur – the intervals between successive releases of locked tokens. A vesting contract releases tokens on a schedule that can range from continuous (per-second streaming) to annual (single cliff unlock).",
       },
       {
         type: "table",
@@ -1271,7 +1271,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The same total allocation and the same total vesting duration can be structured at any of these cadences. A 2,400,000 token grant over 24 months could release 100,000 per month, 25,000 per week, ~3,288 per day, or stream at 1.52 tokens per second — the recipient's total allocation is identical. The market dynamics and recipient behaviour are not.",
+        html: "The same total allocation and the same total vesting duration can be structured at any of these cadences. A 2,400,000 token grant over 24 months could release 100,000 per month, 25,000 per week, ~3,288 per day, or stream at 1.52 tokens per second – the recipient's total allocation is identical. The market dynamics and recipient behaviour are not.",
       },
 
       { type: "h2", text: "The Psychology of Drip vs Chunk Unlocks" },
@@ -1286,16 +1286,16 @@ const articles: Article[] = [
       { type: "h3", text: "The drip effect (high frequency)" },
       {
         type: "p",
-        html: "Recipients receiving tokens weekly or continuously tend to make smaller, more habitual decisions about each tranche. Each release is a small decision — sell this week's portion, hold it, stake it? The <strong>decision cost is low because the stakes are low</strong>. This produces a pattern of micro-decisions rather than one or two large, high-stakes choices. Behavioural research suggests that small, frequent decisions are more likely to default to the prior decision — which, in the context of a hold-biased recipient, means more holding.",
+        html: "Recipients receiving tokens weekly or continuously tend to make smaller, more habitual decisions about each tranche. Each release is a small decision – sell this week's portion, hold it, stake it? The <strong>decision cost is low because the stakes are low</strong>. This produces a pattern of micro-decisions rather than one or two large, high-stakes choices. Behavioural research suggests that small, frequent decisions are more likely to default to the prior decision – which, in the context of a hold-biased recipient, means more holding.",
       },
       {
         type: "p",
-        html: "There is also a salience effect: weekly token releases quickly fade into the background. Recipients start to treat them like a salary — expected, routine, and not requiring active attention. This reduces the likelihood of large reactive selling triggered by news events or price volatility.",
+        html: "There is also a salience effect: weekly token releases quickly fade into the background. Recipients start to treat them like a salary – expected, routine, and not requiring active attention. This reduces the likelihood of large reactive selling triggered by news events or price volatility.",
       },
       { type: "h3", text: "The chunk effect (low frequency)" },
       {
         type: "p",
-        html: "Monthly or quarterly unlock events are <em>discrete decision moments</em>. They are marked on calendars. They are anticipated. And — critically — they carry higher per-event stakes. When 416,000 tokens unlock at once, that is a materially larger decision than 13,000 tokens unlocking daily. The recipient is more likely to consciously deliberate, to consult tax advisors, to evaluate current market conditions, and — in stressed market conditions — to treat the unlock as a forced decision point.",
+        html: "Monthly or quarterly unlock events are <em>discrete decision moments</em>. They are marked on calendars. They are anticipated. And – critically – they carry higher per-event stakes. When 416,000 tokens unlock at once, that is a materially larger decision than 13,000 tokens unlocking daily. The recipient is more likely to consciously deliberate, to consult tax advisors, to evaluate current market conditions, and – in stressed market conditions – to treat the unlock as a forced decision point.",
       },
       {
         type: "p",
@@ -1311,7 +1311,7 @@ const articles: Article[] = [
       { type: "h2", text: "Weekly Vesting: The Underused Sweet Spot" },
       {
         type: "p",
-        html: "Weekly vesting — releasing 1/104th of a 2-year allocation every seven days — is underused in crypto despite having significant advantages. It produces 104 unlock events over a 24-month period, each releasing about 1% of the total allocation. The market impact of any individual event is negligible. Recipients develop a weekly rhythm that reduces the psychological salience of each release.",
+        html: "Weekly vesting – releasing 1/104th of a 2-year allocation every seven days – is underused in crypto despite having significant advantages. It produces 104 unlock events over a 24-month period, each releasing about 1% of the total allocation. The market impact of any individual event is negligible. Recipients develop a weekly rhythm that reduces the psychological salience of each release.",
       },
       {
         type: "p",
@@ -1325,11 +1325,11 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The hidden cost is the creation of <strong>24 or 36 discrete sell decision moments</strong> over a vesting period. In a bear market, each of these moments is a potential exit point. Research on investor behaviour in declining markets shows that decision moments — points where a holder must actively choose to hold rather than automatically holding — increase the probability of selling. Monthly vesting creates more of these moments than weekly vesting, more sell decisions per year, and more opportunities for loss aversion to drive premature exits.",
+        html: "The hidden cost is the creation of <strong>24 or 36 discrete sell decision moments</strong> over a vesting period. In a bear market, each of these moments is a potential exit point. Research on investor behaviour in declining markets shows that decision moments – points where a holder must actively choose to hold rather than automatically holding – increase the probability of selling. Monthly vesting creates more of these moments than weekly vesting, more sell decisions per year, and more opportunities for loss aversion to drive premature exits.",
       },
       {
         type: "p",
-        html: "This does not mean monthly vesting is bad — it is appropriate for many contexts. But designers should be aware that 'monthly' is not a neutral default; it is a specific psychological structure with specific behavioural consequences.",
+        html: "This does not mean monthly vesting is bad – it is appropriate for many contexts. But designers should be aware that 'monthly' is not a neutral default; it is a specific psychological structure with specific behavioural consequences.",
       },
 
       { type: "h2", text: "Quarterly Vesting: The Corporate Holdover with Volatility Costs" },
@@ -1339,22 +1339,22 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The market dynamics of quarterly vesting are closer to cliff behaviour than to smooth linear vesting. Eight unlock events over two years means each event releases approximately 12.5% of the total allocation. These are not micro-events — they are major supply additions that, for sizeable positions, can be individually market-moving. Quarterly unlock dates for large stakeholder categories are often visible in price charts as volatility inflection points.",
+        html: "The market dynamics of quarterly vesting are closer to cliff behaviour than to smooth linear vesting. Eight unlock events over two years means each event releases approximately 12.5% of the total allocation. These are not micro-events – they are major supply additions that, for sizeable positions, can be individually market-moving. Quarterly unlock dates for large stakeholder categories are often visible in price charts as volatility inflection points.",
       },
       {
         type: "p",
-        html: "The one genuine advantage of quarterly vesting is simplicity for recipients who are not active market participants — advisors, academics, early community members — for whom monthly decisions would be burdensome and annual decisions too infrequent. For these recipients, the reduced decision frequency is a feature, not a bug.",
+        html: "The one genuine advantage of quarterly vesting is simplicity for recipients who are not active market participants – advisors, academics, early community members – for whom monthly decisions would be burdensome and annual decisions too infrequent. For these recipients, the reduced decision frequency is a feature, not a bug.",
       },
 
       { type: "h2", text: "How Cadence Interacts With Market Cycles" },
       {
         type: "p",
-        html: "Unlock cadence does not operate in a vacuum — it interacts with the prevailing market environment in ways that amplify or dampen its effects.",
+        html: "Unlock cadence does not operate in a vacuum – it interacts with the prevailing market environment in ways that amplify or dampen its effects.",
       },
       { type: "h3", text: "Bull markets: high frequency wins" },
       {
         type: "p",
-        html: "In rising markets, frequent small unlocks are fully absorbed by buy-side pressure. Each weekly or daily tranche enters a market with enough demand to buy it. Recipients who sell immediately are replaced by new buyers, and the net price impact is negligible. The market's ability to absorb frequent small releases in bull conditions makes high-frequency vesting the optimal design for launch phases — assuming the launch coincides with favourable conditions.",
+        html: "In rising markets, frequent small unlocks are fully absorbed by buy-side pressure. Each weekly or daily tranche enters a market with enough demand to buy it. Recipients who sell immediately are replaced by new buyers, and the net price impact is negligible. The market's ability to absorb frequent small releases in bull conditions makes high-frequency vesting the optimal design for launch phases – assuming the launch coincides with favourable conditions.",
       },
       { type: "h3", text: "Bear markets: cadence becomes critical" },
       {
@@ -1369,11 +1369,11 @@ const articles: Article[] = [
       { type: "h2", text: "Continuous Streaming: Removing the Event Entirely" },
       {
         type: "p",
-        html: "The logical extreme of high-frequency vesting is continuous streaming — the approach taken by Sablier and, to a lesser extent, Unvest. In a streaming model, tokens unlock at a constant per-second rate. There is no 'unlock event'. There is no date to mark on a calendar. There is no discrete decision moment.",
+        html: "The logical extreme of high-frequency vesting is continuous streaming – the approach taken by Sablier and, to a lesser extent, Unvest. In a streaming model, tokens unlock at a constant per-second rate. There is no 'unlock event'. There is no date to mark on a calendar. There is no discrete decision moment.",
       },
       {
         type: "p",
-        html: "The psychological effect is profound: streaming vesting effectively converts a token allocation into a continuous income stream rather than a sequence of capital events. This reframes the recipient's mental model from 'when should I sell this tranche?' to 'what is my target withdrawal rate?' — a fundamentally different and more stable decision framework.",
+        html: "The psychological effect is profound: streaming vesting effectively converts a token allocation into a continuous income stream rather than a sequence of capital events. This reframes the recipient's mental model from 'when should I sell this tranche?' to 'what is my target withdrawal rate?' – a fundamentally different and more stable decision framework.",
       },
       {
         type: "p",
@@ -1389,7 +1389,7 @@ const articles: Article[] = [
       { type: "h2", text: "Cadence Optimisation by Recipient Type" },
       {
         type: "p",
-        html: "There is no universal optimal cadence — the right frequency depends on the recipient type, their expected behaviour, and the intended relationship between recipient and protocol.",
+        html: "There is no universal optimal cadence – the right frequency depends on the recipient type, their expected behaviour, and the intended relationship between recipient and protocol.",
       },
       {
         type: "table",
@@ -1423,7 +1423,7 @@ const articles: Article[] = [
         items: [
           {
             q: "What is vesting unlock cadence?",
-            a: "Vesting unlock cadence is the frequency at which locked tokens are released to recipients — for example, daily, weekly, monthly, or quarterly. Two vesting schedules with the same total duration and allocation can have very different market effects depending on how often the unlocks occur.",
+            a: "Vesting unlock cadence is the frequency at which locked tokens are released to recipients – for example, daily, weekly, monthly, or quarterly. Two vesting schedules with the same total duration and allocation can have very different market effects depending on how often the unlocks occur.",
           },
           {
             q: "Is monthly or quarterly vesting better?",
@@ -1431,7 +1431,7 @@ const articles: Article[] = [
           },
           {
             q: "What is continuous vesting (token streaming)?",
-            a: "Continuous vesting — offered by platforms like Sablier — releases tokens in real-time, second by second, rather than in monthly or quarterly batches. There are no discrete unlock events. This eliminates the front-running and anticipatory selling associated with scheduled unlocks and reframes the recipient's mental model from a series of capital events to a continuous income stream.",
+            a: "Continuous vesting – offered by platforms like Sablier – releases tokens in real-time, second by second, rather than in monthly or quarterly batches. There are no discrete unlock events. This eliminates the front-running and anticipatory selling associated with scheduled unlocks and reframes the recipient's mental model from a series of capital events to a continuous income stream.",
           },
           {
             q: "How does unlock frequency affect token price?",
@@ -1458,7 +1458,7 @@ const articles: Article[] = [
   {
     slug:        "estimating-token-unlock-price-impact",
     title:       "How to Estimate the Price Impact of a Token Unlock Event",
-    excerpt:     "Token unlocks are public knowledge — so why do prices still dump? This framework shows you how to model sell pressure, adjust for holder type, and identify the unlocks that genuinely move markets.",
+    excerpt:     "Token unlocks are public knowledge – so why do prices still dump? This framework shows you how to model sell pressure, adjust for holder type, and identify the unlocks that genuinely move markets.",
     publishedAt: "2026-03-16",
     updatedAt:   "2026-03-16",
     readingTime: "14 min read",
@@ -1467,7 +1467,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Every token unlock event is announced months in advance. The vesting schedule is written into a smart contract, visible on-chain to anyone who looks. And yet, time after time, prices drop when cliff dates arrive. The question isn't whether unlocks cause sell pressure — they often do. The question is <strong>how much</strong>, under what conditions, and whether that pressure is already priced in before the date arrives.",
+        html: "Every token unlock event is announced months in advance. The vesting schedule is written into a smart contract, visible on-chain to anyone who looks. And yet, time after time, prices drop when cliff dates arrive. The question isn't whether unlocks cause sell pressure – they often do. The question is <strong>how much</strong>, under what conditions, and whether that pressure is already priced in before the date arrives.",
       },
       {
         type: "p",
@@ -1477,7 +1477,7 @@ const articles: Article[] = [
       { type: "h2", text: "The Mechanics of Unlock-Driven Sell Pressure" },
       {
         type: "p",
-        html: "An unlock event increases the <strong>liquid supply</strong> of a token: tokens that were previously locked — and therefore unable to be sold — become transferable. This creates a potential supply shock. The magnitude of that shock depends on three variables:",
+        html: "An unlock event increases the <strong>liquid supply</strong> of a token: tokens that were previously locked – and therefore unable to be sold – become transferable. This creates a potential supply shock. The magnitude of that shock depends on three variables:",
       },
       {
         type: "ul",
@@ -1501,7 +1501,7 @@ const articles: Article[] = [
       { type: "h2", text: "Building a Simple Price Impact Model" },
       {
         type: "p",
-        html: "A workable first-order model combines the float change with two adjustments: <strong>holder type</strong> (who is receiving the unlocked tokens) and <strong>market depth</strong> (how much daily volume the token trades). The formula below is deliberately simple — the goal is a directional signal, not a precise prediction.",
+        html: "A workable first-order model combines the float change with two adjustments: <strong>holder type</strong> (who is receiving the unlocked tokens) and <strong>market depth</strong> (how much daily volume the token trades). The formula below is deliberately simple – the goal is a directional signal, not a precise prediction.",
       },
       {
         type: "ol",
@@ -1514,7 +1514,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This model is intentionally conservative — it tells you <em>potential</em> sell pressure, not <em>actual</em> sell pressure. Real-world outcomes depend on market sentiment, token utility demand, and whether buyers step in. But the model reliably flags the events worth paying attention to.",
+        html: "This model is intentionally conservative – it tells you <em>potential</em> sell pressure, not <em>actual</em> sell pressure. Real-world outcomes depend on market sentiment, token utility demand, and whether buyers step in. But the model reliably flags the events worth paying attention to.",
       },
 
       { type: "h2", text: "The Holder Type Matrix" },
@@ -1531,7 +1531,7 @@ const articles: Article[] = [
           ["Founding Team", "12–24 months", "Moderate (30–60%)", "Depends heavily on runway needs, public commitments, and market conditions"],
           ["Advisors", "6–12 months", "Moderate–High (50–80%)", "Token-compensated work often treated as income; advisors frequently sell at unlock"],
           ["Community / Airdrop", "0–6 months", "Variable (10–90%)", "Highly sensitive to recipient size; small amounts sold immediately, large grants often staked"],
-          ["Protocol Treasury", "N/A (internal)", "Very Low (5–15%)", "Treasury tokens deployed into liquidity, grants, or buybacks — rarely dumped on open market"],
+          ["Protocol Treasury", "N/A (internal)", "Very Low (5–15%)", "Treasury tokens deployed into liquidity, grants, or buybacks – rarely dumped on open market"],
         ],
       },
 
@@ -1552,8 +1552,8 @@ const articles: Article[] = [
       {
         type: "callout",
         emoji: "⚠️",
-        title: "\"The Unlock Is Priced In\" — Until It Isn't",
-        body: "Market participants frequently claim that scheduled unlock events are already priced in. This is sometimes true — for small unlocks into liquid markets. It is often false for cliff events where the recipient is a VC fund with a cost basis 10× below market, or where the unlock represents more than 10% of circulating supply. Do the arithmetic before assuming the market has.",
+        title: "\"The Unlock Is Priced In\" – Until It Isn't",
+        body: "Market participants frequently claim that scheduled unlock events are already priced in. This is sometimes true – for small unlocks into liquid markets. It is often false for cliff events where the recipient is a VC fund with a cost basis 10× below market, or where the unlock represents more than 10% of circulating supply. Do the arithmetic before assuming the market has.",
       },
 
       { type: "h2", text: "Adjustments for Real-World Complexity" },
@@ -1583,7 +1583,7 @@ const articles: Article[] = [
           "<strong>Holder type multiplier:</strong> VC investors at current price 3× cost basis → multiplier 0.85 (high sell pressure expected)",
           "<strong>Adjusted sell amount:</strong> 40m × 0.85 × $0.90 = $30.6m in potential selling",
           "<strong>Volume-adjusted impact:</strong> $30.6m ÷ $8m daily volume = 3.8 trading days of sell pressure",
-          "<strong>Sanity check:</strong> $30.6m ÷ $180m market cap = 17% of market cap — high-risk threshold clearly breached",
+          "<strong>Sanity check:</strong> $30.6m ÷ $180m market cap = 17% of market cap – high-risk threshold clearly breached",
           "<strong>Conclusion:</strong> This unlock warrants serious attention. Watch for pre-cliff positioning in the −14 day window, and consider the post-dump recovery trade 7–14 days after the cliff if fundamentals are intact.",
         ],
       },
@@ -1601,11 +1601,11 @@ const articles: Article[] = [
           },
           {
             q: "Does vesting through Sablier vs UNCX affect price impact?",
-            a: "The protocol itself does not change the fundamental supply dynamics — the price impact comes from recipient incentives and market conditions, not which smart contract holds the tokens. However, streaming protocols like Sablier produce continuous micro-unlocks rather than discrete cliff events, which tend to spread sell pressure more evenly and reduce day-of volatility compared to cliff-based protocols.",
+            a: "The protocol itself does not change the fundamental supply dynamics – the price impact comes from recipient incentives and market conditions, not which smart contract holds the tokens. However, streaming protocols like Sablier produce continuous micro-unlocks rather than discrete cliff events, which tend to spread sell pressure more evenly and reduce day-of volatility compared to cliff-based protocols.",
           },
           {
             q: "How do I find upcoming unlock events for a token I hold?",
-            a: "The most reliable method is to read the project's smart contracts directly — vesting schedules are public on-chain data. Tools like Vestream aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
+            a: "The most reliable method is to read the project's smart contracts directly – vesting schedules are public on-chain data. Tools like Vestream aggregate this data across multiple protocols and chains, allowing you to see all upcoming cliff and linear unlock events in a single calendar view. Always cross-reference with the project's tokenomics documentation, as not all vesting is on-chain.",
           },
         ],
       },
@@ -1616,7 +1616,7 @@ const articles: Article[] = [
   {
     slug:        "vesting-cliff-explained",
     title:       "The Vesting Cliff Explained: What It Is, Why It Exists, and Why It Moves Markets",
-    excerpt:     "The cliff is the most misunderstood mechanism in token vesting — and the one most likely to catch investors off guard. This guide covers the mechanics, the market dynamics, and what the data shows about cliff-driven price events.",
+    excerpt:     "The cliff is the most misunderstood mechanism in token vesting – and the one most likely to catch investors off guard. This guide covers the mechanics, the market dynamics, and what the data shows about cliff-driven price events.",
     publishedAt: "2026-03-17",
     updatedAt:   "2026-03-17",
     readingTime: "13 min read",
@@ -1625,7 +1625,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Ask most crypto investors what a vesting cliff is, and they will tell you it is 'a waiting period before tokens unlock.' That is technically correct, but it misses what makes the cliff structurally significant. The cliff is not just a delay — it is a <strong>concentrated release event</strong> that can deliver 12 to 24 months' worth of token allocation in a single transaction. Understanding the cliff at a mechanical level changes how you analyse a project's tokenomics and how you position around unlock events.",
+        html: "Ask most crypto investors what a vesting cliff is, and they will tell you it is 'a waiting period before tokens unlock.' That is technically correct, but it misses what makes the cliff structurally significant. The cliff is not just a delay – it is a <strong>concentrated release event</strong> that can deliver 12 to 24 months' worth of token allocation in a single transaction. Understanding the cliff at a mechanical level changes how you analyse a project's tokenomics and how you position around unlock events.",
       },
       {
         type: "p",
@@ -1635,7 +1635,7 @@ const articles: Article[] = [
       { type: "h2", text: "What Is a Vesting Cliff?" },
       {
         type: "p",
-        html: "A vesting cliff is a period at the start of a vesting schedule during which <strong>zero tokens are released</strong>. Once the cliff date is reached, a pre-defined lump sum — typically corresponding to the proportion of the total allocation that 'accrued' during the cliff period — unlocks immediately. After the cliff, remaining tokens vest according to the ongoing schedule (usually linear).",
+        html: "A vesting cliff is a period at the start of a vesting schedule during which <strong>zero tokens are released</strong>. Once the cliff date is reached, a pre-defined lump sum – typically corresponding to the proportion of the total allocation that 'accrued' during the cliff period – unlocks immediately. After the cliff, remaining tokens vest according to the ongoing schedule (usually linear).",
       },
       {
         type: "p",
@@ -1645,7 +1645,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "💡",
         title: "The Cliff vs Linear Distinction",
-        body: "Without a cliff, linear vesting begins from day one — the recipient earns tokens continuously from grant date. With a cliff, nothing is earned (or at least nothing is withdrawable) until the cliff date, at which point all accrued tokens release at once. The cliff is a threshold, not a gradual ramp.",
+        body: "Without a cliff, linear vesting begins from day one – the recipient earns tokens continuously from grant date. With a cliff, nothing is earned (or at least nothing is withdrawable) until the cliff date, at which point all accrued tokens release at once. The cliff is a threshold, not a gradual ramp.",
       },
 
       { type: "h2", text: "How Cliff Calculations Work On-Chain" },
@@ -1655,16 +1655,16 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Different protocols model cliffs differently. In <strong>Sablier v2 LockupLinear</strong>, two separate amounts are specified: a cliff amount (released at the cliff timestamp) and a streaming amount (released linearly from cliff to end). This allows precise control — a 25% cliff with 75% linear, for example, or a 0% cliff with 100% linear.",
+        html: "Different protocols model cliffs differently. In <strong>Sablier v2 LockupLinear</strong>, two separate amounts are specified: a cliff amount (released at the cliff timestamp) and a streaming amount (released linearly from cliff to end). This allows precise control – a 25% cliff with 75% linear, for example, or a 0% cliff with 100% linear.",
       },
       {
         type: "p",
-        html: "In <strong>UNCX</strong>, the cliff is modelled as a single timestamp before which nothing vests. After the cliff, the contract calculates how many full periods have elapsed since the start and releases the proportional amount. Some implementations allow multiple cliff stages — a <strong>cascading cliff</strong> where partial amounts release at defined intervals before the full schedule begins.",
+        html: "In <strong>UNCX</strong>, the cliff is modelled as a single timestamp before which nothing vests. After the cliff, the contract calculates how many full periods have elapsed since the start and releases the proportional amount. Some implementations allow multiple cliff stages – a <strong>cascading cliff</strong> where partial amounts release at defined intervals before the full schedule begins.",
       },
       {
         type: "ul",
         items: [
-          "<strong>Cliff timestamp precision:</strong> Cliffs are encoded as Unix timestamps (seconds since January 1, 1970). The practical precision is one second, but actual block timestamps vary by chain — Ethereum blocks target 12 seconds, making cliff execution within 1–2 blocks of the target timestamp.",
+          "<strong>Cliff timestamp precision:</strong> Cliffs are encoded as Unix timestamps (seconds since January 1, 1970). The practical precision is one second, but actual block timestamps vary by chain – Ethereum blocks target 12 seconds, making cliff execution within 1–2 blocks of the target timestamp.",
           "<strong>Discrete vs continuous models:</strong> Streaming protocols (Sablier) release tokens continuously, so the 'cliff event' is technically the moment streaming begins rather than a discrete batch release. Non-streaming protocols release a fixed amount at the cliff block, making the event more discrete and visible on-chain.",
           "<strong>Gas and execution:</strong> The cliff release does not happen automatically. Recipients must call a claim or withdraw function. This means the actual on-chain transfer may happen hours or days after the cliff timestamp, depending on recipient attention and gas prices.",
         ],
@@ -1687,27 +1687,27 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📜",
         title: "Why 12 Months Became the Standard",
-        body: "The 12-month cliff in crypto traces directly to Silicon Valley startup equity. Typical startup equity grants use a 4-year vest with 1-year cliff — the same '1+3' or '1+2' structures common in crypto. When the first token-compensated crypto projects structured their allocations, they borrowed from equity compensation norms. The structure stuck, even though the liquidity dynamics of tokens are fundamentally different from illiquid startup equity.",
+        body: "The 12-month cliff in crypto traces directly to Silicon Valley startup equity. Typical startup equity grants use a 4-year vest with 1-year cliff – the same '1+3' or '1+2' structures common in crypto. When the first token-compensated crypto projects structured their allocations, they borrowed from equity compensation norms. The structure stuck, even though the liquidity dynamics of tokens are fundamentally different from illiquid startup equity.",
       },
 
       { type: "h2", text: "The Cliff Release Problem" },
       {
         type: "p",
-        html: "Here is where the cliff becomes a market structure event rather than just a schedule mechanism. When the cliff fires, a <strong>large discrete quantity of tokens</strong> — potentially 20–35% of total allocation — becomes immediately liquid. The size of this event relative to the existing circulating supply determines whether the cliff is a market-moving occurrence or a non-event.",
+        html: "Here is where the cliff becomes a market structure event rather than just a schedule mechanism. When the cliff fires, a <strong>large discrete quantity of tokens</strong> – potentially 20–35% of total allocation – becomes immediately liquid. The size of this event relative to the existing circulating supply determines whether the cliff is a market-moving occurrence or a non-event.",
       },
       {
         type: "table",
         headers: ["Unlock Type", "Market Impact Profile", "Price Predictability", "Seller Incentive"],
         rows: [
           ["Cliff release", "Large discrete shock on cliff date", "Low (single-day event, hard to predict timing)", "High pressure if cost basis well below market"],
-          ["Linear monthly", "Steady incremental supply addition", "High (predictable monthly amounts)", "Moderate — small per-event, but cumulative"],
-          ["Quarterly tranches", "Medium discrete events 4× per year", "Medium", "Moderate — larger than monthly, smaller than cliff"],
+          ["Linear monthly", "Steady incremental supply addition", "High (predictable monthly amounts)", "Moderate – small per-event, but cumulative"],
+          ["Quarterly tranches", "Medium discrete events 4× per year", "Medium", "Moderate – larger than monthly, smaller than cliff"],
           ["Continuous stream (Sablier)", "Per-second micro-additions", "Very high (fully predictable)", "Low per-moment, but meaningful on long timescales"],
         ],
       },
       {
         type: "p",
-        html: "Sophisticated market participants — particularly those with access to vesting schedule data — often begin positioning <strong>before the cliff date</strong>. This typically manifests as increased short interest, reduced buy-side depth, or direct selling by recipients who hold pre-cliff positions through derivatives or OTC agreements. The result is that many cliff events show price weakness in the 7–14 days before the cliff fires.",
+        html: "Sophisticated market participants – particularly those with access to vesting schedule data – often begin positioning <strong>before the cliff date</strong>. This typically manifests as increased short interest, reduced buy-side depth, or direct selling by recipients who hold pre-cliff positions through derivatives or OTC agreements. The result is that many cliff events show price weakness in the 7–14 days before the cliff fires.",
       },
 
       { type: "h2", text: "Cliff Variations in the Wild" },
@@ -1718,8 +1718,8 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>No cliff (fully linear from day one).</strong> Common for community allocations and public sale tokens. Signals that the project wants recipients to feel immediate ownership. Watch for projects claiming 'no cliff' for team and investor allocations — this is a yellow flag for commitment.",
-          "<strong>Short cliff (3–6 months).</strong> Used when liquidity is needed quickly — bootstrapping liquidity provider incentives, early ecosystem grants. Appropriate for operational allocations, but concerning for investor/team tokens.",
+          "<strong>No cliff (fully linear from day one).</strong> Common for community allocations and public sale tokens. Signals that the project wants recipients to feel immediate ownership. Watch for projects claiming 'no cliff' for team and investor allocations – this is a yellow flag for commitment.",
+          "<strong>Short cliff (3–6 months).</strong> Used when liquidity is needed quickly – bootstrapping liquidity provider incentives, early ecosystem grants. Appropriate for operational allocations, but concerning for investor/team tokens.",
           "<strong>Standard cliff (12 months).</strong> The baseline. Reasonable alignment signal. Evaluate based on total vesting duration: a 12-month cliff with 14-month total vest is almost as risky as no cliff. A 12-month cliff with 36-month total vest is genuinely aligned.",
           "<strong>Extended cliff (18–24 months).</strong> Strong commitment signal, particularly for founding teams. Rare but increasingly seen in 'long-term narrative' projects that want to communicate multi-year conviction.",
           "<strong>Back-loaded schedules.</strong> Some projects use a reverse-cliff structure: small early tranches that increase in size over time. This discourages early selling but creates growing supply pressure in later years.",
@@ -1746,7 +1746,7 @@ const articles: Article[] = [
         items: [
           {
             q: "What happens to unvested tokens during the cliff period?",
-            a: "During the cliff period, tokens remain in the vesting contract — they are not accessible to the recipient or the project. The project deposited them at vesting schedule creation; neither party can access them until the cliff date. If the schedule is revocable, the project can cancel the schedule and recover unvested tokens, but cannot access them without cancellation.",
+            a: "During the cliff period, tokens remain in the vesting contract – they are not accessible to the recipient or the project. The project deposited them at vesting schedule creation; neither party can access them until the cliff date. If the schedule is revocable, the project can cancel the schedule and recover unvested tokens, but cannot access them without cancellation.",
           },
           {
             q: "Can a cliff be modified or removed after vesting has started?",
@@ -1754,15 +1754,15 @@ const articles: Article[] = [
           },
           {
             q: "Do all tokens have vesting cliffs?",
-            a: "No. Public sale tokens and community distribution tokens often have no cliff — they vest immediately or on a short linear schedule. Mining and staking rewards typically have no cliff at all. Cliffs are most common for team, investor, and advisor allocations where long-term alignment is the goal. Always check the specific allocation category you are tracking.",
+            a: "No. Public sale tokens and community distribution tokens often have no cliff – they vest immediately or on a short linear schedule. Mining and staking rewards typically have no cliff at all. Cliffs are most common for team, investor, and advisor allocations where long-term alignment is the goal. Always check the specific allocation category you are tracking.",
           },
           {
             q: "What is a 'hard cliff' vs 'soft cliff'?",
-            a: "In some documentation, a 'hard cliff' refers to a schedule where zero tokens are accessible before the cliff date regardless of circumstances — the smart contract enforces it unconditionally. A 'soft cliff' sometimes refers to a revocable schedule where, while tokens don't vest before the cliff, the depositor can cancel the schedule and change the terms. In strict technical usage, all on-chain cliffs are 'hard' (the contract enforces them), but the revocability of the overall schedule affects the practical security of the recipient's allocation.",
+            a: "In some documentation, a 'hard cliff' refers to a schedule where zero tokens are accessible before the cliff date regardless of circumstances – the smart contract enforces it unconditionally. A 'soft cliff' sometimes refers to a revocable schedule where, while tokens don't vest before the cliff, the depositor can cancel the schedule and change the terms. In strict technical usage, all on-chain cliffs are 'hard' (the contract enforces them), but the revocability of the overall schedule affects the practical security of the recipient's allocation.",
           },
           {
             q: "Can I sell or transfer my vesting position before the cliff fires?",
-            a: "On protocols that represent vesting as NFTs (Sablier, Hedgey), you can transfer the vesting NFT to another address, effectively selling the future claim to the tokens. The new holder then waits for the cliff and claims. On address-locked protocols (UNCX, Unvest), you cannot transfer the vesting position — it is permanently tied to the recipient address set at creation.",
+            a: "On protocols that represent vesting as NFTs (Sablier, Hedgey), you can transfer the vesting NFT to another address, effectively selling the future claim to the tokens. The new holder then waits for the cliff and claims. On address-locked protocols (UNCX, Unvest), you cannot transfer the vesting position – it is permanently tied to the recipient address set at creation.",
           },
         ],
       },
@@ -1782,11 +1782,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Most token investors read the whitepaper. Far fewer read the vesting schedule with the same level of scrutiny. That is a mistake. A token's vesting design is one of the most reliable signals of how a team thinks about long-term alignment — and one of the most direct levers on price. A badly designed schedule creates a predictable, calendar-driven overhang that the market can front-run months in advance. A well-designed one builds trust, signals conviction, and avoids the kind of concentrated unlock events that send community members scrambling for the exit.",
+        html: "Most token investors read the whitepaper. Far fewer read the vesting schedule with the same level of scrutiny. That is a mistake. A token's vesting design is one of the most reliable signals of how a team thinks about long-term alignment – and one of the most direct levers on price. A badly designed schedule creates a predictable, calendar-driven overhang that the market can front-run months in advance. A well-designed one builds trust, signals conviction, and avoids the kind of concentrated unlock events that send community members scrambling for the exit.",
       },
       {
         type: "p",
-        html: "This article uses two real, documented case studies — <strong>Uniswap (UNI)</strong> and <strong>dYdX (DYDX)</strong> — to illustrate what separates a great vesting structure from a terrible one. Both are major DeFi protocols. Both have large, institutional investor allocations. But their approach to releasing those tokens could not be more different — and the market has judged them accordingly.",
+        html: "This article uses two real, documented case studies – <strong>Uniswap (UNI)</strong> and <strong>dYdX (DYDX)</strong> – to illustrate what separates a great vesting structure from a terrible one. Both are major DeFi protocols. Both have large, institutional investor allocations. But their approach to releasing those tokens could not be more different – and the market has judged them accordingly.",
       },
       {
         type: "callout",
@@ -1798,16 +1798,16 @@ const articles: Article[] = [
       { type: "h2", text: "What Makes a Vesting Schedule 'Good' or 'Bad'?" },
       {
         type: "p",
-        html: "Before diving into the case studies, it helps to establish the criteria. A vesting schedule is not good or bad in isolation — it is good or bad relative to what it is trying to achieve. For a typical token-backed project, the goal is to align incentives across insiders (team, early investors, advisors) and the broader community, while avoiding the kind of supply shock that destroys retail confidence. With that framing, a good vesting schedule tends to have the following properties:",
+        html: "Before diving into the case studies, it helps to establish the criteria. A vesting schedule is not good or bad in isolation – it is good or bad relative to what it is trying to achieve. For a typical token-backed project, the goal is to align incentives across insiders (team, early investors, advisors) and the broader community, while avoiding the kind of supply shock that destroys retail confidence. With that framing, a good vesting schedule tends to have the following properties:",
       },
       {
         type: "ul",
         items: [
-          "<strong>Long lock-up relative to the project's development horizon</strong> — insiders should not be able to exit before the product has shipped and proven itself.",
-          "<strong>Gradual, continuous release rather than large cliff tranches</strong> — a single large unlock creates a predictable sell event that the market can anticipate and trade around.",
-          "<strong>Cliffs that meaningfully separate insiders from liquidity</strong> — a 6-month cliff on a 3-year token does not signal long-term conviction. A 12-month cliff on a 4-year schedule is materially different.",
-          "<strong>Consistent treatment across stakeholder groups</strong> — when investors get shorter vesting than the team, it signals a misalignment of risk. Both groups should have comparable exposure to the project's timeline.",
-          "<strong>Transparent, on-chain enforcement</strong> — vesting enforced by smart contracts is auditable and cannot be quietly amended. Off-chain agreements with trusted custodians are far weaker guarantees.",
+          "<strong>Long lock-up relative to the project's development horizon</strong> – insiders should not be able to exit before the product has shipped and proven itself.",
+          "<strong>Gradual, continuous release rather than large cliff tranches</strong> – a single large unlock creates a predictable sell event that the market can anticipate and trade around.",
+          "<strong>Cliffs that meaningfully separate insiders from liquidity</strong> – a 6-month cliff on a 3-year token does not signal long-term conviction. A 12-month cliff on a 4-year schedule is materially different.",
+          "<strong>Consistent treatment across stakeholder groups</strong> – when investors get shorter vesting than the team, it signals a misalignment of risk. Both groups should have comparable exposure to the project's timeline.",
+          "<strong>Transparent, on-chain enforcement</strong> – vesting enforced by smart contracts is auditable and cannot be quietly amended. Off-chain agreements with trusted custodians are far weaker guarantees.",
         ],
       },
       {
@@ -1815,10 +1815,10 @@ const articles: Article[] = [
         html: "A bad schedule often fails on multiple of these dimensions simultaneously: short total duration, large tranche releases, and an investor vesting timeline that is misaligned with the community's holding period. Let's look at how each plays out in practice.",
       },
 
-      { type: "h2", text: "Case Study 1: Uniswap (UNI) — The Gold Standard" },
+      { type: "h2", text: "Case Study 1: Uniswap (UNI) – The Gold Standard" },
       {
         type: "p",
-        html: "Uniswap launched its governance token, UNI, in September 2020 — a surprise airdrop that became one of the most discussed distribution events in DeFi history. The immediate narrative was the airdrop itself: 400 UNI to every address that had ever used the protocol. But the more important story was in the vesting structure governing the remaining 60% of supply allocated to team members, investors, and advisors.",
+        html: "Uniswap launched its governance token, UNI, in September 2020 – a surprise airdrop that became one of the most discussed distribution events in DeFi history. The immediate narrative was the airdrop itself: 400 UNI to every address that had ever used the protocol. But the more important story was in the vesting structure governing the remaining 60% of supply allocated to team members, investors, and advisors.",
       },
 
       { type: "h3", text: "The Allocation Breakdown" },
@@ -1836,21 +1836,21 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Several things stand out. First, the team and investors received <em>identical</em> vesting terms — a 4-year schedule with a 1-year cliff. This matters because it removes the common structural injustice where sophisticated capital can exit long before the team that built the product. Second, the cliff period is a full year. Anyone holding UNI in September 2020 knew that no insider tokens would hit the market until September 2021 at the earliest — giving the protocol twelve months of runway without the noise of insider selling.",
+        html: "Several things stand out. First, the team and investors received <em>identical</em> vesting terms – a 4-year schedule with a 1-year cliff. This matters because it removes the common structural injustice where sophisticated capital can exit long before the team that built the product. Second, the cliff period is a full year. Anyone holding UNI in September 2020 knew that no insider tokens would hit the market until September 2021 at the earliest – giving the protocol twelve months of runway without the noise of insider selling.",
       },
       {
         type: "p",
-        html: "Third, and perhaps most importantly, the 4-year total vesting duration signals something about how the Uniswap team viewed the project's timeline. It was not a 12 or 18-month sprint to token liquidity — it was a multi-year commitment to building the most important decentralised exchange in DeFi. The vesting schedule communicated that intent clearly, and the market respected it.",
+        html: "Third, and perhaps most importantly, the 4-year total vesting duration signals something about how the Uniswap team viewed the project's timeline. It was not a 12 or 18-month sprint to token liquidity – it was a multi-year commitment to building the most important decentralised exchange in DeFi. The vesting schedule communicated that intent clearly, and the market respected it.",
       },
 
       { type: "h3", text: "What Happened When the Cliff Hit" },
       {
         type: "p",
-        html: "September 2021 — one year after launch — was when the first insider tokens began to unlock. At that point, UNI was trading between $20 and $30, compared to a launch-day price of around $3–4. Insiders were sitting on substantial gains. Yet the unlock did not produce the kind of concentrated selling event that destroys a token's price chart in a single week. Why?",
+        html: "September 2021 – one year after launch – was when the first insider tokens began to unlock. At that point, UNI was trading between $20 and $30, compared to a launch-day price of around $3–4. Insiders were sitting on substantial gains. Yet the unlock did not produce the kind of concentrated selling event that destroys a token's price chart in a single week. Why?",
       },
       {
         type: "p",
-        html: "Because the schedule released tokens <em>linearly</em> over the remaining three years, not all at once. After the cliff, team and investor tokens unlocked continuously — a small fraction of the total each day. There was no single date circled on a calendar as a sell signal. The supply entered circulation gradually, in a way that liquid demand could absorb. The 1-year cliff gave the protocol time to establish its value proposition; the linear release prevented a subsequent cliff from undoing that work.",
+        html: "Because the schedule released tokens <em>linearly</em> over the remaining three years, not all at once. After the cliff, team and investor tokens unlocked continuously – a small fraction of the total each day. There was no single date circled on a calendar as a sell signal. The supply entered circulation gradually, in a way that liquid demand could absorb. The 1-year cliff gave the protocol time to establish its value proposition; the linear release prevented a subsequent cliff from undoing that work.",
       },
       {
         type: "callout",
@@ -1860,23 +1860,23 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Uniswap's vesting structure is now frequently cited in tokenomics literature as a reference design. It is not the only valid approach, but it demonstrates the key principles: long duration, meaningful cliff, linear release, and identical treatment of insiders. The protocol has gone on to become the most used DEX in DeFi by volume — and its token's vesting design contributed meaningfully to maintaining community confidence through its most critical growth period.",
+        html: "Uniswap's vesting structure is now frequently cited in tokenomics literature as a reference design. It is not the only valid approach, but it demonstrates the key principles: long duration, meaningful cliff, linear release, and identical treatment of insiders. The protocol has gone on to become the most used DEX in DeFi by volume – and its token's vesting design contributed meaningfully to maintaining community confidence through its most critical growth period.",
       },
 
-      { type: "h2", text: "Case Study 2: dYdX (DYDX) — A Textbook Unlock Crisis" },
+      { type: "h2", text: "Case Study 2: dYdX (DYDX) – A Textbook Unlock Crisis" },
       {
         type: "p",
-        html: "dYdX is one of the largest decentralised derivatives exchanges by volume. Its DYDX token launched in August 2021 with significant fanfare — a retroactive airdrop, active governance, and a protocol generating hundreds of millions in annualised trading fees. On paper, it was a strong project with a real product. But its token vesting structure contained a time bomb that the market began pricing in months before it detonated.",
+        html: "dYdX is one of the largest decentralised derivatives exchanges by volume. Its DYDX token launched in August 2021 with significant fanfare – a retroactive airdrop, active governance, and a protocol generating hundreds of millions in annualised trading fees. On paper, it was a strong project with a real product. But its token vesting structure contained a time bomb that the market began pricing in months before it detonated.",
       },
 
       { type: "h3", text: "The Structure That Created the Problem" },
       {
         type: "p",
-        html: "The original DYDX tokenomics allocated approximately 27.7% of total supply to investors and 15.3% to founders, employees, and advisors — a combined insider allocation of roughly 43%. The initial lock-up placed these tokens behind a cliff of around 18 months from the token's August 2021 launch, pointing to a significant unlock window opening in early-to-mid 2023.",
+        html: "The original DYDX tokenomics allocated approximately 27.7% of total supply to investors and 15.3% to founders, employees, and advisors – a combined insider allocation of roughly 43%. The initial lock-up placed these tokens behind a cliff of around 18 months from the token's August 2021 launch, pointing to a significant unlock window opening in early-to-mid 2023.",
       },
       {
         type: "p",
-        html: "The critical structural problem was what happened <em>after</em> the cliff. Rather than a multi-year linear release, a very substantial portion of the investor and team allocation was set to unlock in a concentrated period. Token analytics services and the dYdX community had the unlock date circled on a calendar: <strong>February 1, 2023</strong>. On that date, approximately 150 million DYDX tokens — representing a significant fraction of the entire circulating supply at the time — were set to unlock for investors and employees simultaneously.",
+        html: "The critical structural problem was what happened <em>after</em> the cliff. Rather than a multi-year linear release, a very substantial portion of the investor and team allocation was set to unlock in a concentrated period. Token analytics services and the dYdX community had the unlock date circled on a calendar: <strong>February 1, 2023</strong>. On that date, approximately 150 million DYDX tokens – representing a significant fraction of the entire circulating supply at the time – were set to unlock for investors and employees simultaneously.",
       },
       {
         type: "callout",
@@ -1888,15 +1888,15 @@ const articles: Article[] = [
       { type: "h3", text: "How the Market Responded" },
       {
         type: "p",
-        html: "The market did not wait for February 1st. As is typical with large, predictable unlock events, DYDX's price came under sustained pressure in the weeks and months before the unlock date. Token investors who had been tracking the unlock calendar began reducing exposure. Short sellers positioned in anticipation of insider selling. The token underperformed its DeFi peers significantly in the period leading up to the unlock — not because the underlying product was deteriorating, but because rational market participants were front-running a known, scheduled supply shock.",
+        html: "The market did not wait for February 1st. As is typical with large, predictable unlock events, DYDX's price came under sustained pressure in the weeks and months before the unlock date. Token investors who had been tracking the unlock calendar began reducing exposure. Short sellers positioned in anticipation of insider selling. The token underperformed its DeFi peers significantly in the period leading up to the unlock – not because the underlying product was deteriorating, but because rational market participants were front-running a known, scheduled supply shock.",
       },
       {
         type: "p",
-        html: "When February 1st arrived, on-chain data showed substantial outflows from the unlocked addresses in the days that followed. Some recipients held. Many others — particularly the earlier institutional investors who had been waiting 18 months to access their position — chose to sell into whatever liquidity was available. The concentrated nature of the unlock made it impossible for organic demand to absorb the supply cleanly.",
+        html: "When February 1st arrived, on-chain data showed substantial outflows from the unlocked addresses in the days that followed. Some recipients held. Many others – particularly the earlier institutional investors who had been waiting 18 months to access their position – chose to sell into whatever liquidity was available. The concentrated nature of the unlock made it impossible for organic demand to absorb the supply cleanly.",
       },
       {
         type: "p",
-        html: "It is worth being precise about what caused the problem: it was not that insiders were bad actors. Selling a long-locked position after 18 months is entirely rational behaviour. The failure was structural. The vesting schedule created a situation where rational individual behaviour — each investor selling their unlock — produced a collective outcome that was deeply harmful to the protocol and its community holders. That is the definition of a poorly aligned incentive system.",
+        html: "It is worth being precise about what caused the problem: it was not that insiders were bad actors. Selling a long-locked position after 18 months is entirely rational behaviour. The failure was structural. The vesting schedule created a situation where rational individual behaviour – each investor selling their unlock – produced a collective outcome that was deeply harmful to the protocol and its community holders. That is the definition of a poorly aligned incentive system.",
       },
 
       { type: "h3", text: "The Contrast in Numbers" },
@@ -1908,7 +1908,7 @@ const articles: Article[] = [
           ["Cliff period", "12 months", "~18 months"],
           ["Release after cliff", "Linear over 3 years", "Large tranche on a single date"],
           ["Predictable sell event?", "No (gradual daily release)", "Yes (single unlock date)"],
-          ["Market pre-positioning", "Low — no target date to front-run", "High — months of anticipated selling pressure"],
+          ["Market pre-positioning", "Low – no target date to front-run", "High – months of anticipated selling pressure"],
           ["Community confidence through cliff", "Maintained", "Significantly eroded before and after unlock"],
           ["Token vesting enforced on-chain?", "Yes (smart contracts)", "Yes (smart contracts)"],
         ],
@@ -1922,45 +1922,45 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Short cliff relative to vesting maturity.</strong> An 18-month cliff sounds long, but when paired with a large tranche release immediately after the cliff, the effective period before significant insider liquidity is still just 18 months — barely enough time for a DeFi protocol to reach product maturity.",
+          "<strong>Short cliff relative to vesting maturity.</strong> An 18-month cliff sounds long, but when paired with a large tranche release immediately after the cliff, the effective period before significant insider liquidity is still just 18 months – barely enough time for a DeFi protocol to reach product maturity.",
           "<strong>Tranche release rather than linear release.</strong> Releasing a substantial portion of insider tokens on a single calendar date created an identifiable, front-runnable event. Linear release would have distributed the same supply over months or years, eliminating the spike.",
-          "<strong>No differentiation between investor groups.</strong> Earlier seed investors carrying more risk were vesting on similar timelines to later investors who paid higher prices. A tiered approach — longer vesting for earlier, cheaper rounds — would have reduced the concentration of selling at a single price level.",
+          "<strong>No differentiation between investor groups.</strong> Earlier seed investors carrying more risk were vesting on similar timelines to later investors who paid higher prices. A tiered approach – longer vesting for earlier, cheaper rounds – would have reduced the concentration of selling at a single price level.",
           "<strong>Insufficient post-cliff vesting tail.</strong> A well-designed schedule keeps a significant portion of insider tokens locked even after the initial cliff, continuing to incentivise long-term participation. A short post-cliff tail eliminates that ongoing alignment.",
-          "<strong>Insufficient communication and community management.</strong> While the unlock was technically disclosed, the community was largely unprepared for the scale of the event. Proactive treasury actions or buyback programs in the lead-up can partially offset unlock pressure — but these require planning, not reaction.",
+          "<strong>Insufficient communication and community management.</strong> While the unlock was technically disclosed, the community was largely unprepared for the scale of the event. Proactive treasury actions or buyback programs in the lead-up can partially offset unlock pressure – but these require planning, not reaction.",
         ],
       },
 
       { type: "h2", text: "What This Means for Token Investors" },
       {
         type: "p",
-        html: "If you are evaluating a token allocation — whether as an investor, a community member, or an advisor — the vesting schedule deserves as much scrutiny as the technology, the team, and the market opportunity. Here is a practical framework for assessing any vesting schedule you encounter:",
+        html: "If you are evaluating a token allocation – whether as an investor, a community member, or an advisor – the vesting schedule deserves as much scrutiny as the technology, the team, and the market opportunity. Here is a practical framework for assessing any vesting schedule you encounter:",
       },
       {
         type: "ul",
         items: [
           "<strong>Find the total insider %.</strong> Any insider allocation above 40% of supply warrants close inspection. Above 50% is a red flag.",
           "<strong>Map every unlock date.</strong> Use token unlock trackers (or a tool like Vestream's explorer) to identify every date when a significant tranche of supply enters circulation. Mark these as potential selling windows.",
-          "<strong>Check if the release is linear or tranche-based.</strong> A continuous linear release after the cliff is structurally superior to a large single unlock. Both can appear in whitepapers as '4-year vesting' — the difference is in the specifics.",
+          "<strong>Check if the release is linear or tranche-based.</strong> A continuous linear release after the cliff is structurally superior to a large single unlock. Both can appear in whitepapers as '4-year vesting' – the difference is in the specifics.",
           "<strong>Compare investor and team vesting.</strong> If investors vest faster than the team, the incentive alignment is asymmetric. The team should have at least as long a lock as the capital.",
           "<strong>Check on-chain enforcement.</strong> Vesting enforced by a smart contract is independently auditable. A legal agreement with a custodian is not the same thing.",
-          "<strong>Look for protocol-owned liquidity or buyback programs.</strong> These can partially offset unlock pressure, but they are a patch on a structural weakness — not a substitute for a well-designed schedule in the first place.",
+          "<strong>Look for protocol-owned liquidity or buyback programs.</strong> These can partially offset unlock pressure, but they are a patch on a structural weakness – not a substitute for a well-designed schedule in the first place.",
         ],
       },
 
       { type: "h2", text: "The Lesson: Vesting Is a Signal, Not Just a Schedule" },
       {
         type: "p",
-        html: "The most important takeaway from comparing these two cases is that a vesting schedule is not just a legal mechanism for distributing tokens — it is a signal of how the team thinks about alignment, fairness, and the long-term health of the token economy. Teams that design vesting schedules with community holders in mind — building in long cliffs, linear release, and consistent insider treatment — are signalling that they view themselves as long-term stakeholders in the same ecosystem. Teams that optimise their own liquidity at the expense of schedule design are, often unknowingly, signalling the opposite.",
+        html: "The most important takeaway from comparing these two cases is that a vesting schedule is not just a legal mechanism for distributing tokens – it is a signal of how the team thinks about alignment, fairness, and the long-term health of the token economy. Teams that design vesting schedules with community holders in mind – building in long cliffs, linear release, and consistent insider treatment – are signalling that they view themselves as long-term stakeholders in the same ecosystem. Teams that optimise their own liquidity at the expense of schedule design are, often unknowingly, signalling the opposite.",
       },
       {
         type: "p",
-        html: "The dYdX case is particularly instructive because dYdX is a legitimately strong protocol with real revenue and a real product. The February 2023 unlock did not happen because the team was acting in bad faith — it happened because a structural design decision made 18 months earlier created an outcome that served no stakeholder group well. The insiders who sold into thin liquidity got worse prices than they would have with a linear release. The community holders experienced months of selling pressure. The protocol's reputation suffered unnecessarily. Better vesting design would have been better for everyone.",
+        html: "The dYdX case is particularly instructive because dYdX is a legitimately strong protocol with real revenue and a real product. The February 2023 unlock did not happen because the team was acting in bad faith – it happened because a structural design decision made 18 months earlier created an outcome that served no stakeholder group well. The insiders who sold into thin liquidity got worse prices than they would have with a linear release. The community holders experienced months of selling pressure. The protocol's reputation suffered unnecessarily. Better vesting design would have been better for everyone.",
       },
       {
         type: "callout",
         emoji: "🔑",
         title: "The single most important question to ask",
-        body: "Before committing to any token allocation, ask: 'Is there a single date — or a narrow window of dates — when a large amount of insider tokens enters circulation simultaneously?' If the answer is yes, that date is a sell event that the market will price in well before it arrives.",
+        body: "Before committing to any token allocation, ask: 'Is there a single date – or a narrow window of dates – when a large amount of insider tokens enters circulation simultaneously?' If the answer is yes, that date is a sell event that the market will price in well before it arrives.",
       },
 
       {
@@ -1972,11 +1972,11 @@ const articles: Article[] = [
           },
           {
             q: "Is Uniswap's vesting structure still considered the gold standard?",
-            a: "UNI's structure is frequently cited as a strong reference design, but the space has evolved. Projects like Arbitrum, Optimism, and Eigenlayer have each approached vesting differently — with varying results. No single structure suits every project; what matters is the underlying principles: long duration, linear release, insider alignment, and on-chain enforceability.",
+            a: "UNI's structure is frequently cited as a strong reference design, but the space has evolved. Projects like Arbitrum, Optimism, and Eigenlayer have each approached vesting differently – with varying results. No single structure suits every project; what matters is the underlying principles: long duration, linear release, insider alignment, and on-chain enforceability.",
           },
           {
             q: "How can I find out when a token's unlock events are scheduled?",
-            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source — smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, and Hedgey protocols.",
+            a: "Several dedicated services track token unlock calendars, including Token Unlocks and Vesting.finance. On-chain data is the most reliable source – smart contract events and vesting contract state can be read directly from the blockchain. Vestream's Token Vesting Explorer provides on-chain vesting data across Sablier, UNCX, and Hedgey protocols.",
           },
           {
             q: "What should a project team do if they already have a poorly structured vesting schedule?",
@@ -1984,7 +1984,7 @@ const articles: Article[] = [
           },
           {
             q: "Does a longer vesting schedule always mean a better token?",
-            a: "Not necessarily. An extremely long vesting schedule can demotivate early contributors if they see no near-term upside, potentially leading to team attrition. The goal is alignment, not punishment. The sweet spot for most projects is a 3–4 year total vesting period with a 12-month cliff — long enough to create meaningful alignment, short enough to remain motivating.",
+            a: "Not necessarily. An extremely long vesting schedule can demotivate early contributors if they see no near-term upside, potentially leading to team attrition. The goal is alignment, not punishment. The sweet spot for most projects is a 3–4 year total vesting period with a 12-month cliff – long enough to create meaningful alignment, short enough to remain motivating.",
           },
         ],
       },
@@ -1995,7 +1995,7 @@ const articles: Article[] = [
   {
     slug:        "token-allocation-vesting-red-flags",
     title:       "Token Allocation: What Each Stakeholder's Vesting Terms Tell You Before You Invest",
-    excerpt:     "A token's allocation chart is one of the most information-dense documents in crypto. This guide teaches you how to read vesting terms for every stakeholder category — and which red flags should make you reconsider an investment.",
+    excerpt:     "A token's allocation chart is one of the most information-dense documents in crypto. This guide teaches you how to read vesting terms for every stakeholder category – and which red flags should make you reconsider an investment.",
     publishedAt: "2026-03-19",
     updatedAt:   "2026-03-19",
     readingTime: "14 min read",
@@ -2004,11 +2004,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Before a single token trades on a public market, its fate is largely determined by a document that most retail investors never read carefully: the token allocation table. This table — sometimes buried in a whitepaper, sometimes published as a pie chart on a project website — tells you who owns what, and crucially, <strong>when they can sell it</strong>. Decoding that information is one of the highest-value skills in crypto investing.",
+        html: "Before a single token trades on a public market, its fate is largely determined by a document that most retail investors never read carefully: the token allocation table. This table – sometimes buried in a whitepaper, sometimes published as a pie chart on a project website – tells you who owns what, and crucially, <strong>when they can sell it</strong>. Decoding that information is one of the highest-value skills in crypto investing.",
       },
       {
         type: "p",
-        html: "Every token project distributes its supply across different stakeholder groups. Each group has different incentives, different lock-up periods, and different behaviours when their tokens unlock. Understanding how to interpret these terms — not just accept them at face value — separates informed token holders from those who are perpetually surprised by price action.",
+        html: "Every token project distributes its supply across different stakeholder groups. Each group has different incentives, different lock-up periods, and different behaviours when their tokens unlock. Understanding how to interpret these terms – not just accept them at face value – separates informed token holders from those who are perpetually surprised by price action.",
       },
       {
         type: "callout",
@@ -2020,7 +2020,7 @@ const articles: Article[] = [
       { type: "h2", text: "The Six Stakeholder Categories" },
       {
         type: "p",
-        html: "Most token allocations divide supply across some combination of six stakeholder groups. Each group has a distinct relationship with the project — and that relationship should be reflected in their vesting terms. When it isn't, that misalignment is worth investigating.",
+        html: "Most token allocations divide supply across some combination of six stakeholder groups. Each group has a distinct relationship with the project – and that relationship should be reflected in their vesting terms. When it isn't, that misalignment is worth investigating.",
       },
       {
         type: "table",
@@ -2036,7 +2036,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "These ranges are not arbitrary — they represent what market participants have come to expect after years of observing which token structures succeed and which fail. Significant deviations from these norms are not always red flags, but they always deserve an explanation.",
+        html: "These ranges are not arbitrary – they represent what market participants have come to expect after years of observing which token structures succeed and which fail. Significant deviations from these norms are not always red flags, but they always deserve an explanation.",
       },
 
       { type: "h2", text: "Reading Team Token Allocations" },
@@ -2053,7 +2053,7 @@ const articles: Article[] = [
           "<strong>Cliff of at least 12 months:</strong> A one-year cliff means the team receives nothing before the project has had at least a year to prove itself.",
           "<strong>Total vesting period of 3–4 years:</strong> Aligns with the average time it takes for a Web3 project to reach meaningful adoption.",
           "<strong>Linear monthly or quarterly release:</strong> Gradual release avoids concentrated selling pressure on specific dates.",
-          "<strong>No TGE unlock for the team:</strong> Any immediate team allocation at Token Generation Event is a warning sign — it means founders can sell on day one.",
+          "<strong>No TGE unlock for the team:</strong> Any immediate team allocation at Token Generation Event is a warning sign – it means founders can sell on day one.",
         ],
       },
       {
@@ -2072,17 +2072,17 @@ const articles: Article[] = [
         type: "callout",
         emoji: "⚠️",
         title: "The three-month cliff trick",
-        body: "Some projects advertise a 'cliff and vesting' structure to appear credible, but on inspection the cliff is only 90 days. This provides almost no protection against immediate insider selling. A real cliff — one that meaningfully aligns incentives — is 12 months minimum.",
+        body: "Some projects advertise a 'cliff and vesting' structure to appear credible, but on inspection the cliff is only 90 days. This provides almost no protection against immediate insider selling. A real cliff – one that meaningfully aligns incentives – is 12 months minimum.",
       },
 
       { type: "h2", text: "Investor Token Allocations: Seed, Private, and Strategic Rounds" },
       {
         type: "p",
-        html: "Private sale investors — seed funds, venture capital firms, and angel investors — typically receive the largest discount to public sale price, sometimes 80–95% below the eventual listing price. The vesting terms attached to these tranches determine how much sell pressure the token absorbs from sophisticated, profit-motivated capital.",
+        html: "Private sale investors – seed funds, venture capital firms, and angel investors – typically receive the largest discount to public sale price, sometimes 80–95% below the eventual listing price. The vesting terms attached to these tranches determine how much sell pressure the token absorbs from sophisticated, profit-motivated capital.",
       },
       {
         type: "p",
-        html: "The key metric here is <strong>multiple on invested capital at TGE</strong>. If seed investors bought tokens at $0.01 and the token lists at $0.20, they are sitting on a 20x return from day one. Even if those tokens are locked for 12 months, the moment their cliff ends, the incentive to sell is overwhelming. This is mathematically unavoidable — which is why investor vesting terms need to be evaluated in the context of their entry price.",
+        html: "The key metric here is <strong>multiple on invested capital at TGE</strong>. If seed investors bought tokens at $0.01 and the token lists at $0.20, they are sitting on a 20x return from day one. Even if those tokens are locked for 12 months, the moment their cliff ends, the incentive to sell is overwhelming. This is mathematically unavoidable – which is why investor vesting terms need to be evaluated in the context of their entry price.",
       },
       {
         type: "h3", text: "What to look for in investor vesting",
@@ -2100,7 +2100,7 @@ const articles: Article[] = [
       { type: "h2", text: "Community and Ecosystem Allocations" },
       {
         type: "p",
-        html: "Community allocations — often labelled 'ecosystem fund', 'community incentives', 'liquidity mining', or 'airdrops' — are the most complex to evaluate because they are not governed by fixed vesting schedules. Instead, they are typically released over time according to emission schedules or governance decisions.",
+        html: "Community allocations – often labelled 'ecosystem fund', 'community incentives', 'liquidity mining', or 'airdrops' – are the most complex to evaluate because they are not governed by fixed vesting schedules. Instead, they are typically released over time according to emission schedules or governance decisions.",
       },
       {
         type: "p",
@@ -2111,7 +2111,7 @@ const articles: Article[] = [
         items: [
           "<strong>Ask: what is the emission rate?</strong> Annual emission as a percentage of circulating supply tells you how much dilution current holders face each year.",
           "<strong>Ask: who qualifies?</strong> Community allocations distributed to active users (proof-of-work style) create healthier dynamics than those distributed to wallet snapshots.",
-          "<strong>Ask: is there a lockup on distributed tokens?</strong> Some protocols require staking or locking received tokens before they can be sold — this meaningfully changes the supply dynamics.",
+          "<strong>Ask: is there a lockup on distributed tokens?</strong> Some protocols require staking or locking received tokens before they can be sold – this meaningfully changes the supply dynamics.",
         ],
       },
 
@@ -2122,23 +2122,23 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The key question is not when these tokens vest — it is <strong>who controls the release</strong>. Treasury tokens governed by a multisig held by the founding team give the team enormous discretionary power over the token supply. Treasury tokens governed by on-chain DAO voting are meaningfully more decentralised.",
+        html: "The key question is not when these tokens vest – it is <strong>who controls the release</strong>. Treasury tokens governed by a multisig held by the founding team give the team enormous discretionary power over the token supply. Treasury tokens governed by on-chain DAO voting are meaningfully more decentralised.",
       },
       {
         type: "callout",
         emoji: "🔍",
         title: "Check the multisig",
-        body: "Before investing, verify who controls the treasury. A Gnosis Safe with 5 signers who are all unnamed team members is not decentralised governance — it is a pseudonymous centralised treasury. Look for independently verifiable signers, public identities, or time-lock contracts on treasury movements.",
+        body: "Before investing, verify who controls the treasury. A Gnosis Safe with 5 signers who are all unnamed team members is not decentralised governance – it is a pseudonymous centralised treasury. Look for independently verifiable signers, public identities, or time-lock contracts on treasury movements.",
       },
 
       { type: "h2", text: "Advisor Allocations: Small but Telling" },
       {
         type: "p",
-        html: "Advisor allocations are typically small (1–5% of supply) but they reveal something important about how a project values accountability. Advisors are typically influential individuals — exchange executives, protocol founders, investment managers — who lend their name and network to a project.",
+        html: "Advisor allocations are typically small (1–5% of supply) but they reveal something important about how a project values accountability. Advisors are typically influential individuals – exchange executives, protocol founders, investment managers – who lend their name and network to a project.",
       },
       {
         type: "p",
-        html: "The problem is that many advisor arrangements are <em>entirely informal</em>. The advisor receives a token allocation in exchange for a short call, a tweet, or an introduction — and the vesting terms are often the most lenient in the entire structure. Watch for:",
+        html: "The problem is that many advisor arrangements are <em>entirely informal</em>. The advisor receives a token allocation in exchange for a short call, a tweet, or an introduction – and the vesting terms are often the most lenient in the entire structure. Watch for:",
       },
       {
         type: "ul",
@@ -2152,7 +2152,7 @@ const articles: Article[] = [
       { type: "h2", text: "The Full Picture: Calculating Unlock Overhang" },
       {
         type: "p",
-        html: "The most useful analytical exercise when reviewing a token allocation is to calculate the <strong>unlock overhang</strong> — the ratio of locked supply to circulating supply at any given point in time. A token trading with a circulating supply of 100 million and a locked supply of 900 million has a 9x unlock overhang. Even a small percentage of locked holders choosing to sell at their first unlock can represent a significant multiple of current daily volume.",
+        html: "The most useful analytical exercise when reviewing a token allocation is to calculate the <strong>unlock overhang</strong> – the ratio of locked supply to circulating supply at any given point in time. A token trading with a circulating supply of 100 million and a locked supply of 900 million has a 9x unlock overhang. Even a small percentage of locked holders choosing to sell at their first unlock can represent a significant multiple of current daily volume.",
       },
       {
         type: "ol",
@@ -2166,7 +2166,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This calculation will not tell you what price will do — markets are forward-looking and a well-anticipated unlock can be fully priced in. But it tells you the <em>structural risk</em> you are accepting as a token holder, and whether the current valuation is sustainable once locked supply enters circulation.",
+        html: "This calculation will not tell you what price will do – markets are forward-looking and a well-anticipated unlock can be fully priced in. But it tells you the <em>structural risk</em> you are accepting as a token holder, and whether the current valuation is sustainable once locked supply enters circulation.",
       },
 
       { type: "h2", text: "How On-Chain Vesting Changes the Picture" },
@@ -2176,13 +2176,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "On-chain vesting — enforced by protocols like Sablier, UNCX, Hedgey, or Unvest — is verifiable by anyone. You can look at the vesting contract address on a block explorer and confirm exactly how many tokens are locked, when they unlock, and who the beneficiary is. <strong>If a project's team vesting is not on-chain, the only thing preventing early access to those tokens is the team's word.</strong>",
+        html: "On-chain vesting – enforced by protocols like Sablier, UNCX, Hedgey, or Unvest – is verifiable by anyone. You can look at the vesting contract address on a block explorer and confirm exactly how many tokens are locked, when they unlock, and who the beneficiary is. <strong>If a project's team vesting is not on-chain, the only thing preventing early access to those tokens is the team's word.</strong>",
       },
       {
         type: "callout",
         emoji: "✅",
         title: "Verify on-chain vesting yourself",
-        body: "Ask the project team for the vesting contract address. Paste it into Etherscan, Arbiscan, or the relevant explorer. If they cannot provide one — or if the address shows tokens that are already withdrawn — treat that as material information.",
+        body: "Ask the project team for the vesting contract address. Paste it into Etherscan, Arbiscan, or the relevant explorer. If they cannot provide one – or if the address shows tokens that are already withdrawn – treat that as material information.",
       },
 
       {
@@ -2206,7 +2206,7 @@ const articles: Article[] = [
           },
           {
             q: "Can vesting terms be changed after launch?",
-            a: "For on-chain vesting, the smart contract terms are immutable — they cannot be changed without beneficiary consent. For contractual vesting (off-chain legal agreements), terms can theoretically be renegotiated. This is another reason why on-chain enforcement is preferable to contractual promises.",
+            a: "For on-chain vesting, the smart contract terms are immutable – they cannot be changed without beneficiary consent. For contractual vesting (off-chain legal agreements), terms can theoretically be renegotiated. This is another reason why on-chain enforcement is preferable to contractual promises.",
           },
         ],
       },
@@ -2226,11 +2226,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Most crypto investors spend hours reading whitepapers, studying tokenomics PDFs, and watching founder interviews. Very few spend ten minutes looking at the vesting schedule — which is a mistake, because the vesting schedule is the one document a project cannot fake.",
+        html: "Most crypto investors spend hours reading whitepapers, studying tokenomics PDFs, and watching founder interviews. Very few spend ten minutes looking at the vesting schedule – which is a mistake, because the vesting schedule is the one document a project cannot fake.",
       },
       {
         type: "p",
-        html: "A whitepaper is a marketing document. A pitch deck is a best-case scenario. But a token vesting contract, deployed on-chain, is a legally and cryptographically binding commitment. It tells you exactly when every insider — every founder, every VC, every advisor — can sell. And that, more than anything else, reveals what they actually believe about the project's future.",
+        html: "A whitepaper is a marketing document. A pitch deck is a best-case scenario. But a token vesting contract, deployed on-chain, is a legally and cryptographically binding commitment. It tells you exactly when every insider – every founder, every VC, every advisor – can sell. And that, more than anything else, reveals what they actually believe about the project's future.",
       },
       {
         type: "callout",
@@ -2263,9 +2263,9 @@ const articles: Article[] = [
         items: [
           "<strong>High TGE unlocks for insiders (above 15%).</strong> If founders or seed investors can sell 20%+ of their allocation the day the token lists, the incentive structure is broken. Watch for projects where the team's TGE unlock is higher than the community's.",
           "<strong>Vesting periods shorter than 18 months for the team.</strong> Building a meaningful protocol takes years. A team whose tokens fully vest in 12 months has no structural reason to stay past month 12. Many don't.",
-          "<strong>No cliff for seed or private round investors.</strong> Early-stage investors who can sell from day one are not long-term believers — they are short-term speculators. If VCs have no cliff, expect selling pressure the moment the token lists.",
+          "<strong>No cliff for seed or private round investors.</strong> Early-stage investors who can sell from day one are not long-term believers – they are short-term speculators. If VCs have no cliff, expect selling pressure the moment the token lists.",
           "<strong>Ecosystem and treasury funds with short vesting.</strong> A '40% community fund' sounds generous. A 40% community fund that fully unlocks in 6 months is a dumping mechanism disguised as altruism.",
-          "<strong>Vesting changes after launch.</strong> On-chain vesting contracts are immutable — a project that announces it is 'adjusting' its vesting schedule post-launch is using off-chain (contractual) rather than on-chain enforcement. That is a red flag for the entire token's integrity.",
+          "<strong>Vesting changes after launch.</strong> On-chain vesting contracts are immutable – a project that announces it is 'adjusting' its vesting schedule post-launch is using off-chain (contractual) rather than on-chain enforcement. That is a red flag for the entire token's integrity.",
         ],
       },
 
@@ -2280,7 +2280,7 @@ const articles: Article[] = [
           "<strong>Team vesting longer than investor vesting.</strong> Founders should be tied to the project longer than the VCs backing them. If the team's vesting is shorter, ask why.",
           "<strong>On-chain enforcement.</strong> Vesting contracts deployed to Ethereum, Base, or another L2 via protocols like Sablier or UNCX are verifiable and immutable. Contractual vesting ('trust us, it's in the legal agreements') is not.",
           "<strong>No cliff exceptions.</strong> Some projects grant early liquidity to certain advisors or strategic partners. Each exception is a sell event you did not see coming.",
-          "<strong>Community allocation vesting longer than private round.</strong> This signals the team wants retail holders to have earlier access than institutions — a genuine alignment with the community.",
+          "<strong>Community allocation vesting longer than private round.</strong> This signals the team wants retail holders to have earlier access than institutions – a genuine alignment with the community.",
           "<strong>Published, verified on-chain addresses.</strong> The project should publish the smart contract addresses for every vesting tranche. If you cannot independently verify when tokens will unlock, assume the worst.",
         ],
       },
@@ -2288,7 +2288,7 @@ const articles: Article[] = [
       { type: "h2", text: "How to Read a Vesting Schedule in Practice" },
       {
         type: "p",
-        html: "Start with the tokenomics table — usually in the whitepaper or on the project website. Note the allocation percentages (team, investors, advisors, ecosystem, etc.) and their respective vesting terms. Then ask three questions:",
+        html: "Start with the tokenomics table – usually in the whitepaper or on the project website. Note the allocation percentages (team, investors, advisors, ecosystem, etc.) and their respective vesting terms. Then ask three questions:",
       },
       {
         type: "ol",
@@ -2308,15 +2308,15 @@ const articles: Article[] = [
       { type: "h2", text: "Why This Matters More Than Fundamentals (Short Term)" },
       {
         type: "p",
-        html: "In traditional equity markets, a company's stock can rise on strong fundamentals even while insiders are selling — because the selling pressure is spread across millions of public shares and many liquidity providers. Crypto tokens are different. Supply floats are small, liquidity is thin, and a single unlock event involving 5% of total supply can move the price by 20–30%.",
+        html: "In traditional equity markets, a company's stock can rise on strong fundamentals even while insiders are selling – because the selling pressure is spread across millions of public shares and many liquidity providers. Crypto tokens are different. Supply floats are small, liquidity is thin, and a single unlock event involving 5% of total supply can move the price by 20–30%.",
       },
       {
         type: "p",
-        html: "This means that even a fundamentally strong project with a poor vesting schedule will struggle to hold its price in the year after launch. Conversely, a mediocre project with a well-designed vesting schedule may <em>appear</em> to perform well simply because there is limited sell pressure. Vesting schedules do not tell you about a project's long-term quality — but they tell you a great deal about its short-to-medium term price dynamics.",
+        html: "This means that even a fundamentally strong project with a poor vesting schedule will struggle to hold its price in the year after launch. Conversely, a mediocre project with a well-designed vesting schedule may <em>appear</em> to perform well simply because there is limited sell pressure. Vesting schedules do not tell you about a project's long-term quality – but they tell you a great deal about its short-to-medium term price dynamics.",
       },
       {
         type: "p",
-        html: "For traders, this means vesting unlock calendars are a first-order input to any position sizing decision. For long-term investors, a strong vesting structure is a prerequisite — not a nice-to-have — before doing deeper research.",
+        html: "For traders, this means vesting unlock calendars are a first-order input to any position sizing decision. For long-term investors, a strong vesting structure is a prerequisite – not a nice-to-have – before doing deeper research.",
       },
 
       { type: "h2", text: "Tracking Vesting Unlocks Across Your Portfolio" },
@@ -2326,7 +2326,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This is the problem Vestream was built to solve. Connect your wallet and Vestream surfaces every active vesting stream across every major protocol and chain in a single view — with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
+        html: "This is the problem Vestream was built to solve. Connect your wallet and Vestream surfaces every active vesting stream across every major protocol and chain in a single view – with an unlock calendar that shows you exactly when tokens are scheduled to release, weeks in advance.",
       },
 
       {
@@ -2334,19 +2334,19 @@ const articles: Article[] = [
         items: [
           {
             q: "Does a long vesting period guarantee a project is legitimate?",
-            a: "No. Vesting periods can be gamed — for example, by setting long public vesting periods while quietly granting shorter vesting to individual insiders via separate contracts. Always verify on-chain. Long vesting is necessary but not sufficient for legitimacy.",
+            a: "No. Vesting periods can be gamed – for example, by setting long public vesting periods while quietly granting shorter vesting to individual insiders via separate contracts. Always verify on-chain. Long vesting is necessary but not sufficient for legitimacy.",
           },
           {
             q: "What is the difference between a cliff and a lock-up?",
-            a: "A cliff is the minimum period before vesting begins — after the cliff, tokens release gradually. A lock-up typically means 100% of tokens are locked until a specific date, then release all at once. Lock-ups without subsequent vesting create a single large sell event; cliffs followed by linear vesting create gradual, smaller releases.",
+            a: "A cliff is the minimum period before vesting begins – after the cliff, tokens release gradually. A lock-up typically means 100% of tokens are locked until a specific date, then release all at once. Lock-ups without subsequent vesting create a single large sell event; cliffs followed by linear vesting create gradual, smaller releases.",
           },
           {
             q: "Can I see another wallet's vesting schedule?",
-            a: "Yes — vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like Vestream make this easier by normalising data across multiple protocols into a readable format.",
+            a: "Yes – vesting contracts are public on-chain. Any blockchain explorer will show the contract state. Tools like Vestream make this easier by normalising data across multiple protocols into a readable format.",
           },
           {
             q: "What happens to unvested tokens if a project fails?",
-            a: "It depends on the vesting contract design. Some contracts allow the project to revoke unvested tokens (common for employee grants, less common for investor tranches). Others are irrevocable — even if the project shuts down, tokens continue to vest on the original schedule. Always check whether the contract has a revocation function.",
+            a: "It depends on the vesting contract design. Some contracts allow the project to revoke unvested tokens (common for employee grants, less common for investor tranches). Others are irrevocable – even if the project shuts down, tokens continue to vest on the original schedule. Always check whether the contract has a revocation function.",
           },
         ],
       },
@@ -2357,7 +2357,7 @@ const articles: Article[] = [
   {
     slug:        "token-unlock-calendar",
     title:       "Token Unlock Calendar: How to Track When Your Tokens Become Available",
-    excerpt:     "Every vested token has an unlock schedule. Understanding when your tokens release — and how to track those dates — is essential for managing your crypto portfolio.",
+    excerpt:     "Every vested token has an unlock schedule. Understanding when your tokens release – and how to track those dates – is essential for managing your crypto portfolio.",
     publishedAt: "2026-03-21",
     updatedAt:   "2026-03-21",
     readingTime: "8 min read",
@@ -2366,7 +2366,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you have received tokens through a vesting agreement — as an investor, a project team member, or through a community program — you almost certainly cannot access all of them right now. Your tokens are unlocking on a schedule, and that schedule has a direct impact on your portfolio value, your tax planning, and your decisions about when and whether to sell.",
+        html: "If you have received tokens through a vesting agreement – as an investor, a project team member, or through a community program – you almost certainly cannot access all of them right now. Your tokens are unlocking on a schedule, and that schedule has a direct impact on your portfolio value, your tax planning, and your decisions about when and whether to sell.",
       },
       {
         type: "p",
@@ -2382,16 +2382,16 @@ const articles: Article[] = [
       { type: "h2", text: "What Is a Token Unlock?" },
       {
         type: "p",
-        html: "A token unlock is the moment a portion of previously locked tokens becomes transferable. Tokens are locked by smart contracts — code deployed on a blockchain that holds your tokens in escrow and releases them according to a predefined schedule. Until the contract releases them, you can see your allocation but cannot move, sell, or use those tokens.",
+        html: "A token unlock is the moment a portion of previously locked tokens becomes transferable. Tokens are locked by smart contracts – code deployed on a blockchain that holds your tokens in escrow and releases them according to a predefined schedule. Until the contract releases them, you can see your allocation but cannot move, sell, or use those tokens.",
       },
       {
         type: "p",
-        html: "Unlocks can be structured in several ways. A <strong>linear unlock</strong> releases a fixed fraction of your allocation every second, every day, or every month. A <strong>cliff unlock</strong> releases nothing until a specific date, then either releases everything at once or switches to linear vesting. A <strong>tranche unlock</strong> releases fixed percentages at predetermined milestones — for example, 25% every six months.",
+        html: "Unlocks can be structured in several ways. A <strong>linear unlock</strong> releases a fixed fraction of your allocation every second, every day, or every month. A <strong>cliff unlock</strong> releases nothing until a specific date, then either releases everything at once or switches to linear vesting. A <strong>tranche unlock</strong> releases fixed percentages at predetermined milestones – for example, 25% every six months.",
       },
       {
         type: "ul",
         items: [
-          "<strong>Linear vesting:</strong> Smooth, continuous release — e.g., 1/1440th of your allocation unlocks every minute for 1,000 days.",
+          "<strong>Linear vesting:</strong> Smooth, continuous release – e.g., 1/1440th of your allocation unlocks every minute for 1,000 days.",
           "<strong>Cliff + linear:</strong> Nothing unlocks for 12 months (the cliff), then linear release begins over 24 months.",
           "<strong>Milestone-based:</strong> Tranches release when protocol metrics are hit (TVL targets, user counts), though this requires off-chain oracle input and is less common.",
           "<strong>TGE unlock:</strong> A percentage (often 5–20%) unlocks immediately at Token Generation Event; the remainder vests over time.",
@@ -2405,19 +2405,19 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The last point — percentage of total supply — is the one most investors ignore. An unlock of 1,000,000 tokens sounds large. But if total supply is 10 billion, it represents 0.01% of supply and is unlikely to move the price. Conversely, an unlock of 500,000 tokens from a 2,000,000-token circulating supply is a 25% supply increase in a single event — a genuinely significant market event.",
+        html: "The last point – percentage of total supply – is the one most investors ignore. An unlock of 1,000,000 tokens sounds large. But if total supply is 10 billion, it represents 0.01% of supply and is unlikely to move the price. Conversely, an unlock of 500,000 tokens from a 2,000,000-token circulating supply is a 25% supply increase in a single event – a genuinely significant market event.",
       },
       {
         type: "callout",
         emoji: "📊",
         title: "The right metric",
-        body:  "Always express unlock quantities as a percentage of current circulating supply — not total supply, and not your personal allocation. That percentage tells you how much new sell pressure the market must absorb.",
+        body:  "Always express unlock quantities as a percentage of current circulating supply – not total supply, and not your personal allocation. That percentage tells you how much new sell pressure the market must absorb.",
       },
 
       { type: "h2", text: "Why Token Unlocks Move Prices" },
       {
         type: "p",
-        html: "Token unlocks have a measurable effect on price — particularly in the days immediately before and after a large unlock event. The mechanism is straightforward: recipients who have been waiting for liquidity will, in aggregate, sell some portion of what they receive. The market anticipates this, and professional traders often build short positions ahead of large known unlock events.",
+        html: "Token unlocks have a measurable effect on price – particularly in the days immediately before and after a large unlock event. The mechanism is straightforward: recipients who have been waiting for liquidity will, in aggregate, sell some portion of what they receive. The market anticipates this, and professional traders often build short positions ahead of large known unlock events.",
       },
       {
         type: "p",
@@ -2441,14 +2441,14 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>The project's official tokenomics documentation.</strong> Most projects publish a vesting schedule in their whitepaper or tokenomics page. This tells you the intended schedule — but does not confirm it is actually enforced on-chain.",
+          "<strong>The project's official tokenomics documentation.</strong> Most projects publish a vesting schedule in their whitepaper or tokenomics page. This tells you the intended schedule – but does not confirm it is actually enforced on-chain.",
           "<strong>Block explorers.</strong> For any token with on-chain vesting, the vesting contract is publicly visible. Search the token's contract address on Etherscan, BscScan, or Polygonscan to find associated vesting contracts. This requires understanding how to read smart contract state, which is not beginner-friendly.",
           "<strong>Vesting aggregator tools.</strong> Platforms like Vestream read vesting contracts across Ethereum, Base, BNB Chain, and Polygon, normalise the data, and present unlock schedules in a readable format. Connect your wallet and you can see every active vesting stream you are party to, with future unlock dates displayed on a calendar.",
         ],
       },
       {
         type: "p",
-        html: "The third option — a dedicated vesting aggregator — is the only one that gives you a consolidated view if you hold multiple token positions across different protocols. Most investors have vesting positions spread across Sablier, UNCX, and Hedgey simultaneously, and checking each protocol manually is impractical.",
+        html: "The third option – a dedicated vesting aggregator – is the only one that gives you a consolidated view if you hold multiple token positions across different protocols. Most investors have vesting positions spread across Sablier, UNCX, and Hedgey simultaneously, and checking each protocol manually is impractical.",
       },
 
       { type: "h2", text: "Building Your Personal Token Unlock Calendar" },
@@ -2458,7 +2458,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Beyond your own positions, serious token holders also track <em>market-wide</em> unlock calendars — the aggregate unlocks happening across the entire market, not just their own wallet. A large unlock in a competing protocol can affect sentiment across an entire sector. A massive team unlock in a high-profile token can pull liquidity from the whole market as investors sell to reallocate.",
+        html: "Beyond your own positions, serious token holders also track <em>market-wide</em> unlock calendars – the aggregate unlocks happening across the entire market, not just their own wallet. A large unlock in a competing protocol can affect sentiment across an entire sector. A massive team unlock in a high-profile token can pull liquidity from the whole market as investors sell to reallocate.",
       },
       {
         type: "callout",
@@ -2470,7 +2470,7 @@ const articles: Article[] = [
       { type: "h2", text: "Protocols That Manage Token Vesting On-Chain" },
       {
         type: "p",
-        html: "Not all vesting is created equal. On-chain vesting — enforced by immutable smart contracts — is verifiable and tamper-proof. Off-chain vesting — managed by legal agreements and manual token transfers — is not. The following protocols handle on-chain vesting and are widely used by major token projects:",
+        html: "Not all vesting is created equal. On-chain vesting – enforced by immutable smart contracts – is verifiable and tamper-proof. Off-chain vesting – managed by legal agreements and manual token transfers – is not. The following protocols handle on-chain vesting and are widely used by major token projects:",
       },
       {
         type: "table",
@@ -2492,19 +2492,19 @@ const articles: Article[] = [
         items: [
           {
             q: "Do I owe taxes when my tokens unlock?",
-            a: "In most jurisdictions, yes — a token unlock is treated as receipt of income at the fair market value at the time of unlocking, regardless of whether you sell. Consult a tax professional familiar with crypto in your country, as treatment varies significantly by jurisdiction.",
+            a: "In most jurisdictions, yes – a token unlock is treated as receipt of income at the fair market value at the time of unlocking, regardless of whether you sell. Consult a tax professional familiar with crypto in your country, as treatment varies significantly by jurisdiction.",
           },
           {
             q: "Can a project change my vesting schedule after the fact?",
-            a: "Not if the vesting is enforced by an immutable smart contract. Contracts deployed on-chain cannot be altered unless they were specifically designed with upgradeability. If a project claims it is 'adjusting' its vesting schedule, ask whether the on-chain contracts have actually been changed — or whether only off-chain legal agreements have been modified.",
+            a: "Not if the vesting is enforced by an immutable smart contract. Contracts deployed on-chain cannot be altered unless they were specifically designed with upgradeability. If a project claims it is 'adjusting' its vesting schedule, ask whether the on-chain contracts have actually been changed – or whether only off-chain legal agreements have been modified.",
           },
           {
             q: "What happens if I miss a claim on my vesting contract?",
-            a: "Most vesting contracts continue accruing tokens regardless of whether you actively claim them. You do not forfeit unclaimed tokens by failing to claim on a specific date — they accumulate and can be claimed whenever you choose. Check your specific contract, as behaviour varies by protocol.",
+            a: "Most vesting contracts continue accruing tokens regardless of whether you actively claim them. You do not forfeit unclaimed tokens by failing to claim on a specific date – they accumulate and can be claimed whenever you choose. Check your specific contract, as behaviour varies by protocol.",
           },
           {
             q: "How do I track token unlocks for projects I am invested in but not directly holding vesting positions?",
-            a: "For market-wide unlock tracking, use a token unlock aggregator that monitors all vesting contracts for a given token — not just your personal wallet. This gives you visibility into upcoming sell pressure from all recipient groups, even if you purchased tokens on the open market rather than through a vesting agreement.",
+            a: "For market-wide unlock tracking, use a token unlock aggregator that monitors all vesting contracts for a given token – not just your personal wallet. This gives you visibility into upcoming sell pressure from all recipient groups, even if you purchased tokens on the open market rather than through a vesting agreement.",
           },
         ],
       },
@@ -2515,7 +2515,7 @@ const articles: Article[] = [
   {
     slug:        "what-is-a-token",
     title:       "What Is a Token? A Plain-English Guide for People New to Crypto",
-    excerpt:     "A token is a unit of value that lives inside a smart contract. This guide explains what tokens are, how they differ from coins, the main types you will encounter, and how to track tokens you actually own — without the jargon.",
+    excerpt:     "A token is a unit of value that lives inside a smart contract. This guide explains what tokens are, how they differ from coins, the main types you will encounter, and how to track tokens you actually own – without the jargon.",
     publishedAt: "2026-04-24",
     updatedAt:   "2026-04-24",
     readingTime: "9 min read",
@@ -2524,11 +2524,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Almost every article about crypto starts by saying \"token\" as though everyone already knows what that means. Most people do not — and asking feels like admitting you have not been paying attention. This guide fixes that. No jargon, no handwaving: just a clear explanation of what a token is, the different kinds you will run into, and what actually happens when you hold one.",
+        html: "Almost every article about crypto starts by saying \"token\" as though everyone already knows what that means. Most people do not – and asking feels like admitting you have not been paying attention. This guide fixes that. No jargon, no handwaving: just a clear explanation of what a token is, the different kinds you will run into, and what actually happens when you hold one.",
       },
       {
         type: "p",
-        html: "By the end of this you will be able to read almost any crypto-project landing page, token-sale announcement, or vesting contract and understand exactly what is being offered. You will also know why tokens — not blockchains — are the primary unit you interact with when you use crypto in daily life.",
+        html: "By the end of this you will be able to read almost any crypto-project landing page, token-sale announcement, or vesting contract and understand exactly what is being offered. You will also know why tokens – not blockchains – are the primary unit you interact with when you use crypto in daily life.",
       },
 
       { type: "h2", text: "What Is a Token, Really?" },
@@ -2544,10 +2544,10 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "When you \"hold\" a token, you do not have a physical object and you do not have a file on your computer. What you have is a private key that proves control of a wallet address — and the smart contract's ledger says that address owns N units of the token. Moving tokens means signing a transaction with your key, which tells the contract to update the ledger.",
+        html: "When you \"hold\" a token, you do not have a physical object and you do not have a file on your computer. What you have is a private key that proves control of a wallet address – and the smart contract's ledger says that address owns N units of the token. Moving tokens means signing a transaction with your key, which tells the contract to update the ledger.",
       },
 
-      { type: "h2", text: "Tokens vs. Coins — The Distinction That Actually Matters" },
+      { type: "h2", text: "Tokens vs. Coins – The Distinction That Actually Matters" },
       {
         type: "p",
         html: "People use \"token\" and \"coin\" interchangeably, and most of the time it does not matter. But if you want to sound like you know what you are talking about, here is the distinction:",
@@ -2570,12 +2570,12 @@ const articles: Article[] = [
         type: "table",
         headers: ["Type", "What it represents", "Examples"],
         rows: [
-          ["Utility token",    "Access to a product or service — think of it as a pre-paid credit",        "BAT, GRT, FIL"],
+          ["Utility token",    "Access to a product or service – think of it as a pre-paid credit",        "BAT, GRT, FIL"],
           ["Governance token", "A vote on decisions made by a protocol or DAO",                            "UNI, AAVE, MKR"],
-          ["Stablecoin",       "A claim on a stable asset — usually $1 USD or a fiat equivalent",          "USDC, USDT, DAI"],
+          ["Stablecoin",       "A claim on a stable asset – usually $1 USD or a fiat equivalent",          "USDC, USDT, DAI"],
           ["Wrapped asset",    "A tokenised version of another asset (often cross-chain)",                 "WBTC, WETH"],
           ["Security token",   "A regulated security represented on-chain (ownership, dividends, etc.)",   "Real-estate tokens, tokenised equity"],
-          ["NFT",              "A unique, non-interchangeable token — usually ERC-721 rather than ERC-20", "Bored Apes, ENS names, game items"],
+          ["NFT",              "A unique, non-interchangeable token – usually ERC-721 rather than ERC-20", "Bored Apes, ENS names, game items"],
           ["LP token",         "Proof that you supplied liquidity to a DEX pool",                          "Uniswap V2/V3 positions, Curve LP"],
         ],
       },
@@ -2592,15 +2592,15 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>ERC-20</strong> — fungible tokens (every unit is interchangeable: 1 USDC = 1 USDC)",
-          "<strong>ERC-721</strong> — non-fungible tokens (each one is unique — this is the NFT standard)",
-          "<strong>ERC-1155</strong> — a multi-token standard that can hold both fungible and non-fungible together, popular in gaming",
-          "<strong>BEP-20, TRC-20, SPL</strong> — the equivalent standards on BNB Chain, Tron, and Solana respectively",
+          "<strong>ERC-20</strong> – fungible tokens (every unit is interchangeable: 1 USDC = 1 USDC)",
+          "<strong>ERC-721</strong> – non-fungible tokens (each one is unique – this is the NFT standard)",
+          "<strong>ERC-1155</strong> – a multi-token standard that can hold both fungible and non-fungible together, popular in gaming",
+          "<strong>BEP-20, TRC-20, SPL</strong> – the equivalent standards on BNB Chain, Tron, and Solana respectively",
         ],
       },
       {
         type: "p",
-        html: "If a token is ERC-20 compliant, any wallet, exchange, or protocol that supports ERC-20 supports that token — automatically. This is why listing a new token on Uniswap or MetaMask does not require any engineering work: the standard does the heavy lifting.",
+        html: "If a token is ERC-20 compliant, any wallet, exchange, or protocol that supports ERC-20 supports that token – automatically. This is why listing a new token on Uniswap or MetaMask does not require any engineering work: the standard does the heavy lifting.",
       },
 
       { type: "h2", text: "How You Actually Get Tokens" },
@@ -2611,11 +2611,11 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Purchase on an exchange.</strong> You buy the token on a centralised exchange (Coinbase, Binance) or a decentralised one (Uniswap, 1inch). The token is delivered to your wallet immediately — no vesting, no lock-up.",
-          "<strong>Airdrop.</strong> The project sends tokens to eligible wallets for free — usually to reward early users, protocol activity, or governance participation.",
+          "<strong>Purchase on an exchange.</strong> You buy the token on a centralised exchange (Coinbase, Binance) or a decentralised one (Uniswap, 1inch). The token is delivered to your wallet immediately – no vesting, no lock-up.",
+          "<strong>Airdrop.</strong> The project sends tokens to eligible wallets for free – usually to reward early users, protocol activity, or governance participation.",
           "<strong>Token sale / ICO / IDO.</strong> You buy the token directly from the project at an agreed price. These allocations are almost always subject to a vesting schedule.",
           "<strong>Rewards or yield.</strong> You stake, provide liquidity, or use a protocol, and it emits tokens to you over time.",
-          "<strong>Grant or compensation.</strong> You are a founder, team member, advisor, or investor, and the project has granted you a token allocation — almost always with a multi-year vesting schedule enforced by a vesting contract.",
+          "<strong>Grant or compensation.</strong> You are a founder, team member, advisor, or investor, and the project has granted you a token allocation – almost always with a multi-year vesting schedule enforced by a vesting contract.",
         ],
       },
       {
@@ -2628,7 +2628,7 @@ const articles: Article[] = [
       { type: "h2", text: "Where Tokens Live: Chains" },
       {
         type: "p",
-        html: "Every token is deployed on a specific chain. An ERC-20 token on Ethereum is a different thing from an ERC-20 token with the same name on Base or Polygon — even if they share a symbol. This trips people up often: USDC on Ethereum, USDC on Base, and USDC on Solana are three different smart contracts (bridged or natively issued by Circle), and moving between them requires a bridge.",
+        html: "Every token is deployed on a specific chain. An ERC-20 token on Ethereum is a different thing from an ERC-20 token with the same name on Base or Polygon – even if they share a symbol. This trips people up often: USDC on Ethereum, USDC on Base, and USDC on Solana are three different smart contracts (bridged or natively issued by Circle), and moving between them requires a bridge.",
       },
       {
         type: "p",
@@ -2638,11 +2638,11 @@ const articles: Article[] = [
       { type: "h2", text: "Tracking Tokens You Own" },
       {
         type: "p",
-        html: "Once you have tokens, tracking them is more complex than it sounds — especially if you received them through a vesting agreement. Your wallet balance only shows you what you can move today. It does not show you tokens that are locked in vesting contracts, tokens that are staked, tokens that are earning yield, or tokens that are sitting in LP positions.",
+        html: "Once you have tokens, tracking them is more complex than it sounds – especially if you received them through a vesting agreement. Your wallet balance only shows you what you can move today. It does not show you tokens that are locked in vesting contracts, tokens that are staked, tokens that are earning yield, or tokens that are sitting in LP positions.",
       },
       {
         type: "p",
-        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols — which is common for active investors and team members — you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
+        html: "For vested tokens specifically, you need a dashboard that can read the vesting contract itself and calculate your actual unlock schedule. Most of the major vesting protocols (Sablier, Hedgey, UNCX, Unvest, Superfluid, PinkLock) have their own interfaces, but they only show you tokens vesting on that specific platform. If your allocations are spread across multiple protocols – which is common for active investors and team members – you need an aggregator. <a href=\"/\" style=\"color: #1CB8B8; text-decoration: underline;\">Vestream</a> is one option that indexes all the main vesting protocols across Ethereum, Base, BNB Chain, and Polygon.",
       },
 
       { type: "h2", text: "What to Know Before You Hold Any Token" },
@@ -2661,7 +2661,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Holding tokens is not like holding equity. The rules are enforced by code, not contract law, and the only way to really know what you own is to read the contract and the vesting schedule. Fortunately, that information is all on-chain and publicly verifiable — you just need the right tools to surface it.",
+        html: "Holding tokens is not like holding equity. The rules are enforced by code, not contract law, and the only way to really know what you own is to read the contract and the vesting schedule. Fortunately, that information is all on-chain and publicly verifiable – you just need the right tools to surface it.",
       },
 
       {
@@ -2673,19 +2673,19 @@ const articles: Article[] = [
           },
           {
             q: "Can I lose a token after I receive it?",
-            a: "If you lose access to the private key of the wallet that holds the token, yes — no one else can recover it for you. There is no customer-support line. This is why self-custody requires discipline about backup and security.",
+            a: "If you lose access to the private key of the wallet that holds the token, yes – no one else can recover it for you. There is no customer-support line. This is why self-custody requires discipline about backup and security.",
           },
           {
             q: "If a project issues a new token, where does it come from?",
-            a: "The project deploys a smart contract that defines the token and the initial supply. The contract is code — it runs on the blockchain and has to follow the rules of the token standard (ERC-20, etc.). The initial supply is allocated to specific addresses at deployment, typically including treasury, team, investors, community, and liquidity.",
+            a: "The project deploys a smart contract that defines the token and the initial supply. The contract is code – it runs on the blockchain and has to follow the rules of the token standard (ERC-20, etc.). The initial supply is allocated to specific addresses at deployment, typically including treasury, team, investors, community, and liquidity.",
           },
           {
             q: "Do I pay tax when I receive a token?",
-            a: "In most jurisdictions, yes — receiving tokens (via airdrop, reward, or vesting unlock) is usually treated as income at the fair market value at the time of receipt. Selling that token later creates a separate capital gains event. This varies significantly by country; consult a crypto-literate tax professional.",
+            a: "In most jurisdictions, yes – receiving tokens (via airdrop, reward, or vesting unlock) is usually treated as income at the fair market value at the time of receipt. Selling that token later creates a separate capital gains event. This varies significantly by country; consult a crypto-literate tax professional.",
           },
           {
             q: "How do I find out if my tokens are locked in a vesting contract?",
-            a: "Ask the project which vesting protocol they use (Sablier, UNCX, Hedgey, etc.) and check your wallet on that protocol's dashboard. Or use an aggregator that reads all major vesting contracts and shows you the complete unlock schedule for your wallet — see our <a href=\"/resources/how-to-track-token-vesting\" style=\"color: #1CB8B8; text-decoration: underline;\">guide to tracking token vesting</a> for the step-by-step.",
+            a: "Ask the project which vesting protocol they use (Sablier, UNCX, Hedgey, etc.) and check your wallet on that protocol's dashboard. Or use an aggregator that reads all major vesting contracts and shows you the complete unlock schedule for your wallet – see our <a href=\"/resources/how-to-track-token-vesting\" style=\"color: #1CB8B8; text-decoration: underline;\">guide to tracking token vesting</a> for the step-by-step.",
           },
         ],
       },
@@ -2696,7 +2696,7 @@ const articles: Article[] = [
   {
     slug:        "sablier-vs-hedgey-vs-uncx-comparison",
     title:       "Sablier vs Hedgey vs UNCX: Token Vesting Protocol Comparison (2026)",
-    excerpt:     "Three protocols dominate token vesting on EVM chains. They look similar from the outside but differ in mechanics, cost, and feature scope. This guide breaks down when to use each — for projects designing vesting, and for recipients trying to understand what they were granted.",
+    excerpt:     "Three protocols dominate token vesting on EVM chains. They look similar from the outside but differ in mechanics, cost, and feature scope. This guide breaks down when to use each – for projects designing vesting, and for recipients trying to understand what they were granted.",
     publishedAt: "2026-04-26",
     updatedAt:   "2026-04-26",
     readingTime: "11 min read",
@@ -2705,14 +2705,14 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If your project is about to launch a token, or you've just been granted one with a vesting schedule, you'll quickly run into three names: <strong>Sablier</strong>, <strong>Hedgey</strong>, and <strong>UNCX</strong>. Together they account for the majority of on-chain vesting positions across Ethereum, Base, BNB Chain, and Polygon. They all do roughly the same thing — lock tokens in a contract, release them on a schedule — but the mechanics differ in ways that matter when you're choosing one (or trying to claim from one).",
+        html: "If your project is about to launch a token, or you've just been granted one with a vesting schedule, you'll quickly run into three names: <strong>Sablier</strong>, <strong>Hedgey</strong>, and <strong>UNCX</strong>. Together they account for the majority of on-chain vesting positions across Ethereum, Base, BNB Chain, and Polygon. They all do roughly the same thing – lock tokens in a contract, release them on a schedule – but the mechanics differ in ways that matter when you're choosing one (or trying to claim from one).",
       },
       {
         type: "p",
-        html: "This guide compares all three on the dimensions that actually drive a decision: vesting model, cliff support, claim UX, gas cost, multi-chain coverage, NFT representation, and ecosystem fit. We're protocol-neutral — Vestream tracks vestings across all three (and six others) so we have no horse in the race. The recommendations below are what we'd tell a friend asking which one to use.",
+        html: "This guide compares all three on the dimensions that actually drive a decision: vesting model, cliff support, claim UX, gas cost, multi-chain coverage, NFT representation, and ecosystem fit. We're protocol-neutral – Vestream tracks vestings across all three (and six others) so we have no horse in the race. The recommendations below are what we'd tell a friend asking which one to use.",
       },
 
-      { type: "h2", text: "TL;DR — Quick verdict" },
+      { type: "h2", text: "TL;DR – Quick verdict" },
       {
         type: "table",
         headers: ["Use case", "Best protocol", "Why"],
@@ -2729,7 +2729,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "ℹ️",
         title: "What to remember",
-        body:  "There is no single 'best' protocol. The right choice depends on whether you're optimising for streaming UX (Sablier), transferability (Hedgey), or launch-bundled lockers (UNCX). All three are production-ready and audited — security is not the differentiator.",
+        body:  "There is no single 'best' protocol. The right choice depends on whether you're optimising for streaming UX (Sablier), transferability (Hedgey), or launch-bundled lockers (UNCX). All three are production-ready and audited – security is not the differentiator.",
       },
 
       { type: "h2", text: "Sablier" },
@@ -2740,103 +2740,103 @@ const articles: Article[] = [
       { type: "h3", text: "How Sablier works" },
       {
         type: "p",
-        html: "Sablier's flagship feature is <strong>per-second streaming</strong>. Instead of releasing tokens in chunks (e.g. monthly), the contract continuously increases the recipient's claimable balance, second by second. From the recipient's perspective, the math looks like: at any moment, claimable = (totalAmount × elapsedSeconds) / vestingDurationSeconds. The contract uses pure on-chain time arithmetic — no off-chain oracle, no scheduled tasks, no manual triggers.",
+        html: "Sablier's flagship feature is <strong>per-second streaming</strong>. Instead of releasing tokens in chunks (e.g. monthly), the contract continuously increases the recipient's claimable balance, second by second. From the recipient's perspective, the math looks like: at any moment, claimable = (totalAmount × elapsedSeconds) / vestingDurationSeconds. The contract uses pure on-chain time arithmetic – no off-chain oracle, no scheduled tasks, no manual triggers.",
       },
       {
         type: "p",
-        html: "Sablier supports two main shapes: <strong>LockupLinear</strong> (single linear stream, optionally with a cliff) and <strong>LockupTranched</strong> (multiple tranches with custom amounts and unlock times — good for milestone-based grants). A single Sablier contract on each chain serves all streams, which means recipients claim through the same dashboard regardless of which project granted them the tokens.",
+        html: "Sablier supports two main shapes: <strong>LockupLinear</strong> (single linear stream, optionally with a cliff) and <strong>LockupTranched</strong> (multiple tranches with custom amounts and unlock times – good for milestone-based grants). A single Sablier contract on each chain serves all streams, which means recipients claim through the same dashboard regardless of which project granted them the tokens.",
       },
       { type: "h3", text: "Sablier strengths" },
       {
         type: "ul",
         items: [
-          "<strong>Battle-tested</strong> — over $500M in cumulative vested value across all chains. Used by major DAOs (MakerDAO, Aave, Lido, etc.) for treasury vesting.",
-          "<strong>Per-second streaming</strong> — recipients can claim any time without waiting for a calendar tick. Useful for cash-flow-sensitive recipients (advisors, contractors).",
-          "<strong>Cancelable streams</strong> — projects can configure vests as cancelable (returning unvested tokens to the grantor) or non-cancelable. Both are common.",
-          "<strong>Polished recipient UX</strong> — Sablier's own claim dashboard is the cleanest in the category, with clear schedules, claim history, and ENS integration.",
-          "<strong>The Graph subgraphs</strong> — every chain has a public subgraph that aggregators (like Vestream) can read efficiently.",
+          "<strong>Battle-tested</strong> – over $500M in cumulative vested value across all chains. Used by major DAOs (MakerDAO, Aave, Lido, etc.) for treasury vesting.",
+          "<strong>Per-second streaming</strong> – recipients can claim any time without waiting for a calendar tick. Useful for cash-flow-sensitive recipients (advisors, contractors).",
+          "<strong>Cancelable streams</strong> – projects can configure vests as cancelable (returning unvested tokens to the grantor) or non-cancelable. Both are common.",
+          "<strong>Polished recipient UX</strong> – Sablier's own claim dashboard is the cleanest in the category, with clear schedules, claim history, and ENS integration.",
+          "<strong>The Graph subgraphs</strong> – every chain has a public subgraph that aggregators (like Vestream) can read efficiently.",
         ],
       },
       { type: "h3", text: "Sablier weaknesses" },
       {
         type: "ul",
         items: [
-          "<strong>No NFT receipts in V2</strong> (V1 had them, V2 dropped them) — vested positions are bound to the recipient address. If you lose access to that wallet, the tokens are stranded.",
-          "<strong>No native LP locker</strong> — Sablier is purely vesting. If you also need to lock your token's liquidity pool, you'll be combining Sablier with another tool (often UNCX).",
-          "<strong>Tranched math can confuse</strong> — for non-developers, the LockupTranched model is harder to reason about than a simple monthly schedule.",
+          "<strong>No NFT receipts in V2</strong> (V1 had them, V2 dropped them) – vested positions are bound to the recipient address. If you lose access to that wallet, the tokens are stranded.",
+          "<strong>No native LP locker</strong> – Sablier is purely vesting. If you also need to lock your token's liquidity pool, you'll be combining Sablier with another tool (often UNCX).",
+          "<strong>Tranched math can confuse</strong> – for non-developers, the LockupTranched model is harder to reason about than a simple monthly schedule.",
         ],
       },
 
       { type: "h2", text: "Hedgey" },
       {
         type: "p",
-        html: "Hedgey's distinctive design choice is that <strong>every vesting plan is an NFT</strong>. When a project grants you tokens through Hedgey, you don't just get a stream — you get an ERC-721 token in your wallet that represents the right to claim. This sounds like a small detail but it changes the economics meaningfully.",
+        html: "Hedgey's distinctive design choice is that <strong>every vesting plan is an NFT</strong>. When a project grants you tokens through Hedgey, you don't just get a stream – you get an ERC-721 token in your wallet that represents the right to claim. This sounds like a small detail but it changes the economics meaningfully.",
       },
       { type: "h3", text: "How Hedgey works" },
       {
         type: "p",
-        html: "Hedgey calls a vesting plan a <strong>TokenVestingPlan</strong>, and each one is minted as an NFT to the recipient. The NFT carries the schedule (start time, cliff, end time, total amount) and the right to claim accumulated tokens at any time. Crucially, NFTs are <strong>transferable</strong> — you can sell, gift, or move your unvested allocation to another wallet without breaking the schedule. This is impossible on Sablier where vests are bound to the original recipient.",
+        html: "Hedgey calls a vesting plan a <strong>TokenVestingPlan</strong>, and each one is minted as an NFT to the recipient. The NFT carries the schedule (start time, cliff, end time, total amount) and the right to claim accumulated tokens at any time. Crucially, NFTs are <strong>transferable</strong> – you can sell, gift, or move your unvested allocation to another wallet without breaking the schedule. This is impossible on Sablier where vests are bound to the original recipient.",
       },
       {
         type: "p",
-        html: "Hedgey's plans support both linear and milestone (stepped) schedules, with optional cliffs. Like Sablier, claims are pull-based — the recipient calls <code>redeemPlans()</code> on the contract to claim the currently-vested portion.",
+        html: "Hedgey's plans support both linear and milestone (stepped) schedules, with optional cliffs. Like Sablier, claims are pull-based – the recipient calls <code>redeemPlans()</code> on the contract to claim the currently-vested portion.",
       },
       { type: "h3", text: "Hedgey strengths" },
       {
         type: "ul",
         items: [
-          "<strong>Transferable plans</strong> — NFT representation means vesting positions can be transferred (e.g. to a multi-sig, to a new wallet for security, or sold OTC). Unique in this category.",
-          "<strong>Inheritance-friendly</strong> — because the NFT is portable, estate planning is significantly easier than with bound-to-address vests.",
-          "<strong>Strong investor allocation use case</strong> — VCs prefer Hedgey because they can transfer SAFT positions between fund vehicles without re-negotiating with the project.",
-          "<strong>Comprehensive schedule shapes</strong> — supports linear with cliff, stepped, milestone-based, and combinations.",
-          "<strong>Clean web app for project deployment</strong> — Hedgey's create-a-plan flow is the most polished if you're a project setting up vesting for the first time.",
+          "<strong>Transferable plans</strong> – NFT representation means vesting positions can be transferred (e.g. to a multi-sig, to a new wallet for security, or sold OTC). Unique in this category.",
+          "<strong>Inheritance-friendly</strong> – because the NFT is portable, estate planning is significantly easier than with bound-to-address vests.",
+          "<strong>Strong investor allocation use case</strong> – VCs prefer Hedgey because they can transfer SAFT positions between fund vehicles without re-negotiating with the project.",
+          "<strong>Comprehensive schedule shapes</strong> – supports linear with cliff, stepped, milestone-based, and combinations.",
+          "<strong>Clean web app for project deployment</strong> – Hedgey's create-a-plan flow is the most polished if you're a project setting up vesting for the first time.",
         ],
       },
       { type: "h3", text: "Hedgey weaknesses" },
       {
         type: "ul",
         items: [
-          "<strong>Higher gas at claim time</strong> — NFT contract overhead means each claim costs noticeably more than a Sablier claim. Adds up if you have many small vests.",
-          "<strong>Smaller TVL than Sablier</strong> — meaningful but not dominant. Around $140M cumulative as of early 2026.",
-          "<strong>NFT discoverability tradeoff</strong> — recipients sometimes don't realise they have a Hedgey NFT in their wallet. We've seen multiple cases of users missing claims because they didn't check NFT holdings.",
+          "<strong>Higher gas at claim time</strong> – NFT contract overhead means each claim costs noticeably more than a Sablier claim. Adds up if you have many small vests.",
+          "<strong>Smaller TVL than Sablier</strong> – meaningful but not dominant. Around $140M cumulative as of early 2026.",
+          "<strong>NFT discoverability tradeoff</strong> – recipients sometimes don't realise they have a Hedgey NFT in their wallet. We've seen multiple cases of users missing claims because they didn't check NFT holdings.",
         ],
       },
 
       { type: "h2", text: "UNCX" },
       {
         type: "p",
-        html: "UNCX (formerly Unicrypt) is positioned slightly differently from Sablier and Hedgey. It started as a <strong>liquidity locker</strong> for token projects — a way to lock your Uniswap LP tokens so investors trust that the founder won't rug-pull liquidity — and grew vesting features alongside that. As a result, UNCX is the natural choice for projects that need both LP locks AND team/investor vesting in one place.",
+        html: "UNCX (formerly Unicrypt) is positioned slightly differently from Sablier and Hedgey. It started as a <strong>liquidity locker</strong> for token projects – a way to lock your Uniswap LP tokens so investors trust that the founder won't rug-pull liquidity – and grew vesting features alongside that. As a result, UNCX is the natural choice for projects that need both LP locks AND team/investor vesting in one place.",
       },
       { type: "h3", text: "How UNCX works" },
       {
         type: "p",
-        html: "UNCX has two distinct vesting products: <strong>TokenVesting</strong> (V3, the modern locker) and <strong>VestingManager</strong> (the legacy variant used in earlier launches). Both lock ERC-20 tokens with a schedule but the contract architecture differs. From a recipient's perspective they look similar — you go to the UNCX dashboard, connect your wallet, and claim.",
+        html: "UNCX has two distinct vesting products: <strong>TokenVesting</strong> (V3, the modern locker) and <strong>VestingManager</strong> (the legacy variant used in earlier launches). Both lock ERC-20 tokens with a schedule but the contract architecture differs. From a recipient's perspective they look similar – you go to the UNCX dashboard, connect your wallet, and claim.",
       },
       {
         type: "p",
-        html: "UNCX's vesting model is cliff-plus-stepped: a cliff period during which nothing unlocks, then either linear release or fixed step amounts at fixed intervals. There's no per-second streaming like Sablier — UNCX vesting is checkpoint-based.",
+        html: "UNCX's vesting model is cliff-plus-stepped: a cliff period during which nothing unlocks, then either linear release or fixed step amounts at fixed intervals. There's no per-second streaming like Sablier – UNCX vesting is checkpoint-based.",
       },
       { type: "h3", text: "UNCX strengths" },
       {
         type: "ul",
         items: [
-          "<strong>Bundled LP locker + token vesting</strong> — the only one of the three that natively lets a project lock both LP and team tokens through the same UI/contract suite.",
-          "<strong>Token-launch fit</strong> — projects launching on Uniswap/PancakeSwap who need to demonstrate rug-pull protection use UNCX because that's what audit firms and exchanges expect to see.",
-          "<strong>Wide chain coverage</strong> — Ethereum, BNB Chain, Polygon, Base, plus more chain-specific deployments than Sablier or Hedgey.",
-          "<strong>Reasonable claim costs</strong> — the contract is simpler than Hedgey's NFT path, so gas at claim time is competitive with Sablier.",
+          "<strong>Bundled LP locker + token vesting</strong> – the only one of the three that natively lets a project lock both LP and team tokens through the same UI/contract suite.",
+          "<strong>Token-launch fit</strong> – projects launching on Uniswap/PancakeSwap who need to demonstrate rug-pull protection use UNCX because that's what audit firms and exchanges expect to see.",
+          "<strong>Wide chain coverage</strong> – Ethereum, BNB Chain, Polygon, Base, plus more chain-specific deployments than Sablier or Hedgey.",
+          "<strong>Reasonable claim costs</strong> – the contract is simpler than Hedgey's NFT path, so gas at claim time is competitive with Sablier.",
         ],
       },
       { type: "h3", text: "UNCX weaknesses" },
       {
         type: "ul",
         items: [
-          "<strong>Less polished recipient UX</strong> — the dashboard works but feels older than Sablier's. Discovering whether you have a vest with UNCX often requires the project's pointer rather than self-discovery.",
-          "<strong>Two contract variants is confusing</strong> — TokenVesting vs VestingManager means recipients sometimes claim from the wrong UI and miss positions. (Vestream merges both behind a single 'UNCX' tracker for exactly this reason.)",
-          "<strong>Not associated with crypto-native DAOs</strong> — Sablier has the DAO/protocol audience; UNCX has the token-launch audience. Cultural fit matters when picking.",
+          "<strong>Less polished recipient UX</strong> – the dashboard works but feels older than Sablier's. Discovering whether you have a vest with UNCX often requires the project's pointer rather than self-discovery.",
+          "<strong>Two contract variants is confusing</strong> – TokenVesting vs VestingManager means recipients sometimes claim from the wrong UI and miss positions. (Vestream merges both behind a single 'UNCX' tracker for exactly this reason.)",
+          "<strong>Not associated with crypto-native DAOs</strong> – Sablier has the DAO/protocol audience; UNCX has the token-launch audience. Cultural fit matters when picking.",
         ],
       },
 
-      { type: "h2", text: "Decision framework — which one to use?" },
+      { type: "h2", text: "Decision framework – which one to use?" },
       {
         type: "p",
         html: "Strip away the marketing and the choice usually comes down to three questions:",
@@ -2846,12 +2846,12 @@ const articles: Article[] = [
         items: [
           "<strong>Do you need transferability?</strong> If yes (typically institutional investors who want to move SAFT positions between funds), use <strong>Hedgey</strong>. Sablier and UNCX bind vests to the original recipient address.",
           "<strong>Do you also need an LP locker?</strong> If yes (token launches, rug-protection signalling), use <strong>UNCX</strong>. Sablier and Hedgey are vesting-only.",
-          "<strong>Otherwise, default to Sablier</strong> — most battle-tested, lowest gas, polished UX, dominant DAO adoption.",
+          "<strong>Otherwise, default to Sablier</strong> – most battle-tested, lowest gas, polished UX, dominant DAO adoption.",
         ],
       },
       {
         type: "p",
-        html: "Many real projects use <strong>combinations</strong>. A typical token launch might use Sablier for team vesting (because the team trusts the protocol), Hedgey for institutional investor allocations (because investors want NFT transferability), and UNCX for LP locks (because exchanges audit for that specifically). This is fine — the only downside is recipients then need to check three dashboards. Or one aggregator (like ours).",
+        html: "Many real projects use <strong>combinations</strong>. A typical token launch might use Sablier for team vesting (because the team trusts the protocol), Hedgey for institutional investor allocations (because investors want NFT transferability), and UNCX for LP locks (because exchanges audit for that specifically). This is fine – the only downside is recipients then need to check three dashboards. Or one aggregator (like ours).",
       },
 
       { type: "h2", text: "What's identical across all three" },
@@ -2862,27 +2862,27 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Security model</strong> — all three are audited by major firms. None has had a critical exploit affecting deposited funds.",
-          "<strong>Pull-based claims</strong> — recipients always have to call a transaction to claim. None of them auto-distributes tokens to wallets.",
-          "<strong>On-chain enforcement</strong> — schedules cannot be changed after deployment (with rare exceptions for cancelable streams). The smart contract is the source of truth.",
-          "<strong>ERC-20 only</strong> — none of them currently support vesting NFTs or other token standards. If you need to vest a Bored Ape, you'll need a different solution.",
+          "<strong>Security model</strong> – all three are audited by major firms. None has had a critical exploit affecting deposited funds.",
+          "<strong>Pull-based claims</strong> – recipients always have to call a transaction to claim. None of them auto-distributes tokens to wallets.",
+          "<strong>On-chain enforcement</strong> – schedules cannot be changed after deployment (with rare exceptions for cancelable streams). The smart contract is the source of truth.",
+          "<strong>ERC-20 only</strong> – none of them currently support vesting NFTs or other token standards. If you need to vest a Bored Ape, you'll need a different solution.",
         ],
       },
 
       { type: "h2", text: "How Vestream tracks all three" },
       {
         type: "p",
-        html: "We built Vestream specifically because crypto users frequently have vestings across multiple protocols and don't want to check three or four dashboards every month. Paste any wallet address and Vestream queries Sablier's subgraph, Hedgey's subgraph, both UNCX variants, and six other protocols in parallel — returning every active vesting in under three seconds.",
+        html: "We built Vestream specifically because crypto users frequently have vestings across multiple protocols and don't want to check three or four dashboards every month. Paste any wallet address and Vestream queries Sablier's subgraph, Hedgey's subgraph, both UNCX variants, and six other protocols in parallel – returning every active vesting in under three seconds.",
       },
       {
         type: "p",
-        html: "On the protocol pages we maintain — <a href=\"/protocols/sablier\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/sablier</a>, <a href=\"/protocols/hedgey\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/hedgey</a>, <a href=\"/protocols/uncx\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/uncx</a> — you can see live TVL, stream counts, and the upcoming unlock calendar. We don't favour one over another; the goal is to make it boring to track all of them.",
+        html: "On the protocol pages we maintain – <a href=\"/protocols/sablier\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/sablier</a>, <a href=\"/protocols/hedgey\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/hedgey</a>, <a href=\"/protocols/uncx\" style=\"color: #1CB8B8; text-decoration: underline;\">/protocols/uncx</a> – you can see live TVL, stream counts, and the upcoming unlock calendar. We don't favour one over another; the goal is to make it boring to track all of them.",
       },
       {
         type: "callout",
         emoji: "🔗",
         title: "Try it",
-        body:  "Paste any wallet at vestream.io/find-vestings to see what's vested for that address across all three protocols (and six more). No signup, no email — just the data.",
+        body:  "Paste any wallet at vestream.io/find-vestings to see what's vested for that address across all three protocols (and six more). No signup, no email – just the data.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -2895,7 +2895,7 @@ const articles: Article[] = [
           },
           {
             q: "Which protocol is cheapest for projects to deploy vesting on?",
-            a: "Sablier and UNCX are roughly tied — both have a one-time deployment cost per stream/lock that scales linearly with the number of recipients. Hedgey is slightly more expensive due to the NFT mint per recipient. For a project granting tokens to 500 recipients, the difference is meaningful (low five figures vs low six figures of gas). Sablier on Layer 2 (Base, Optimism) is by far the cheapest path.",
+            a: "Sablier and UNCX are roughly tied – both have a one-time deployment cost per stream/lock that scales linearly with the number of recipients. Hedgey is slightly more expensive due to the NFT mint per recipient. For a project granting tokens to 500 recipients, the difference is meaningful (low five figures vs low six figures of gas). Sablier on Layer 2 (Base, Optimism) is by far the cheapest path.",
           },
           {
             q: "Does any of them support cliff + linear unlock combinations?",
@@ -2903,11 +2903,11 @@ const articles: Article[] = [
           },
           {
             q: "What happens if the protocol's frontend goes offline?",
-            a: "Your tokens are still claimable — the contracts run on-chain regardless of whether the project's website is up. You'd interact with the contract directly via Etherscan's 'Write Contract' tab, or use an aggregator. This is a real consideration: smaller protocols have shut down their frontends, and recipients still successfully claimed by going contract-direct. Sablier, Hedgey, and UNCX are all well-funded enough that frontend availability isn't a near-term concern.",
+            a: "Your tokens are still claimable – the contracts run on-chain regardless of whether the project's website is up. You'd interact with the contract directly via Etherscan's 'Write Contract' tab, or use an aggregator. This is a real consideration: smaller protocols have shut down their frontends, and recipients still successfully claimed by going contract-direct. Sablier, Hedgey, and UNCX are all well-funded enough that frontend availability isn't a near-term concern.",
           },
           {
             q: "Can I tell from a token address which vesting protocol holds my tokens?",
-            a: "Not directly from the token contract, no. The token doesn't 'know' it's locked — it just knows the vesting protocol's contract holds the balance. To find out which protocol, either ask the project or use an aggregator like Vestream that scans all of them automatically.",
+            a: "Not directly from the token contract, no. The token doesn't 'know' it's locked – it just knows the vesting protocol's contract holds the balance. To find out which protocol, either ask the project or use an aggregator like Vestream that scans all of them automatically.",
           },
         ],
       },
@@ -2927,7 +2927,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Sablier is the protocol that introduced the idea of <strong>real-time token streaming</strong> to Ethereum. Instead of releasing locked tokens in monthly tranches, Sablier releases them <em>per second</em> — turning a vesting schedule into a continuous flow of value from the contract to the recipient's claimable balance.",
+        html: "Sablier is the protocol that introduced the idea of <strong>real-time token streaming</strong> to Ethereum. Instead of releasing locked tokens in monthly tranches, Sablier releases them <em>per second</em> – turning a vesting schedule into a continuous flow of value from the contract to the recipient's claimable balance.",
       },
       {
         type: "p",
@@ -2943,7 +2943,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "💧",
         title: "Streaming, in one sentence",
-        body:  "Locked total ÷ duration = release rate. Multiply by elapsed seconds and you have your claimable balance — updated every block.",
+        body:  "Locked total ÷ duration = release rate. Multiply by elapsed seconds and you have your claimable balance – updated every block.",
       },
       {
         type: "p",
@@ -2953,7 +2953,7 @@ const articles: Article[] = [
       { type: "h2", text: "Per-Second Release: Why It Matters" },
       {
         type: "p",
-        html: "Most legacy vesting contracts release tokens in lump sums — you wait 30 days, then claim a chunk. Streaming dissolves that waiting. The benefits compound across several dimensions:",
+        html: "Most legacy vesting contracts release tokens in lump sums – you wait 30 days, then claim a chunk. Streaming dissolves that waiting. The benefits compound across several dimensions:",
       },
       {
         type: "ul",
@@ -2966,7 +2966,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "For projects designing tokenomics, the trade-off is that streaming makes your unlock schedule slightly harder to communicate to a community used to thinking in monthly bars. That is one reason Sablier's <em>tranched</em> variant exists — sometimes you want the social clarity of a discrete monthly cliff.",
+        html: "For projects designing tokenomics, the trade-off is that streaming makes your unlock schedule slightly harder to communicate to a community used to thinking in monthly bars. That is one reason Sablier's <em>tranched</em> variant exists – sometimes you want the social clarity of a discrete monthly cliff.",
       },
 
       { type: "h2", text: "Supported Chains" },
@@ -3001,7 +3001,7 @@ const articles: Article[] = [
           "<strong>Founder and team vesting:</strong> 4-year stream with a 1-year cliff is the canonical configuration. Tokens flow continuously after the cliff, eliminating the temptation of a single-day dump.",
           "<strong>Investor allocations:</strong> seed and private rounds frequently use linear streams over 18–36 months, sometimes with a TGE unlock implemented as a separate stream.",
           "<strong>Grants programs:</strong> DAOs use Sablier to disburse grants over the life of a project, with the option to cancel the stream if milestones aren't met.",
-          "<strong>Onchain payroll:</strong> contractors paid in tokens prefer streams to monthly invoices — claimable balance grows in real time.",
+          "<strong>Onchain payroll:</strong> contractors paid in tokens prefer streams to monthly invoices – claimable balance grows in real time.",
         ],
       },
       {
@@ -3017,11 +3017,11 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>startTime</strong> — when the stream began accruing.",
-          "<strong>endTime</strong> — when the final token unlocks.",
-          "<strong>cliffTime</strong> — the timestamp before which zero tokens are claimable (optional).",
-          "<strong>depositedAmount</strong> — total tokens placed into the stream.",
-          "<strong>withdrawnAmount</strong> — total tokens already pulled by the recipient.",
+          "<strong>startTime</strong> – when the stream began accruing.",
+          "<strong>endTime</strong> – when the final token unlocks.",
+          "<strong>cliffTime</strong> – the timestamp before which zero tokens are claimable (optional).",
+          "<strong>depositedAmount</strong> – total tokens placed into the stream.",
+          "<strong>withdrawnAmount</strong> – total tokens already pulled by the recipient.",
         ],
       },
       {
@@ -3032,27 +3032,27 @@ const articles: Article[] = [
       { type: "h2", text: "Tracking Sablier Streams on Vestream" },
       {
         type: "p",
-        html: "Vestream indexes Sablier across all supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol — Hedgey, UNCX, Superfluid, PinkSale, Streamflow, Jupiter Lock, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
+        html: "Vestream indexes Sablier across all supported chains via its hosted subgraphs. When you add a wallet to your dashboard, the Sablier adapter is queried in parallel with every other supported protocol – Hedgey, UNCX, Superfluid, PinkSale, Streamflow, Jupiter Lock, and the rest. Streams are normalised into a unified card so you don't need to understand each contract's specific field naming.",
       },
       {
         type: "p",
-        html: "You can also view all Sablier streams for a single token by using the <a href=\"/explore\">explore</a> page. This is especially useful for due diligence — confirming, for example, that a project's team allocation is indeed locked in a 4-year LockupLinear stream rather than sitting in a multisig.",
+        html: "You can also view all Sablier streams for a single token by using the <a href=\"/explore\">explore</a> page. This is especially useful for due diligence – confirming, for example, that a project's team allocation is indeed locked in a 4-year LockupLinear stream rather than sitting in a multisig.",
       },
       {
         type: "callout",
         emoji: "📡",
         title: "Track Sablier vesting on Vestream",
-        body:  "Add any Ethereum, Base, BNB, Polygon or Sepolia address and Vestream will surface every Sablier stream it owns or receives — with claimable balance updated in real time. Sign in at <a href=\"/login\">Vestream</a> to get started.",
+        body:  "Add any Ethereum, Base, BNB, Polygon or Sepolia address and Vestream will surface every Sablier stream it owns or receives – with claimable balance updated in real time. Sign in at <a href=\"/login\">Vestream</a> to get started.",
       },
 
       { type: "h2", text: "FAQ" },
       {
         type: "faq",
         items: [
-          { q: "Is Sablier audited?", a: "Yes — multiple independent audits across LockupLinear and LockupTranched are public. As with any contract, audits reduce but do not eliminate risk. Always confirm the deployed contract address matches Sablier's documented deployments before sending funds." },
+          { q: "Is Sablier audited?", a: "Yes – multiple independent audits across LockupLinear and LockupTranched are public. As with any contract, audits reduce but do not eliminate risk. Always confirm the deployed contract address matches Sablier's documented deployments before sending funds." },
           { q: "Can a Sablier stream be cancelled?", a: "Only if the sender enabled cancelability at creation. Many vesting deployments deliberately set cancelability to false so the recipient cannot have their stream pulled. Check the stream's metadata before assuming either way." },
-          { q: "What happens if I never claim?", a: "Nothing bad. The tokens remain in the contract and continue to accrue against your claimable balance. There is no expiry — you can claim the full amount at any point after the stream ends." },
-          { q: "Does Sablier support tokens with transfer fees?", a: "Some token types (rebasing, transfer-tax) interact poorly with streaming math. Sablier's docs flag the unsupported types — most vanilla ERC-20s work without issue." },
+          { q: "What happens if I never claim?", a: "Nothing bad. The tokens remain in the contract and continue to accrue against your claimable balance. There is no expiry – you can claim the full amount at any point after the stream ends." },
+          { q: "Does Sablier support tokens with transfer fees?", a: "Some token types (rebasing, transfer-tax) interact poorly with streaming math. Sablier's docs flag the unsupported types – most vanilla ERC-20s work without issue." },
         ],
       },
     ],
@@ -3071,11 +3071,11 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Most vesting protocols treat a recipient's allocation as a row in a contract — a numeric position keyed to an address. <strong>Hedgey</strong> takes a different approach: each vesting plan is an <strong>NFT</strong>, owned by the recipient's wallet, with the underlying tokens locked behind it. Transfer the NFT and you transfer the entire vesting position.",
+        html: "Most vesting protocols treat a recipient's allocation as a row in a contract – a numeric position keyed to an address. <strong>Hedgey</strong> takes a different approach: each vesting plan is an <strong>NFT</strong>, owned by the recipient's wallet, with the underlying tokens locked behind it. Transfer the NFT and you transfer the entire vesting position.",
       },
       {
         type: "p",
-        html: "That single design decision changes everything downstream — composability, transferability, accounting, and the user experience for revoking grants. This guide unpacks how Hedgey works, why projects choose it, and how Vestream surfaces Hedgey plans alongside streams from other protocols.",
+        html: "That single design decision changes everything downstream – composability, transferability, accounting, and the user experience for revoking grants. This guide unpacks how Hedgey works, why projects choose it, and how Vestream surfaces Hedgey plans alongside streams from other protocols.",
       },
 
       { type: "h2", text: "The NFT-as-Vesting-Plan Model" },
@@ -3087,7 +3087,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🧾",
         title: "One plan, one NFT",
-        body:  "If a project grants you tokens via Hedgey, you receive an NFT in your wallet. The NFT <em>is</em> your vesting position — it is not a receipt or a representation, it is the bearer instrument.",
+        body:  "If a project grants you tokens via Hedgey, you receive an NFT in your wallet. The NFT <em>is</em> your vesting position – it is not a receipt or a representation, it is the bearer instrument.",
       },
       {
         type: "p",
@@ -3097,7 +3097,7 @@ const articles: Article[] = [
       { type: "h2", text: "Why Make Vesting Transferable?" },
       {
         type: "p",
-        html: "Transferable vesting positions sound risky — they enable secondary markets in unvested tokens, which is precisely what some projects want to prevent. But transferability solves real problems too:",
+        html: "Transferable vesting positions sound risky – they enable secondary markets in unvested tokens, which is precisely what some projects want to prevent. But transferability solves real problems too:",
       },
       {
         type: "ul",
@@ -3132,18 +3132,18 @@ const articles: Article[] = [
       { type: "h2", text: "Reading a Hedgey Plan" },
       {
         type: "p",
-        html: "When you open a Hedgey position, the on-chain fields you'll encounter are nearly identical to the cross-protocol vocabulary used by every other vesting tool — see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a> for a primer. Hedgey's twist is the <strong>period</strong> field, which controls the granularity of unlocks. A period of 1 means linear streaming (per-second). A period of 2,592,000 (30 days in seconds) means monthly tranches.",
+        html: "When you open a Hedgey position, the on-chain fields you'll encounter are nearly identical to the cross-protocol vocabulary used by every other vesting tool – see <a href=\"/resources/how-to-read-a-vesting-schedule\">How to Read a Vesting Schedule</a> for a primer. Hedgey's twist is the <strong>period</strong> field, which controls the granularity of unlocks. A period of 1 means linear streaming (per-second). A period of 2,592,000 (30 days in seconds) means monthly tranches.",
       },
       {
         type: "ul",
         items: [
-          "<strong>amount</strong> — total locked tokens",
-          "<strong>start</strong> — schedule start (unix seconds)",
-          "<strong>cliff</strong> — timestamp before which zero is claimable",
-          "<strong>rate</strong> — tokens released per period",
-          "<strong>period</strong> — release granularity in seconds",
-          "<strong>token</strong> — underlying ERC-20",
-          "<strong>vestingAdmin</strong> — the address authorised to revoke (TokenVestingPlan only)",
+          "<strong>amount</strong> – total locked tokens",
+          "<strong>start</strong> – schedule start (unix seconds)",
+          "<strong>cliff</strong> – timestamp before which zero is claimable",
+          "<strong>rate</strong> – tokens released per period",
+          "<strong>period</strong> – release granularity in seconds",
+          "<strong>token</strong> – underlying ERC-20",
+          "<strong>vestingAdmin</strong> – the address authorised to revoke (TokenVestingPlan only)",
         ],
       },
 
@@ -3162,7 +3162,7 @@ const articles: Article[] = [
       { type: "h2", text: "Voting Rights on Vesting Tokens" },
       {
         type: "p",
-        html: "Hedgey's voting variants delegate the locked tokens' governance power to the recipient even before the tokens vest. This is important for projects whose token is also a governance token — without delegation, locked allocations are effectively disenfranchised, and a small number of unlocked holders dominate votes. Hedgey's voting plan calls <strong>delegate()</strong> on the underlying token in the same transaction that creates the plan.",
+        html: "Hedgey's voting variants delegate the locked tokens' governance power to the recipient even before the tokens vest. This is important for projects whose token is also a governance token – without delegation, locked allocations are effectively disenfranchised, and a small number of unlocked holders dominate votes. Hedgey's voting plan calls <strong>delegate()</strong> on the underlying token in the same transaction that creates the plan.",
       },
 
       { type: "h2", text: "Tracking Hedgey on Vestream" },
@@ -3174,7 +3174,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📡",
         title: "Track Hedgey vesting on Vestream",
-        body:  "Vestream surfaces every Hedgey vesting NFT in a watched wallet — across Ethereum, Base, BNB, and Polygon. Sign in at <a href=\"/login\">Vestream</a> to monitor your plans alongside streams from Sablier, UNCX, and the rest.",
+        body:  "Vestream surfaces every Hedgey vesting NFT in a watched wallet – across Ethereum, Base, BNB, and Polygon. Sign in at <a href=\"/login\">Vestream</a> to monitor your plans alongside streams from Sablier, UNCX, and the rest.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -3182,9 +3182,9 @@ const articles: Article[] = [
         type: "faq",
         items: [
           { q: "Can I sell my Hedgey vesting NFT?", a: "Only if it is a transferable variant. Most team grants are transferable; most lockup plans are not. Check the contract's transfer restrictions before listing." },
-          { q: "What happens to my vesting if I lose the NFT?", a: "Whoever holds the NFT controls the position. Lost NFTs mean lost vesting, with no recovery — the granting project cannot reissue without revoking and redeploying." },
+          { q: "What happens to my vesting if I lose the NFT?", a: "Whoever holds the NFT controls the position. Lost NFTs mean lost vesting, with no recovery – the granting project cannot reissue without revoking and redeploying." },
           { q: "Why does Hedgey cost more gas than Sablier?", a: "Hedgey mints an ERC-721 per recipient, which is more expensive than Sablier's storage-only stream creation. The trade-off is the transferability and composability that NFT semantics provide." },
-          { q: "Does Hedgey support cliff plus linear?", a: "Yes — every plan variant supports an explicit cliff timestamp before the linear (or stepped) release begins." },
+          { q: "Does Hedgey support cliff plus linear?", a: "Yes – every plan variant supports an explicit cliff timestamp before the linear (or stepped) release begins." },
         ],
       },
     ],
@@ -3203,7 +3203,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you have spent any time around new token launches you have seen the UNCX badge — the green lock icon on a token's listing page that confirms the project's liquidity is locked. <strong>UNCX</strong> is the most widely-used token locker in the EVM ecosystem, and over time it expanded from LP locks into team-token vesting too.",
+        html: "If you have spent any time around new token launches you have seen the UNCX badge – the green lock icon on a token's listing page that confirms the project's liquidity is locked. <strong>UNCX</strong> is the most widely-used token locker in the EVM ecosystem, and over time it expanded from LP locks into team-token vesting too.",
       },
       {
         type: "p",
@@ -3248,7 +3248,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "TokenVesting v3 supports cliff + linear schedules natively. The cliff is implemented as a TGE unlock plus a delay before <em>startEmission</em> — making it slightly less ergonomic than Sablier's explicit cliff parameter, but functionally equivalent.",
+        html: "TokenVesting v3 supports cliff + linear schedules natively. The cliff is implemented as a TGE unlock plus a delay before <em>startEmission</em> – making it slightly less ergonomic than Sablier's explicit cliff parameter, but functionally equivalent.",
       },
 
       { type: "h2", text: "VestingManager: The Newer Architecture" },
@@ -3258,7 +3258,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "From a recipient's perspective, the experience is similar — you see a vesting position keyed to your address, with a claimable balance that grows over time. From a project's perspective, VestingManager is the more convenient choice for distributing tokens to dozens or hundreds of contributors at once.",
+        html: "From a recipient's perspective, the experience is similar – you see a vesting position keyed to your address, with a claimable balance that grows over time. From a project's perspective, VestingManager is the more convenient choice for distributing tokens to dozens or hundreds of contributors at once.",
       },
       {
         type: "callout",
@@ -3275,11 +3275,11 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Ethereum</strong> (chainId 1) — TokenVesting v3 and VestingManager",
-          "<strong>BNB Chain</strong> (56) — both products, very high usage volume",
-          "<strong>Polygon</strong> (137) — both products",
-          "<strong>Base</strong> (8453) — both products",
-          "<strong>Sepolia</strong> (11155111) — TokenVesting v3, for testnet flows",
+          "<strong>Ethereum</strong> (chainId 1) – TokenVesting v3 and VestingManager",
+          "<strong>BNB Chain</strong> (56) – both products, very high usage volume",
+          "<strong>Polygon</strong> (137) – both products",
+          "<strong>Base</strong> (8453) – both products",
+          "<strong>Sepolia</strong> (11155111) – TokenVesting v3, for testnet flows",
         ],
       },
 
@@ -3331,9 +3331,9 @@ const articles: Article[] = [
         type: "faq",
         items: [
           { q: "Is the UNCX badge on a token listing the same as token vesting?", a: "Not necessarily. The most common UNCX badge refers to liquidity-pool token locks, not team vesting. Read the project's docs to confirm what is locked." },
-          { q: "Can a UNCX vest be cancelled by the project?", a: "TokenVesting v3 vests are not unilaterally cancellable by the project once funded. Always verify on a per-deployment basis though — admin keys can vary." },
+          { q: "Can a UNCX vest be cancelled by the project?", a: "TokenVesting v3 vests are not unilaterally cancellable by the project once funded. Always verify on a per-deployment basis though – admin keys can vary." },
           { q: "What is the difference between UNCX TokenVesting v3 and VestingManager?", a: "TokenVesting v3 is the older, single-contract-per-deployment model. VestingManager is the newer architecture that handles many recipients more efficiently. Functionally they behave the same from a recipient's perspective." },
-          { q: "Does UNCX support per-second streaming?", a: "No — UNCX vests use linear release between startEmission and endEmission, calculated on each claim. Effectively similar to streaming but you only realise the unlock when you withdraw." },
+          { q: "Does UNCX support per-second streaming?", a: "No – UNCX vests use linear release between startEmission and endEmission, calculated on each claim. Effectively similar to streaming but you only realise the unlock when you withdraw." },
         ],
       },
     ],
@@ -3352,7 +3352,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "Solana's account model and SPL token standard make on-chain vesting feel different from the EVM equivalent — and that difference shows up clearly in <strong>Streamflow</strong>, the most-used vesting protocol on Solana. If you are coming from Sablier or Hedgey, the mental model needs a small adjustment.",
+        html: "Solana's account model and SPL token standard make on-chain vesting feel different from the EVM equivalent – and that difference shows up clearly in <strong>Streamflow</strong>, the most-used vesting protocol on Solana. If you are coming from Sablier or Hedgey, the mental model needs a small adjustment.",
       },
       {
         type: "p",
@@ -3368,7 +3368,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🌊",
         title: "Account-based, not contract-based",
-        body:  "On Solana, every stream is its own program-derived account holding state. There is no shared mapping of 'all streams' inside one contract — each stream is its own data account.",
+        body:  "On Solana, every stream is its own program-derived account holding state. There is no shared mapping of 'all streams' inside one contract – each stream is its own data account.",
       },
 
       { type: "h2", text: "How SPL Token Mechanics Differ from ERC-20" },
@@ -3442,7 +3442,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "⚡",
         title: "TVL category caveat",
-        body:  "Streamflow runs both vesting and payments products. When evaluating Streamflow's vesting-specific TVL, always isolate the vesting category — combined headline numbers can include open payment streams that are not strictly vesting.",
+        body:  "Streamflow runs both vesting and payments products. When evaluating Streamflow's vesting-specific TVL, always isolate the vesting category – combined headline numbers can include open payment streams that are not strictly vesting.",
       },
 
       { type: "h2", text: "How Vestream Indexes Streamflow" },
@@ -3452,7 +3452,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "The Solana ecosystem in Vestream is feature-flagged — for environments without Solana RPC configured, the adapter is a no-op. Production users on Vestream get Streamflow coverage by default.",
+        html: "The Solana ecosystem in Vestream is feature-flagged – for environments without Solana RPC configured, the adapter is a no-op. Production users on Vestream get Streamflow coverage by default.",
       },
       {
         type: "callout",
@@ -3465,7 +3465,7 @@ const articles: Article[] = [
       {
         type: "faq",
         items: [
-          { q: "Does Streamflow support cliff schedules?", a: "Yes — every Streamflow vesting contract accepts a cliff parameter. It behaves the same as EVM cliffs: zero claimable until the cliff timestamp, then the cliff portion unlocks in one go." },
+          { q: "Does Streamflow support cliff schedules?", a: "Yes – every Streamflow vesting contract accepts a cliff parameter. It behaves the same as EVM cliffs: zero claimable until the cliff timestamp, then the cliff portion unlocks in one go." },
           { q: "Can a Streamflow stream be cancelled?", a: "Yes, if the stream was configured as cancelable at creation. The sender can call cancel and reclaim unvested tokens. Many vesting deployments deliberately set cancelable to false." },
           { q: "What's the difference between Streamflow's vesting and payments products?", a: "Vesting is finite, with a defined total amount and end date. Payments streams are open-ended, designed for payroll-style ongoing flows. Vestream surfaces the vesting category." },
           { q: "Why isn't Streamflow on EVM?", a: "Streamflow is a Solana-native protocol that takes advantage of Solana's account model and low fees. The EVM equivalent for similar UX is Sablier or Superfluid." },
@@ -3487,7 +3487,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "<strong>Superfluid</strong> is best known for streaming payments — its 'money streams' have powered DAO payroll and continuous subscriptions for years. The same primitive underlies a more recent product: the <strong>Vesting Scheduler</strong>, which combines a one-time cliff payment with a continuous Superfluid flow for the remainder of the schedule.",
+        html: "<strong>Superfluid</strong> is best known for streaming payments – its 'money streams' have powered DAO payroll and continuous subscriptions for years. The same primitive underlies a more recent product: the <strong>Vesting Scheduler</strong>, which combines a one-time cliff payment with a continuous Superfluid flow for the remainder of the schedule.",
       },
       {
         type: "p",
@@ -3538,15 +3538,15 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>Ethereum</strong> — full vesting scheduler deployment",
-          "<strong>Base</strong> — heavy Superfluid usage given low L2 fees",
-          "<strong>BNB Chain</strong> — fewer projects, but supported",
-          "<strong>Polygon</strong> — historical major deployment",
+          "<strong>Ethereum</strong> – full vesting scheduler deployment",
+          "<strong>Base</strong> – heavy Superfluid usage given low L2 fees",
+          "<strong>BNB Chain</strong> – fewer projects, but supported",
+          "<strong>Polygon</strong> – historical major deployment",
         ],
       },
       {
         type: "p",
-        html: "Vestream queries Superfluid's hosted subgraphs for each chain — these don't require a Graph API key, so the adapter is unusually lightweight to operate.",
+        html: "Vestream queries Superfluid's hosted subgraphs for each chain – these don't require a Graph API key, so the adapter is unusually lightweight to operate.",
       },
 
       { type: "h2", text: "When to Choose Superfluid" },
@@ -3557,7 +3557,7 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "Your project is already running streaming payroll or subscriptions on Superfluid — you keep one financial primitive.",
+          "Your project is already running streaming payroll or subscriptions on Superfluid – you keep one financial primitive.",
           "You want a single cliff plus a smooth continuous flow, and you're comfortable with the Super Token wrapper.",
           "You value the option to ramp flow rate up or down later (Superfluid flows are dynamic).",
           "You're vesting on Base or Polygon where the gas savings make per-second flow economically natural.",
@@ -3576,11 +3576,11 @@ const articles: Article[] = [
       {
         type: "ul",
         items: [
-          "<strong>cliffDate</strong> — when the cliff payment fires",
-          "<strong>cliffAmount</strong> — size of the one-time cliff transfer",
-          "<strong>endDate</strong> — when the post-cliff flow ends",
-          "<strong>flowRate</strong> — tokens per second after the cliff",
-          "<strong>superToken</strong> — the wrapped ERC-20",
+          "<strong>cliffDate</strong> – when the cliff payment fires",
+          "<strong>cliffAmount</strong> – size of the one-time cliff transfer",
+          "<strong>endDate</strong> – when the post-cliff flow ends",
+          "<strong>flowRate</strong> – tokens per second after the cliff",
+          "<strong>superToken</strong> – the wrapped ERC-20",
         ],
       },
       {
@@ -3597,7 +3597,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This isn't a bug — it's a deliberate design choice that mirrors traditional employment vesting (where a company controls the eventual payout). For vesting that <em>must</em> be cryptographically immutable, Sablier or Hedgey lockup plans are stronger guarantees.",
+        html: "This isn't a bug – it's a deliberate design choice that mirrors traditional employment vesting (where a company controls the eventual payout). For vesting that <em>must</em> be cryptographically immutable, Sablier or Hedgey lockup plans are stronger guarantees.",
       },
 
       { type: "h2", text: "Tracking Superfluid Vesting on Vestream" },
@@ -3612,10 +3612,10 @@ const articles: Article[] = [
       {
         type: "faq",
         items: [
-          { q: "Do I have to wrap my tokens to use Superfluid?", a: "Yes — Superfluid operates on Super Tokens, which are 1:1 wrappers around an underlying ERC-20. Wrap and unwrap are permissionless and instant." },
+          { q: "Do I have to wrap my tokens to use Superfluid?", a: "Yes – Superfluid operates on Super Tokens, which are 1:1 wrappers around an underlying ERC-20. Wrap and unwrap are permissionless and instant." },
           { q: "Can a Superfluid vesting flow be cancelled?", a: "The sender can close any Superfluid flow they originated. This is by design but can surprise recipients used to immutable streams." },
           { q: "How is Superfluid different from Sablier?", a: "Sablier holds tokens in a per-stream contract and computes claimable balance on read. Superfluid uses a per-account net-flow accounting model with a wrapper token. Sablier is more 'vesting-native'; Superfluid is more 'payments-native'." },
-          { q: "Does Superfluid support tranched vesting?", a: "Not natively — Superfluid is flow-first. For tranched schedules, Sablier's LockupTranched is a better fit." },
+          { q: "Does Superfluid support tranched vesting?", a: "Not natively – Superfluid is flow-first. For tranched schedules, Sablier's LockupTranched is a better fit." },
         ],
       },
     ],
@@ -3675,7 +3675,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Cliffs alone (without a subsequent linear phase) are less common — they create cliff-day chaos when the entire allocation lands in one transaction.",
+        html: "Cliffs alone (without a subsequent linear phase) are less common – they create cliff-day chaos when the entire allocation lands in one transaction.",
       },
 
       { type: "h2", text: "Linear Vesting: When and Why" },
@@ -3743,7 +3743,7 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "Publish the schedule as both a chart and a table — different audiences read different formats.",
+          "Publish the schedule as both a chart and a table – different audiences read different formats.",
           "List unlock dates explicitly. 'Q3 2026' is fine; '92 days from TGE' is better.",
           "Disclose the underlying protocol and contract address. <a href=\"/resources/how-to-read-a-vesting-schedule\">Anyone should be able to verify your schedule on-chain</a>.",
           "If you change anything mid-flight (e.g. extend a cliff voluntarily), publish the new schedule the same way.",
@@ -3762,7 +3762,7 @@ const articles: Article[] = [
       {
         type: "faq",
         items: [
-          { q: "Is cliff vesting always better than linear?", a: "No. Cliffs are a retention test — they only make sense when continued contribution from the recipient matters. For investors, smaller cliffs plus longer linear is often a better fit." },
+          { q: "Is cliff vesting always better than linear?", a: "No. Cliffs are a retention test – they only make sense when continued contribution from the recipient matters. For investors, smaller cliffs plus longer linear is often a better fit." },
           { q: "Can I have multiple cliffs in one schedule?", a: "Most protocols support only a single cliff. If you need multiple cliffs, you typically chain multiple separate vesting positions or use a tranched product like Sablier's LockupTranched." },
           { q: "What's the standard cliff length?", a: "12 months for founders and team, 6 months for advisors, 6-12 months for seed investors. Shorter cliffs (3 months) are common for community contributors." },
           { q: "Do cliffs reduce sell pressure?", a: "They concentrate it. Without subsequent linear release, a cliff produces a single 'cliff day' of intense selling. Pair every meaningful cliff with a long linear tail to smooth this out." },
@@ -3775,7 +3775,7 @@ const articles: Article[] = [
   {
     slug:        "how-to-read-a-vesting-schedule",
     title:       "How to Read a Vesting Schedule: A Beginner's Guide",
-    excerpt:     "Cliff date, vesting end, claimable now, total amount — the same five fields appear on every vesting protocol. Here is how to read them.",
+    excerpt:     "Cliff date, vesting end, claimable now, total amount – the same five fields appear on every vesting protocol. Here is how to read them.",
     publishedAt: "2026-04-27",
     updatedAt:   "2026-04-27",
     readingTime: "8 min read",
@@ -3784,7 +3784,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you have just received tokens from a project and someone has handed you a 'vesting schedule', the document might look intimidating — dates, percentages, tranches, claim functions. It isn't. Every vesting schedule, on every protocol, ultimately answers the same five questions.",
+        html: "If you have just received tokens from a project and someone has handed you a 'vesting schedule', the document might look intimidating – dates, percentages, tranches, claim functions. It isn't. Every vesting schedule, on every protocol, ultimately answers the same five questions.",
       },
       {
         type: "p",
@@ -3795,18 +3795,18 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>How much?</strong> — the total amount of tokens locked in this vest.",
-          "<strong>When did it start?</strong> — the timestamp from which unlocks are calculated.",
-          "<strong>When does it end?</strong> — the timestamp at which 100% has unlocked.",
-          "<strong>What about the cliff?</strong> — the timestamp before which zero is claimable.",
-          "<strong>How much can I claim right now?</strong> — the unlocked-but-not-yet-withdrawn balance.",
+          "<strong>How much?</strong> – the total amount of tokens locked in this vest.",
+          "<strong>When did it start?</strong> – the timestamp from which unlocks are calculated.",
+          "<strong>When does it end?</strong> – the timestamp at which 100% has unlocked.",
+          "<strong>What about the cliff?</strong> – the timestamp before which zero is claimable.",
+          "<strong>How much can I claim right now?</strong> – the unlocked-but-not-yet-withdrawn balance.",
         ],
       },
       {
         type: "callout",
         emoji: "🧭",
         title: "Five fields, every protocol",
-        body:  "Total amount, start time, end time, cliff time, claimable now. Once you can answer those five, you understand the schedule — regardless of which protocol or chain hosts it.",
+        body:  "Total amount, start time, end time, cliff time, claimable now. Once you can answer those five, you understand the schedule – regardless of which protocol or chain hosts it.",
       },
 
       { type: "h2", text: "Term-by-Term Breakdown" },
@@ -3819,11 +3819,11 @@ const articles: Article[] = [
         items: [
           "<strong>Total amount (a.k.a. depositedAmount):</strong> the full size of the locked allocation. This is fixed at creation and does not change.",
           "<strong>Vesting start (a.k.a. startTime, start, startEmission):</strong> the unix timestamp from which time-based release begins.",
-          "<strong>Vesting end (a.k.a. endTime, end, endEmission):</strong> the unix timestamp at which the schedule completes — 100% unlocked.",
+          "<strong>Vesting end (a.k.a. endTime, end, endEmission):</strong> the unix timestamp at which the schedule completes – 100% unlocked.",
           "<strong>Cliff date (a.k.a. cliffTime, cliff):</strong> if non-zero, the timestamp before which zero tokens are claimable. At the cliff, the pro-rata portion for the cliff period unlocks at once.",
           "<strong>Claimable now (a.k.a. withdrawable, claimable):</strong> the dollar-or-token amount available to withdraw as of right now.",
           "<strong>Withdrawn amount (a.k.a. withdrawnAmount):</strong> the cumulative amount the recipient has already pulled.",
-          "<strong>Locked amount:</strong> total amount minus withdrawn amount minus claimable now — the future portion still under lock.",
+          "<strong>Locked amount:</strong> total amount minus withdrawn amount minus claimable now – the future portion still under lock.",
           "<strong>Claim cadence:</strong> how often you can call the claim function. Most protocols are continuous (call any time); some are tranched (only at unlock events).",
         ],
       },
@@ -3868,7 +3868,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "* UNCX models cliff differently — see <a href=\"/resources/uncx-token-lockers-and-vesting\">our UNCX guide</a> for the specifics. The end result is the same: zero claimable until the cliff, then the catch-up amount unlocks.",
+        html: "* UNCX models cliff differently – see <a href=\"/resources/uncx-token-lockers-and-vesting\">our UNCX guide</a> for the specifics. The end result is the same: zero claimable until the cliff, then the catch-up amount unlocks.",
       },
 
       { type: "h2", text: "How to Verify a Schedule On-Chain" },
@@ -3916,9 +3916,9 @@ const articles: Article[] = [
       {
         type: "faq",
         items: [
-          { q: "Why does my claimable balance never seem to update on the protocol's own page?", a: "Most UIs cache for performance. The on-chain truth always updates per block — try refreshing or query the contract directly. Vestream re-fetches per-stream when you open the card." },
-          { q: "What does 'fully vested' mean?", a: "All tokens have unlocked — i.e. the current time is past the end timestamp. Fully vested doesn't mean fully claimed; you may still need to call the withdraw function to move them to your wallet." },
-          { q: "What if my schedule was changed after the fact?", a: "On most protocols this is impossible — the schedule is immutable once created. If a project claims to have changed your schedule, ask them to point at the new on-chain position. There should be a fresh contract or a fresh sub-position." },
+          { q: "Why does my claimable balance never seem to update on the protocol's own page?", a: "Most UIs cache for performance. The on-chain truth always updates per block – try refreshing or query the contract directly. Vestream re-fetches per-stream when you open the card." },
+          { q: "What does 'fully vested' mean?", a: "All tokens have unlocked – i.e. the current time is past the end timestamp. Fully vested doesn't mean fully claimed; you may still need to call the withdraw function to move them to your wallet." },
+          { q: "What if my schedule was changed after the fact?", a: "On most protocols this is impossible – the schedule is immutable once created. If a project claims to have changed your schedule, ask them to point at the new on-chain position. There should be a fresh contract or a fresh sub-position." },
           { q: "Do I need to claim before vesting ends?", a: "No. Once vested, tokens remain claimable indefinitely. You can wait until the schedule completes and withdraw the full amount in one transaction if gas costs matter to you." },
         ],
       },
@@ -3929,7 +3929,7 @@ const articles: Article[] = [
   {
     slug:        "token-vesting-tax-guide",
     title:       "How to File Taxes on Token Vesting Income (And the One Spreadsheet That Saves You Hours)",
-    excerpt:     "Vesting income is taxable — but the rules vary by country. Here's how the major jurisdictions treat it, what tax software needs from you, and how to stop reconciling claim history by hand.",
+    excerpt:     "Vesting income is taxable – but the rules vary by country. Here's how the major jurisdictions treat it, what tax software needs from you, and how to stop reconciling claim history by hand.",
     publishedAt: "2026-04-28",
     updatedAt:   "2026-04-28",
     readingTime: "12 min read",
@@ -3938,7 +3938,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you've received tokens through vesting — as a founder, an early investor, an employee, an advisor, or via an airdrop with vesting attached — you have a tax problem most people misunderstand. <strong>Each tranche of vesting tokens is its own tax event.</strong> Not TGE. Not when you eventually sell. Each individual unlock or claim — depending on your jurisdiction — is a separate income-tax moment, valued in your local currency at that exact moment.",
+        html: "If you've received tokens through vesting – as a founder, an early investor, an employee, an advisor, or via an airdrop with vesting attached – you have a tax problem most people misunderstand. <strong>Each tranche of vesting tokens is its own tax event.</strong> Not TGE. Not when you eventually sell. Each individual unlock or claim – depending on your jurisdiction – is a separate income-tax moment, valued in your local currency at that exact moment.",
       },
       {
         type: "p",
@@ -3972,9 +3972,9 @@ const articles: Article[] = [
         type: "table",
         headers: ["Jurisdiction", "Receipt event", "Practical consequence"],
         rows: [
-          ["United States (IRS)",  "When you claim — i.e. tokens move from the vesting contract into your wallet",          "If tokens are unlocked but you haven't claimed, no tax event yet (subject to constructive-receipt arguments)"],
-          ["United Kingdom (HMRC)","When tokens are beneficially owned — typically the unlock date, even if unclaimed",   "You can owe tax on tokens you haven't physically received in your wallet yet (similar to RSU treatment)"],
-          ["Australia (ATO)",      "Generally when you have legal ownership and control — often the unlock date",          "Similar to UK — unlocked-but-unclaimed tokens may be taxable"],
+          ["United States (IRS)",  "When you claim – i.e. tokens move from the vesting contract into your wallet",          "If tokens are unlocked but you haven't claimed, no tax event yet (subject to constructive-receipt arguments)"],
+          ["United Kingdom (HMRC)","When tokens are beneficially owned – typically the unlock date, even if unclaimed",   "You can owe tax on tokens you haven't physically received in your wallet yet (similar to RSU treatment)"],
+          ["Australia (ATO)",      "Generally when you have legal ownership and control – often the unlock date",          "Similar to UK – unlocked-but-unclaimed tokens may be taxable"],
           ["Canada (CRA)",         "When tokens are received, with employment-context cases nuanced",                       "Closer to US treatment for most cases; talk to an accountant if employment-related"],
           ["Germany",              "When tokens are received; tax-free after 1-year hold",                                  "Closer to US treatment; the holding-period clock starts at receipt"],
         ],
@@ -3983,17 +3983,17 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🧾",
         title: "Two transactions, two tax events",
-        body:  "When you claim 10,000 tokens at $5 each: $50,000 of income (taxed in the year of receipt under your local rules). When you sell them later at $8: $30,000 of capital gain. The $5 cost basis comes from the receipt event — get it wrong, and your eventual capital-gains calculation is wrong too.",
+        body:  "When you claim 10,000 tokens at $5 each: $50,000 of income (taxed in the year of receipt under your local rules). When you sell them later at $8: $30,000 of capital gain. The $5 cost basis comes from the receipt event – get it wrong, and your eventual capital-gains calculation is wrong too.",
       },
       {
         type: "p",
-        html: "This means the <strong>value-at-receipt</strong> is the most consequential single number in your year-end vesting tax position. Get it right and everything else flows. Get it wrong — by using TGE price, year-end price, or \"I'll figure it out later\" — and you risk under- or over-paying both income tax now AND capital-gains tax later.",
+        html: "This means the <strong>value-at-receipt</strong> is the most consequential single number in your year-end vesting tax position. Get it right and everything else flows. Get it wrong – by using TGE price, year-end price, or \"I'll figure it out later\" – and you risk under- or over-paying both income tax now AND capital-gains tax later.",
       },
 
       { type: "h2", text: "Vestream's Data Model: We Capture Claim Events" },
       {
         type: "p",
-        html: "Important to understand what Vestream tracks: <strong>we index every on-chain claim transaction</strong> — the moment tokens leave the vesting contract and arrive in your wallet. For US filers, that's exactly the right tax event. For UK / Australia filers whose receipt event is the unlock date (not the claim), our claim-date data is still useful — but you'll need to map it forward to the unlock dates yourself or with your accountant.",
+        html: "Important to understand what Vestream tracks: <strong>we index every on-chain claim transaction</strong> – the moment tokens leave the vesting contract and arrive in your wallet. For US filers, that's exactly the right tax event. For UK / Australia filers whose receipt event is the unlock date (not the claim), our claim-date data is still useful – but you'll need to map it forward to the unlock dates yourself or with your accountant.",
       },
       {
         type: "ul",
@@ -4007,7 +4007,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🛣️",
         title: "On the roadmap",
-        body:  "We're scoping unlock-date tax-basis exports for HMRC / ATO users — surfacing both the unlock schedule AND the claim history side-by-side, so the right basis is one click away regardless of jurisdiction. If this matters to you, ping us via the contact form so we know to prioritise it.",
+        body:  "We're scoping unlock-date tax-basis exports for HMRC / ATO users – surfacing both the unlock schedule AND the claim history side-by-side, so the right basis is one click away regardless of jurisdiction. If this matters to you, ping us via the contact form so we know to prioritise it.",
       },
 
       { type: "h2", text: "What Counts as a 'Claim Event'?" },
@@ -4019,18 +4019,18 @@ const articles: Article[] = [
         type: "table",
         headers: ["Protocol",       "On-chain event name",          "Notes"],
         rows: [
-          ["Sablier",                "Withdraw / withdrawMax",        "Continuous streaming — claim any time after start"],
+          ["Sablier",                "Withdraw / withdrawMax",        "Continuous streaming – claim any time after start"],
           ["Hedgey",                 "PlanRedeemed",                  "Per-plan redemption against an NFT"],
           ["UNCX (V3 + VM)",         "WithdrawEvent / TokensReleased","Each unlock is a discrete event"],
           ["Unvest",                 "Claim",                         "Per-milestone or pro-rata draws"],
           ["Superfluid",             "VestingCliffAndFlowExecuted",   "Cliff payouts are discrete; continuous flow accrues every second"],
           ["PinkSale",               "LockUnlocked",                  "Cycle-based unlocks"],
-          ["Streamflow / Jupiter Lock","Withdraw instruction",        "Solana — recorded against the program account"],
+          ["Streamflow / Jupiter Lock","Withdraw instruction",        "Solana – recorded against the program account"],
         ],
       },
       {
         type: "p",
-        html: "The on-chain claim transaction is what Vestream indexes. <strong>Whether the claim is also the tax event depends on your jurisdiction</strong> (see the table further up). For US/Canada/Germany filers, the claim is the tax event. For UK/Australia filers, the unlock date can be earlier — your accountant maps Vestream's claim records back against the unlock schedule to assign income to the right tax year.",
+        html: "The on-chain claim transaction is what Vestream indexes. <strong>Whether the claim is also the tax event depends on your jurisdiction</strong> (see the table further up). For US/Canada/Germany filers, the claim is the tax event. For UK/Australia filers, the unlock date can be earlier – your accountant maps Vestream's claim records back against the unlock schedule to assign income to the right tax year.",
       },
 
       { type: "h2", text: "The Five Pieces of Information You Need Per Claim" },
@@ -4041,7 +4041,7 @@ const articles: Article[] = [
       {
         type: "ol",
         items: [
-          "<strong>Date and time</strong> (UTC, to the second — block timestamp).",
+          "<strong>Date and time</strong> (UTC, to the second – block timestamp).",
           "<strong>Token symbol and contract address</strong> (so software can match cost basis on later sales).",
           "<strong>Quantity claimed</strong>, in whole token units (not raw on-chain wei).",
           "<strong>USD value at claim</strong>, computed from the historical price on that exact date.",
@@ -4052,7 +4052,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📋",
         title: "Why all five matter",
-        body:  "Tax software groups by token symbol + chain to track cost basis lots over time. If you skip the contract address, two tokens with the same symbol on different chains get merged. If you skip the tx hash, re-imports double-count. If you skip the historical price, the software guesses — usually wrong.",
+        body:  "Tax software groups by token symbol + chain to track cost basis lots over time. If you skip the contract address, two tokens with the same symbol on different chains get merged. If you skip the tx hash, re-imports double-count. If you skip the historical price, the software guesses – usually wrong.",
       },
 
       { type: "h2", text: "How to Compute Historical Prices (And Why You Probably Shouldn't)" },
@@ -4077,7 +4077,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "It's about 200 lines of code per dimension — token resolution, rate-limit-aware fetching, caching, fallback ladder. Vestream does this once, server-side, with a 7-day fallback window and price-confidence flags so you know which numbers are exact-day vs nearest-day vs missing.",
+        html: "It's about 200 lines of code per dimension – token resolution, rate-limit-aware fetching, caching, fallback ladder. Vestream does this once, server-side, with a 7-day fallback window and price-confidence flags so you know which numbers are exact-day vs nearest-day vs missing.",
       },
 
       { type: "h2", text: "What Koinly, CoinTracker, and TurboTax Each Want" },
@@ -4091,12 +4091,12 @@ const articles: Article[] = [
         rows: [
           ["Koinly",             "Settings → Wallets → Add → Custom CSV", "Date, Sent Amount + Currency, Received Amount + Currency, Label, TxHash, Description"],
           ["CoinTracker",        "Add Wallet → Generic CSV upload",       "Date, Received Quantity + Currency, Sent Quantity + Currency, Fee, Tag, Tx Hash"],
-          ["TurboTax",           "Investments → Crypto → Upload CSV",     "Symbol, Quantity, Date Acquired, Date Sold, Cost Basis, Proceeds (vesting income goes in via 'other income' — Vestream's TurboTax format flags each row appropriately)"],
+          ["TurboTax",           "Investments → Crypto → Upload CSV",     "Symbol, Quantity, Date Acquired, Date Sold, Cost Basis, Proceeds (vesting income goes in via 'other income' – Vestream's TurboTax format flags each row appropriately)"],
         ],
       },
       {
         type: "p",
-        html: "All three CSVs need the same five fields per claim — date, token, quantity, USD value, tx hash — they just label and order them differently. Vestream's Exports tab generates each format exactly to spec.",
+        html: "All three CSVs need the same five fields per claim – date, token, quantity, USD value, tx hash – they just label and order them differently. Vestream's Exports tab generates each format exactly to spec.",
       },
 
       { type: "h2", text: "The 60-Second Workflow on Vestream" },
@@ -4114,18 +4114,18 @@ const articles: Article[] = [
         type: "callout",
         emoji: "⚡",
         title: "What the workflow replaces",
-        body:  "Without Vestream, the equivalent is: open every protocol's UI, scroll back through your claim history, copy each claim into a spreadsheet, look up the historical USD price for each row by hand, paste into the right tax-software CSV format, hope you didn't miss any. We've timed it — about 6 hours for a 50-claim year, with material risk of getting the historical prices wrong.",
+        body:  "Without Vestream, the equivalent is: open every protocol's UI, scroll back through your claim history, copy each claim into a spreadsheet, look up the historical USD price for each row by hand, paste into the right tax-software CSV format, hope you didn't miss any. We've timed it – about 6 hours for a 50-claim year, with material risk of getting the historical prices wrong.",
       },
 
       { type: "h2", text: "Edge Cases Worth Knowing" },
       {
         type: "ul",
         items: [
-          "<strong>Continuous streams (Sablier, Superfluid):</strong> when you call <code>withdraw</code>, you receive everything that has accrued since the last withdrawal. That single transaction is one tax event — you don't pro-rate it across the days the tokens were accruing. The block timestamp of the withdraw is the canonical receipt date.",
+          "<strong>Continuous streams (Sablier, Superfluid):</strong> when you call <code>withdraw</code>, you receive everything that has accrued since the last withdrawal. That single transaction is one tax event – you don't pro-rate it across the days the tokens were accruing. The block timestamp of the withdraw is the canonical receipt date.",
           "<strong>Cliff unlocks:</strong> if a 6-month cliff unlocks 25% on day 180, the tax event timing depends on jurisdiction. In the US, the tax event happens when you <em>claim</em> those tokens, valued at the claim-date price. In the UK / Australia, the tax event can be the unlock date itself (day 180) regardless of when you claim. The price you use therefore differs: claim-date price for US, unlock-date price for UK/AU. Vestream surfaces the claim record; your accountant applies the right rule.",
-          "<strong>Cancelled vests:</strong> if a stream is cancelled by the sender (cancellable vests), tokens already claimed are still income for the year they were claimed — the cancellation doesn't reverse it.",
+          "<strong>Cancelled vests:</strong> if a stream is cancelled by the sender (cancellable vests), tokens already claimed are still income for the year they were claimed – the cancellation doesn't reverse it.",
           "<strong>Re-vesting / topped-up vests:</strong> some protocols allow the sender to add tokens to an existing vest. New tokens have their own clock; new claims against them are new tax events, valued at the new claim date.",
-          "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. Vestream uses a snapshot-diff model — the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
+          "<strong>Non-EVM chains (Solana):</strong> Streamflow and Jupiter Lock store cumulative claimed amounts on-chain rather than per-event logs. Vestream uses a snapshot-diff model – the first refresh after you sign up captures pre-existing history as one baseline event; subsequent refreshes track new claims individually.",
         ],
       },
 
@@ -4147,7 +4147,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Vestream does not provide tax advice. Use the data we surface to populate forms with your accountant. The CSV exports map cleanly to the import flows of Koinly, CoinTracker, and TurboTax — which themselves map to the right line items on the relevant local return.",
+        html: "Vestream does not provide tax advice. Use the data we surface to populate forms with your accountant. The CSV exports map cleanly to the import flows of Koinly, CoinTracker, and TurboTax – which themselves map to the right line items on the relevant local return.",
       },
 
       { type: "h2", text: "FAQ" },
@@ -4155,22 +4155,22 @@ const articles: Article[] = [
         type: "faq",
         items: [
           { q: "Are vested-but-unclaimed tokens taxable?",
-            a: "Depends on your country. In the US (and most of the EU + Canada + Germany), the answer is no — taxation triggers on the claim transaction, when tokens move into your wallet. In the UK (HMRC) and Australia (ATO), tokens that have unlocked but not yet been claimed CAN already be taxable — the test is beneficial ownership, not physical receipt. If you're a UK/AU filer with unlocked-but-unclaimed tokens at year-end, talk to a local accountant before assuming there's no liability."
+            a: "Depends on your country. In the US (and most of the EU + Canada + Germany), the answer is no – taxation triggers on the claim transaction, when tokens move into your wallet. In the UK (HMRC) and Australia (ATO), tokens that have unlocked but not yet been claimed CAN already be taxable – the test is beneficial ownership, not physical receipt. If you're a UK/AU filer with unlocked-but-unclaimed tokens at year-end, talk to a local accountant before assuming there's no liability."
           },
           { q: "What if the token had no liquid market on the claim date?",
-            a: "You'll need a manual cost basis. Vestream flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero — talk to your accountant before settling on a method."
+            a: "You'll need a manual cost basis. Vestream flags these as 'missing' price confidence. Common practice is to use the most recent OTC sale price, the project's most recent funding-round valuation, or zero – talk to your accountant before settling on a method."
           },
           { q: "Can I just enter total annual income at year-end and skip the per-claim detail?",
             a: "Tax software needs per-event detail to track cost basis lots for capital-gains calculations on later sales. Lumping everything into one annual receipt loses the per-token cost-basis lots you'll need when you eventually sell. Per-claim is the right granularity."
           },
           { q: "Does Vestream submit my taxes for me?",
-            a: "No. Vestream produces the data your accountant or tax software needs. The actual filing is done in Koinly / CoinTracker / TurboTax / your accountant's tool of choice — Vestream's CSV imports cleanly into all of them."
+            a: "No. Vestream produces the data your accountant or tax software needs. The actual filing is done in Koinly / CoinTracker / TurboTax / your accountant's tool of choice – Vestream's CSV imports cleanly into all of them."
           },
           { q: "What if I claimed across multiple wallets in the same year?",
             a: "Add every receiving wallet to your Vestream dashboard. The Exports tab aggregates across all your tracked wallets, so the year-end report covers your entire vesting income regardless of which wallet received which claim."
           },
           { q: "Is the price I receive at claim the same as the cost basis for capital-gains later?",
-            a: "Yes — that's the whole point of the income-at-receipt rule. The USD value you report as income at the claim becomes your cost basis for that lot. When you sell, your gain/loss is (sale price − cost basis) per token."
+            a: "Yes – that's the whole point of the income-at-receipt rule. The USD value you report as income at the claim becomes your cost basis for that lot. When you sell, your gain/loss is (sale price − cost basis) per token."
           },
           { q: "What about staking / yield rewards on vested tokens?",
             a: "Treated separately. If you stake tokens you've already received, the staking rewards are their own income events with their own dates and cost bases. Vestream tracks vesting receipts; staking rewards need a separate tool or accountant entry."
@@ -4183,12 +4183,12 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📊",
         title: "Skip the 6-hour January reconciliation",
-        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 10 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax — in about 60 seconds.",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 10 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax – in about 60 seconds.",
       },
     ],
   },
 
-  // ── Article 22 — Worker-pivot SEO surface ────────────────────────────────────
+  // ── Article 22 – Worker-pivot SEO surface ────────────────────────────────────
   // Targets the "I get paid in crypto" search audience (DAO contributors,
   // remote contractors, grant recipients). Distinct enough from the
   // existing investor-flavoured tax guide that both can rank without
@@ -4196,7 +4196,7 @@ const articles: Article[] = [
   {
     slug:        "crypto-payroll-and-contributor-income-guide",
     title:       "Crypto Payroll & Contributor Income: A Practical 2026 Guide",
-    excerpt:     "Getting paid in tokens is now mainstream — DAO contributors, crypto-native contractors, and grant recipients all need to track receipts, runway, and tax. Here is how it works, what your tax authority expects, and how to never miss a payslip.",
+    excerpt:     "Getting paid in tokens is now mainstream – DAO contributors, crypto-native contractors, and grant recipients all need to track receipts, runway, and tax. Here is how it works, what your tax authority expects, and how to never miss a payslip.",
     publishedAt: "2026-05-03",
     updatedAt:   "2026-05-03",
     readingTime: "10 min read",
@@ -4205,7 +4205,7 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you are paid in tokens — by a DAO, a remote-first crypto company, a grant programme, or as a contractor billing in stablecoins — you are already part of the fastest-growing slice of crypto's recipient-side economy. <strong>This is not investor vesting</strong>. It is payroll, and it is taxed completely differently.",
+        html: "If you are paid in tokens – by a DAO, a remote-first crypto company, a grant programme, or as a contractor billing in stablecoins – you are already part of the fastest-growing slice of crypto's recipient-side economy. <strong>This is not investor vesting</strong>. It is payroll, and it is taxed completely differently.",
       },
       {
         type: "p",
@@ -4223,16 +4223,16 @@ const articles: Article[] = [
         type: "p",
         html: "Three patterns dominate the recipient side of token payroll right now. Each has a different feel; understanding which one your payer uses helps you reason about cashflow.",
       },
-      { type: "h3", text: "Pattern 1 — Continuous per-second streaming" },
+      { type: "h3", text: "Pattern 1 – Continuous per-second streaming" },
       {
         type: "p",
-        html: "<strong>LlamaPay</strong> and <strong>Sablier Flow</strong> are the dominant rails. Your employer creates a stream from their treasury to your wallet at a set rate — say <code>$5,000/month / 30 / 24 / 60 / 60 ≈ $0.00193 per second</code>. The contract literally accrues your balance one second at a time. You can withdraw any time; whatever you do not withdraw stays earning in the contract.",
+        html: "<strong>LlamaPay</strong> and <strong>Sablier Flow</strong> are the dominant rails. Your employer creates a stream from their treasury to your wallet at a set rate – say <code>$5,000/month / 30 / 24 / 60 / 60 ≈ $0.00193 per second</code>. The contract literally accrues your balance one second at a time. You can withdraw any time; whatever you do not withdraw stays earning in the contract.",
       },
       {
         type: "p",
         html: "This is how crypto-native companies pay because it cancels two things working in real-world payroll: (a) the awkward two-week lag between work done and money received, and (b) the operational overhead of running a payroll cycle. The treasury just deposits a quarter's runway and the math handles itself.",
       },
-      { type: "h3", text: "Pattern 2 — Cliff + linear vesting" },
+      { type: "h3", text: "Pattern 2 – Cliff + linear vesting" },
       {
         type: "p",
         html: "Common for team token grants and longer-tenure contributor agreements. <strong>Sablier Lockup</strong> and <strong>Hedgey</strong> are the typical rails. You receive a non-transferable claim against a pool of tokens that unlocks linearly (often after a 6-12 month cliff) over 2-4 years. Each unlock is taxable income at FMV-on-receipt.",
@@ -4241,10 +4241,10 @@ const articles: Article[] = [
         type: "p",
         html: "If you have BOTH a streaming salary AND a longer vesting grant from the same employer, you have two simultaneous tax events on different cadences. The streaming side is usually higher-frequency-lower-volume; the vesting side is lower-frequency-higher-volume. They go on the same return but you'll want to track them separately.",
       },
-      { type: "h3", text: "Pattern 3 — Milestone or one-shot grants" },
+      { type: "h3", text: "Pattern 3 – Milestone or one-shot grants" },
       {
         type: "p",
-        html: "Grant programmes (Optimism RetroPGF, Arbitrum STIP, Gitcoin rounds) and bounty platforms drop tokens to recipients on milestone completion. No vesting, no stream — just a transfer. Tax treatment is identical to streaming: ordinary income at FMV on the date of receipt.",
+        html: "Grant programmes (Optimism RetroPGF, Arbitrum STIP, Gitcoin rounds) and bounty platforms drop tokens to recipients on milestone completion. No vesting, no stream – just a transfer. Tax treatment is identical to streaming: ordinary income at FMV on the date of receipt.",
       },
 
       { type: "h2", text: "What Your Tax Authority Expects" },
@@ -4255,11 +4255,11 @@ const articles: Article[] = [
       { type: "h3", text: "United States" },
       {
         type: "p",
-        html: "If you are a contractor (1099-NEC), you owe tax on <strong>gross income at FMV-on-receipt</strong> — no deduction for the fact you held the token instead of selling immediately. Goes on Schedule C (self-employment) or as Other Income on Schedule 1, depending on whether crypto-paid contracting is a trade-or-business for you.",
+        html: "If you are a contractor (1099-NEC), you owe tax on <strong>gross income at FMV-on-receipt</strong> – no deduction for the fact you held the token instead of selling immediately. Goes on Schedule C (self-employment) or as Other Income on Schedule 1, depending on whether crypto-paid contracting is a trade-or-business for you.",
       },
       {
         type: "p",
-        html: "Each receipt also establishes a <strong>cost basis</strong> equal to the FMV used as income. When you later sell or convert that token, your capital gain or loss is calculated against that basis. Lose track of basis and you double-pay tax — once at receipt, again on the entire sale price as if it were pure profit.",
+        html: "Each receipt also establishes a <strong>cost basis</strong> equal to the FMV used as income. When you later sell or convert that token, your capital gain or loss is calculated against that basis. Lose track of basis and you double-pay tax – once at receipt, again on the entire sale price as if it were pure profit.",
       },
       { type: "h3", text: "United Kingdom" },
       {
@@ -4268,7 +4268,7 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Convert each receipt to GBP using HMRC's published exchange rates — they publish monthly averages and yearly averages on gov.uk. The choice of rate (transaction-time vs year-end average) is a documentable methodology; pick one and apply it consistently across the year.",
+        html: "Convert each receipt to GBP using HMRC's published exchange rates – they publish monthly averages and yearly averages on gov.uk. The choice of rate (transaction-time vs year-end average) is a documentable methodology; pick one and apply it consistently across the year.",
       },
       { type: "h3", text: "Other jurisdictions" },
       {
@@ -4297,13 +4297,13 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "Operationally, claim quarterly. Gas costs are a rounding error compared to the bookkeeping clarity of having physical receipts every 3 months. If you absolutely never claim until year-end, talk to your accountant about whether your jurisdiction wants you to recognise unrealised stream balance as income during the year — most don't, but the answer is jurisdiction-specific.",
+        html: "Operationally, claim quarterly. Gas costs are a rounding error compared to the bookkeeping clarity of having physical receipts every 3 months. If you absolutely never claim until year-end, talk to your accountant about whether your jurisdiction wants you to recognise unrealised stream balance as income during the year – most don't, but the answer is jurisdiction-specific.",
       },
 
       { type: "h2", text: "Where Vesting and Streaming Coexist" },
       {
         type: "p",
-        html: "Many contributors have both — a streaming salary AND a longer-term token grant. Both are income, both go on the same return, but the receipts behave differently in tax software:",
+        html: "Many contributors have both – a streaming salary AND a longer-term token grant. Both are income, both go on the same return, but the receipts behave differently in tax software:",
       },
       {
         type: "table",
@@ -4312,7 +4312,7 @@ const articles: Article[] = [
           ["Tax category",         "Ordinary income",   "Ordinary income"],
           ["Frequency",             "Per claim (often quarterly in practice)", "Per unlock event (monthly / quarterly / annually)"],
           ["FMV basis",             "Date of withdrawal",                       "Date of unlock (tx hash)"],
-          ["Cost basis carry-over", "Yes — at the FMV used as income",          "Yes — at the FMV used as income"],
+          ["Cost basis carry-over", "Yes – at the FMV used as income",          "Yes – at the FMV used as income"],
           ["US form",               "Schedule C / 1099-NEC summary",            "Schedule C / 1099-NEC summary (or Schedule 1 Other Income)"],
           ["UK form",               "SA103 turnover (box 9 / 15)",              "SA103 turnover (box 9 / 15)"],
         ],
@@ -4323,22 +4323,22 @@ const articles: Article[] = [
         type: "faq",
         items: [
           { q: "Is my crypto salary capital gains or ordinary income?",
-            a: "Ordinary income, almost everywhere. Capital gains apply to ASSETS YOU OWN that change in value — but tokens you receive as compensation aren't yours until you receive them, so the receipt itself is the income event. Later sales of those received tokens DO trigger capital gains, calculated against the cost basis you established at receipt."
+            a: "Ordinary income, almost everywhere. Capital gains apply to ASSETS YOU OWN that change in value – but tokens you receive as compensation aren't yours until you receive them, so the receipt itself is the income event. Later sales of those received tokens DO trigger capital gains, calculated against the cost basis you established at receipt."
           },
           { q: "Do I owe tax on a stream balance I haven't withdrawn?",
-            a: "Jurisdiction-specific. US, Canada, Germany, most of the EU: no — taxation is on withdrawal. UK and Australia: maybe — both use a beneficial-ownership test that can apply to streamed-but-unwithdrawn balance. When in doubt, withdraw at least quarterly and ask a local accountant before year-end."
+            a: "Jurisdiction-specific. US, Canada, Germany, most of the EU: no – taxation is on withdrawal. UK and Australia: maybe – both use a beneficial-ownership test that can apply to streamed-but-unwithdrawn balance. When in doubt, withdraw at least quarterly and ask a local accountant before year-end."
           },
           { q: "What if my employer pays me in their illiquid token instead of stablecoin?",
-            a: "You owe tax at FMV on the receipt date — same rule. The challenge is establishing FMV when there's no market. Common practice: use the most recent OTC sale, the most recent funding-round valuation, or zero. Whatever you choose, document it as your methodology and apply it consistently."
+            a: "You owe tax at FMV on the receipt date – same rule. The challenge is establishing FMV when there's no market. Common practice: use the most recent OTC sale, the most recent funding-round valuation, or zero. Whatever you choose, document it as your methodology and apply it consistently."
           },
           { q: "Can I deduct gas fees from my streaming salary?",
-            a: "If you're filing as self-employed (Schedule C / SA103F), gas paid to claim is a business expense — deductible. If you're treating crypto income as miscellaneous Other Income (Schedule 1) the answer is murkier; talk to your accountant. Vestream's exports include gas USD value per claim so the totals are easy to grab."
+            a: "If you're filing as self-employed (Schedule C / SA103F), gas paid to claim is a business expense – deductible. If you're treating crypto income as miscellaneous Other Income (Schedule 1) the answer is murkier; talk to your accountant. Vestream's exports include gas USD value per claim so the totals are easy to grab."
           },
           { q: "How does this compare to an investor vesting allocation?",
-            a: "Same tax category (ordinary income) but the relationship to capital-gains is different. Worker income at receipt establishes a cost basis; investors who SAFT-purchased tokens have a cost basis from purchase, not from unlock — the unlock just removes the time-lock. Vestream branches the income statement by audience so the framing matches: 'Vesting income' for investors, 'Crypto income' for workers, 'Token income' for those who are both."
+            a: "Same tax category (ordinary income) but the relationship to capital-gains is different. Worker income at receipt establishes a cost basis; investors who SAFT-purchased tokens have a cost basis from purchase, not from unlock – the unlock just removes the time-lock. Vestream branches the income statement by audience so the framing matches: 'Vesting income' for investors, 'Crypto income' for workers, 'Token income' for those who are both."
           },
           { q: "Does Vestream handle workers paid in tokens?",
-            a: "Yes — that's the worker side of the product. Add the streaming or grant contract address to your dashboard, set notifications, run the year-end Payroll Income CSV. The whole flow is symmetrical with the investor side; the difference is the tax export shape and the framing copy."
+            a: "Yes – that's the worker side of the product. Add the streaming or grant contract address to your dashboard, set notifications, run the year-end Payroll Income CSV. The whole flow is symmetrical with the investor side; the difference is the tax export shape and the framing copy."
           },
         ],
       },

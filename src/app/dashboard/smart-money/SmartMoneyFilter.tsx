@@ -5,7 +5,7 @@
 // Client-side filter pills + leaderboard list rendering.
 //
 // We rejected path-segment filters (/smart-money/evm) because the page is
-// ISR-cached and reading searchParams would dynamicize the route — same
+// ISR-cached and reading searchParams would dynamicize the route – same
 // landmine documented in CLAUDE.md. Instead, the parent server component
 // passes the full 100-row payload (small, ~30KB serialised), and this
 // client island toggles the slice based on the active filter.
@@ -44,16 +44,16 @@ const FILTERS: Array<{ id: Filter; label: string }> = [
 ];
 
 function shortAddr(a: string): string {
-  if (!a) return "—";
+  if (!a) return "–";
   return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
 // ── In-memory column sort ────────────────────────────────────────────────────
-// "rank" is the default — rows arrive rank-ordered (the cron's USD-weighted
+// "rank" is the default – rows arrive rank-ordered (the cron's USD-weighted
 // composite of locked value + token breadth), so rank IS the blended order.
 // The three numeric column labels toggle between asc/desc; clicking the active
 // one flips direction, clicking a new one resets to that column's natural
-// default (desc — biggest first).
+// default (desc – biggest first).
 type SortCol = "rank" | "locked" | "streams" | "tokens";
 type SortDir = "asc" | "desc";
 
@@ -72,7 +72,7 @@ function sortValue(r: SnapshotRow, col: SortCol): number {
 // Persist the active filter across navigation. Clicking a wallet leaves the
 // page (→ /dashboard/explorer); hitting Back re-mounts this island, which
 // otherwise reset to "all" and threw away the user's selection. sessionStorage
-// (not URL params) keeps it simple — no Suspense boundary or ISR-dynamization
+// (not URL params) keeps it simple – no Suspense boundary or ISR-dynamization
 // concerns, and it survives same-tab back-navigation.
 const FILTER_STORAGE_KEY = "vestream-smart-money-filter";
 function isFilter(v: string | null): v is Filter {
@@ -91,7 +91,7 @@ export function SmartMoneyFilter({ rows }: { rows: SnapshotRow[] }) {
     try {
       const saved = sessionStorage.getItem(FILTER_STORAGE_KEY);
       if (isFilter(saved)) setFilter(saved);
-    } catch { /* sessionStorage disabled — keep default */ }
+    } catch { /* sessionStorage disabled – keep default */ }
   }, []);
 
   function selectFilter(f: Filter) {
@@ -176,7 +176,7 @@ export function SmartMoneyFilter({ rows }: { rows: SnapshotRow[] }) {
       ) : (
         <div className="rounded-2xl overflow-hidden border"
           style={{ background: "var(--preview-card)", borderColor: "var(--preview-border)" }}>
-          {/* Sortable header — three numeric columns toggle in-memory sort. */}
+          {/* Sortable header – three numeric columns toggle in-memory sort. */}
           <div
             className="grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-2"
             style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}
@@ -271,12 +271,12 @@ function WalletRow({ row, showTopBorder }: { row: SnapshotRow; showTopBorder: bo
           ))}
         </div>
       </div>
-      {/* Locked USD — one of the two blend axes, so teal like Tokens. Hidden on
-          mobile to fit; "—" when the wallet's tokens are all unpriced. */}
+      {/* Locked USD – one of the two blend axes, so teal like Tokens. Hidden on
+          mobile to fit; "–" when the wallet's tokens are all unpriced. */}
       <div className="text-right hidden md:block tabular-nums">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Locked</p>
         <p className="text-sm font-bold" style={{ color: totalUsd != null && totalUsd > 0 ? "#0F8A8A" : "var(--preview-text-3)" }}>
-          {totalUsd != null && totalUsd > 0 ? formatUsdCompact(totalUsd) : "—"}
+          {totalUsd != null && totalUsd > 0 ? formatUsdCompact(totalUsd) : "–"}
         </p>
       </div>
       {/* Stream count */}
@@ -286,7 +286,7 @@ function WalletRow({ row, showTopBorder }: { row: SnapshotRow; showTopBorder: bo
           {row.streamCount.toLocaleString()}
         </p>
       </div>
-      {/* Distinct tokens — the other blend axis */}
+      {/* Distinct tokens – the other blend axis */}
       <div className="text-right tabular-nums">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Tokens</p>
         <p className="text-sm font-bold" style={{ color: "#0F8A8A" }}>

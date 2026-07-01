@@ -3,7 +3,7 @@
 // src/components/UpcomingUnlockTicker.tsx
 //
 // Forward-looking sibling to <LiveActivityTicker/>. Polls /api/unlocks/upcoming
-// and shows the next N scheduled unlock GROUPS across all protocols — with a
+// and shows the next N scheduled unlock GROUPS across all protocols – with a
 // live countdown that decrements every second on the client.
 //
 // ─── What's a "group" and why are we showing groups? ────────────────────────
@@ -11,14 +11,14 @@
 // The API endpoint groups raw stream rows by
 //   `(protocol, chainId, tokenAddress, ROUND(endTime, 3600))`
 // (1-hour bucket) before returning. A team distribution that pays 50 wallets
-// at the same hour collapses to one row — "50 wallets · 500K USDC · in 8h 41m"
-// — instead of producing 50 visually-identical rows. The 1-hour bucket
+// at the same hour collapses to one row – "50 wallets · 500K USDC · in 8h 41m"
+// – instead of producing 50 visually-identical rows. The 1-hour bucket
 // absorbs scheduling jitter (block-time variance, slightly staggered
 // schedules) without merging genuinely different events.
 //
 // When `walletCount === 1` the group is a single stream and we render the
 // legacy "for 0xabcd…1234" wallet-targeted format. When `walletCount > 1`
-// we switch to "N wallets" and drop the recipient line — the deep-link
+// we switch to "N wallets" and drop the recipient line – the deep-link
 // already points at the token-explorer page, which lists every recipient.
 //
 // ─── Coverage caveat ────────────────────────────────────────────────────────
@@ -26,13 +26,13 @@
 // This widget reads from `vestingStreamsCache`, which is per-user-seeded.
 // TVL is solved exhaustively at the token level, but the upcoming-unlocks
 // query doesn't yet have walker-backed coverage. Grouping helps even with
-// partial data; full coverage is a separate workstream — see the file
+// partial data; full coverage is a separate workstream – see the file
 // header on `src/app/api/unlocks/upcoming/route.ts`.
 //
 // Design goals:
 //   - Visual contrast with the "recent activity" ticker (different hue, orange
 //     accents instead of blue) so the two feeds clearly mean different things.
-//   - Countdown never goes stale — tick(1s) even between API polls.
+//   - Countdown never goes stale – tick(1s) even between API polls.
 //   - Empty state stays useful: "Indexing… first unlocks will appear here".
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ import { protocolBrand, protocolIcon } from "@/lib/protocol-constants";
  * wallet phrasing); `walletCount > 1` triggers the "N wallets" rollup.
  *
  * `streamId` and `recipient` carry the *first* (earliest) member of the
- * group — kept so single-stream groups behave like before, and so groups
+ * group – kept so single-stream groups behave like before, and so groups
  * still have a deterministic React key. New consumers should prefer
  * `groupKey` for keying.
  */
@@ -58,12 +58,12 @@ type UpcomingRow = {
   chainId:       number;
   tokenSymbol:   string | null;
   tokenAddress:  string;
-  tokenDecimals: number;   // needed to scale `amount` — defaults upstream to 18
+  tokenDecimals: number;   // needed to scale `amount` – defaults upstream to 18
   recipient:     string;   // earliest-in-group member; only shown when walletCount === 1
   amount:        string | null;  // sum of lockedAmount across the group, stringified bigint
   endTime:       number | null;  // earliest endTime in the group (drives the countdown)
-  walletCount:   number;          // ≥ 1 — distinct recipients folded into this group
-  streamCount:   number;          // ≥ walletCount — total streams folded in
+  walletCount:   number;          // ≥ 1 – distinct recipients folded into this group
+  streamCount:   number;          // ≥ walletCount – total streams folded in
   groupKey:      string;          // stable id for React `key=`
   /** Optional USD-equivalent attached server-side. Undefined when the
    *  token has no liquid DEX pair on its chain. */
@@ -78,18 +78,18 @@ type UpcomingResponse = {
 
 const POLL_MS     = 30_000;
 // Roughly matches the visual height of the sibling TvlComparisonBar
-// column (10 protocol rows since Team Finance was re-enabled — the TVL
+// column (10 protocol rows since Team Finance was re-enabled – the TVL
 // rows are taller than these ticker rows, so 15 ticker rows line the
-// two columns up). API is queried with the same limit — we cap at
+// two columns up). API is queried with the same limit – we cap at
 // MAX_VISIBLE; the slice+cap makes this a no-op when the set is smaller.
 const MAX_VISIBLE = 15;
 
-// Protocol brand colours come from the single source — protocolBrand() in
+// Protocol brand colours come from the single source – protocolBrand() in
 // protocol-constants.ts (replaces the local map this and LiveActivityTicker
 // each duplicated + drifted).
 
 // Use the canonical CHAIN_NAMES map (single source of truth) rather than a
-// local switch — a local copy silently dropped Arbitrum (42161), which
+// local switch – a local copy silently dropped Arbitrum (42161), which
 // rendered as "Chain 42161" in the ticker.
 function chainLabel(id: number): string {
   return CHAIN_NAMES[id as SupportedChainId] ?? `Chain ${id}`;
@@ -100,10 +100,10 @@ function truncAddr(a: string): string {
 }
 
 function formatAmount(raw: string | null, symbol: string | null, decimals = 18): string {
-  if (!raw) return symbol ?? "—";
+  if (!raw) return symbol ?? "–";
   let whole: number;
   try { whole = Number(BigInt(raw)) / 10 ** decimals; }
-  catch { return symbol ?? "—"; }
+  catch { return symbol ?? "–"; }
   const sym = symbol ? ` ${symbol}` : "";
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
@@ -128,7 +128,7 @@ function fmtUsdShort(usd: number): string {
 }
 
 function countdown(unlockSec: number | null, nowMs: number): string {
-  if (!unlockSec) return "—";
+  if (!unlockSec) return "–";
   const deltaSec = Math.max(0, unlockSec - Math.floor(nowMs / 1000));
   if (deltaSec < 60)       return `${deltaSec}s`;
   if (deltaSec < 3600)     return `${Math.floor(deltaSec / 60)} min`;
@@ -154,7 +154,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
     let cancelled = false;
     async function load() {
       try {
-        // No `cache: "no-store"` — that defeats the route's
+        // No `cache: "no-store"` – that defeats the route's
         // Cache-Control: s-maxage=300 edge cache and was hammering Postgres
         // every minute (XX000 EDBHANDLEREXITED + ECHECKOUTTIMEOUT cascades
         // observed 2026-05-03). Default fetch caching pairs with the
@@ -181,7 +181,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
 
   const rows = useMemo(() => (data?.unlocks ?? []).slice(0, MAX_VISIBLE), [data]);
 
-  // Aggregate stats for the sub-header — matches the confidence-band
+  // Aggregate stats for the sub-header – matches the confidence-band
   // sub-header on TvlComparisonBar so the two columns line up visually.
   // Soonest = countdown to the nearest upcoming unlock; "N protocols"
   // = distinct protocols represented in the current set.
@@ -213,7 +213,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
         boxShadow: "0 4px 24px rgba(240,153,46,0.07)",
       }}
     >
-      {/* Header strip — orange to contrast with the blue "live activity" feed */}
+      {/* Header strip – orange to contrast with the blue "live activity" feed */}
       <div
         className="flex items-center justify-between px-4 md:px-5 py-3 gap-3 flex-wrap"
         style={{
@@ -240,7 +240,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
         )}
       </div>
 
-      {/* Sub-header — mirrors the confidence-band strip on the TvlComparisonBar
+      {/* Sub-header – mirrors the confidence-band strip on the TvlComparisonBar
           sibling so the two columns line up visually. Shows the soonest unlock
           countdown + protocol diversity of the current set. */}
       {rows.length > 0 && (
@@ -274,7 +274,7 @@ export function UpcomingUnlockTicker({ initialData = null }: { initialData?: Upc
         </div>
       )}
 
-      {/* Rows — flex-1 so the list stretches to match the sibling column */}
+      {/* Rows – flex-1 so the list stretches to match the sibling column */}
       <div className="divide-y flex-1" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
         {err && !data && (
           <div className="px-4 md:px-5 py-6 text-center text-sm" style={{ color: "#94a3b8" }}>
@@ -318,13 +318,13 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
   const amount = formatAmount(row.amount, row.tokenSymbol, row.tokenDecimals);
   const ttl    = countdown(row.endTime, nowMs);
   const imminent = row.endTime != null && (row.endTime - Math.floor(nowMs / 1000)) < 3600; // under 1 h
-  // EVM 0x-hex OR Solana base58 — mirrors isLinkableTokenAddress() in
+  // EVM 0x-hex OR Solana base58 – mirrors isLinkableTokenAddress() in
   // chain-links.ts (inlined here to keep @solana/web3.js out of the client
   // bundle). Without the Solana branch every Streamflow / Jupiter Lock token
   // was un-clickable.
   const canLink  = !!row.tokenAddress &&
     (/^0x[0-9a-fA-F]{40}$/.test(row.tokenAddress) || /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(row.tokenAddress));
-  // walletCount may be undefined on legacy clients hitting an old API build —
+  // walletCount may be undefined on legacy clients hitting an old API build –
   // default to 1 so the row still renders the single-wallet format. (Once the
   // API and client are deployed together, this is always set.)
   const isGroup  = (row.walletCount ?? 1) > 1;
@@ -344,11 +344,12 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Single line — never wraps. The amount/symbol (long for Solana
-            base58 tickers) truncates with an ellipsis; the protocol + chain +
-            USD stay pinned at full size so the row layout can't break onto a
-            second line. */}
-        <div className="flex items-center gap-1.5 min-w-0 flex-nowrap">
+        {/* Line 1 – the important bit: token amount + symbol + USD. Given the
+            whole width so it never truncates on mobile (the protocol used to be
+            pinned here and stole the space, forcing "500.0K gato" → "500…").
+            The protocol is already shown by the logo avatar, so it moves to the
+            secondary line below. */}
+        <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm font-semibold truncate min-w-0" style={{ color: "#0f172a" }}>
             {amount}
           </span>
@@ -357,31 +358,25 @@ function UpcomingRow({ row, nowMs }: { row: UpcomingRow; nowMs: number }) {
               {fmtUsdShort(row.usdValue)}
             </span>
           )}
-          <span className="text-xs flex-shrink-0" style={{ color: "#94a3b8" }}>on</span>
-          <span className="text-xs font-semibold flex-shrink-0" style={{ color: meta.color }}>
+        </div>
+        {/* Line 2 – secondary: protocol · chain · recipient. The recipient
+            truncates here (not the amount). */}
+        <div className="flex items-center gap-1.5 min-w-0 text-[10.5px]">
+          <span className="font-semibold flex-shrink-0" style={{ color: meta.color }}>
             {meta.name}
           </span>
           <span
-            className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
+            className="px-1 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0"
             style={{ background: "rgba(0,0,0,0.04)", color: "#64748b" }}
           >
             {chainLabel(row.chainId)}
           </span>
-        </div>
-        <div className="text-[10.5px] font-mono truncate" style={{ color: "#94a3b8" }}>
-          {isGroup
-            // Group rollup — "50 wallets unlock together". The deep-link
-            // points at the token-explorer page, which already lists every
-            // recipient, so we don't need to enumerate addresses here.
-            ? <>
-                <span className="font-sans font-semibold" style={{ color: "#475569" }}>
-                  {row.walletCount}
-                </span>
-                {" "}wallets unlock together
-              </>
-            // Single-stream group — keep the legacy wallet-targeted phrasing.
-            : <>for {truncAddr(row.recipient)}</>
-          }
+          <span className="font-mono truncate min-w-0" style={{ color: "#94a3b8" }}>
+            {isGroup
+              ? <><span className="font-sans font-semibold" style={{ color: "#475569" }}>{row.walletCount}</span>{" "}wallets</>
+              : <>for {truncAddr(row.recipient)}</>
+            }
+          </span>
         </div>
       </div>
 

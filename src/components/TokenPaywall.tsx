@@ -5,19 +5,19 @@
 // Anonymous/free visitors get FREE_LIMIT distinct token pages, then a blurred
 // "get the app" overlay. Deliberately CLIENT-SIDE so SEO is untouched:
 //   - The page server-renders full content for everyone. Crawlers (which don't
-//     execute JS) therefore always see the complete page — no cloaking, no
+//     execute JS) therefore always see the complete page – no cloaking, no
 //     ranking hit, snippets intact.
 //   - The view counter lives in a client cookie set via document.cookie (never
 //     a Set-Cookie header), so the edge cache for /token/* stays shared and
-//     warm — the cached HTML is identical for every visitor.
+//     warm – the cached HTML is identical for every visitor.
 //   - Humans over the limit get the overlay applied post-hydration.
 //
 // Pro bypass: a logged-in user skips the wall entirely. The real session
-// cookie (`vestr_session`) is httpOnly so client JS can't read it — checking
+// cookie (`vestr_session`) is httpOnly so client JS can't read it – checking
 // for it here silently never matched, so Pro users got walled. Instead we read
 // `vestr_pro`, a READABLE companion cookie the middleware sets on every
 // authenticated /dashboard visit (see src/middleware.ts). Existence is a
-// sufficient proxy — this is a soft marketing gate, not a data-access control
+// sufficient proxy – this is a soft marketing gate, not a data-access control
 // (those live server-side on the gated APIs).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -45,12 +45,12 @@ function writeViewed(keys: string[]): void {
     const v = encodeURIComponent(JSON.stringify(keys.slice(-20)));
     document.cookie = `${VIEW_COOKIE}=${v}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
   } catch {
-    /* cookies disabled — visitor just won't be metered */
+    /* cookies disabled – visitor just won't be metered */
   }
 }
 
 function hasProSession(): boolean {
-  // vestr_pro is the readable companion to the httpOnly vestr_session — set by
+  // vestr_pro is the readable companion to the httpOnly vestr_session – set by
   // middleware for logged-in users (src/middleware.ts). httpOnly cookies aren't
   // visible to document.cookie, which is why checking vestr_session never worked.
   return /(?:^|; )vestr_pro=1/.test(document.cookie);
@@ -126,7 +126,7 @@ export function TokenPaywall({
         </h2>
         <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: "#64748b", lineHeight: 1.55 }}>
           Get the Vestream app to explore unlimited tokens{symbol ? `, track ${symbol},` : ""} and
-          get push alerts before every unlock — free on iOS &amp; Android.
+          get push alerts before every unlock – free on iOS &amp; Android.
         </p>
         <AppStoreBadges align="center" />
       </div>

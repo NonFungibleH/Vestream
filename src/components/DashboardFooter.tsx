@@ -8,7 +8,7 @@
 // with no local state. Hidden on mobile (md:flex) where the bottom nav owns
 // the bottom edge.
 //
-// Socials mirror the marketing SiteFooter — single source of handles would be
+// Socials mirror the marketing SiteFooter – single source of handles would be
 // nicer, but SiteFooter is "use client" with its own theming; duplicating the
 // three hrefs here is cheaper than coupling the two footers.
 // ─────────────────────────────────────────────────────────────────────────────

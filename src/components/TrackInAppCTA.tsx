@@ -3,7 +3,7 @@
 // TrackInAppCTA
 // ─────────────────────────────────────────────────────────────────────────────
 // "Track in app" CTA for the public find-vestings flow. Users on this page
-// have just scanned a wallet and seen results — the next thing they want is
+// have just scanned a wallet and seen results – the next thing they want is
 // "set and forget alerts on these in my pocket". We hand off context so the
 // mobile app's add-wallet sheet pre-populates with the wallet they just saw.
 //
@@ -26,7 +26,7 @@ interface Props {
   walletAddress?: string;
   /** Optional token symbol context (e.g. "NOVA"). Mobile pre-fills add-wallet. */
   tokenSymbol?: string;
-  /** Coarse surface tag for analytics — "find_vestings", "explore", etc. */
+  /** Coarse surface tag for analytics – "find_vestings", "explore", etc. */
   surface: string;
   className?: string;
   /** Inline style passthrough so callers can match local theming without a CSS file. */
@@ -57,7 +57,7 @@ export function TrackInAppCTA({ walletAddress, tokenSymbol, surface, className, 
     // Try the deep link first.
     window.location.href = deepLink;
 
-    // If the app isn't installed, mobile Safari stays on the page — we punt
+    // If the app isn't installed, mobile Safari stays on the page – we punt
     // to the App Store. 1500ms is long enough that an installed app has
     // already foregrounded (so the App Store redirect is dropped by the
     // backgrounded tab) but short enough that a missing-app user isn't

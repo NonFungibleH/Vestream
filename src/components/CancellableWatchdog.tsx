@@ -2,7 +2,7 @@
 
 // CancellableWatchdog
 // ─────────────────────────────────────────────────────────────────────────────
-// Compact "some of your vests are cancellable" warning — a small amber chip
+// Compact "some of your vests are cancellable" warning – a small amber chip
 // that sits in the Vesting Schedules table header. Hover (or keyboard-focus)
 // reveals the detail: which tokens are at risk and what cancellable means.
 //
@@ -10,7 +10,7 @@
 // "cancellable" vests where the sender can revoke unvested tokens at any time.
 // Recipients often don't realise their vest is cancellable. The table has a
 // per-row "Cancellable Yes/No" column, but it's far right on a horizontally-
-// scrolling table — easy to miss. This chip surfaces the same signal at the
+// scrolling table – easy to miss. This chip surfaces the same signal at the
 // top of the table without the heavy full-width banner it used to be (which
 // the user flagged as too prominent for what is, most days, ambient context).
 //
@@ -56,7 +56,7 @@ export function CancellableWatchdog({ streams }: Props) {
       <div
         tabIndex={0}
         role="button"
-        aria-label={`${cancellable.length} cancellable vesting position${cancellable.length === 1 ? "" : "s"} — issuer can revoke unvested tokens`}
+        aria-label={`${cancellable.length} cancellable vesting position${cancellable.length === 1 ? "" : "s"} – issuer can revoke unvested tokens`}
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full cursor-default outline-none"
         style={{
           background:  "rgba(245,158,11,0.12)",
@@ -73,7 +73,7 @@ export function CancellableWatchdog({ streams }: Props) {
         </span>
       </div>
 
-      {/* Tooltip — hidden until hover/focus. Right-aligned so it doesn't
+      {/* Tooltip – hidden until hover/focus. Right-aligned so it doesn't
           overflow the viewport on the right edge of the table header. */}
       <div
         role="tooltip"

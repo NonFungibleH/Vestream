@@ -9,7 +9,7 @@
 // Why the defaults below:
 //
 //   dedupingInterval: 60_000
-//     Requests for the same key within 60s collapse into one — even
+//     Requests for the same key within 60s collapse into one – even
 //     across page navigations. Click /dashboard/alerts → /dashboard →
 //     /dashboard/alerts and the second alerts visit reuses the cached
 //     payload instantly, no spinner. Background revalidates ARE still
@@ -17,7 +17,7 @@
 //
 //   revalidateOnFocus: false
 //     The default behaviour (refetch every time the tab regains focus)
-//     fights navigation perf — every time you cmd-tab back into the
+//     fights navigation perf – every time you cmd-tab back into the
 //     app, every mounted SWR hook fires. For our data shape (vestings
 //     don't change second-to-second) that's pure cost. Background
 //     refresh via refreshInterval on the specific hooks that need it.
@@ -36,7 +36,7 @@
 //   - onError logs to console; we don't show a toast at the provider
 //     level because each consumer renders its own error UI shape.
 //   - The fetcher defaults to a JSON GET with credentials: "include"
-//     so iron-session cookies travel — this is what every existing
+//     so iron-session cookies travel – this is what every existing
 //     dashboard SWR call already does manually.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ import type { ReactNode } from "react";
 async function defaultFetcher<T>(url: string): Promise<T> {
   const res = await fetch(url, { credentials: "include" });
   if (!res.ok) {
-    // Mirror what the existing per-page fetchers do — throw with the
+    // Mirror what the existing per-page fetchers do – throw with the
     // status, so SWR knows to swallow the result and surface error state.
     throw new Error(`HTTP ${res.status}`);
   }
@@ -62,7 +62,7 @@ export function DashboardSwrProvider({ children }: { children: ReactNode }) {
         revalidateOnFocus: false,
         keepPreviousData:  true,
         onError: (err) => {
-          // Don't log AbortErrors — those happen when SWR cancels in-flight
+          // Don't log AbortErrors – those happen when SWR cancels in-flight
           // requests during nav. Useful telemetry would be a real fetch
           // failure (HTTP 5xx, network), which carries an HTTP-prefixed message.
           if (err instanceof Error && err.message.startsWith("HTTP ")) {

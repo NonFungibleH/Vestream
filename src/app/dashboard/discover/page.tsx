@@ -70,7 +70,7 @@ const PROTOCOL_OPTIONS = [
   { id: "pinksale",     label: "PinkSale"      },
 ];
 
-// Single source of truth — see protocol-constants.ts (PROTOCOL_CHIPS).
+// Single source of truth – see protocol-constants.ts (PROTOCOL_CHIPS).
 const PROTOCOL_COLORS = PROTOCOL_CHIPS;
 
 function shortAddr(addr: string) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
@@ -99,7 +99,7 @@ function mergeUncxResults(results: ScanResult[]): ScanResult[] {
           }
         }
       } else {
-        // No matching uncx entry yet — push as "uncx"
+        // No matching uncx entry yet – push as "uncx"
         merged.push({ ...r, protocolId: "uncx", protocolName: "UNCX" });
       }
     } else {
@@ -159,7 +159,7 @@ function IconCompass() {
   );
 }
 
-// Sidebar removed — now provided by src/app/dashboard/layout.tsx via the
+// Sidebar removed – now provided by src/app/dashboard/layout.tsx via the
 // shared DashboardSidebar component. This keeps nav consistent across every
 // dashboard sub-route. The legacy DiscoverSidebar (with its own NAV_ITEMS
 // list missing several entries) lived here previously; deleted in this
@@ -348,7 +348,7 @@ export default function DiscoverPage() {
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   const [scanResetAt,    setScanResetAt]    = useState<string | null>(null);
 
-  // SWR-cached wallets list — shared with the dashboard's other consumers
+  // SWR-cached wallets list – shared with the dashboard's other consumers
   // of /api/wallets via the global SWRConfig provider. Nav back to this
   // page after a 5-second detour renders instantly; the cached snapshot
   // also covers the case where wallets were added/removed elsewhere and
@@ -385,7 +385,7 @@ export default function DiscoverPage() {
       const res = await fetch(`/api/wallets/scan?address=${address}${filterQs ? "&" + filterQs : ""}`);
       if (res.status === 402) {
         const j = await res.json().catch(() => ({}));
-        setScanError(j.error ?? "You've used your free scans — upgrade to Pro for daily resets.");
+        setScanError(j.error ?? "You've used your free scans – upgrade to Pro for daily resets.");
         // 402 from a free user means lifetime cap hit. Surface 0 remaining
         // so the UI stays honest about what's available.
         setScansRemaining(0);
@@ -416,7 +416,7 @@ export default function DiscoverPage() {
       // Update quota display
       if (typeof data.scansRemaining === "number") setScansRemaining(data.scansRemaining);
       if (data.scanResetAt) setScanResetAt(data.scanResetAt);
-    } catch { setScanError("Network error — please try again."); }
+    } catch { setScanError("Network error – please try again."); }
     finally { setScanning(false); }
   }
 
@@ -500,13 +500,13 @@ export default function DiscoverPage() {
         if (res.status === 402) {
           const j = await res.json();
           const nextPlan = j.tier === "free" ? "Pro" : "Fund";
-          setScanError(`Wallet limit reached — upgrade to ${nextPlan} to track more.`);
+          setScanError(`Wallet limit reached – upgrade to ${nextPlan} to track more.`);
           setWatchStatus(prev => ({ ...prev, [key]: "error" }));
           track("upgrade_clicked", { from_surface: "discover_watch", target_tier: nextPlan.toLowerCase(), trigger: "wallet_cap" });
           return;
         }
         if (res.status === 409) {
-          // Race condition: wallet was already added — fall through to PATCH
+          // Race condition: wallet was already added – fall through to PATCH
           await loadWallets();
           const freshWallets = await fetch("/api/wallets").then(r => r.json()).catch(() => null);
           const fresh = (freshWallets?.wallets ?? []) as TrackedWallet[];
@@ -550,7 +550,7 @@ export default function DiscoverPage() {
   }
 
   // The outer flex shell (sidebar + main column wrapping) is provided by
-  // src/app/dashboard/layout.tsx via DashboardChrome — every dashboard
+  // src/app/dashboard/layout.tsx via DashboardChrome – every dashboard
   // sub-page now shares the same nav rail. We render only the right-hand
   // content column here.
   return (
@@ -574,7 +574,7 @@ export default function DiscoverPage() {
               onMouseLeave={(e) => (e.currentTarget.style.background = "var(--preview-card)")}>
               ← Dashboard
             </button>
-            {/* Per-page dark toggle removed — night mode is the single shared
+            {/* Per-page dark toggle removed – night mode is the single shared
                 control in the sidebar (DarkModeProvider). */}
           </div>
         </header>
@@ -593,7 +593,7 @@ export default function DiscoverPage() {
                     Auto-scan unlocks with Pro
                   </p>
                   <p className="text-xs" style={{ color: "var(--preview-text-3)", lineHeight: 1.5 }}>
-                    Enter any wallet address and Vestream automatically scans every protocol and chain to find all your vesting streams — no contract address needed.
+                    Enter any wallet address and Vestream automatically scans every protocol and chain to find all your vesting streams – no contract address needed.
                   </p>
                 </div>
               </div>
@@ -618,7 +618,7 @@ export default function DiscoverPage() {
               </div>
               <div>
                 {/* Hero copy explicitly frames Discover as "live scan of a
-                    specific wallet" — distinct from Explorer's "search the
+                    specific wallet" – distinct from Explorer's "search the
                     indexed universe". The two surfaces felt redundant
                     visually, so we lean hard into the action verb here. */}
                 <div className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
@@ -626,7 +626,7 @@ export default function DiscoverPage() {
                   Wallet Scanner
                 </div>
                 <h2 className="text-base font-semibold mb-1" style={{ color: "var(--preview-text)" }}>
-                  Find every vesting on a wallet — live
+                  Find every vesting on a wallet – live
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
                   Paste any wallet address. We hit all 10 protocols across 7 chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
@@ -708,7 +708,7 @@ export default function DiscoverPage() {
               </p>
             )}
 
-            {/* Quota indicator — appears after first scan attempt. Copy
+            {/* Quota indicator – appears after first scan attempt. Copy
                 changes between tiers because free is a lifetime budget
                 (never resets) and Pro is a 24-hour rolling window. */}
             {scansRemaining !== null && (
@@ -733,9 +733,9 @@ export default function DiscoverPage() {
                       ? `${scansRemaining} free scan${scansRemaining !== 1 ? "s" : ""} remaining`
                       : `${scansRemaining} scan${scansRemaining !== 1 ? "s" : ""} remaining today`
                     : tier === "free"
-                      ? "Free scans used — upgrade to Pro for daily resets"
+                      ? "Free scans used – upgrade to Pro for daily resets"
                       : scanResetAt
-                        ? `No scans left — resets in ${Math.max(1, Math.ceil((new Date(scanResetAt).getTime() - Date.now()) / 3_600_000))}h`
+                        ? `No scans left – resets in ${Math.max(1, Math.ceil((new Date(scanResetAt).getTime() - Date.now()) / 3_600_000))}h`
                         : "No scans remaining today"
                   }
                 </span>
@@ -862,7 +862,7 @@ export default function DiscoverPage() {
             </div>
           )}
 
-          {/* Initial empty state — before first scan */}
+          {/* Initial empty state – before first scan */}
           {!scanData && !scanning && (
             <div className="rounded-2xl p-10 text-center"
               style={{ background: "var(--preview-card)", border: "1px dashed var(--preview-border-2)" }}>

@@ -44,7 +44,7 @@ export function ExplorerSidebar({ tier }: { tier: Tier | null }) {
 
       <nav className="px-3 py-3 space-y-0.5 flex-shrink-0">
         {NAV_ITEMS.map((item) => {
-          // Server component — no usePathname available. Explorer rendered
+          // Server component – no usePathname available. Explorer rendered
           // here, so Explorer is the always-active item. Sub-routes (e.g.
           // /dashboard/explorer/[chainId]/[tokenAddress]) fall through to a
           // separate page that renders this same sidebar, so it remains
@@ -111,7 +111,7 @@ export function ExplorerSidebar({ tier }: { tier: Tier | null }) {
             <span className="text-[10px] font-semibold" style={{ color: "var(--preview-text-2)" }}>Pro Plan</span>
           </div>
         ) : (
-          // Legacy non-free/non-pro tiers (e.g. "mobile") are Pro aliases —
+          // Legacy non-free/non-pro tiers (e.g. "mobile") are Pro aliases –
           // show the Pro badge, not the long-removed "Fund Plan".
           <div
             className="flex items-center gap-2 px-3 py-2 rounded-xl"

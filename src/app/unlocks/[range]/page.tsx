@@ -1,4 +1,4 @@
-// /unlocks/[range] — date-windowed unlock landing pages.
+// /unlocks/[range] – date-windowed unlock landing pages.
 //
 // Each window slug (today, tomorrow, this-week, etc.) is statically
 // pre-rendered + ISR-revalidated every hour, so search engines see fresh
@@ -32,21 +32,21 @@ import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib
 // Marketing-page tease: top N rows visible to all visitors, the rest
 // blurred behind a "Sign up free" CTA. Full calendar lives inside the
 // authenticated dashboard product. Same shape as
-// /protocols/[slug]/unlocks — keeps the JSON-LD ItemList intact so SEO
+// /protocols/[slug]/unlocks – keeps the JSON-LD ItemList intact so SEO
 // crawlers still index every event.
 const TEASER_VISIBLE_ROWS = 10;
 
 // On-demand ISR, 1h revalidation (2026-06-12). This page was briefly
 // force-dynamic because getQuickUsdPrices' Upstash Redis calls (the SDK
 // hardcodes no-store fetches) hard-error inside ISR routes on Next
-// 16.3.0-canary.19. The replacement — a middleware-injected SWR
-// Cache-Control header — never actually stuck: this canary's framework-set
+// 16.3.0-canary.19. The replacement – a middleware-injected SWR
+// Cache-Control header – never actually stuck: this canary's framework-set
 // `private, no-cache, no-store` for dynamic routes overrides middleware
 // headers (verified live 2026-06-12). Result: zero HTTP caching and a
 // live render per visitor, feeding the Cloudflare QUIC-kill timeouts.
 //
 // Now the pricing call passes `{ redis: false }` (its DexScreener fetch
-// uses next.revalidate — ISR-safe), so real ISR is back: the framework
+// uses next.revalidate – ISR-safe), so real ISR is back: the framework
 // emits `s-maxage=3600, stale-while-revalidate` natively and the CDN
 // serves cached HTML instantly while revalidating in the background.
 //
@@ -65,14 +65,14 @@ interface PageParams {
   params: Promise<{ range: string }>;
 }
 
-// ── Helpers (page-local — small enough to keep colocated) ───────────────────
+// ── Helpers (page-local – small enough to keep colocated) ───────────────────
 
 function isWindowSlug(s: string): s is WindowSlug {
   return ALL_WINDOW_SLUGS.includes(s as WindowSlug);
 }
 
 function fmtTokenAmount(amount: string | null, decimals: number): string {
-  if (!amount) return "—";
+  if (!amount) return "–";
   try {
     const n = Number(BigInt(amount)) / Math.pow(10, decimals);
     if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
@@ -81,7 +81,7 @@ function fmtTokenAmount(amount: string | null, decimals: number): string {
     if (n >= 1)   return n.toFixed(2);
     return n.toFixed(4);
   } catch {
-    return "—";
+    return "–";
   }
 }
 
@@ -89,7 +89,7 @@ function fmtTokenAmount(amount: string | null, decimals: number): string {
 // placeholder, which adapters write when the ERC-20 metadata call
 // fails or the token doesn't implement IERC20Metadata), fall back to
 // a truncated contract address. Keeps the row useful for visitors
-// who recognise the address from Etherscan / DexScreener — and an
+// who recognise the address from Etherscan / DexScreener – and an
 // address truncation is more honest than "Unknown" for tokens that
 // genuinely exist on-chain.
 function isMissingSymbol(s: string | null | undefined): boolean {
@@ -118,7 +118,7 @@ function tokenInitial(symbol: string | null, address: string): string {
 }
 
 function relativeTimeUntil(endTimeSec: number | null): string {
-  if (!endTimeSec) return "—";
+  if (!endTimeSec) return "–";
   const diff = endTimeSec - Math.floor(Date.now() / 1000);
   if (diff <= 0) return "now";
   if (diff < 3600)    return `in ${Math.round(diff / 60)}m`;
@@ -170,11 +170,11 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
 
   // Prefer dynamic label/description for windows whose scope shifts with
   // the calendar (this-week, this-month). Adds the actual end-date or
-  // month-year to the title — better for SEO ("Token unlocks April 2026"
+  // month-year to the title – better for SEO ("Token unlocks April 2026"
   // ranks for the month-name search) and clearer for users.
   const dynLabel = def.dynamicLabel?.() ?? def.label;
   const dynDesc  = def.dynamicDescription?.() ?? def.description;
-  const title  = `Token unlocks ${dynLabel.toLowerCase()} — ${dateStr} | Vestream`;
+  const title  = `Token unlocks ${dynLabel.toLowerCase()} – ${dateStr} | Vestream`;
   const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 10 vesting protocols.`;
   const url    = `https://www.vestream.io/unlocks/${range}`;
 
@@ -205,7 +205,7 @@ export default async function WindowPage({ params }: PageParams) {
 
   const def    = WINDOWS[range];
   const ranges = def.range();
-  // Fail-soft: at build time CI has no DB access — render empty state and
+  // Fail-soft: at build time CI has no DB access – render empty state and
   // let ISR refresh on first runtime request.
   // Cap the pool at 1,000 (the page renders a ~50-row teaser + gated rest) and
   // bound it with withTimeout so a stalled scan degrades to the empty state in
@@ -221,16 +221,16 @@ export default async function WindowPage({ params }: PageParams) {
 
   // Enrich the byToken aggregates with USD value and re-sort by USD (with
   // raw-amount as the tiebreaker for tokens we can't price). Users care
-  // about the dollar value of an unlock, not raw token counts — a 10B
+  // about the dollar value of an unlock, not raw token counts – a 10B
   // unlock of a $0.0001 memecoin is ~$1M; a 100 BTC unlock is ~$7M; the
   // raw-amount sort puts the memecoin first which is misleading.
   //
   // Pricing budget: byToken is capped at 20 entries upstream, well within
   // DexScreener's 30-pair batch limit. Adapter-level timeout (8s, see
-  // fetch-with-retry.ts) means a sick DexScreener can't hang the page —
+  // fetch-with-retry.ts) means a sick DexScreener can't hang the page –
   // worst case we render with no USD values and the previous raw-amount
   // sort, which is still functional.
-  // redis:false — this is an ISR render; the Upstash SDK's no-store fetch
+  // redis:false – this is an ISR render; the Upstash SDK's no-store fetch
   // hard-errors here. The DexScreener fetch inside uses next.revalidate.
   const tokenPriceMap = await getQuickUsdPrices(
     result.stats.byToken.map((t) => ({ chainId: t.chainId, address: t.address })),
@@ -251,13 +251,13 @@ export default async function WindowPage({ params }: PageParams) {
     return a.amount > b.amount ? -1 : a.amount < b.amount ? 1 : 0;
   });
   // The render path below consumes `byTokenWithUsd` directly (USD-enriched +
-  // sorted). We don't fold it back into `result` — `result` stays the typed,
+  // sorted). We don't fold it back into `result` – `result` stays the typed,
   // const fetch payload.
 
-  // ItemList JSON-LD — every unlock as an Event so Google can render rich
+  // ItemList JSON-LD – every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
   // upper bound for ItemList rich results). `eventStatus` +
-  // `eventAttendanceMode` are required by Google's rich-result validator —
+  // `eventAttendanceMode` are required by Google's rich-result validator –
   // without them the events are ignored even if `startDate` / `location`
   // are otherwise present.
   const itemListGroups = result.groups.slice(0, 50);
@@ -276,7 +276,7 @@ export default async function WindowPage({ params }: PageParams) {
         position:  i + 1,
         item: {
           "@type":              "Event",
-          name:                 `${tokenStr} unlock — ${amountStr} ${tokenStr}`,
+          name:                 `${tokenStr} unlock – ${amountStr} ${tokenStr}`,
           description:          `${amountStr} ${tokenStr} unlocks on ${protocolDisplay(g.protocol).name}.`,
           startDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
           eventStatus:          "https://schema.org/EventScheduled",
@@ -321,7 +321,7 @@ export default async function WindowPage({ params }: PageParams) {
 
       <SiteNav theme="light" />
 
-      {/* ── Hero (breadcrumb integrated, no separate bar — matches the
+      {/* ── Hero (breadcrumb integrated, no separate bar – matches the
           /protocols/[slug]/unlocks pattern so every calendar surface
           looks the same) ──────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pt-20 md:pt-24 pb-10 md:pb-14 max-w-5xl mx-auto w-full">
@@ -456,7 +456,7 @@ export default async function WindowPage({ params }: PageParams) {
                 </div>
                 <div className="text-right hidden md:block">
                   <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-                    {g.eventTime ? fmtDateUtc(g.eventTime) : "—"}
+                    {g.eventTime ? fmtDateUtc(g.eventTime) : "–"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -477,7 +477,7 @@ export default async function WindowPage({ params }: PageParams) {
                   headline={`See every ${def.label.toLowerCase()} unlock`}
                   subline="Free account · full calendar in your dashboard · alerts on the events you care about"
                 >
-                  {/* Only render the first 3 gated rows behind the blur —
+                  {/* Only render the first 3 gated rows behind the blur –
                       enough to communicate "there's more like this" without
                       bloating the page with hundreds of rows the user can't
                       see anyway. The hiddenLabel tells them the total. */}

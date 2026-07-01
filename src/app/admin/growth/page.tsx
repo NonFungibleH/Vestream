@@ -2,7 +2,7 @@
 //
 // Internal growth + activity dashboard. Gated by the `vestr_admin` cookie
 // via middleware (see src/middleware.ts:62). Reads directly from Postgres
-// — no API hop, no client-side state, no cache. force-dynamic so every
+// – no API hop, no client-side state, no cache. force-dynamic so every
 // load is fresh.
 //
 // Panels:
@@ -13,7 +13,7 @@
 //
 // Implementation notes:
 //   - All queries are raw `sql` template literals rather than Drizzle's
-//     query builder — for aggregates with subqueries the SQL is clearer
+//     query builder – for aggregates with subqueries the SQL is clearer
 //     read top-down than method-chained, and admin pages don't need the
 //     type-safety of the builder.
 //   - Run in Promise.all so the page renders ~50ms instead of summed
@@ -27,7 +27,7 @@ export const dynamic    = "force-dynamic";
 // Raise the function timeout above the default 10s so a cold lambda
 // hitting Supabase for the first time + ~19 sequential queries via the
 // max:1 pool doesn't get killed mid-render. Vercel Pro allows up to
-// 60s on `nodejs` runtime — we ask for 30 which is plenty.
+// 60s on `nodejs` runtime – we ask for 30 which is plenty.
 export const maxDuration = 30;
 
 // Drizzle's db.execute<T> requires T extends Record<string, unknown>, so
@@ -79,7 +79,7 @@ async function safeExec<T extends Record<string, unknown>>(
 
 export default async function GrowthDashboard() {
   const pageStart = Date.now();
-  // Promise.all over every query — total page time = max query time, not
+  // Promise.all over every query – total page time = max query time, not
   // sum of query times. Each query is wrapped in safeExec so one slow /
   // broken query falls back to [] instead of killing the page.
   const [
@@ -175,7 +175,7 @@ export default async function GrowthDashboard() {
 
   // Drizzle + postgres-js returns rows as a direct array, not wrapped in
   // `{ rows: [...] }` (that's the node-postgres / Drizzle-Neon shape).
-  // First-element accessor is safe — every COUNT query returns exactly one row.
+  // First-element accessor is safe – every COUNT query returns exactly one row.
   const totalUsersCount  = totalUsers[0]?.count ?? 0;
   const mobileCount      = mobileUsers[0]?.count ?? 0;
   const webCount         = webUsers[0]?.count ?? 0;
@@ -209,7 +209,7 @@ export default async function GrowthDashboard() {
             Growth & Activity
           </h1>
           <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Live numbers from Postgres. force-dynamic — every refresh is fresh.
+            Live numbers from Postgres. force-dynamic – every refresh is fresh.
           </p>
         </header>
 
@@ -440,7 +440,7 @@ function Stat({ label, value, accent }: { label: string; value: number | string;
   );
 }
 
-// Display helpers — kept inline rather than imported to keep the page
+// Display helpers – kept inline rather than imported to keep the page
 // self-contained (one file = one feature).
 
 function shortAddr(addr: string): string {

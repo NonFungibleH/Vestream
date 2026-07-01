@@ -7,7 +7,7 @@
 // Free tier: shows a soft locked-state with a pointer to upgrade.
 // Pro tier:  list current subscriptions + a small create form below.
 //
-// Talks to /api/developer/webhooks (cookie-authed proxy) — that endpoint
+// Talks to /api/developer/webhooks (cookie-authed proxy) – that endpoint
 // runs the same DB ops as the public /api/v1/webhooks but uses the
 // vestr_api_access cookie instead of a Bearer token, since this panel
 // has the cookie session, not the plaintext key.
@@ -173,11 +173,11 @@ export function WebhooksPanel({ tier }: { tier: string }) {
           Server-to-server unlock alerts
         </h3>
         <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Register a URL and we&rsquo;ll POST to it whenever a matching unlock fires — no polling required.
+          Register a URL and we&rsquo;ll POST to it whenever a matching unlock fires – no polling required.
           Filter by wallet, protocol, chain, or lookahead window. HMAC-signed for verification.
         </p>
         <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Online checkout for Pro is being set up — until it goes live, email{" "}
+          Online checkout for Pro is being set up – until it goes live, email{" "}
           <a href="mailto:team@vestream.io?subject=Vestream%20Pro%20-%20webhooks" className="underline" style={{ color: "#1CB8B8" }}>
             team@vestream.io
           </a>{" "}
@@ -187,7 +187,7 @@ export function WebhooksPanel({ tier }: { tier: string }) {
     );
   }
 
-  // ── Pro state — list + create ─────────────────────────────────────────
+  // ── Pro state – list + create ─────────────────────────────────────────
   return (
     <div className="rounded-2xl p-6"
       style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -225,7 +225,7 @@ export function WebhooksPanel({ tier }: { tier: string }) {
             Subscription created
           </p>
           <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Your signing secret is shown once. Vestream will use it to sign every delivery — keep it safe.
+            Your signing secret is shown once. Vestream will use it to sign every delivery – keep it safe.
           </p>
           <div className="rounded-lg p-2 mb-2 flex items-center gap-2"
             style={{ background: "#0d0f14", border: "1px solid rgba(28,184,184,0.30)" }}>

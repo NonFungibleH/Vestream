@@ -12,7 +12,7 @@
 // threaded from individual pages. The per-tab title is derived from the path.
 //
 // What's NOT here (deliberately): the home page's inline "+ Add wallet" quick-
-// add bar stays on the home page — it drives home-specific UI. Everywhere
+// add bar stays on the home page – it drives home-specific UI. Everywhere
 // else, "Manage" → /settings is the add/edit path.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -91,7 +91,7 @@ export function DashboardHeader() {
       // Close the account dropdown when clicking elsewhere in the bar.
       onClick={() => { if (chipOpen) setChipOpen(false); }}>
       <div className="flex items-center gap-3">
-        {/* Mobile hamburger — toggles the shared sidebar drawer. */}
+        {/* Mobile hamburger – toggles the shared sidebar drawer. */}
         <button className="flex md:hidden w-8 h-8 items-center justify-center rounded-lg"
           style={{ color: "var(--preview-text-2)" }}
           onClick={toggleSidebar}
@@ -103,7 +103,7 @@ export function DashboardHeader() {
         <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>{title}</h1>
       </div>
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-        {/* Wallet count + Manage — universal across tabs. The inline quick-add
+        {/* Wallet count + Manage – universal across tabs. The inline quick-add
             ("+ Add") stays on the home page only. */}
         {walletCount !== null && (
           <div className="hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg"

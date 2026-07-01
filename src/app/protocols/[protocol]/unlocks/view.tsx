@@ -1,9 +1,9 @@
-// /protocols/[slug]/unlocks/view.tsx — shared renderer for the protocol
+// /protocols/[slug]/unlocks/view.tsx – shared renderer for the protocol
 // unlock calendar, used by BOTH the unfiltered base page (./page.tsx) and
 // the per-chain variants ([chain]/page.tsx).
 //
 // Why the split exists (2026-06-12): the chain filter used to be a
-// ?chain= query param read via `searchParams` in the page — a request-time
+// ?chain= query param read via `searchParams` in the page – a request-time
 // API that silently opted the route into dynamic rendering, turning its
 // `revalidate = 3600` into dead code. Every request then ran the 2000-row
 // getUnlocksInWindow query live (measured 9.8s TTFB in prod) with zero
@@ -30,7 +30,7 @@ const FIVE_YEARS_SEC = 5 * 365 * 86400;
 
 // Parse a chain path/query param. Accepts numeric chain id ("1", "137") or
 // a short slug ("ethereum", "bsc", "polygon", "base"). Returns null when
-// missing or unrecognised — callers treat null as "all chains".
+// missing or unrecognised – callers treat null as "all chains".
 const CHAIN_SLUG_TO_ID: Record<string, number> = {
   ethereum: 1,    eth: 1,    mainnet: 1,
   bsc:      56,   bnb: 56,   "bnb-chain": 56,
@@ -52,7 +52,7 @@ export function parseChainParam(raw: string | undefined): number | null {
 /**
  * The page's single data dependency, in Vercel's Data Cache.
  *
- * 5-year forward window — broad enough to capture multi-year team vests
+ * 5-year forward window – broad enough to capture multi-year team vests
  * (typical 2-4 year linear schedules don't have discrete "events" before
  * completion, so a 365-day window misses 90%+ of active positions). Pool
  * of 2000 is sized to stay under gateway timeouts for Sablier-scale
@@ -62,7 +62,7 @@ export function parseChainParam(raw: string | undefined): number | null {
  * Wrapped in unstable_cache so (a) generateMetadata and the page body
  * share one query per revalidation window instead of two, and (b) ISR
  * revalidations across the base + per-chain variants of the same protocol
- * stay cheap. `now` is computed INSIDE the callback — putting it in the
+ * stay cheap. `now` is computed INSIDE the callback – putting it in the
  * key would bust the cache every second.
  */
 export const getCachedProtocolUnlocks = unstable_cache(
@@ -71,12 +71,12 @@ export const getCachedProtocolUnlocks = unstable_cache(
     // caches a thrown error, so the first runtime request re-runs the query and
     // caches REAL data. Previously getUnlocksInWindow's own build-phase guard
     // returned EMPTY_WINDOW_RESULT, which got committed to this Data Cache entry
-    // — and on these low-traffic deep-link pages the empty snapshot was served
+    // – and on these low-traffic deep-link pages the empty snapshot was served
     // ~indefinitely (every protocol's /unlocks page showed "No upcoming unlocks
     // indexed" despite the cache being full). Mirrors loadProtocolData in
     // ../page.tsx, which is why the detail page never had this bug.
     if (process.env.NEXT_PHASE === "phase-production-build") {
-      throw new Error("build-phase: skipping unlocks query — ISR fills at runtime");
+      throw new Error("build-phase: skipping unlocks query – ISR fills at runtime");
     }
     const now = Math.floor(Date.now() / 1000);
     const result = await getUnlocksInWindow(
@@ -87,7 +87,7 @@ export const getCachedProtocolUnlocks = unstable_cache(
       chainId ? [chainId] : undefined,
     );
     // unstable_cache JSON-serialises its payload, and stats.byToken carries
-    // raw `bigint` amounts — JSON.stringify throws "Do not know how to
+    // raw `bigint` amounts – JSON.stringify throws "Do not know how to
     // serialize a BigInt", the cache write rejects, and the query silently
     // re-runs on every request. Stringify the amounts (this page doesn't
     // render byToken anyway; /unlocks/[range] consumes it uncached).
@@ -110,7 +110,7 @@ const EMPTY_RESULT: UnlocksResult = {
   stats:  { unlockCount: 0, tokenCount: 0, chainCount: 0, walletCount: 0, byToken: [] },
 };
 
-// ── Formatting helpers (mirror /unlocks/[range] — kept colocated for now;
+// ── Formatting helpers (mirror /unlocks/[range] – kept colocated for now;
 //    extract to a shared lib once a third surface needs them) ──────────────
 
 function isMissingSymbol(s: string | null | undefined): boolean {
@@ -135,7 +135,7 @@ function tokenInitial(symbol: string | null, address: string): string {
 }
 
 function fmtTokenAmount(amount: string | null, decimals: number): string {
-  if (!amount) return "—";
+  if (!amount) return "–";
   try {
     const n = Number(BigInt(amount)) / Math.pow(10, decimals);
     if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
@@ -144,12 +144,12 @@ function fmtTokenAmount(amount: string | null, decimals: number): string {
     if (n >= 1)   return n.toFixed(2);
     return n.toFixed(4);
   } catch {
-    return "—";
+    return "–";
   }
 }
 
 function relativeTimeUntil(endTimeSec: number | null): string {
-  if (!endTimeSec) return "—";
+  if (!endTimeSec) return "–";
   const diff = endTimeSec - Math.floor(Date.now() / 1000);
   if (diff <= 0) return "now";
   if (diff < 3600)    return `in ${Math.round(diff / 60)}m`;
@@ -175,7 +175,7 @@ export async function ProtocolUnlocksView({
   filterChainId: number | null;
 }) {
   // Fail-soft: at build time CI has no DB access, and a runtime DB blip
-  // shouldn't 500 a marketing page — render the empty state; ISR retries
+  // shouldn't 500 a marketing page – render the empty state; ISR retries
   // on the next revalidation.
   let result: UnlocksResult;
   try {
@@ -185,12 +185,12 @@ export async function ProtocolUnlocksView({
     result = EMPTY_RESULT;
   }
   // Top N visible to everyone, rest blurred behind the signup CTA.
-  // Pre-computed here (not inside JSX) — Turbopack mishandles IIFE-scoped
+  // Pre-computed here (not inside JSX) – Turbopack mishandles IIFE-scoped
   // references to outer-function `const` bindings inside RSC-compiled JSX.
   const visibleRows = result.groups.slice(0, TEASER_VISIBLE_ROWS);
   const gatedRows   = result.groups.slice(TEASER_VISIBLE_ROWS);
 
-  // ItemList JSON-LD — unlock events scoped to this protocol.
+  // ItemList JSON-LD – unlock events scoped to this protocol.
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type":    "ItemList",
@@ -262,7 +262,7 @@ export async function ProtocolUnlocksView({
           )}
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-6" style={{ color: "#475569" }}>
-          Every active vesting schedule on {meta.name} — sorted by next unlock event. Mass distributions to many wallets are collapsed into a single row. Click any token for the full per-token schedule.
+          Every active vesting schedule on {meta.name} – sorted by next unlock event. Mass distributions to many wallets are collapsed into a single row. Click any token for the full per-token schedule.
         </p>
 
         {/* Stat strip */}
@@ -276,7 +276,7 @@ export async function ProtocolUnlocksView({
 
         {/* ── Chain filter pills ─────────────────────────────────────────
             Server-rendered Links so each filtered view is a fully-formed
-            URL — shareable, bookmarkable, indexable by Google, and (since
+            URL – shareable, bookmarkable, indexable by Google, and (since
             2026-06-12) a PATH segment rather than a query param so every
             variant is ISR-cached. The active pill picks up the protocol's
             brand colour so the filter feels like part of the page. */}
@@ -330,7 +330,7 @@ export async function ProtocolUnlocksView({
                 headline={`See all ${meta.name} unlocks`}
                 subline="Free account · full calendar in your dashboard · alerts on the events you care about"
               >
-                {/* First 4 gated rows only — enough to suggest "there's more"
+                {/* First 4 gated rows only – enough to suggest "there's more"
                     without rendering 100+ blurred rows of dead DOM weight.
                     The hiddenLabel above already communicates the full count. */}
                 {gatedRows.slice(0, 4).map((g) => (
@@ -406,7 +406,7 @@ function ProtocolUnlockRow({
       </div>
       <div className="text-right hidden md:block">
         <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
-          {group.eventTime ? fmtDateUtc(group.eventTime) : "—"}
+          {group.eventTime ? fmtDateUtc(group.eventTime) : "–"}
         </p>
       </div>
       <div className="text-right">

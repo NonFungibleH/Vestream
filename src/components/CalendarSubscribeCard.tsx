@@ -8,7 +8,7 @@
 // button.
 //
 // Calendar URL is sensitive-ish (anyone with the URL can read your unlock
-// schedule). Initial state hides the URL behind a "Show" button — same
+// schedule). Initial state hides the URL behind a "Show" button – same
 // pattern as masking API keys.
 //
 // Lives in /settings under the Notifications section since this is a
@@ -52,7 +52,7 @@ export function CalendarSubscribeCard() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Couldn't copy — select the URL manually.");
+      setError("Couldn't copy – select the URL manually.");
     }
   }
 
@@ -69,7 +69,7 @@ export function CalendarSubscribeCard() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
       }
-      // Force SWR to refresh — the URL has changed.
+      // Force SWR to refresh – the URL has changed.
       await globalMutate("/api/calendar/manage");
       setReveal(true); // show the new one immediately
     } catch (err) {
@@ -110,7 +110,7 @@ export function CalendarSubscribeCard() {
         The calendar app polls this URL on its own schedule (~6 hours) and shows every cliff and unlock as a moment in your calendar.
       </p>
 
-      {/* The URL — masked by default, reveal on click. Same pattern as
+      {/* The URL – masked by default, reveal on click. Same pattern as
           masking API keys; the URL grants read access to your upcoming
           unlocks. */}
       <div
@@ -155,7 +155,7 @@ export function CalendarSubscribeCard() {
         )}
       </div>
 
-      {/* Quick-add buttons — Apple Calendar handles webcal:// natively;
+      {/* Quick-add buttons – Apple Calendar handles webcal:// natively;
           Google needs manual paste so we link to the add-by-url page; for
           Outlook same idea. */}
       <div className="flex flex-wrap gap-2">
@@ -181,7 +181,7 @@ export function CalendarSubscribeCard() {
             border:     "1px solid rgba(28,184,184,0.22)",
             color:      "#0F8A8A",
           }}
-          title="Opens Google Calendar's 'Add by URL' page. The subscribe URL is copied to your clipboard automatically — paste it there."
+          title="Opens Google Calendar's 'Add by URL' page. The subscribe URL is copied to your clipboard automatically – paste it there."
         >
           📅 Add to Google Calendar
         </a>
@@ -205,7 +205,7 @@ export function CalendarSubscribeCard() {
         <p className="text-[10px]" style={{ color: "var(--preview-text-3)" }}>
           {data.lastFetchedAt
             ? `Last polled by your calendar ${new Date(data.lastFetchedAt).toLocaleString()}`
-            : "No calendar app has subscribed yet — click “Add to Calendar” above and your calendar will start polling on its own schedule."}
+            : "No calendar app has subscribed yet – click “Add to Calendar” above and your calendar will start polling on its own schedule."}
         </p>
         <button
           type="button"

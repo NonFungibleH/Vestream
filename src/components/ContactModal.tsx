@@ -148,7 +148,7 @@ export default function ContactModal({
                 Get in touch
               </h2>
               <p className="text-sm" style={{ color: "#8B8E92" }}>
-                Tell us about your portfolio or integration needs — we&apos;ll come back to you within one business day.
+                Tell us about your portfolio or integration needs – we&apos;ll come back to you within one business day.
               </p>
             </div>
 

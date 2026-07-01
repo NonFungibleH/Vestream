@@ -10,13 +10,13 @@ import useSWR from "swr";
 import { isValidWalletAddress } from "@/lib/address-validation";
 import { VestingStream } from "@/lib/vesting/normalize";
 import { CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
-// MobileAppBanner removed — dashboard users have demonstrably already paired
+// MobileAppBanner removed – dashboard users have demonstrably already paired
 // via QR code, so "Get the app" prompts are noise for this audience.
 import { CancellableWatchdog } from "@/components/CancellableWatchdog";
 import { useDashboardChrome } from "@/components/DashboardChrome";
 import { useCurrency } from "@/lib/use-currency";
 
-// Interaction-gated components — none render on first paint. The upsell
+// Interaction-gated components – none render on first paint. The upsell
 // modal only mounts when a free-tier action hits the paywall; the two
 // per-stream editors only mount inside an EXPANDED stream-detail row.
 // Loading them with next/dynamic (ssr:false) keeps ~640 lines of editor
@@ -69,7 +69,7 @@ const TOKEN_COLORS_PRESET: Record<string, string> = {
 // 20-slot palette of visually distinct hues for unknown tokens.
 // Purples were swapped out (off-brand under the new ink/teal palette);
 // replacements are visually distinct from existing slots and from
-// the brand teal — slate, lime, amber stand in for the three purples.
+// the brand teal – slate, lime, amber stand in for the three purples.
 const HASH_PALETTE = [
   "#e74c3c", "#e67e22", "#2ecc71", "#1abc9c", "#3498db",
   "#475569", "#ff6b6b", "#feca57", "#48dbfb", "#ff9ff3",
@@ -87,7 +87,7 @@ function getTokenColor(symbol: string): string {
   return HASH_PALETTE[Math.abs(h) % HASH_PALETTE.length];
 }
 
-// ─── TokenIcon — image with text-initials fallback ───────────────────────────
+// ─── TokenIcon – image with text-initials fallback ───────────────────────────
 // Used by VestingTable rows, NextClaimCountdown cards, SnapshotPanel token
 // rows, and PnLPanel. Renders the DexScreener logo when available; falls back
 // to the coloured initials circle when the URL is missing or fails to load.
@@ -121,7 +121,7 @@ function TokenIcon({
 }
 
 // Block-explorer base URLs per chain ID. Token contracts live at
-// `${base}/token/{address}`; transactions at `${base}/tx/{hash}` —
+// `${base}/token/{address}`; transactions at `${base}/tx/{hash}` –
 // same convention across every EVM explorer we support.
 // 2026-05-14: added Arbitrum, Optimism, Solana so the lockTxHash row
 // resolves on those chains too.
@@ -142,12 +142,12 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 
 // 2026-05-15: aligned to the canonical palette in src/lib/protocol-constants.ts
 // (which mobile + /protocols pages already use). Previous local map had
-// Hedgey collide with brand-teal and UNCX collide with Sablier — both
+// Hedgey collide with brand-teal and UNCX collide with Sablier – both
 // real design-bug-level palette collisions in the dashboard streams
 // table. Streamflow / Jupiter Lock / LlamaPay / Sablier-Flow added for
 // completeness so the fallback "#B8BABD grey" never fires on supported
 // protocols.
-// Single source of truth — see protocol-constants.ts (PROTOCOL_CHIPS).
+// Single source of truth – see protocol-constants.ts (PROTOCOL_CHIPS).
 const PROTOCOL_COLORS = PROTOCOL_CHIPS;
 
 const CLAIM_LINKS: Record<string, string> = {
@@ -172,7 +172,7 @@ const CLAIM_LINKS: Record<string, string> = {
  *
  * Trade-off: components that derive "vested-so-far" / "time-until-unlock"
  * stay accurate to ±15s on average without forcing a re-render every
- * frame. For a vesting tracker that's fine — unlock schedules don't
+ * frame. For a vesting tracker that's fine – unlock schedules don't
  * fire faster than that anyway.
  *
  * Use this hook anywhere you previously wrote
@@ -454,7 +454,7 @@ function IconExport() {
   );
 }
 
-// Income statement / P&L icon — matches the bar-chart hint for an
+// Income statement / P&L icon – matches the bar-chart hint for an
 // aggregated finances view, distinct from the simple "download" Exports icon.
 function IconIncomeStatement() {
   return (
@@ -537,7 +537,7 @@ function DonutChart({ tokens }: { tokens: TokenSummary[] }) {
   }) : [];
 
   if (multiNoPrice) {
-    // No USD data for multiple tokens — show informative placeholder
+    // No USD data for multiple tokens – show informative placeholder
     return (
       <div className="flex flex-col items-center justify-center py-4 gap-2 text-center">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-1"
@@ -566,7 +566,7 @@ function DonutChart({ tokens }: { tokens: TokenSummary[] }) {
   }
 
   if (totalVal === 0 && !hasPrice && tokens.length === 1) {
-    // Single token, no price — show raw amounts with token label
+    // Single token, no price – show raw amounts with token label
     const t = tokens[0];
     const totalRaw = t.claimable + t.locked;
     if (totalRaw === 0) return null;
@@ -779,7 +779,7 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
   } else {
     // Linear vesting. With a cliff it stays flat at 0 until the cliff date,
     // jumps to the back-accrued amount at the cliff, then goes linear to the
-    // end — nothing vests before the cliff. (Matches on-chain semantics + the
+    // end – nothing vests before the cliff. (Matches on-chain semantics + the
     // mobile chart; previously this drew a straight line from start, showing
     // tokens vesting pre-cliff.)
     const duration = stream.endTime - stream.startTime;
@@ -867,10 +867,10 @@ function EmissionChart({ stream }: { stream: VestingStream }) {
             stroke="var(--preview-border-2)" strokeWidth={0.75} />
         ))}
 
-        {/* Filled area (locked — faint) */}
+        {/* Filled area (locked – faint) */}
         <path d={fillD} fill={color} fillOpacity={0.07} />
 
-        {/* Vested fill up to "now" — brighter */}
+        {/* Vested fill up to "now" – brighter */}
         {nowSec > stream.startTime && nowSec < stream.endTime && (() => {
           const clampedPath = pathPoints
             .filter((p) => p.x <= nowX)
@@ -1032,7 +1032,7 @@ function ClaimHistory({ stream }: { stream: VestingStream }) {
             <span style={{ fontSize: 10 }}>ℹ</span>
           </div>
           <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-            <span className="font-semibold" style={{ color }}>{withdrawnAmt.toLocaleString("en-US", { maximumFractionDigits: 4 })} {stream.tokenSymbol}</span> claimed — individual transaction history not available for this protocol
+            <span className="font-semibold" style={{ color }}>{withdrawnAmt.toLocaleString("en-US", { maximumFractionDigits: 4 })} {stream.tokenSymbol}</span> claimed – individual transaction history not available for this protocol
           </p>
         </div>
       ) : null}
@@ -1104,7 +1104,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
   const hasPrice       = totalValue > 0;
   const totalRaw       = tokens.reduce((s, t) => s + t.claimable + t.locked, 0);
   const activeStreams   = streams.filter((s) => !s.isFullyVested);
-  // Tokens with tokens claimable but NO USD price — need separate display when in USD mode
+  // Tokens with tokens claimable but NO USD price – need separate display when in USD mode
   const claimableNoPrice = tokens.filter((t) => t.claimable > 0 && t.claimableUSD === 0);
 
   // Next unlock: stream with soonest nextUnlockTime
@@ -1113,7 +1113,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
     .sort((a, b) => (a.nextUnlockTime ?? 0) - (b.nextUnlockTime ?? 0))[0] ?? null;
   const nextUnlock = nextUnlockStream?.nextUnlockTime ?? null;
 
-  // Next unlock amount — for step streams use the next tranche, for linear use monthly rate
+  // Next unlock amount – for step streams use the next tranche, for linear use monthly rate
   const nextUnlockAmt: string | null = (() => {
     if (!nextUnlockStream) return null;
     const s = nextUnlockStream;
@@ -1163,7 +1163,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
             <p className="text-4xl font-bold tabular-nums tracking-tight text-white leading-none">
               {fmtCurrencyFull(totalValue)}
             </p>
-            {/* "Ready to claim" intentionally not repeated here — it's shown in
+            {/* "Ready to claim" intentionally not repeated here – it's shown in
                 the "Ready to Claim" stat chip (right) and per-token in the
                 Token Unlock Status section below. */}
 
@@ -1191,10 +1191,10 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
             )}
           </div>
 
-          {/* Right: stat blocks — four meaningful live metrics */}
+          {/* Right: stat blocks – four meaningful live metrics */}
           <div className="flex gap-2.5 flex-shrink-0">
 
-            {/* Stat 1: Ready to Claim — per-token breakdown when no price data */}
+            {/* Stat 1: Ready to Claim – per-token breakdown when no price data */}
             <div className="rounded-xl px-4 py-3 min-w-[108px]"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2"
@@ -1209,9 +1209,9 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                   <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{pctClaimable.toFixed(1)}% of total</p>
                 </>
               )}
-              {/* Raw amounts for tokens without a market price — only in USD
+              {/* Raw amounts for tokens without a market price – only in USD
                   mode (alongside the USD total). When there's NO price at all,
-                  the fallback below renders them instead — gating on hasPrice
+                  the fallback below renders them instead – gating on hasPrice
                   here stops both paths listing the same tokens twice. */}
               {hasPrice && claimableNoPrice.slice(0, 2).map((t) => (
                 <p key={t.symbol} className="text-sm font-bold tabular-nums mt-0.5 leading-tight text-white">
@@ -1228,11 +1228,11 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
               ))}
               {/* Nothing claimable */}
               {totalClaimable === 0 && claimableNoPrice.length === 0 && !tokens.some((t) => t.claimable > 0) && (
-                <p className="text-base font-bold mt-0.5 text-white">—</p>
+                <p className="text-base font-bold mt-0.5 text-white">–</p>
               )}
             </div>
 
-            {/* Stat 2: This Month — from monthly cashflow forecast */}
+            {/* Stat 2: This Month – from monthly cashflow forecast */}
             <div className="rounded-xl px-4 py-3 min-w-[108px]"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2"
@@ -1251,13 +1251,13 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                 </>
               ) : (
                 <>
-                  <p className="text-base font-bold tabular-nums mt-0.5 text-white">—</p>
+                  <p className="text-base font-bold tabular-nums mt-0.5 text-white">–</p>
                   <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>nothing this month</p>
                 </>
               )}
             </div>
 
-            {/* Stat 3: Next Event — countdown + amount */}
+            {/* Stat 3: Next Event – countdown + amount */}
             <div className="rounded-xl px-4 py-3 min-w-[108px]"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="w-6 h-6 rounded-md flex items-center justify-center mb-2"
@@ -1273,7 +1273,7 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
                   )}
                 </>
               ) : (
-                <p className="text-base font-bold tabular-nums mt-0.5 text-white">—</p>
+                <p className="text-base font-bold tabular-nums mt-0.5 text-white">–</p>
               )}
             </div>
 
@@ -1311,12 +1311,12 @@ function PortfolioHero({ streams, walletCount, dark, prices }: { streams: Vestin
           </div>
         </div>
 
-        {/* Unpriced token footnote — only shown when some tokens lack a live price */}
+        {/* Unpriced token footnote – only shown when some tokens lack a live price */}
         {hasPrice && tokens.some((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)) && (
           <p className="mt-3 text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
             * Portfolio total excludes{" "}
             {tokens.filter((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)).map((t) => t.symbol).join(", ")}{" "}
-            — no live price available for {tokens.filter((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)).length === 1 ? "this token" : "these tokens"}.
+            – no live price available for {tokens.filter((t) => (t.claimableUSD + t.lockedUSD === 0) && (t.claimable + t.locked > 0)).length === 1 ? "this token" : "these tokens"}.
           </p>
         )}
       </div>
@@ -1490,7 +1490,7 @@ function StreamDetailSheet({
       style={{ background: "rgba(0,0,0,0.60)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Sheet panel — slides up from bottom on mobile */}
+      {/* Sheet panel – slides up from bottom on mobile */}
       <div
         className="w-full rounded-t-3xl overflow-y-auto"
         style={{
@@ -1656,16 +1656,16 @@ function StreamDetailSheet({
 // ─── VestingTable ─────────────────────────────────────────────────────────────
 
 // Columns: Asset | Protocol | Locked | Start | End | Progress | Claimable | Schedule | Cancellable | Contract | Action
-// Chain name is shown under the token symbol in the Asset column — no separate column needed
+// Chain name is shown under the token symbol in the Asset column – no separate column needed
 const COL = "grid-cols-[160px_88px_98px_80px_80px_108px_98px_118px_80px_90px_130px]";
 
 function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: VestingStream[]; prices: Record<string, number>; imageUrls?: Record<string, string>; onClaim?: () => void }) {
-  // Single source of truth for "now" inside this table — used by the cliff /
+  // Single source of truth for "now" inside this table – used by the cliff /
   // monthly-rate derivations below. Replaces inline Date.now() calls flagged
   // by react-hooks/purity (Date.now isn't pure for React 19's strict-mode
   // analysis). Re-renders every 30s so cliff-active flags stay accurate.
   const nowSec = useNowSec();
-  // Track stream IDs where user clicked "Claim ↗" — shows a "refreshing…"
+  // Track stream IDs where user clicked "Claim ↗" – shows a "refreshing…"
   // indicator for 15s until the parent triggers a data refresh.
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
   // Mobile drill-down: which stream is currently open in the detail sheet
@@ -1673,7 +1673,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
 
   // Bulk-fetch the user's stream annotations once. We expose a Map<streamId,
   // annotation> for O(1) row-level lookup. Cheap because annotations are
-  // sparse — most users have 0–10 rows, so the response is tiny.
+  // sparse – most users have 0–10 rows, so the response is tiny.
   const { data: annData } = useSWR<{ annotations: Array<{ streamId: string; customName: string | null; notes: string | null }> }>(
     "/api/streams/annotations",
     async (url: string) => {
@@ -1724,7 +1724,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
       return true; // if we can't parse, show rather than hide
     }
   });
-  // Mobile detail sheet stream — resolved after `active` to avoid temporal dead zone
+  // Mobile detail sheet stream – resolved after `active` to avoid temporal dead zone
   const sheetStream = active.find(s => s.id === sheetStreamId) ?? null;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const COLS = ["Asset", "Protocol", "Locked", "Start", "End", "Progress", "Claimable", "Schedule", "Cancellable", "Contract", ""];
@@ -1736,7 +1736,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
         borderColor: "var(--preview-border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
       }}>
-      {/* Outer header — full width, no scroll */}
+      {/* Outer header – full width, no scroll */}
       <div className="px-6 py-4 flex items-center justify-between flex-shrink-0"
         style={{ borderBottom: "1px solid var(--preview-border-2)" }}>
         <div>
@@ -1745,7 +1745,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
             {active.length} active position{active.length !== 1 ? "s" : ""} · scroll →
           </p>
         </div>
-        {/* Compact cancellable-vests warning — hover/focus for detail. Replaces
+        {/* Compact cancellable-vests warning – hover/focus for detail. Replaces
             the old full-width banner that sat above the hero (too prominent). */}
         <CancellableWatchdog streams={active} />
       </div>
@@ -1774,7 +1774,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
 
               return (
                 <div key={s.id} style={{ borderTop: idx > 0 ? "1px solid var(--preview-border-2)" : undefined }}>
-                  {/* Main row — 4 columns: tap = open detail sheet */}
+                  {/* Main row – 4 columns: tap = open detail sheet */}
                   <div
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
                     onClick={() => setSheetStreamId(s.id)}
@@ -1855,7 +1855,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                     </div>
                   </div>
 
-                  {/* Mobile rows open the full-screen detail sheet on tap — no inline expansion */}
+                  {/* Mobile rows open the full-screen detail sheet on tap – no inline expansion */}
                 </div>
               );
             })}
@@ -1911,12 +1911,12 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                   <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: tokenColor }} />
 
-                  {/* 1. Asset — token symbol + chain name + recipient.
+                  {/* 1. Asset – token symbol + chain name + recipient.
                       If the user set a customName via StreamAnnotationEditor,
                       it becomes the row's primary label; the on-chain symbol
                       drops to a subtitle so the user can still see it.
                       Tag chips render below the recipient if the user has
-                      tagged this stream — small, colour-coded, max 2 visible
+                      tagged this stream – small, colour-coded, max 2 visible
                       with overflow indicator. */}
                   <div className="flex items-center gap-2.5 min-w-0">
                     <TokenIcon symbol={s.tokenSymbol} imageUrl={imageUrls[s.tokenSymbol]} size={32} />
@@ -2124,7 +2124,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                         ✓ Fixed
                       </span>
                     ) : (
-                      <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>—</span>
+                      <span className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>–</span>
                     )}
                   </div>
 
@@ -2133,7 +2133,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                       contract explorer icon. Renders only when the adapter
                       surfaced a lockTxHash (UNCX-VM, Hedgey, Sablier).
                       One click opens the originating creation tx on the
-                      chain's block explorer — the verifiable on-chain
+                      chain's block explorer – the verifiable on-chain
                       anchor backing every claim in the row. */}
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] font-mono" style={{ color: "var(--preview-text-3)" }}>
@@ -2167,10 +2167,10 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                       "All holders" link promoted to column 1 (token info cell)
                       where it has room to breathe and is more discoverable.
                       Link points at /token/* (the canonical token page) directly
-                      instead of /explore/* which 308-redirects there — saves a
+                      instead of /explore/* which 308-redirects there – saves a
                       round trip and means clicks feel instant. */}
                   <div className="flex items-center justify-end gap-1.5">
-                    {/* Set alert — deep-links into the token-first alerts page
+                    {/* Set alert – deep-links into the token-first alerts page
                         with this stream pre-selected (?stream=<id>). */}
                     {!s.isFullyVested && (
                       <a href={`/dashboard/alerts?stream=${s.id}`}
@@ -2211,7 +2211,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                         View ↗
                       </a>
                     )}
-                    {/* Expand chart chevron — coloured for step streams so it's more discoverable */}
+                    {/* Expand chart chevron – coloured for step streams so it's more discoverable */}
                     <button
                       onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : s.id); }}
                       className="flex items-center gap-0.5 px-1.5 h-6 rounded-lg transition-all"
@@ -2253,7 +2253,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
         </div>{/* /min-w */}
       </div>{/* /hidden md:block overflow-x-auto */}
 
-      {/* Mobile detail sheet — rendered as portal-like fixed overlay */}
+      {/* Mobile detail sheet – rendered as portal-like fixed overlay */}
       {sheetStream && (
         <StreamDetailSheet
           stream={sheetStream}
@@ -2273,7 +2273,7 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
 // The Tokenomist / Carta mental model applied to a single user's portfolio:
 // how much $ is unlocking in the next 30 / 90 / 365 days across every
 // tracked stream? Tokenomist / CryptoRank / DefiLlama know per-TOKEN unlock
-// projections but they can't apply them to "your" portfolio — only we do.
+// projections but they can't apply them to "your" portfolio – only we do.
 // This card is the one chart a user can ONLY get here.
 //
 // 2026-05-13.
@@ -2353,10 +2353,10 @@ function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices
     [streams, prices, window],
   );
 
-  // No upcoming priced events — hide rather than show a $0 placeholder.
+  // No upcoming priced events – hide rather than show a $0 placeholder.
   if (totalUsd === 0 && eventCount === 0) return null;
 
-  // Build cumulative running-total curve — Apple-tier "outlook" charts use
+  // Build cumulative running-total curve – Apple-tier "outlook" charts use
   // cumulative because users care about WHEN they hit $X total.
   const cum: number[] = [];
   let running = 0;
@@ -2386,14 +2386,14 @@ function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices
       role="region"
       aria-label={`${OUTLOOK_WINDOW_LABEL[window]}: ${fmtUSDFull(totalUsd)} unlocking across ${eventCount} event${eventCount !== 1 ? "s" : ""}`}
     >
-      {/* Brand-teal hairline — matches mobile UpcomingOutlook visual continuity */}
+      {/* Brand-teal hairline – matches mobile UpcomingOutlook visual continuity */}
       <div
         className="h-[2px] pointer-events-none"
         style={{ background: "linear-gradient(90deg, rgba(28,184,184,0.55), rgba(28,184,184,0))" }}
         aria-hidden
       />
       <div className="px-5 py-4">
-        {/* Header — eyebrow + window selector */}
+        {/* Header – eyebrow + window selector */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1CB8B8" }} />
@@ -2425,7 +2425,7 @@ function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices
           </div>
         </div>
 
-        {/* Hero metric — total USD unlocking in the chosen window */}
+        {/* Hero metric – total USD unlocking in the chosen window */}
         <p
           className="text-3xl md:text-4xl font-extrabold tabular-nums leading-none"
           style={{
@@ -2441,7 +2441,7 @@ function UpcomingOutlook({ streams, prices }: { streams: VestingStream[]; prices
           {eventCount !== 1 ? "s" : ""} · {OUTLOOK_WINDOW_LABEL[window].toLowerCase()}
         </p>
 
-        {/* Cumulative projection sparkline — shape of unlock pressure */}
+        {/* Cumulative projection sparkline – shape of unlock pressure */}
         <div className="mt-3">
           <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
             <defs>
@@ -2705,7 +2705,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
                 </div>
               </div>
 
-              {/* End date label — inline for normal streams, pinned to right edge for extending ones */}
+              {/* End date label – inline for normal streams, pinned to right edge for extending ones */}
               {!extendsBeyond ? (
                 <span className="absolute text-[10px] font-medium whitespace-nowrap"
                   style={{ left: `${endPct}%`, top: "50%", transform: "translateY(-50%)", paddingLeft: 6, color: "var(--preview-text-3)", zIndex: 1 }}>
@@ -2726,7 +2726,7 @@ function UnlockTimeline({ streams }: { streams: VestingStream[]; dark: boolean }
         );
       })}
 
-      {/* ── Future streams (start > 2yr window) — shown as text rows ────── */}
+      {/* ── Future streams (start > 2yr window) – shown as text rows ────── */}
       {futureStreams.length > 0 && (
         <div style={{ borderTop: "1px solid var(--preview-border-2)" }}>
           <div className="px-5 py-2"
@@ -2856,7 +2856,7 @@ function MonthlyCashFlow({
 
       {/* Chart */}
       <div className="px-6 py-5">
-        {/* Value label row — two lines per bar: primary metric + secondary when both available */}
+        {/* Value label row – two lines per bar: primary metric + secondary when both available */}
         <div className="flex gap-0.5 mb-1.5" style={{ height: 34 }}>
           {data.map((d, i) => {
             const val    = hasPrice ? d.usd : d.raw;
@@ -2909,7 +2909,7 @@ function MonthlyCashFlow({
               const segTotal = segments.reduce((s, t) => s + t.val, 0);
               return (
                 <div key={d.month} className="flex-1 group relative flex flex-col justify-end" style={{ height: "100%" }}>
-                  {/* Hover tooltip — always shows both metrics when available */}
+                  {/* Hover tooltip – always shows both metrics when available */}
                   {(val > 0 || d.usd > 0) && (
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap rounded-lg px-2.5 py-1.5"
                       style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", boxShadow: "0 4px 16px rgba(0,0,0,0.14)" }}>
@@ -3032,7 +3032,7 @@ interface TokenMarket {
 }
 
 function fmtCompact(n: number | null): string {
-  if (n === null || n === 0) return "—";
+  if (n === null || n === 0) return "–";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -3169,10 +3169,10 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
                       <p className="text-[10px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>No price data</p>
                     )}
                   </div>
-                  {/* current price change — moved to labeled row below */}
+                  {/* current price change – moved to labeled row below */}
                 </div>
 
-                {/* Price change row — 1h / 6h / 24h */}
+                {/* Price change row – 1h / 6h / 24h */}
                 {hasData && (m.change1h !== null || m.change6h !== null || m.change24h !== null) && (
                   <div className="flex items-center gap-1.5 mb-3">
                     {changePill("1h", m.change1h)}
@@ -3210,7 +3210,7 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
                 )}
                 {m.liquidity === "low" && hasData && (
                   <p className="text-[9px] mb-3" style={{ color: "#B3322E" }}>
-                    ⚠ Low liquidity — large sells may have significant price impact.
+                    ⚠ Low liquidity – large sells may have significant price impact.
                   </p>
                 )}
 
@@ -3293,7 +3293,7 @@ function TokenMarketPanel({ tokens }: { tokens: TokenInfo[] }) {
 
 // ─── PnLPanel ─────────────────────────────────────────────────────────────────
 // Per-token purchase + sell transaction log. Entry price derived from purchases.
-// All data stored in localStorage only — nothing sent to any server.
+// All data stored in localStorage only – nothing sent to any server.
 
 type SellTx = { id: string; date: string; amount: number; pricePer: number };
 type BuyTx  = { id: string; date: string; amount: number; pricePer: number };
@@ -3379,7 +3379,7 @@ function PnLPanel({
     const pricePer = fmMode === "total" ? px / amt : px;
     // ID generation: React 19's react-hooks/purity flags Date.now() + Math.random()
     // here because the function is defined during render. But this IS a click
-    // handler — it never runs during render, only when the user clicks Save. The
+    // handler – it never runs during render, only when the user clicks Save. The
     // disable scopes the suppression to this exact line.
     // eslint-disable-next-line react-hooks/purity
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -3435,7 +3435,7 @@ function PnLPanel({
         <div>
           <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>P&amp;L Tracker</h2>
           <p className="text-[11px] mt-0.5" style={{ color: "var(--preview-text-3)" }}>
-            Log entry price &amp; individual sales — realized &amp; unrealized P&amp;L, stored locally
+            Log entry price &amp; individual sales – realized &amp; unrealized P&amp;L, stored locally
           </p>
         </div>
         {(hasAnyRealized || hasAnyUnrealized) ? (
@@ -3478,7 +3478,7 @@ function PnLPanel({
         style={{ background: "rgba(28,184,184,0.05)", borderBottom: "1px solid rgba(28,184,184,0.12)" }}>
         <span style={{ fontSize: 12, color: "#0F8A8A" }}>☁</span>
         <span style={{ color: "var(--preview-text-3)" }}>
-          P&amp;L data syncs to your account — available on any device.
+          P&amp;L data syncs to your account – available on any device.
           Local data from this browser is migrated automatically on first load.
         </span>
       </div>
@@ -3524,7 +3524,7 @@ function PnLPanel({
                     {entryFromBuys ? "Avg cost" : "Entry"}
                   </span>
                   {entryFromBuys ? (
-                    // Auto-calculated from purchase transactions — show as read-only with indicator
+                    // Auto-calculated from purchase transactions – show as read-only with indicator
                     <span className="rounded-lg px-2 py-1 text-xs font-mono tabular-nums flex items-center gap-1"
                       style={{ color: "var(--preview-text)", background: t.color + "12", border: `1px solid ${t.color}30` }}>
                       ${entryPrice!.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
@@ -3549,7 +3549,7 @@ function PnLPanel({
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-medium" style={{ color: "var(--preview-text-3)" }}>Now</span>
                   <span className="text-xs font-mono" style={{ color: "var(--preview-text-2)" }}>
-                    {currentPrice ? `$${currentPrice >= 0.01 ? currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : currentPrice.toFixed(8)}` : "—"}
+                    {currentPrice ? `$${currentPrice >= 0.01 ? currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : currentPrice.toFixed(8)}` : "–"}
                   </span>
                 </div>
               </div>
@@ -3824,7 +3824,7 @@ function PnLPanel({
               ) : !entryPrice ? (
                 <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>Log a purchase or set an entry price to track P&amp;L</p>
               ) : entryPrice && !currentPrice ? (
-                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>No live price for {t.symbol} — unrealized P&amp;L unavailable</p>
+                <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>No live price for {t.symbol} – unrealized P&amp;L unavailable</p>
               ) : null}
             </div>
           );
@@ -3857,7 +3857,7 @@ function DarkToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void })
   );
 }
 
-// WalletChip moved to src/components/WalletChip.tsx — the account chip now
+// WalletChip moved to src/components/WalletChip.tsx – the account chip now
 // lives in the universal <DashboardHeader> (rendered by DashboardChrome on
 // every tab), not in this page's local header.
 
@@ -3874,7 +3874,7 @@ const PROTOCOL_LABELS: Record<string, string> = {
 
 // ─── AddWalletModal ───────────────────────────────────────────────────────────
 // Simplified: just enter an address. We scan all chains × all protocols
-// automatically — no chain/protocol dropdowns needed.
+// automatically – no chain/protocol dropdowns needed.
 
 function AddWalletModal({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const [address, setAddress] = useState("");
@@ -3895,7 +3895,7 @@ function AddWalletModal({ onAdd, onCancel }: { onAdd: () => void; onCancel: () =
     setError(null);
     const trimmed = address.trim();
     if (!isValidWalletAddress(trimmed)) {
-      setError("Invalid address — expected EVM 0x… or Solana pubkey");
+      setError("Invalid address – expected EVM 0x… or Solana pubkey");
       return;
     }
     setLoading(true);
@@ -3910,12 +3910,12 @@ function AddWalletModal({ onAdd, onCancel }: { onAdd: () => void; onCancel: () =
       if (res.status === 402) {
         const j = await res.json();
         const nextPlan = j.tier === "free" ? "Pro" : "Enterprise";
-        setError(`${j.error ?? "Plan limit reached"} — upgrade to ${nextPlan} to add more wallets.`);
+        setError(`${j.error ?? "Plan limit reached"} – upgrade to ${nextPlan} to add more wallets.`);
         return;
       }
       if (!res.ok) { const j = await res.json().catch(() => ({})); setError((j as {error?:string}).error ?? "Failed to add wallet"); return; }
       onAdd();
-    } catch { setError("Network error — please try again"); }
+    } catch { setError("Network error – please try again"); }
     finally { setLoading(false); }
   }
 
@@ -4051,7 +4051,7 @@ function Spinner16() {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-// Nav definition — `active` is computed from usePathname() at render time,
+// Nav definition – `active` is computed from usePathname() at render time,
 // not hardcoded. The previous static `active: true` on Dashboard meant the
 // Dashboard pill stayed highlighted regardless of which sub-route the user
 // was viewing, and the Explorer pill never lit up.
@@ -4065,7 +4065,7 @@ const NAV_ITEMS = [
   { icon: <IconSettings />, label: "Settings",       href: "/settings"                    },
 ];
 
-// ─── WalletRow (sidebar wallet entry — clean display with config badges) ──────
+// ─── WalletRow (sidebar wallet entry – clean display with config badges) ──────
 
 function WalletRow({
   wallet, onRemove,
@@ -4086,7 +4086,7 @@ function WalletRow({
       >
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
         <span className="flex-1 truncate font-medium">{wallet.label ?? shortAddr(wallet.address)}</span>
-        {/* Config filter dot — visible only when filters are set */}
+        {/* Config filter dot – visible only when filters are set */}
         {hasConfig && (
           <span className="flex-shrink-0 w-1 h-1 rounded-full" style={{ background: "#1CB8B8" }} title="Custom filters applied" />
         )}
@@ -4097,7 +4097,7 @@ function WalletRow({
         >×</button>
       </div>
 
-      {/* Config badge tooltip — appears above the row on hover */}
+      {/* Config badge tooltip – appears above the row on hover */}
       {hasConfig && (
         <div className="absolute left-0 right-0 bottom-full mb-1.5 hidden group-hover:flex flex-wrap gap-1 px-2.5 py-2 rounded-xl z-50 pointer-events-none"
           style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)", boxShadow: "0 4px 16px rgba(0,0,0,0.18)" }}>
@@ -4129,14 +4129,14 @@ function WalletRow({
 
 // ─── OnboardingModal ──────────────────────────────────────────────────────────
 // First-visit welcome modal. Shown once (localStorage flag prevents repeat).
-// Warm tone — these users are arriving from the mobile app so they already
+// Warm tone – these users are arriving from the mobile app so they already
 // trust Vestream. Goal: orient them quickly and surface the Pro features.
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const features = [
     { icon: <IconGrid />,     title: "Portfolio overview", desc: "Every vesting stream, claimable amount, and total portfolio value in one place." },
     { icon: <IconCalendar size={16} />, title: "Vesting schedule", desc: "A visual unlock timeline so you always know what's coming and when." },
-    { icon: <IconCashFlow size={16} />, title: "Monthly cashflow", desc: "Month-by-month view of tokens unlocking — plan treasury or personal finances ahead." },
+    { icon: <IconCashFlow size={16} />, title: "Monthly cashflow", desc: "Month-by-month view of tokens unlocking – plan treasury or personal finances ahead." },
     { icon: <IconSearch />,   title: "Wallet scanner", desc: "Scan any wallet to discover vesting streams across all major protocols instantly." },
     { icon: <IconTrendUp size={16} />,  title: "P&L tracker", desc: "Log entry prices and sales to track realized and unrealized profit on vested tokens." },
     { icon: <IconExport />,   title: "Tax exports", desc: "One-click CSV exports compatible with Koinly, CoinTracker, and TurboTax." },
@@ -4170,7 +4170,7 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
             Welcome to your vesting dashboard
           </h2>
           <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-            Every unlock, claim, and price across your wallets and protocols — in one live view. Here&apos;s a quick tour.
+            Every unlock, claim, and price across your wallets and protocols – in one live view. Here&apos;s a quick tour.
           </p>
         </div>
 
@@ -4233,7 +4233,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
       });
       setDone(true);
     } catch {
-      // Silent fail — feedback isn't critical
+      // Silent fail – feedback isn't critical
       setDone(true);
     }
   }
@@ -4328,7 +4328,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       style={{ background: "var(--preview-card)", borderRight: "1px solid var(--preview-border)" }}>
 
       {/* Logo. Two <img> tags, swapped via Tailwind's `dark:` variant
-          (defined in globals.css as `&:is(.dark *)` — i.e. any descendant
+          (defined in globals.css as `&:is(.dark *)` – i.e. any descendant
           of a .dark element). The Sidebar lives under the dashboard root
           which sets `.dark` based on the toggle, so the right variant
           renders without JS. */}
@@ -4343,7 +4343,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
       </a>
 
       {/* Nav.
-          Discover is no longer Pro-locked — free users get 3 lifetime
+          Discover is no longer Pro-locked – free users get 3 lifetime
           scans, then upgrade. Explorer (block-explorer search) is open
           to all tiers but free is capped at 50 results / single filter
           so the surface still drives Pro conversion. We badge both with
@@ -4353,7 +4353,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         {NAV_ITEMS.map((item) => {
           const isFree         = tier === "free";
           const showFreeBadge  = isFree && (item.href === "/dashboard/discover"); // "Wallet Scanner"
-          // Dynamic active — Dashboard matches exact path; everything else
+          // Dynamic active – Dashboard matches exact path; everything else
           // matches when pathname starts with item.href so sub-routes
           // (e.g. /dashboard/explorer/[token]) keep the parent highlighted.
           const isActive = item.href === "/dashboard"
@@ -4394,12 +4394,12 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
             onRemove={() => onRemoveWallet(w.address)}
           />
         ))}
-        {/* Add wallet button — or upgrade nudge if at limit */}
+        {/* Add wallet button – or upgrade nudge if at limit */}
         {walletLimit !== null && wallets.length >= walletLimit ? (
           <div className="mt-2 mx-1 px-3 py-2 rounded-xl"
             style={{ background: "var(--preview-muted)", border: "1px solid var(--preview-border-2)" }}>
             <p className="text-[9px]" style={{ color: "var(--preview-text-3)" }}>
-              {walletLimit}/{walletLimit} wallets — {tier === "free" ? "upgrade to add more" : "contact us for Enterprise"}
+              {walletLimit}/{walletLimit} wallets – {tier === "free" ? "upgrade to add more" : "contact us for Enterprise"}
             </p>
           </div>
         ) : (
@@ -4419,7 +4419,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
         )}
       </div>
 
-      {/* Footer — tier badge */}
+      {/* Footer – tier badge */}
       <div className="px-3 pb-3 flex-shrink-0 space-y-2" style={{ borderTop: "1px solid var(--preview-border-2)", paddingTop: "0.75rem" }}>
 
         {/* Enterprise plan badge (internal tier name "fund" stays in the
@@ -4436,7 +4436,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           </div>
         )}
 
-        {/* Pro plan badge — previously said "5 wallets" but the real cap
+        {/* Pro plan badge – previously said "5 wallets" but the real cap
             (enforced server-side + on /pricing) is 3. */}
         {tier === "pro" && (
           <div className="px-3 py-2.5 rounded-xl"
@@ -4458,7 +4458,7 @@ function Sidebar({ wallets, tier, walletLimit, isOpen, onClose, onAddWallet, onR
           </div>
         )}
 
-        {/* Free plan badge — previously claimed "1 chain · no alerts"
+        {/* Free plan badge – previously claimed "1 chain · no alerts"
             which is wrong on both counts (Free auto-scans all 5 chains
             AND gets 3 lifetime push alerts per /pricing). Progress bar
             also used red (read-as-error) at cap; switched to amber
@@ -4580,7 +4580,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function Dashboard() {
   const router = useRouter();
-  // wagmi useAccount is used inside AddWalletBar — nothing needed at top level
+  // wagmi useAccount is used inside AddWalletBar – nothing needed at top level
   const [wallets, setWallets]             = useState<Wallet[]>([]);
   const [walletsLoaded, setWalletsLoaded] = useState(false);
   const [tier, setTier]                   = useState<string>("free");
@@ -4588,11 +4588,11 @@ export default function Dashboard() {
   const [showAddWallet, setShowAddWallet] = useState(false);
   // Night mode is now a single shared control (sidebar) backed by
   // DarkModeProvider. Read the reactive value here for inline-styled children
-  // (PortfolioHero gradient, UnlockTimeline) — no local state, no per-page toggle.
+  // (PortfolioHero gradient, UnlockTimeline) – no local state, no per-page toggle.
   const { dark }                          = useDarkMode();
   const [activeTokens, setActiveTokens]   = useState<Set<string>>(new Set());
   const [upsell, setUpsell]               = useState<{ featureName: string; requiredTier: "pro" | "fund" } | null>(null);
-  // sidebarOpen state moved to DashboardChrome (the layout wrapper) — every
+  // sidebarOpen state moved to DashboardChrome (the layout wrapper) – every
   // dashboard sub-route now shares the same drawer state via context.
   const { toggleSidebar }                 = useDashboardChrome();
   const [showFeedback, setShowFeedback]   = useState(false);
@@ -4628,7 +4628,7 @@ export default function Dashboard() {
         const migrated: Record<string, SellTx[]> = {};
         for (const [sym, val] of Object.entries(parsed)) {
           if (Array.isArray(val)) migrated[sym] = val as SellTx[];
-          // else: old {amount, avgPrice} object — silently discard
+          // else: old {amount, avgPrice} object – silently discard
         }
         setSells(migrated);
         localStorage.setItem("vestr-sells", JSON.stringify(migrated));
@@ -4701,7 +4701,7 @@ export default function Dashboard() {
       try { localStorage.setItem("vestr-sells", JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
-    // Delete from Supabase (fire-and-forget — ID is either Supabase UUID or temp)
+    // Delete from Supabase (fire-and-forget – ID is either Supabase UUID or temp)
     const addr = symbolToAddress.current[symbol];
     if (addr) {
       fetch(`/api/dashboard/pnl/${encodeURIComponent(addr)}/sales/${encodeURIComponent(id)}`, {
@@ -4763,7 +4763,7 @@ export default function Dashboard() {
         setWalletLimit(json.walletLimit !== undefined ? json.walletLimit : 3);
       }
     } catch {
-      // Network error — fall through, walletsLoaded still gets set so UI doesn't hang
+      // Network error – fall through, walletsLoaded still gets set so UI doesn't hang
     } finally {
       setWalletsLoaded(true);
     }
@@ -4802,7 +4802,7 @@ export default function Dashboard() {
       // real data lands seconds after the background scan finishes; once
       // streams arrive, drop back to the lazy 60s refresh.
       refreshInterval: (latest) => (latest?.scanning ? 4_000 : 60_000),
-      // revalidateOnFocus inherits the provider default (false) — the 60s
+      // revalidateOnFocus inherits the provider default (false) – the 60s
       // poll already covers staleness, so refetching on every tab-focus
       // was pure cost. (Was an explicit `true` override here.)
     }
@@ -4831,7 +4831,7 @@ export default function Dashboard() {
   // ── Phase 2: merge cloud P&L once streams are known ──────────────────────
   // Runs after the streams SWR fetch resolves. Builds symbolToAddress from
   // streams, then fetches /api/dashboard/pnl and overlays results.
-  // Cloud data wins for any symbol that has a Supabase entry — otherwise
+  // Cloud data wins for any symbol that has a Supabase entry – otherwise
   // the localStorage data from Phase 1 is kept as-is (works offline too).
   useEffect(() => {
     if (pnlCloudLoaded.current) return;  // only load once per session
@@ -4862,7 +4862,7 @@ export default function Dashboard() {
 
         for (const [addr, pnlData] of Object.entries(json.byToken)) {
           const sym = a2s[addr];
-          if (!sym) continue;  // address not in this user's streams — skip
+          if (!sym) continue;  // address not in this user's streams – skip
           if (pnlData.entryPrice !== null) newCostBasis[sym] = pnlData.entryPrice;
           if (pnlData.sales.length > 0) {
             newSells[sym] = pnlData.sales.map(s => ({ id: s.id, date: s.date, amount: s.amount, pricePer: s.price }));
@@ -4872,7 +4872,7 @@ export default function Dashboard() {
           }
         }
 
-        // Only update state if the cloud actually has data — don't wipe localStorage
+        // Only update state if the cloud actually has data – don't wipe localStorage
         // for tokens that aren't in Supabase yet (those stay as-is).
         if (Object.keys(newCostBasis).length > 0) {
           setCostBasis(prev => ({ ...prev, ...newCostBasis }));
@@ -4884,7 +4884,7 @@ export default function Dashboard() {
           setBuys(prev => ({ ...prev, ...newBuys }));
         }
       })
-      .catch(() => { /* cloud unavailable — localStorage data stays */ });
+      .catch(() => { /* cloud unavailable – localStorage data stays */ });
   }, [streams]);
 
   useEffect(() => {
@@ -4910,7 +4910,7 @@ export default function Dashboard() {
 
   const filteredStreams = streams.filter((s) => activeTokens.has(s.tokenSymbol));
 
-  // Build market query from filteredStreams — identical to what TokenMarketPanel uses,
+  // Build market query from filteredStreams – identical to what TokenMarketPanel uses,
   // guaranteeing SWR deduplicates both into a single request and prices stay in sync.
   const marketQuery = (() => {
     const seen = new Set<string>();
@@ -4948,13 +4948,13 @@ export default function Dashboard() {
   // Sidebar component (with its own NAV_ITEMS) has been removed; the
   // layout's shared DashboardSidebar is now canonical and consistent
   // across every dashboard sub-route. Wallet management UI continues to
-  // live on this page — it migrates from the sidebar into the main
+  // live on this page – it migrates from the sidebar into the main
   // content area (see "Tracked wallets" section below). The mobile
   // hamburger now calls `toggleSidebar()` from the chrome context.
   //
   // Returning a Fragment so the modals (which use position: fixed) can
   // sit as siblings of the main content column without an extra wrapping
-  // div — keeps DOM clean and matches the previous mount semantics.
+  // div – keeps DOM clean and matches the previous mount semantics.
   return (
     <>
       <div className={`flex-1 flex flex-col min-w-0 overflow-hidden${dark ? " dark" : ""}`}>
@@ -5008,7 +5008,7 @@ export default function Dashboard() {
               </div>
               <PortfolioHero streams={filteredStreams} walletCount={wallets.length} dark={dark} prices={prices} />
 
-              {/* Global token filter — drives filteredStreams across the whole
+              {/* Global token filter – drives filteredStreams across the whole
                   dashboard. Kept directly above the table so you filter the
                   content you're reading. (Previously these pills lived inside
                   the Portfolio Mix card, which now sits below the table.) */}
@@ -5039,7 +5039,7 @@ export default function Dashboard() {
               })()}
 
               {/* ── Tab strip for below-fold panels ───────────────────── */}
-              {/* Floating pill tabs — each panel keeps its own card wrapper below */}
+              {/* Floating pill tabs – each panel keeps its own card wrapper below */}
               <div className="flex gap-1 mb-3 overflow-x-auto">
                 {(["schedule", "cashflow", "pnl", "market", "gantt"] as const).map((tab) => {
                   const labels: Record<string, string> = {
@@ -5070,7 +5070,7 @@ export default function Dashboard() {
                 })}
               </div>
 
-              {/* Active panel — each renders its own full card */}
+              {/* Active panel – each renders its own full card */}
               {activeTab === "schedule" && (
                 <VestingTable streams={filteredStreams} prices={prices} imageUrls={imageUrls} onClaim={() => {
                   // Auto-refresh stream data 15s after a claim action
@@ -5108,7 +5108,7 @@ export default function Dashboard() {
                 <UnlockTimeline streams={filteredStreams} dark={dark} />
               )}
 
-              {/* Secondary insight panels — moved below the table so the
+              {/* Secondary insight panels – moved below the table so the
                   schedule sits high on the page. Upcoming outlook + the
                   portfolio-mix / claimable-vs-locked charts. */}
               <div className="mt-5">
@@ -5116,7 +5116,7 @@ export default function Dashboard() {
                 <SnapshotPanel streams={filteredStreams} prices={prices} />
               </div>
 
-              {/* Footer — stacks on mobile (links above copyright) so the
+              {/* Footer – stacks on mobile (links above copyright) so the
                   links stay tap-friendly on phones, side-by-side on md+. */}
               <footer className="mt-6 pt-4 pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between flex-shrink-0 gap-3 sm:gap-0"
                 style={{ borderTop: "1px solid var(--preview-border-2)" }}>
@@ -5131,7 +5131,7 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Upsell modal — rendered outside scroll container so it covers everything */}
+      {/* Upsell modal – rendered outside scroll container so it covers everything */}
       {upsell && (
         <UpsellModal
           featureName={upsell.featureName}
@@ -5140,7 +5140,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Add wallet modal — simple address-only form, scans all chains+protocols */}
+      {/* Add wallet modal – simple address-only form, scans all chains+protocols */}
       {showAddWallet && (
         <AddWalletModal
           onAdd={() => { loadWallets(); setShowAddWallet(false); }}
@@ -5148,7 +5148,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Onboarding welcome modal — first visit only */}
+      {/* Onboarding welcome modal – first visit only */}
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
       {/* Beta feedback modal */}

@@ -44,7 +44,7 @@ const fetcher = async (url: string) => {
 };
 
 export function StreamAnnotationEditor({ streamId }: Props) {
-  // Per-stream fetch — cheap because the expanded row is the only place
+  // Per-stream fetch – cheap because the expanded row is the only place
   // this component mounts. SWR caches across remounts within the session.
   const { data, mutate, isLoading } = useSWR<{ annotation: Annotation | null }>(
     `/api/streams/${encodeURIComponent(streamId)}/annotation`,
@@ -61,7 +61,7 @@ export function StreamAnnotationEditor({ streamId }: Props) {
   const [error,  setError]  = useState<string | null>(null);
 
   // Sync local draft state when SWR data lands / changes (avoid clobbering
-  // user keystrokes mid-edit — only sync when not actively editing).
+  // user keystrokes mid-edit – only sync when not actively editing).
   useEffect(() => {
     if (!editing) {
       setNameDraft(annotation?.customName ?? "");
@@ -141,7 +141,7 @@ export function StreamAnnotationEditor({ streamId }: Props) {
             </p>
           ) : !hasName ? (
             <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-              No notes yet — add a custom name or context to help distinguish this stream.
+              No notes yet – add a custom name or context to help distinguish this stream.
             </p>
           ) : null}
         </div>
@@ -189,7 +189,7 @@ export function StreamAnnotationEditor({ streamId }: Props) {
           type="text"
           value={nameDraft}
           onChange={(e) => setNameDraft(e.target.value.slice(0, NAME_MAX + 20))}
-          placeholder="e.g. Series A — Acme Capital allocation"
+          placeholder="e.g. Series A – Acme Capital allocation"
           className="w-full text-sm px-3 py-2 rounded-md outline-none focus:ring-2"
           style={{
             background: "var(--preview-card)",
@@ -212,7 +212,7 @@ export function StreamAnnotationEditor({ streamId }: Props) {
         <textarea
           value={notesDraft}
           onChange={(e) => setNotesDraft(e.target.value.slice(0, NOTES_MAX + 20))}
-          placeholder="Anything that helps you distinguish this stream — issuer, deal terms, tax notes…"
+          placeholder="Anything that helps you distinguish this stream – issuer, deal terms, tax notes…"
           rows={3}
           className="w-full text-xs px-3 py-2 rounded-md outline-none focus:ring-2 resize-none"
           style={{

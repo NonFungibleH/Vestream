@@ -160,7 +160,7 @@ export default function FindVestingsClient() {
   }, []);
 
   // Auto-scan when wallet becomes connected (or swaps).
-  // Check sessionStorage first — if a recent result exists, show it
+  // Check sessionStorage first – if a recent result exists, show it
   // immediately without hitting the network again.
   useEffect(() => {
     if (!isConnected || !connectedAddress) return;
@@ -230,7 +230,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 10 protocols and 7 chains — EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 10 protocols and 7 chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the
@@ -279,7 +279,7 @@ export default function FindVestingsClient() {
               type="text"
               value={manualAddress}
               onChange={(e) => setManualAddress(e.target.value)}
-              placeholder="Paste any wallet — 0x… or Solana pubkey"
+              placeholder="Paste any wallet – 0x… or Solana pubkey"
               disabled={loading}
               className="flex-1 px-4 py-3 text-sm font-mono rounded-xl outline-none focus:ring-2"
               style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.08)", color: "#1A1D20", minWidth: 240 }}
@@ -386,13 +386,13 @@ export default function FindVestingsClient() {
  * loading branch).
  */
 function ResultsBlock({ result }: { result: ScanResponse }) {
-  // Anchor that the sticky bar observes — when this is offscreen, the
+  // Anchor that the sticky bar observes – when this is offscreen, the
   // sticky bar slides in. When it's on-screen, sticky bar slides out so
   // we never double-CTA the user.
   const stripRef = useRef<HTMLDivElement | null>(null);
 
   // Pick a "primary symbol" to personalise the conversion headline. We
-  // use the symbol with the most streams as a heuristic — it's the user's
+  // use the symbol with the most streams as a heuristic – it's the user's
   // dominant exposure and the one they'll most viscerally not-want-to-miss.
   // Falls back to null if nothing has a symbol (rare; renders generic copy).
   const primarySymbol = useMemo<string | null>(() => {
@@ -415,7 +415,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
     <>
       <ResultsSummary result={result} />
 
-      {/* Primary conversion gate — store download badges, directly after summary */}
+      {/* Primary conversion gate – store download badges, directly after summary */}
       <div ref={stripRef}>
         <DownloadGate
           totalStreams={result.totalStreams}
@@ -424,7 +424,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
         />
       </div>
 
-      {/* Teaser cards — protocol/chain/symbol visible, amounts blurred */}
+      {/* Teaser cards – protocol/chain/symbol visible, amounts blurred */}
       <div className="grid grid-cols-1 gap-3">
         {result.groups.map((g) => (
           <TeaserCard
@@ -435,7 +435,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
         ))}
       </div>
 
-      {/* Secondary conversion — email capture, demoted to below the cards */}
+      {/* Secondary conversion – email capture, demoted to below the cards */}
       <SaveToAppCard walletAddress={result.address} />
 
       <StickyAppBar
@@ -448,7 +448,7 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Scanning indicator — animated progress signal during the 10-30s scan
+// Scanning indicator – animated progress signal during the 10-30s scan
 // ─────────────────────────────────────────────────────────────────────────
 
 const SCAN_PROTOCOLS = [
@@ -466,7 +466,7 @@ const SCAN_PROTOCOLS = [
 
 function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
   // Cycle through protocol names every ~1s so the user can see progress
-  // happening even if the API is still pending. Visual lie? A bit — the
+  // happening even if the API is still pending. Visual lie? A bit – the
   // adapters mostly run in parallel so we don't actually finish protocol N
   // at second N. But the cycling indicator vastly improves perceived
   // responsiveness; without it a 20s scan feels like the app froze.
@@ -480,7 +480,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Hero scanning card — pulsing radar + active protocol name */}
+      {/* Hero scanning card – pulsing radar + active protocol name */}
       <div
         className="rounded-2xl p-6 md:p-8 text-center relative overflow-hidden"
         style={{
@@ -542,7 +542,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
         <div className="text-xs uppercase tracking-wider font-semibold mb-1.5" style={{ color: "#1CB8B8" }}>
           Scanning {scanningLabel || "wallet"}
         </div>
-        {/* Active-protocol carousel — single line, swaps every 900ms.
+        {/* Active-protocol carousel – single line, swaps every 900ms.
             Fixed height keeps the layout from jumping. */}
         <div className="h-7 flex items-center justify-center" style={{ color: "#1A1D20" }}>
           <span className="text-base md:text-lg font-bold tabular-nums" style={{ letterSpacing: "-0.02em" }}>
@@ -558,7 +558,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
           </span>
         </div>
 
-        {/* Progress bar — pure CSS sweeping animation. NOT tied to actual
+        {/* Progress bar – pure CSS sweeping animation. NOT tied to actual
             scan progress (the API doesn't expose granular state) but the
             constant motion signals the job is alive. */}
         <div
@@ -575,11 +575,11 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
         </div>
 
         <p className="text-xs mt-4" style={{ color: "#B8BABD" }}>
-          Scanning all supported protocols and chains — usually 10–30 seconds.
+          Scanning all supported protocols and chains – usually 10–30 seconds.
         </p>
       </div>
 
-      {/* Skeleton result cards — subtle preview of where data will land. */}
+      {/* Skeleton result cards – subtle preview of where data will land. */}
       <div className="grid grid-cols-1 gap-3">
         {[0, 1, 2].map((i) => (
           <div
@@ -602,7 +602,7 @@ function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
 
 /**
  * Primary conversion gate shown immediately after ResultsSummary.
- * Goal: one dominant action — download the app to unlock amounts.
+ * Goal: one dominant action – download the app to unlock amounts.
  * No social proof copy until we have real review data.
  */
 function DownloadGate({
@@ -616,7 +616,7 @@ function DownloadGate({
 }) {
   return (
     <>
-      {/* keyframes for pulsing glow + badge float — scoped to this component */}
+      {/* keyframes for pulsing glow + badge float – scoped to this component */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes gate-glow {
           0%, 100% { box-shadow: 0 14px 40px rgba(28,184,184,0.30); }
@@ -667,10 +667,10 @@ function DownloadGate({
             className="text-sm md:text-base mb-7 max-w-sm mx-auto"
             style={{ color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}
           >
-            See live amounts, track progress, and claim — free on iOS and Android.
+            See live amounts, track progress, and claim – free on iOS and Android.
           </p>
 
-          {/* Store badges — centred, floating animation */}
+          {/* Store badges – centred, floating animation */}
           <div className="flex flex-wrap gap-3 justify-center">
             <a
               href="https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911"
@@ -738,7 +738,7 @@ function DownloadGate({
             Free · iOS &amp; Android
           </p>
 
-          {/* Notification mockup — centred below badges */}
+          {/* Notification mockup – centred below badges */}
           <div className="mt-6 flex justify-center">
             <NotificationMockup primarySymbol={primarySymbol} />
           </div>
@@ -749,11 +749,11 @@ function DownloadGate({
 }
 
 /**
- * Stylised lock-screen notification preview. Renders on all screen sizes —
+ * Stylised lock-screen notification preview. Renders on all screen sizes –
  * full-width and stacked below the headline copy on mobile, fixed-width in
  * the right column on md+.
  *
- * Deliberately abstract — not a real device chrome, just enough visual
+ * Deliberately abstract – not a real device chrome, just enough visual
  * vocabulary that users read it as "phone notification". Avoids brand
  * confusion (looks like neither a real iPhone nor a Pixel) while still
  * landing the message: this is what the app does for you.
@@ -805,7 +805,7 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
         </div>
       </div>
 
-      {/* Second, more subtle peek — implies a STREAM of alerts, not one */}
+      {/* Second, more subtle peek – implies a STREAM of alerts, not one */}
       <div
         className="rounded-2xl p-2.5 mx-2 opacity-70"
         style={{
@@ -833,17 +833,17 @@ function NotificationMockup({ primarySymbol }: { primarySymbol: string | null })
  * Why a sticky bar specifically: the inline strip is a single visual
  * moment; once it's offscreen the user still has the dopamine of seeing
  * their numbers but no reminder of the next step. The sticky bar is
- * "Smart App Banner"-style — a low-cost permanent affordance that the
+ * "Smart App Banner"-style – a low-cost permanent affordance that the
  * user dismisses by scrolling away or acting on.
  */
 // ─────────────────────────────────────────────────────────────────────────
-// Save-to-app handoff card — captures email, persists (email, wallet) into
+// Save-to-app handoff card – captures email, persists (email, wallet) into
 // pending_wallet_links via /api/find-vestings/save-link. When the user
 // later signs into the mobile app with the same email via OTP, the verify
 // handler auto-claims every matching row and pre-loads the wallet into
 // their portfolio.
 //
-// No App Store deep link or attribution SDK needed — the email is the
+// No App Store deep link or attribution SDK needed – the email is the
 // attribution vector. The card just primes the backend; the user installs
 // from the App Store / Play Store badges further down the page.
 // ─────────────────────────────────────────────────────────────────────────
@@ -868,12 +868,12 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || "Couldn't save — try again");
+        throw new Error(body?.error || "Couldn't save – try again");
       }
       setSaved(true);
       track("cta_clicked", { cta_id: "find_vestings_save_to_app", surface: "find_vestings_results" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Couldn't save — try again");
+      setError(e instanceof Error ? e.message : "Couldn't save – try again");
     } finally {
       setBusy(false);
     }
@@ -898,7 +898,7 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
               Saved to <span style={{ color: "#0F8A8A" }}>{email}</span>
             </h3>
             <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-              Install the app and sign in with the same email — your scan will be ready in the portfolio. App Store and Play Store links are further down this page.
+              Install the app and sign in with the same email – your scan will be ready in the portfolio. App Store and Play Store links are further down this page.
             </p>
           </div>
         </div>
@@ -926,7 +926,7 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
             Continue in the app
           </h3>
           <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-            On desktop? Drop your email — this scan will be waiting when you open the app. No password, just OTP sign-in.
+            On desktop? Drop your email – this scan will be waiting when you open the app. No password, just OTP sign-in.
           </p>
         </div>
       </div>
@@ -981,7 +981,7 @@ function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams
   useEffect(() => {
     const el = anchorRef.current;
     if (!el || typeof IntersectionObserver === "undefined") {
-      // SSR / older browsers — keep hidden, no JS-driven CTA. The inline
+      // SSR / older browsers – keep hidden, no JS-driven CTA. The inline
       // strip alone covers conversion in that path.
       return;
     }
@@ -1113,7 +1113,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
       className="rounded-2xl p-5 md:p-6"
       style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}
     >
-      {/* ── Card header — always visible ─────────────────────────── */}
+      {/* ── Card header – always visible ─────────────────────────── */}
       <div className="flex items-center gap-3 mb-4">
         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colour }} />
         <div>
@@ -1126,7 +1126,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
         </div>
       </div>
 
-      {/* ── Token rows — amounts blurred, CTA overlay ────────────── */}
+      {/* ── Token rows – amounts blurred, CTA overlay ────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {group.tokens.slice(0, 4).map((tok) => {
           const tokClaimable = BigInt(tok.claimableNowRaw || "0") > 0n;
@@ -1136,17 +1136,17 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
               className="rounded-xl overflow-hidden relative"
               style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}
             >
-              {/* Symbol row — always visible */}
+              {/* Symbol row – always visible */}
               <div className="flex items-center justify-between px-3 pt-3 pb-1">
                 <span className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
-                  {tok.symbol || "—"}
+                  {tok.symbol || "–"}
                 </span>
                 <span className="text-[11px]" style={{ color: "#B8BABD" }}>
                   {tok.streamCount} stream{tok.streamCount === 1 ? "" : "s"}
                 </span>
               </div>
 
-              {/* Amount block — blurred */}
+              {/* Amount block – blurred */}
               <div className="relative" style={{ minHeight: 52 }}>
                 {/* Actual numbers, blurred so they are unreadable */}
                 <div
@@ -1171,7 +1171,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
                   )}
                 </div>
 
-                {/* CTA overlay — sits above the blurred amounts */}
+                {/* CTA overlay – sits above the blurred amounts */}
                 <div
                   className="absolute inset-0 flex items-center justify-center"
                   style={{ background: "rgba(248,250,252,0.55)" }}
@@ -1218,7 +1218,7 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
           />
           <span className="truncate">
             {liveClaimableSymbol ? (
-              <><strong style={{ color: "#0f172a" }}>{liveClaimableSymbol}</strong> ready to claim — open in app</>
+              <><strong style={{ color: "#0f172a" }}>{liveClaimableSymbol}</strong> ready to claim – open in app</>
             ) : (
               <>Live progress &amp; alerts in app</>
             )}
@@ -1265,7 +1265,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#8B8E92" }}>
-        We scanned 10 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana. If this wallet has vestings elsewhere, let us know — we add new protocols every month.
+        We scanned 10 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana. If this wallet has vestings elsewhere, let us know – we add new protocols every month.
       </p>
     </div>
   );

@@ -3,9 +3,9 @@
 // src/components/InteractiveDemo.tsx
 //
 // Three-step interactive walkthrough that mimics the full Vestream product flow:
-//   1. Find   — animated scan across 10 protocols, finds hits on 3 of them
-//   2. Alert  — mock phone frame with dashboard + push notification
-//   3. Claim  — mock Sablier-style protocol UI, claim button, tx success
+//   1. Find   – animated scan across 10 protocols, finds hits on 3 of them
+//   2. Alert  – mock phone frame with dashboard + push notification
+//   3. Claim  – mock Sablier-style protocol UI, claim button, tx success
 //
 // Purely client-side (no API). The user advances steps themselves, with
 // auto-animations inside each step. ~90 seconds end-to-end.
@@ -24,7 +24,7 @@ import Link from "next/link";
 // ── Demo data ────────────────────────────────────────────────────────────────
 const DEMO_WALLET_SHORT = "0x3f5C...8b2e";
 
-// Assumed spot prices — fake but plausible, used to show $-equivalents
+// Assumed spot prices – fake but plausible, used to show $-equivalents
 const PRICE_USD = {
   NOVA: 0.42,
   FLUX: 1.85,
@@ -46,7 +46,7 @@ interface DemoStream {
   unlockInHrs: number;
 }
 
-// Three hits across three different protocols — demonstrates breadth of coverage
+// Three hits across three different protocols – demonstrates breadth of coverage
 const STREAMS: DemoStream[] = [
   {
     protocolId: "sablier", protocolName: "Sablier",
@@ -71,7 +71,7 @@ const STREAMS: DemoStream[] = [
   },
 ];
 
-// Featured stream (the one surfaced on alert + claim steps — the biggest USD value)
+// Featured stream (the one surfaced on alert + claim steps – the biggest USD value)
 const FEATURED = STREAMS[0];
 
 // 8 protocols scanned in parallel; 3 hit in our fake result set
@@ -181,7 +181,7 @@ export function InteractiveDemo() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="relative">
-      {/* Outer "demo widget" frame — strong visual boundary + label */}
+      {/* Outer "demo widget" frame – strong visual boundary + label */}
       <div
         className="absolute -top-3 left-6 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
         style={{
@@ -308,7 +308,7 @@ function StepIndicator({ step }: { step: Step }) {
 }
 
 // ─── Pulse advance button ──────────────────────────────────────────────────
-// Reusable pulsing gradient button — draws attention to the next advance step.
+// Reusable pulsing gradient button – draws attention to the next advance step.
 function PulseAdvanceButton({
   onClick, children, size = "md",
 }: {
@@ -443,7 +443,7 @@ function ScanStep({
                       </svg>
                     )}
                     {isDone && !p.hit && (
-                      <span className="text-[11px] font-semibold" style={{ color: "#cbd5e1" }}>—</span>
+                      <span className="text-[11px] font-semibold" style={{ color: "#cbd5e1" }}>–</span>
                     )}
                   </div>
 

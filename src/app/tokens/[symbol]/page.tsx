@@ -1,4 +1,4 @@
-// /token/[symbol] — symbol-routed token landing page.
+// /token/[symbol] – symbol-routed token landing page.
 //
 // Routing logic:
 //   - 0 matches: 404
@@ -6,7 +6,7 @@
 //   - 2+ matches: render disambiguation page (USDC across 5 chains, etc.)
 //
 // SEO objective: capture branded queries like "ARB unlock", "OP vesting",
-// "PEPE token cliff" — none of which currently land on the canonical
+// "PEPE token cliff" – none of which currently land on the canonical
 // chain+address URL because the URL doesn't contain the symbol.
 
 import type { Metadata } from "next";
@@ -17,11 +17,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getChainSummariesForSymbol, getTopSymbols } from "@/lib/vesting/token-symbols";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 
-// ISR — symbol → (chain, address) mapping rarely changes; cache for 6h.
+// ISR – symbol → (chain, address) mapping rarely changes; cache for 6h.
 export const revalidate = 21600;
 
 // Pre-render top 200 symbols at build time. Long-tail symbols fall through
-// to on-demand ISR — Next.js generates them on first request and caches.
+// to on-demand ISR – Next.js generates them on first request and caches.
 // Wrapped in try/catch so a DB hiccup at build time doesn't kill the build;
 // we'll still have on-demand generation as the safety net.
 export async function generateStaticParams() {
@@ -46,7 +46,7 @@ function fmtTokenAmount(amount: string, decimals: number): string {
     if (n >= 1)   return n.toFixed(2);
     return n.toFixed(4);
   } catch {
-    return "—";
+    return "–";
   }
 }
 
@@ -56,10 +56,10 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   try {
     matches = await getChainSummariesForSymbol(symbol);
   } catch {
-    // Build-time DB outage — return a neutral title; ISR will re-render
+    // Build-time DB outage – return a neutral title; ISR will re-render
     // proper metadata on first runtime request.
   }
-  if (matches.length === 0) return { title: "Token not found — Vestream" };
+  if (matches.length === 0) return { title: "Token not found – Vestream" };
 
   const display = matches[0]?.symbol ?? symbol.toUpperCase();
   const url     = `https://vestream.io/tokens/${symbol.toLowerCase()}`;
@@ -72,13 +72,13 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     const m    = matches[0];
     const chain = CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`;
     return {
-      title:       `${display} unlock schedule on ${chain} — Vestream`,
-      description: `Track ${display} vesting on ${chain} — ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
+      title:       `${display} unlock schedule on ${chain} – Vestream`,
+      description: `Track ${display} vesting on ${chain} – ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
       alternates:  { canonical: `https://vestream.io/token/${m.chainId}/${m.address}` },
     };
   }
 
-  // Multi-chain — describe coverage in the snippet
+  // Multi-chain – describe coverage in the snippet
   const chainList = matches.map((m) => CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`).join(", ");
   return {
     title:       `${display} vesting & unlocks across ${matches.length} chains | Vestream`,

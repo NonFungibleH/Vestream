@@ -1,4 +1,4 @@
-// /unlocks/biggest-this-week — top USD-value unlocks landing this week.
+// /unlocks/biggest-this-week – top USD-value unlocks landing this week.
 //
 // SEO target: "biggest token unlocks this week", "largest unlocks today",
 // etc. The list ranks by enriched usdValue (sub-project A), so what
@@ -22,7 +22,7 @@ export const revalidate = 3600;
 const CANONICAL_URL = "https://www.vestream.io/unlocks/biggest-this-week";
 
 export const metadata: Metadata = {
-  title:       "Biggest Token Unlocks This Week — Live Calendar | Vestream",
+  title:       "Biggest Token Unlocks This Week – Live Calendar | Vestream",
   description: "Every token unlock landing this week, ranked by USD value. Live, on-chain, across Sablier, Hedgey, UNCX, and more.",
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BiggestThisWeekPage() {
-  // "This week" window matches /unlocks/this-week — Mon→Sun in user-local
+  // "This week" window matches /unlocks/this-week – Mon→Sun in user-local
   // time, but the underlying SQL window is UTC so the cached result is
   // shared. enrichGroupsWithUsd() prices everything; the unpriced tail
   // falls to the end of the sort.
@@ -54,7 +54,7 @@ export default async function BiggestThisWeekPage() {
   }
 
   // Priced rows first (USD desc), unpriced rows after (raw amount desc)
-  // — same fallback shape as the explorer's "Largest" sort so the two
+  // – same fallback shape as the explorer's "Largest" sort so the two
   // surfaces agree.
   groups = [...groups].sort((a, b) => {
     const av = a.usdValue, bv = b.usdValue;

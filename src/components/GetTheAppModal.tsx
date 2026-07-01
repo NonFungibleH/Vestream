@@ -2,7 +2,7 @@
 
 // GetTheAppModal
 // ─────────────────────────────────────────────────────────────────────────────
-// "Get the app" modal — the user-facing half of the magic-link auth bridge.
+// "Get the app" modal – the user-facing half of the magic-link auth bridge.
 // Logged-in web user clicks → we mint a single-use handoff token →
 //   - desktop: render a QR code; user scans with iPhone camera; iOS opens
 //     Safari → Universal Link → app launches → app deep-link handler trades
@@ -51,7 +51,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
     }
   }, []);
 
-  // Fresh handoff on every open — old token may have expired (5-min TTL)
+  // Fresh handoff on every open – old token may have expired (5-min TTL)
   // and a new modal session always deserves a new token.
   useEffect(() => {
     if (!open) { setDeepLink(null); setError(null); setCopied(false); return; }
@@ -101,7 +101,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
         <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.55, marginBottom: 24 }}>
           {isMobileBrowser
             ? "Tap below to open the app, signed in and ready."
-            : "Scan with your iPhone camera. The app opens already signed in — no second OTP."}
+            : "Scan with your iPhone camera. The app opens already signed in – no second OTP."}
         </p>
 
         {loading && (
@@ -173,7 +173,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
             </button>
 
             <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 16, textAlign: "center", lineHeight: 1.5 }}>
-              Link expires in 5 minutes. Single-use — anyone with this link can sign in to your account once.
+              Link expires in 5 minutes. Single-use – anyone with this link can sign in to your account once.
             </p>
           </>
         )}
@@ -183,7 +183,7 @@ export function GetTheAppModal({ open, onClose }: Props) {
           borderTop: "1px solid rgba(0,0,0,0.06)",
           display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap",
         }}>
-          {/* App Store badge — opens to install if not yet installed.
+          {/* App Store badge – opens to install if not yet installed.
               We use Apple's apps.apple.com link which Universal Links
               upgrade to "open in app" if installed. */}
           <a

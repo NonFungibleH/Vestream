@@ -11,7 +11,7 @@
 //      to re-enter their email + OTP a second time after typing the
 //      access code. /api/auth/email now sets the early-access cookie
 //      server-side on successful OTP verify, so /login alone is
-//      sufficient — and this page can drop the gate entirely.
+//      sufficient – and this page can drop the gate entirely.
 //   2. The beta-full capacity check it depended on was a soft limit only.
 //      Capacity is now managed via tier (Founders Circle / Pro / Free).
 // ─────────────────────────────────────────────────────────────────────────────

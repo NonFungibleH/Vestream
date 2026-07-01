@@ -1,6 +1,6 @@
 "use client";
 
-// WatchButton — small client island for the Explorer row-level watch action.
+// WatchButton – small client island for the Explorer row-level watch action.
 //
 // Adds or removes a token from the user's Token Watchlist
 // (POST/DELETE /api/watchlist) without navigating away.

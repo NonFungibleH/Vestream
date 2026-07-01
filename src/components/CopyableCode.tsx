@@ -6,7 +6,7 @@
 // /developer/quickstart, and anywhere else where the user is meant to grab
 // JSON / shell to paste into a config file.
 //
-// Theming is intentionally minimal — the host page sets the surrounding
+// Theming is intentionally minimal – the host page sets the surrounding
 // card background, this component just paints a darker inset over it. Keeps
 // the component reusable across navy (/developer) and near-black (/ai)
 // themes without needing a `theme` prop.
@@ -29,7 +29,7 @@ export function CopyableCode({ code, label }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard refused (HTTP context, sandbox) — user can still
+      // Clipboard refused (HTTP context, sandbox) – user can still
       // select-copy the visible text.
     }
   }

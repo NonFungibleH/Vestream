@@ -11,7 +11,7 @@
 //      jump the user back to the top every minute, which is hostile UX
 //      for ops who are reading a specific row.
 //   2. No full document reload. Next streams the new server-rendered
-//      output and patches the React tree — no flash of empty content.
+//      output and patches the React tree – no flash of empty content.
 //
 // The server work behind each refresh is cheap: loadStatusData() in
 // page.tsx is wrapped in unstable_cache(60s), so most refreshes return
@@ -48,7 +48,7 @@ export function StatusAutoRefresh() {
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        // Re-fetch immediately when the user returns to the tab — they
+        // Re-fetch immediately when the user returns to the tab – they
         // probably want to know the current state right now, not after
         // up to 60s of waiting.
         router.refresh();

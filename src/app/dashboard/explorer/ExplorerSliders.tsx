@@ -1,6 +1,6 @@
 "use client";
 
-// Dual-handle RANGE sliders for the explorer sidebar — drill into the token
+// Dual-handle RANGE sliders for the explorer sidebar – drill into the token
 // universe by wallets / locked USD / schedules / % vested, each with a min AND
 // max bound (e.g. "30–50 wallets", "$500k–$1M locked"). All map to indexed
 // rollup columns, so a change is a fast server re-query. Values snap to a stops
@@ -39,7 +39,7 @@ export function ExplorerSliders({
   minVested:  number | undefined; maxVested:  number | undefined;  // 0–100
   usdMin:     number | undefined; usdMax:     number | undefined;
   topMin:     number | undefined; topMax:     number | undefined;  // 0–100
-  /** CLIENT mode — when set, a slider release calls this with just its two
+  /** CLIENT mode – when set, a slider release calls this with just its two
    *  changed keys ({ [keyMin], [keyMax] }) instead of navigating. The parent
    *  merges into in-memory state (instant). Omit for the server-nav pages. */
   onCommit?:  (delta: Record<string, string | undefined>) => void;
@@ -85,7 +85,7 @@ function RangeSlider({
       [keyMin]: loIdx > 0 ? String(stops[loIdx]) : undefined,
       [keyMax]: hiIdx < N ? String(stops[hiIdx]) : undefined,
     };
-    if (onCommit) { onCommit(delta); return; }    // client mode — no navigation
+    if (onCommit) { onCommit(delta); return; }    // client mode – no navigation
     router.push(buildUrl({ ...params, ...delta, page: undefined }), { scroll: false });
   };
 

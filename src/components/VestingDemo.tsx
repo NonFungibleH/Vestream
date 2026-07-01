@@ -4,17 +4,17 @@
 //
 // Interactive vesting demo widget. Drops into the /demo page.
 //
-// Visitors customise token symbol, amount, and duration before starting — the
+// Visitors customise token symbol, amount, and duration before starting – the
 // progress bar, stats grid, and push notifications all reflect their chosen
 // schedule so the demo feels like "their programme".
 //
-// Works in both simulation mode (no env vars) and Sepolia mode — the UI is
+// Works in both simulation mode (no env vars) and Sepolia mode – the UI is
 // identical; only the server decides. In Sepolia mode the on-chain contract
 // is the source of truth and custom config is ignored. Links to Etherscan
 // for the claim tx + vesting contract appear automatically.
 //
 // The widget also lets visitors opt in to web-push notifications for each
-// 25%/50%/75%/100% milestone — proving the push feature end-to-end without
+// 25%/50%/75%/100% milestone – proving the push feature end-to-end without
 // asking them to install an app. See `PushAlertCard` below.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ const DURATION_PRESETS: { label: string; value: number }[] = [
 
 function formatAmountPreview(raw: string): string {
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return "—";
+  if (!Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 2)}M`;
   if (n >= 1_000)     return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K`;
   return n.toLocaleString("en-US");
@@ -118,7 +118,7 @@ export function VestingDemo() {
       const body = await res.json();
       if (body.ok) setState(body.state);
     } catch {
-      // Silent poll failures are fine — next tick will recover
+      // Silent poll failures are fine – next tick will recover
     }
   }, []);
 
@@ -126,7 +126,7 @@ export function VestingDemo() {
     setLoad(true);
     setError(null);
     try {
-      // Client-side mirror of server validation — surface errors early.
+      // Client-side mirror of server validation – surface errors early.
       const sym = config.tokenSymbol.trim().toUpperCase();
       if (!/^[A-Z0-9]{1,10}$/.test(sym)) {
         throw new Error("Token symbol must be 1–10 letters or digits.");
@@ -233,7 +233,7 @@ export function VestingDemo() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#1CB8B8" }} />
             </span>
-            Demo — simulated vesting
+            Demo – simulated vesting
           </div>
           <h3 className="text-xl md:text-2xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
             {isActive
@@ -242,7 +242,7 @@ export function VestingDemo() {
           </h3>
           <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
             {isActive
-              ? "Linear unlock in real time. Claim anytime — gas-free."
+              ? "Linear unlock in real time. Claim anytime – gas-free."
               : "Name the token, pick the amount and duration, and watch it vest."}
           </p>
         </div>
@@ -263,7 +263,7 @@ export function VestingDemo() {
         )}
       </div>
 
-      {/* Not started yet — show config form */}
+      {/* Not started yet – show config form */}
       {!isActive && (
         <DemoConfigForm
           config={config}
@@ -344,7 +344,7 @@ export function VestingDemo() {
             </button>
           </div>
 
-          {/* Push alert opt-in — shown once an active demo is running */}
+          {/* Push alert opt-in – shown once an active demo is running */}
           <PushAlertCard sessionId={state.sessionId} />
 
           {/* Etherscan links (Sepolia only) */}
@@ -431,7 +431,7 @@ function DemoConfigForm({
 
   return (
     <div className="py-4">
-      {/* Live preview pill — tells the visitor exactly what they'll see */}
+      {/* Live preview pill – tells the visitor exactly what they'll see */}
       <div className="mb-6 flex items-center justify-center">
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
@@ -443,7 +443,7 @@ function DemoConfigForm({
         >
           <span style={{ color: "#8B8E92" }}>Preview:</span>
           <span className="font-mono" style={{ color: "#1A1D20" }}>
-            {formatAmountPreview(config.totalAmount)} {symTrimmed || "—"}
+            {formatAmountPreview(config.totalAmount)} {symTrimmed || "–"}
           </span>
           <span style={{ color: "#B8BABD" }}>over</span>
           <span className="font-mono" style={{ color: "#1A1D20" }}>{durationLabel}</span>
@@ -542,7 +542,7 @@ function DemoConfigForm({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-semibold"
               style={{ color: "#B8BABD" }}
             >
-              {symTrimmed || "—"}
+              {symTrimmed || "–"}
             </div>
           </div>
           {amountError && (
@@ -586,7 +586,7 @@ function DemoConfigForm({
 
         {/* Previously this was a "Start my vesting schedule" button that kicked
             off a client-side simulation. Browser-level alerts and a fake progress
-            bar don't sell the product — the app does. So Start is now a funnel
+            bar don't sell the product – the app does. So Start is now a funnel
             straight to the App Store: users design the schedule they want to
             see, then download the app to watch it for real. The onStart handler
             + server-side demo state remain wired for future use. */}
@@ -602,13 +602,13 @@ function DemoConfigForm({
               Watch your {symTrimmed || "VEST"} vesting go live on your phone
             </p>
             <p className="text-xs" style={{ color: "#8B8E92", lineHeight: 1.55 }}>
-              Download the Vestream app, sign in, and see the vesting you just designed tick down in real time — with native push alerts the moment tokens unlock.
+              Download the Vestream app, sign in, and see the vesting you just designed tick down in real time – with native push alerts the moment tokens unlock.
             </p>
           </div>
           <AppStoreBadges />
         </div>
 
-        {/* Quiet "start the web sim anyway" affordance — kept because the sim
+        {/* Quiet "start the web sim anyway" affordance – kept because the sim
             logic is still fully functional and useful for us during QA. Hidden
             from the hero flow but one click away for power users. */}
         <details className="text-center">
@@ -640,11 +640,11 @@ function DemoConfigForm({
 //
 // Anonymous web-push subscription scoped to the current demo session cookie.
 // On click:
-//   1. Register /sw.js service worker (idempotent — browser dedupes)
+//   1. Register /sw.js service worker (idempotent – browser dedupes)
 //   2. Request `Notification` permission
 //   3. Subscribe via pushManager with our VAPID public key
 //   4. POST the subscription to /api/demo/push/subscribe along with the
-//      demo session id — the server mirrors the demo timeline so the cron
+//      demo session id – the server mirrors the demo timeline so the cron
 //      can fire 25/50/75/100% milestone pushes even after the tab closes.
 //
 // iOS caveat: Apple only delivers web push to PWAs that have been added to
@@ -668,7 +668,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 function isIOSSafariWebkit(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  // iPhone/iPad/iPod — iPad on iPadOS 13+ reports as Mac, so also check touch
+  // iPhone/iPad/iPod – iPad on iPadOS 13+ reports as Mac, so also check touch
   const iOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Mac") && "ontouchend" in document);
   return iOS;
 }
@@ -821,7 +821,7 @@ function PushAlertCard({ sessionId }: { sessionId: string | null }) {
             Get a real push alert at every milestone
           </div>
           <div className="text-xs mt-0.5" style={{ color: "#8B8E92" }}>
-            One-tap opt-in — no account, no email. You&rsquo;ll feel the pings land at 25%, 50%, 75% and 100%.
+            One-tap opt-in – no account, no email. You&rsquo;ll feel the pings land at 25%, 50%, 75% and 100%.
             {isIOSSafariWebkit() && (
               <span className="block mt-1" style={{ color: "#F0992E" }}>
                 iPhone: add Vestream to your Home Screen first (Share → Add to Home Screen) for push.

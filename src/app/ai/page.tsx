@@ -7,24 +7,24 @@ import { CopyableCode } from "@/components/CopyableCode";
 // description, missing OG/Twitter cards + canonical. That meant share links
 // rendered with the root-layout fallback (generic homepage card) and search
 // engines had no per-page canonical, which can dilute /ai's ranking signal
-// into the homepage's. Aligned with /developer's metadata shape — same
+// into the homepage's. Aligned with /developer's metadata shape – same
 // pattern, theme-specific copy.
 export const metadata = {
-  title: "AI Agents — Vestream",
+  title: "AI Agents – Vestream",
   description:
-    "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+    "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent – query token vesting streams in natural language.",
   alternates: { canonical: "https://www.vestream.io/ai" },
   openGraph: {
-    title:       "AI Agents — Vestream",
-    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+    title:       "AI Agents – Vestream",
+    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent – query token vesting streams in natural language.",
     url:         "https://www.vestream.io/ai",
     siteName:    "Vestream",
     type:        "website",
   },
   twitter: {
     card:        "summary_large_image" as const,
-    title:       "AI Agents — Vestream",
-    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent — query token vesting streams in natural language.",
+    title:       "AI Agents – Vestream",
+    description: "The vesting data layer for AI agents. Native MCP support for Claude, Cursor, and any MCP-compatible agent – query token vesting streams in natural language.",
   },
 };
 
@@ -108,7 +108,7 @@ function ToolCard({
         <div className="flex flex-col gap-1.5">
           {params.map((p) => (
             // flex-wrap so the parameter row reflows cleanly on narrow
-            // screens — `desc` was overflowing horizontally previously.
+            // screens – `desc` was overflowing horizontally previously.
             <div key={p.name} className="flex items-start gap-2 text-xs flex-wrap">
               <code style={{ color: "#1CB8B8", flexShrink: 0 }}>{p.name}</code>
               <span style={{ color: "#4b5563", flexShrink: 0 }}>{p.type}</span>
@@ -165,7 +165,7 @@ export default function AiPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Give your AI agent real-time access to on-chain token vesting data — every wallet, every protocol, every chain.
+            Give your AI agent real-time access to on-chain token vesting data – every wallet, every protocol, every chain.
             Query in natural language via MCP, or call the REST API directly.
           </p>
 
@@ -186,10 +186,10 @@ export default function AiPage() {
             </Link>
           </div>
 
-          {/* Stats strip — on mobile, 5 items in a 2-col grid leaves a
+          {/* Stats strip – on mobile, 5 items in a 2-col grid leaves a
               dangling 5th item taking the full width, which reads as
               broken layout. We use a 3-col mobile grid (so 5 items reflow
-              as 3+2 — visibly intentional) and switch to flex on sm+
+              as 3+2 – visibly intentional) and switch to flex on sm+
               where horizontal space allows the natural row. */}
           <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-x-4 sm:gap-x-6 gap-y-5 sm:gap-8 mt-10 sm:mt-14 sm:flex-wrap">
             {[
@@ -223,7 +223,7 @@ export default function AiPage() {
           <div>
             <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#1CB8B8" }}>What is MCP?</p>
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
-              The <strong style={{ color: "white" }}>Model Context Protocol</strong> (MCP) is an open standard by Anthropic that lets AI agents call external tools natively — without writing API glue code.
+              The <strong style={{ color: "white" }}>Model Context Protocol</strong> (MCP) is an open standard by Anthropic that lets AI agents call external tools natively – without writing API glue code.
               Install <code style={{ color: "#1CB8B8" }}>@vestream/mcp</code> and your agent can query vesting data the same way it reasons about anything else: in natural language.
             </p>
           </div>
@@ -237,7 +237,7 @@ export default function AiPage() {
           <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Three free tools, three Pro webhook tools.</h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
             Install the MCP server and your agent immediately has read access to every wallet, stream, and
-            upcoming unlock on the free tier — plus webhook subscription management on Pro.
+            upcoming unlock on the free tier – plus webhook subscription management on Pro.
           </p>
         </div>
 
@@ -256,10 +256,10 @@ export default function AiPage() {
               Webhook subscriptions are now an MCP tool
             </p>
             <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-              Three new tools — <code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>list_webhook_subscriptions</code>,
+              Three new tools – <code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>list_webhook_subscriptions</code>,
               {" "}<code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>create_webhook_subscription</code>,
               {" "}<code className="font-mono px-1 rounded" style={{ background: "rgba(255,255,255,0.05)", color: "#1CB8B8" }}>delete_webhook_subscription</code>{" "}
-              — let your agent set up server-to-server alerts the moment a matching unlock fires. HMAC-signed,
+              – let your agent set up server-to-server alerts the moment a matching unlock fires. HMAC-signed,
               filterable by wallet / protocol / chain. Pro tier. Update with <code className="font-mono">npx -y @vestream/mcp@latest</code>.
             </p>
           </div>
@@ -270,7 +270,7 @@ export default function AiPage() {
             name="get_wallet_vestings"
             description="Get all token vesting streams for a wallet (EVM or Solana) across all 10+ supported protocols and 7+ chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
-              { name: "address", type: "string", required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
+              { name: "address", type: "string", required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, superfluid, team-finance, pinksale, streamflow, jupiter-lock" },
               { name: "chain",   type: "string", required: false, desc: "Filter by chain ID: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)" },
               { name: "active_only", type: "boolean", required: false, desc: "Only return streams not yet fully vested" },
@@ -283,9 +283,9 @@ export default function AiPage() {
 
           <ToolCard
             name="get_upcoming_unlocks"
-            description="Forecast all token unlock events for a wallet within a future time window. Returns cliff completions, tranche unlocks, and linear stream endings sorted by date — ideal for scheduling claims or building alerts."
+            description="Forecast all token unlock events for a wallet within a future time window. Returns cliff completions, tranche unlocks, and linear stream endings sorted by date – ideal for scheduling claims or building alerts."
             params={[
-              { name: "address", type: "string",  required: true,  desc: "Wallet address — EVM 0x… or Solana base58 pubkey" },
+              { name: "address", type: "string",  required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "days",    type: "number",  required: false, desc: "Lookahead window in days (default: 30, max: 365)" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol (any of the 10+ protocols above)" },
             ]}
@@ -306,7 +306,7 @@ export default function AiPage() {
 })`}
           />
 
-          {/* ── v1.2 — webhook tools (Pro tier) ────────────────────────── */}
+          {/* ── v1.2 – webhook tools (Pro tier) ────────────────────────── */}
           <ToolCard
             name="list_webhook_subscriptions"
             description="Pro tier. List the webhook subscriptions registered to the caller's API key. Each subscription describes a URL Vestream POSTs to when a matching upcoming-unlock fires."
@@ -316,7 +316,7 @@ export default function AiPage() {
 
           <ToolCard
             name="create_webhook_subscription"
-            description="Pro tier. Register a new webhook subscription. Returns the signing secret ONCE — store it for HMAC verification. Vestream POSTs to the URL with X-Vestream-Signature on each matching event."
+            description="Pro tier. Register a new webhook subscription. Returns the signing secret ONCE – store it for HMAC verification. Vestream POSTs to the URL with X-Vestream-Signature on each matching event."
             params={[
               { name: "url",             type: "string",  required: true,  desc: "Destination URL (https in production)" },
               { name: "wallet_filter",   type: "array",   required: false, desc: "Restrict to these wallet addresses" },
@@ -373,7 +373,7 @@ export default function AiPage() {
               </div>
             </div>
 
-            {/* Tool call — ml-10 on desktop indents under the user avatar for
+            {/* Tool call – ml-10 on desktop indents under the user avatar for
                 visual hierarchy. On mobile that wastes scarce horizontal
                 space for no reading benefit, so we drop the indent. */}
             <div className="ml-0 sm:ml-10">
@@ -429,8 +429,8 @@ export default function AiPage() {
               </div>
               <div className="rounded-2xl rounded-tl-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm leading-relaxed min-w-0" style={{ background: "#141720", color: "rgba(255,255,255,0.85)", maxWidth: "85%" }}>
                 You have <strong style={{ color: "white" }}>2 unlock events</strong> in the next 14 days totalling <strong style={{ color: "#34d399" }}>$22,630.50</strong>:<br /><br />
-                • <strong style={{ color: "white" }}>$18,420</strong> NOVA on <strong>Base</strong> via Sablier — cliff unlock on Apr 2<br />
-                • <strong style={{ color: "white" }}>$4,210</strong> FLUX on <strong>Ethereum</strong> via Hedgey — tranche unlock on Apr 8<br /><br />
+                • <strong style={{ color: "white" }}>$18,420</strong> NOVA on <strong>Base</strong> via Sablier – cliff unlock on Apr 2<br />
+                • <strong style={{ color: "white" }}>$4,210</strong> FLUX on <strong>Ethereum</strong> via Hedgey – tranche unlock on Apr 8<br /><br />
                 Would you like me to set a reminder or draft a claim strategy?
               </div>
             </div>
@@ -498,7 +498,7 @@ export default function AiPage() {
           </div>
         </div>
 
-        {/* Get-key CTA + quickstart link — replaces the previous "from the
+        {/* Get-key CTA + quickstart link – replaces the previous "from the
             developer portal" tail copy. The portal is for returning users;
             new visitors want a key, fast. */}
         <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
@@ -537,11 +537,11 @@ export default function AiPage() {
           />
           <ShowcaseCard
             user='When should I claim my APE before the next cliff?'
-            agent='Your Sablier APE stream has a cliff completing in 6 days, releasing ~4,200 APE. Gas is currently 23 gwei; predicted to drop to ~14 gwei overnight. Recommend claiming after midnight UTC — you save roughly $18 in gas at current prices.'
+            agent='Your Sablier APE stream has a cliff completing in 6 days, releasing ~4,200 APE. Gas is currently 23 gwei; predicted to drop to ~14 gwei overnight. Recommend claiming after midnight UTC – you save roughly $18 in gas at current prices.'
           />
           <ShowcaseCard
             user="What's unlocking across my 3 wallets in the next 30 days?"
-            agent='12 unlock events across 3 wallets — total locked value coming online: $63,418. Biggest single event: a UNCX cliff on May 9 (28% of the total). Want me to draft a calendar export or set up a watch on the day before each?'
+            agent='12 unlock events across 3 wallets – total locked value coming online: $63,418. Biggest single event: a UNCX cliff on May 9 (28% of the total). Want me to draft a calendar export or set up a watch on the day before each?'
           />
         </div>
         <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -562,7 +562,7 @@ export default function AiPage() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
               color: "#0F8A8A", bg: "rgba(15,138,138,0.1)", border: "rgba(15,138,138,0.2)",
               title: "Unlock alert agents",
-              body: "Monitor wallets 24/7 and ping Slack, Telegram, or email the moment a cliff or tranche unlock is due — before you'd normally even check.",
+              body: "Monitor wallets 24/7 and ping Slack, Telegram, or email the moment a cliff or tranche unlock is due – before you'd normally even check.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
@@ -574,13 +574,13 @@ export default function AiPage() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
               color: "#059669", bg: "rgba(5,150,105,0.1)", border: "rgba(5,150,105,0.2)",
               title: "Token intelligence agents",
-              body: "Pull the full global vesting schedule for any token — who's unlocking, when, and how much — to model selling pressure before it hits the market.",
+              body: "Pull the full global vesting schedule for any token – who's unlocking, when, and how much – to model selling pressure before it hits the market.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
               color: "#0BA0CB", bg: "rgba(11,160,203,0.1)", border: "rgba(11,160,203,0.2)",
               title: "Compliance & reporting agents",
-              body: "Generate audit-ready vesting reports for any wallet or team — cliff dates, tranches, claimed amounts — structured and exportable on demand.",
+              body: "Generate audit-ready vesting reports for any wallet or team – cliff dates, tranches, claimed amounts – structured and exportable on demand.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
@@ -592,7 +592,7 @@ export default function AiPage() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
               color: "#F0992E", bg: "rgba(240,153,46,0.1)", border: "rgba(240,153,46,0.2)",
               title: "Wallet app integrations",
-              body: "Embed Vestream vesting data inside any product — wallets, portfolio trackers, DAO tools — with a single API call and zero normalisation work.",
+              body: "Embed Vestream vesting data inside any product – wallets, portfolio trackers, DAO tools – with a single API call and zero normalisation work.",
             },
           ].map((c) => (
             <div key={c.title} className="rounded-2xl p-5" style={{ background: "#141720", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -619,7 +619,7 @@ export default function AiPage() {
             {
               label: "npm",
               name: "@vestream/mcp",
-              desc: "Install via npx — no global install required. Works anywhere Node.js runs.",
+              desc: "Install via npx – no global install required. Works anywhere Node.js runs.",
               cmd: "npx -y @vestream/mcp",
               color: "#F0992E",
             },

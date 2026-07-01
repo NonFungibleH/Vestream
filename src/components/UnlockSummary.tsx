@@ -55,7 +55,7 @@ export function UnlockSummary({ streams }: UnlockSummaryProps) {
   function renderStat(label: string, getValue: (t: SummaryByToken) => bigint, color?: string) {
     const nonZero = tokens.filter((t) => getValue(t) > 0n);
     if (nonZero.length === 0) {
-      return <p className="text-2xl font-bold text-muted-foreground">—</p>;
+      return <p className="text-2xl font-bold text-muted-foreground">–</p>;
     }
     return (
       <div className={`space-y-1 ${color ?? ""}`}>

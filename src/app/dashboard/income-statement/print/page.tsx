@@ -6,7 +6,7 @@
 //
 // Why this page exists separate from /dashboard/income-statement:
 //   - The interactive income statement is for the user (year picker,
-//     compact tables, links). The print version is for THEIR ACCOUNTANT —
+//     compact tables, links). The print version is for THEIR ACCOUNTANT –
 //     a single A4-formatted document with year-end totals, signed and
 //     dated, that they can email or hand over.
 //   - "Save as PDF" via the browser's print dialog is a 1-click action
@@ -17,7 +17,7 @@
 // Print CSS is inlined here. Non-essential chrome (top nav, sidebar,
 // links) is hidden via `@media print`. The dashboard layout
 // (CurrencyProvider) still applies but rendering is intentionally
-// USD-only on this page — historical-rate currency conversion is what
+// USD-only on this page – historical-rate currency conversion is what
 // tax accountants need, not today's-rate FX.
 //
 // Query params:
@@ -55,34 +55,34 @@ interface IncomeStatement {
 }
 
 /** Print-page header copy keyed by audience. Drops "Vesting" framing for
- *  workers — accountants reading the worker version need to know up-front
+ *  workers – accountants reading the worker version need to know up-front
  *  that this is ordinary-income (Schedule C / SA103) not capital-asset
  *  (Schedule D / Capital Gains). Mirrors copyForAudience() in the
  *  interactive page; differs in tone (more formal, accountant-facing). */
 function printHeaderForAudience(category: string | null | undefined): {
   rubric:   string;
-  receiptLabel: string;  // "claim" vs "receipt" — used in the totals subtitle
+  receiptLabel: string;  // "claim" vs "receipt" – used in the totals subtitle
   taxFraming: string;    // one-liner under the headline totals
 } {
   const audience = category ?? "investor";
   if (audience === "worker") {
     return {
-      rubric:       "Vestream — Crypto Income Report",
+      rubric:       "Vestream – Crypto Income Report",
       receiptLabel: "receipt",
       taxFraming:   "Ordinary income at FMV-on-receipt. US: Schedule C / 1099-NEC summary. UK: SA103 self-employment turnover. Convert to local currency at year-end published rates.",
     };
   }
   if (audience === "both") {
     return {
-      rubric:       "Vestream — Token Income Report",
+      rubric:       "Vestream – Token Income Report",
       receiptLabel: "receipt",
-      taxFraming:   "Combines investor vesting income (capital asset basis events) with worker streaming income (ordinary income). Treat each line per its source category — your accountant can split filings.",
+      taxFraming:   "Combines investor vesting income (capital asset basis events) with worker streaming income (ordinary income). Treat each line per its source category – your accountant can split filings.",
     };
   }
   return {
-    rubric:       "Vestream — Vesting Income Report",
+    rubric:       "Vestream – Vesting Income Report",
     receiptLabel: "claim",
-    taxFraming:   "USD-anchored at the date of each on-chain claim — the canonical tax-event basis used for capital-asset vesting (Schedule D / capital-gains framework).",
+    taxFraming:   "USD-anchored at the date of each on-chain claim – the canonical tax-event basis used for capital-asset vesting (Schedule D / capital-gains framework).",
   };
 }
 
@@ -176,7 +176,7 @@ export default function PrintIncomeStatementPage() {
 
   return (
     <>
-      {/* Print-only stylesheet — keeps the printable surface clean
+      {/* Print-only stylesheet – keeps the printable surface clean
           (white bg, black text, A4 margins) and hides non-content chrome. */}
       <style>{`
         @media print {
@@ -203,7 +203,7 @@ export default function PrintIncomeStatementPage() {
       `}</style>
 
       <div className="print-page">
-        {/* Toolbar — only visible on screen, hidden on print */}
+        {/* Toolbar – only visible on screen, hidden on print */}
         <div className="no-print mb-6 flex items-center justify-between gap-3 pb-4 border-b" style={{ borderColor: "#e2e8f0" }}>
           <Link href={`/dashboard/income-statement?year=${year}`} className="text-sm underline" style={{ color: "#2563eb" }}>
             ← Back to interactive view
@@ -217,7 +217,7 @@ export default function PrintIncomeStatementPage() {
           </button>
         </div>
 
-        {/* Header — audience-aware. Investor and worker both file in
+        {/* Header – audience-aware. Investor and worker both file in
             different sections of their respective tax codes; the rubric +
             framing copy here primes the receiving accountant. */}
         {(() => {
@@ -305,7 +305,7 @@ export default function PrintIncomeStatementPage() {
               </thead>
               <tbody>
                 {data.byToken.map((t, i) => {
-                  let humanUnits = "—";
+                  let humanUnits = "–";
                   try {
                     const big = BigInt(t.units);
                     const divisor = 10n ** BigInt(t.tokenDecimals);
@@ -364,12 +364,12 @@ export default function PrintIncomeStatementPage() {
           </table>
         </section>
 
-        {/* Notes / disclaimers — accountant-readable */}
+        {/* Notes / disclaimers – accountant-readable */}
         <section style={{ marginTop: 28, fontSize: 11, color: "#64748b", lineHeight: 1.6 }}>
           <h2 style={{ fontSize: 13 }}>Notes for the preparer</h2>
           <ol style={{ paddingLeft: 18 }}>
             <li><strong>Tax basis used:</strong> claim date. Each row is dated at the on-chain claim transaction (when tokens moved from the vesting contract to the recipient&apos;s wallet) and valued at the CoinGecko historical USD price for that UTC date.</li>
-            <li><strong>Jurisdictional applicability:</strong> the claim-date basis maps directly to the receipt event for US (IRS), Canada (CRA), Germany, and most of the EU. For UK (HMRC) and Australia (ATO), the receipt event can be the <em>unlock date</em> rather than the claim date — re-attribution to unlock dates may be required. Per-stream unlock schedules are visible on the recipient&apos;s Vestream dashboard.</li>
+            <li><strong>Jurisdictional applicability:</strong> the claim-date basis maps directly to the receipt event for US (IRS), Canada (CRA), Germany, and most of the EU. For UK (HMRC) and Australia (ATO), the receipt event can be the <em>unlock date</em> rather than the claim date – re-attribution to unlock dates may be required. Per-stream unlock schedules are visible on the recipient&apos;s Vestream dashboard.</li>
             <li>Gas values are paid in the chain&apos;s native token (ETH, BNB, MATIC, SOL) and converted to USD at the time of the transaction.</li>
             <li>Superfluid claims captured here represent discrete cliff and end-of-vesting payouts. Continuous flow accrual between cliff and end is not yet attributed at the per-event level.</li>
             <li>Solana protocols (Streamflow, Jupiter Lock) use an account-snapshot delta model: pre-Vestream-activation history may appear as a single baseline event per stream, while subsequent claims are tracked individually.</li>

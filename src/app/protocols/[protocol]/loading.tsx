@@ -1,7 +1,7 @@
 // src/app/protocols/[protocol]/loading.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Streamed loading skeleton for /protocols/[slug]. Without this, Next clicks
-// on /protocols cards felt broken on cold lambdas — the protocol page is
+// on /protocols cards felt broken on cold lambdas – the protocol page is
 // `force-dynamic` and pulls 4 parallel DB queries (stats, latest, next,
 // upcoming list) plus a price batch. Cold lambda + cold cache = ~1-3s of
 // blank-page hang before HTML arrives.
@@ -39,7 +39,7 @@ export default function ProtocolPageLoading() {
         </div>
       </section>
 
-      {/* Upcoming unlocks list — 4 stub rows */}
+      {/* Upcoming unlocks list – 4 stub rows */}
       <section className="px-4 md:px-8 pb-20 max-w-5xl mx-auto w-full">
         <Bar w="30%" h={20} delay="0.4s" className="mb-4" />
         <div className="rounded-2xl overflow-hidden"

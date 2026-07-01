@@ -3,12 +3,12 @@
 // Public live indexing-status page.
 //
 // Surfaces a (protocol × chain) freshness matrix from vesting_streams_cache
-// — the same data /admin/cache-stats shows internally, but with no row counts
-// or PII, just "last indexed Xm ago" or "—" for cells we don't index. Lets
+// – the same data /admin/cache-stats shows internally, but with no row counts
+// or PII, just "last indexed Xm ago" or "–" for cells we don't index. Lets
 // anyone (users, would-be customers, ourselves on a phone) check at a glance
 // whether the seeder is healthy across every protocol/chain we claim to support.
 //
-// Deliberately NOT linked from the nav — discoverable only by URL. If we want
+// Deliberately NOT linked from the nav – discoverable only by URL. If we want
 // to promote it later we can add a footer link.
 //
 // Refresh strategy: revalidate every 60s. The seeder runs at 03:00 UTC daily,
@@ -37,7 +37,7 @@ import { StatusAutoRefresh } from "./StatusAutoRefresh";
 // instance occasionally CONNECTION_CLOSEDs the first request after the
 // pooler's idle timeout dropped its underlying socket. ISR + the build-time
 // DB short-circuit guard (per CLAUDE.md) means the pre-rendered snapshot
-// is empty too, so the user sees "Status check failed — couldn't reach
+// is empty too, so the user sees "Status check failed – couldn't reach
 // the freshness database" until the next request warms the connection.
 //
 // We sidestep that by mirroring the most recent successful payload into
@@ -48,7 +48,7 @@ import { StatusAutoRefresh } from "./StatusAutoRefresh";
 // render after deploy), which is now an extreme edge case rather than
 // the norm.
 //
-// 7-day TTL gives us a generous window — if the DB has been broken for
+// 7-day TTL gives us a generous window – if the DB has been broken for
 // a week the stale data is the smaller of our problems.
 //
 // `stale: true` is added to the payload so the hero can show a soft
@@ -58,10 +58,10 @@ const STATUS_CACHE_TTL_SEC = 60 * 60 * 24 * 7; // 7 days
 
 // Rows from indexer_state that ran successfully within the last 20 minutes.
 // Used by the status page to distinguish "stale because low activity" from
-// "stale because broken" — a chain with a healthy active indexer should show
+// "stale because broken" – a chain with a healthy active indexer should show
 // amber at worst, not red, even if lastRefreshedAt is old.
 async function getActiveIndexers(): Promise<Array<{ protocol: string; chainId: number }>> {
-  // Hard 2s timeout — same pattern as getCacheStatsCells / getMaxLastRefreshedAt.
+  // Hard 2s timeout – same pattern as getCacheStatsCells / getMaxLastRefreshedAt.
   // Without this, a hanging DB connection (not failing, just stalled) would
   // block the entire Promise.all in loadStatusData until Vercel's maxDuration=30
   // fires, returning a 504 to every visitor. The try/catch alone doesn't help
@@ -80,7 +80,7 @@ async function getActiveIndexers(): Promise<Array<{ protocol: string; chainId: n
       }),
     new Promise<Array<{ protocol: string; chainId: number }>>((resolve) =>
       setTimeout(() => {
-        console.warn("[/status] getActiveIndexers exceeded 2s — returning []");
+        console.warn("[/status] getActiveIndexers exceeded 2s – returning []");
         resolve([]);
       }, 2000),
     ),
@@ -91,7 +91,7 @@ interface StatusPayload {
   cells:                Awaited<ReturnType<typeof getCacheStatsCells>>;
   tvlRows:              Awaited<ReturnType<typeof readAllSnapshots>>;
   maxLastRefreshedSec:  number | null;
-  /** Indexer rows that ran cleanly within the last 20 minutes — used to
+  /** Indexer rows that ran cleanly within the last 20 minutes – used to
    *  downgrade "stuck" cells to "stale" when the indexer is healthy. */
   activeIndexers:       Array<{ protocol: string; chainId: number }>;
 }
@@ -115,7 +115,7 @@ function maybeRedis(): Redis | null {
 }
 
 // 2026-05-13: both Redis helpers wrapped with a hard 1.5s timeout. Upstash
-// going slow (not failing — just slow) was hanging the /status page past
+// going slow (not failing – just slow) was hanging the /status page past
 // Cloudflare's gateway timeout. The page already has a catch path; we'd
 // rather miss the last-known-good fallback than serve a 504.
 function withRedisTimeout<T>(
@@ -131,7 +131,7 @@ function withRedisTimeout<T>(
     }),
     new Promise<T>((resolve) =>
       setTimeout(() => {
-        console.warn(`[/status] ${label} exceeded ${ms}ms — using fallback`);
+        console.warn(`[/status] ${label} exceeded ${ms}ms – using fallback`);
         resolve(fallback);
       }, ms),
     ),
@@ -150,7 +150,7 @@ async function readLastGood(): Promise<(StatusPayload & { capturedAt: number }) 
     );
     if (fromRedis) return fromRedis;
   }
-  // L2: durable Postgres (never evicts) — the real fix for the all-"Pending"
+  // L2: durable Postgres (never evicts) – the real fix for the all-"Pending"
   // empty grid when a cold-lambda live read times out AND Redis has dropped.
   return getLastGoodStatusDb<Good>();
 }
@@ -168,7 +168,7 @@ async function writeLastGood(payload: StatusPayload): Promise<void> {
 }
 
 export const metadata: Metadata = {
-  title:       "Status — Vestream",
+  title:       "Status – Vestream",
   description: "Live indexing freshness for every supported protocol and chain.",
   robots:      { index: false, follow: false },
 };
@@ -177,13 +177,13 @@ export const metadata: Metadata = {
 //
 // ISR + the build-time DB guard combined to give a confusing first-load
 // experience: at build time both getCacheStatsCells() and readAllSnapshots()
-// short-circuit to [] (per the CLAUDE.md landmine — DB helpers must
+// short-circuit to [] (per the CLAUDE.md landmine – DB helpers must
 // short-circuit during `next build` or transient pooler drops can kill
 // the build), so the pre-rendered snapshot was empty. The first user
 // post-deploy got that empty snapshot; ISR background revalidation took
 // 30+ seconds to swap in real data.
 //
-// /status is low-traffic and operator-facing — paying 1-3s of DB-query
+// /status is low-traffic and operator-facing – paying 1-3s of DB-query
 // latency per request to get always-live data is the right trade. There's
 // no value in caching a snapshot of a dashboard whose entire purpose is
 // to show "what's happening right now."
@@ -195,7 +195,7 @@ export const maxDuration = 30;
 //
 // 60s TTL = the page feels live for operator monitoring while a single
 // DB hammering pass produces ~60 free reads. Without this wrapper, every
-// refresh — manual or via the StatusAutoRefresh client component below —
+// refresh – manual or via the StatusAutoRefresh client component below –
 // triggered two full-table-scans against Supabase. Three concurrent
 // users hitting refresh could plausibly DDoS the pooler.
 //
@@ -223,12 +223,12 @@ const loadStatusData = unstable_cache(
       //      fallback path too, so the next error also returns empty
       // The fix: when cells comes back empty, prefer the last-known-good
       // Redis payload instead. We don't poison Redis with empty cells
-      // either — the writeLastGood call below is gated on cells.length > 0.
+      // either – the writeLastGood call below is gated on cells.length > 0.
       if (cells.length === 0) {
         const fallback = await readLastGood();
         if (fallback && fallback.cells.length > 0) {
           console.warn(
-            `[/status] live query returned 0 cells (likely status_summary mid-rewrite) — ` +
+            `[/status] live query returned 0 cells (likely status_summary mid-rewrite) – ` +
             `serving Redis last-good from ${new Date(fallback.capturedAt * 1000).toISOString()}`,
           );
           return {
@@ -241,7 +241,7 @@ const loadStatusData = unstable_cache(
             capturedAt:          fallback.capturedAt,
           };
         }
-        // Truly cold (no cells in DB, no Redis fallback) — let the empty
+        // Truly cold (no cells in DB, no Redis fallback) – let the empty
         // payload through. First-time deploy / freshly-truncated DB. The
         // hero will read this correctly and show "0 operational, X pending".
       }
@@ -250,9 +250,9 @@ const loadStatusData = unstable_cache(
       // 2026-05-13: switched from awaited to fire-and-forget. Even with the
       // 1.5s timeout inside writeLastGood, awaiting it added avoidable
       // latency to every successful render. Redis writes don't have to be
-      // synchronous — if the write loses, the next render captures fresh
+      // synchronous – if the write loses, the next render captures fresh
       // data anyway. The internal timeout still bounds total work.
-      // 2026-05-26: gated on cells.length > 0 — never poison Redis with an
+      // 2026-05-26: gated on cells.length > 0 – never poison Redis with an
       // empty payload (catch-block fallback would then serve forever-empty).
       if (cells.length > 0) {
         writeLastGood(payload).catch(() => {});
@@ -276,7 +276,7 @@ const loadStatusData = unstable_cache(
           capturedAt:          fallback.capturedAt,
         };
       }
-      // Truly cold — no live data, no Redis fallback. Render the error
+      // Truly cold – no live data, no Redis fallback. Render the error
       // hero as before so operators know to investigate.
       return {
         cells:               [],
@@ -314,21 +314,21 @@ const loadStatusData = unstable_cache(
   // v9 bump on 2026-05-26: the v8 cache captured ANOTHER empty payload
   // when the seed-cache cron was mid-refreshStatusSummary. v9 forces
   // invalidation, and the empty-result trap above (added the same day)
-  // makes this self-healing — future empty queries fall back to Redis
+  // makes this self-healing – future empty queries fall back to Redis
   // instead of poisoning the cache. So v9 should be the last v-bump
   // we need for this class of bug.
   // v10 bump on 2026-05-26: added activeIndexers to payload (indexer health
   // cross-reference). Forces invalidation of cached v9 payloads that lack
-  // the new field — avoids "activeIndexers undefined" on the first render.
+  // the new field – avoids "activeIndexers undefined" on the first render.
   // v11 bump on 2026-06-30: the v10 cache had captured an empty (all-Pending)
   // payload from a cold render that lost the 6s status_summary timeout race
-  // (see cache-stats.ts — bumped to 15s the same day). Without this bump the
+  // (see cache-stats.ts – bumped to 15s the same day). Without this bump the
   // poisoned empty entry would keep serving for up to 10 min after deploy.
   ["status-page-data-v11"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
-// Column order — most-trafficked chains on the left, Solana last (Solana
+// Column order – most-trafficked chains on the left, Solana last (Solana
 // only intersects two protocols so its column is mostly empty).
 const CHAIN_COLUMNS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
@@ -348,9 +348,9 @@ interface StatusBucket {
   color: string;
 }
 
-/** Compact USD format for cell footers — "$1.2M", "$340K", "$12", "—". */
+/** Compact USD format for cell footers – "$1.2M", "$340K", "$12", "–". */
 function formatCompactUsd(n: number): string {
-  if (!isFinite(n) || n <= 0) return "—";
+  if (!isFinite(n) || n <= 0) return "–";
   if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000)     return `$${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000)         return `$${(n / 1_000).toFixed(0)}K`;
@@ -361,7 +361,7 @@ function formatCompactUsd(n: number): string {
 // touched within one cron-cycle (24h), amber for 1.5x cycles (a missed
 // run is now visible), red for 2+ cycles (the indexer for that cell is
 // likely broken). These thresholds are correct for the current cron
-// cadence — if/when we add live-ingest paths or per-protocol cadences,
+// cadence – if/when we add live-ingest paths or per-protocol cadences,
 // extend ProtocolMeta with `expectedRefreshIntervalHours` and pipe it
 // through here.
 const DAILY_CRON_HOURS = 24;
@@ -375,7 +375,7 @@ const STALE_THRESHOLD_MIN = DAILY_CRON_HOURS * 60 * 1.5;  // ≤ 36h → amber
  *  could miss), red beyond that. */
 function bucket(freshestSec: number | null, nowSec: number): StatusBucket {
   if (freshestSec === null) {
-    return { kind: "none", label: "—", color: "#94a3b8" };
+    return { kind: "none", label: "–", color: "#94a3b8" };
   }
   const ageMin = Math.max(0, Math.floor((nowSec - freshestSec) / 60));
   let label: string;
@@ -401,11 +401,11 @@ function relativeAge(unixSec: number, nowSec: number): string {
 
 export default async function StatusPage() {
   // Only currently-active protocols appear in the public matrix. Disabled /
-  // paused protocols (e.g. Team Finance) are excluded entirely — we don't
+  // paused protocols (e.g. Team Finance) are excluded entirely – we don't
   // surface a protocol we're not actively indexing anywhere user-facing.
   const protocols = listProtocols();
 
-  // Single cached call — all error handling lives in loadStatusData. If
+  // Single cached call – all error handling lives in loadStatusData. If
   // the query layer failed, `error` is set and we render the degraded
   // hero ("Status check failed") with empty matrices below. If it
   // succeeded, `cells`/`tvlRows`/`maxLastRefreshedSec` are populated.
@@ -430,7 +430,7 @@ export default async function StatusPage() {
   // Per-cell metadata: TVL from snapshot (DefiLlama or self-indexed),
   // and the timestamp of that snapshot. We surface "prices X ago" in the
   // cell footer because operational triage cares about WHEN the priced TVL
-  // was last computed — stale prices are a silent-trust risk (false zeros,
+  // was last computed – stale prices are a silent-trust risk (false zeros,
   // outdated USD numbers), whereas the stream count rarely moves day to
   // day and is already implied by the indexer-status endpoint.
   //
@@ -468,12 +468,12 @@ export default async function StatusPage() {
   // Build a Set of "protocol|chainId" keys for indexers that are actively
   // running (last successful run within 20 minutes, no error). These chains
   // may have stale lastRefreshedAt simply because no new vesting events were
-  // created — the indexer IS healthy, there's just nothing to write.
+  // created – the indexer IS healthy, there's just nothing to write.
   const activeIndexerSet = new Set(
     activeIndexers.map((r) => `${r.protocol}|${r.chainId}`)
   );
 
-  // Binary health signal — green if no cell has crossed the "stuck"
+  // Binary health signal – green if no cell has crossed the "stuck"
   // threshold, red if any has. The matrix below shows which cells.
   // Amber/stale (between cron runs) is expected behaviour and does NOT
   // flip the headline; only red-band cells count as cause for concern.
@@ -497,7 +497,7 @@ export default async function StatusPage() {
       if (b.kind === "stuck" && !activeIndexerSet.has(indexerKey)) {
         stuckCells.push({ protocol: proto.name, chainId, label: b.label });
       } else {
-        // fresh + stale both count as operational — stale is normal between
+        // fresh + stale both count as operational – stale is normal between
         // cron runs. "stuck" with a healthy active indexer also counts as
         // operational (the data is current, just no new events to write).
         operationalCount++;
@@ -505,12 +505,12 @@ export default async function StatusPage() {
     }
   }
   // Health rollup. The query-error case wins over both healthy/unhealthy
-  // because it means we don't actually KNOW the state — better to flag
+  // because it means we don't actually KNOW the state – better to flag
   // the failure honestly than show a misleading green.
   //
   // `isStale` (live DB query failed but we recovered last-known-good from
   // Redis) is rendered with the cells' actual freshness colours rather
-  // than a hard "failed" banner — the data IS valid, just slightly old.
+  // than a hard "failed" banner – the data IS valid, just slightly old.
   // The hero gets a soft amber pill reminder that the live query couldn't
   // run; an operator can still see whether the underlying cells are
   // healthy or not from the matrix below.
@@ -528,14 +528,14 @@ export default async function StatusPage() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <SiteNav theme="light" />
-      {/* Auto-refresh client component — calls router.refresh() every
+      {/* Auto-refresh client component – calls router.refresh() every
           60s. Server runs are cheap because loadStatusData() is cached
           for 60s; the refresh just re-fetches the cached snapshot. */}
       <StatusAutoRefresh />
 
 
       <main className="mx-auto max-w-5xl px-4 md:px-8 pb-24 pt-12">
-        {/* Hero — single binary signal. Big enough that the
+        {/* Hero – single binary signal. Big enough that the
             green/red is the only thing the eye lands on at first glance. */}
         <div
           className="mb-10 rounded-2xl p-8 flex items-center gap-5"
@@ -562,15 +562,15 @@ export default async function StatusPage() {
             </h1>
             <p className="text-sm mt-1" style={{ color: "#64748b" }}>
               {queryError
-                ? `Couldn't reach the freshness database — try refresh in a moment. (${queryError.slice(0, 80)})`
+                ? `Couldn't reach the freshness database – try refresh in a moment. (${queryError.slice(0, 80)})`
                 : isStale
                 ? `Showing last known data from ${cachedAtSec ? relativeAge(cachedAtSec, nowSec) : "earlier"}. Live query refreshing in the background.`
                 : isHealthy
                 ? "Every protocol × chain we index is refreshing within the expected window."
                 : `One or more cells haven't refreshed in over ${Math.floor(STALE_THRESHOLD_MIN / 60)} hours. See the matrix below.`}
             </p>
-            {/* Single highest-value operator signal — "is the seeder
-                actually producing usable output?" — surfaced in the hero
+            {/* Single highest-value operator signal – "is the seeder
+                actually producing usable output?" – surfaced in the hero
                 where the eye lands. Reads from MAX(lastRefreshedAt),
                 which moves only when data actually changes (per the
                 May 2 2026 semantic shift in CLAUDE.md). */}
@@ -582,7 +582,7 @@ export default async function StatusPage() {
                 </span>
               </p>
             )}
-            {/* Counts breakdown — same numbers in every state, so the
+            {/* Counts breakdown – same numbers in every state, so the
                 operator can see scale at a glance. */}
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium" style={{ color: "#64748b" }}>
               <span>
@@ -662,7 +662,7 @@ export default async function StatusPage() {
                     //      adapter that hasn't run yet) → grey "Pending" pill
                     //   3. Chain has data → fresh/stale/stuck pill
                     if (!proto.chainIds.includes(chainId)) {
-                      // Protocol doesn't deploy on this chain — render a
+                      // Protocol doesn't deploy on this chain – render a
                       // faded em-dash so the eye still tracks the row
                       // (an empty cell looks like a layout glitch).
                       return (
@@ -672,7 +672,7 @@ export default async function StatusPage() {
                           style={{ color: "#cbd5e1" }}
                           aria-label="Not deployed on this chain"
                         >
-                          —
+                          –
                         </td>
                       );
                     }
@@ -695,7 +695,7 @@ export default async function StatusPage() {
                     }
                     const rawBucket = bucket(freshestSec, nowSec);
                     // If the indexer ran successfully within 20 min, the data
-                    // is current — there just weren't any new events to write.
+                    // is current – there just weren't any new events to write.
                     // Cap at "stale" (amber) instead of showing false red.
                     const cellKey = `${proto.adapterIds[0]}|${chainId}`;
                     const b = rawBucket.kind === "stuck" && activeIndexerSet.has(cellKey)
@@ -725,7 +725,7 @@ export default async function StatusPage() {
                             // above (TVL snapshot runs 03:15 UTC daily).
                             // Colour the time portion using bucket() so the
                             // eye can scan stale-price cells without reading
-                            // every value — "prices 15d ago" lights up red
+                            // every value – "prices 15d ago" lights up red
                             // even when the cache row above is green.
                             const priceBucket = meta.tvlComputedAtSec !== null
                               ? bucket(meta.tvlComputedAtSec, nowSec)
@@ -741,7 +741,7 @@ export default async function StatusPage() {
                                     {priceBucket.label}
                                   </span>
                                 ) : (
-                                  <span style={{ color: "#94a3b8" }}>—</span>
+                                  <span style={{ color: "#94a3b8" }}>–</span>
                                 )}
                                 {/* Heartbeat marker: the cron keeps trying this
                                     cell but can't commit a fresh value. Tells
@@ -749,7 +749,7 @@ export default async function StatusPage() {
                                 {meta.consecutiveFailures > 0 && (
                                   <span
                                     style={{ color: "#dc2626", fontWeight: 700 }}
-                                    title={`Pricing pipeline failing — ${meta.consecutiveFailures} consecutive failed refresh${meta.consecutiveFailures === 1 ? "" : "es"}; showing last good value`}
+                                    title={`Pricing pipeline failing – ${meta.consecutiveFailures} consecutive failed refresh${meta.consecutiveFailures === 1 ? "" : "es"}; showing last good value`}
                                   >
                                     {" "}⚠×{meta.consecutiveFailures}
                                   </span>
@@ -777,10 +777,10 @@ export default async function StatusPage() {
               <span style={{ color: "#10b981", fontWeight: 600 }}>Green</span> = data refreshed in the last 24 hours.
             </li>
             <li>
-              <span style={{ color: "#d97706", fontWeight: 600 }}>Amber</span> = 24–36 hours since last write, OR over 36 hours but the on-chain indexer is actively running with no errors (low-activity chain — data is current, no new events to write).
+              <span style={{ color: "#d97706", fontWeight: 600 }}>Amber</span> = 24–36 hours since last write, OR over 36 hours but the on-chain indexer is actively running with no errors (low-activity chain – data is current, no new events to write).
             </li>
             <li>
-              <span style={{ color: "#dc2626", fontWeight: 600 }}>Red</span> = more than 36 hours stale and the indexer is not actively running — needs attention.
+              <span style={{ color: "#dc2626", fontWeight: 600 }}>Red</span> = more than 36 hours stale and the indexer is not actively running – needs attention.
             </li>
             <li>
               <span style={{ color: "#64748b", fontWeight: 600 }}>Pending</span> = chain we support but the cache is empty (newly added adapter, awaiting first seed run).

@@ -3,7 +3,7 @@
 // "From zero to first call in 60 seconds" walkthrough.
 //
 // Three tabs (Claude Desktop / Cursor / ChatGPT) each show a self-contained
-// 3-step recipe — get a key, paste a config snippet, ask a question. We
+// 3-step recipe – get a key, paste a config snippet, ask a question. We
 // deliberately keep the setup snippet identical between Claude Desktop and
 // Cursor (both speak MCP over stdio with the same JSON shape) and provide
 // OpenAPI-Action instructions for ChatGPT.
@@ -20,7 +20,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { QuickstartTabs } from "./QuickstartTabs";
 
 export const metadata: Metadata = {
-  title:       "Quickstart — Vestream API + MCP",
+  title:       "Quickstart – Vestream API + MCP",
   description: "From zero to first vesting query in 60 seconds. Step-by-step setup for Claude Desktop, Cursor, Windsurf, and ChatGPT.",
   alternates:  { canonical: "https://www.vestream.io/developer/quickstart" },
 };
@@ -49,12 +49,12 @@ export default function QuickstartPage() {
           From zero to first vesting query
         </h1>
         <p className="text-base md:text-lg max-w-2xl leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-          Three steps: get a key, paste a config, ask a question. Pick your client below — same recipe works
+          Three steps: get a key, paste a config, ask a question. Pick your client below – same recipe works
           for Claude Desktop, Cursor, Windsurf, and any ChatGPT Custom GPT.
         </p>
       </section>
 
-      {/* ── Step 1 — get a key ───────────────────────────────────────────── */}
+      {/* ── Step 1 – get a key ───────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-12 max-w-4xl mx-auto w-full">
         <div className="rounded-2xl p-6 md:p-8"
           style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -79,7 +79,7 @@ export default function QuickstartPage() {
         </div>
       </section>
 
-      {/* ── Step 2 — paste a config ─────────────────────────────────────── */}
+      {/* ── Step 2 – paste a config ─────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-12 max-w-4xl mx-auto w-full">
         <div className="rounded-2xl p-6 md:p-8"
           style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -97,7 +97,7 @@ export default function QuickstartPage() {
         </div>
       </section>
 
-      {/* ── Step 3 — ask a question ─────────────────────────────────────── */}
+      {/* ── Step 3 – ask a question ─────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 max-w-4xl mx-auto w-full">
         <div className="rounded-2xl p-6 md:p-8"
           style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -153,19 +153,19 @@ export default function QuickstartPage() {
             <ul className="text-xs space-y-2" style={{ color: "rgba(255,255,255,0.55)" }}>
               <li>
                 <Link href="/api-docs" className="underline" style={{ color: "#1CB8B8" }}>Swagger UI</Link>{" "}
-                — Try every endpoint live
+                – Try every endpoint live
               </li>
               <li>
                 <a href="https://www.vestream.io/openapi.json" className="underline" style={{ color: "#1CB8B8" }}>OpenAPI spec</a>{" "}
-                — Drop into ChatGPT Actions
+                – Drop into ChatGPT Actions
               </li>
               <li>
                 <a href="https://www.npmjs.com/package/@vestream/mcp" className="underline" style={{ color: "#1CB8B8" }}>@vestream/mcp on npm</a>{" "}
-                — Source + README
+                – Source + README
               </li>
               <li>
                 <Link href="/pricing" className="underline" style={{ color: "#1CB8B8" }}>Pricing</Link>{" "}
-                — Pro tier: 5,000 req/day + alerts
+                – Pro tier: 5,000 req/day + alerts
               </li>
             </ul>
           </div>

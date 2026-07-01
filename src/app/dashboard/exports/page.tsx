@@ -2,7 +2,7 @@
 
 // /dashboard/exports
 // ─────────────────────────────────────────────────────────────────────────────
-// The Exports tab — surfaces a user's claim history and offers tax-software-
+// The Exports tab – surfaces a user's claim history and offers tax-software-
 // ready CSV downloads. Currently powered by Sablier ingestion only; a
 // coverage banner honestly tells users what's indexed vs pending.
 //
@@ -11,7 +11,7 @@
 //     tax season. Vestream pre-computes USD-value-at-claim and serves it
 //     in formats their accountant already uses (Koinly, CoinTracker,
 //     TurboTax).
-//   - "Once tax season uses you, churn → 0" — sticky feature. This is the
+//   - "Once tax season uses you, churn → 0" – sticky feature. This is the
 //     single highest-LTV feature in the consumer lineup.
 //
 // v1 scope (this commit):
@@ -24,7 +24,7 @@
 // Phase 3 follow-ups:
 //   - Date-range picker (currently year only)
 //   - Cost-basis method selector (FIFO / LIFO / HIFO)
-//   - Multi-currency display (read-only — USD-at-claim stays in USD for tax)
+//   - Multi-currency display (read-only – USD-at-claim stays in USD for tax)
 //   - PDF year-end summary report
 //   - Direct accountant email
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { useCountUp } from "@/lib/use-count-up";
 import { VestingsList } from "./VestingsList";
 
-// Drizzle row shape mirrored manually — the API returns rows from the
+// Drizzle row shape mirrored manually – the API returns rows from the
 // claim_events table with claimedAt as ISO string after JSON serialization.
 interface ClaimEvent {
   id:               string;
@@ -109,7 +109,7 @@ function claimSortValue(e: ClaimEvent, col: ClaimSortCol): number | string {
 // that deep-links straight to the right place. The CSV download is auto-
 // triggered when the user clicks the guided-send button so they don't have
 // to bounce back here to grab the file. None of these platforms have a
-// public push API (we researched — Koinly + CoinTracker only support
+// public push API (we researched – Koinly + CoinTracker only support
 // CSV upload or pull-direction integrations), so the guided flow is the
 // closest thing to a 1-click experience we can ship.
 interface ExportFormat {
@@ -129,7 +129,7 @@ const FORMATS: ExportFormat[] = [
   {
     id:       "vestream-generic",
     name:     "Vestream generic CSV",
-    subtitle: "Universal — works with any spreadsheet or accountant",
+    subtitle: "Universal – works with any spreadsheet or accountant",
     audience: "any",
   },
   {
@@ -141,7 +141,7 @@ const FORMATS: ExportFormat[] = [
       "We'll download your Koinly-format CSV and open Koinly's import page in a new tab.",
       "In Koinly, search for and select \"Custom CSV\" as the wallet type.",
       "Click \"Upload File\" and pick the CSV we just downloaded.",
-      "Koinly maps the columns automatically — confirm and import.",
+      "Koinly maps the columns automatically – confirm and import.",
     ],
     audience: "investor",
   },
@@ -154,7 +154,7 @@ const FORMATS: ExportFormat[] = [
       "We'll download your CoinTracker-format CSV and open CoinTracker's wallets page.",
       "Click \"Add Wallet\" and select \"Generic CSV\".",
       "Upload the CSV we just downloaded.",
-      "CoinTracker validates the format and imports — review and confirm.",
+      "CoinTracker validates the format and imports – review and confirm.",
     ],
     audience: "investor",
   },
@@ -167,68 +167,68 @@ const FORMATS: ExportFormat[] = [
       "We'll download your TurboTax-format CSV.",
       "In TurboTax: Investments → Cryptocurrency → \"I'll type it in myself\" → Upload CSV.",
       "Select \"Other\" as the platform and upload the CSV we just downloaded.",
-      "TurboTax classifies vesting income on Schedule 1 / capital gains on Schedule D — review the import preview.",
+      "TurboTax classifies vesting income on Schedule 1 / capital gains on Schedule D – review the import preview.",
     ],
     audience: "investor",
   },
-  // Worker-pivot formats — ordinary-income at FMV-on-receipt. Distinct
+  // Worker-pivot formats – ordinary-income at FMV-on-receipt. Distinct
   // from the four capital-gains formats above. For DAO contributors,
   // crypto-paid contractors, and salary streams.
   {
     id:        "payroll-income",
-    name:      "Payroll income — detail",
-    subtitle:  "Per-claim CSV at FMV-on-receipt — the audit-trail format your accountant will want",
+    name:      "Payroll income – detail",
+    subtitle:  "Per-claim CSV at FMV-on-receipt – the audit-trail format your accountant will want",
     steps:     [
       "We'll download a CSV with one row per claim received as income.",
-      "Each row carries the FMV in USD at the moment of receipt — the figure your tax authority wants.",
+      "Each row carries the FMV in USD at the moment of receipt – the figure your tax authority wants.",
       "US: paste totals into TurboTax → 1099-NEC summary, or attach the CSV as supporting documentation.",
-      "UK: the per-row figures map onto SA103 (Self-employment) — your accountant can sum and convert to GBP at year-end.",
+      "UK: the per-row figures map onto SA103 (Self-employment) – your accountant can sum and convert to GBP at year-end.",
       "Other countries: the CSV is generic enough for any accountant to use directly.",
     ],
     audience: "worker",
   },
   {
     id:        "payroll-summary-us",
-    name:      "Payroll income — US 1099-NEC summary",
-    subtitle:  "One row per payer with summed totals — drops directly into TurboTax / FreeTaxUSA / 1099-NEC line 1",
+    name:      "Payroll income – US 1099-NEC summary",
+    subtitle:  "One row per payer with summed totals – drops directly into TurboTax / FreeTaxUSA / 1099-NEC line 1",
     steps:     [
       "We'll download a CSV with one row per payer (the streaming contract paying you).",
       "Each row carries the total Gross Income (USD) you received from that payer in the selected period.",
-      "Paste the per-payer total into TurboTax → 1099-NEC → \"Box 1: Nonemployee Compensation\" — one entry per payer.",
+      "Paste the per-payer total into TurboTax → 1099-NEC → \"Box 1: Nonemployee Compensation\" – one entry per payer.",
       "Self-employed (Schedule C) filers: total of all rows is your gross receipts.",
-      "Per-claim audit detail is in the \"Payroll income — detail\" CSV.",
+      "Per-claim audit detail is in the \"Payroll income – detail\" CSV.",
     ],
     audience: "worker",
   },
   {
     id:        "payroll-summary-uk",
-    name:      "Payroll income — UK SA103 summary",
-    subtitle:  "Self-employment turnover by payer — for HMRC SA103 / SA103S box 9",
+    name:      "Payroll income – UK SA103 summary",
+    subtitle:  "Self-employment turnover by payer – for HMRC SA103 / SA103S box 9",
     steps:     [
       "We'll download a CSV with one row per payer (the streaming contract paying you).",
-      "Amounts stay in USD — the CSV's footer note links to HMRC's published exchange-rate page for year-end conversion.",
+      "Amounts stay in USD – the CSV's footer note links to HMRC's published exchange-rate page for year-end conversion.",
       "Sum all payers (last row of the CSV) → convert to GBP → enter on SA103S box 9 (Turnover) or SA103F box 15.",
       "Keep the CSV as supporting documentation in case HMRC requests the breakdown.",
-      "Per-claim audit detail is in the \"Payroll income — detail\" CSV.",
+      "Per-claim audit detail is in the \"Payroll income – detail\" CSV.",
     ],
     audience: "worker",
   },
 ];
 
-/** Sort export formats by audience preference — workers see payroll
+/** Sort export formats by audience preference – workers see payroll
  *  formats first, investors see capital-gains formats first. "any"-tagged
  *  formats sit between. Stable sort preserves the original relative order
  *  inside each audience bucket. Falls back to investor-first when the
  *  user hasn't completed onboarding (audienceCategory === null).
  *
- *  May 5 2026 — strategy reset: marketing surface focuses on vesting
+ *  May 5 2026 – strategy reset: marketing surface focuses on vesting
  *  while Payroll moves to the roadmap. The audience-aware sort code
  *  is preserved (server still tracks audienceCategory; we'll re-enable
  *  the worker-first ordering when Payroll relaunches), but the page
  *  now hard-codes the investor-first sort regardless of the user's
  *  stored audienceCategory. Worker-flavoured formats (1099-NEC / SA103)
- *  remain in the format list — power users who want them can still
- *  scroll down — they're just no longer hoisted to the top.
+ *  remain in the format list – power users who want them can still
+ *  scroll down – they're just no longer hoisted to the top.
  */
 function sortFormatsForAudience(
   formats:           ExportFormat[],
@@ -248,7 +248,7 @@ export default function ExportsPage() {
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshMsg, setRefreshMsg]   = useState<string | null>(null);
   // Date range for the report (empty string = open-ended). Replaces the old
-  // year-only dropdown — UK tax years (Apr 6–Apr 5) and single quarters don't
+  // year-only dropdown – UK tax years (Apr 6–Apr 5) and single quarters don't
   // fit calendar years. Presets below set these; the date inputs allow any
   // custom span. The /api/claims/{history,export} endpoints already take
   // since/until, so this is purely a UI change.
@@ -257,19 +257,19 @@ export default function ExportsPage() {
   // Per-protocol inserted/error counts from the most recent refresh.
   // Used to surface the per-protocol diagnostic panel right after a refresh
   // so users can see exactly which ingestors ran, which inserted rows,
-  // and which errored out — instead of having to deduce coverage from the
+  // and which errored out – instead of having to deduce coverage from the
   // single aggregate totalInserted figure the previous flow showed.
   const [perProtocol, setPerProtocol] = useState<IngestResult[]>([]);
   // Which export format is currently being built (server takes a few seconds);
   // drives the per-card spinner so a click gives immediate feedback.
   const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
   // View-only filters (protocol / chain / token) for exploring history. These
-  // refine the on-screen table + summary cards ONLY — the downloadable reports
+  // refine the on-screen table + summary cards ONLY – the downloadable reports
   // always cover the full Report Period in date order (see downloadCsv).
   const [fProtocol, setFProtocol] = useState<string>("");
   const [fChain,    setFChain]    = useState<string>("");
   const [fToken,    setFToken]    = useState<string>("");
-  // Auto-refresh guard — fire once on first mount if no claims are indexed yet.
+  // Auto-refresh guard – fire once on first mount if no claims are indexed yet.
   // The ref ensures we only auto-trigger once per page visit even if the
   // yearFilter changes and load() re-runs.
   const autoRefreshed = useRef(false);
@@ -288,7 +288,7 @@ export default function ExportsPage() {
     summary: Summary | null;
     audienceCategory: string | null;
   }>(swrKey, async (url: string) => {
-    // no-store: the response varies by ?since/?until — never reuse a cached
+    // no-store: the response varies by ?since/?until – never reuse a cached
     // body for a different date range (the year-filter "not filtering" bug).
     const res = await fetch(url, { credentials: "include", cache: "no-store" });
     if (res.status === 401) { router.push("/login"); throw new Error("unauthorized"); }
@@ -301,7 +301,7 @@ export default function ExportsPage() {
 
   // ── Multi-currency (historical FX) ───────────────────────────────────────
   // Each claim's USD-at-receipt value is shown in the user's chosen currency
-  // converted AT THE RATE ON THE CLAIM DATE — tax-correct (HMRC wants GBP at
+  // converted AT THE RATE ON THE CLAIM DATE – tax-correct (HMRC wants GBP at
   // receipt, not today's GBP). We fetch a date→rate map for the distinct claim
   // dates; a date the provider can't resolve falls back to the live rate. USD
   // short-circuits to no conversion (rate 1 everywhere).
@@ -338,10 +338,10 @@ export default function ExportsPage() {
       formatMoney(usd ?? null, currency, rateForDate(iso)),
     [currency, rateForDate],
   );
-  // Localised unit price — keeps extra precision for sub-unit prices, mirroring
+  // Localised unit price – keeps extra precision for sub-unit prices, mirroring
   // the old USD price format but with the chosen currency's symbol.
   const fmtPriceAt = useCallback((usd: number | null, iso: string): string => {
-    if (usd == null) return "—";
+    if (usd == null) return "–";
     const local = usd * rateForDate(iso);
     if (local < 1) return `${ccyMeta.symbol}${local.toPrecision(3)}`;
     return `${ccyMeta.symbol}${local.toLocaleString(ccyMeta.locale, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
@@ -405,7 +405,7 @@ export default function ExportsPage() {
     return { totalRows: filteredEvents.length, totalUsd, totalLocal, byYear };
   }, [historyData, filteredEvents, rateForDate]);
 
-  // In-memory sort of the claim table — same pattern as the explorer's
+  // In-memory sort of the claim table – same pattern as the explorer's
   // ExplorerTable (click a header → reorder instantly, zero round-trip).
   const [sortCol, setSortCol] = useState<ClaimSortCol>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -432,7 +432,7 @@ export default function ExportsPage() {
   const animYears      = useCountUp(summary ? Object.keys(summary.byYear).length : 0);
 
   // Auto-index on first visit if the user has never refreshed before.
-  // Saves the "why is this page empty?" confusion — on mount, if the
+  // Saves the "why is this page empty?" confusion – on mount, if the
   // initial load completes with zero events and we haven't auto-refreshed
   // yet this session, kick off the indexer automatically.
   useEffect(() => {
@@ -473,13 +473,13 @@ export default function ExportsPage() {
   }
 
   // Build + download a CSV. Fetched as a blob (not a bare <a download>) so the
-  // button can show a pending spinner until the file is actually ready — the
+  // button can show a pending spinner until the file is actually ready – the
   // server spends a few seconds pricing + assembling the CSV, and a plain
   // <a download> gives the user no signal that anything is happening.
   // Reports always honour the Report Period (since/until) in date order; the
   // view-only protocol/chain/token filters never narrow the exported file.
   async function downloadCsv(format: string) {
-    if (downloadingFormat) return; // one build at a time — ignore double-clicks
+    if (downloadingFormat) return; // one build at a time – ignore double-clicks
     const sp = new URLSearchParams({ format });
     if (since) sp.set("since", since);
     if (until) sp.set("until", until);
@@ -502,7 +502,7 @@ export default function ExportsPage() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch {
-      toast.error("Couldn't build that CSV — please try again.");
+      toast.error("Couldn't build that CSV – please try again.");
     } finally {
       setDownloadingFormat(null);
     }
@@ -528,7 +528,7 @@ export default function ExportsPage() {
           </p>
         </div>
 
-        {/* Coverage banner — honest about what's indexed */}
+        {/* Coverage banner – honest about what's indexed */}
         <div className="rounded-2xl p-4 mb-5"
           style={{
             background: "rgba(28,184,184,0.05)",
@@ -550,7 +550,7 @@ export default function ExportsPage() {
               </p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
                 Hit refresh to index your claim history. Each claim is priced at the date of
-                receipt — the right figure for US / Canada / EU / Germany tax purposes.{" "}
+                receipt – the right figure for US / Canada / EU / Germany tax purposes.{" "}
                 <strong>UK (HMRC)</strong> and <strong>Australia (ATO)</strong> filers may need to
                 re-attribute to unlock dates with their accountant.{" "}
                 <Link href="/resources/token-vesting-tax-guide" className="underline" style={{ color: "#0F8A8A" }}>
@@ -569,7 +569,7 @@ export default function ExportsPage() {
         <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--preview-text-3)" }}>Report period</span>
-            {/* Preset chips — calendar years + UK tax years (Apr 6–Apr 5).
+            {/* Preset chips – calendar years + UK tax years (Apr 6–Apr 5).
                 For anything else (a single quarter, an arbitrary span) use the
                 From/To inputs below. */}
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -641,16 +641,16 @@ export default function ExportsPage() {
           </p>
         )}
 
-        {/* Per-protocol breakdown — only shown after the most recent
+        {/* Per-protocol breakdown – only shown after the most recent
             refresh, so users see exactly which ingestors found data,
-            which were silent (no streams on that protocol — expected),
+            which were silent (no streams on that protocol – expected),
             and which errored. Replaces the previous "single totalInserted"
             figure that gave no diagnostic info. */}
         {perProtocol.length > 0 && (
           <div className="mb-5 rounded-xl p-3"
             style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--preview-text-3)" }}>
-              Last refresh — per protocol
+              Last refresh – per protocol
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px]">
               {perProtocol.map((r) => {
@@ -673,12 +673,12 @@ export default function ExportsPage() {
             </div>
             <p className="text-[10px] mt-2" style={{ color: "var(--preview-text-3)" }}>
               &quot;No new claims&quot; usually means you don&apos;t have any vesting streams on that
-              protocol — not an error. Errors will show in red.
+              protocol – not an error. Errors will show in red.
             </p>
           </div>
         )}
 
-        {/* View filters — refine the on-screen table + summary (not the export) */}
+        {/* View filters – refine the on-screen table + summary (not the export) */}
         {events.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className="text-[10px] font-semibold uppercase tracking-wider mr-0.5" style={{ color: "var(--preview-text-3)" }}>
@@ -723,7 +723,7 @@ export default function ExportsPage() {
           </div>
         )}
 
-        {/* Historical-FX note — only when displaying a non-USD currency */}
+        {/* Historical-FX note – only when displaying a non-USD currency */}
         {isNonUsd && summary && summary.totalRows > 0 && (
           <p className="text-xs mb-3 -mt-2" style={{ color: "var(--preview-text-3)" }}>
             Amounts shown in {currency}, converted from USD at the FX rate on each
@@ -745,7 +745,7 @@ export default function ExportsPage() {
             </div>
             <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>No claim history indexed yet</p>
             <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-              Hit <strong>&ldquo;↻ Refresh claims&rdquo;</strong> above — Vestream will index your Sablier
+              Hit <strong>&ldquo;↻ Refresh claims&rdquo;</strong> above – Vestream will index your Sablier
               vesting payouts and price each one at the date of receipt.
             </p>
           </div>
@@ -804,12 +804,12 @@ export default function ExportsPage() {
                       <td className="px-4 py-3 text-right whitespace-nowrap" style={{ color: e.usdValueAtClaim ? "var(--preview-text)" : "var(--preview-text-3)" }}>
                         {e.usdValueAtClaim
                           ? fmtMoneyAt(Number(e.usdValueAtClaim), e.claimedAt)
-                          : "—"}
+                          : "–"}
                         {e.priceConfidence === "nearest" && (
                           <span className="ml-1 text-[10px]" title="Used nearest available price within ±7 days" style={{ color: "#d97706" }}>~</span>
                         )}
                         {e.priceConfidence === "missing" && (
-                          <span className="ml-1 text-[10px]" title="No historical price found — set cost basis manually" style={{ color: "#B3322E" }}>!</span>
+                          <span className="ml-1 text-[10px]" title="No historical price found – set cost basis manually" style={{ color: "#B3322E" }}>!</span>
                         )}
                       </td>
                       <td className="px-4 py-3" style={{ color: "var(--preview-text-2)" }}>{getProtocol(e.protocol)?.name ?? e.protocol}</td>
@@ -837,7 +837,7 @@ export default function ExportsPage() {
             fatigue. The top panel is the single source of truth for what
             we've confirmed vs what's still indexing. */}
 
-        {/* Download formats — always visible so users understand what's available
+        {/* Download formats – always visible so users understand what's available
             before they hit refresh. Cards are slightly muted when no data exists
             yet; downloads still work (they produce an empty CSV). */}
         <div>
@@ -860,7 +860,7 @@ export default function ExportsPage() {
             ))}
           </div>
           <p className="text-[11px] mt-4" style={{ color: "var(--preview-text-3)" }}>
-            ✦ The CSV exports cost basis values at the date of claim — Koinly / CoinTracker /
+            ✦ The CSV exports cost basis values at the date of claim – Koinly / CoinTracker /
             TurboTax use these as the income amount and as cost basis for future capital-gains calculations.
             Rows where price was approximate carry a ~ marker; rows with no price found carry a ! marker
             and need a manual cost basis entered in your tax software.
@@ -907,7 +907,7 @@ function ClaimTh({
   );
 }
 
-// Shimmer skeleton for the claim table — reserves height to avoid layout jump
+// Shimmer skeleton for the claim table – reserves height to avoid layout jump
 // while the history loads. Mirrors src/app/dashboard/explorer/loading.tsx.
 function ClaimTableSkeleton() {
   return (
@@ -987,15 +987,15 @@ function FilterSelect({
 /**
  * Per-format export card. Two action surfaces:
  *
- *   - Bare "Download CSV" button — for users who want the file and know
+ *   - Bare "Download CSV" button – for users who want the file and know
  *     where it's going (their accountant, manual reconciliation, etc).
- *   - "Send to <Platform>" button — for users importing into a specific
+ *   - "Send to <Platform>" button – for users importing into a specific
  *     tax tool. Triggers the CSV download AND opens the platform's
  *     import page in a new tab, then expands a numbered steps panel
  *     so the user knows exactly what to click on the other side.
  *
  * The platforms covered (Koinly, CoinTracker, TurboTax) don't expose
- * public push APIs — every one of them imports via CSV upload. The
+ * public push APIs – every one of them imports via CSV upload. The
  * guided flow is the closest thing to 1-click we can build without a
  * private partnership; researched + documented in the FORMATS const.
  */
@@ -1010,14 +1010,14 @@ function ExportFormatCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   // Formats pre-built for a specific tax tool show ONLY the "Send to <tool>"
-  // action — it downloads the same CSV AND opens the importer, so a separate
+  // action – it downloads the same CSV AND opens the importer, so a separate
   // "Download CSV" button was redundant. Generic / accountant formats keep the
   // plain download.
   const isGuided = Boolean(format.importUrl);
 
   function handleGuidedSend() {
     // Order matters. Open the import tab FIRST, while the click's user gesture
-    // is still "fresh" — browsers blank out popups initiated after an async
+    // is still "fresh" – browsers blank out popups initiated after an async
     // download. window.open is synchronous here, so the gesture is preserved;
     // the (async) download then runs with its own spinner.
     if (format.importUrl) {
@@ -1091,7 +1091,7 @@ function ExportFormatCard({
   );
 }
 
-/** Mirror of the helper in csv-exports.ts — kept duplicated client-side
+/** Mirror of the helper in csv-exports.ts – kept duplicated client-side
  *  rather than imported because csv-exports has server-only imports
  *  (db schema types). Same logic, smaller surface. */
 function tokensWhole(amount: string, decimals: number): string {
@@ -1104,6 +1104,6 @@ function tokensWhole(amount: string, decimals: number): string {
     const fracStr = frac.toString().padStart(decimals, "0").slice(0, 4).replace(/0+$/, "");
     return fracStr ? `${whole.toLocaleString()}.${fracStr}` : whole.toLocaleString();
   } catch {
-    return "—";
+    return "–";
   }
 }

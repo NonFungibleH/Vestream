@@ -1,12 +1,12 @@
 // /dashboard/smart-money
 // ─────────────────────────────────────────────────────────────────────────────
-// Smart Money leaderboard — wallets ranked by a USD-weighted blend of locked
+// Smart Money leaderboard – wallets ranked by a USD-weighted blend of locked
 // vesting value and token breadth. Cross-protocol, cross-chain, refreshed
 // daily. (Ranking weights live in /api/cron/smart-money.)
 //
 // Why this page exists: nobody else has cross-protocol recipient data at this
 // scale. A wallet receiving vestings of 200 distinct tokens is clearly a
-// fund/whale/aggregator — the kind of signal traders pay attention to. This
+// fund/whale/aggregator – the kind of signal traders pay attention to. This
 // is the alpha-discovery surface that gives crypto-native users a reason to
 // visit even when their own portfolio is quiet. Mission alignment: "track
 // every token unlock" = "see who else is."
@@ -14,7 +14,7 @@
 // Architecture:
 //   - Server component (no interactivity beyond Links). ISR-cached with 1h
 //     revalidation. The underlying snapshot table updates daily at 03:30
-//     UTC via /api/cron/smart-money — the page just reads it.
+//     UTC via /api/cron/smart-money – the page just reads it.
 //   - Filter chips ("All / EVM / Solana") are PATH segments via
 //     searchParams which would dynamicize; instead, all three views are
 //     server-rendered into one HTML and shown/hidden via the active filter
@@ -33,7 +33,7 @@ import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import { SmartMoneyFilter } from "./SmartMoneyFilter";
 
-export const revalidate = 3600; // page-level ISR — the cron writes every 24h
+export const revalidate = 3600; // page-level ISR – the cron writes every 24h
                                 // so anything tighter than ~1h is wasted.
 
 interface SnapshotRow {
@@ -50,23 +50,23 @@ interface SnapshotRow {
     usdValue:     number | null;
   }>;
   // Epoch ms (not Date) so the row survives unstable_cache's JSON
-  // serialization — a Date would come back as a string and break getTime().
+  // serialization – a Date would come back as a string and break getTime().
   computedAt:         number;
 }
 
 function shortAddr(a: string): string {
-  if (!a) return "—";
+  if (!a) return "–";
   return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
 // The snapshot table is rewritten once a day by the cron, so the query
 // result is cacheable for an hour. Wrapping it in unstable_cache means the
-// per-request DB round-trip is skipped on warm cache — the dashboard layout
+// per-request DB round-trip is skipped on warm cache – the dashboard layout
 // reads cookies (which dynamicises the route, killing the page-level
 // `revalidate`), so without this the leaderboard re-queried Postgres on every
 // navigation. Now the heavy read happens at most once per hour across all
 // visitors. JSON-serialised payload: computedAt is epoch ms, totalLockedUsd a
-// string, topTokensJson plain JSON — no BigInt/Date, so the cache write is safe.
+// string, topTokensJson plain JSON – no BigInt/Date, so the cache write is safe.
 const loadSnapshotCached = unstable_cache(
   async (): Promise<SnapshotRow[]> => {
     const rows = await db
@@ -89,7 +89,7 @@ const loadSnapshotCached = unstable_cache(
 );
 
 async function loadSnapshot(): Promise<SnapshotRow[]> {
-  // Build-phase short-circuit — DB-touching helpers must skip the build per
+  // Build-phase short-circuit – DB-touching helpers must skip the build per
   // CLAUDE.md (Postgres-pooler-drop-mid-build pattern). On runtime the
   // snapshot is served from the 1h cache; on build we bake the empty state
   // and ISR fills on the first revalidation.
@@ -103,7 +103,7 @@ async function loadSnapshot(): Promise<SnapshotRow[]> {
 }
 
 export const metadata = {
-  title: "Smart Money — Vestream",
+  title: "Smart Money – Vestream",
   description: "Wallets receiving vestings of the most distinct tokens across all indexed protocols. Daily snapshot.",
 };
 
@@ -130,7 +130,7 @@ export default async function SmartMoneyPage() {
         Who&apos;s vesting everything
       </h1>
       <p className="text-sm mb-6 max-w-2xl" style={{ color: "var(--preview-text-2)" }}>
-        Top 100 wallets ranked by a blend of <strong style={{ color: "var(--preview-text)" }}>locked value</strong> and <strong style={{ color: "var(--preview-text)" }}>token breadth</strong> — surfacing funds, treasuries, and aggregators with real positions, not just dust. Sort by any column, and click a wallet to drill into its full positions.
+        Top 100 wallets ranked by a blend of <strong style={{ color: "var(--preview-text)" }}>locked value</strong> and <strong style={{ color: "var(--preview-text)" }}>token breadth</strong> – surfacing funds, treasuries, and aggregators with real positions, not just dust. Sort by any column, and click a wallet to drill into its full positions.
       </p>
 
       {/* Stats strip */}
@@ -151,7 +151,7 @@ export default async function SmartMoneyPage() {
         <div>
           <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--preview-text-3)" }}>Updated</p>
           <p className="text-lg font-bold tabular-nums" style={{ color: "var(--preview-text)" }}>
-            {lastComputedAt ? formatRelative(new Date(lastComputedAt)) : "—"}
+            {lastComputedAt ? formatRelative(new Date(lastComputedAt)) : "–"}
           </p>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default async function SmartMoneyPage() {
             No snapshot yet
           </p>
           <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-            The smart-money cron runs daily at 03:30 UTC — check back after the next run.
+            The smart-money cron runs daily at 03:30 UTC – check back after the next run.
           </p>
         </div>
       ) : (

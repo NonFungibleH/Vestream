@@ -30,7 +30,7 @@ interface ToastApi {
 
 const ToastCtx = createContext<ToastApi | null>(null);
 
-/** Safe to call outside a provider — falls back to a no-op (logs in dev). */
+/** Safe to call outside a provider – falls back to a no-op (logs in dev). */
 export function useToast(): ToastApi {
   const ctx = useContext(ToastCtx);
   if (ctx) return ctx;

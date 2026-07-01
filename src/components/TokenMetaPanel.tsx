@@ -5,11 +5,11 @@
 // Shows at a glance:
 //   • Live price + 24h change (DexScreener-sourced)
 //   • Liquidity USD · 24h volume · FDV / market cap
-//   • Indexed locked supply (from our own cache) — the Vestream differentiator
+//   • Indexed locked supply (from our own cache) – the Vestream differentiator
 //   • External links row: block explorer · website · project X · TokenSniffer
 //     · DexScreener · "Search $SYMBOL on X"
 //
-// Server Component — pure, no hooks. Missing data (no socials, no price)
+// Server Component – pure, no hooks. Missing data (no socials, no price)
 // renders gracefully; nothing here throws.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ import type { TokenMarketData, TokenOverview } from "@/lib/vesting/token-aggrega
 interface Props {
   chainId:      number;
   tokenAddress: string;
-  /** Required — used for the X search query + labels. May be null for tokens
+  /** Required – used for the X search query + labels. May be null for tokens
    *  that don't have a resolved symbol in either DexScreener or our cache. */
   tokenSymbol:  string | null;
   market:       TokenMarketData;
@@ -32,7 +32,7 @@ interface Props {
 }
 
 function fmtUsd(n: number | null): string {
-  if (n == null || !Number.isFinite(n) || n <= 0) return "—";
+  if (n == null || !Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -41,7 +41,7 @@ function fmtUsd(n: number | null): string {
 }
 
 function fmtPrice(n: number | null): string {
-  if (n == null || !Number.isFinite(n) || n <= 0) return "—";
+  if (n == null || !Number.isFinite(n) || n <= 0) return "–";
   if (n >= 1)      return `$${n.toFixed(4)}`;
   if (n >= 0.01)   return `$${n.toFixed(4)}`;
   if (n >= 1e-5)   return `$${n.toFixed(6)}`;
@@ -51,7 +51,7 @@ function fmtPrice(n: number | null): string {
 }
 
 function fmtPct(n: number | null): string {
-  if (n == null || !Number.isFinite(n)) return "—";
+  if (n == null || !Number.isFinite(n)) return "–";
   const sign = n >= 0 ? "+" : "";
   return `${sign}${n.toFixed(2)}%`;
 }
@@ -145,7 +145,7 @@ export function TokenMetaPanel({
         boxShadow:  "0 4px 24px rgba(28,184,184,0.06)",
       }}
     >
-      {/* Row 1 — price (left) + market stats (right on desktop, below on mobile).
+      {/* Row 1 – price (left) + market stats (right on desktop, below on mobile).
           The old layout was a single flex with everything wrapping, which
           at 375px scattered "Liquidity / 24h volume / FDV" mid-wrap. On
           mobile we now stack: price on top, stats trio in a 3-column grid
@@ -177,7 +177,7 @@ export function TokenMetaPanel({
         </div>
       </div>
 
-      {/* Row 2 — Vestream differentiator: indexed locked supply.
+      {/* Row 2 – Vestream differentiator: indexed locked supply.
           Two-row layout at mobile so the badge + amount stay on one line
           and the "locked across N streams · protocols" descriptor sits
           below in full width, rather than fragmenting mid-phrase when
@@ -215,7 +215,7 @@ export function TokenMetaPanel({
         </div>
       )}
 
-      {/* Row 3 — external links */}
+      {/* Row 3 – external links */}
       <div className="px-5 md:px-6 py-3 flex items-center gap-2 flex-wrap">
         <LinkPill
           href={blockExplorerUrl(chainId, tokenAddress)}
@@ -267,7 +267,7 @@ export function TokenMetaPanel({
   );
 }
 
-// Small inline stat — label above, value below. Used in row 1 next to the price.
+// Small inline stat – label above, value below. Used in row 1 next to the price.
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>

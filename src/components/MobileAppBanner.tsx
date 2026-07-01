@@ -1,18 +1,18 @@
 "use client";
 
-// MobileAppBanner — dismissible card on the dashboard pointing users at the
+// MobileAppBanner – dismissible card on the dashboard pointing users at the
 // iOS app. Clicking opens GetTheAppModal which mints a single-use handoff
 // token, so the app launches already signed-in.
 //
 // Doubles as the "two-surface mental model" affordance: explicitly frames
 // mobile as the alerts surface, web as research/discovery, so users don't
-// feel like the split is friction — they feel like there's "another half
+// feel like the split is friction – they feel like there's "another half
 // of the product" waiting on their phone.
 //
 // Visual: solid teal gradient with white text + a phone glyph in a frosted
 // pill on the left. The previous low-contrast version (rgba(28,184,184,0.07)
 // background + 75% white text) read as decorative chrome that users
-// scrolled past — this version reads as a clear secondary action.
+// scrolled past – this version reads as a clear secondary action.
 
 import { useState, useEffect } from "react";
 import { GetTheAppModal } from "./GetTheAppModal";
@@ -46,7 +46,7 @@ export function MobileAppBanner() {
     <>
       <div
         style={{
-          // Solid brand gradient — reads on both light and dark dashboard
+          // Solid brand gradient – reads on both light and dark dashboard
           // surfaces. White text + frosted pill icon = high contrast in
           // every theme without theme-conditional colour logic.
           background: "linear-gradient(135deg, #1CB8B8 0%, #0F8A8A 100%)",
@@ -59,7 +59,7 @@ export function MobileAppBanner() {
           boxShadow: "0 4px 16px rgba(28,184,184,0.28)",
         }}
       >
-        {/* Phone glyph — frosted-glass pill on the gradient */}
+        {/* Phone glyph – frosted-glass pill on the gradient */}
         <div
           aria-hidden="true"
           style={{
@@ -94,7 +94,7 @@ export function MobileAppBanner() {
             Get push alerts for every unlock
           </div>
           <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.82)", lineHeight: 1.35 }}>
-            Sign in to the iOS app with one tap — no second OTP.
+            Sign in to the iOS app with one tap – no second OTP.
           </div>
         </div>
 

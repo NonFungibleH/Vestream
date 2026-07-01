@@ -6,12 +6,12 @@
 //
 // Behaviour:
 //   - Live-detect what the user typed and show a "we'll look this up as X"
-//     hint under the input — gives confidence the search will do the right
+//     hint under the input – gives confidence the search will do the right
 //     thing before they press Enter.
 //   - On submit, navigate via Next router so existing filters in the URL
 //     are preserved when relevant (calendar/symbol queries) or wiped (when
 //     the new query is for a specific address/ENS/protocol).
-//   - Hidden inputs preserve current filter state for the form fallback —
+//   - Hidden inputs preserve current filter state for the form fallback –
 //     non-JS submits still work.
 
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -62,7 +62,7 @@ export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, d
         const data = await res.json() as { results: Suggestion[] };
         setSuggestions(data.results ?? []);
         setOpen((data.results ?? []).length > 0);
-      } catch { /* aborted / network — ignore */ }
+      } catch { /* aborted / network – ignore */ }
     }, 180);
     return () => { clearTimeout(t); ctrl.abort(); };
   }, [value, detected.kind]);
@@ -87,28 +87,28 @@ export function ExplorerSearchInput({ initialQuery, mode, chainIds, protocols, d
       return;
     }
     // Fire a search_performed event with the detected kind so dashboards
-    // can group "what are people searching for" — addresses vs ENS vs
+    // can group "what are people searching for" – addresses vs ENS vs
     // protocol slugs vs token symbols.
     track("search_performed", {
       surface:    "explorer",
       query_type: detected.kind,
       mode,
     });
-    // For protocol / address / ENS — navigate to the dedicated landing.
-    // For symbol / freeform — stay on the explorer with the query as ?q.
+    // For protocol / address / ENS – navigate to the dedicated landing.
+    // For symbol / freeform – stay on the explorer with the query as ?q.
     const dest = destinationForQuery(detected);
     startTransition(() => router.push(dest));
   }
 
-  // Hint copy — shown under the input as the user types.
+  // Hint copy – shown under the input as the user types.
   const hint = (() => {
     switch (detected.kind) {
       case "empty":     return "Type a wallet, ENS, token symbol, or protocol";
-      case "address":   return `Looking up ${detected.ecosystem === "evm" ? "EVM" : "Solana"} address — wallet mode`;
+      case "address":   return `Looking up ${detected.ecosystem === "evm" ? "EVM" : "Solana"} address – wallet mode`;
       case "ens":       return `Resolving ${detected.name} → wallet mode`;
-      case "protocol":  return `Protocol: ${detected.slug} — calendar mode`;
-      case "symbol":    return `Token symbol: ${detected.symbol} — calendar mode`;
-      case "freeform":  return "Free-text search — best-effort match";
+      case "protocol":  return `Protocol: ${detected.slug} – calendar mode`;
+      case "symbol":    return `Token symbol: ${detected.symbol} – calendar mode`;
+      case "freeform":  return "Free-text search – best-effort match";
     }
   })();
 
