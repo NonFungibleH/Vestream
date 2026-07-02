@@ -13,7 +13,7 @@
 // every render re-aggregate/price the whole pool. Sorting across pages can
 // only be correct server-side, hence the move.
 //
-// Columns (the narrow ones auto-hide below md):
+// Columns (the narrow ones auto-hide below lg):
 //   Token · Amount · USD · Wallets · Top holder · Rounds · Cliff · Risk · Vested · Next
 // Mobile collapses to Token · USD · Wallets.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ export function ExplorerTable({
   const to   = (page - 1) * pageSize + rows.length;
 
   // Shared grid template: mobile = Token · USD · Wallets (3); desktop adds
-  // Amount, Rounds, Risk, Next (7). Desktop-only cells use `hidden md:flex`,
+  // Amount, Rounds, Risk, Next (7). Desktop-only cells use `hidden lg:flex`,
   // so on mobile they're removed from the grid and the 3 visible cells fill
   // the 3-column template.
   // Proportional `fr` columns (NOT auto): the template is deterministic, so
@@ -148,7 +148,11 @@ export function ExplorerTable({
   // Token column soaks up the full-width slack (its name + protocol·chain
   // subtitle can use the room) so the data columns stay packed instead of
   // spreading into big gaps. Vested tightened (it's just a small sparkline).
-  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,2.4fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.85fr)_minmax(0,0.85fr)] items-center gap-3 px-4 md:px-5";
+  // Breakpoint is `lg` (1024px), NOT `md` (768px): ten columns plus the two-word
+  // headers ("Top recipient", "Next unlock") don't fit in the 768–1023px band, so
+  // at `md` the header labels overflowed their tracks and overlapped. Below `lg`
+  // we fall back to the clean 3-column layout (Token · USD · Wallets).
+  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,2.4fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.85fr)_minmax(0,0.85fr)] items-center gap-3 px-4 lg:px-5";
 
   return (
     <>
@@ -166,15 +170,15 @@ export function ExplorerTable({
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
             <Th label="Token"       active={sort === "token"}         dir={dir} {...sortProps("token", "asc")} title={TOKEN_HELP} />
-            <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden md:flex" title={AMOUNT_HELP} />
+            <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden lg:flex" title={AMOUNT_HELP} />
             <Th label="USD"         active={sort === "usd"}           dir={dir} {...sortProps("usd", "desc")} align="right" minW={64} title={USD_HELP} />
             <Th label="Wallets"     active={sort === "wallets"}       dir={dir} {...sortProps("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
-            <Th label="Top recipient" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden md:flex" minW={64} title={CONCENTRATION_HELP} />
-            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden md:flex" title={ROUNDS_HELP} />
-            <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden md:flex" title={CLIFF_HELP} />
-            <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden md:flex" minW={48} title={RISK_METHODOLOGY} />
-            <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} align="right" className="hidden md:flex" title={PROGRESS_HELP} />
-            <Th label="Next unlock" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden md:flex" title={NEXT_HELP} />
+            <Th label="Top recipient" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden lg:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden lg:flex" title={ROUNDS_HELP} />
+            <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden lg:flex" title={CLIFF_HELP} />
+            <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden lg:flex" minW={48} title={RISK_METHODOLOGY} />
+            <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} align="right" className="hidden lg:flex" title={PROGRESS_HELP} />
+            <Th label="Next unlock" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden lg:flex" title={NEXT_HELP} />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
@@ -221,7 +225,7 @@ function Th({
 }) {
   const inner = (
     <>
-      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors"
+      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors whitespace-nowrap"
         style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
         {label}
       </span>
@@ -327,7 +331,7 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
           </div>
         </div>
         {/* Amount (desktop) */}
-        <div className="text-right tabular-nums hidden md:block">
+        <div className="text-right tabular-nums hidden lg:block">
           <p className="text-sm font-semibold truncate" style={{ color: "var(--preview-text-2)" }}>{fmtAmount(r.amount, r.tokenDecimals)}</p>
         </div>
         {/* USD */}
@@ -352,27 +356,27 @@ function Row({ r, grid, showTopBorder }: { r: ExplorerRow; grid: string; showTop
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{walletsOf(r).toLocaleString()}</p>
         </div>
         {/* Top holder concentration (desktop) */}
-        <div className="text-right hidden md:block" style={{ minWidth: 64 }}>
+        <div className="text-right hidden lg:block" style={{ minWidth: 64 }}>
           <ConcentrationChip r={r} />
         </div>
         {/* Rounds (desktop) */}
-        <div className="text-right tabular-nums hidden md:block">
+        <div className="text-right tabular-nums hidden lg:block">
           <p className="text-sm font-semibold" style={{ color: "var(--preview-text-2)" }}>{r.tokenRoundCount ?? "–"}</p>
         </div>
         {/* Cliff (desktop) – moved off the token name into its own column */}
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <CliffChip r={r} />
         </div>
         {/* Risk (desktop) */}
-        <div className="text-right hidden md:block" style={{ minWidth: 48 }}>
+        <div className="text-right hidden lg:block" style={{ minWidth: 48 }}>
           <RiskChip r={r} />
         </div>
         {/* Vesting progress (desktop) */}
-        <div className="hidden md:flex justify-end" title={progressTitle(r)}>
+        <div className="hidden lg:flex justify-end" title={progressTitle(r)}>
           <VestingProgress r={r} />
         </div>
         {/* Next unlock (desktop) */}
-        <div className="text-right hidden md:block">
+        <div className="text-right hidden lg:block">
           <p className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>in {relativeUntil(r.eventTime)}</p>
         </div>
       </Link>
