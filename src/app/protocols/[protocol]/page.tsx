@@ -269,7 +269,10 @@ const loadProtocolData = unstable_cache(
   // A revalidateTag("protocol-page") flush did NOT reliably evict the v7
   // entry in prod, so fresh HTML renders kept reading the stale 3-chain
   // tvlPerChain. The key bump forces loadProtocolData to recompute.
-  ["protocol-page-data-v8"],
+  // v9 = bump on 2026-07-02 for the self-indexed "$0 declared chains" card fix
+  // (Team Finance on Base). CACHE_TTL_SECONDS is 3600, so without a key bump the
+  // change wouldn't surface for up to an hour after deploy.
+  ["protocol-page-data-v9"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -597,13 +600,26 @@ export default async function ProtocolLandingPage(
 
       {/* ── TVL by chain ────────────────────────────────────────────────── */}
       {tvlPerChain.length > 0 && (() => {
-        // Only show chains the protocol actually operates on. DefiLlama-sourced
-        // snapshots sometimes carry dust on chains we don't track – e.g.
-        // Streamflow is Solana-only but DefiLlama reported sub-$1 amounts on
-        // Ethereum/BNB/Polygon, which surfaced as bogus extra rows here.
-        const chainTvl = tvlPerChain.filter((r) =>
-          (meta.chainIds as readonly number[]).includes(r.chainId),
-        );
+        // Which chains to show, and with what TVL.
+        //
+        // Self-indexed protocols (no externalTvl — we walk their contracts
+        // ourselves): show EVERY declared chain, defaulting to $0 when we've
+        // walked it and found nothing locked yet. That's the integration story
+        // the "N chains covered" stat promises — e.g. Team Finance is live on
+        // Base with no vestings yet, so Base shows at $0 rather than vanishing.
+        //
+        // DefiLlama-sourced protocols: only show chains DefiLlama actually
+        // reports. Inventing $0 rows for their other declared chains would be
+        // misleading (DefiLlama may aggregate that chain's TVL elsewhere), and
+        // DefiLlama sometimes carries dust on chains we don't track (Streamflow
+        // is Solana-only yet DefiLlama reported sub-$1 on ETH/BNB/Polygon).
+        const declared = (meta.chainIds as readonly number[]);
+        const bySnapshot = new Map(tvlPerChain.map((r) => [r.chainId, r.tvlUsd]));
+        const chainTvl = (
+          meta.externalTvl
+            ? tvlPerChain.filter((r) => declared.includes(r.chainId))
+            : declared.map((chainId) => ({ chainId, tvlUsd: bySnapshot.get(chainId) ?? 0 }))
+        ).sort((a, b) => b.tvlUsd - a.tvlUsd);
         if (chainTvl.length === 0) return null;
         const totalTvl = chainTvl.reduce((s, r) => s + r.tvlUsd, 0);
         return (
