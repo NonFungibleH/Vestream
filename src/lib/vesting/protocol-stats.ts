@@ -504,8 +504,14 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
           and ${vestingStreamsCache.isFullyVested} = false
         )
       )::int`,
-      tokens:          sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
-      recipients:      sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
+      // Count addresses case-INSENSITIVELY for EVM (0x…) but case-SENSITIVELY
+      // for Solana base58 (where case is significant). Storage isn't uniformly
+      // lowercased, so a plain `count(distinct token_address)` double-counts the
+      // mixed-case EVM variants of a single token — e.g. Team Finance showed
+      // "68 tokens" when there were really 63. The token page + Explorer already
+      // read via lower(); this makes the protocol-hero counts agree.
+      tokens:          sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end)::int`,
+      recipients:      sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end)::int`,
       chains:          sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed:     sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })

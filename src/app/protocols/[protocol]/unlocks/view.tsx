@@ -190,6 +190,22 @@ export async function ProtocolUnlocksView({
   const visibleRows = result.groups.slice(0, TEASER_VISIBLE_ROWS);
   const gatedRows   = result.groups.slice(TEASER_VISIBLE_ROWS);
 
+  // Chain pills should only offer chains that ACTUALLY have an upcoming unlock —
+  // otherwise an integrated-but-idle chain (e.g. Team Finance on Base, 0 upcoming
+  // unlocks) shows a filter chip that leads to an empty page and contradicts the
+  // "Chains" stat. Derived UNFILTERED so the pill set is identical on every
+  // per-chain view; when already unfiltered we reuse `result` (no extra query).
+  let allGroups = result.groups;
+  if (filterChainId != null) {
+    try {
+      allGroups = (await getCachedProtocolUnlocks(meta.slug, meta.adapterIds, null)).groups;
+    } catch { /* fall back to the filtered set */ }
+  }
+  const chainsWithUnlocks = new Set(allGroups.map((g) => g.chainId));
+  // Keep the currently-selected chain in the list even if it has none, so its
+  // active pill still renders when someone deep-links to an idle chain.
+  const filterChains = meta.chainIds.filter((cid) => chainsWithUnlocks.has(cid) || cid === filterChainId);
+
   // ItemList JSON-LD – unlock events scoped to this protocol.
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -280,7 +296,7 @@ export async function ProtocolUnlocksView({
             2026-06-12) a PATH segment rather than a query param so every
             variant is ISR-cached. The active pill picks up the protocol's
             brand colour so the filter feels like part of the page. */}
-        {meta.chainIds.length > 1 && (
+        {filterChains.length > 1 && (
           <div className="mt-5 flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-bold tracking-widest uppercase mr-1" style={{ color: "#B8BABD" }}>
               Filter
@@ -288,7 +304,7 @@ export async function ProtocolUnlocksView({
             <ChainPill href={`/protocols/${meta.slug}/unlocks`} active={!filterChainId} accent={meta.color}>
               All chains
             </ChainPill>
-            {meta.chainIds.map((cid) => {
+            {filterChains.map((cid) => {
               const chainName = CHAIN_NAMES[cid as keyof typeof CHAIN_NAMES] ?? `chain ${cid}`;
               return (
                 <ChainPill
