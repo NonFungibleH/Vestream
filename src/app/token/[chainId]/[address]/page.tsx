@@ -248,8 +248,25 @@ export default async function TokenPage(
   // cuts it → a 524 the visitor sees as "this page couldn't load". A cap turns
   // that into a partial render in seconds – the same graceful-degradation
   // intent as the allSettled fallbacks, but for HANGS rather than throws.
+  // The OVERVIEW is the gatekeeper: it alone decides "has vesting" vs "no
+  // vesting". getTokenOverview returns null for a GENUINELY empty token (0 active
+  // streams) and an object otherwise — but a timeout/DB-blip is indistinguishable
+  // from genuine-empty if we let it degrade to a null fallback. That ambiguity is
+  // the AITECH bug: a cold-pooler timeout rendered "No vesting activity" and ISR
+  // cached THAT for 30 min, so a token with live streams showed empty.
+  //
+  // Fix: the overview load REJECTS on timeout (not a silent null fallback), and we
+  // throw on failure below so ISR never caches a failed render. On revalidation
+  // Next keeps serving the last good entry; only a first-ever blocking render hits
+  // the error boundary. The 4 loaders below stay soft (they're enhancements — a
+  // token still renders usefully if the calendar or recipient list degrades).
   const settled = await Promise.allSettled([
-    withTimeout(getTokenOverview(cid, addr), 15_000, null, "pubtoken:overview"),
+    Promise.race([
+      getTokenOverview(cid, addr),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("overview load exceeded 15s")), 15_000),
+      ),
+    ]),
     // Past 12 + next 12 months = 24 monthly buckets. The calendar UI
     // auto-folds the historical half away when it's all zero (fresh tokens
     // with no tranche history to show), so passing monthsBack is safe even
@@ -269,7 +286,17 @@ export default async function TokenPage(
     }
   });
 
-  const overview   = settled[0].status === "fulfilled" ? settled[0].value : null;
+  // GATEKEEPER: a failed overview load must NOT be cached as an empty page.
+  // Throw → ISR declines to cache this render and retries on the next request,
+  // serving the previous good entry in the meantime, instead of poisoning the
+  // token with "No vesting activity" for the full 30-min revalidate window.
+  if (settled[0].status === "rejected") {
+    throw new Error(
+      `[token-page] overview load failed for ${cid}/${addr} — declining to cache empty render: ` +
+      `${settled[0].reason instanceof Error ? settled[0].reason.message : String(settled[0].reason)}`,
+    );
+  }
+  const overview   = settled[0].value;
   const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
   const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
   const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
