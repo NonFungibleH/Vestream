@@ -291,6 +291,12 @@ export async function getTokenOverview(
   chainId: number,
   tokenAddress: string,
 ): Promise<TokenOverview | null> {
+  // Build-phase guard (CLAUDE.md landmine): the token page's generateStaticParams
+  // prerenders a sample at `next build`, where the Supabase pooler is unreliable.
+  // Return null (treated as genuine-empty) rather than letting the query hang and
+  // time out — otherwise the page's overview gatekeeper throws and fails the whole
+  // build. ISR fills real data on the first runtime request.
+  if (process.env.NEXT_PHASE === "phase-production-build") return null;
   const rows   = await fetchActiveStreams(chainId, tokenAddress);
   if (rows.length === 0) return null;
 

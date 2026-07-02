@@ -287,16 +287,23 @@ export default async function TokenPage(
   });
 
   // GATEKEEPER: a failed overview load must NOT be cached as an empty page.
-  // Throw → ISR declines to cache this render and retries on the next request,
-  // serving the previous good entry in the meantime, instead of poisoning the
-  // token with "No vesting activity" for the full 30-min revalidate window.
-  if (settled[0].status === "rejected") {
+  // At runtime, throw → ISR declines to cache this render and retries on the next
+  // request, serving the previous good entry in the meantime, instead of poisoning
+  // the token with "No vesting activity" for the full 30-min revalidate window.
+  //
+  // But NEVER throw during `next build`: the generateStaticParams prerender has no
+  // reliable DB, and a throw there fails the whole build (getTokenOverview already
+  // guards the build phase, so this is belt-and-suspenders). Build renders are
+  // throwaway — ISR replaces them on the first runtime request — so a build-time
+  // failure is treated as empty.
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+  if (settled[0].status === "rejected" && !isBuildPhase) {
     throw new Error(
       `[token-page] overview load failed for ${cid}/${addr} — declining to cache empty render: ` +
       `${settled[0].reason instanceof Error ? settled[0].reason.message : String(settled[0].reason)}`,
     );
   }
-  const overview   = settled[0].value;
+  const overview   = settled[0].status === "fulfilled" ? settled[0].value : null;
   const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
   const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
   const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
