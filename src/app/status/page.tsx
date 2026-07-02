@@ -565,7 +565,7 @@ export default async function StatusPage() {
     : { label: `${stuckCells.length} cell${stuckCells.length === 1 ? "" : "s"} need attention`, color: "#dc2626" };
 
   return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
+    <div style={{ background: "#f8fafc", minHeight: "100vh" }} data-build="diag-20260702a">
       <SiteNav theme="light" />
       {/* Auto-refresh client component – calls router.refresh() every
           60s. Server runs are cheap because loadStatusData() is cached
