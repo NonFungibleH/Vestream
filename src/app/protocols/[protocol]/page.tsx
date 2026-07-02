@@ -413,7 +413,7 @@ export default async function ProtocolLandingPage(
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }} data-build="proto-diag-20260702a">
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -656,8 +656,12 @@ export default async function ProtocolLandingPage(
                           )}
                           {chainLabel(row.chainId)}
                         </span>
-                        <span className="text-sm font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
-                          {formatUsdCompact(row.tvlUsd)}
+                        <span className="text-sm font-semibold tabular-nums" style={{ color: row.tvlUsd === 0 ? "#94A3B8" : "#1A1D20" }}>
+                          {/* An integrated-but-empty chain (e.g. Team Finance on
+                              Base) shows an explicit "$0" rather than the generic
+                              "—" no-value dash, so it reads as "covered, nothing
+                              locked yet" instead of "unknown". */}
+                          {row.tvlUsd === 0 ? "$0" : formatUsdCompact(row.tvlUsd)}
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
