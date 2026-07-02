@@ -37,13 +37,29 @@ import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
-// Each refresh is a single heavy GROUP BY against vesting_streams_cache.
-// Vercel side allows up to 300s; Cloudflare in front of vestream.io
-// caps gateway responses at 100s. Combined refresh time can exceed
-// 100s under load, so we return 202 immediately and run the work in
-// after() — same pattern as seed-cache's per-group fan-out.
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
+
+// Run the three refreshes SEQUENTIALLY, awaited to completion.
+//
+// The previous version wrapped all three in `after()` and ran them in PARALLEL.
+// Two problems: (1) `after()` work is best-effort on Vercel and gets killed, so
+// the rollups silently FROZE on 2026-06-21 — the Vesting Explorer's Upcoming tab
+// (which reads token_vesting_rollups) went blank, and Team Finance (re-enabled
+// 2026-06-30) never got indexed at all; (2) three heavy GROUP BYs hitting the
+// pooler at once amplified contention. Vercel cron invokes the function directly
+// (it is NOT subject to Cloudflare's 100s gateway cap — the tvl-snapshot cron
+// already runs ~191s synchronously this way), so we simply AWAIT the work.
+// Sequential keeps peak pooler load low; total ~170s, comfortably under the 300s
+// maxDuration. A per-step try/catch means one failure doesn't sink the others.
+async function runAll(): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
+  const out = { tokens: null as number | null, protocol: null as number | null, status: null as number | null };
+  // token rollups first — the heaviest, and what the Explorer depends on.
+  try { out.tokens   = (await refreshTokenRollups()).rows;      } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
+  try { out.protocol = (await refreshProtocolSummaries()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshProtocolSummaries failed:", e); }
+  try { out.status   = (await refreshStatusSummary()).rows;     } catch (e) { console.error("[cron/refresh-rollups] refreshStatusSummary failed:", e); }
+  return out;
+}
 
 async function handle(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -51,38 +67,24 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Background execution — caller gets sub-second 202; work runs to
-  // completion within Vercel's maxDuration (300s) even when both
-  // refreshes together push past Cloudflare's 100s gateway timeout.
-  // PromiseAllSettled inside so a failure in one doesn't block the
-  // other from committing.
-  after(async () => {
-    const startedAt = Date.now();
-    const settled = await Promise.allSettled([
-      refreshProtocolSummaries(),
-      refreshStatusSummary(),
-      refreshTokenRollups(),
-    ]);
-    const protocolResult = settled[0].status === "fulfilled" ? settled[0].value : null;
-    const statusResult   = settled[1].status === "fulfilled" ? settled[1].value : null;
-    const tokenResult    = settled[2].status === "fulfilled" ? settled[2].value : null;
-    for (let i = 0; i < settled.length; i++) {
-      const r = settled[i];
-      if (r.status === "rejected") {
-        const name = ["refreshProtocolSummaries", "refreshStatusSummary", "refreshTokenRollups"][i];
-        console.error(`[cron/refresh-rollups] ${name} failed:`, r.reason);
-      }
-    }
-    const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
-    console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s — protocol=${protocolResult?.rows ?? "?"} status=${statusResult?.rows ?? "?"} tokens=${tokenResult?.rows ?? "?"}`);
-  });
+  // `?background=true` keeps a fire-and-forget path for MANUAL calls made through
+  // the Cloudflare-fronted vestream.io domain (which would 524 at 100s on the
+  // synchronous path). The scheduled Vercel cron hits the function directly and
+  // uses the default synchronous path, which reliably runs to completion.
+  if (req.nextUrl.searchParams.get("background") === "true") {
+    after(async () => {
+      const t = Date.now();
+      const r = await runAll();
+      console.log(`[cron/refresh-rollups] background complete in ${((Date.now() - t) / 1000).toFixed(1)}s — ${JSON.stringify(r)}`);
+    });
+    return NextResponse.json({ ok: true, accepted: true, message: "Refresh running in background." }, { status: 202 });
+  }
 
-  return NextResponse.json({
-    ok:        true,
-    accepted:  true,
-    message:   "Rollup refresh queued in background. Check Vercel logs for completion.",
-    startedAt: new Date().toISOString(),
-  }, { status: 202 });
+  const startedAt = Date.now();
+  const result = await runAll();
+  const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
+  console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s — ${JSON.stringify(result)}`);
+  return NextResponse.json({ ok: true, durationSec: elapsedSec, ...result });
 }
 
 export async function GET(req: NextRequest)  { return handle(req); }
