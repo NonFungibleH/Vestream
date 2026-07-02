@@ -243,6 +243,15 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
           isFullyVested:   sql`excluded.is_fully_vested`,
           streamData:      sql`excluded.stream_data`,
           lastRefreshedAt: sql`excluded.last_refreshed_at`,
+          // Keep the denormalised token_symbol column in sync with the freshly
+          // fetched value — but NEVER downgrade a real symbol back to
+          // unknown/null/''. Historically this column was insert-only, so a row
+          // first seen before its symbol resolved (Sablier's subgraph often lags
+          // token metadata) stayed "unknown" forever even after streamData
+          // caught up — surfacing as "1.62M unknown" in the upcoming queue while
+          // the token page (which reads streamData) showed the real symbol. This
+          // COALESCE keeps the better of the two so the gap can't regrow.
+          tokenSymbol:     sql`COALESCE(NULLIF(NULLIF(excluded.token_symbol, 'unknown'), ''), ${vestingStreamsCache.tokenSymbol})`,
         },
         // Update when:
         //  - stream data moved (the always-update case from the original
