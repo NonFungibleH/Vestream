@@ -421,3 +421,71 @@ export async function getMaxLastRefreshedAt(): Promise<number | null> {
     ),
   ]);
 }
+
+// ── Derived-table freshness (pipeline monitor) ───────────────────────────────
+//
+// The per-cell matrix above tracks vesting_streams_cache. But the AGGREGATE
+// surfaces (Vesting Explorer's Upcoming tab, /protocols stats + TVL, the /status
+// grid itself) read from DERIVED tables refreshed by SEPARATE crons. A frozen
+// cron there is invisible to the cache matrix — exactly how token_vesting_rollups
+// sat dead for 11 days (2026-06-21 → 07-02) and the Explorer showed nothing for
+// Team Finance while everything else looked healthy. This surfaces each derived
+// table's age so a freeze is caught immediately — rendered on /status and exposed
+// in /api/admin/cache-stats JSON (poll it from an uptime monitor to page on it).
+
+export interface PipelineFreshnessEntry {
+  key:           string;        // machine key (table name)
+  label:         string;        // human label
+  computedAtSec: number | null; // last refresh, unix seconds (null = never)
+  ageHours:      number | null; // hours since last refresh (null = never)
+  maxAgeHours:   number;        // expected max before it counts as stale
+  stale:         boolean;       // ageHours == null || ageHours > maxAgeHours
+}
+
+export async function getPipelineFreshness(): Promise<PipelineFreshnessEntry[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+
+  // Thresholds allow for one missed cron run + buffer. rollups/summaries/status
+  // refresh every 12h → stale past 26h; tvl-snapshots run daily → stale past 30h.
+  const SPECS = [
+    { key: "token_vesting_rollups",  label: "Explorer rollups", maxAgeHours: 26 },
+    { key: "protocol_summaries",     label: "Protocol stats",   maxAgeHours: 26 },
+    { key: "status_summary",         label: "Status matrix",    maxAgeHours: 26 },
+    { key: "protocol_tvl_snapshots", label: "TVL snapshots",    maxAgeHours: 30 },
+  ] as const;
+
+  try {
+    const rows = (await db.execute(sql`
+      SELECT
+        extract(epoch from (SELECT max(computed_at)     FROM token_vesting_rollups))::bigint  AS rollups,
+        extract(epoch from (SELECT max(computed_at)     FROM protocol_summaries))::bigint      AS summaries,
+        extract(epoch from (SELECT max(computed_at)     FROM status_summary))::bigint          AS status,
+        extract(epoch from (SELECT max(last_attempt_at) FROM protocol_tvl_snapshots))::bigint  AS tvl
+    `)) as unknown as Array<{ rollups: number | null; summaries: number | null; status: number | null; tvl: number | null }>;
+
+    const r = rows[0] ?? { rollups: null, summaries: null, status: null, tvl: null };
+    const secByKey: Record<string, number | null> = {
+      token_vesting_rollups:  r.rollups   != null ? Number(r.rollups)   : null,
+      protocol_summaries:     r.summaries != null ? Number(r.summaries) : null,
+      status_summary:         r.status    != null ? Number(r.status)    : null,
+      protocol_tvl_snapshots: r.tvl       != null ? Number(r.tvl)       : null,
+    };
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    return SPECS.map((s) => {
+      const sec = secByKey[s.key];
+      const ageHours = sec != null ? Math.max(0, (nowSec - sec) / 3600) : null;
+      return {
+        key:           s.key,
+        label:         s.label,
+        computedAtSec: sec,
+        ageHours:      ageHours != null ? Math.round(ageHours * 10) / 10 : null,
+        maxAgeHours:   s.maxAgeHours,
+        stale:         ageHours == null || ageHours > s.maxAgeHours,
+      };
+    });
+  } catch (err) {
+    console.warn(`[cache-stats] getPipelineFreshness failed: ${err instanceof Error ? err.message : err}`);
+    return [];
+  }
+}

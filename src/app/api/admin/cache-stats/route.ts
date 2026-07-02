@@ -17,7 +17,9 @@ import { isAdminAuthorized } from "@/lib/admin-auth";
 import {
   getCacheStatsCells,
   getMaxLastRefreshedAt,
+  getPipelineFreshness,
   type CacheStatsCell,
+  type PipelineFreshnessEntry,
 } from "@/lib/vesting/cache-stats";
 import { env } from "@/lib/env";
 
@@ -27,6 +29,12 @@ export interface CacheStatsResponse {
   ok:        true;
   nowMs:     number;
   totalRows: number;
+  /** Freshness of the derived aggregate tables (Explorer rollups, protocol
+   *  stats, status matrix, TVL snapshots). `pipelineStale` is true if ANY is
+   *  past its expected refresh window — poll it from an uptime monitor to catch
+   *  a frozen cron (which the per-cell matrix below cannot see). */
+  pipeline:      PipelineFreshnessEntry[];
+  pipelineStale: boolean;
   /**
    * Set when ?live=1 is passed. The default rollup path reads from
    * `status_summary`, which is only updated at the end of a successful
@@ -59,8 +67,12 @@ export async function GET(req: NextRequest) {
   const live = req.nextUrl.searchParams.get("live") === "1";
 
   try {
-    const cells     = await getCacheStatsCells();
+    const [cells, pipeline] = await Promise.all([
+      getCacheStatsCells(),
+      getPipelineFreshness(),
+    ]);
     const totalRows = cells.reduce((sum, c) => sum + c.streams, 0);
+    const pipelineStale = pipeline.some((p) => p.stale);
 
     // ?live=1 — bypass the status_summary rollup and read MAX(last_refreshed_at)
     // straight from vesting_streams_cache. Used to disambiguate "seeder didn't
@@ -82,6 +94,8 @@ export async function GET(req: NextRequest) {
         ok:       true,
         nowMs:    Date.now(),
         totalRows,
+        pipeline,
+        pipelineStale,
         ...(live ? { liveMaxLastRefreshedAtSec } : {}),
         cells,
       } satisfies CacheStatsResponse,

@@ -22,7 +22,7 @@ import { Redis } from "@upstash/redis";
 import { SiteNav } from "@/components/SiteNav";
 import { listProtocols } from "@/lib/protocol-constants";
 import { CHAIN_NAMES, CHAIN_IDS, type SupportedChainId } from "@vestream/shared";
-import { getCacheStatsCells } from "@/lib/vesting/cache-stats";
+import { getCacheStatsCells, getPipelineFreshness } from "@/lib/vesting/cache-stats";
 import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
 import { db } from "@/lib/db";
 import { indexerState } from "@/lib/db/schema";
@@ -458,6 +458,18 @@ export default async function StatusPage() {
     capturedAt: cachedAtSec,
   } = await loadStatusData();
 
+  // Derived-table freshness (Explorer rollups, protocol stats, TVL snapshots).
+  // Separate from the per-cell cache matrix below — a frozen refresh cron there
+  // is otherwise invisible (token_vesting_rollups sat dead for 11 days without
+  // any signal here). Bounded so a cold pooler can't hang the page.
+  const pipeline = await Promise.race([
+    getPipelineFreshness(),
+    new Promise<Awaited<ReturnType<typeof getPipelineFreshness>>>((resolve) =>
+      setTimeout(() => resolve([]), 3000),
+    ),
+  ]).catch(() => [] as Awaited<ReturnType<typeof getPipelineFreshness>>);
+  const stalePipeline = pipeline.filter((p) => p.stale);
+
   const nowSec = Math.floor(Date.now() / 1000);
 
   // Build per-cell lookups. cellMap holds freshness; metaMap holds the
@@ -574,6 +586,43 @@ export default async function StatusPage() {
 
 
       <main className="mx-auto max-w-5xl px-4 md:px-8 pb-24 pt-12">
+        {/* Derived-data pipeline banner — only shown when a refresh cron has
+            frozen (a derived table is past its expected refresh window). This is
+            the signal that was missing when token_vesting_rollups sat dead for
+            11 days and the Vesting Explorer went blank. */}
+        {stalePipeline.length > 0 && (
+          <div
+            className="mb-6 rounded-2xl p-5"
+            style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.30)" }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full" style={{ background: "#dc2626" }} />
+              <span className="text-sm font-bold" style={{ color: "#b91c1c" }}>
+                Aggregate data pipeline is stale
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed mb-3" style={{ color: "#7f1d1d" }}>
+              A refresh cron has stopped updating one or more derived tables. The
+              live stream cache below may look healthy while the Explorer, TVL, or
+              protocol aggregates serve stale data.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {stalePipeline.map((p) => (
+                <span
+                  key={p.key}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold tabular-nums"
+                  style={{ background: "white", border: "1px solid rgba(220,38,38,0.25)", color: "#b91c1c" }}
+                >
+                  {p.label}
+                  <span style={{ color: "#94a3b8", fontWeight: 500 }}>
+                    {p.ageHours == null ? "never" : `${p.ageHours}h ago`}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Hero – single binary signal. Big enough that the
             green/red is the only thing the eye lands on at first glance. */}
         <div
