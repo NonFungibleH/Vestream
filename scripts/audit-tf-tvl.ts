@@ -21,14 +21,14 @@ function perTokenCeiling(p: { source: string; liquidityUsd: number | null; confi
 async function main() {
   const walker = await runWalker("team-finance", 56);
   if (!walker) { console.log("no walker result"); return; }
-  const input = walker.tokens.map((t: any) => ({
+  const input = walker.tokens.map((t) => ({
     chainId: t.chainId, tokenAddress: t.tokenAddress, tokenSymbol: t.tokenSymbol,
     tokenDecimals: t.tokenDecimals, lockedAmount: t.lockedAmount,
   }));
   const { priced } = await priceAggregates(input);
 
   let rawTotal = 0, creditedTotal = 0, floorHits = 0;
-  const rows = priced.map((p: any) => {
+  const rows = priced.map((p) => {
     const credited = Math.min(p.usd, perTokenCeiling(p));
     rawTotal += p.usd; creditedTotal += credited;
     if (Math.abs(credited - MIN_PER_TOKEN_CEILING_USD) < 1) floorHits++;
