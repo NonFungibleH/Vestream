@@ -12,6 +12,7 @@ import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { readFromCache, writeToCache, readAllStreamsForWallets, mergeFreshWithCached } from "@/lib/vesting/dbcache";
 import { ALL_CHAIN_IDS, SupportedChainId, VestingStream } from "@/lib/vesting/types";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { recordScanEvent } from "@/lib/db/queries";
 
 export async function GET(req: NextRequest) {
   const token  = extractBearerToken(req);
@@ -44,6 +45,11 @@ export async function GET(req: NextRequest) {
 
   const userWallets = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   if (!userWallets.length) return NextResponse.json({ streams: [] });
+
+  // A pull-to-refresh (?refresh=1) with wallets present is a genuine
+  // user-initiated scan — count it. The automated 15-min background refresh
+  // hits this route WITHOUT ?refresh=1, so it's correctly excluded.
+  if (refresh) void recordScanEvent(userId, "mobile_refresh");
 
   const addresses = userWallets.map(w => w.address.toLowerCase());
 

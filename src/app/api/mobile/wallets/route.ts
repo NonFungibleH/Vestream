@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { wallets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logWalletSearch } from "@/lib/search-log";
+import { recordScanEvent } from "@/lib/db/queries";
 
 // Wallet limits per tier — keep in sync with src/app/api/wallets/route.ts.
 //   free   → 3   (was 1; bumped May 2026 to make the free tier usable)
@@ -85,6 +86,10 @@ export async function POST(req: NextRequest) {
     source:        "mobile_track",
     userId,
   });
+
+  // Adding a wallet triggers a fresh scan of that address — count it as a
+  // user-initiated scan (best-effort).
+  void recordScanEvent(userId, "mobile_add_wallet");
 
   return NextResponse.json({ wallet });
 }

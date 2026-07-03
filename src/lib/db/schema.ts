@@ -179,6 +179,31 @@ export const watchlist = pgTable("watchlist", {
   uniqueIndex("watchlist_user_chain_token_uq").on(t.userId, t.chainId, t.tokenAddress),
 ]);
 
+// ── Scan events ─────────────────────────────────────────────────────────────
+// One row per USER-INITIATED wallet scan. Distinct from users.scan_count, which
+// is a resetting rate-limit BUDGET, not a running total. This event log answers
+// "how much are people scanning" over time: totals, per-user, per-source, and
+// scans/day. Automated 15-minute background refreshes are deliberately NOT
+// recorded here — only scans a person actively triggers, so the metric reflects
+// real engagement rather than machine activity.
+//
+// source values (keep in sync with recordScanEvent callers):
+//   "web_discover"      — /find-vestings scan on the web (/api/wallets/scan)
+//   "mobile_add_wallet" — adding a wallet in the app (triggers a scan)
+//   "mobile_refresh"    — pull-to-refresh in the app (/api/mobile/vestings?refresh=1)
+export const scanEvents = pgTable("scan_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  source: text("source").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("scan_events_user_idx").on(t.userId),
+  index("scan_events_created_idx").on(t.createdAt),
+  index("scan_events_source_idx").on(t.source),
+]);
+
 /**
  * Per-user, per-stream annotations — custom name + freeform notes.
  *

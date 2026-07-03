@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { isValidWalletAddress } from "@/lib/address-validation";
-import { getUserByAddress, checkAndIncrementScanCount } from "@/lib/db/queries";
+import { getUserByAddress, checkAndIncrementScanCount, recordScanEvent } from "@/lib/db/queries";
 import { aggregateVestingStreams } from "@/lib/vesting/aggregate";
 import { logWalletSearch } from "@/lib/search-log";
 import { ALL_CHAIN_IDS, CHAIN_NAMES, SupportedChainId } from "@/lib/vesting/types";
@@ -95,6 +95,9 @@ export async function GET(req: NextRequest) {
       source:        "dashboard_discover",
       userId:        user?.id ?? null,
     });
+
+    // Count this user-initiated scan in the scan_events log (best-effort).
+    void recordScanEvent(user.id, "web_discover");
 
     // Optional chain/protocol filters — narrows the scan for speed
     const chainsParam    = searchParams.get("chains");

@@ -9,6 +9,7 @@ import {
   streamAnnotations,
   streamTags,
   calendarTokens,
+  scanEvents,
 } from "./schema";
 import { randomBytes } from "node:crypto";
 import { normaliseAddress } from "@/lib/address-validation";
@@ -283,6 +284,25 @@ export async function checkAndIncrementScanCount(
     resetAt:   new Date(scanWindowStart!.getTime() + WINDOW_MS),
     tier,
   };
+}
+
+/** Canonical set of scan sources — keep in sync with the `scanEvents.source`
+ *  doc in schema.ts. A union type so callers can't typo a source string. */
+export type ScanSource = "web_discover" | "mobile_add_wallet" | "mobile_refresh";
+
+/**
+ * Record ONE user-initiated scan in the scan_events log. Best-effort and
+ * non-blocking: a failure here must never break the scan the user actually
+ * asked for, so callers fire-and-forget (`void recordScanEvent(...)`) and we
+ * swallow errors. Do NOT call this from the automated background refresh —
+ * only from paths a person actively triggers (see schema.ts).
+ */
+export async function recordScanEvent(userId: string, source: ScanSource): Promise<void> {
+  try {
+    await db.insert(scanEvents).values({ userId, source });
+  } catch (err) {
+    console.warn("[scan-events] insert failed (non-fatal):", err);
+  }
 }
 
 /**
