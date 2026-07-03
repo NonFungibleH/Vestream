@@ -127,6 +127,11 @@ const raw = {
     description: "shared secret RevenueCat sends in Authorization header",
   }, problems),
 
+  REVENUECAT_SECRET_KEY: readEnv("REVENUECAT_SECRET_KEY", {
+    presence: "requiredInProd",
+    description: "RevenueCat secret API key (sk_...) for server-side entitlement verification — the /revenuecat-sync fallback no-ops without it",
+  }, problems),
+
   // Admin auth — split from CRON_SECRET so a leaked cron token can't be used
   // to mint API keys via /api/v1/admin/keys.
   ADMIN_API_SECRET: readEnv("ADMIN_API_SECRET", {
@@ -196,6 +201,7 @@ export const env = {
   UPSTASH_REDIS_REST_TOKEN: raw.UPSTASH_REDIS_REST_TOKEN,
   GRAPH_API_KEY: raw.GRAPH_API_KEY,
   REVENUECAT_WEBHOOK_SECRET: raw.REVENUECAT_WEBHOOK_SECRET,
+  REVENUECAT_SECRET_KEY: raw.REVENUECAT_SECRET_KEY,
   ADMIN_API_SECRET: raw.ADMIN_API_SECRET,
 
   // Observability
