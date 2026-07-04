@@ -4353,6 +4353,219 @@ const articles: Article[] = [
     ],
   },
 
+  // ── How-to: track Sablier unlocks ────────────────────────────────────────────
+  {
+    slug:        "how-to-track-sablier-unlocks",
+    title:       "How to Track Your Sablier Stream Unlocks (2026)",
+    excerpt:     "A step-by-step guide to finding your Sablier vesting streams, reading their unlock schedule, and getting alerted before every tranche unlocks — manual methods vs automated tracking, compared.",
+    publishedAt: "2026-07-04",
+    updatedAt:   "2026-07-04",
+    readingTime: "7 min read",
+    category:    "Guides",
+    tags:        ["sablier", "token unlock", "vesting tracker", "how to track vesting", "unlock alerts"],
+    content: [
+      {
+        type: "p",
+        html: "If you received tokens through <strong>Sablier</strong> — the most widely used on-chain token streaming protocol — your allocation is released continuously or in tranches according to a schedule enforced by a smart contract. The hard part isn't the vesting; it's <em>keeping track of it</em>: knowing exactly how much has unlocked, what's claimable right now, and when the next unlock lands so you don't miss it. This guide covers every way to do that, from manual lookups to automated alerts.",
+      },
+      { type: "h2", text: "How Sablier vesting works (in one paragraph)" },
+      {
+        type: "p",
+        html: "Sablier's Lockup contracts stream tokens from a sender to a recipient over time. A <strong>linear</strong> stream releases a constant amount every second; a <strong>tranched</strong> stream unlocks in discrete steps (e.g. monthly), often after an initial <a href=\"/resources/vesting-cliff-explained\">cliff</a>. Vested tokens are claimable by the recipient at any time via <code>withdraw</code>; unvested tokens stay locked. Because it's fully on-chain, anyone can read the exact schedule — the challenge is surfacing it in a readable way and being reminded before each unlock.",
+      },
+      { type: "h2", text: "Method 1: The Sablier app (manual)" },
+      {
+        type: "ol",
+        items: [
+          "Go to <a href=\"https://app.sablier.com\" rel=\"nofollow\">app.sablier.com</a> and search the recipient wallet address (or connect the wallet).",
+          "Open each stream to see its start, end, cliff, amount, and how much is currently withdrawable.",
+          "Claim withdrawable tokens with the <code>withdraw</code> action when you want them.",
+        ],
+      },
+      {
+        type: "p",
+        html: "This works, but it has real limits: it only shows <strong>Sablier</strong> streams (not any other protocol you're vesting on), there are <strong>no alerts</strong> — you have to remember to check — and if your tokens are split across multiple wallets or chains you'll be flipping between views. It's fine for a single stream you check often; it doesn't scale to a real portfolio.",
+      },
+      { type: "h2", text: "Method 2: Block explorer (advanced, tedious)" },
+      {
+        type: "p",
+        html: "You can read the Sablier Lockup contract directly on Etherscan (or the relevant chain's explorer) and call the view functions for your stream ID. This gives you ground truth but requires knowing your stream ID, the contract address for your chain, and how to interpret raw amounts and timestamps. Almost nobody does this for ongoing tracking — it's a spot-check tool, not a monitoring one.",
+      },
+      { type: "h2", text: "Method 3: Automated tracking with alerts (recommended)" },
+      {
+        type: "p",
+        html: "The fastest way to stay on top of Sablier unlocks is to let a tracker watch the wallet for you. With <a href=\"/find-vestings\">Vestream</a> you paste the recipient address — no wallet connection, no signing, read-only — and it finds every Sablier stream on that wallet across Ethereum, Base, BNB Chain, Polygon, Arbitrum, and Optimism, shows the full unlock calendar, and sends an <strong>email or push alert before each unlock</strong>. It also picks up vesting from 10 other protocols on the same wallet, so a treasury or team member sees everything in one place.",
+      },
+      {
+        type: "table",
+        headers: ["", "Sablier app", "Block explorer", "Vestream"],
+        rows: [
+          ["Shows your Sablier streams", "Yes", "Yes (manual)", "Yes"],
+          ["Other protocols on the same wallet", "No", "No", "Yes (11 protocols)"],
+          ["Multi-wallet / multi-chain in one view", "No", "No", "Yes"],
+          ["Alerts before an unlock", "No", "No", "Email + push"],
+          ["Wallet connection required", "To claim", "No", "No — read-only"],
+          ["Tax-ready CSV export", "No", "No", "Yes (Pro)"],
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "⏱️",
+        title: "The 30-second setup",
+        body:  "Paste your wallet at Vestream's free scanner, turn on alerts, and you'll never manually check a Sablier stream again — you'll get a heads-up before every unlock instead.",
+      },
+      {
+        type: "faq",
+        items: [
+          { q: "How do I see when my Sablier tokens unlock?", a: "Either open your stream on app.sablier.com to read its schedule, or paste your wallet address into a tracker like Vestream to see the full unlock calendar and get alerted before each tranche unlocks." },
+          { q: "Can I get notified before a Sablier unlock?", a: "The Sablier app itself does not send unlock reminders. A tracker such as Vestream sends email and push notifications before each Sablier unlock at a lead time you choose." },
+          { q: "Do I need to connect my wallet to track Sablier vesting?", a: "No. Sablier vesting data is public and on-chain. Vestream tracks it read-only from just the wallet address — no wallet connection or signing. You only connect a wallet when you want to claim on Sablier itself." },
+          { q: "Does tracking work across chains?", a: "Yes. Sablier is deployed on Ethereum, Base, BNB Chain, Polygon, Arbitrum, and Optimism, and Vestream scans a wallet across all of them at once." },
+        ],
+      },
+      {
+        type: "p",
+        html: "Want the deeper mechanics? See <a href=\"/resources/sablier-token-streaming-vesting-explained\">Sablier token streaming explained</a>, or compare protocols in <a href=\"/resources/sablier-vs-hedgey-vs-uncx-comparison\">Sablier vs Hedgey vs UNCX</a>.",
+      },
+    ],
+  },
+
+  // ── How-to: track Hedgey unlocks ─────────────────────────────────────────────
+  {
+    slug:        "how-to-track-hedgey-unlocks",
+    title:       "How to Track Your Hedgey Vesting Plan Unlocks (2026)",
+    excerpt:     "Hedgey issues vesting as NFTs, which makes unlock schedules easy to hold but easy to lose track of. Here's how to find your Hedgey plans, read their unlock dates, and get alerted before each one.",
+    publishedAt: "2026-07-04",
+    updatedAt:   "2026-07-04",
+    readingTime: "6 min read",
+    category:    "Guides",
+    tags:        ["hedgey", "token unlock", "vesting tracker", "how to track vesting", "nft vesting"],
+    content: [
+      {
+        type: "p",
+        html: "<strong>Hedgey</strong> is one of the largest token vesting platforms in crypto, and it does vesting differently: each vesting or lockup plan is represented as an <strong>ERC-721 NFT</strong> held by the recipient. That design is elegant — your claim is a transferable token — but it also means your unlock schedule lives inside an NFT you might rarely look at. This guide shows how to find your Hedgey plans and never miss an unlock.",
+      },
+      { type: "h2", text: "How Hedgey vesting works" },
+      {
+        type: "p",
+        html: "When a project grants you tokens through Hedgey, it mints you a vesting-plan NFT. The NFT encodes the schedule — start, cliff, rate, and end — and gates how much of the underlying token you can <code>redeem</code> at any point. As time passes, more of the plan becomes redeemable. Read more in <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey NFT vesting plans explained</a>.",
+      },
+      { type: "h2", text: "Method 1: The Hedgey app (manual)" },
+      {
+        type: "ol",
+        items: [
+          "Go to <a href=\"https://app.hedgey.finance\" rel=\"nofollow\">app.hedgey.finance</a> and connect the wallet that holds your plan NFTs.",
+          "Open each plan to see its schedule and how much is currently redeemable.",
+          "Redeem unlocked tokens when you want them.",
+        ],
+      },
+      {
+        type: "p",
+        html: "As with any single-protocol dapp, this shows only your Hedgey plans, gives you <strong>no reminders</strong> before an unlock, and requires connecting your wallet. If you hold plans across several wallets, or vest on other protocols too, you're stitching the picture together by hand.",
+      },
+      { type: "h2", text: "Method 2: Automated tracking with alerts (recommended)" },
+      {
+        type: "p",
+        html: "To track Hedgey unlocks without babysitting the dapp, use a read-only tracker. Paste your address into <a href=\"/find-vestings\">Vestream</a> and it finds your Hedgey plans (and any other vesting on that wallet), lays out the unlock calendar, and sends an alert before each unlock. No wallet connection — it reads the public on-chain plan data from the address alone.",
+      },
+      {
+        type: "table",
+        headers: ["", "Hedgey app", "Vestream"],
+        rows: [
+          ["Shows your Hedgey plans", "Yes", "Yes"],
+          ["Other protocols on the same wallet", "No", "Yes (11 protocols)"],
+          ["Alerts before an unlock", "No", "Email + push"],
+          ["Wallet connection required", "Yes (to view + redeem)", "No — read-only to view"],
+          ["Multi-wallet in one view", "No", "Yes"],
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🔔",
+        title: "Don't rely on remembering",
+        body:  "NFT-based plans are the easiest to forget about — the schedule is buried in a token you don't check. Set an alert once and Vestream reminds you before every Hedgey unlock.",
+      },
+      {
+        type: "faq",
+        items: [
+          { q: "Where do I see my Hedgey vesting schedule?", a: "Connect your wallet at app.hedgey.finance to view each plan, or paste your wallet address into Vestream to see all Hedgey plans plus their unlock calendar and alerts — without connecting a wallet." },
+          { q: "Can I track Hedgey unlocks without connecting my wallet?", a: "Yes. Hedgey plan data is on-chain and public. Vestream reads it from the wallet address in read-only mode, so no connection or signing is needed to track it." },
+          { q: "I hold plans in more than one wallet — can I see them together?", a: "Yes. Add each address to Vestream and every Hedgey plan (and other vesting) appears in a single unified calendar." },
+        ],
+      },
+    ],
+  },
+
+  // ── How-to: track Team Finance unlocks ───────────────────────────────────────
+  {
+    slug:        "how-to-track-team-finance-unlocks",
+    title:       "How to Track Team Finance Token Unlocks (2026)",
+    excerpt:     "Team Finance vesting is often merkle-distributed, which makes your unlock schedule genuinely hard to find. Here's how to see your Team Finance unlocks and get alerted before each one.",
+    publishedAt: "2026-07-04",
+    updatedAt:   "2026-07-04",
+    readingTime: "6 min read",
+    category:    "Guides",
+    tags:        ["team finance", "token unlock", "vesting tracker", "how to track vesting", "merkle vesting"],
+    content: [
+      {
+        type: "p",
+        html: "<strong>Team Finance</strong> is a long-standing tool for locking and vesting team and treasury tokens with transparent on-chain proof — the standard many launchpad-era projects rely on. But tracking <em>your own</em> Team Finance unlocks is harder than with most protocols, for one specific reason: many Team Finance vestings are <strong>merkle-distributed</strong>. This guide explains why that matters and how to see your unlocks anyway.",
+      },
+      { type: "h2", text: "Why Team Finance unlocks are hard to track" },
+      {
+        type: "p",
+        html: "In a merkle distribution, the full list of recipients and amounts is committed on-chain as a single <em>merkle root</em> — a cryptographic fingerprint — rather than as an individual on-chain record per person. Your allocation is a <em>leaf</em> in that tree. The upside is efficiency; the downside is that until you claim, there's often no obvious per-wallet on-chain entry to read, so a normal block-explorer lookup won't surface your schedule. That's why holders frequently don't know when their next Team Finance unlock is.",
+      },
+      { type: "h2", text: "Method 1: The Team Finance app (manual)" },
+      {
+        type: "ol",
+        items: [
+          "Go to <a href=\"https://team.finance\" rel=\"nofollow\">team.finance</a> and connect the wallet that received the vesting.",
+          "Find the vesting associated with your wallet and its claim schedule.",
+          "Claim unlocked tokens when they're available.",
+        ],
+      },
+      {
+        type: "p",
+        html: "This is the canonical source, but it only covers Team Finance, offers <strong>no advance alerts</strong>, and requires you to remember to check a dapp that you might visit only a few times a year — exactly the pattern that leads to missed unlocks.",
+      },
+      { type: "h2", text: "Method 2: Automated tracking with alerts (recommended)" },
+      {
+        type: "p",
+        html: "<a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting directly from its on-chain data across Ethereum, BNB Chain, and Polygon, and resolves per-wallet schedules so you can see your own unlocks without hunting through a claim portal. Paste your address, see the unlock calendar alongside any other vesting on that wallet, and get an email or push alert before each unlock. It's read-only — no wallet connection required to track.",
+      },
+      {
+        type: "table",
+        headers: ["", "Team Finance app", "Block explorer", "Vestream"],
+        rows: [
+          ["Surfaces your unlock schedule", "Yes (connect wallet)", "Often no (merkle)", "Yes"],
+          ["Alerts before an unlock", "No", "No", "Email + push"],
+          ["Other protocols on the same wallet", "No", "No", "Yes (11 protocols)"],
+          ["Wallet connection required", "Yes", "No", "No — read-only"],
+        ],
+      },
+      {
+        type: "callout",
+        emoji: "🧩",
+        title: "Merkle vesting, made visible",
+        body:  "Because merkle-distributed vesting hides your schedule from ordinary lookups, an indexer that resolves per-wallet data is the practical way to see Team Finance unlocks — and to be reminded before they happen.",
+      },
+      {
+        type: "faq",
+        items: [
+          { q: "Why can't I see my Team Finance vesting on Etherscan?", a: "Many Team Finance vestings are merkle-distributed: recipients are committed as a single merkle root rather than one on-chain record each, so there's often no per-wallet entry to read until you claim. A tracker that indexes and resolves the data per wallet (like Vestream) surfaces it for you." },
+          { q: "How do I get alerted before a Team Finance unlock?", a: "The Team Finance app doesn't send reminders. Paste your wallet into Vestream, turn on alerts, and you'll get an email or push notification before each Team Finance unlock." },
+          { q: "Which chains does Team Finance tracking cover?", a: "Vestream indexes Team Finance vesting on Ethereum, BNB Chain, and Polygon." },
+          { q: "Do I need to connect my wallet?", a: "No — tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
+        ],
+      },
+      {
+        type: "p",
+        html: "See live Team Finance coverage and stats on the <a href=\"/protocols/team-finance\">Team Finance protocol page</a>, or learn the fundamentals in <a href=\"/resources/what-is-token-vesting\">What is token vesting?</a>",
+      },
+    ],
+  },
+
 ];
 
 export function getArticle(slug: string): Article | undefined {

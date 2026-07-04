@@ -1,6 +1,6 @@
 # Vestream
 
-> Vestream is a free token vesting tracker and alert service that monitors every unlock event across 9 protocols and 7 chains. Users paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules — with push notifications before each event. The Pro tier adds the web dashboard, email alerts, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax. A REST API and MCP server (npm: @vestream/mcp) make vesting data queryable by AI agents and developers.
+> Vestream is a free token vesting tracker and alert service that monitors every unlock event across 11 protocols and 7 chains. Users paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules — with push notifications before each event. The Pro tier adds the web dashboard, email alerts, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax. A REST API and MCP server (npm: @vestream/mcp) make vesting data queryable by AI agents and developers.
 
 ## Key Pages
 
@@ -25,10 +25,12 @@
 - [Streamflow unlock tracker](https://www.vestream.io/protocols/streamflow): Streamflow Solana vesting
 - [Jupiter Lock tracker](https://www.vestream.io/protocols/jupiter-lock): Jupiter Lock — Solana token locker
 - [LlamaPay tracker](https://www.vestream.io/protocols/llamapay): LlamaPay streaming payroll
+- [Team Finance unlock tracker](https://www.vestream.io/protocols/team-finance): Team Finance team/treasury token vesting with on-chain lock proof — merkle-distributed, hard to track anywhere else — ETH, BNB, Polygon
+- [Sablier Flow tracker](https://www.vestream.io/protocols/sablier-flow): Sablier Flow open-ended token streaming for payroll and grants
 
 ## Data Coverage
 
-Protocols: Sablier, Hedgey, UNCX (TokenVesting V3 + VestingManager), Superfluid, PinkSale (PinkLock V2), Unvest, Streamflow, Jupiter Lock, LlamaPay
+Protocols: Sablier, Hedgey, UNCX (TokenVesting V3 + VestingManager), Superfluid, PinkSale (PinkLock V2), Unvest, Streamflow, Jupiter Lock, LlamaPay, Team Finance, Sablier Flow
 Chains: Ethereum (1), BNB Chain (56), Polygon (137), Base (8453), Arbitrum One (42161), Optimism (10), Solana (101)
 Update cadence: streams indexed daily; unlock calendar refreshes every 15 minutes; TVL snapshots daily at 03:15 UTC
 
@@ -53,6 +55,9 @@ Update cadence: streams indexed daily; unlock calendar refreshes every 15 minute
 ### Guides
 
 - [How to Track Your Token Vesting](https://www.vestream.io/resources/how-to-track-token-vesting): Every method from manual block explorer lookups to multi-protocol dashboards
+- [How to Track Your Sablier Stream Unlocks](https://www.vestream.io/resources/how-to-track-sablier-unlocks): Find your Sablier vesting streams and get alerted before each unlock — manual vs automated compared
+- [How to Track Your Hedgey Vesting Unlocks](https://www.vestream.io/resources/how-to-track-hedgey-unlocks): Find your Hedgey NFT vesting plans and their unlock dates without checking each plan by hand
+- [How to Track Team Finance Token Unlocks](https://www.vestream.io/resources/how-to-track-team-finance-unlocks): See your Team Finance vesting unlocks despite merkle distribution making them hard to find elsewhere
 - [Token Unlock Calendar: How to Track When Your Tokens Become Available](https://www.vestream.io/resources/token-unlock-calendar): Building and reading an unlock calendar
 - [Token Vesting Tax Guide](https://www.vestream.io/resources/token-vesting-tax-guide): How vested tokens are taxed in the US, UK, and EU; when the taxable event occurs
 - [Crypto Payroll and Contributor Income Guide](https://www.vestream.io/resources/crypto-payroll-and-contributor-income-guide): Income recognition, tax treatment, and planning for crypto-paid contributors
