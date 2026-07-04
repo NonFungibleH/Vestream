@@ -120,6 +120,16 @@ export const maxDuration = 60;
 // pricing cost across thousands of subsequent visits.
 const CACHE_TTL_SECONDS = 3600;
 
+// Protocols that have a dedicated "how to track X unlocks" guide in
+// /resources. Rendered as a cross-link in the "More trackers" section so the
+// high-intent protocol page funnels into the answer content (topic cluster +
+// AI-crawlable path). Keep in sync with the how-to articles in lib/articles.ts.
+const HOW_TO_GUIDE: Record<string, { href: string; label: string }> = {
+  "sablier":      { href: "/resources/how-to-track-sablier-unlocks",      label: "How to track your Sablier unlocks" },
+  "hedgey":       { href: "/resources/how-to-track-hedgey-unlocks",       label: "How to track your Hedgey unlocks" },
+  "team-finance": { href: "/resources/how-to-track-team-finance-unlocks", label: "How to track Team Finance unlocks" },
+};
+
 interface ProtocolPageData {
   stats:        ProtocolStats | null;
   latest:       UnlockSummary | null;
@@ -1032,6 +1042,22 @@ export default async function ProtocolLandingPage(
             Browse all {listProtocols().length} protocol trackers →
           </Link>
         </div>
+
+        {/* Cross-link to the protocol's how-to guide when one exists. Internal
+            linking from these high-intent pages into the /resources guides
+            strengthens the topic cluster (SEO) and gives AI crawlers a clear
+            path to the answer content. See lib/articles.ts. */}
+        {HOW_TO_GUIDE[meta.slug] && (
+          <div className="mt-3 text-center">
+            <Link
+              href={HOW_TO_GUIDE[meta.slug].href}
+              className="text-sm font-semibold"
+              style={{ color: meta.color }}
+            >
+              {HOW_TO_GUIDE[meta.slug].label} →
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
