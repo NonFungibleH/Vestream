@@ -318,7 +318,23 @@ export default async function ArticlePage(
   if (!article) notFound();
 
   const allArticles = getAllArticles();
-  const relatedArticles = allArticles.filter((a) => a.slug !== slug).slice(0, 4);
+  // Related = most topically relevant, not "first 4 in the array". Score by
+  // shared tags (weight 2) + same category (weight 1); ties and any shortfall
+  // fall back to array order so the section is never empty. This turns the
+  // corpus into a real topic cluster — e.g. the Sablier "explained" article
+  // now surfaces the Sablier "how-to-track" guide (and vice versa), which both
+  // helps readers and gives search/AI crawlers relevance-weighted internal
+  // links instead of arbitrary ones.
+  const relatedArticles = allArticles
+    .filter((a) => a.slug !== slug)
+    .map((a, i) => {
+      const sharedTags = a.tags.filter((t) => article!.tags.includes(t)).length;
+      const score = sharedTags * 2 + (a.category === article!.category ? 1 : 0);
+      return { a, score, i };
+    })
+    .sort((x, y) => y.score - x.score || x.i - y.i)
+    .slice(0, 4)
+    .map((x) => x.a);
 
   // ── FAQ items for JSON-LD ──────────────────────────────────────────────────
   const faqBlock = article.content.find((b): b is Extract<Block, { type: "faq" }> => b.type === "faq");
