@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { toUnlockRows } from "./unlock-events";
+import { describe, it, expect, vi } from "vitest";
+import { toUnlockRows, usdValueForTranche, priceForTranche } from "./unlock-events";
 import type { VestingStream } from "./types";
+
+vi.mock("./historical-prices", () => ({
+  getHistoricalPrice: vi.fn(),
+}));
+import { getHistoricalPrice } from "./historical-prices";
+const mockPrice = vi.mocked(getHistoricalPrice);
 
 const DAY = 86_400;
 
@@ -77,5 +83,33 @@ describe("toUnlockRows", () => {
     ]);
     expect(rows[0].tokenAddress).toBe(mint);
     expect(rows[0].recipient).toBe(mint);
+  });
+});
+
+describe("usdValueForTranche", () => {
+  it("converts base units × price with 6-dp precision", () => {
+    // 1.5 tokens (18 decimals) × $2.00 = $3.000000
+    expect(usdValueForTranche("1500000000000000000", 18, 2)).toBe("3.000000");
+  });
+  it("handles 6-decimal tokens (e.g. USDC-shaped)", () => {
+    // 100 tokens (6 decimals) × $0.50 = $50.000000
+    expect(usdValueForTranche("100000000", 6, 0.5)).toBe("50.000000");
+  });
+  it("returns null on a malformed amount", () => {
+    expect(usdValueForTranche("not-a-number", 18, 2)).toBeNull();
+  });
+});
+
+describe("priceForTranche", () => {
+  it("prices via getHistoricalPrice and carries the confidence", async () => {
+    mockPrice.mockResolvedValueOnce({ usd: 2, confidence: "exact", resolvedDate: "2026-01-01" });
+    const r = await priceForTranche(1, "0xtok", 1_700_000_000, "1000000000000000000", 18);
+    expect(mockPrice).toHaveBeenCalledWith(1, "0xtok", 1_700_000_000);
+    expect(r).toEqual({ usdValueAtUnlock: "2.000000", priceConfidence: "exact" });
+  });
+  it("leaves value null + confidence missing when no price exists", async () => {
+    mockPrice.mockResolvedValueOnce({ usd: null, confidence: "missing", resolvedDate: null });
+    const r = await priceForTranche(1, "0xtok", 1_700_000_000, "1000000000000000000", 18);
+    expect(r).toEqual({ usdValueAtUnlock: null, priceConfidence: "missing" });
   });
 });

@@ -12,10 +12,12 @@
 // the repo has no db-test harness.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { vestingUnlockEvents } from "../db/schema";
 import { normaliseAddress } from "../address-validation";
 import { computeUnlockTranches } from "./unlock-schedule";
+import { getHistoricalPrice, type PriceConfidence } from "./historical-prices";
 import type { VestingStream } from "./types";
 
 /** Insert-shaped unlock-event row (pre-pricing). */
@@ -103,4 +105,97 @@ export async function generateUnlockEventsForUser(
     }
   }
   return inserted;
+}
+
+// ── Pricing ─────────────────────────────────────────────────────────────────
+
+/**
+ * Pure: whole-token amount × USD price, 6-dp string (numeric-safe). Mirrors the
+ * conversion in token-rollups.ts — `min(decimals, 30)` guards absurd decimals.
+ * Returns null on a malformed amount (UI prompts for manual FMV in that case).
+ */
+export function usdValueForTranche(amount: string, decimals: number, priceUsd: number): string | null {
+  try {
+    const tokensWhole = Number(BigInt(amount)) / Math.pow(10, Math.min(decimals, 30));
+    return (tokensWhole * priceUsd).toFixed(6);
+  } catch {
+    return null;
+  }
+}
+
+export interface TranchePricing {
+  usdValueAtUnlock: string | null;
+  priceConfidence: PriceConfidence;
+}
+
+/**
+ * Price one tranche at its unlock timestamp. getHistoricalPrice is Redis-cached
+ * per (chain, token, UTC-day), so tranches of the same stepped stream that fall
+ * on the same day share a cache hit. Null price → value null, confidence
+ * "missing" (the "needs your input" flag for manual FMV entry).
+ */
+export async function priceForTranche(
+  chainId: number,
+  tokenAddress: string,
+  unlockSec: number,
+  amount: string,
+  decimals: number,
+): Promise<TranchePricing> {
+  const price = await getHistoricalPrice(chainId, tokenAddress, unlockSec);
+  if (price.usd === null) {
+    return { usdValueAtUnlock: null, priceConfidence: "missing" };
+  }
+  return {
+    usdValueAtUnlock: usdValueForTranche(amount, decimals, price.usd),
+    priceConfidence: price.confidence,
+  };
+}
+
+/**
+ * Enrich this user's unpriced unlock rows. Selects rows with
+ * priceConfidence = "missing" AND manual_price = false (never touches
+ * user-entered FMV), prices each at its unlock timestamp, and UPDATEs the row.
+ * Best-effort per row; returns the count of rows that got a non-null price.
+ */
+export async function priceUnlockEvents(userId: string): Promise<number> {
+  const rows = await db
+    .select({
+      id: vestingUnlockEvents.id,
+      chainId: vestingUnlockEvents.chainId,
+      tokenAddress: vestingUnlockEvents.tokenAddress,
+      unlockTime: vestingUnlockEvents.unlockTime,
+      amount: vestingUnlockEvents.amount,
+      tokenDecimals: vestingUnlockEvents.tokenDecimals,
+    })
+    .from(vestingUnlockEvents)
+    .where(
+      and(
+        eq(vestingUnlockEvents.userId, userId),
+        eq(vestingUnlockEvents.priceConfidence, "missing"),
+        eq(vestingUnlockEvents.manualPrice, false),
+      ),
+    );
+
+  let priced = 0;
+  for (const row of rows) {
+    try {
+      const { usdValueAtUnlock, priceConfidence } = await priceForTranche(
+        row.chainId,
+        row.tokenAddress,
+        Math.floor(row.unlockTime.getTime() / 1000),
+        row.amount,
+        row.tokenDecimals,
+      );
+      // Nothing resolved — leave it "missing" so the next pass retries.
+      if (priceConfidence === "missing") continue;
+      await db
+        .update(vestingUnlockEvents)
+        .set({ usdValueAtUnlock, priceConfidence })
+        .where(eq(vestingUnlockEvents.id, row.id));
+      priced++;
+    } catch (err) {
+      console.error(`[unlock-events] pricing failed for row ${row.id}:`, err);
+    }
+  }
+  return priced;
 }
