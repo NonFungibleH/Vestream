@@ -12,7 +12,7 @@
 // the repo has no db-test harness.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingUnlockEvents, claimEvents } from "../db/schema";
 import { normaliseAddress, addressesEqual } from "../address-validation";
@@ -198,6 +198,28 @@ export async function priceUnlockEvents(userId: string): Promise<number> {
     }
   }
   return priced;
+}
+
+/**
+ * Load a user's unlock events for CSV export, applying the same date/token
+ * filters the claim exporter uses (getClaimHistoryForUser). Newest first.
+ * `tokenAddress` is matched case-insensitively for EVM only via normaliseAddress.
+ */
+export async function getUnlockEventsForExport(
+  userId: string,
+  opts: { since?: Date; until?: Date; protocol?: string; tokenAddress?: string } = {},
+): Promise<(typeof vestingUnlockEvents.$inferSelect)[]> {
+  const conditions = [eq(vestingUnlockEvents.userId, userId)];
+  if (opts.since)        conditions.push(sql`${vestingUnlockEvents.unlockTime} >= ${opts.since}`);
+  if (opts.until)        conditions.push(sql`${vestingUnlockEvents.unlockTime} <= ${opts.until}`);
+  if (opts.protocol)     conditions.push(eq(vestingUnlockEvents.protocol, opts.protocol));
+  if (opts.tokenAddress) conditions.push(eq(vestingUnlockEvents.tokenAddress, normaliseAddress(opts.tokenAddress)));
+
+  return db
+    .select()
+    .from(vestingUnlockEvents)
+    .where(and(...conditions))
+    .orderBy(sql`${vestingUnlockEvents.unlockTime} desc`);
 }
 
 // ── Dashboard merge (unlock + claim side by side) ────────────────────────────
