@@ -29,6 +29,10 @@
       "schedule": "0 7 * * *"
     },
     {
+      "path": "/api/cron/generate-unlocks",
+      "schedule": "30 7 * * *"
+    },
+    {
       "path": "/api/cron/refresh-prices",
       "schedule": "20 2,8,14,20 * * *"
     },
