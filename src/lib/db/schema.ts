@@ -71,6 +71,11 @@ export const users = pgTable("users", {
   // a follow-up. Both nullable/defaulted so existing rows are unaffected.
   displayName:           text("display_name"),
   marketingOptIn:        boolean("marketing_opt_in").default(false).notNull(),
+  // 2026-07-05: which basis the user reports vesting income on —
+  // "claim" (default; income at withdrawal) or "unlock" (accrual; income
+  // when tokens vest). Jurisdiction-dependent; claim stays default, unlock
+  // is opt-in via the tax dashboard toggle. See lib/tax/tax-basis.ts.
+  taxBasis:              text("tax_basis").default("claim").notNull(),
 });
 
 // ── Claim events ────────────────────────────────────────────────────────────
