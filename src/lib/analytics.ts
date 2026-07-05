@@ -69,6 +69,8 @@ export type AnalyticsEvent =
   | "subscription_started"
   | "subscription_canceled"
   | "api_access_requested"
+  | "tax_basis_changed"
+  | "tax_unlock_fmv_set"
   | "cta_clicked";
 
 // ── Allowed params per event ────────────────────────────────────────────────
