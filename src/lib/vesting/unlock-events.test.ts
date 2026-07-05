@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { toUnlockRows, usdValueForTranche, priceForTranche } from "./unlock-events";
+import { toUnlockRows, usdValueForTranche, priceForTranche, mergeUnlockAndClaim } from "./unlock-events";
+import type { MergeUnlockInput, MergeClaimInput } from "./unlock-events";
 import type { VestingStream } from "./types";
 
 vi.mock("./historical-prices", () => ({
@@ -111,5 +112,75 @@ describe("priceForTranche", () => {
     mockPrice.mockResolvedValueOnce({ usd: null, confidence: "missing", resolvedDate: null });
     const r = await priceForTranche(1, "0xtok", 1_700_000_000, "1000000000000000000", 18);
     expect(r).toEqual({ usdValueAtUnlock: null, priceConfidence: "missing" });
+  });
+});
+
+describe("mergeUnlockAndClaim", () => {
+  function unlock(o: Partial<MergeUnlockInput>): MergeUnlockInput {
+    return {
+      id: o.id ?? "u1",
+      streamId: o.streamId ?? "hedgey-1-42",
+      protocol: o.protocol ?? "hedgey",
+      chainId: o.chainId ?? 1,
+      tokenAddress: o.tokenAddress ?? "0xtok",
+      tokenSymbol: o.tokenSymbol ?? "TKN",
+      tokenDecimals: o.tokenDecimals ?? 18,
+      amount: o.amount ?? "100",
+      unlockTime: o.unlockTime ?? new Date("2026-01-01T00:00:00Z"),
+      usdValueAtUnlock: "usdValueAtUnlock" in o ? (o.usdValueAtUnlock ?? null) : "200.000000",
+      priceConfidence: o.priceConfidence ?? "exact",
+      manualPrice: o.manualPrice ?? false,
+    };
+  }
+  function claim(o: Partial<MergeClaimInput>): MergeClaimInput {
+    return {
+      streamId: o.streamId ?? "hedgey-1-42",
+      tokenAddress: o.tokenAddress ?? "0xtok",
+      amount: o.amount ?? "100",
+      claimedAt: o.claimedAt ?? new Date("2026-02-01T00:00:00Z"),
+      usdValueAtClaim: o.usdValueAtClaim ?? "150.000000",
+      priceConfidence: o.priceConfidence ?? "exact",
+    };
+  }
+
+  it("pairs an unlock with its later claim (same stream+token)", () => {
+    const [row] = mergeUnlockAndClaim([unlock({})], [claim({})]);
+    expect(row.usdAtUnlock).toBe("200.000000");
+    expect(row.claimedAt).toEqual(new Date("2026-02-01T00:00:00Z"));
+    expect(row.usdAtClaim).toBe("150.000000");
+    expect(row.needsInput).toBe(false);
+  });
+
+  it("leaves the claim side null when no claim matches", () => {
+    const [row] = mergeUnlockAndClaim([unlock({})], []);
+    expect(row.claimedAt).toBeNull();
+    expect(row.usdAtClaim).toBeNull();
+    expect(row.claimConfidence).toBeNull();
+  });
+
+  it("flags needsInput when the unlock price is missing", () => {
+    const [row] = mergeUnlockAndClaim([unlock({ priceConfidence: "missing", usdValueAtUnlock: null })], []);
+    expect(row.needsInput).toBe(true);
+    expect(row.usdAtUnlock).toBeNull();
+  });
+
+  it("does not match a claim that predates the tranche", () => {
+    const [row] = mergeUnlockAndClaim(
+      [unlock({ unlockTime: new Date("2026-03-01T00:00:00Z") })],
+      [claim({ claimedAt: new Date("2026-01-01T00:00:00Z") })], // before unlock
+    );
+    expect(row.claimedAt).toBeNull();
+  });
+
+  it("assigns each claim to at most one tranche (one-to-one)", () => {
+    const rows = mergeUnlockAndClaim(
+      [
+        unlock({ id: "u1", unlockTime: new Date("2026-01-01T00:00:00Z") }),
+        unlock({ id: "u2", unlockTime: new Date("2026-01-15T00:00:00Z") }),
+      ],
+      [claim({ claimedAt: new Date("2026-02-01T00:00:00Z") })], // single claim
+    );
+    const withClaim = rows.filter((r) => r.claimedAt !== null);
+    expect(withClaim).toHaveLength(1); // only ONE tranche gets the claim
   });
 });

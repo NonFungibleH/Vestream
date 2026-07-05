@@ -14,8 +14,8 @@
 
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { vestingUnlockEvents } from "../db/schema";
-import { normaliseAddress } from "../address-validation";
+import { vestingUnlockEvents, claimEvents } from "../db/schema";
+import { normaliseAddress, addressesEqual } from "../address-validation";
 import { computeUnlockTranches } from "./unlock-schedule";
 import { getHistoricalPrice, type PriceConfidence } from "./historical-prices";
 import type { VestingStream } from "./types";
@@ -198,4 +198,169 @@ export async function priceUnlockEvents(userId: string): Promise<number> {
     }
   }
   return priced;
+}
+
+// ── Dashboard merge (unlock + claim side by side) ────────────────────────────
+
+/** Minimal unlock-row shape the pure merge needs (subset of the DB row). */
+export interface MergeUnlockInput {
+  id: string;
+  streamId: string;
+  protocol: string;
+  chainId: number;
+  tokenAddress: string;
+  tokenSymbol: string | null;
+  tokenDecimals: number;
+  amount: string;
+  unlockTime: Date;
+  usdValueAtUnlock: string | null;
+  priceConfidence: string;
+  manualPrice: boolean;
+}
+
+/** Minimal claim-row shape the pure merge needs. */
+export interface MergeClaimInput {
+  streamId: string;
+  tokenAddress: string;
+  amount: string;
+  claimedAt: Date;
+  usdValueAtClaim: string | null;
+  priceConfidence: string;
+}
+
+/** One dashboard row per unlock tranche, carrying both bases. */
+export interface TaxEventRow {
+  id: string;
+  protocol: string;
+  chainId: number;
+  tokenAddress: string;
+  tokenSymbol: string | null;
+  tokenDecimals: number;
+  amount: string;
+  unlockTime: Date;
+  usdAtUnlock: string | null;
+  unlockConfidence: string;
+  manualPrice: boolean;
+  claimedAt: Date | null;
+  usdAtClaim: string | null;
+  claimConfidence: string | null;
+  /** True when the unlock price is missing — prompt for manual FMV. */
+  needsInput: boolean;
+}
+
+/**
+ * Pure: produce one dashboard row per unlock tranche, pairing it with the claim
+ * that most likely realised it. Matching is greedy one-to-one by (streamId,
+ * token) and time: earliest tranche takes the earliest claim on/after it, and a
+ * claim is consumed so it can't be attributed to two tranches. Unmatched
+ * tranches keep a null claim side. `needsInput` flags missing unlock prices.
+ */
+export function mergeUnlockAndClaim(
+  unlockRows: MergeUnlockInput[],
+  claimRows: MergeClaimInput[],
+): TaxEventRow[] {
+  // Sort tranches oldest-first so greedy assignment is stable + deterministic.
+  const tranches = [...unlockRows].sort((a, b) => a.unlockTime.getTime() - b.unlockTime.getTime());
+  const claims = [...claimRows].sort((a, b) => a.claimedAt.getTime() - b.claimedAt.getTime());
+  const claimUsed = new Array(claims.length).fill(false);
+
+  return tranches.map((u) => {
+    let matchIdx = -1;
+    for (let i = 0; i < claims.length; i++) {
+      if (claimUsed[i]) continue;
+      const c = claims[i];
+      if (c.streamId !== u.streamId) continue;
+      if (!addressesEqual(c.tokenAddress, u.tokenAddress)) continue;
+      if (c.claimedAt.getTime() < u.unlockTime.getTime()) continue; // claim must be on/after unlock
+      matchIdx = i; // claims are time-sorted, so the first hit is the nearest
+      break;
+    }
+    const claim = matchIdx >= 0 ? claims[matchIdx] : null;
+    if (matchIdx >= 0) claimUsed[matchIdx] = true;
+
+    return {
+      id: u.id,
+      protocol: u.protocol,
+      chainId: u.chainId,
+      tokenAddress: u.tokenAddress,
+      tokenSymbol: u.tokenSymbol,
+      tokenDecimals: u.tokenDecimals,
+      amount: u.amount,
+      unlockTime: u.unlockTime,
+      usdAtUnlock: u.usdValueAtUnlock,
+      unlockConfidence: u.priceConfidence,
+      manualPrice: u.manualPrice,
+      claimedAt: claim?.claimedAt ?? null,
+      usdAtClaim: claim?.usdValueAtClaim ?? null,
+      claimConfidence: claim?.priceConfidence ?? null,
+      needsInput: u.priceConfidence === "missing",
+    };
+  });
+}
+
+/**
+ * Load a user's unlock tranches + claim events and merge them into dashboard
+ * rows (both bases per tranche). Newest tranche first.
+ */
+export async function getTaxEventsForUser(userId: string): Promise<TaxEventRow[]> {
+  const [unlockRows, claimRows] = await Promise.all([
+    db.select().from(vestingUnlockEvents).where(eq(vestingUnlockEvents.userId, userId)),
+    db.select().from(claimEvents).where(eq(claimEvents.userId, userId)),
+  ]);
+
+  const merged = mergeUnlockAndClaim(
+    unlockRows.map((r) => ({
+      id: r.id,
+      streamId: r.streamId,
+      protocol: r.protocol,
+      chainId: r.chainId,
+      tokenAddress: r.tokenAddress,
+      tokenSymbol: r.tokenSymbol,
+      tokenDecimals: r.tokenDecimals,
+      amount: r.amount,
+      unlockTime: r.unlockTime,
+      usdValueAtUnlock: r.usdValueAtUnlock,
+      priceConfidence: r.priceConfidence,
+      manualPrice: r.manualPrice,
+    })),
+    claimRows.map((r) => ({
+      streamId: r.streamId,
+      tokenAddress: r.tokenAddress,
+      amount: r.amount,
+      claimedAt: r.claimedAt,
+      usdValueAtClaim: r.usdValueAtClaim,
+      priceConfidence: r.priceConfidence,
+    })),
+  );
+
+  return merged.sort((a, b) => b.unlockTime.getTime() - a.unlockTime.getTime());
+}
+
+/**
+ * Set a manual fair-market-value USD for one unlock event. Guards: the row must
+ * belong to the user AND still be unpriced (priceConfidence "missing") — we
+ * never overwrite an auto-priced row. Marks it manual so pricing passes skip it.
+ * Returns true if a row was updated.
+ */
+export async function setManualUnlockPrice(
+  userId: string,
+  eventId: string,
+  usd: number,
+): Promise<boolean> {
+  const result = await db
+    .update(vestingUnlockEvents)
+    .set({
+      usdValueAtUnlock: usd.toFixed(6),
+      priceConfidence: "manual",
+      manualPrice: true,
+    })
+    .where(
+      and(
+        eq(vestingUnlockEvents.id, eventId),
+        eq(vestingUnlockEvents.userId, userId),
+        eq(vestingUnlockEvents.priceConfidence, "missing"),
+      ),
+    )
+    .returning({ id: vestingUnlockEvents.id });
+  return result.length > 0;
 }
