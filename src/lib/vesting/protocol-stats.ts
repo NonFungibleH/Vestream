@@ -31,8 +31,12 @@ const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDE
 export interface ProtocolStats {
   /** Total streams of this protocol currently indexed, active + fully vested. */
   totalStreams: number;
-  /** Indexed streams still releasing — i.e. `isFullyVested = false`. */
+  /** Indexed streams still releasing — i.e. `isFullyVested = false` and not
+   *  past their end (live scope). Reconciles with the calendar's "upcoming". */
   activeStreams: number;
+  /** Fully vested but not fully withdrawn — streams sitting claimable-but-
+   *  unclaimed. The honest "N still have tokens to collect" signal. */
+  unclaimedStreams: number;
   /** Distinct chain IDs this protocol is indexed on (sorted asc). */
   chainIds: number[];
   /** Distinct ERC-20 token contract addresses seen for this protocol. */
@@ -189,12 +193,13 @@ function shouldSkipDbAtBuildTime(): boolean {
 }
 
 const EMPTY_PROTOCOL_STATS: ProtocolStats = {
-  totalStreams:   0,
-  activeStreams:  0,
-  chainIds:       [],
-  tokensTracked:  0,
-  recipientCount: 0,
-  lastIndexedAt:  null,
+  totalStreams:    0,
+  activeStreams:   0,
+  unclaimedStreams: 0,
+  chainIds:        [],
+  tokensTracked:   0,
+  recipientCount:  0,
+  lastIndexedAt:   null,
 };
 
 /**
@@ -262,6 +267,7 @@ async function fastPathStats(adapterIds: readonly string[]): Promise<ProtocolSta
       protocol:       protocolSummaries.protocol,
       totalStreams:   protocolSummaries.totalStreams,
       activeStreams:  protocolSummaries.activeStreams,
+      unclaimedStreams: protocolSummaries.unclaimedStreams,
       tokensTracked:  protocolSummaries.tokensTracked,
       recipientCount: protocolSummaries.recipientCount,
       chainIds:       protocolSummaries.chainIds,
@@ -276,12 +282,13 @@ async function fastPathStats(adapterIds: readonly string[]): Promise<ProtocolSta
   // be summed perfectly across protocols, but for the UNCX classic+VM merge the
   // overlap is negligible (different contracts → different streams), so a sum is
   // close enough for the public stats display.
-  let total = 0, active = 0, tokens = 0, recipients = 0;
+  let total = 0, active = 0, unclaimed = 0, tokens = 0, recipients = 0;
   const chainSet = new Set<number>();
   let lastIndexedAt: Date | null = null;
   for (const r of rows) {
     total      += r.totalStreams;
     active     += r.activeStreams;
+    unclaimed  += r.unclaimedStreams;
     tokens     += r.tokensTracked;
     recipients += r.recipientCount;
     for (const c of r.chainIds ?? []) chainSet.add(c);
@@ -291,11 +298,12 @@ async function fastPathStats(adapterIds: readonly string[]): Promise<ProtocolSta
     }
   }
   return {
-    totalStreams:   total,
-    activeStreams:  active,
-    tokensTracked:  tokens,
-    recipientCount: recipients,
-    chainIds:       Array.from(chainSet).sort((a, b) => a - b),
+    totalStreams:    total,
+    activeStreams:   active,
+    unclaimedStreams: unclaimed,
+    tokensTracked:   tokens,
+    recipientCount:  recipients,
+    chainIds:        Array.from(chainSet).sort((a, b) => a - b),
     lastIndexedAt,
   };
 }
@@ -316,6 +324,7 @@ export async function getAllProtocolStatsMap(): Promise<Map<string, ProtocolStat
       protocol:       protocolSummaries.protocol,
       totalStreams:   protocolSummaries.totalStreams,
       activeStreams:  protocolSummaries.activeStreams,
+      unclaimedStreams: protocolSummaries.unclaimedStreams,
       tokensTracked:  protocolSummaries.tokensTracked,
       recipientCount: protocolSummaries.recipientCount,
       chainIds:       protocolSummaries.chainIds,
@@ -328,6 +337,7 @@ export async function getAllProtocolStatsMap(): Promise<Map<string, ProtocolStat
     map.set(r.protocol, {
       totalStreams:   r.totalStreams,
       activeStreams:  r.activeStreams,
+      unclaimedStreams: r.unclaimedStreams,
       tokensTracked:  r.tokensTracked,
       recipientCount: r.recipientCount,
       chainIds:       (r.chainIds ?? []).slice().sort((a, b) => a - b),
@@ -352,12 +362,13 @@ export function foldProtocolStats(
     .filter((s): s is ProtocolStats => !!s);
   if (matched.length === 0) return null;
 
-  let total = 0, active = 0, tokens = 0, recipients = 0;
+  let total = 0, active = 0, unclaimed = 0, tokens = 0, recipients = 0;
   const chainSet = new Set<number>();
   let lastIndexedAt: Date | null = null;
   for (const s of matched) {
     total      += s.totalStreams;
     active     += s.activeStreams;
+    unclaimed  += s.unclaimedStreams;
     tokens     += s.tokensTracked;
     recipients += s.recipientCount;
     for (const c of s.chainIds) chainSet.add(c);
@@ -368,11 +379,12 @@ export function foldProtocolStats(
     }
   }
   return {
-    totalStreams:   total,
-    activeStreams:  active,
-    tokensTracked:  tokens,
-    recipientCount: recipients,
-    chainIds:       Array.from(chainSet).sort((a, b) => a - b),
+    totalStreams:    total,
+    activeStreams:   active,
+    unclaimedStreams: unclaimed,
+    tokensTracked:   tokens,
+    recipientCount:  recipients,
+    chainIds:        Array.from(chainSet).sort((a, b) => a - b),
     lastIndexedAt,
   };
 }
@@ -397,23 +409,31 @@ async function computeProtocolStatsFromCache(
   // The caller (getProtocolStats) catches this error and the page renders with
   // placeholder stats. The protocol_summaries fast path avoids this entirely
   // when the cron has run.
+  // Live scope + unclaimed mirror the write path (refreshProtocolSummaries)
+  // so the bootstrap fallback reconciles with the calendar the same way.
+  const liveScope = sql`(
+    ${vestingStreamsCache.isFullyVested} = false
+    and (
+      ${vestingStreamsCache.endTime} is null
+      or ${vestingStreamsCache.endTime} <= 0
+      or ${vestingStreamsCache.endTime} > extract(epoch from now())
+    )
+  )`;
   const queryPromise = db
     .select({
       total:       sql<number>`count(*)::int`,
-      active:      sql<number>`count(*) filter (
-        where (
-          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
-          and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
-          and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
-            < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
-        )
-        or (
-          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is null
-          and ${vestingStreamsCache.isFullyVested} = false
-        )
+      active:      sql<number>`count(*) filter (where ${liveScope})::int`,
+      unclaimed:   sql<number>`count(*) filter (
+        where ${vestingStreamsCache.isFullyVested} = true
+        and (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
+        and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
+        and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
+          < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
       )::int`,
-      tokens:      sql<number>`count(distinct ${vestingStreamsCache.tokenAddress})::int`,
-      recipients:  sql<number>`count(distinct ${vestingStreamsCache.recipient})::int`,
+      tokens:      sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end) filter (where ${liveScope})::int`,
+      recipients:  sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end) filter (where ${liveScope})::int`,
+      tokensAll:   sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end)::int`,
+      recipientsAll: sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end)::int`,
       chains:      sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed: sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
@@ -429,12 +449,18 @@ async function computeProtocolStatsFromCache(
 
   const lastIndexedAt = toDate(statsRow?.lastIndexed);
 
+  // Stream-category protocols store is_fully_vested=true, so the live-scope
+  // filter would zero their token/recipient counts — fall back to all-time
+  // for them (mirrors refreshProtocolSummaries).
+  const isStreamCat = adapterIds.some((id) => PROTOCOL_DEFAULT_CATEGORY[id] === "stream");
+
   return {
-    totalStreams:   statsRow?.total      ?? 0,
-    activeStreams:  statsRow?.active     ?? 0,
-    tokensTracked:  statsRow?.tokens     ?? 0,
-    recipientCount: statsRow?.recipients ?? 0,
-    chainIds:       (statsRow?.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
+    totalStreams:    statsRow?.total      ?? 0,
+    activeStreams:   isStreamCat ? (statsRow?.total ?? 0) : (statsRow?.active ?? 0),
+    unclaimedStreams: statsRow?.unclaimed ?? 0,
+    tokensTracked:   (isStreamCat ? statsRow?.tokensAll     : statsRow?.tokens)     ?? 0,
+    recipientCount:  (isStreamCat ? statsRow?.recipientsAll : statsRow?.recipients) ?? 0,
+    chainIds:        (statsRow?.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
     lastIndexedAt,
   };
 }
@@ -483,26 +509,41 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
   // Read all per-protocol aggregates in one pass. Postgres's GROUP BY is
   // fast given the protocol index; we do the active-vs-stream split in TS
   // since the column is already loaded.
+  // "Live" scope = still has locked tokens AND hasn't passed its end (or is
+  // perpetual / end-unknown). Matches the calendar/explorer's upcoming scope
+  // (is_fully_vested=false AND end_time>now) so the hero's Active/Tokens/
+  // Recipients reconcile with it. The past-due-but-unclaimed tail is
+  // deliberately excluded here and counted separately as `unclaimed` below.
+  // Perpetual streams (end_time null/≤0, e.g. LlamaPay payroll) stay in scope
+  // so streaming protocols aren't zeroed. Hits the partial index
+  // vsc_active_protocol_end_time_idx (WHERE is_fully_vested = false).
+  const liveScope = sql`(
+    ${vestingStreamsCache.isFullyVested} = false
+    and (
+      ${vestingStreamsCache.endTime} is null
+      or ${vestingStreamsCache.endTime} <= 0
+      or ${vestingStreamsCache.endTime} > extract(epoch from now())
+    )
+  )`;
   const aggregates = await db
     .select({
       protocol:        vestingStreamsCache.protocol,
+      // All-time footprint — every stream ever indexed for this protocol.
+      // The credibility/marketing number, deliberately NOT reconciled to the
+      // live scope.
       total:           sql<number>`count(*)::int`,
-      // Active = there's still something unclaimed for the recipient.
-      // Falls back to !is_fully_vested when withdrawn/total are missing
-      // from streamData (legacy cache rows pre-2025) so we don't
-      // suddenly drop counts for any protocol that hasn't been re-indexed
-      // since the schema firmed up.
-      vestingActive:   sql<number>`count(*) filter (
-        where (
-          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
-          and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
-          and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
-            < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
-        )
-        or (
-          (${vestingStreamsCache.streamData}->>'withdrawnAmount') is null
-          and ${vestingStreamsCache.isFullyVested} = false
-        )
+      // Still-vesting count (live scope) — reconciles with the calendar's
+      // "upcoming" so the hero's "Active now" no longer contradicts it.
+      vestingActive:   sql<number>`count(*) filter (where ${liveScope})::int`,
+      // Fully vested but not fully withdrawn = tokens sitting claimable-but-
+      // unclaimed. The honest home for the population that used to inflate
+      // "Active now" (which counted every withdrawn<total, past-due included).
+      unclaimed:       sql<number>`count(*) filter (
+        where ${vestingStreamsCache.isFullyVested} = true
+        and (${vestingStreamsCache.streamData}->>'withdrawnAmount') is not null
+        and (${vestingStreamsCache.streamData}->>'totalAmount')   is not null
+        and (${vestingStreamsCache.streamData}->>'withdrawnAmount')::numeric
+          < (${vestingStreamsCache.streamData}->>'totalAmount')::numeric
       )::int`,
       // Count addresses case-INSENSITIVELY for EVM (0x…) but case-SENSITIVELY
       // for Solana base58 (where case is significant). Storage isn't uniformly
@@ -510,8 +551,17 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
       // mixed-case EVM variants of a single token — e.g. Team Finance showed
       // "68 tokens" when there were really 63. The token page + Explorer already
       // read via lower(); this makes the protocol-hero counts agree.
-      tokens:          sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end)::int`,
-      recipients:      sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end)::int`,
+      //
+      // Filtered to the live scope so "Tokens"/"Recipients" reconcile with the
+      // calendar/explorer (tokens/wallets with a still-pending unlock) instead
+      // of counting every token/wallet ever touched. Continuous-stream
+      // protocols (llamapay, sablier-flow) store is_fully_vested=true and so
+      // fall outside the live scope — they use the all-time counts below
+      // instead (same reason their "active" uses total, not vestingActive).
+      tokens:          sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end) filter (where ${liveScope})::int`,
+      recipients:      sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end) filter (where ${liveScope})::int`,
+      tokensAll:       sql<number>`count(distinct case when ${vestingStreamsCache.tokenAddress} like '0x%' then lower(${vestingStreamsCache.tokenAddress}) else ${vestingStreamsCache.tokenAddress} end)::int`,
+      recipientsAll:   sql<number>`count(distinct case when ${vestingStreamsCache.recipient} like '0x%' then lower(${vestingStreamsCache.recipient}) else ${vestingStreamsCache.recipient} end)::int`,
       chains:          sql<number[] | null>`array_agg(distinct ${vestingStreamsCache.chainId})`,
       lastIndexed:     sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
@@ -524,18 +574,21 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
   const now = new Date();
   const values = aggregates.map((r) => {
     const category = PROTOCOL_DEFAULT_CATEGORY[r.protocol] ?? "vesting";
-    // Stream-category protocols: every flowing row counts as active.
-    // (See docstring above for why.)
-    const active = category === "stream" ? r.total : r.vestingActive;
+    // Stream-category protocols (llamapay, sablier-flow) store
+    // is_fully_vested=true, so the live scope would zero their counts. Fall
+    // back to the all-time counts for them — same reason "active" uses total.
+    const isStreamCat = category === "stream";
+    const active = isStreamCat ? r.total : r.vestingActive;
     return {
-      protocol:       r.protocol,
-      totalStreams:   r.total      ?? 0,
-      activeStreams:  active       ?? 0,
-      tokensTracked:  r.tokens     ?? 0,
-      recipientCount: r.recipients ?? 0,
-      chainIds:       (r.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
-      lastIndexedAt:  toDate(r.lastIndexed),
-      computedAt:     now,
+      protocol:        r.protocol,
+      totalStreams:    r.total      ?? 0,
+      activeStreams:   active       ?? 0,
+      unclaimedStreams: r.unclaimed ?? 0,
+      tokensTracked:   (isStreamCat ? r.tokensAll     : r.tokens)     ?? 0,
+      recipientCount:  (isStreamCat ? r.recipientsAll : r.recipients) ?? 0,
+      chainIds:        (r.chains ?? []).filter((c): c is number => c != null).sort((a, b) => a - b),
+      lastIndexedAt:   toDate(r.lastIndexed),
+      computedAt:      now,
     };
   });
 
@@ -551,6 +604,7 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
       set: {
         totalStreams:   sql`excluded.total_streams`,
         activeStreams:  sql`excluded.active_streams`,
+        unclaimedStreams: sql`excluded.unclaimed_streams`,
         tokensTracked:  sql`excluded.tokens_tracked`,
         recipientCount: sql`excluded.recipient_count`,
         chainIds:       sql`excluded.chain_ids`,

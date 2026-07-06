@@ -368,8 +368,9 @@ export default async function ProtocolLandingPage(
 
   // Stream counts now come from cache only (getGlobalStats was dropped –
   // see the loadProtocolData comment for the why).
-  const effectiveTotal  = stats?.totalStreams  ?? 0;
-  const effectiveActive = stats?.activeStreams ?? 0;
+  const effectiveTotal     = stats?.totalStreams  ?? 0;
+  const effectiveActive    = stats?.activeStreams ?? 0;
+  const effectiveUnclaimed = stats?.unclaimedStreams ?? 0;
   const hasData = effectiveTotal > 0;
   // Continuous-stream protocols (LlamaPay, Sablier Flow) don't have discrete
   // scheduled "unlocks" – tokens flow per-second and are claimable any time.
@@ -561,6 +562,8 @@ export default async function ProtocolLandingPage(
             color={meta.color}
           />
           <Stat
+            // Live scope: still-vesting streams (not past their end). Reconciles
+            // with the /unlocks calendar's "upcoming" count — same population.
             label={isStream ? "Streaming now" : "Active now"}
             value={hasData ? effectiveActive.toLocaleString() : "–"}
             color={meta.color}
@@ -587,8 +590,11 @@ export default async function ProtocolLandingPage(
             color={meta.color}
           />
           <Stat
-            label="Last indexed"
-            value={stats?.lastIndexedAt ? relativeFreshness(stats.lastIndexedAt) : "–"}
+            // Fully vested but not fully withdrawn — tokens sitting claimable
+            // that recipients haven't collected. The honest home for the
+            // past-due population that used to inflate "Active now".
+            label="Unclaimed"
+            value={hasData ? effectiveUnclaimed.toLocaleString() : "–"}
             color={meta.color}
           />
         </div>

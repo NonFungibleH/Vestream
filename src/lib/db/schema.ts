@@ -876,6 +876,10 @@ export const protocolSummaries = pgTable(
     protocol:        text("protocol").primaryKey(),
     totalStreams:    integer("total_streams").notNull().default(0),
     activeStreams:   integer("active_streams").notNull().default(0),
+    // Fully vested but not fully withdrawn — tokens sitting claimable-but-
+    // unclaimed. The honest "N streams still have tokens to collect" signal
+    // (distinct from activeStreams, which is now the still-vesting count).
+    unclaimedStreams: integer("unclaimed_streams").notNull().default(0),
     tokensTracked:   integer("tokens_tracked").notNull().default(0),
     recipientCount:  integer("recipient_count").notNull().default(0),
     // jsonb so the int[] of chains is portable across drizzle-kit
