@@ -562,9 +562,19 @@ const SLUGS_WITH_ICON = new Set([
   "pinksale", "streamflow", "jupiter-lock", "llamapay",
 ]);
 
+// Variant adapters that share a parent brand's mark — no separate asset needed.
+// sablier-flow is Sablier's streaming product; uncx-vm is UNCX's VestingManager
+// (hidden in UI, merged with uncx). Without this alias both fell back to a bare
+// monogram on the hero + OG share cards.
+const ICON_ALIASES: Record<string, string> = {
+  "sablier-flow": "sablier",
+  "uncx-vm":      "uncx",
+};
+
 /** Path to a protocol's logo icon, or null when there's no mark (→ monogram). */
 export function protocolIcon(slug: string): string | null {
-  return SLUGS_WITH_ICON.has(slug) ? `/protocols/icons/${slug}.png` : null;
+  const resolved = ICON_ALIASES[slug] ?? slug;
+  return SLUGS_WITH_ICON.has(resolved) ? `/protocols/icons/${resolved}.png` : null;
 }
 
 // ── Single source of truth for chain brand colours ──────────────────────────

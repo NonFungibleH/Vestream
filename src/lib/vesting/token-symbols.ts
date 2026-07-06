@@ -15,7 +15,7 @@
 
 import { and, count, eq, notInArray, sql, sum } from "drizzle-orm";
 import { db } from "../db";
-import { vestingStreamsCache } from "../db/schema";
+import { vestingStreamsCache, tokenVestingRollups } from "../db/schema";
 
 // Same testnet exclusion convention as protocol-stats.ts — public surfaces
 // hide Sepolia / Base Sepolia.
@@ -95,22 +95,29 @@ export async function getTokensBySymbol(symbol: string): Promise<SymbolMatch[]> 
 export async function getTopSymbols(limit = 200): Promise<string[]> {
   if (isDbUnreachable()) return [];
 
+  // Read the pre-aggregated per-token rollup (one row per (chain, address),
+  // ~8k rows) instead of a GROUP BY over the whole vesting_streams_cache
+  // (~200k rows, ~12s). That live group-by was timing out inside the sitemap
+  // route → the sitemap silently shipped ZERO /tokens/[symbol] URLs. The
+  // rollup is refreshed hourly by the refresh-rollups cron and reads in tens
+  // of ms. One symbol can span multiple chains/addresses, so sum stream_count
+  // per lower(symbol).
   const rows = await db
     .select({
-      symbol: vestingStreamsCache.tokenSymbol,
-      total:  count(),
+      symbol: sql<string>`lower(${tokenVestingRollups.tokenSymbol})`,
+      total:  sql<number>`sum(${tokenVestingRollups.streamCount})::int`,
     })
-    .from(vestingStreamsCache)
+    .from(tokenVestingRollups)
     .where(
       and(
-        sql`${vestingStreamsCache.tokenSymbol} is not null`,
-        sql`length(${vestingStreamsCache.tokenSymbol}) >= 2`,
-        sql`lower(${vestingStreamsCache.tokenSymbol}) != 'unknown'`,
-        excludeTestnets,
+        sql`${tokenVestingRollups.tokenSymbol} is not null`,
+        sql`length(${tokenVestingRollups.tokenSymbol}) >= 2`,
+        sql`lower(${tokenVestingRollups.tokenSymbol}) != 'unknown'`,
+        notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
       ),
     )
-    .groupBy(vestingStreamsCache.tokenSymbol)
-    .orderBy(sql`count(*) desc`)
+    .groupBy(sql`lower(${tokenVestingRollups.tokenSymbol})`)
+    .orderBy(sql`sum(${tokenVestingRollups.streamCount}) desc`)
     .limit(limit);
 
   return rows.map((r) => (r.symbol ?? "").toLowerCase()).filter((s) => s.length >= 2);
@@ -132,26 +139,28 @@ export interface TopTokenRow {
 export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
   if (isDbUnreachable()) return [];
 
+  // Same reason as getTopSymbols: read the small pre-aggregated rollup rather
+  // than a GROUP BY over the whole cache, which timed out and emptied the
+  // sitemap's /token/{chainId}/{address} URLs. token_address is already
+  // lower-cased + validated in the rollup.
   const rows = await db
     .select({
-      chainId: vestingStreamsCache.chainId,
-      address: vestingStreamsCache.tokenAddress,
-      total:   count(),
+      chainId: tokenVestingRollups.chainId,
+      address: tokenVestingRollups.tokenAddress,
     })
-    .from(vestingStreamsCache)
+    .from(tokenVestingRollups)
     .where(
       and(
-        sql`${vestingStreamsCache.tokenAddress} is not null`,
-        excludeTestnets,
+        sql`length(${tokenVestingRollups.tokenAddress}) >= 32`,
+        notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
       ),
     )
-    .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress)
-    .orderBy(sql`count(*) desc`)
+    .orderBy(sql`${tokenVestingRollups.streamCount} desc`)
     .limit(limit);
 
   return rows
     .filter((r) => r.address && r.address.length >= 32)
-    .map((r) => ({ chainId: r.chainId, address: r.address!.toLowerCase() }));
+    .map((r) => ({ chainId: r.chainId, address: r.address.toLowerCase() }));
 }
 
 /**
