@@ -2,8 +2,17 @@
  * Team Finance V3 adapter
  *
  * Data sources:
- *  • REST API  – https://team-finance-backend-dev-origdfl2wq-uc.a.run.app
- *    GET /api/app/vesting/{user}  →  per-user vestings across all chains
+ *  • REST API  – https://api.team.finance   (swagger: https://api.team.finance/docs/)
+ *    GET /api/vesting/{user}  →  per-user vestings across all chains.
+ *    Response: { vestings: TFVesting[] }.
+ *    2026-07-06: migrated off the old dev Cloud Run host
+ *    (team-finance-backend-dev-…-uc.a.run.app, path /api/app/vesting) — Team
+ *    Finance confirmed it was out of date. That host had drifted to a
+ *    startTime/endTime shape and dropped cadence/percentageOnStart/revocable,
+ *    which our mapping reads as start/end/… → schedules were silently
+ *    resolving to undefined. The production host returns the exact shape
+ *    TFVesting expects, so this both de-risks the dev dependency AND fixes
+ *    broken schedule parsing.
  *
  *  • Squid GQL – https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql
  *    vestingClaims  →  individual claim events (used to derive withdrawnAmount)
@@ -16,14 +25,15 @@ import { VestingStream, SupportedChainId, CHAIN_IDS, nextUnlockTime } from "../t
 
 // ─── Endpoints ───────────────────────────────────────────────────────────────
 
-const REST_BASE  = "https://team-finance-backend-dev-origdfl2wq-uc.a.run.app";
+const REST_BASE  = "https://api.team.finance";
 const SQUID_URL  = "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
 
 // ─── REST API types ───────────────────────────────────────────────────────────
 
 interface TFApiResponse {
-  data:   TFVesting[];
-  stats?: unknown;
+  vestings?: TFVesting[];   // production shape (api.team.finance)
+  data?:     TFVesting[];   // legacy dev-host shape, kept as a fallback
+  stats?:    unknown;
 }
 
 export interface TFVesting {
@@ -54,7 +64,7 @@ export async function fetchWalletVestings(wallet: string): Promise<TFVesting[]> 
   if (entry && Date.now() - entry.ts < CACHE_TTL_MS) return entry.vestings;
 
   try {
-    const res = await fetch(`${REST_BASE}/api/app/vesting/${addr}`, {
+    const res = await fetch(`${REST_BASE}/api/vesting/${addr}`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 60 },
     });
@@ -63,12 +73,16 @@ export async function fetchWalletVestings(wallet: string): Promise<TFVesting[]> 
       return [];
     }
     const parsed: unknown = await res.json();
-    // API returns { data: TFVesting[], stats: {} } — handle both shapes for resilience
+    // Production API returns { vestings: TFVesting[] }. Also accept a bare
+    // array and the legacy { data: [] } wrapper so a shape tweak upstream
+    // can't silently zero us out.
     let vestings: TFVesting[];
     if (Array.isArray(parsed)) {
       vestings = parsed as TFVesting[];
+    } else if (parsed && typeof parsed === "object" && Array.isArray((parsed as TFApiResponse).vestings)) {
+      vestings = (parsed as TFApiResponse).vestings!;
     } else if (parsed && typeof parsed === "object" && Array.isArray((parsed as TFApiResponse).data)) {
-      vestings = (parsed as TFApiResponse).data;
+      vestings = (parsed as TFApiResponse).data!;
     } else {
       vestings = [];
     }
