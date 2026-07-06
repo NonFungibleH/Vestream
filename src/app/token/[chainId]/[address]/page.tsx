@@ -816,7 +816,7 @@ export default async function TokenPage(
             >
               Get a push and email notification the moment {symbol} tokens
               are ready to claim – plus coverage for every other wallet you
-              track, across all 10 protocols and 7 chains – EVM and Solana.
+              track, across all 10 protocols and 8 chains – EVM and Solana.
             </p>
             <AppStoreBadges align="center" />
             <div className="mt-5">

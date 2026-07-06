@@ -117,7 +117,7 @@ const homepageJsonLd = {
       featureList: [
         "Track token vestings across 10+ protocols",
         "Real-time unlock alerts via push and email",
-        "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Solana",
+        "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana",
         "P&L tracking and CSV export",
         "Protocol-by-protocol TVL transparency",
       ],
@@ -231,7 +231,7 @@ export default async function Home() {
               Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              10+ protocols. Seven chains. Mobile app and desktop dashboard.
+              10+ protocols. Eight chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs – app badges lead (mobile is the primary product),
@@ -1105,7 +1105,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -1208,7 +1208,7 @@ export default async function Home() {
             <ul className="flex flex-col gap-3.5">
               {[
                 "10+ protocols scanned simultaneously - every one listed above",
-                "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism & Solana",
+                "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
                 <li key={item} className="flex items-center gap-3 text-sm font-medium" style={{ color: "#1A1D20" }}>
@@ -1255,7 +1255,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 10 protocols &amp; 7 chains</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 10 protocols &amp; 8 chains</p>
           </div>
         </div>
       </section>
@@ -1744,7 +1744,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",

@@ -230,7 +230,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 10 protocols and 7 chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 10 protocols and 8 chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the
@@ -1265,7 +1265,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#8B8E92" }}>
-        We scanned 10 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana. If this wallet has vestings elsewhere, let us know – we add new protocols every month.
+        We scanned 10 vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche and Solana. If this wallet has vestings elsewhere, let us know – we add new protocols every month.
       </p>
     </div>
   );

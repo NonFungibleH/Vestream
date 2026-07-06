@@ -33,7 +33,7 @@ interface Suggestion {
   walletCount: number; lockedValueUsd: number | null;
 }
 
-const CHAIN_LABEL: Record<number, string> = { 1: "Ethereum", 56: "BNB", 137: "Polygon", 8453: "Base", 42161: "Arbitrum", 10: "Optimism", 101: "Solana" };
+const CHAIN_LABEL: Record<number, string> = { 1: "Ethereum", 56: "BNB", 137: "Polygon", 8453: "Base", 42161: "Arbitrum", 10: "Optimism", 43114: "Avalanche", 101: "Solana" };
 const fmtUsd = (n: number | null) =>
   n == null ? "" : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(0)}k` : `$${n.toFixed(0)}`;
 

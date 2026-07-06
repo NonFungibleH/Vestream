@@ -22,11 +22,11 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
-  description: "Live calendar of upcoming token unlocks across 10 vesting protocols and 7 chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
+  description: "Live calendar of upcoming token unlocks across 10 vesting protocols and 8 chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
   alternates:  { canonical: "https://www.vestream.io/unlocks" },
   openGraph: {
     title:       "Token Unlock Calendar – Vestream",
-    description: "Live calendar of upcoming token unlocks across 10 vesting protocols and 7 chains.",
+    description: "Live calendar of upcoming token unlocks across 10 vesting protocols and 8 chains.",
     url:         "https://www.vestream.io/unlocks",
     siteName:    "Vestream",
     type:        "website",
@@ -103,7 +103,7 @@ export default async function UnlocksIndex() {
             <span style={{ color: "#1CB8B8" }}>indexed live.</span>
           </h1>
           <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: "#475569" }}>
-            View upcoming unlocks across 10 vesting protocols and 7 chains. Pick a window – today, this week, this month, or rolling 30/60/90-day – to see exactly what unlocks when.
+            View upcoming unlocks across 10 vesting protocols and 8 chains. Pick a window – today, this week, this month, or rolling 30/60/90-day – to see exactly what unlocks when.
           </p>
         </div>
       </section>

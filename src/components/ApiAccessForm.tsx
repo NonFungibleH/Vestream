@@ -73,7 +73,7 @@ export function ApiAccessForm() {
           <ul className="text-xs space-y-1 text-left" style={{ color: "rgba(255,255,255,0.65)" }}>
             <li>• 30 requests / minute (burst)</li>
             <li>• 150 requests / day</li>
-            <li>• All 10 protocols + 7 chains</li>
+            <li>• All 10 protocols + 8 chains</li>
             <li>• REST + MCP server access</li>
           </ul>
         </div>

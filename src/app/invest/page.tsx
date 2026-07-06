@@ -26,11 +26,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Vestream Invest – Track every token vesting unlock you're owed",
-  description: "Watch every token vesting unlock you're owed across 10 protocols and 7 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
+  description: "Watch every token vesting unlock you're owed across 10 protocols and 8 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
     title:       "Vestream Invest – Track every vesting unlock",
-    description: "10 protocols. 7 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
+    description: "10 protocols. 8 chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
     type:        "website",
     url:         "https://www.vestream.io/invest",
   },
@@ -77,7 +77,7 @@ export default function InvestLanding() {
             className="max-w-2xl text-base md:text-lg mb-8"
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
-            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across nine vesting protocols and seven chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
+            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across nine vesting protocols and eight chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
           </p>
 
           {/* Primary funnel CTA */}
@@ -173,7 +173,7 @@ export default function InvestLanding() {
             ))}
           </div>
           <p className="text-center text-xs mt-4" style={{ color: "#94a3b8" }}>
-            Across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Solana.
+            Across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche and Solana.
           </p>
         </section>
 

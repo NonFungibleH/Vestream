@@ -111,7 +111,7 @@ export default async function OG() {
             }}
           >
             <span style={{ width: 10, height: 10, background: "#0F8A8A", borderRadius: "50%" }} />
-            10 protocols · 7 chains · Live indexing
+            10 protocols · 8 chains · Live indexing
           </div>
           <span style={{ fontSize: 22, color: "#8B8E92" }}>vestream.io</span>
         </div>

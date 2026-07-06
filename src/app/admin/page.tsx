@@ -21,6 +21,7 @@ const CHAIN_NAMES: Record<number, string> = {
   8453:     "Base",
   42161:    "Arbitrum",
   10:       "Optimism",
+  43114:    "Avalanche",
   101:      "Solana",
   11155111: "Sepolia",
   84532:    "Base Sepolia",

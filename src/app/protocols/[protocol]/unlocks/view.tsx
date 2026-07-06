@@ -38,6 +38,7 @@ const CHAIN_SLUG_TO_ID: Record<string, number> = {
   base:     8453,
   arbitrum: 42161, arb: 42161,
   optimism: 10,   op: 10,
+  avalanche: 43114, avax: 43114,
   solana:   101,  sol: 101,
 };
 export function parseChainParam(raw: string | undefined): number | null {

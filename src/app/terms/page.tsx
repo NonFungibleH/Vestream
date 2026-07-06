@@ -68,7 +68,7 @@ export default function Terms() {
               data from supported protocols (currently Sablier, Hedgey,
               Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and
               Jupiter Lock) across supported chains (Ethereum, BNB Chain,
-              Polygon, Base, Arbitrum, Optimism, and Solana) and present it
+              Polygon, Base, Arbitrum, Optimism, Avalanche, and Solana) and present it
               through the website,
               the mobile app, the developer API, and the MCP server. The
               Service does{" "}

@@ -138,7 +138,7 @@ export default function Privacy() {
               vesting positions across the protocols and chains we support
               (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
               Streamflow, Jupiter Lock – across Ethereum, BNB Chain,
-              Polygon, Base, Arbitrum, Optimism, and Solana). This index is
+              Polygon, Base, Arbitrum, Optimism, Avalanche, and Solana). This index is
               built from publicly available on-chain data and protocol
               subgraphs.
             </p>

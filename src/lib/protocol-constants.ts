@@ -624,6 +624,7 @@ const CHAIN_ICON_FILE: Record<number, string> = {
   8453:  "base",
   42161: "arbitrum",
   10:    "optimism",
+  43114: "avalanche",
   101:   "solana",
 };
 

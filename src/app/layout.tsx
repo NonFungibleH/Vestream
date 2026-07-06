@@ -40,7 +40,7 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // tracker" parks there until we relaunch.
 const SITE_TITLE       = "Vestream – Token Vesting Tracker & Unlock Alerts";
 const SITE_DESCRIPTION =
-  "Track every token vesting unlock you're owed across 10 protocols and 7 chains. Push alerts the moment a cliff hits, one-tap claim links, tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
+  "Track every token vesting unlock you're owed across 10 protocols and 8 chains. Push alerts the moment a cliff hits, one-tap claim links, tax-ready CSV exports for Koinly, CoinTracker and TurboTax. Free, no signup.";
 
 export const metadata: Metadata = {
   title: SITE_TITLE,

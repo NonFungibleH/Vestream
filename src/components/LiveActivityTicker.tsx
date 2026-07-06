@@ -11,7 +11,7 @@
 //     changed, a "live monitoring" dot pulses and a "seconds ago" clock
 //     increments every second on the client.
 //   - Degrade gracefully – zero results → "No activity indexed in the last
-//     hour – but we're watching 10 protocols across 7 chains" state, not
+//     hour – but we're watching 10 protocols across 8 chains" state, not
 //     a blank box.
 //   - Keep it cheap – 10s poll interval, edge-cached, <1kB of payload.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ export function LiveActivityTicker() {
         {data && rows.length === 0 && (
           <div className="px-4 md:px-5 py-6 text-center">
             <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
-              Watching 10 protocols across 7 chains
+              Watching 10 protocols across 8 chains
             </div>
             <div className="text-xs" style={{ color: "#94a3b8" }}>
               The moment a tracked wallet lands on any protocol, it streams into this feed.
