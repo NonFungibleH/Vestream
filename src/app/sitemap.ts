@@ -23,9 +23,15 @@ import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
 
 const SITE = "https://www.vestream.io";
 
-// Regenerate once per hour — sitemap freshness matters for crawlers but
-// there's no need to hit the DB on every robot hit.
-export const revalidate = 3600;
+// Regenerate every 10 min. The sitemap returns an EMPTY token/symbol list at
+// build time (no DB during build), so a long window would strand that empty
+// version for up to an hour after every deploy. `revalidatePath("/sitemap.xml")`
+// does NOT reliably bust metadata routes (Next quirk — verified 2026-07-06:
+// stayed x-vercel-cache HIT after an on-demand call), so we can't force it on
+// demand; a short ISR window is the reliable way to let natural revalidation
+// repopulate the ~2k token/symbol URLs. The queries read the pre-aggregated
+// token_vesting_rollups table (~600ms total), so a 10-min cadence is cheap.
+export const revalidate = 600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
