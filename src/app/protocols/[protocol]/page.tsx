@@ -394,7 +394,6 @@ export default async function ProtocolLandingPage(
   // see the loadProtocolData comment for the why).
   const effectiveTotal     = stats?.totalStreams  ?? 0;
   const effectiveActive    = stats?.activeStreams ?? 0;
-  const effectiveUnclaimed = stats?.unclaimedStreams ?? 0;
   const hasData = effectiveTotal > 0;
   // Continuous-stream protocols (LlamaPay, Sablier Flow) don't have discrete
   // scheduled "unlocks" – tokens flow per-second and are claimable any time.
@@ -577,7 +576,7 @@ export default async function ProtocolLandingPage(
       {/* ── Live stat strip ──────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
         <div
-          className="rounded-2xl px-4 py-5 md:px-8 md:py-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-2"
+          className="rounded-2xl px-4 py-5 md:px-8 md:py-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-2"
           style={{ background: "white", border: `1px solid ${meta.border}`, boxShadow: `0 2px 10px ${accentWash}` }}
         >
           <Stat
@@ -611,14 +610,6 @@ export default async function ProtocolLandingPage(
             // moment a Base vesting appears we pick it up. (The /unlocks page's
             // "N chains" is a different metric: chains with unlocks in-window.)
             value={meta.chainIds.length.toString()}
-            color={meta.color}
-          />
-          <Stat
-            // Fully vested but not fully withdrawn — tokens sitting claimable
-            // that recipients haven't collected. The honest home for the
-            // past-due population that used to inflate "Active now".
-            label="Unclaimed"
-            value={hasData ? effectiveUnclaimed.toLocaleString() : "–"}
             color={meta.color}
           />
         </div>
@@ -1231,7 +1222,7 @@ function formatBigTokenAmount(rawAmount: string, decimals: number, symbol: strin
 
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="text-center md:text-left">
+    <div className="text-center">
       <div className="font-bold text-xl md:text-2xl tracking-tight" style={{ letterSpacing: "-0.02em", color }}>
         {value}
       </div>
