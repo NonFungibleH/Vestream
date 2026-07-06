@@ -34,7 +34,6 @@
 // EMPTY data on degraded renders. Identical to the pre-fix behaviour.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Redis } from "@upstash/redis";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { pageFallback } from "@/lib/db/schema";
@@ -93,13 +92,6 @@ function writeFallbackDb<T>(key: string, value: T): void {
     });
 }
 
-function getRedis(): Redis | null {
-  const url   = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
-  return Redis.fromEnv();
-}
-
 /**
  * Read a previously cached "last good" payload, or null if none exists.
  * Errors are swallowed — Redis blip should NEVER cascade into a page
@@ -139,16 +131,24 @@ async function readFallbackRedis<T>(key: string): Promise<T | null> {
 /**
  * Persist the latest successful render. Errors are logged and swallowed.
  *
- * MUST be called from inside `after()` (next/server) on ISR pages — the
- * SDK's no-store fetch is only safe once the response/prerender has
- * finished. Called on every successful render; over time Redis holds the
- * last known good copy of every protocol page + the index.
+ * Deliberately NOT the Upstash SDK: its `.set()` is a `cache: "no-store"`
+ * fetch, which trips Next 16's dynamic-usage detector even inside `after()`
+ * during a static/ISR prerender — the source of the recurring
+ * "[page-fallback] Redis write failed … DYNAMIC_SERVER_USAGE" log. This uses a
+ * plain REST SET (command-array form) against the Upstash REST API, mirroring
+ * readFallbackRedis. The value is JSON.stringify'd to match what the SDK wrote
+ * (and what readFallbackRedis JSON.parses back). Fire-and-forget; swallowed.
  */
 function writeFallbackRedis<T>(key: string, value: T): void {
-  const redis = getRedis();
-  if (!redis) return;
-  // No await — fire-and-forget. Don't block on Redis latency.
-  redis.set(key, value, { ex: TTL_SECONDS }).catch((err) => {
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return;
+  // No await — don't block the render/after() on Redis latency.
+  fetch(url, {
+    method:  "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body:    JSON.stringify(["SET", key, JSON.stringify(value), "EX", String(TTL_SECONDS)]),
+  }).catch((err) => {
     console.error(`[page-fallback] Redis write failed for ${key}:`, err);
   });
 }

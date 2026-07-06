@@ -21,6 +21,10 @@
       "schedule": "20 4 * * *"
     },
     {
+      "path": "/api/cron/tvl-snapshot?protocol=team-finance",
+      "schedule": "35 4 * * *"
+    },
+    {
       "path": "/api/cron/smart-money",
       "schedule": "30 3 * * *"
     },

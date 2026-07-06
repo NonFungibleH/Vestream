@@ -99,7 +99,9 @@ export const getCachedProtocolUnlocks = unstable_cache(
       },
     };
   },
-  ["protocol-unlocks-v1"],
+  // v2 = bump 2026-07-06 so the dust/scam-token USD sanity guard (toUsdValue)
+  // recomputes immediately on deploy instead of after the 1h TTL.
+  ["protocol-unlocks-v2"],
   { revalidate: 3600, tags: ["protocol-unlocks"] },
 );
 

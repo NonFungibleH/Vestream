@@ -282,7 +282,10 @@ const loadProtocolData = unstable_cache(
   // v9 = bump on 2026-07-02 for the self-indexed "$0 declared chains" card fix
   // (Team Finance on Base). CACHE_TTL_SECONDS is 3600, so without a key bump the
   // change wouldn't surface for up to an hour after deploy.
-  ["protocol-page-data-v9"],
+  // v10 = bump on 2026-07-06 for the dust/scam-token USD sanity guard in
+  // toUsdValue (nonsense "$475.70B TKN" headlines). Key bump forces the
+  // upcoming-queue USD to recompute with the guard immediately on deploy.
+  ["protocol-page-data-v10"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 

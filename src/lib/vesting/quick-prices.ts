@@ -346,6 +346,19 @@ export async function getQuickUsdPrices(
  * can render "—" cleanly. Bounded against unsafe integer overflow by going
  * through a Number division at scaled precision.
  */
+// Display-safety ceilings. A single unlock event valued above these is, in
+// practice, always a dust/scam token: an astronomical supply (e.g. a
+// quadrillion-unit "TKN") multiplied by a thin-liquidity price, producing a
+// nonsense headline like "$475.70B". Rather than print it, we return null so
+// every display surface shows "–" (all callers already treat null as unpriced).
+// This mirrors the TVL headline's per-token ceiling in tvl.ts, applied here to
+// per-event display USD.
+//   - Hard cap: nothing real is a single unlock event this big.
+//   - Thin cap: a "low"-liquidity token (< $1k DEX liquidity) can't plausibly
+//     back a billion-dollar unlock; suppress those sooner.
+const MAX_PLAUSIBLE_UNLOCK_USD  = 10_000_000_000; // $10B
+const THIN_LIQUIDITY_UNLOCK_CAP =  1_000_000_000; // $1B
+
 export function toUsdValue(
   amountRaw: string | null | undefined,
   decimals:  number,
@@ -364,7 +377,11 @@ export function toUsdValue(
     const tokens = Number(scaled) / 1_000_000;
     if (!Number.isFinite(tokens) || tokens <= 0) return null;
     const usd = tokens * price.priceUsd;
-    return Number.isFinite(usd) ? usd : null;
+    if (!Number.isFinite(usd) || usd <= 0) return null;
+    // Dust/scam-token sanity guard (see constants above).
+    if (usd > MAX_PLAUSIBLE_UNLOCK_USD) return null;
+    if (usd > THIN_LIQUIDITY_UNLOCK_CAP && price.confidence === "low") return null;
+    return usd;
   } catch {
     return null;
   }

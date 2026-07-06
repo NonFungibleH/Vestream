@@ -31,6 +31,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { revalidateTag } from "next/cache";
 import { refreshProtocolSummaries } from "@/lib/vesting/protocol-stats";
 import { refreshStatusSummary } from "@/lib/vesting/cache-stats";
 import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
@@ -39,6 +40,23 @@ import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
+
+// Flush the ISR Data Cache tags that wrap the pages these rollups feed.
+// Refreshing the DB tables is NOT enough on its own: /protocols/[slug] and
+// /protocols wrap their data in `unstable_cache` with a 1h TTL (see
+// CACHE_TTL_SECONDS in those pages), so without an explicit tag flush the UI
+// keeps serving the pre-refresh numbers for up to an hour. The seed-cache cron
+// already does this; refresh-rollups did NOT, which is why a fresh rollup could
+// still show stale counts. Next 16 requires the cache-profile arg ("max" =
+// expire as fully as possible). Non-fatal — a flush failure just means the
+// pages catch up on their own TTL.
+function flushTags(tags: string[]): void {
+  try {
+    for (const t of tags) revalidateTag(t, "max");
+  } catch (e) {
+    console.warn("[cron/refresh-rollups] revalidateTag failed (non-fatal):", e);
+  }
+}
 
 // Run the three refreshes SEQUENTIALLY, awaited to completion.
 //
@@ -52,12 +70,27 @@ export const dynamic     = "force-dynamic";
 // already runs ~191s synchronously this way), so we simply AWAIT the work.
 // Sequential keeps peak pooler load low; total ~170s, comfortably under the 300s
 // maxDuration. A per-step try/catch means one failure doesn't sink the others.
+//
+// CHEAP-FIRST ordering (2026-07-06): the two summary refreshes are quick GROUP
+// BYs; the token rollup is the heavy one. Running the summaries first — and
+// flushing their page caches immediately — means a slow/timing-out token rollup
+// can never starve the protocol-hero + /status stats again (the bug that left
+// the Team Finance hero frozen at 504 after a reseed).
 async function runAll(): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
   const out = { tokens: null as number | null, protocol: null as number | null, status: null as number | null };
-  // token rollups first — the heaviest, and what the Explorer depends on.
-  try { out.tokens   = (await refreshTokenRollups()).rows;      } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
+
+  // Cheap summaries first — they power the protocol hero + /status.
   try { out.protocol = (await refreshProtocolSummaries()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshProtocolSummaries failed:", e); }
   try { out.status   = (await refreshStatusSummary()).rows;     } catch (e) { console.error("[cron/refresh-rollups] refreshStatusSummary failed:", e); }
+  // Flush the summary-backed caches now, so even if the heavy token rollup
+  // below stalls, the hero/index/status pages already reflect fresh numbers.
+  flushTags(["protocol-page", "protocols-page", "status-page"]);
+
+  // Heavy token rollup last — the Explorer's per-token aggregates.
+  try { out.tokens = (await refreshTokenRollups()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
+  // Flush the explorer/calendar caches after the token rollup lands.
+  flushTags(["protocol-unlocks", "protocols-page"]);
+
   return out;
 }
 
