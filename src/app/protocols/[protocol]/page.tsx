@@ -331,6 +331,30 @@ export async function generateMetadata(
   };
 }
 
+// Honest provenance line for the "Locked value by chain" card. The card is a
+// DOLLAR figure, and for most protocols that number is OURS, not the source's:
+// we take the locked AMOUNTS from somewhere, then value them with our own
+// DexScreener/CoinGecko market pricing. So the label must not imply the source
+// hands us the TVL — only the amounts. Three cases (see TVL Methodology in
+// CLAUDE.md):
+//   - DefiLlama supplies the finished vesting-TVL USD directly (sablier,
+//     sablier-flow, hedgey, streamflow, llamapay) → "TVL via DefiLlama".
+//   - We read the locked amounts on-chain ourselves (pinksale contract reads,
+//     jupiter-lock program scan) → "on-chain amounts, market-priced".
+//   - We take the locked amounts from the protocol's OWN subgraph/data feed
+//     (team-finance's Squid API, superfluid/unvest/uncx subgraphs) and price
+//     them ourselves → "amounts from <Protocol>, market-priced". This is the
+//     Team-Finance case: their feed gives us the vesting amounts, NOT the TVL.
+function tvlSourceLabel(adapterIds: readonly string[], protocolName: string): string {
+  const has = (id: string) => adapterIds.includes(id);
+  if (["sablier", "sablier-flow", "hedgey", "streamflow", "llamapay"].some(has)) return "TVL via DefiLlama";
+  if (["pinksale", "jupiter-lock"].some(has)) return "on-chain amounts, market-priced";
+  // Non-breaking space inside the protocol name so it never splits across two
+  // lines on mobile (the caption wraps as "data from Team Finance, market-priced"
+  // with "Team Finance" kept whole).
+  return `data from ${protocolName.replace(/ /g, "\u00A0")}, market-priced`;
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function ProtocolLandingPage(
@@ -694,7 +718,7 @@ export default async function ProtocolLandingPage(
                 })}
               </div>
               <p className="text-xs mt-4" style={{ color: "#94A3B8" }}>
-                Vesting TVL only · updated daily · source: {tvlPerChain.length > 0 && ["sablier", "sablier-flow", "hedgey", "streamflow"].some(id => meta.adapterIds.includes(id)) ? "DefiLlama" : "on-chain index"}
+                Vesting TVL only · updated daily · {tvlSourceLabel(meta.adapterIds, meta.name)}
               </p>
             </div>
           </section>
