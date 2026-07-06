@@ -57,6 +57,7 @@ import {
   type TokenMarketData,
 } from "@/lib/vesting/token-aggregates";
 import { withTimeout } from "@/lib/with-timeout";
+import { getTokenTotalSupplyRaw, totalSupplyWhole } from "@/lib/vesting/token-supply";
 
 export const revalidate = 1800;
 
@@ -275,13 +276,16 @@ export default async function TokenPage(
     withTimeout(getTokenRecipients(cid, addr, 10), 8_000, [], "pubtoken:recipients"),
     withTimeout(getTokenUpcomingEvents(cid, addr, 8), 8_000, [], "pubtoken:upcoming"),
     withTimeout(getTokenMarketData(cid, addr), 8_000, null, "pubtoken:market"),
+    // On-chain total supply → "% of total supply" context. Nice-to-have; a 5s
+    // ceiling + null fallback means a slow/absent RPC never blocks the page.
+    withTimeout(getTokenTotalSupplyRaw(cid, addr), 5_000, null, "pubtoken:supply"),
   ]);
 
   // Log every rejection – invisible failures are the whole reason cache
   // poisoning bit us before. Production observability lives in logs.
   settled.forEach((s, i) => {
     if (s.status === "rejected") {
-      const stage = ["overview", "calendar", "recipients", "upcoming", "market"][i];
+      const stage = ["overview", "calendar", "recipients", "upcoming", "market", "supply"][i];
       console.error(`[token-page] ${stage} failed for ${cid}/${addr}:`, s.reason);
     }
   });
@@ -324,6 +328,16 @@ export default async function TokenPage(
   const overhangPct = lockedUsd != null && market.fdv && market.fdv > 0
     ? (lockedUsd / market.fdv) * 100
     : null;
+
+  // On-chain total supply → "% of total supply" context. Works even for
+  // unpriced tokens (where FDV/marketCap are absent), so users can always see
+  // how much of the whole token is locked / unlocking.
+  const rawSupply    = settled[5].status === "fulfilled" ? settled[5].value : null;
+  const totalSupply  = overview ? totalSupplyWhole(rawSupply, overview.tokenDecimals) : null;
+  const lockedPctOfSupply = totalSupply && overview && totalSupply > 0
+    ? (overview.lockedTokensWhole / totalSupply) * 100
+    : null;
+
   const symbol  = overview?.tokenSymbol ?? market.tokenName ?? truncate(addr);
 
   // Pick the dominant protocol for this token (the one with the largest locked
@@ -526,7 +540,12 @@ export default async function TokenPage(
           <HeroStat
             label="Locked"
             value={lockedUsd != null ? fmtUsd(lockedUsd) : (overview ? `${fmtTokens(overview.lockedTokensWhole)} ${symbol}` : "–")}
-            sub={overhangPct != null ? `${overhangPct.toFixed(1)}% of FDV` : (market.fdv ? "–" : "no price data")}
+            // Prefer "% of total supply" (on-chain, works even with no price) so
+            // users always see how much of the whole token is locked. Fall back
+            // to the FDV-based overhang, then to a price-availability note.
+            sub={lockedPctOfSupply != null
+              ? `${lockedPctOfSupply.toFixed(1)}% of ${fmtTokens(totalSupply!)} supply`
+              : (overhangPct != null ? `${overhangPct.toFixed(1)}% of FDV` : (market.fdv ? "–" : "no price data"))}
             accent="#1CB8B8"
           />
           <HeroStat
@@ -885,15 +904,23 @@ function UnlockCalendar({
   const forward    = visible.filter((b) => !b.isPast);
   const grandTotal = forward.reduce((s, b) => s + b.futureTokensWhole, 0);
 
-  // Cumulative running total across the visible window (past + future).
-  // Drives the overlay curve – turns the chart from independent months
-  // into a release trajectory reading at a glance.
+  // Cumulative FORWARD total — the "release trajectory" of what's still to
+  // unlock. Past buckets stay flat at 0 so the curve reaches exactly
+  // `grandTotal` (== the "next 12mo" / "12-mo total" figure the stats headline).
+  //
+  // 2026-07-06: was summing `totalTokensWhole` across past + future, which put
+  // the curve on a DIFFERENT scale than the "16.72M" it ends beside (it
+  // included already-released tokens, so its top was past+future, not the
+  // forward total). Forward-only makes the curve's endpoint literally the
+  // headline number, and keeps it consistent with peak/last-unlock/12-mo-total
+  // (all of which already use futureTokensWhole). The faded past bars still
+  // show what already released; the trajectory line is "what's coming".
   const cumulativeRaw: number[] = visible.reduce<number[]>((acc, b) => {
     const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
-    acc.push(prev + b.totalTokensWhole);
+    acc.push(prev + (b.isPast ? 0 : b.futureTokensWhole));
     return acc;
   }, []);
-  const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1;
+  const maxCum = cumulativeRaw[cumulativeRaw.length - 1] || 1; // == grandTotal
 
   // Peak FUTURE month – stats strip asks "biggest unlock ahead".
   // Peak month – uses futureTokensWhole for the same reason as grandTotal.
@@ -1389,14 +1416,14 @@ function ProtocolMix({
           const slug = protocolSlug(p.protocol);
           const content = (
             <>
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ background: protocolColour(p.protocol) }} />
-                  <span className="text-sm font-semibold" style={{ color: "#1A1D20" }}>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: protocolColour(p.protocol) }} />
+                  <span className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
                     {protocolName(p.protocol)}
                   </span>
                 </div>
-                <span className="text-xs font-bold tabular-nums" style={{ color: "#1A1D20" }}>
+                <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: "#1A1D20" }}>
                   {pct.toFixed(1)}%
                 </span>
               </div>
