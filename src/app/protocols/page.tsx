@@ -380,6 +380,15 @@ export default async function UnlocksIndexPage() {
 
   const grandTotal = protocols.reduce((sum, p) => sum + effectiveTotal(p.slug), 0);
 
+  // Aggregate scale for the headline stats bar. Both are sums of per-protocol
+  // DISTINCT counts (tokensTracked / recipientCount from protocol_summaries) —
+  // consistent with how grandTotal sums per-protocol streams. A token or wallet
+  // active on two protocols is counted once per protocol; that slight
+  // cross-protocol overlap is acceptable for a headline "scale" figure and
+  // avoids a full 176k-row distinct scan of vesting_streams_cache on render.
+  const grandTokens = protocols.reduce((sum, p) => sum + (statsMap.get(p.slug)?.tokensTracked ?? 0), 0);
+  const grandWallets = protocols.reduce((sum, p) => sum + (statsMap.get(p.slug)?.recipientCount ?? 0), 0);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -417,24 +426,35 @@ export default async function UnlocksIndexPage() {
         />
 
         <div className="relative max-w-4xl mx-auto">
+          {/* Headline stats bar – four aggregate scale figures with the
+              numbers boldened so they read as a "powerful" at-a-glance index
+              summary rather than a single caption. flex-wrap keeps it tidy on
+              mobile (segments drop to a second line instead of overflowing the
+              pill). Radar-style pulsing dot matches TvlComparisonBar +
+              UpcomingUnlockTicker so the "live" signal looks consistent. */}
           <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
+            className="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-4 py-2 rounded-full border text-xs sm:text-sm font-semibold mb-8"
             style={{
               background: "rgba(28,184,184,0.06)",
               borderColor: "rgba(28,184,184,0.2)",
-              color: "#1CB8B8",
+              color: "#0F8A8A",
             }}
           >
-            {/* Radar-style pulsing dot – same pattern as TvlComparisonBar
-                + UpcomingUnlockTicker so the "live" signal looks consistent
-                across every surface. The expanding ring makes the live-ness
-                obvious; a static `animate-pulse` opacity fade reads as
-                background animation noise instead of "this is live data". */}
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
+            <span className="inline-flex items-center gap-1.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
+              </span>
+              <span className="uppercase tracking-wide" style={{ letterSpacing: "0.08em" }}>Live</span>
             </span>
-            Live · {protocols.length} protocols · {grandTotal.toLocaleString()} streams indexed
+            <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{protocols.length}</span> protocols</span>
+            <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandTokens.toLocaleString()}</span> tokens</span>
+            <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandWallets.toLocaleString()}</span> wallets</span>
+            <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandTotal.toLocaleString()}</span> streams</span>
           </div>
 
           <h1
