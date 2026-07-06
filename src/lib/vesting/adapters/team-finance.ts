@@ -347,6 +347,9 @@ async function fetchForChain(
 export const teamFinanceAdapter: VestingAdapter = {
   id:                "team-finance",
   name:              "Team Finance",
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.SEPOLIA],
+  // Base dropped 2026-07-06: TF's Squid (discovery + claims) has zero Base
+  // data, so per-wallet REST Base vestings can't get correct withdrawn amounts
+  // — don't fetch Base at all rather than show incorrect data.
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.SEPOLIA],
   fetch:             fetchForChain,
 };

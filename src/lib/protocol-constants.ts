@@ -211,7 +211,13 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#2563EB",
     bg:    "rgba(37,99,235,0.08)",
     border:"rgba(45,179,106,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    // Base dropped 2026-07-06: Team Finance's Squid subgraph (our discovery +
+    // TVL source) indexes ZERO Base vestings, and the claims Squid has no Base
+    // either, so we can't get correct withdrawn amounts even via the per-wallet
+    // REST fallback. Rather than show incomplete/incorrect Base data (or a
+    // permanent "$0 on Base"), we don't claim Base coverage. Re-add if/when TF
+    // indexes Base upstream.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
     officialUrl: "https://www.team.finance",
     claimUrl:   "https://app.team.finance",
     searchKeywords: [
