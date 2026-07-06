@@ -44,7 +44,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { fallback, http, createPublicClient, type Chain, type PublicClient } from "viem";
-import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia, baseSepolia } from "viem/chains";
+import { mainnet, bsc, polygon, base, arbitrum, optimism, avalanche, sepolia, baseSepolia } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 
 interface Provider {
@@ -192,6 +192,15 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://optimism-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/optimism",       excludeForLogs: true },
     { url: "https://1rpc.io/op" },                 // last resort
+  ]),
+  // Avalanche C-Chain. dRPC first (log-safe), then Avalanche's own public
+  // C-Chain RPC. publicnode/ankr tagged excludeForLogs to match sibling chains.
+  [CHAIN_IDS.AVALANCHE]: buildPool(process.env.AVALANCHE_RPC_URL, [
+    { url: "https://avalanche.drpc.org" },
+    { url: "https://api.avax.network/ext/bc/C/rpc" },
+    { url: "https://avalanche-c-chain-rpc.publicnode.com", excludeForLogs: true },
+    { url: "https://rpc.ankr.com/avalanche",               excludeForLogs: true },
+    { url: "https://1rpc.io/avax/c" },             // last resort
   ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
@@ -382,6 +391,7 @@ const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
   [CHAIN_IDS.BASE]:         base,
   [CHAIN_IDS.ARBITRUM]:     arbitrum,
   [CHAIN_IDS.OPTIMISM]:     optimism,
+  [CHAIN_IDS.AVALANCHE]:    avalanche,
   // Testnets added 2026-05-26 so makeFallbackClient can serve adapters
   // that need them (Hedgey/Sepolia, future Base-Sepolia paths).
   [CHAIN_IDS.SEPOLIA]:      sepolia,

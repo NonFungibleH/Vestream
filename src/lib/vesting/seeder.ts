@@ -1061,6 +1061,7 @@ const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.POLYGON]:               0n, // not in UNCX_VM_CONFIG
   [CHAIN_IDS.ARBITRUM]:              0n, // UNCX-VM not yet wired for Arbitrum
   [CHAIN_IDS.OPTIMISM]:              0n, // UNCX-VM not yet wired for Optimism
+  [CHAIN_IDS.AVALANCHE]:             0n, // UNCX-VM not on Avalanche
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
   [CHAIN_IDS.SEPOLIA]:               0n,
   [CHAIN_IDS.BASE_SEPOLIA]:          0n,

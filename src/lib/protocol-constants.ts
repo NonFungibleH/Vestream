@@ -596,6 +596,7 @@ const CHAIN_BASE: Record<number, { color: string; name: string }> = {
   8453:     { color: "#0052FF", name: "Base" },
   42161:    { color: "#12AAFF", name: "Arbitrum" },
   10:       { color: "#FF0420", name: "Optimism" },
+  43114:    { color: "#E84142", name: "Avalanche" },
   101:      { color: "#9945FF", name: "Solana" },
   11155111: { color: "#B8BABD", name: "Sepolia" },
   84532:    { color: "#9AA0A6", name: "Base Sepolia" },

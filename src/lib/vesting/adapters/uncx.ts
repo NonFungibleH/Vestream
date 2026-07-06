@@ -73,6 +73,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
   // Optimism: same status as Arbitrum — TokenVesting V3 subgraph not
   // publicly catalogued. Action to unblock: ask UNCX team.
   [CHAIN_IDS.OPTIMISM]:     undefined,
+  [CHAIN_IDS.AVALANCHE]:    undefined, // UNCX has no Avalanche TokenVesting subgraph
   [CHAIN_IDS.SOLANA]:       undefined, // UNCX does not deploy on Solana
 };
 

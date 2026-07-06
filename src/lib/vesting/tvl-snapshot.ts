@@ -772,6 +772,8 @@ export async function runDefiLlamaSnapshot(
     "arbitrum one": CHAIN_IDS.ARBITRUM,
     optimism:     CHAIN_IDS.OPTIMISM,
     "op mainnet": CHAIN_IDS.OPTIMISM,
+    avalanche:    CHAIN_IDS.AVALANCHE,
+    avax:         CHAIN_IDS.AVALANCHE,
     solana:       CHAIN_IDS.SOLANA,
   };
 

@@ -600,17 +600,19 @@ export interface TokenMarketData {
 }
 
 const DS_CHAIN_SLUG: Record<number, string> = {
-  1:    "ethereum",
-  56:   "bsc",
-  137:  "polygon",
-  8453: "base",
+  1:     "ethereum",
+  56:    "bsc",
+  137:   "polygon",
+  8453:  "base",
+  43114: "avalanche",
 };
 
 const DEXTOOLS_CHAIN_SLUG: Record<number, string> = {
-  1:    "ether",
-  56:   "bnb",
-  137:  "polygon",
-  8453: "base",
+  1:     "ether",
+  56:    "bnb",
+  137:   "polygon",
+  8453:  "base",
+  43114: "avalanche",
 };
 
 // CoinGecko platform slugs — used by the socials FALLBACK below. Distinct
@@ -624,6 +626,7 @@ const CG_PLATFORM_SLUG: Record<number, string> = {
   8453:  "base",
   42161: "arbitrum-one",
   10:    "optimistic-ethereum",
+  43114: "avalanche",
   101:   "solana",
 };
 

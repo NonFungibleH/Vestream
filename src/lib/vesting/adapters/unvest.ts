@@ -38,6 +38,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_OPTIMISM,
                               "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb"
                             ),
+  [CHAIN_IDS.AVALANCHE]:    undefined, // Unvest has no Avalanche subgraph
   [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 

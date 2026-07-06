@@ -39,10 +39,11 @@ export interface HistoricalPrice {
 
 // CoinGecko platform slug → our chain ID
 const CG_PLATFORM_BY_CHAIN: Record<number, string> = {
-  1:    "ethereum",
-  56:   "binance-smart-chain",
-  137:  "polygon-pos",
-  8453: "base",
+  1:     "ethereum",
+  56:    "binance-smart-chain",
+  137:   "polygon-pos",
+  8453:  "base",
+  43114: "avalanche",
   // Solana entries handled separately because tokenAddress format differs
 };
 

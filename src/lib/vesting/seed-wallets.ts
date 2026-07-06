@@ -55,5 +55,6 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   // PinkSale: status on Optimism unconfirmed. PinkSale's primary chain
   // remains BSC. Left empty until verified.
   [CHAIN_IDS.OPTIMISM]:     [],
+  [CHAIN_IDS.AVALANCHE]:    [],
   [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };
