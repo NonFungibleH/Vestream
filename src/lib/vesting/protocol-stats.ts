@@ -12,7 +12,7 @@
 // zeroed stats / null unlocks — the page renders an empty-state.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, desc, eq, gt, inArray, lte, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, lt, lte, notInArray, or, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
@@ -992,11 +992,44 @@ export async function getUpcomingUnlocksForProtocol(
   // See earlier comment on the protocol page Upcoming queue for context.
   const cutoffSec = nowSec + 60;
 
-  // Pool size: a single mass distribution can collapse 100s of rows → 1
-  // group, so we pull more than `limit` raw rows before grouping. Same
-  // 20× multiplier as the cross-protocol query.
-  const POOL_SIZE = Math.max(120, limit * 20);
+  // Two-phase, to stay correct under heavy front-of-queue clustering. A single
+  // mass distribution can be 100s of streams sharing one (token, hour) bucket.
+  // The old approach fetched a fixed pool of the earliest raw rows and grouped
+  // in JS — so when the front of the queue was one giant distribution it
+  // surfaced far fewer than `limit` groups (Unvest showed 3 instead of 6: its
+  // first bucket alone held 118 streams, eating the whole 120-row pool).
+  //
+  // Phase 1 finds the earliest `limit` distinct (chain, token, hour) groups
+  // directly in SQL — a cheap GROUP BY over the end_time index, accurate over
+  // ALL matching rows regardless of clustering. Phase 2 then fetches only those
+  // groups' member rows (bounded by their real sizes), so the unchanged JS
+  // grouping below sees complete groups and its amount sums stay exact.
+  const hourBucketExpr = sql<number>`floor(${vestingStreamsCache.endTime} / 3600)`;
+  const tokenKeyExpr   = sql<string>`lower(coalesce(${vestingStreamsCache.tokenAddress}, ''))`;
 
+  const baseWhere = and(
+    adapterFilter(adapterIds),
+    eq(vestingStreamsCache.isFullyVested, false),
+    gt(vestingStreamsCache.endTime, cutoffSec),
+    excludeTestnets,
+  );
+
+  // Phase 1 — the earliest `limit` distinct groups.
+  const groupRows = await db
+    .select({
+      chainId:  vestingStreamsCache.chainId,
+      tok:      tokenKeyExpr,
+      hb:       hourBucketExpr,
+    })
+    .from(vestingStreamsCache)
+    .where(baseWhere)
+    .groupBy(vestingStreamsCache.chainId, tokenKeyExpr, hourBucketExpr)
+    .orderBy(asc(sql`min(${vestingStreamsCache.endTime})`))
+    .limit(limit);
+
+  if (groupRows.length === 0) return [];
+
+  // Phase 2 — member rows for exactly those groups (bucket = [hb*3600, +3600)).
   const rows = await db
     .select({
       streamId:     vestingStreamsCache.streamId,
@@ -1011,14 +1044,21 @@ export async function getUpcomingUnlocksForProtocol(
     .from(vestingStreamsCache)
     .where(
       and(
-        adapterFilter(adapterIds),
-        eq(vestingStreamsCache.isFullyVested, false),
-        gt(vestingStreamsCache.endTime, cutoffSec),
-        excludeTestnets,
+        baseWhere,
+        or(
+          ...groupRows.map((g) => {
+            const bucketStart = Number(g.hb) * 3600;
+            return and(
+              eq(vestingStreamsCache.chainId, g.chainId),
+              eq(tokenKeyExpr, g.tok),
+              gte(vestingStreamsCache.endTime, bucketStart),
+              lt(vestingStreamsCache.endTime, bucketStart + 3600),
+            );
+          }),
+        ),
       ),
     )
-    .orderBy(asc(vestingStreamsCache.endTime))
-    .limit(POOL_SIZE);
+    .orderBy(asc(vestingStreamsCache.endTime));
 
   interface Group {
     representative: typeof rows[number];

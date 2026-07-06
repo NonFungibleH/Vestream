@@ -784,15 +784,16 @@ export default async function ProtocolLandingPage(
                 wash={accentWash}
               />
             )}
-            {funStats.newStreamsLast24h > 0 && (
-              <SpotlightCard
-                eyebrow="Indexed in the last 24h"
-                value={`${funStats.newStreamsLast24h.toLocaleString()} new`}
-                sub={funStats.newStreamsLast24h === 1 ? "vesting added" : "vestings added"}
-                accent={meta.color}
-                wash={accentWash}
-              />
-            )}
+            {/* Always render the 24h box – even at 0 – so the row keeps its
+                three-column rhythm instead of collapsing to two. A quiet "0"
+                is honest signal ("nothing new today"), not an empty state. */}
+            <SpotlightCard
+              eyebrow="Indexed in the last 24h"
+              value={`${funStats.newStreamsLast24h.toLocaleString()} new`}
+              sub={funStats.newStreamsLast24h === 1 ? "vesting added" : "vestings added"}
+              accent={meta.color}
+              wash={accentWash}
+            />
           </div>
         </section>
       )}

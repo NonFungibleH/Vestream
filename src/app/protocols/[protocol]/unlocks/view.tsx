@@ -18,7 +18,8 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PaywallTeaser } from "@/components/PaywallTeaser";
 import type { ProtocolMeta } from "@/lib/protocol-constants";
-import { getUnlocksInWindow, type WindowUnlockGroup } from "@/lib/vesting/unlock-windows";
+import { getUnlocksInWindow, enrichGroupsWithUsd, type WindowUnlockGroup } from "@/lib/vesting/unlock-windows";
+import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 
 // Marketing-page tease: every visitor (anon, free, paid) sees the same
@@ -87,13 +88,20 @@ export const getCachedProtocolUnlocks = unstable_cache(
       adapterIds,
       chainId ? [chainId] : undefined,
     );
+    // Price the groups so the calendar rows can show a USD value alongside the
+    // raw token amount (the "$" makes sparse rows feel fuller). redis:false
+    // because this runs inside an ISR/unstable_cache render path — the Upstash
+    // SDK hardcodes cache:"no-store", which hard-errors there (see CLAUDE.md
+    // ISR rules); getQuickUsdPrices falls back to a plain revalidated fetch.
+    // Same pattern as /unlocks/biggest-this-week + /unlocks/mass-distributions.
+    const enrichedGroups = await enrichGroupsWithUsd(result.groups, { redis: false });
     // unstable_cache JSON-serialises its payload, and stats.byToken carries
     // raw `bigint` amounts – JSON.stringify throws "Do not know how to
     // serialize a BigInt", the cache write rejects, and the query silently
     // re-runs on every request. Stringify the amounts (this page doesn't
     // render byToken anyway; /unlocks/[range] consumes it uncached).
     return {
-      groups: result.groups,
+      groups: enrichedGroups,
       stats: {
         ...result.stats,
         byToken: result.stats.byToken.map((t) => ({ ...t, amount: t.amount.toString() })),
@@ -402,7 +410,7 @@ function ProtocolUnlockRow({
   return (
     <Link
       href={`/token/${group.chainId}/${group.tokenAddress}`}
-      className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
+      className="grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 md:gap-5 px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors"
       style={{ borderTop: showTopBorder ? "1px solid rgba(0,0,0,0.05)" : undefined }}
     >
       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
@@ -423,8 +431,16 @@ function ProtocolUnlockRow({
           )}
         </p>
       </div>
+      {/* USD value of the locked amount, where we have a price. Shown as the
+          emphasised number so sparse calendars read as fuller; silently blank
+          for unpriced (dust / no-liquidity) tokens rather than a bogus $0. */}
+      <div className="text-right">
+        <p className="text-sm font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
+          {group.usdValue != null ? formatUsdCompact(group.usdValue) : ""}
+        </p>
+      </div>
       <div className="text-right hidden md:block">
-        <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>
+        <p className="text-xs font-semibold" style={{ color: "#8B8E92" }}>
           {group.eventTime ? fmtDateUtc(group.eventTime) : "–"}
         </p>
       </div>

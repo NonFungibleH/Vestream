@@ -1791,7 +1791,7 @@ export default async function Home() {
             Start free. Scale when you&apos;re ready.
           </h2>
           <p className="text-base" style={{ color: "#8B8E92" }}>
-            From solo investors to investment funds – a plan for every stage.
+            From a single wallet to your whole portfolio – simple pricing, no surprises.
           </p>
         </div>
 

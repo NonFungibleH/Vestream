@@ -172,7 +172,7 @@ export default function Pricing() {
           </span>
         </h1>
         <p className="relative text-lg max-w-lg mb-2 leading-relaxed" style={{ color: "#8B8E92" }}>
-          From solo investors to investment funds – a plan for every stage.
+          From a single wallet to your whole portfolio – simple pricing, no surprises.
         </p>
       </section>
 
