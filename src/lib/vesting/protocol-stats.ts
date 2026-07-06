@@ -1263,6 +1263,7 @@ export function chainLabel(chainId: number): string {
     case 8453:  return "Base";
     case 42161: return "Arbitrum";
     case 10:    return "Optimism";
+    case 43114: return "Avalanche";
     case 101:   return "Solana";
     case 11155111: return "Sepolia";
     case 84532:    return "Base Sepolia";
