@@ -1383,6 +1383,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "team-finance", chainId: CHAIN_IDS.ETHEREUM, discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.BSC,      discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.POLYGON,  discover: discoverTeamFinanceRecipients },
+  { adapterId: "team-finance", chainId: CHAIN_IDS.AVALANCHE, discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.SEPOLIA,  discover: discoverTeamFinanceRecipients },
   // Hedgey — four mainnets + Sepolia (ERC721Enumerable reads via Multicall3).
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ETHEREUM, discover: discoverHedgeyRecipients },

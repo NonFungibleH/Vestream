@@ -350,6 +350,8 @@ export const teamFinanceAdapter: VestingAdapter = {
   // Base dropped 2026-07-06: TF's Squid (discovery + claims) has zero Base
   // data, so per-wallet REST Base vestings can't get correct withdrawn amounts
   // — don't fetch Base at all rather than show incorrect data.
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.SEPOLIA],
+  // Avalanche added 2026-07-06: TF's Squid DOES index Avax (147 vestings) + the
+  // REST API returns per-wallet Avax, so it's fully supported unlike Base.
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE, CHAIN_IDS.SEPOLIA],
   fetch:             fetchForChain,
 };

@@ -105,7 +105,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#F0992E",
     bg:    "rgba(240,153,46,0.08)",
     border:"rgba(240,153,46,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
     officialUrl: "https://sablier.com",
     claimUrl:   "https://app.sablier.com/portfolio",
     searchKeywords: [
@@ -178,7 +178,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#33406B",
     bg:    "rgba(51,64,107,0.08)",
     border:"rgba(51,64,107,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
     officialUrl: "https://hedgey.finance",
     claimUrl:   "https://app.hedgey.finance",
     searchKeywords: [
@@ -217,7 +217,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // REST fallback. Rather than show incomplete/incorrect Base data (or a
     // permanent "$0 on Base"), we don't claim Base coverage. Re-add if/when TF
     // indexes Base upstream.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE],
     officialUrl: "https://www.team.finance",
     claimUrl:   "https://app.team.finance",
     searchKeywords: [
@@ -438,7 +438,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // OR we build an on-chain factory adapter – see comments in
     // src/lib/vesting/adapters/llamapay.ts SUBGRAPH_IDS for the full
     // verification log.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.OPTIMISM],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
     officialUrl: "https://llamapay.io",
     claimUrl:   "https://llamapay.io/withdraw",
     searchKeywords: [

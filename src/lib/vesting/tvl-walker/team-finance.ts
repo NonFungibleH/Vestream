@@ -25,18 +25,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, base } from "viem/chains";
+import { mainnet, bsc, polygon, avalanche } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 
 const SQUID_URL =
   "https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql";
 
+// Base dropped + Avalanche added 2026-07-06 (see adapter/protocol-constants):
+// TF's Squid indexes Avax (147 vestings) but zero Base.
 const SUPPORTED_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
   CHAIN_IDS.POLYGON,
-  CHAIN_IDS.BASE,
+  CHAIN_IDS.AVALANCHE,
 ];
 
 const PAGE_SIZE = 1000;
@@ -74,7 +76,7 @@ function getRpcUrl(chainId: SupportedChainId): string {
     case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
     case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
     case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
-    case CHAIN_IDS.BASE:     return process.env.ALCHEMY_RPC_URL_BASE  ?? "https://base.publicnode.com";
+    case CHAIN_IDS.AVALANCHE: return process.env.AVALANCHE_RPC_URL    ?? "https://api.avax.network/ext/bc/C/rpc";
     default:                 return "https://ethereum.publicnode.com";
   }
 }
@@ -84,7 +86,7 @@ function getViemChain(chainId: SupportedChainId) {
     case CHAIN_IDS.ETHEREUM: return mainnet;
     case CHAIN_IDS.BSC:      return bsc;
     case CHAIN_IDS.POLYGON:  return polygon;
-    case CHAIN_IDS.BASE:     return base;
+    case CHAIN_IDS.AVALANCHE: return avalanche;
     default:                 return mainnet;
   }
 }
