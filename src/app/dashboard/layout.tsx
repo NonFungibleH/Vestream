@@ -90,17 +90,37 @@ async function requireDashboardAccess(): Promise<string> {
   // No valid (decryptable) session → not logged in.
   if (!address) redirect("/login");
 
-  // Bound the tier lookup. A try/catch only catches THROWS – a query that
-  // STALLS on a saturated Supabase pooler connection (no per-statement timeout
-  // by default) just hangs the await until Cloudflare's 100s cutoff → a 524 on
-  // EVERY dashboard route (this exact outage happened 2026-06-19). withTimeout
-  // resolves to "free" in 5s on a stall/reject; "free" → not-Pro → /login, so
-  // we stay FAIL-CLOSED: a stalled gate never grants access, it just bounces a
-  // real Pro user to /login (recoverable on retry) instead of 524-ing.
-  const tier = await withTimeout(lookupTier(address), 5000, "free", "dash:lookupTier");
+  // Bound the tier lookup. A query that STALLS on a saturated Supabase pooler
+  // connection (no per-statement timeout by default) would hang the await
+  // until Cloudflare's 100s cutoff → a 524 on every dashboard route (this
+  // exact outage happened 2026-06-19). withTimeout resolves to the fallback in
+  // 5s on a stall/reject.
+  //
+  // CRITICAL (2026-07-06): the fallback used to be "free", which is
+  // INDISTINGUISHABLE from a genuinely-free user — so a transient pooler
+  // hiccup mapped to "free" → not-Pro → /login, bouncing a REAL Pro user
+  // straight back to the login screen right after a successful QR pairing
+  // ("signed in, instantly logged out"; recoverable only on retry). Paying
+  // users were locked out ~2/3 of attempts under DB load.
+  //
+  // Fix: use a distinct sentinel for "couldn't determine" and FAIL OPEN on it.
+  // This is safe because the session cookie is minted by the desktop-pair poll
+  // ONLY after /api/mobile/desktop-pair/confirm has verified the user is Pro —
+  // so a valid, decryptable session already implies Pro-at-pairing-time. We
+  // still FAIL CLOSED on a DEFINITIVE non-Pro result (lookup succeeded, tier is
+  // free/lapsed), and every dashboard data route re-checks tier server-side, so
+  // a lapsed account can't actually pull Pro data during the brief window.
+  const LOOKUP_FAILED = "__tier_lookup_failed__";
+  const tier = await withTimeout(lookupTier(address), 5000, LOOKUP_FAILED, "dash:lookupTier");
+
+  if (tier === LOOKUP_FAILED) {
+    // Transient DB stall/reject — don't bounce a real Pro user. Render as Pro;
+    // the next clean render re-validates and bounces a genuinely lapsed account.
+    return "pro";
+  }
 
   if (!canAccessDashboard(normaliseTier(tier))) {
-    // Not Pro (lapsed subscription), or the lookup stalled/failed → /login.
+    // Definitive non-Pro (lapsed subscription) → /login.
     redirect("/login");
   }
   return tier;
