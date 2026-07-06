@@ -10,8 +10,30 @@
 // converts measurably better than a generic Vestream card.
 
 import { ImageResponse } from "next/og";
-import { getProtocol } from "@/lib/protocol-constants";
+import { getProtocol, protocolIcon } from "@/lib/protocol-constants";
 import { getProtocolStats } from "@/lib/vesting/protocol-stats";
+
+// Satori (next/og) can't resolve relative <img> srcs and disk reads of
+// dynamically-named public/ assets aren't traced into the Vercel function
+// bundle — so fetch the already-deployed protocol icon and inline it as a
+// base64 data URI (the format Satori decodes most reliably). Fail-soft to
+// null so the card falls back to the initial-letter badge, never breaking a
+// share preview over a missing/slow icon.
+async function loadProtocolIconDataUri(slug: string): Promise<string | null> {
+  const rel = protocolIcon(slug); // e.g. /protocols/icons/team-finance.png
+  if (!rel) return null;
+  const base = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://www.vestream.io";
+  try {
+    const res = await fetch(new URL(rel, base), { cache: "force-cache" });
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
 
 // Runtime: nodejs (NOT edge) – required because the parent page exports
 // generateStaticParams to pre-render every protocol slug at build time, and
@@ -81,6 +103,7 @@ export default async function OG(
   }
 
   const initial = meta.name.charAt(0);
+  const iconDataUri = await loadProtocolIconDataUri(meta.slug);
 
   return new ImageResponse(
     (
@@ -133,13 +156,13 @@ export default async function OG(
             flex:           1,
           }}
         >
-          {/* Brand-coloured square initial */}
+          {/* Protocol logo tile — falls back to the brand-coloured initial */}
           <div
             style={{
               width:         180,
               height:        180,
               borderRadius:  32,
-              background:    `${meta.color}1F`,
+              background:    iconDataUri ? "#FFFFFF" : `${meta.color}1F`,
               border:        `2px solid ${meta.color}66`,
               display:       "flex",
               alignItems:    "center",
@@ -148,9 +171,21 @@ export default async function OG(
               fontWeight:    800,
               color:         meta.color,
               flexShrink:    0,
+              overflow:      "hidden",
             }}
           >
-            {initial}
+            {iconDataUri ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={iconDataUri}
+                width={124}
+                height={124}
+                style={{ objectFit: "contain" }}
+                alt=""
+              />
+            ) : (
+              initial
+            )}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
