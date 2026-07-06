@@ -26,7 +26,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { isAdminAuthorized } from "@/lib/admin-auth";
 import { env } from "@/lib/env";
 
@@ -74,10 +74,19 @@ export async function POST(req: NextRequest) {
     revalidateTag(TAG_PROTOCOL_UNLOCKS, "max");
     revalidated.push(TAG_PROTOCOL_UNLOCKS);
   }
+  // The sitemap is a time-based-ISR route (revalidate=3600) that returns an
+  // EMPTY token/symbol list at build time (no DB during build) — so every
+  // deploy resets it to a near-empty sitemap for up to an hour. Force a
+  // regeneration so the ~2k /token + /tokens/[symbol] URLs come back
+  // immediately. Also fired from the refresh-rollups cron so it self-heals.
+  if (scope === "all" || scope === "sitemap") {
+    revalidatePath("/sitemap.xml");
+    revalidated.push("sitemap.xml");
+  }
 
   if (revalidated.length === 0) {
     return NextResponse.json(
-      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index' | 'unlocks'.` },
+      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index' | 'unlocks' | 'sitemap'.` },
       { status: 400 },
     );
   }

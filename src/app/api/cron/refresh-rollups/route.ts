@@ -31,7 +31,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { refreshProtocolSummaries } from "@/lib/vesting/protocol-stats";
 import { refreshStatusSummary } from "@/lib/vesting/cache-stats";
 import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
@@ -90,6 +90,11 @@ async function runAll(): Promise<{ tokens: number | null; protocol: number | nul
   try { out.tokens = (await refreshTokenRollups()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
   // Flush the explorer/calendar caches after the token rollup lands.
   flushTags(["protocol-unlocks", "protocols-page"]);
+  // The sitemap reads token_vesting_rollups (top symbols + tokens), which we
+  // just refreshed — regenerate it so its ~2k long-tail URLs stay fresh AND
+  // so it recovers from the empty build-time version after every deploy
+  // (time-based ISR would otherwise hold that empty version for up to an hour).
+  try { revalidatePath("/sitemap.xml"); } catch (e) { console.warn("[cron/refresh-rollups] sitemap revalidate failed (non-fatal):", e); }
 
   return out;
 }
