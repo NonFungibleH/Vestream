@@ -473,16 +473,6 @@ async function discoverTeamFinanceRecipients(chainId: SupportedChainId, limit: n
     `[seeder:team-finance/${chainId}] discovery: squid=${squidRecipients.length}, cached=${cachedRecipients.length}, combined=${recipients.length}`,
   );
 
-  // Team Finance's Squid indexer has no Base data as of writing — verified
-  // directly against the endpoint. ETH/BSC/Polygon have tens of thousands
-  // of claims each; Base has zero. Not our bug — upstream. Log this
-  // distinctly so the next time someone sees "team-finance/8453: 0" they
-  // don't waste an hour debugging the query.
-  if (squidRecipients.length === 0 && chainId === CHAIN_IDS.BASE) {
-    console.log(
-      `[seeder:team-finance/${CHAIN_IDS.BASE}] upstream Squid has no indexed claims or vestings for Base; nothing to seed — this will fix itself when Team Finance starts indexing Base`,
-    );
-  }
   return recipients.slice(0, limit);
 }
 
@@ -1386,13 +1376,12 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "superfluid",   chainId: CHAIN_IDS.BASE,     discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.ARBITRUM, discover: discoverSuperfluidRecipients },
   { adapterId: "superfluid",   chainId: CHAIN_IDS.OPTIMISM, discover: discoverSuperfluidRecipients },
-  // Team Finance — four mainnets + Sepolia (Squid GraphQL, different stack).
-  // Note: Base returns 0 because Team Finance's Squid doesn't index Base
-  // yet; that's logged distinctly inside the discover fn.
+  // Team Finance — ETH/BSC/Polygon + Sepolia (Squid GraphQL, different stack).
+  // Base dropped 2026-07-06: TF's Squid indexes zero Base vestings, so there's
+  // nothing to discover there; re-add if TF starts indexing Base upstream.
   { adapterId: "team-finance", chainId: CHAIN_IDS.ETHEREUM, discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.BSC,      discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.POLYGON,  discover: discoverTeamFinanceRecipients },
-  { adapterId: "team-finance", chainId: CHAIN_IDS.BASE,     discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.SEPOLIA,  discover: discoverTeamFinanceRecipients },
   // Hedgey — four mainnets + Sepolia (ERC721Enumerable reads via Multicall3).
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ETHEREUM, discover: discoverHedgeyRecipients },
