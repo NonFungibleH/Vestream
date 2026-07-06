@@ -173,12 +173,12 @@ export function ExplorerTable({
             <Th label="Amount"      active={sort === "amount"}        dir={dir} {...sortProps("amount", "desc")} align="right" className="hidden lg:flex" title={AMOUNT_HELP} />
             <Th label="USD"         active={sort === "usd"}           dir={dir} {...sortProps("usd", "desc")} align="right" minW={64} title={USD_HELP} />
             <Th label="Wallets"     active={sort === "wallets"}       dir={dir} {...sortProps("wallets", "desc")} align="right" minW={56} title={WALLETS_HELP} />
-            <Th label="Top recipient" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden lg:flex" minW={64} title={CONCENTRATION_HELP} />
+            <Th label="Top %" active={sort === "concentration"} dir={dir} {...sortProps("concentration", "desc")} align="right" className="hidden lg:flex" minW={44} title={CONCENTRATION_HELP} />
             <Th label="Rounds"      active={sort === "rounds"}        dir={dir} {...sortProps("rounds", "desc")} align="right" className="hidden lg:flex" title={ROUNDS_HELP} />
             <Th label="Cliff"       active={sort === "cliff"}         dir={dir} {...sortProps("cliff", "desc")} className="hidden lg:flex" title={CLIFF_HELP} />
             <Th label="Risk"        active={sort === "risk"}          dir={dir} {...sortProps("risk", "desc")} align="right" className="hidden lg:flex" minW={48} title={RISK_METHODOLOGY} />
             <Th label="Vested"      active={sort === "progress"}      dir={dir} {...sortProps("progress", "desc")} align="right" className="hidden lg:flex" title={PROGRESS_HELP} />
-            <Th label="Next unlock" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden lg:flex" title={NEXT_HELP} />
+            <Th label="Next" active={sort === "date"}          dir={dir} {...sortProps("date", "asc")} align="right" className="hidden lg:flex" title={NEXT_HELP} />
           </div>
           <div className="pr-3 pl-1"><div style={{ width: 26 }} aria-hidden /></div>
         </div>
@@ -225,16 +225,18 @@ function Th({
 }) {
   const inner = (
     <>
-      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors whitespace-nowrap"
+      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors truncate min-w-0"
         style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
         {label}
       </span>
-      <span className="text-[8px]" style={{ color: active ? "#0F8A8A" : "transparent" }}>
+      <span className="text-[8px] shrink-0" style={{ color: active ? "#0F8A8A" : "transparent" }}>
         {active ? (dir === "asc" ? "▲" : "▼") : "▲"}
       </span>
     </>
   );
-  const cls = `flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${className}`;
+  // min-w-0 + overflow-hidden so a label can never spill into the neighbouring
+  // column (the dense 10-col grid has 0.55fr tracks narrower than some labels).
+  const cls = `flex items-center gap-1 min-w-0 overflow-hidden ${align === "right" ? "justify-end" : ""} ${className}`;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={cls} style={{ minWidth: minW }}
