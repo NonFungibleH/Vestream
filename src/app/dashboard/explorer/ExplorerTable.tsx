@@ -152,7 +152,13 @@ export function ExplorerTable({
   // headers ("Top recipient", "Next unlock") don't fit in the 768–1023px band, so
   // at `md` the header labels overflowed their tracks and overlapped. Below `lg`
   // we fall back to the clean 3-column layout (Token · USD · Wallets).
-  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,2.4fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.85fr)_minmax(0,0.85fr)] items-center gap-3 px-4 lg:px-5";
+  // Desktop tracks carry a PIXEL FLOOR (not minmax(0,…)) so no column can ever
+  // shrink below its full heading — headings show in full at all times. When
+  // the floors sum past the viewport the whole table scrolls sideways inside
+  // its overflow-x-auto wrapper (see below), which the user explicitly prefers
+  // over truncated "AMOU… / WALL… / RO… / CL…" labels. Mobile keeps the clean
+  // 3-column fr layout (Token · USD · Wallets) — it fits without scroll.
+  const GRID = "grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(190px,2.4fr)_minmax(80px,0.9fr)_minmax(92px,1fr)_minmax(74px,0.7fr)_minmax(62px,0.6fr)_minmax(74px,0.6fr)_minmax(60px,0.55fr)_minmax(66px,0.6fr)_minmax(92px,0.9fr)_minmax(72px,0.7fr)] items-center gap-3 px-4 lg:px-5";
 
   return (
     <>
@@ -166,6 +172,12 @@ export function ExplorerTable({
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--preview-card)", border: "1px solid var(--preview-border)" }}>
+       {/* Horizontal scroll on desktop: the min-width holds every column at its
+           full-heading size; when the viewport is narrower the table scrolls
+           sideways rather than squeezing/truncating the headings. Mobile (no
+           lg: min-width) keeps the 3-column layout and never scrolls. */}
+       <div className="overflow-x-auto">
+        <div className="lg:min-w-[1040px]">
         {/* Sortable header – each is a Link that re-queries server-side. */}
         <div className="flex items-center" style={{ borderBottom: "1px solid var(--preview-border-2)", background: "var(--preview-muted)" }}>
           <div className={`flex-1 ${GRID} py-2`}>
@@ -187,6 +199,8 @@ export function ExplorerTable({
         {rows.map((r, i) => (
           <Row key={r.groupKey} r={r} grid={GRID} showTopBorder={i > 0} />
         ))}
+        </div>
+       </div>
       </div>
 
       {/* Pagination footer */}
@@ -225,7 +239,7 @@ function Th({
 }) {
   const inner = (
     <>
-      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors truncate min-w-0"
+      <span className="text-[10px] font-semibold uppercase tracking-wider transition-colors whitespace-nowrap"
         style={{ color: active ? "#0F8A8A" : "var(--preview-text-3)" }}>
         {label}
       </span>
@@ -234,9 +248,10 @@ function Th({
       </span>
     </>
   );
-  // min-w-0 + overflow-hidden so a label can never spill into the neighbouring
-  // column (the dense 10-col grid has 0.55fr tracks narrower than some labels).
-  const cls = `flex items-center gap-1 min-w-0 overflow-hidden ${align === "right" ? "justify-end" : ""} ${className}`;
+  // whitespace-nowrap (no truncate/overflow-hidden): headings always render in
+  // full. The grid's per-column pixel floors guarantee each track is wide
+  // enough for its label, and the table scrolls sideways when they don't fit.
+  const cls = `flex items-center gap-1 whitespace-nowrap ${align === "right" ? "justify-end" : ""} ${className}`;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={cls} style={{ minWidth: minW }}
