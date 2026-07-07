@@ -24,7 +24,9 @@ import type { VestingStream } from "@/lib/vesting/types";
 import { CopyButton } from "./CopyButton";
 import { SaveTokenButton } from "./SaveTokenButton";
 import { blockExplorerUrl, blockExplorerName, tokenSnifferUrl, xSearchUrl } from "@/lib/chain-links";
-import type { TokenMarketData } from "@/lib/vesting/token-aggregates";
+import type { TokenMarketData, TokenOverview, TokenRecipient } from "@/lib/vesting/token-aggregates";
+import { TokenPulse } from "@/components/TokenPulse";
+import { buildTokenPulse } from "@/lib/vesting/token-pulse";
 
 const FREE_TIER_ROW_CAP = 50;
 
@@ -86,6 +88,42 @@ export default async function ExplorerTokenPage({
     (m, r) => (r.nextUnlockTime != null && (m == null || r.nextUnlockTime < m) ? r.nextUnlockTime : m),
     null,
   );
+
+  // ── Pulse input, built from data ALREADY loaded above ────────────────────
+  // Deliberately NOT calling getTokenOverview/getTokenRecipients here — each
+  // re-runs the same per-token streams query, and this page is latency-
+  // sensitive (Team Finance tokens are heavy). We fold the streams we already
+  // have into the shapes buildTokenPulse needs. `calendar` is unused by the
+  // rendered bullets, so we pass [].
+  const pulseNowSec = Math.floor(Date.now() / 1000);
+  const protoMix = new Map<string, { streams: number; lockedTokensWhole: number }>();
+  const recipAgg = new Map<string, { streamCount: number; lockedTokensWhole: number; nextUnlockTime: number | null; protocols: Set<string> }>();
+  for (const s of streams) {
+    const locked = Number(BigInt(s.lockedAmount ?? "0")) / 10 ** (s.tokenDecimals ?? dec);
+    const pm = protoMix.get(s.protocol) ?? { streams: 0, lockedTokensWhole: 0 };
+    pm.streams += 1; pm.lockedTokensWhole += locked;
+    protoMix.set(s.protocol, pm);
+    const ra = recipAgg.get(s.recipient) ?? { streamCount: 0, lockedTokensWhole: 0, nextUnlockTime: null, protocols: new Set<string>() };
+    ra.streamCount += 1; ra.lockedTokensWhole += locked;
+    if (s.nextUnlockTime != null && (ra.nextUnlockTime == null || s.nextUnlockTime < ra.nextUnlockTime)) ra.nextUnlockTime = s.nextUnlockTime;
+    ra.protocols.add(s.protocol);
+    recipAgg.set(s.recipient, ra);
+  }
+  const windowTokens = (days: number) =>
+    upcomingEvents.filter((e) => e.timestamp <= pulseNowSec + days * 86400).reduce((a, e) => a + e.tokensWhole, 0);
+  const pulseOverview: TokenOverview = {
+    chainId: cid, tokenAddress: addr, tokenSymbol: symbol, tokenDecimals: dec,
+    streamCount: streams.length, activeStreamCount: streams.length,
+    recipientCount, lockedTokensWhole: totalLockedWhole,
+    protocolMix: Array.from(protoMix.entries()).map(([protocol, v]) => ({ protocol, streams: v.streams, lockedTokensWhole: v.lockedTokensWhole })),
+    upcoming7dTokens: windowTokens(7), upcoming30dTokens: windowTokens(30), upcoming90dTokens: windowTokens(90),
+  };
+  const pulseRecipients: TokenRecipient[] = Array.from(recipAgg.entries())
+    .map(([recipient, v]) => ({ recipient, streamCount: v.streamCount, lockedTokensWhole: v.lockedTokensWhole, nextUnlockTime: v.nextUnlockTime, protocols: Array.from(v.protocols) }))
+    .sort((a, b) => b.lockedTokensWhole - a.lockedTokensWhole);
+  const pulse = market
+    ? buildTokenPulse({ symbol, overview: pulseOverview, market, calendar: [], upcoming: upcomingEvents, recipients: pulseRecipients })
+    : null;
 
   // ── Holder distribution + vesting span ───────────────────────────────────
   // "Who holds the locked supply" is the single biggest informed-decision
@@ -318,6 +356,15 @@ export default async function ExplorerTokenPage({
         />
       </div>
 
+      {/* Pulse – 3-4 live insight bullets over the token's vesting state.
+          Dark variant to match the explorer surface; renders null when
+          there's nothing substantive to say. */}
+      {pulse && (
+        <div className="mb-5">
+          <TokenPulse pulse={pulse} symbol={symbol} variant="dark" />
+        </div>
+      )}
+
       {streams.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
           <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>No active vesting indexed for this token yet</p>
@@ -393,6 +440,36 @@ export default async function ExplorerTokenPage({
           </h2>
           <RoundsList rounds={rounds} symbol={symbol} isFree={isFree} rowCap={FREE_TIER_ROW_CAP} />
         </>
+      )}
+
+      {/* Price chart (DexScreener embed) at the very bottom — supporting market
+          context below the vesting data. theme=dark to match the dashboard;
+          only when a priced pair with enough liquidity to actually chart
+          exists (thin pairs get stuck on "Loading pair…"). dexscreener.com is
+          allow-listed in the CSP frame-src (next.config.ts). w-full so the
+          iframe's width:100% resolves against a definite-width parent. */}
+      {market && market.pairUrl && (market.liquidity ?? 0) >= 5_000 && (
+        <div className="w-full mt-6">
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Price chart</h2>
+            <a
+              href={market.dexScreenerUrl ?? market.pairUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] hover:underline"
+              style={{ color: "var(--preview-text-3)" }}
+            >
+              via DexScreener ↗
+            </a>
+          </div>
+          <div className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid var(--preview-border)" }}>
+            <iframe
+              src={`${market.pairUrl}?embed=1&theme=dark&info=0&trades=0`}
+              title={`${symbol} price chart on DexScreener`}
+              style={{ display: "block", width: "100%", height: 520, border: 0 }}
+            />
+          </div>
+        </div>
       )}
     </main>
   );

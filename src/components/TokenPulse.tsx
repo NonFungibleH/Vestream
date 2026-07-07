@@ -19,19 +19,48 @@ interface Props {
   pulse:  PulseOutput;
   /** For the card header and fallback wording. */
   symbol: string;
+  /** "light" (default) matches the white public /token page. "dark" swaps to
+   *  the dashboard's `--preview-*` themed surfaces so the same card reads
+   *  correctly on the dark Vesting Explorer. */
+  variant?: "light" | "dark";
 }
 
-export function TokenPulse({ pulse, symbol }: Props) {
+export function TokenPulse({ pulse, symbol, variant = "light" }: Props) {
   // Nothing to say – don't render an empty card.
   if (pulse.bullets.length === 0) return null;
+
+  const dark = variant === "dark";
+  const c = dark
+    ? {
+        cardBg:       "var(--preview-card)",
+        cardBorder:   "var(--preview-border)",
+        shadow:       "none",
+        headerBg:     "linear-gradient(90deg, rgba(28,184,184,0.12), rgba(15,138,138,0.06))",
+        headerBorder: "var(--preview-border)",
+        accent:       "#1CB8B8",
+        caption:      "var(--preview-text-3)",
+        bulletText:   "var(--preview-text)",
+        bulletDot:    "#1CB8B8",
+      }
+    : {
+        cardBg:       "white",
+        cardBorder:   "rgba(21,23,26,0.10)",
+        shadow:       "0 4px 24px rgba(28,184,184,0.06)",
+        headerBg:     "linear-gradient(90deg, rgba(28,184,184,0.05), rgba(15,138,138,0.05))",
+        headerBorder: "rgba(0,0,0,0.05)",
+        accent:       "#0F8A8A",
+        caption:      "#B8BABD",
+        bulletText:   "#1A1D20",
+        bulletDot:    "#0F8A8A",
+      };
 
   return (
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: "white",
-        border:     "1px solid rgba(21,23,26,0.10)",
-        boxShadow:  "0 4px 24px rgba(28,184,184,0.06)",
+        background: c.cardBg,
+        border:     `1px solid ${c.cardBorder}`,
+        boxShadow:  c.shadow,
       }}
     >
       {/* Header strip – blue/purple gradient matching the rest of the site's
@@ -41,24 +70,24 @@ export function TokenPulse({ pulse, symbol }: Props) {
       <div
         className="flex items-center justify-between px-5 md:px-6 py-3 gap-3 flex-wrap"
         style={{
-          background:   "linear-gradient(90deg, rgba(28,184,184,0.05), rgba(15,138,138,0.05))",
-          borderBottom: "1px solid rgba(0,0,0,0.05)",
+          background:   c.headerBg,
+          borderBottom: `1px solid ${c.headerBorder}`,
         }}
       >
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2" aria-hidden>
             <span
               className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              style={{ background: "#0F8A8A" }}
+              style={{ background: c.accent }}
             />
             <span
               className="relative inline-flex rounded-full h-2 w-2"
-              style={{ background: "#0F8A8A" }}
+              style={{ background: c.accent }}
             />
           </span>
           <span
             className="text-xs font-bold uppercase tracking-wider"
-            style={{ color: "#0F8A8A" }}
+            style={{ color: c.accent }}
           >
             Pulse · {symbol}
           </span>
@@ -67,7 +96,7 @@ export function TokenPulse({ pulse, symbol }: Props) {
             label already communicates "live data". Showing the full
             sentence alongside on a 375px viewport wraps to a second line
             and crowds the pill. */}
-        <span className="hidden sm:inline text-[11px]" style={{ color: "#B8BABD" }}>
+        <span className="hidden sm:inline text-[11px]" style={{ color: c.caption }}>
           Generated from Vestream&rsquo;s indexed cache
         </span>
       </div>
@@ -84,12 +113,12 @@ export function TokenPulse({ pulse, symbol }: Props) {
           <li
             key={i}
             className="flex gap-3 text-sm leading-relaxed"
-            style={{ color: "#1A1D20" }}
+            style={{ color: c.bulletText }}
           >
             <span
               aria-hidden
               className="flex-shrink-0 mt-2 w-1.5 h-1.5 rounded-full"
-              style={{ background: "#0F8A8A" }}
+              style={{ background: c.bulletDot }}
             />
             <span>{b}</span>
           </li>
