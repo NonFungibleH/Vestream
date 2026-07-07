@@ -72,7 +72,12 @@ export default async function ExplorerTokenPage({
 
   const rounds = groupIntoRounds(streams);
   const dec = streams[0]?.tokenDecimals ?? 18;
-  const symbol = streams[0]?.tokenSymbol ?? shortAddr(addr);
+  // Prefer the indexed cache symbol; fall back to the DexScreener market
+  // symbol before the truncated address. Some cache rows have a null
+  // tokenSymbol (indexer couldn't read symbol() at the time) — without the
+  // market fallback the "Total locked" stat and header rendered the raw
+  // contract address (e.g. "0 0x0c83…9818") instead of "0 BDCA".
+  const symbol = streams[0]?.tokenSymbol || market?.tokenSymbol || shortAddr(addr);
   const name = market?.tokenName ?? null;
   const priceUsd = market?.priceUsd ?? null;
   const recipientCount = new Set(streams.map((s) => s.recipient.toLowerCase())).size;

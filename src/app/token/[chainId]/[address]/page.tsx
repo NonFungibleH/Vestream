@@ -184,7 +184,7 @@ export async function generateMetadata(
   // access is safe.
   const market: TokenMarketData = (marketRes.status === "fulfilled" && marketRes.value) ? marketRes.value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
-    liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
+    liquidity: null, volume24h: null, tokenName: null, tokenSymbol: null, imageUrl: null,
     website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: null, dexToolsUrl: null, pairUrl: null,
   };
@@ -315,7 +315,7 @@ export default async function TokenPage(
   // empty shell so `market.x` access stays safe.
   const market: TokenMarketData = (settled[4].status === "fulfilled" && settled[4].value) ? settled[4].value : {
     priceUsd: null, fdv: null, marketCap: null, change24h: null,
-    liquidity: null, volume24h: null, tokenName: null, imageUrl: null,
+    liquidity: null, volume24h: null, tokenName: null, tokenSymbol: null, imageUrl: null,
     website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: null, dexToolsUrl: null, pairUrl: null,
   };

@@ -580,6 +580,7 @@ export interface TokenMarketData {
   liquidity:  number | null;
   volume24h:  number | null;
   tokenName:  string | null;
+  tokenSymbol: string | null;
   imageUrl:   string | null;
   website:    string | null;
   /** Project's X / Twitter URL, pulled from DexScreener's info.socials[].
@@ -749,7 +750,7 @@ export async function getTokenMarketData(
 ): Promise<TokenMarketData> {
   const empty: TokenMarketData = {
     priceUsd:   null, fdv: null, marketCap: null, change24h: null,
-    liquidity:  null, volume24h: null, tokenName: null, imageUrl: null,
+    liquidity:  null, volume24h: null, tokenName: null, tokenSymbol: null, imageUrl: null,
     website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
     dexScreenerUrl: DS_CHAIN_SLUG[chainId]
       ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${normaliseAddress(tokenAddress)}` : null,
@@ -854,6 +855,7 @@ export async function getTokenMarketData(
     liquidity:  best.liquidity?.usd   ?? null,
     volume24h:  best.volume?.h24      ?? null,
     tokenName:  best.baseToken?.name  ?? null,
+    tokenSymbol: best.baseToken?.symbol ?? null,
     imageUrl:   best.info?.imageUrl   ?? null,
     ...socials,
     dexScreenerUrl: best.url ?? empty.dexScreenerUrl,
