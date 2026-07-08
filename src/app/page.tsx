@@ -556,6 +556,7 @@ export default async function Home() {
               { name: "Polygon",   color: "#8247E5", icon: "/chains/icons/polygon.png" },
               { name: "Arbitrum",  color: "#12AAFF", icon: "/chains/icons/arbitrum.png" },
               { name: "Optimism",  color: "#FF0420", icon: "/chains/icons/optimism.png" },
+              { name: "Avalanche", color: "#E84142", icon: "/chains/icons/avalanche.png" },
               { name: "Solana",    color: "#9945FF", icon: "/chains/icons/solana.png" },
             ].map((c) => (
               <div key={c.name} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full"
