@@ -637,23 +637,29 @@ export default async function ProtocolLandingPage(
         // Which chains to show, and with what TVL.
         //
         // Self-indexed protocols (no externalTvl — we walk their contracts
-        // ourselves): show EVERY declared chain, defaulting to $0 when we've
-        // walked it and found nothing locked yet. That's the integration story
-        // the "N chains covered" stat promises — e.g. Team Finance is live on
-        // Base with no vestings yet, so Base shows at $0 rather than vanishing.
+        // ourselves): consider every declared chain, defaulting to $0 when we've
+        // walked it and found nothing locked (or the tokens are unpriced).
         //
-        // DefiLlama-sourced protocols: only show chains DefiLlama actually
-        // reports. Inventing $0 rows for their other declared chains would be
-        // misleading (DefiLlama may aggregate that chain's TVL elsewhere), and
-        // DefiLlama sometimes carries dust on chains we don't track (Streamflow
-        // is Solana-only yet DefiLlama reported sub-$1 on ETH/BNB/Polygon).
+        // DefiLlama-sourced protocols: only chains DefiLlama actually reports.
+        // Inventing $0 rows for their other declared chains would be misleading
+        // (DefiLlama may aggregate that chain's TVL elsewhere), and DefiLlama
+        // sometimes carries dust on chains we don't track (Streamflow is
+        // Solana-only yet DefiLlama reported sub-$1 on ETH/BNB/Polygon).
+        //
+        // Then DROP any chain at $0: a "Locked value by chain" breakdown should
+        // only list chains with actual locked value — a $0 row (e.g. Team
+        // Finance on Avalanche, whose 147 vestings are all unpriced dust) is
+        // noise here. The integration-breadth story is carried by the separate
+        // "N chains covered" hero stat, not this card.
         const declared = (meta.chainIds as readonly number[]);
         const bySnapshot = new Map(tvlPerChain.map((r) => [r.chainId, r.tvlUsd]));
         const chainTvl = (
           meta.externalTvl
             ? tvlPerChain.filter((r) => declared.includes(r.chainId))
             : declared.map((chainId) => ({ chainId, tvlUsd: bySnapshot.get(chainId) ?? 0 }))
-        ).sort((a, b) => b.tvlUsd - a.tvlUsd);
+        )
+          .filter((r) => r.tvlUsd > 0)
+          .sort((a, b) => b.tvlUsd - a.tvlUsd);
         if (chainTvl.length === 0) return null;
         const totalTvl = chainTvl.reduce((s, r) => s + r.tvlUsd, 0);
         return (
