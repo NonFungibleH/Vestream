@@ -115,6 +115,14 @@
     {
       "path": "/api/cron/seed-cache?group=solana",
       "schedule": "45 7 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=team-finance",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/seed-cache?group=unvest",
+      "schedule": "15 8 * * *"
     }
   ],
   "headers": [

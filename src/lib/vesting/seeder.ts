@@ -1194,9 +1194,9 @@ function limitFor(mode: SeedMode): number {
 // causing sustained 429 storms and Vercel 300s timeouts. Running sequentially
 // in separate cron jobs with a 30-min gap eliminates the contention.
 // Streamflow runs daily; Jupiter Lock every 2 days.
-export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey";
+export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey" | "team-finance" | "unvest";
 
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey", "team-finance", "unvest"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
@@ -1228,6 +1228,20 @@ function groupFor(adapterId: string): SeedGroup {
   // Moving here gives Hedgey its own full 300s budget and drops "subgraphs"
   // from 21 → 14 jobs — comfortable headroom for UNCX/Unvest/LlamaPay.
   if (adapterId === "hedgey") return "hedgey";
+  // 2026-07-13: Team Finance split out of "subgraphs" into its own group.
+  // TF was added back to "subgraphs" with the June re-enable + Avalanche work
+  // (5 chains: ETH/BSC/Polygon/Avax/Sepolia). That pushed the group back over
+  // its 300s budget and starved TF at the tail — Unvest (earlier in the group)
+  // stayed fresh while TF ETH/BSC/Polygon aged to 2-3 days. Same failure mode
+  // that split out Superfluid/Hedgey/Sablier-Flow. Own group = own 300s budget.
+  if (adapterId === "team-finance") return "team-finance";
+  // 2026-07-13: Unvest split out of "subgraphs" too. seeder_state showed the
+  // subgraphs group was timing out mid-Unvest — ETH/BSC/Polygon/Base ran daily
+  // but Arbitrum + Optimism (the last two Unvest jobs) hadn't been ATTEMPTED in
+  // ~17 days. Splitting TF out doesn't help those two (they die before TF in the
+  // order), so Unvest needs its own 300s budget for all 6 chains. Leaves
+  // "subgraphs" as just UNCX + UNCX-VM + LlamaPay — comfortably under budget.
+  if (adapterId === "unvest") return "unvest";
   return "subgraphs";
 }
 
