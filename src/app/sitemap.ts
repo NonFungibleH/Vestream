@@ -21,6 +21,7 @@ import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
 import { readSitemapSymbolsCache, readSitemapTokensCache } from "@/lib/sitemap-token-cache";
+import { withTimeout } from "@/lib/with-timeout";
 
 const SITE = "https://www.vestream.io";
 
@@ -130,18 +131,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.85,
   }));
 
-  // Top-N symbol-routed token pages. Bumped 150 → 500 (May 2026) so the
-  // long-tail head still gets crawler priority; ultra-cold symbols fall
-  // through to on-demand ISR.
-  // Same build-time guard — see protocolLastModified above. Empty list
-  // during build; ISR populates with the real top-N on first hit.
+  // Top-N symbol-routed token pages (500). July 2026: these were emitted ONLY
+  // at runtime before, behind the isBuild guard — but the sitemap's runtime ISR
+  // does not reliably regenerate on prod, so the token URLs never appeared and
+  // Google couldn't discover ~2,000 SEO pages. Fix: generate them at BUILD too,
+  // so every deploy bakes a full sitemap. The isBuild guard existed because a
+  // hung pooler query could blow the 60s static-gen budget and block the deploy
+  // (2026-05-13 incident) — so the build path is a BOUNDED single-shot via
+  // withTimeout (Promise.race, cannot hang the deploy; degrades to empty, no
+  // worse than before). At runtime we retry + fall back to the last-good cache.
   let topSymbols: string[] = [];
-  if (!isBuild) {
-    // July 2026: the production sitemap served ZERO /tokens URLs because a
-    // single transient pooler failure at ISR-regeneration time was swallowed.
-    // Retry (transient contention is the cause — the query is healthy), then
-    // fall back to the last-good cache written by the refresh-rollups cron so
-    // the sitemap can never regress to empty once it's been populated.
+  if (isBuild) {
+    topSymbols = await withTimeout<string[]>(getTopSymbols(500).catch(() => []), 15_000, [], "sitemap-build-symbols");
+  } else {
     topSymbols = await fetchTokenListWithRetry(() => getTopSymbols(500), "getTopSymbols");
     if (topSymbols.length === 0) {
       topSymbols = await readSitemapSymbolsCache();
@@ -162,7 +164,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // limit even combined with everything else below. Sitemap-index split
   // is the next move when this list exceeds ~30k.
   let topTokens: { chainId: number; address: string }[] = [];
-  if (!isBuild) {
+  if (isBuild) {
+    topTokens = await withTimeout<{ chainId: number; address: string }[]>(getTopTokens(1500).catch(() => []), 15_000, [], "sitemap-build-tokens");
+  } else {
     topTokens = await fetchTokenListWithRetry(() => getTopTokens(1500), "getTopTokens");
     if (topTokens.length === 0) {
       topTokens = await readSitemapTokensCache();
