@@ -65,12 +65,21 @@ export default async function ExplorerTokenPage({
   // hanging the whole render until Cloudflare's 100s gateway cuts it → a 524
   // the user sees as "this page couldn't load". Streams get the most headroom
   // (they're the page's core content); the secondary panels fail fast.
-  const [streams, market, smartHolders, upcomingEvents] = await Promise.all([
-    withTimeout(getTokenStreams(cid, addr), 15_000, [], "token:getTokenStreams"),
+  const [streamsResult, market, smartHolders, upcomingEvents] = await Promise.all([
+    withTimeout<Awaited<ReturnType<typeof getTokenStreams>> | null>(getTokenStreams(cid, addr), 15_000, null, "token:getTokenStreams"),
     withTimeout(getTokenMarketData(cid, addr), 8_000, null, "token:getTokenMarketData"),
     withTimeout(getSmartMoneyHoldersOfToken(cid, addr), 6_000, [], "token:getSmartMoney"),
     withTimeout(getTokenUpcomingEvents(cid, addr, 50), 6_000, [], "token:getUpcomingEvents"),
   ]);
+
+  // A 15s timeout on the core stream query is NOT the same as "this token has
+  // no vesting". Falling back to [] rendered "0 locked / no vesting indexed"
+  // for tokens the explorer had just promised data on — one sighting destroys
+  // trust in every number on the site (July 2026 CPO audit #1). The null
+  // sentinel lets us tell a timeout apart from a genuine empty and show a
+  // retry state instead of a false negative.
+  const streamsTimedOut = streamsResult === null;
+  const streams = streamsResult ?? [];
 
   const rounds = groupIntoRounds(streams);
   const dec = streams[0]?.tokenDecimals ?? 18;
@@ -366,10 +375,17 @@ export default async function ExplorerTokenPage({
       )}
 
       {streams.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
-          <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>No active vesting indexed for this token yet</p>
-          <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>It may not use one of the protocols we track, or all of its streams have fully vested.</p>
-        </div>
+        streamsTimedOut ? (
+          <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>Couldn&rsquo;t load this token&rsquo;s vesting in time</p>
+            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>The data service was slow just now — refresh to try again. This doesn&rsquo;t mean the token has no vesting.</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>No active vesting indexed for this token yet</p>
+            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>It may not use one of the protocols we track, or all of its streams have fully vested.</p>
+          </div>
+        )
       ) : (
         <>
           <HolderDistribution
