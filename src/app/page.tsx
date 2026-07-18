@@ -215,7 +215,7 @@ export default async function Home() {
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-widest"
                 style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
-                {streamLabel} streams · $3.4B+ tracked
+                {streamLabel} streams · $3B+ tracked
               </span>
             </div>
 

@@ -77,7 +77,7 @@ export default function InvestLanding() {
             className="max-w-2xl text-base md:text-lg mb-8"
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
-            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across nine vesting protocols and eight chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
+            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across ten vesting protocols and eight chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
           </p>
 
           {/* Primary funnel CTA */}
@@ -193,7 +193,7 @@ export default function InvestLanding() {
               Stop missing your unlocks.
             </h3>
             <p className="text-sm md:text-base max-w-xl mx-auto mb-6" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>
-              Free to scan. Free to install. Pro upgrade only if you want unlimited wallets, the Discover page and tax exports.
+              Free to scan. Free to install. Pro upgrade only if you want up to 10 wallets, the Discover page and tax exports.
             </p>
             <div className="flex flex-wrap justify-center gap-3 mb-5">
               <Link

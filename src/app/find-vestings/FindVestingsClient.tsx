@@ -116,7 +116,11 @@ export default function FindVestingsClient() {
   const { disconnect } = useDisconnect();
 
   // ── Manual-address fallback ─────────────────────────────────────────────
-  const [manualMode,    setManualMode]    = useState(false);
+  // Paste-first (July 2026 audit): the whole pitch that brings users here is
+  // "paste any wallet, no sign-up" — leading with a Connect-wallet wall broke
+  // that promise and bounced desktop/no-extension visitors. Default to the
+  // manual paste form; "← Connect wallet instead" remains one tap away.
+  const [manualMode,    setManualMode]    = useState(true);
   const [manualAddress, setManualAddress] = useState("");
 
   // ── Scan state ──────────────────────────────────────────────────────────

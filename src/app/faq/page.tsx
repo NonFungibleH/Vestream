@@ -76,11 +76,11 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I start using Vestream?",
-        a: "Go to /early-access, enter your email, and you'll get a one-time code to sign in. From there you add any wallet – EVM 0x… address or Solana pubkey – and Vestream automatically scans it across all 10 protocols and 8 chains. Free plan tracks 1 wallet; Pro tracks 3; Enterprise is unlimited.",
+        a: "Download the free Vestream app (iOS or Android), then add any wallet – an EVM 0x… address or a Solana pubkey – and Vestream automatically scans it across all 10 protocols and 8 chains. The Free plan tracks 3 wallets; Pro tracks 10. Prefer your browser? Paste a wallet at /find-vestings for an instant scan, no install.",
       },
       {
         q: "Do I need to connect my wallet to use Vestream?",
-        a: "No. Vestream is strictly a read-only, address-watching tracker – you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. Email OTP is the only login required.",
+        a: "No. Vestream is strictly a read-only, address-watching tracker – you enter addresses as text, not by connecting a wallet. There is no wallet-signing step, no transaction approval, no access to your keys. You sign into the app with an email one-time code; the web dashboard unlocks by scanning a QR from the app (Pro).",
       },
       {
         q: "Do I need to know what protocol my tokens are vested on?",
@@ -230,7 +230,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I get an API key?",
-        a: "Request access via /early-access or the contact form. API keys have the format vstr_live_{32 hex chars}, are shown once at creation time, and are stored as SHA-256 hashes – we can never recover a lost key, so copy it into your secret manager immediately. Use the Authorization: Bearer vstr_live_... header on every request.",
+        a: "Request access via the developer portal (/developer) or the contact form. API keys have the format vstr_live_{32 hex chars}, are shown once at creation time, and are stored as SHA-256 hashes – we can never recover a lost key, so copy it into your secret manager immediately. Use the Authorization: Bearer vstr_live_... header on every request.",
       },
       {
         q: "What is the MCP server?",

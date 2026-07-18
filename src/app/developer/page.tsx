@@ -94,7 +94,7 @@ export default function DeveloperPage() {
           {/* Stats bar */}
           <div className="flex items-center justify-center gap-8 mt-14 flex-wrap">
             {[
-              { value: "9",     label: "Protocols indexed" },
+              { value: "10",    label: "Protocols indexed" },
               { value: "7",     label: "Chains (EVM + Solana)" },
               { value: "3",     label: "API endpoints" },
               { value: "JSON",  label: "Normalised output" },
@@ -145,7 +145,7 @@ export default function DeveloperPage() {
           {/* Shared chain coverage – applies to all protocols above */}
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
             <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Available on</span>
-            {["Ethereum", "BNB Chain", "Base", "Polygon", "Solana"].map((chain) => (
+            {["Ethereum", "BNB Chain", "Base", "Polygon", "Arbitrum", "Optimism", "Avalanche", "Solana"].map((chain) => (
               <span key={chain} className="text-xs px-2.5 py-1 rounded-full font-medium"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
                 {chain}

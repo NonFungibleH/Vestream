@@ -193,7 +193,7 @@ export default function AiPage() {
               where horizontal space allows the natural row. */}
           <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-x-4 sm:gap-x-6 gap-y-5 sm:gap-8 mt-10 sm:mt-14 sm:flex-wrap">
             {[
-              { value: "9+",     label: "Protocols indexed" },
+              { value: "10+",    label: "Protocols indexed" },
               { value: "7+",     label: "Chains"             },
               { value: "3 + 3",  label: "Tools (Free + Pro)" },
               { value: "MCP",    label: "Native support"    },
@@ -268,7 +268,7 @@ export default function AiPage() {
         <div className="flex flex-col gap-5">
           <ToolCard
             name="get_wallet_vestings"
-            description="Get all token vesting streams for a wallet (EVM or Solana) across all 10+ supported protocols and 7+ chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
+            description="Get all token vesting streams for a wallet (EVM or Solana) across all 10+ supported protocols and 8 chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
             params={[
               { name: "address", type: "string", required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, superfluid, team-finance, pinksale, streamflow, jupiter-lock" },

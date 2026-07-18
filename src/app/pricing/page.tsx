@@ -289,7 +289,7 @@ export default function Pricing() {
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <FAQItem
               q="Do I need a credit card to start?"
-              a="No. The Free plan requires no payment details at all – just sign up with your email and start tracking. You only need to add a card when you choose to upgrade."
+              a="No. Download the free app and start tracking straight away – no account, no email, no payment details. When you're ready for Pro, you subscribe inside the iOS or Android app; payment is handled by the App Store or Google Play, so your card details go to Apple/Google, never to us."
             />
             <FAQItem
               q="What does the Free plan actually let me do?"
@@ -301,7 +301,7 @@ export default function Pricing() {
             />
             <FAQItem
               q="Can I cancel anytime?"
-              a="Yes – cancel from your settings page at any time. You'll retain access until the end of your current billing period, then revert to Free."
+              a="Yes – manage or cancel your subscription in your App Store or Google Play account settings (that's where the billing lives). You'll keep Pro until the end of your current billing period, then revert to Free."
             />
             <FAQItem
               q="How does annual billing work?"
