@@ -69,6 +69,7 @@ import {
 } from "@/lib/vesting/seeder";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
+import { reportCronError } from "@/lib/cron-report";
 
 // Each group fits inside 300s. Per-group paths schedule via `after()` so
 // the response returns 202 in <1s even while the work runs in background.
@@ -93,6 +94,63 @@ function parseMode(req: NextRequest): SeedMode {
  * self-fetch) gets a sub-second 202 confirming the work is queued, then
  * the seeder runs to completion within Vercel's maxDuration (300s).
  */
+// Bust the page caches after fresh data lands in vesting_streams_cache so
+// users see the new freshness matrix / unlock timeline on their next pageview
+// instead of waiting out the unstable_cache TTL. Tag strings must match the
+// `tags:` on each page's unstable_cache + admin/revalidate-protocols.
+//   - "protocols-page"  → /protocols index + /status (5-min TTL)
+//   - "protocol-page"   → /protocols/[slug] detail pages (1-HOUR TTL)
+//   - "protocol-unlocks"→ /protocols/[slug]/unlocks calendars
+//   - "status-page"     → /status hero
+function revalidateSeedPages(): void {
+  try {
+    revalidateTag("protocols-page",   "max");
+    revalidateTag("protocol-page",    "max");
+    revalidateTag("protocol-unlocks", "max");
+    revalidateTag("status-page",      "max");
+  } catch (err) {
+    console.warn(`[cron/seed-cache] revalidateTag failed (non-fatal):`, err);
+  }
+}
+
+/**
+ * SYNCHRONOUS group run — the default path for Vercel cron.
+ *
+ * July 2026 CTO audit: this route used to schedule the work via `after()` and
+ * return 202 in <1s. That is the exact anti-pattern CLAUDE.md documents —
+ * Vercel reaps the function once the response flushes, so `after()` background
+ * work frequently never runs (the refresh-rollups cron silently froze for
+ * WEEKS this way). Vercel cron invocations are direct (they bypass Cloudflare's
+ * ~100s gateway cap), so awaiting to completion within maxDuration (300s) is
+ * both correct and reliable — proven by tvl-snapshot, which runs ~191s
+ * synchronously as a Vercel cron. `?background=true` keeps the old fire-and-
+ * forget behaviour ONLY for manual, Cloudflare-fronted curls that would 524.
+ */
+async function runOneGroupSync(group: SeedGroup, mode: SeedMode, protocolId: string | null): Promise<NextResponse> {
+  const startedAt = Date.now();
+  try {
+    const results = await seedAll(mode, group, protocolId);
+    const summary = summariseRun(results);
+    const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
+    const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
+    console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsedSec}s —`, summary);
+    revalidateSeedPages();
+    return NextResponse.json({ ok: true, group, ...(protocolId ? { protocol: protocolId } : {}), mode, elapsedSec, summary });
+  } catch (err) {
+    reportCronError("seed-cache", err, { group, mode, protocolId });
+    return NextResponse.json({
+      ok: false, group, mode,
+      elapsedSec: Math.round((Date.now() - startedAt) / 100) / 10,
+      error: err instanceof Error ? err.message : String(err),
+    }, { status: 500 });
+  }
+}
+
+/**
+ * BACKGROUND group run — `?background=true` escape hatch for manual curls that
+ * hit Cloudflare's ~100s gateway cap (the heavy group can take 2-3 min). Returns
+ * 202 immediately and finishes in `after()`. NOT used by the Vercel cron path.
+ */
 function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null = null): NextResponse {
   after(async () => {
     const startedAt = Date.now();
@@ -102,26 +160,9 @@ function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null
       const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
       const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
       console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsed}s —`, summary);
-      // Fresh data landed in vesting_streams_cache. Bust the page caches so
-      // users see the new freshness matrix / unlock timeline on their next
-      // pageview instead of waiting out the unstable_cache TTL.
-      //   - "protocols-page" → /protocols index + /status (5-min TTL)
-      //   - "protocol-page"  → /protocols/[slug] detail pages (1-HOUR TTL)
-      //   - "status-page"    → /status hero
-      // The detail tag was previously omitted, so a freshly-seeded protocol's
-      // detail page (e.g. Team Finance go-live) kept serving the empty
-      // mid-seed snapshot for up to an hour. Tag strings must match the
-      // `tags:` on each page's unstable_cache + admin/revalidate-protocols.
-      try {
-        revalidateTag("protocols-page",  "max");
-        revalidateTag("protocol-page",   "max");
-        revalidateTag("protocol-unlocks", "max"); // /protocols/[slug]/unlocks calendars
-        revalidateTag("status-page",     "max");
-      } catch (err) {
-        console.warn(`[cron/seed-cache] revalidateTag failed (non-fatal):`, err);
-      }
+      revalidateSeedPages();
     } catch (err) {
-      console.error(`[cron/seed-cache] group="${group}" job failed:`, err);
+      reportCronError("seed-cache", err, { group, mode, protocolId, path: "background" });
     }
   });
   return NextResponse.json({
@@ -189,9 +230,13 @@ async function handle(req: NextRequest) {
     }
   }
 
-  // Per-group path — Vercel cron / curl asked for a specific group. Run inline.
+  // Per-group path. Vercel cron runs SYNCHRONOUSLY to completion (reliable —
+  // Vercel cron bypasses Cloudflare's 100s cap, proven by tvl-snapshot ~191s).
+  // `?background=true` returns 202 + finishes in after() — only for manual,
+  // Cloudflare-fronted curls of the heavy group that would 524.
   if (group) {
-    return runOneGroup(group, mode, protocolId);
+    const background = req.nextUrl.searchParams.get("background") === "true";
+    return background ? runOneGroup(group, mode, protocolId) : runOneGroupSync(group, mode, protocolId);
   }
 
   // No `?group=` provided — return 400 with a usage hint. The fan-out
