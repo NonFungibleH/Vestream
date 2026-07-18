@@ -20,6 +20,7 @@ import { listProtocols } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
+import { readSitemapSymbolsCache, readSitemapTokensCache } from "@/lib/sitemap-token-cache";
 
 const SITE = "https://www.vestream.io";
 
@@ -32,6 +33,31 @@ const SITE = "https://www.vestream.io";
 // repopulate the ~2k token/symbol URLs. The queries read the pre-aggregated
 // token_vesting_rollups table (~600ms total), so a 10-min cadence is cheap.
 export const revalidate = 600;
+
+// Retry the token-list query before giving up. The failure that emptied the
+// production sitemap was a transient pooler connection error at ISR-regeneration
+// time; the query itself is healthy. Retries on BOTH a throw and an empty result
+// (the site always has thousands of tokens, so empty === failure here), with a
+// short backoff so the pooler has time to free a connection.
+async function fetchTokenListWithRetry<T>(
+  fn: () => Promise<T[]>,
+  label: string,
+  attempts = 3,
+): Promise<T[]> {
+  let last: T[] = [];
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const r = await fn();
+      if (r.length > 0) return r;
+      last = r;
+      console.warn(`[sitemap] ${label} returned 0 rows (attempt ${i + 1}/${attempts})`);
+    } catch (err) {
+      console.error(`[sitemap] ${label} threw (attempt ${i + 1}/${attempts}):`, err);
+    }
+    if (i < attempts - 1) await new Promise((res) => setTimeout(res, 600 * (i + 1)));
+  }
+  return last;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -111,17 +137,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // during build; ISR populates with the real top-N on first hit.
   let topSymbols: string[] = [];
   if (!isBuild) {
-    try {
-      topSymbols = await getTopSymbols(500);
-      // July 2026 audit: the production sitemap was serving ZERO /tokens
-      // URLs even on fresh (non-build) regenerations. The catch below used
-      // to swallow the cause silently, so a query throw was indistinguishable
-      // from a genuinely-empty rollup table. Log both so the next regeneration
-      // tells us which: 0 rows here + no error → refresh-rollups isn't
-      // populating token_vesting_rollups symbols; an error → query/pooler issue.
-      if (topSymbols.length === 0) console.warn("[sitemap] getTopSymbols returned 0 rows at runtime — check token_vesting_rollups population");
-    } catch (err) {
-      console.error("[sitemap] getTopSymbols threw — token URLs will be missing:", err);
+    // July 2026: the production sitemap served ZERO /tokens URLs because a
+    // single transient pooler failure at ISR-regeneration time was swallowed.
+    // Retry (transient contention is the cause — the query is healthy), then
+    // fall back to the last-good cache written by the refresh-rollups cron so
+    // the sitemap can never regress to empty once it's been populated.
+    topSymbols = await fetchTokenListWithRetry(() => getTopSymbols(500), "getTopSymbols");
+    if (topSymbols.length === 0) {
+      topSymbols = await readSitemapSymbolsCache();
+      if (topSymbols.length > 0) console.warn("[sitemap] getTopSymbols empty — served last-good cache");
     }
   }
   const symbolEntries: MetadataRoute.Sitemap = topSymbols.map((s) => ({
@@ -139,11 +163,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // is the next move when this list exceeds ~30k.
   let topTokens: { chainId: number; address: string }[] = [];
   if (!isBuild) {
-    try {
-      topTokens = await getTopTokens(1500);
-      if (topTokens.length === 0) console.warn("[sitemap] getTopTokens returned 0 rows at runtime — check token_vesting_rollups population");
-    } catch (err) {
-      console.error("[sitemap] getTopTokens threw — token URLs will be missing:", err);
+    topTokens = await fetchTokenListWithRetry(() => getTopTokens(1500), "getTopTokens");
+    if (topTokens.length === 0) {
+      topTokens = await readSitemapTokensCache();
+      if (topTokens.length > 0) console.warn("[sitemap] getTopTokens empty — served last-good cache");
     }
   }
   const tokenAddressEntries: MetadataRoute.Sitemap = topTokens.map((t) => ({

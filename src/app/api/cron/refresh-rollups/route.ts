@@ -35,6 +35,8 @@ import { revalidateTag, revalidatePath } from "next/cache";
 import { refreshProtocolSummaries } from "@/lib/vesting/protocol-stats";
 import { refreshStatusSummary } from "@/lib/vesting/cache-stats";
 import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
+import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
+import { writeSitemapTokenCache } from "@/lib/sitemap-token-cache";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
@@ -90,6 +92,19 @@ async function runAll(): Promise<{ tokens: number | null; protocol: number | nul
   try { out.tokens = (await refreshTokenRollups()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
   // Flush the explorer/calendar caches after the token rollup lands.
   flushTags(["protocol-unlocks", "protocols-page"]);
+
+  // Populate the sitemap's last-good token/URL cache from the freshly-rebuilt
+  // rollup (the DB is warm here). This is what makes the sitemap's ~2k /token +
+  // /tokens URLs survive a transient pooler failure at ISR-regeneration time —
+  // the failure that had been leaving the production sitemap with ZERO token
+  // URLs, so Google couldn't discover them. See lib/sitemap-token-cache.
+  try {
+    const [syms, toks] = await Promise.all([getTopSymbols(500), getTopTokens(1500)]);
+    await writeSitemapTokenCache(syms, toks);
+    console.log(`[cron/refresh-rollups] sitemap cache written: ${syms.length} symbols, ${toks.length} tokens`);
+  } catch (e) {
+    console.warn("[cron/refresh-rollups] sitemap cache write failed (non-fatal):", e);
+  }
   // The sitemap reads token_vesting_rollups (top symbols + tokens), which we
   // just refreshed — regenerate it so its ~2k long-tail URLs stay fresh AND
   // so it recovers from the empty build-time version after every deploy
