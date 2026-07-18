@@ -16,6 +16,7 @@
 import { and, count, eq, notInArray, sql, sum } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache, tokenVestingRollups } from "../db/schema";
+import { normaliseAddress } from "../address-validation";
 
 // Same testnet exclusion convention as protocol-stats.ts — public surfaces
 // hide Sepolia / Base Sepolia.
@@ -212,16 +213,41 @@ export async function getChainSummariesForSymbol(symbol: string): Promise<ChainS
     )
     .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress, vestingStreamsCache.tokenSymbol);
 
-  return aggregates
-    .filter((r) => r.address)
-    .map((r) => ({
-      chainId:      r.chainId,
-      address:      (r.address ?? "").toLowerCase(),
-      symbol:       r.symbol ?? trimmed,
-      streamCount:  r.streamCount,
-      walletCount:  r.walletCount,
-      lockedAmount: r.lockedSum ?? "0",
-      decimals:     r.decimals ?? 18,
-    }))
-    .sort((a, b) => b.streamCount - a.streamCount);
+  // Merge rows that differ only by address CASING. The GROUP BY above keys on
+  // the raw tokenAddress, so an EVM token cached under both checksummed and
+  // lowercase forms produces two buckets for the same on-chain token — which
+  // surfaced as e.g. USDC listing "Base" twice, with an inflated chain count
+  // (July 2026 audit). normaliseAddress lowercases EVM but leaves case-
+  // sensitive Solana mints untouched, so distinct Solana tokens never merge.
+  const merged = new Map<string, ChainSummary>();
+  for (const r of aggregates) {
+    if (!r.address) continue;
+    const address = normaliseAddress(r.address);
+    const key = `${r.chainId}:${address}`;
+    const existing = merged.get(key);
+    if (existing) {
+      existing.streamCount += r.streamCount;
+      existing.walletCount += r.walletCount;
+      // lockedAmount is a stringified integer (raw token units) — sum via
+      // BigInt to preserve precision; fall back to the larger on any parse
+      // surprise (e.g. a legacy decimal-bearing row).
+      try {
+        existing.lockedAmount = (BigInt(existing.lockedAmount) + BigInt(r.lockedSum ?? "0")).toString();
+      } catch {
+        if (Number(r.lockedSum ?? "0") > Number(existing.lockedAmount)) existing.lockedAmount = r.lockedSum ?? existing.lockedAmount;
+      }
+    } else {
+      merged.set(key, {
+        chainId:      r.chainId,
+        address,
+        symbol:       r.symbol ?? trimmed,
+        streamCount:  r.streamCount,
+        walletCount:  r.walletCount,
+        lockedAmount: r.lockedSum ?? "0",
+        decimals:     r.decimals ?? 18,
+      });
+    }
+  }
+
+  return [...merged.values()].sort((a, b) => b.streamCount - a.streamCount);
 }

@@ -1405,6 +1405,13 @@ export function formatAmountCompact(
     return tokenSymbol ?? "—";
   }
   const sym = tokenSymbol ? ` ${tokenSymbol}` : "";
+  // Tiers above M (July 2026 audit): without B/T a trillion-supply memecoin
+  // like QOIN rendered as "1332228725003.01M" — the formatter capped at
+  // millions and just left the giant quotient. Beyond a quadrillion even T is
+  // unreadable, so fall back to scientific notation.
+  if (whole >= 1e15)              return `${whole.toExponential(2)}${sym}`;
+  if (whole >= 1_000_000_000_000) return `${(whole / 1e12).toFixed(2)}T${sym}`;
+  if (whole >= 1_000_000_000)     return `${(whole / 1e9).toFixed(2)}B${sym}`;
   if (whole >= 1_000_000) return `${(whole / 1_000_000).toFixed(2)}M${sym}`;
   if (whole >= 1_000)     return `${(whole / 1_000).toFixed(1)}K${sym}`;
   if (whole >= 1)         return `${whole.toFixed(2)}${sym}`;

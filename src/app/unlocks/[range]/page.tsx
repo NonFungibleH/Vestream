@@ -475,7 +475,7 @@ export default async function WindowPage({ params }: PageParams) {
                 <PaywallTeaser
                   hiddenLabel={`${gatedRows.length} more unlock${gatedRows.length === 1 ? "" : "s"} in this window`}
                   headline={`See every ${def.label.toLowerCase()} unlock`}
-                  subline="Free account · full calendar in your dashboard · alerts on the events you care about"
+                  subline="Scan any wallet free · get the app for alerts on the events you care about"
                 >
                   {/* Only render the first 3 gated rows behind the blur –
                       enough to communicate "there's more like this" without

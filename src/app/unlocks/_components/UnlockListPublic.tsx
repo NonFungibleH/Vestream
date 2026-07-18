@@ -176,7 +176,7 @@ export function UnlockListPublic({ groups, emptyMessage, heading, rowHrefFor }: 
           <PaywallTeaser
             hiddenLabel={`${gatedRows.length} more unlock${gatedRows.length === 1 ? "" : "s"}`}
             headline="See every upcoming unlock"
-            subline="Free account · full calendar in your dashboard · alerts on the events you care about"
+            subline="Scan any wallet free · get the app for alerts on the events you care about"
           >
             {gatedRows.slice(0, 4).map((g) => renderRow(g, 0, true))}
           </PaywallTeaser>

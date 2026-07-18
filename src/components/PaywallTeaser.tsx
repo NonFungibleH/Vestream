@@ -40,8 +40,8 @@ export function PaywallTeaser({
   hiddenLabel,
   ctaHref     = "/find-vestings",
   headline    = "See every upcoming unlock",
-  subline     = "Free · no credit card · access the full calendar in your dashboard",
-  ctaLabel    = "Sign up free →",
+  subline     = "Free · no sign-up · scan any wallet in your browser",
+  ctaLabel    = "Scan your wallet free →",
 }: PaywallTeaserProps) {
   return (
     // min-height ensures the card has room even when the blurred children
