@@ -113,8 +113,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isBuild) {
     try {
       topSymbols = await getTopSymbols(500);
-    } catch {
-      /* fall through with empty list */
+      // July 2026 audit: the production sitemap was serving ZERO /tokens
+      // URLs even on fresh (non-build) regenerations. The catch below used
+      // to swallow the cause silently, so a query throw was indistinguishable
+      // from a genuinely-empty rollup table. Log both so the next regeneration
+      // tells us which: 0 rows here + no error → refresh-rollups isn't
+      // populating token_vesting_rollups symbols; an error → query/pooler issue.
+      if (topSymbols.length === 0) console.warn("[sitemap] getTopSymbols returned 0 rows at runtime — check token_vesting_rollups population");
+    } catch (err) {
+      console.error("[sitemap] getTopSymbols threw — token URLs will be missing:", err);
     }
   }
   const symbolEntries: MetadataRoute.Sitemap = topSymbols.map((s) => ({
@@ -134,8 +141,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isBuild) {
     try {
       topTokens = await getTopTokens(1500);
-    } catch {
-      /* fall through with empty list */
+      if (topTokens.length === 0) console.warn("[sitemap] getTopTokens returned 0 rows at runtime — check token_vesting_rollups population");
+    } catch (err) {
+      console.error("[sitemap] getTopTokens threw — token URLs will be missing:", err);
     }
   }
   const tokenAddressEntries: MetadataRoute.Sitemap = topTokens.map((t) => ({

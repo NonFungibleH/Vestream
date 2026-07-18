@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { env } from "@/lib/env";
+import { createAdminToken, ADMIN_TOKEN_MAX_AGE_SEC } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
   // Brute-force protection: 5 attempts per IP per 15 minutes
@@ -26,8 +27,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Store a non-trivial token in the cookie rather than just "1"
-  const token = `vstr_admin_${Buffer.from(expected).toString("base64url").slice(0, 16)}`;
+  // Signed, expiring HMAC token (see lib/admin-auth.ts) — one-way, so a cookie
+  // leak no longer discloses the password prefix the old derivation exposed.
+  const token = createAdminToken();
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set("vestr_admin", token, {
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
     // `strict` — admin is the highest-value cookie surface. Cross-site
     // navigation should never transmit it (audit hardening).
     sameSite: "strict",
-    maxAge:   60 * 60 * 8, // 8 hours
+    maxAge:   ADMIN_TOKEN_MAX_AGE_SEC, // 8 hours — matches the token TTL
     path:     "/",
   });
   return res;

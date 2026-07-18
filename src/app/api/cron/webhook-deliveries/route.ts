@@ -22,6 +22,7 @@ import { webhookSubscriptions } from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { getUpcomingUnlockGroupsAcross } from "@/lib/vesting/protocol-stats";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
+import { isBlockedWebhookHostLiteral } from "@/lib/ssrf-guard";
 
 export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
@@ -85,6 +86,18 @@ async function handle(req: NextRequest) {
     });
 
     if (matches.length === 0) continue;
+
+    // SSRF re-check at delivery: skip subs whose host is a literal private/
+    // loopback/link-local address (covers rows created before the subscribe-
+    // time guard, and any obvious rebind to a literal internal IP).
+    try {
+      if (isBlockedWebhookHostLiteral(new URL(sub.url).hostname)) {
+        console.warn(`[cron/webhook-deliveries] skipping sub ${sub.id}: blocked host`);
+        continue;
+      }
+    } catch {
+      continue; // unparseable stored URL — skip
+    }
 
     let successCount = 0;
     let failureCount = sub.failureCount;

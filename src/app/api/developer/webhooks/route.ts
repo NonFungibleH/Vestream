@@ -17,6 +17,7 @@ import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { apiKeys, webhookSubscriptions } from "@/lib/db/schema";
+import { assertPublicWebhookUrl } from "@/lib/ssrf-guard";
 
 function publicShape(row: typeof webhookSubscriptions.$inferSelect) {
   return {
@@ -89,11 +90,11 @@ export async function POST(req: NextRequest) {
   }
 
   const url = (body.url ?? "").trim();
-  if (!/^https?:\/\/.+/i.test(url)) {
-    return NextResponse.json({ error: "URL must start with http:// or https://" }, { status: 400 });
-  }
-  if (process.env.NODE_ENV === "production" && !/^https:\/\//i.test(url)) {
-    return NextResponse.json({ error: "Production webhooks must use https://" }, { status: 400 });
+  // SSRF guard: scheme + reject loopback/private/link-local hosts, and resolve
+  // DNS to reject hostnames pointing at internal/metadata addresses.
+  const urlCheck = await assertPublicWebhookUrl(url, { requireHttps: process.env.NODE_ENV === "production" });
+  if (!urlCheck.ok) {
+    return NextResponse.json({ error: urlCheck.reason }, { status: 400 });
   }
 
   const hoursBefore = Number.isFinite(body.hours_before)
