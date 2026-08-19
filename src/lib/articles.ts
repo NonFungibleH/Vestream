@@ -26,6 +26,130 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── SEO article: ARB unlock (targets "arbitrum token unlock schedule") ───────
+  {
+    slug:        "arbitrum-arb-token-unlock-schedule",
+    title:       "Arbitrum (ARB) Token Unlock Schedule & Vesting Explained (2026)",
+    excerpt:     "Arbitrum's ARB token still has a large share of supply unlocking through 2027 via cliff-based vesting. Here's how ARB's tokenomics and unlock schedule are structured, and where to see the live figures.",
+    publishedAt: "2026-08-14",
+    updatedAt:   "2026-08-14",
+    readingTime: "6 min read",
+    category:    "Token Unlocks",
+    tags:        ["Arbitrum", "ARB", "ARB token unlock", "ARB vesting", "token unlock schedule"],
+    content: [
+      { type: "p", html: "Arbitrum's <strong>ARB</strong> is one of the most-watched token-unlock schedules in the market — sizeable allocations are still locked and releasing through 2027, and its larger cliff unlocks are among the biggest single-day supply events in DeFi. This guide explains how ARB's <strong>tokenomics</strong> and <strong>unlock schedule</strong> work, and where to check the live numbers." },
+      { type: "callout", emoji: "🗓️", title: "Unlock data changes — verify before you trade", body: "Exact unlock dates and amounts shift as schedules and circulating supply update. Use the figures here as structural context and confirm current numbers on a live tracker (linked below) before any decision. Not financial advice." },
+
+      { type: "h2", text: "ARB tokenomics at a glance" },
+      { type: "p", html: "ARB has a <strong>maximum supply of 10 billion tokens</strong>. As of mid-2026, roughly 61% of that supply had been unlocked into circulation, with the remainder still vesting. The allocation is split across several buckets:" },
+      { type: "ul", items: [
+        "<strong>Arbitrum DAO Treasury</strong> — the largest allocation, governed on-chain by the DAO",
+        "<strong>Team</strong> and <strong>Future Team + Advisors</strong>",
+        "<strong>Investors</strong>",
+        "<strong>Individual wallets</strong> (airdrop recipients) and <strong>DAOs in the Arbitrum ecosystem</strong>",
+      ] },
+      { type: "p", html: "The <strong>Team</strong> and <strong>Investor</strong> buckets are the ones to watch for unlock pressure, since those are the tokens that vest to insiders on a cliff schedule." },
+
+      { type: "h2", text: "How ARB's vesting works" },
+      { type: "p", html: "Most ARB allocations release through a <strong>cliff mechanism</strong> — tokens are held back entirely, then a large tranche unlocks on a specific date, rather than dripping out continuously. That's why ARB's unlocks land as concentrated single-day events, and why they draw so much attention: a cliff can add a substantial share of new supply at once. The vesting schedule extends into 2027." },
+
+      { type: "h2", text: "The 2026 ARB unlocks" },
+      { type: "p", html: "Per public unlock trackers, ARB has scheduled cliff unlocks through 2026 — including one of its <strong>largest single unlocks around August 2026</strong> (reported at roughly 92.65M ARB across trackers). Whether an unlock moves the price depends on its <strong>size relative to circulating supply</strong>, <strong>who receives the tokens</strong>, and market conditions — released tokens can be held, staked, or deposited, not only sold. Historically, ARB has shown relatively low volatility in the week after past unlocks, but that's not a guarantee." },
+      { type: "p", html: "For the <strong>exact upcoming date and amount</strong> (which update over time), always check a live tracker rather than a static article — including this one." },
+
+      { type: "h2", text: "How to track ARB and other token unlocks" },
+      { type: "ol", items: [
+        "Browse the <a href=\"/unlocks\">token unlock calendar</a> for upcoming unlocks across every tracked protocol and chain.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see your own vesting positions — no sign-up.",
+        "Set an alert so you're notified before an unlock, not after it hits the market.",
+      ] },
+
+      { type: "faq", items: [
+        { q: "When does ARB unlock next?", a: "Arbitrum releases ARB through scheduled cliff unlocks running into 2027, with a notably large unlock around August 2026. Because exact dates and amounts change as the schedule updates, check a live unlock tracker for current figures." },
+        { q: "How much ARB is still locked?", a: "ARB has a 10 billion maximum supply. As of mid-2026 roughly 61% had unlocked, leaving a significant share still vesting — primarily across the DAO treasury, team, and investor allocations." },
+        { q: "Will an ARB unlock crash the price?", a: "Not necessarily. Impact depends on the unlock size relative to circulating supply, who receives the tokens, and market conditions. Unlocked tokens don't have to be sold. ARB has historically shown low volatility shortly after past unlocks." },
+      ] },
+
+      { type: "p", html: "<strong>Sources &amp; live data:</strong> tokenomics and unlock figures compiled from public trackers including <a href=\"https://tokenomist.ai/arbitrum\" rel=\"nofollow\">Tokenomist</a>, <a href=\"https://cryptorank.io/price/arbitrum/vesting\" rel=\"nofollow\">CryptoRank</a>, <a href=\"https://messari.io/project/arbitrum/token-unlocks\" rel=\"nofollow\">Messari</a> and <a href=\"https://defillama.com/unlocks/arbitrum\" rel=\"nofollow\">DefiLlama</a>. Always verify current numbers at the source before acting." },
+    ],
+  },
+
+  // ── SEO article: PinkSale/PinkLock (targets "pinklock", "pinksale lock") ─────
+  {
+    slug:        "what-is-pinksale-pinklock-token-locker",
+    title:       "What Is PinkSale (PinkLock)? Token & Liquidity Locking Explained (2026)",
+    excerpt:     "PinkSale is one of the most-used launchpads in crypto, and its PinkLock product locks liquidity and vests team tokens. Here's how PinkLock works, which chains it covers, and how to verify any PinkSale lock.",
+    publishedAt: "2026-08-08",
+    updatedAt:   "2026-08-08",
+    readingTime: "6 min read",
+    category:    "Protocols",
+    tags:        ["PinkSale", "PinkLock", "pinksale lock", "token locker", "liquidity lock", "token vesting"],
+    content: [
+      { type: "p", html: "If you've aped into a new token on BNB Chain, you've almost certainly seen a <strong>PinkSale</strong> launch and a <strong>PinkLock</strong> badge. PinkSale is one of the highest-volume launchpads in crypto, and its PinkLock product is what locks a project's liquidity and vests its team tokens on-chain. This guide covers what PinkLock does and how to check any lock." },
+
+      { type: "h2", text: "What is PinkSale?" },
+      { type: "p", html: "PinkSale is a launchpad that lets projects run token presales and fair launches. Alongside the launchpad, it offers <strong>PinkLock</strong> — a locker that holds a project's liquidity-pool (LP) tokens and vests team/allocation tokens on-chain, so buyers can verify the lockups rather than trust a promise." },
+      { type: "callout", emoji: "🔒", title: "In one line", body: "PinkLock is PinkSale's on-chain locker: it locks LP tokens (anti-rug) and vests team/allocation tokens on a schedule, verifiable by anyone." },
+
+      { type: "h2", text: "PinkLock: liquidity locks vs token vesting" },
+      { type: "ul", items: [
+        "<strong>Liquidity lock:</strong> Locks the LP tokens so the team can't withdraw liquidity — the core anti-rug guarantee buyers look for on a new launch.",
+        "<strong>Token vesting:</strong> Releases team/allocation tokens on a <strong>TGE + cycle-based schedule</strong> — an initial release at launch, then further releases at set intervals.",
+      ] },
+      { type: "p", html: "For assessing future sell pressure, the <strong>token vesting</strong> side is what to read — it tells you how many tokens unlock and when." },
+
+      { type: "h2", text: "Which chains does PinkSale support?" },
+      { type: "p", html: "PinkSale / PinkLock runs across major EVM networks including <strong>BNB Chain, Ethereum, Polygon and Base</strong>. BNB Chain is where the bulk of PinkSale activity lives, given the high volume of BSC token launches." },
+
+      { type: "h2", text: "How to verify a PinkSale lock or vesting schedule" },
+      { type: "p", html: "To see a token's PinkSale vesting and upcoming unlocks — or to check a specific wallet's locks — use the <a href=\"/protocols/pinksale\">PinkSale unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. You'll see locked value, the release schedule, and can set an alert before each unlock." },
+
+      { type: "faq", items: [
+        { q: "What is PinkLock?", a: "PinkLock is PinkSale's on-chain locker. It locks a project's liquidity-pool tokens (to prevent liquidity being pulled) and vests team/allocation tokens on a schedule, all verifiable on-chain." },
+        { q: "Does a PinkSale lock mean a token is safe?", a: "It reduces the specific risk of a liquidity rug pull, but it isn't a guarantee. Check how much liquidity is locked and for how long, plus the team's token vesting schedule — not just the presence of a lock." },
+        { q: "How do I see PinkSale token unlocks?", a: "Use a cross-protocol tracker like Vestream, which indexes PinkSale (PinkLock) vesting on-chain and shows upcoming unlock dates and amounts per token and wallet, with free alerts." },
+      ] },
+    ],
+  },
+
+  // ── SEO article: Streamflow (targets "streamflow", Solana vesting) ───────────
+  {
+    slug:        "what-is-streamflow-solana-token-vesting",
+    title:       "What Is Streamflow? Solana Token Vesting & Streaming Explained (2026)",
+    excerpt:     "Streamflow is the leading token vesting and distribution platform on Solana. Here's how Streamflow vesting works, what it's used for, and how to track any Streamflow vesting schedule.",
+    publishedAt: "2026-08-07",
+    updatedAt:   "2026-08-07",
+    readingTime: "6 min read",
+    category:    "Protocols",
+    tags:        ["Streamflow", "Solana vesting", "token vesting", "token streaming", "token distribution"],
+    content: [
+      { type: "p", html: "On Solana, when a project vests team tokens, distributes an airdrop, or runs token payments, <strong>Streamflow</strong> is very often the rails underneath it. It's the leading <strong>token vesting and distribution</strong> platform in the Solana ecosystem. This guide explains what Streamflow does and how to track a Streamflow vesting schedule." },
+
+      { type: "h2", text: "What is Streamflow?" },
+      { type: "p", html: "Streamflow provides on-chain infrastructure for distributing SPL tokens over time on Solana — vesting, token lockups, streaming payments, and airdrop distribution. Recipients' tokens unlock according to a schedule (cliff and/or linear), enforced by Solana programs rather than a team's discretion." },
+      { type: "callout", emoji: "◎", title: "In one line", body: "Streamflow = Solana's go-to vesting and token-distribution layer — cliffs, linear release, streaming payments, and airdrops, all on-chain." },
+
+      { type: "h2", text: "What Streamflow is used for" },
+      { type: "ul", items: [
+        "<strong>Team & investor vesting:</strong> Locking founder/investor allocations with a cliff + linear release.",
+        "<strong>Airdrop distribution:</strong> Distributing community allocations, sometimes with vesting to reduce immediate sell-off.",
+        "<strong>Streaming payments:</strong> Ongoing payroll/grants that release continuously.",
+      ] },
+
+      { type: "h2", text: "Streamflow vs EVM vesting protocols" },
+      { type: "p", html: "Streamflow plays the role on Solana that protocols like Sablier, Hedgey and UNCX play on EVM chains — the difference is the ecosystem. Because Solana uses a different address format and program model, Solana vesting positions are tracked separately from EVM ones, so a genuinely cross-chain tracker needs to cover both." },
+
+      { type: "h2", text: "How to track Streamflow vesting" },
+      { type: "p", html: "To see Streamflow vesting for a Solana wallet or token — including claimable vs locked amounts and the schedule — use the <a href=\"/protocols/streamflow\">Streamflow unlock tracker on Vestream</a>, or paste a Solana address into the <a href=\"/find-vestings\">free wallet scanner</a>." },
+
+      { type: "faq", items: [
+        { q: "What is Streamflow used for?", a: "Streamflow is Solana's leading token vesting and distribution platform — used for team/investor vesting, airdrops, token lockups, and streaming payments, all enforced on-chain." },
+        { q: "Is Streamflow only on Solana?", a: "Streamflow is best known as the Solana vesting standard. When tracking a token's total vesting, remember Solana positions are separate from EVM ones — you need a tracker that covers both ecosystems." },
+        { q: "How do I track a Streamflow vesting schedule?", a: "Use a cross-chain tracker like Vestream, which indexes Streamflow on Solana and shows claimable vs locked amounts and upcoming unlocks for any wallet, free." },
+      ] },
+    ],
+  },
+
   // ── SEO article: KAITO unlock (targets "kaito token unlock schedule / august 2026") ─
   {
     slug:        "kaito-token-unlock-schedule",
