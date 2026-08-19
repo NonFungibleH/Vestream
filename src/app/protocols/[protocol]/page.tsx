@@ -306,8 +306,12 @@ export async function generateMetadata(
   const meta = getProtocol(protocol);
   if (!meta || meta.disabled) return { title: "Not found" };
 
-  const title = `${meta.name} unlock tracker & alerts – Vestream`;
-  const description = meta.description.slice(0, 158).replace(/\s+\S*$/, "") + "…";
+  // Title + description tuned to the terms this protocol actually gets
+  // impressions for in GSC (e.g. "uncx locker", "hedgey pricing", "team
+  // finance lock") — front-load the protocol name + "vesting / unlock
+  // schedule / TVL" so the snippet matches intent and earns the click.
+  const title = `${meta.name} Token Vesting & Unlock Schedule — TVL, Alerts | Vestream`;
+  const description = `Track ${meta.name} token vesting and unlocks live — the upcoming unlock schedule, locked value (TVL), top recipients, and free alerts before every cliff. No sign-up.`;
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;
 

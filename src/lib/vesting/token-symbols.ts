@@ -154,6 +154,15 @@ export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
       and(
         sql`length(${tokenVestingRollups.tokenAddress}) >= 32`,
         notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
+        // SEO quality gate (Aug 2026): only sitemap tokens that are still
+        // actively vesting (a real upcoming unlock — last_end in the future)
+        // AND have more than one recipient. Flooding the sitemap with the
+        // long tail of fully-vested, single-stream dust memecoins wasted crawl
+        // budget and signalled low value → most sat "Discovered/Crawled - not
+        // indexed" or fell to the noindex 404 page. The dust is still reachable
+        // via internal links; it's just no longer force-submitted.
+        sql`${tokenVestingRollups.lastEnd} > ${Math.floor(Date.now() / 1000)}`,
+        sql`${tokenVestingRollups.walletCount} >= 2`,
       ),
     )
     .orderBy(sql`${tokenVestingRollups.streamCount} desc`)
