@@ -26,6 +26,146 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── SEO article: UNCX (targets "uncx", "uncx locker", "uncx token") ──────────
+  {
+    slug:        "what-is-uncx-token-locker-and-vesting",
+    title:       "What Is UNCX? The Token Locker & Vesting Platform Explained (2026)",
+    excerpt:     "UNCX Network (formerly Unicrypt) is one of the most widely used token lockers and vesting platforms in DeFi. Here's how UNCX locking and vesting work, which chains it supports, and how to track any UNCX vesting schedule.",
+    publishedAt: "2026-08-12",
+    updatedAt:   "2026-08-12",
+    readingTime: "8 min read",
+    category:    "Protocols",
+    tags:        ["UNCX", "UNCX locker", "UNCX Network", "token locker", "liquidity lock", "token vesting"],
+    content: [
+      { type: "p", html: "If you have ever bought a newly launched token, you have almost certainly relied on <strong>UNCX</strong> without knowing it. UNCX Network — formerly Unicrypt — is one of the oldest and most widely used <strong>token lockers</strong> and <strong>vesting platforms</strong> in DeFi. When a project says its liquidity is \"locked\" or its team tokens are \"vested,\" UNCX is frequently the contract enforcing it." },
+      { type: "p", html: "This guide explains what UNCX is, the difference between its <strong>locker</strong> and <strong>vesting</strong> products, which chains it runs on, and — importantly — how to see the live unlock schedule for any UNCX vesting position." },
+
+      { type: "h2", text: "What is UNCX (UNCX Network)?" },
+      { type: "p", html: "UNCX is an on-chain infrastructure provider that lets token projects <strong>lock</strong> and <strong>vest</strong> tokens using audited smart contracts. Rather than trusting a team's promise not to sell, holders can verify on-chain that liquidity or allocations are locked for a defined period. It launched as Unicrypt in 2020 and rebranded to UNCX Network as it expanded across chains." },
+      { type: "callout", emoji: "🔒", title: "In one line", body: "UNCX = audited smart contracts that lock LP tokens and vest team/investor allocations, so anyone can verify a project's lockups on-chain instead of taking the team's word for it." },
+
+      { type: "h2", text: "UNCX locker vs UNCX vesting — what's the difference?" },
+      { type: "p", html: "People search for the \"UNCX locker\" and \"UNCX vesting\" as if they're one thing, but they solve two different problems:" },
+      { type: "ul", items: [
+        "<strong>Liquidity locker:</strong> Locks a project's liquidity-pool (LP) tokens for a set time so the team can't pull liquidity (a \"rug pull\"). This is the classic \"liquidity locked via UNCX\" badge you see on launchpads and DEX tools.",
+        "<strong>Token vesting:</strong> Releases a team, investor, or advisor allocation gradually on a schedule (cliff + linear or stepped tranches) — the same mechanics as any vesting contract, enforced on-chain.",
+      ] },
+      { type: "p", html: "For token holders trying to understand future sell pressure, the <strong>vesting</strong> side is what matters — it tells you how many tokens unlock, and when." },
+
+      { type: "h2", text: "Which chains does UNCX support?" },
+      { type: "p", html: "UNCX is multi-chain. Its locker and vesting products are deployed across major EVM networks including <strong>Ethereum, BNB Chain, Polygon and Base</strong>, among others. Because the contracts are chain-specific, a single token can have separate UNCX locks on each chain it lives on — which is why a cross-chain view matters when you're assessing a token's real unlock schedule." },
+
+      { type: "h2", text: "How do you track a UNCX vesting or unlock schedule?" },
+      { type: "p", html: "UNCX's own dashboard shows individual locks, but it doesn't give you a wallet-level or cross-protocol view. To see every UNCX vesting position for a wallet or token — plus the upcoming unlock dates and amounts — you can use a dedicated tracker:" },
+      { type: "ol", items: [
+        "Open the <a href=\"/protocols/uncx\">UNCX unlock tracker on Vestream</a> to see live UNCX vesting activity, locked value, and upcoming unlocks.",
+        "Or paste any wallet address into the <a href=\"/find-vestings\">free wallet scanner</a> — it finds UNCX vestings (and every other major protocol) with no sign-up.",
+        "Set an alert so you're notified before each UNCX unlock cliff, rather than finding out after the tokens hit the market.",
+      ] },
+
+      { type: "faq", items: [
+        { q: "Is UNCX the same as Unicrypt?", a: "Yes. UNCX Network is the rebranded name for Unicrypt, which launched in 2020. The contracts and products are the same lineage." },
+        { q: "Does 'liquidity locked on UNCX' mean a token is safe?", a: "It reduces one specific risk — the team pulling liquidity — but it is not a guarantee of safety. Always check the lock duration, how much of the supply is locked, and the team/investor vesting schedule, not just whether a lock exists." },
+        { q: "How can I see when UNCX tokens unlock?", a: "Use a cross-protocol unlock tracker. Vestream indexes UNCX vesting on-chain and shows the upcoming unlock dates and amounts per token and per wallet, with free alerts before each cliff." },
+      ] },
+    ],
+  },
+
+  // ── SEO article: Hedgey (targets "hedgey", "hedgey pricing") ─────────────────
+  {
+    slug:        "hedgey-vesting-pricing-and-alternatives",
+    title:       "Hedgey Vesting: How It Works, Pricing & Alternatives (2026)",
+    excerpt:     "Hedgey is a popular on-chain token vesting and token-grant platform. Here's how Hedgey's vesting plans work, how its pricing model actually works, and the main alternatives if you're choosing a vesting tool.",
+    publishedAt: "2026-08-11",
+    updatedAt:   "2026-08-11",
+    readingTime: "7 min read",
+    category:    "Protocols",
+    tags:        ["Hedgey", "Hedgey pricing", "token vesting", "token grants", "vesting platform"],
+    content: [
+      { type: "p", html: "<strong>Hedgey Finance</strong> is one of the most widely used on-chain platforms for <strong>token vesting</strong>, token grants, and lockups. If a project distributed team or investor tokens as vesting \"plans,\" there's a good chance Hedgey issued them. This guide covers how Hedgey works, how its <strong>pricing</strong> is structured, and the main alternatives." },
+
+      { type: "h2", text: "What is Hedgey?" },
+      { type: "p", html: "Hedgey provides smart contracts and tooling for distributing tokens with conditions attached — vesting schedules, lockups, token grants, and OTC deals. A distinctive feature is that Hedgey vesting <strong>plans are represented as NFTs</strong> (ERC-721): each recipient's vesting position is a transferable on-chain token, which makes plans easy to view, manage, and (where allowed) transfer." },
+      { type: "callout", emoji: "🎟️", title: "The NFT detail", body: "Each Hedgey vesting plan is minted as an NFT to the recipient's wallet. That's why a Hedgey position shows up as an NFT — the NFT *is* the claim on the vesting tokens." },
+
+      { type: "h2", text: "How does Hedgey pricing work?" },
+      { type: "p", html: "This is the question most people search for — so here's the honest answer. Hedgey's <strong>core on-chain vesting and lockup contracts do not charge a subscription fee</strong>; when you create or claim a plan you pay <strong>network gas</strong> like any on-chain transaction. Hedgey has historically monetised through value-added and enterprise services (advanced tooling, support, and custom deal structures) rather than a per-seat SaaS price on basic vesting." },
+      { type: "callout", emoji: "⚠️", title: "Always confirm current terms", body: "Pricing and fee models for on-chain platforms change. For the current, authoritative pricing, check hedgey.finance directly — don't rely on any third-party page (including this one) for exact figures." },
+
+      { type: "h2", text: "Which chains does Hedgey support?" },
+      { type: "p", html: "Hedgey deploys the same contracts across many EVM networks, including <strong>Ethereum, Arbitrum, Optimism, Base, BNB Chain and Polygon</strong>. Because it's the same contract address pattern on each chain, a project can run Hedgey vesting on several networks at once." },
+
+      { type: "h2", text: "Hedgey alternatives" },
+      { type: "p", html: "If you're choosing a vesting tool, or just comparing, the main on-chain alternatives are:" },
+      { type: "table", headers: ["Platform", "Best known for", "Model"], rows: [
+        ["Hedgey", "NFT-based vesting plans & token grants", "On-chain, gas-only for core vesting"],
+        ["Sablier", "Real-time \"streaming\" vesting (per-second)", "On-chain, gas-only core"],
+        ["UNCX", "Token & liquidity locking + vesting", "On-chain, service fee to lock"],
+        ["Streamflow", "Vesting on Solana", "On-chain (Solana)"],
+        ["Superfluid", "Continuous streaming payments & vesting", "On-chain streaming"],
+      ] },
+      { type: "p", html: "The right choice depends on whether you want <strong>tranche-based</strong> unlocks (Hedgey, UNCX), <strong>continuous streaming</strong> (Sablier, Superfluid), or a specific chain (Streamflow for Solana)." },
+
+      { type: "h2", text: "How to track Hedgey vesting unlocks" },
+      { type: "p", html: "To see live Hedgey vesting positions and upcoming unlock dates for a token or wallet, use the <a href=\"/protocols/hedgey\">Hedgey unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. You'll see the schedule, locked value, and can set an alert before each unlock." },
+
+      { type: "faq", items: [
+        { q: "Is Hedgey free?", a: "Hedgey's core on-chain vesting and lockup contracts don't charge a subscription — you pay network gas to create or claim a plan. Enterprise/advanced services may be quoted separately. Check hedgey.finance for current terms." },
+        { q: "Why is my Hedgey vesting an NFT?", a: "Hedgey represents each vesting plan as an ERC-721 NFT minted to the recipient. The NFT is the on-chain claim on the vesting tokens — holding it lets you claim as tokens unlock." },
+        { q: "How do I see when my Hedgey tokens unlock?", a: "Use a cross-protocol unlock tracker like Vestream, which indexes Hedgey on-chain and shows upcoming unlock dates and amounts, with free alerts before each cliff." },
+      ] },
+    ],
+  },
+
+  // ── SEO article: unlock trackers (targets "best crypto token unlock calendar/tracker") ─
+  {
+    slug:        "best-crypto-token-unlock-trackers",
+    title:       "Best Crypto Token Unlock Calendars & Trackers (2026)",
+    excerpt:     "Token unlocks move markets — but only if you see them coming. Here's what makes a good token unlock tracker, and how the main crypto token unlock calendars and trackers compare in 2026.",
+    publishedAt: "2026-08-10",
+    updatedAt:   "2026-08-10",
+    readingTime: "7 min read",
+    category:    "Guides",
+    tags:        ["token unlock calendar", "token unlock tracker", "crypto unlocks", "vesting tracker", "unlock schedule"],
+    content: [
+      { type: "p", html: "A large <strong>token unlock</strong> can add millions of dollars of new supply to the market in a single day. If you hold the token — or trade around it — knowing the unlock schedule in advance is one of the highest-value pieces of information you can have. The problem is that unlock data is scattered across dozens of protocols and chains. That's what a <strong>token unlock tracker</strong> solves." },
+
+      { type: "h2", text: "What makes a good token unlock tracker?" },
+      { type: "p", html: "Not all trackers are equal. When you're choosing a crypto unlock calendar, look for:" },
+      { type: "ul", items: [
+        "<strong>Cross-protocol coverage:</strong> Real vesting lives across many protocols (Sablier, Hedgey, UNCX, Unvest, Streamflow and more). A tracker that only reads one source misses most of it.",
+        "<strong>On-chain accuracy:</strong> The best data comes straight from the vesting contracts, not a manually maintained spreadsheet that can drift out of date.",
+        "<strong>Alerts:</strong> A calendar you have to remember to check is a calendar you'll forget. Push/email alerts before each unlock are the point.",
+        "<strong>Wallet-level view:</strong> Being able to paste your own wallet and see exactly what you're owed and when — not just market-wide unlocks.",
+        "<strong>Free access:</strong> You shouldn't have to pay just to see when your own tokens unlock.",
+      ] },
+
+      { type: "h2", text: "The main crypto unlock trackers in 2026" },
+      { type: "p", html: "Here's an honest overview of the tools people use — including the well-known market-wide calendars and the on-chain, wallet-first approach:" },
+      { type: "table", headers: ["Tool", "Strength", "Watch-out"], rows: [
+        ["Vestream", "On-chain, cross-protocol, free wallet scan + alerts", "Focused on on-chain vesting (not every off-chain schedule)"],
+        ["TokenUnlocks", "Broad coverage of major-token unlock schedules", "Emphasis on large caps; less wallet-level detail"],
+        ["CryptoRank Unlocks", "Big market-wide unlock calendar", "Aggregated data; not wallet-specific"],
+        ["DefiLlama Unlocks", "Free market overview for major tokens", "Emissions data moved behind a paid API tier"],
+      ] },
+      { type: "callout", emoji: "🧭", title: "Two different jobs", body: "Market-wide calendars answer \"which big tokens unlock this week?\" A wallet-first, on-chain tracker answers \"what am *I* owed, across every protocol, and when?\" Most people eventually want both." },
+
+      { type: "h2", text: "How to check your own token unlocks (free)" },
+      { type: "p", html: "The fastest way to see what you personally have vesting is to scan your wallet. On Vestream you can:" },
+      { type: "ol", items: [
+        "Open the <a href=\"/unlocks\">token unlock calendar</a> to see upcoming unlocks across every tracked protocol and chain.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> — no sign-up, no KYC — to find your own vestings in seconds.",
+        "Set a push or email alert so you're notified before each unlock instead of after.",
+      ] },
+
+      { type: "faq", items: [
+        { q: "What is a token unlock calendar?", a: "A token unlock calendar shows the upcoming dates when locked (vesting) tokens will be released to teams, investors, and other holders — along with how many tokens unlock. It's used to anticipate changes in circulating supply and potential sell pressure." },
+        { q: "What's the best free token unlock tracker?", a: "For seeing your own tokens across every protocol, a wallet-first on-chain tracker like Vestream is free and requires no sign-up. For a market-wide view of large-cap unlocks, calendars like TokenUnlocks and CryptoRank are widely used." },
+        { q: "Do token unlocks always crash the price?", a: "No. The impact depends on how large the unlock is relative to circulating supply, who receives the tokens, market conditions, and whether the event was already 'priced in.' Large unlocks to short-term holders tend to have the biggest effect." },
+      ] },
+    ],
+  },
+
   // ── Article 1 ────────────────────────────────────────────────────────────────
   {
     slug:        "what-is-token-vesting",

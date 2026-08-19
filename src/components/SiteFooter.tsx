@@ -61,7 +61,7 @@ const LINK_GROUPS = [
       { label: "Demo",                 href: "/demo"      },
       { label: "Pricing",              href: "/pricing"   },
       { label: "Payroll",                href: "/payroll"  },
-      { label: "Resources",            href: "/resources" },
+      { label: "Guides",               href: "/resources" },
       { label: "FAQ",                  href: "/faq"       },
       { label: "Contact",              href: "/contact"   },
     ],
