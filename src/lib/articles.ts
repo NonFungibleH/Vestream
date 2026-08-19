@@ -26,6 +26,106 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── SEO article: KAITO unlock (targets "kaito token unlock schedule / august 2026") ─
+  {
+    slug:        "kaito-token-unlock-schedule",
+    title:       "KAITO Token Unlock Schedule & Vesting: What Holders Should Know (2026)",
+    excerpt:     "KAITO has a large share of its supply still locked and vesting into 2029. Here's how KAITO's tokenomics and unlock schedule are structured, what to watch around the next unlock, and where to see the live figures.",
+    publishedAt: "2026-08-13",
+    updatedAt:   "2026-08-13",
+    readingTime: "6 min read",
+    category:    "Token Unlocks",
+    tags:        ["KAITO", "KAITO token unlock", "KAITO vesting", "token unlock schedule", "tokenomics"],
+    content: [
+      { type: "p", html: "KAITO is one of the more closely watched token-unlock schedules of 2026 — a large portion of its supply is still locked and vesting over several years. This guide explains how KAITO's <strong>tokenomics</strong> and <strong>unlock schedule</strong> are structured, what an unlock event actually means for supply, and where to find the live, up-to-date figures." },
+      { type: "callout", emoji: "🗓️", title: "Unlock data changes — verify before you trade", body: "Exact unlock dates and amounts move as schedules and circulating supply update. Treat the figures here as structural context and always confirm the current numbers on a live tracker (linked below) before making any decision. This is not financial advice." },
+
+      { type: "h2", text: "KAITO tokenomics at a glance" },
+      { type: "p", html: "KAITO has a <strong>total supply of 1,000,000,000 tokens</strong>. As of mid-2026, roughly a quarter of that supply was circulating — meaning a large majority remained locked and scheduled to unlock over the following years. The allocation is split across ecosystem, contributor, backer, and community buckets:" },
+      { type: "table", headers: ["Allocation", "Share of supply"], rows: [
+        ["Ecosystem & Network Growth", "32.2%"],
+        ["Core Contributors", "25.0%"],
+        ["Initial Community & Ecosystem Claim", "10.0%"],
+        ["Foundation", "10.0%"],
+        ["Early Backers", "8.3%"],
+        ["Long-term Creator Incentives", "7.5%"],
+        ["Liquidity Incentives", "5.0%"],
+        ["Binance Holder Airdrop", "2.0%"],
+      ] },
+      { type: "p", html: "The two largest buckets — <strong>Ecosystem &amp; Network Growth (32.2%)</strong> and <strong>Core Contributors (25%)</strong> — are the ones that matter most for future supply, because they represent the biggest pools of tokens still to be released." },
+
+      { type: "h2", text: "How KAITO's vesting works" },
+      { type: "p", html: "KAITO uses <strong>cliff-style vesting</strong> for major allocations such as Ecosystem &amp; Network Growth — meaning tokens are held back entirely for a period and then released in a step at the cliff, rather than dripping out continuously. Cliff unlocks concentrate supply into specific dates, which is exactly why unlock calendars matter: a single cliff can add a meaningful chunk of new supply on one day." },
+
+      { type: "h2", text: "What the next KAITO unlock means" },
+      { type: "p", html: "Because so much of KAITO's supply is still locked, each scheduled unlock adds to the circulating amount. Whether that moves the price depends on the <strong>size of the unlock relative to circulating supply</strong>, <strong>who receives the tokens</strong> (long-term ecosystem vs short-term holders), and broader market conditions. Historically, KAITO has shown relatively low volatility in the week after past unlocks — but past behaviour doesn't guarantee future results." },
+      { type: "p", html: "For the <strong>exact next unlock date and amount</strong> (which update over time), check a live unlock tracker rather than any static article — including this one." },
+
+      { type: "h2", text: "How to track KAITO and other token unlocks" },
+      { type: "p", html: "To stay ahead of unlocks across the market — and to track your own vesting positions — use a live tracker:" },
+      { type: "ol", items: [
+        "Browse the <a href=\"/unlocks\">token unlock calendar</a> for upcoming unlocks across every tracked protocol and chain.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see what you personally have vesting — no sign-up.",
+        "Set an alert so you're notified before an unlock, not after it hits the market.",
+      ] },
+
+      { type: "faq", items: [
+        { q: "When does KAITO unlock?", a: "KAITO unlocks in scheduled events that run into 2029, with cliff-style releases for major allocations like Ecosystem & Network Growth. Because exact dates and amounts change as the schedule updates, check a live unlock tracker for the current figures." },
+        { q: "How much of KAITO's supply is still locked?", a: "KAITO has a 1 billion total supply, and as of mid-2026 only around a quarter was circulating — so the large majority remained locked and vesting, primarily across the Ecosystem & Network Growth and Core Contributors allocations." },
+        { q: "Do KAITO unlocks crash the price?", a: "Not necessarily. Impact depends on the unlock size relative to circulating supply, who receives the tokens, and market conditions. KAITO has historically shown low volatility shortly after past unlocks, but that's not a guarantee." },
+      ] },
+
+      { type: "p", html: "<strong>Sources &amp; live data:</strong> tokenomics and unlock figures compiled from public trackers including <a href=\"https://tokenomist.ai/kaito\" rel=\"nofollow\">Tokenomist</a>, <a href=\"https://cryptorank.io/price/kaito/vesting\" rel=\"nofollow\">CryptoRank</a>, <a href=\"https://messari.io/project/kaito/token-unlocks\" rel=\"nofollow\">Messari</a> and <a href=\"https://defillama.com/unlocks/kaito\" rel=\"nofollow\">DefiLlama</a>. Always verify current numbers at the source before acting." },
+    ],
+  },
+
+  // ── SEO article: Sablier (targets "sablier", "sablier crypto", "token streaming") ─
+  {
+    slug:        "what-is-sablier-token-streaming-vesting",
+    title:       "What Is Sablier? Real-Time Token Streaming & Vesting Explained (2026)",
+    excerpt:     "Sablier pioneered real-time \"token streaming\" — vesting that releases tokens by the second instead of in monthly chunks. Here's how Sablier works, where it's used, and how to track any Sablier stream.",
+    publishedAt: "2026-08-09",
+    updatedAt:   "2026-08-09",
+    readingTime: "7 min read",
+    category:    "Protocols",
+    tags:        ["Sablier", "token streaming", "streaming payments", "token vesting", "vesting stream"],
+    content: [
+      { type: "p", html: "<strong>Sablier</strong> is the protocol that popularised <strong>real-time token streaming</strong> — the idea that instead of unlocking tokens in monthly steps, you can release them continuously, by the second. If you've heard the phrase \"money streaming\" in crypto, Sablier is where it started. This guide explains what Sablier is, how its vesting works, and how to see any Sablier stream's live schedule." },
+
+      { type: "h2", text: "What is Sablier?" },
+      { type: "p", html: "Sablier is an on-chain protocol for distributing ERC-20 tokens over time. Rather than a recipient claiming a lump sum at each unlock, tokens accrue to them <strong>every second</strong> and can be withdrawn at any point. It's used for token vesting, payroll, grants, and airdrops — anywhere you want a smooth, verifiable, continuous release instead of cliff-and-chunk unlocks." },
+      { type: "callout", emoji: "💧", title: "The core idea", body: "Sablier streams tokens by the second. At any moment, a recipient's 'claimable' balance is exactly what has streamed so far — no waiting for a monthly unlock date." },
+
+      { type: "h2", text: "How Sablier vesting works: Lockup vs Flow" },
+      { type: "p", html: "Sablier has two main flavours of stream:" },
+      { type: "ul", items: [
+        "<strong>Lockup (vesting):</strong> A fixed-total stream — often with a cliff, then linear or tranched release over a set duration. This is the classic vesting use case (team/investor allocations).",
+        "<strong>Flow (open-ended streaming):</strong> A continuous stream with no fixed end — used for ongoing payments like salaries and grants.",
+      ] },
+      { type: "p", html: "For token holders assessing unlock pressure, the <strong>Lockup</strong> streams are the vesting positions that matter — they define how much of a token's supply is still locked and how fast it releases." },
+
+      { type: "h2", text: "Which chains does Sablier support?" },
+      { type: "p", html: "Sablier is deployed across many EVM networks, including <strong>Ethereum, BNB Chain, Polygon, Base, Arbitrum and Optimism</strong>. A single project can run Sablier streams on several chains at once, which is why a cross-chain view helps when you're totalling a token's real vesting." },
+
+      { type: "h2", text: "Sablier vs step-based vesting" },
+      { type: "table", headers: ["", "Sablier (streaming)", "Step/tranche vesting"], rows: [
+        ["Release cadence", "Per second (continuous)", "At discrete unlock dates"],
+        ["Claimable balance", "Grows smoothly every block", "Jumps at each unlock"],
+        ["Best for", "Payroll, grants, smooth vesting", "Cliff-heavy investor/team schedules"],
+        ["Market impact", "Spread out — less spiky", "Concentrated on unlock days"],
+      ] },
+
+      { type: "h2", text: "How to track a Sablier stream or unlock" },
+      { type: "p", html: "To see live Sablier vesting for a wallet or token — including how much has streamed, what's still locked, and the schedule — use the <a href=\"/protocols/sablier\">Sablier unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. No sign-up required." },
+
+      { type: "faq", items: [
+        { q: "What does Sablier do?", a: "Sablier streams ERC-20 tokens over time — releasing them by the second rather than in lump-sum unlocks. It's used for token vesting, payroll, grants, and airdrops on-chain." },
+        { q: "Is Sablier a payment or a vesting tool?", a: "Both. Its Lockup product handles fixed-total vesting (with cliffs), while its Flow product handles open-ended streaming payments like salaries." },
+        { q: "How do I see my Sablier stream's schedule?", a: "Use a cross-protocol tracker like Vestream, which indexes Sablier on-chain and shows claimable vs locked amounts, the release schedule, and alerts — for any wallet, free." },
+      ] },
+    ],
+  },
+
   // ── SEO article: UNCX (targets "uncx", "uncx locker", "uncx token") ──────────
   {
     slug:        "what-is-uncx-token-locker-and-vesting",
