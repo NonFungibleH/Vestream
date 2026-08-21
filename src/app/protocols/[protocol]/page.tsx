@@ -1156,6 +1156,14 @@ export default async function ProtocolLandingPage(
             heading="Track your own vesting across every protocol"
             sub="Paste any wallet — every unlock across 10 protocols and 8 chains. Free, no sign-up."
           />
+          {/* Spoke → pillar link: anchors this protocol page to the token-vesting
+              topic cluster. */}
+          <p className="text-sm mt-5 text-center" style={{ color: "#8B8E92" }}>
+            New to vesting?{" "}
+            <Link href="/resources/what-is-token-vesting" style={{ color: "#0f8a8a", fontWeight: 600 }}>
+              Read our complete guide to token vesting →
+            </Link>
+          </p>
         </div>
       </section>
 

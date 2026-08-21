@@ -519,6 +519,24 @@ export default async function ArticlePage(
               ))}
             </article>
 
+            {/* Spoke → pillar: every article (except the pillar itself) links
+                back to the complete "What Is Token Vesting?" guide. Reinforces
+                the topic cluster's internal-link graph. */}
+            {slug !== "what-is-token-vesting" && (
+              <div className="mt-12">
+                <Link
+                  href="/resources/what-is-token-vesting"
+                  className="flex items-center gap-3 rounded-2xl px-5 py-4 transition-colors hover:brightness-95"
+                  style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.18)" }}
+                >
+                  <span className="text-sm" style={{ color: "#5b6470" }}>
+                    New to token vesting? Start with our complete guide:{" "}
+                    <strong style={{ color: "#0f8a8a" }}>What Is Token Vesting? →</strong>
+                  </span>
+                </Link>
+              </div>
+            )}
+
             {/* Primary activation: scan your own wallet (turns a reader into a
                 user in one step). The app-download CTA below is the follow-up. */}
             <div className="mt-14">

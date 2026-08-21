@@ -629,6 +629,48 @@ const articles: Article[] = [
           },
         ],
       },
+
+      // ── Pillar hub: links out to every spoke (tools, protocols, guides) so
+      //    this page anchors the "token vesting" topic cluster. ──────────────
+      { type: "h2", text: "Track & explore token vesting on Vestream" },
+      {
+        type: "p",
+        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 10 protocols and 8 chains — no sign-up. Start here:",
+      },
+      {
+        type: "ul",
+        items: [
+          "<a href=\"/find-vestings\">Scan any wallet for its vestings</a> — free, instant, no account.",
+          "<a href=\"/unlocks\">Token unlock calendar</a> — every upcoming unlock across all tracked protocols.",
+          "<a href=\"/protocols\">All vesting protocols</a> — live trackers for each platform below.",
+        ],
+      },
+      { type: "h3", text: "Token vesting by protocol" },
+      {
+        type: "ul",
+        items: [
+          "<a href=\"/protocols/sablier\">Sablier</a> — real-time streaming vesting.",
+          "<a href=\"/protocols/hedgey\">Hedgey</a> — NFT-based vesting plans & token grants.",
+          "<a href=\"/protocols/uncx\">UNCX</a> — token & liquidity locker with vesting.",
+          "<a href=\"/protocols/unvest\">Unvest</a> — step/milestone vesting.",
+          "<a href=\"/protocols/superfluid\">Superfluid</a> — continuous streaming vesting.",
+          "<a href=\"/protocols/pinksale\">PinkSale (PinkLock)</a> — launchpad token & LP locks.",
+          "<a href=\"/protocols/streamflow\">Streamflow</a> — Solana token vesting.",
+          "<a href=\"/protocols/jupiter-lock\">Jupiter Lock</a> — Solana token locker.",
+          "<a href=\"/protocols/llamapay\">LlamaPay</a> — per-second token streaming.",
+        ],
+      },
+      { type: "h3", text: "Keep reading" },
+      {
+        type: "ul",
+        items: [
+          "<a href=\"/resources/token-vesting-schedules-explained\">Token vesting schedules explained: cliff, linear & stepped</a>",
+          "<a href=\"/resources/the-vesting-cliff-explained\">The vesting cliff explained — and why it moves markets</a>",
+          "<a href=\"/resources/how-to-estimate-the-price-impact-of-a-token-unlock-event\">How to estimate the price impact of a token unlock</a>",
+          "<a href=\"/resources/how-to-track-your-token-vesting\">How to track your token vesting</a>",
+          "<a href=\"/resources/best-crypto-token-unlock-trackers\">Best crypto token unlock trackers (2026)</a>",
+        ],
+      },
     ],
   },
 
