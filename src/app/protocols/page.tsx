@@ -252,12 +252,12 @@ const loadProtocolsData = unstable_cache(
 );
 
 export const metadata: Metadata = {
-  title: "Token Unlock Trackers — Sablier, Hedgey, UNCX, Team Finance & More | Vestream",
+  title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
   description:
     "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow and Jupiter Lock – across Ethereum, Base, BSC, Polygon and Solana.",
   alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
-    title: "Token Unlock Trackers — Sablier, Hedgey, UNCX, Team Finance & More | Vestream",
+    title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
     description:
       "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
     url: "https://www.vestream.io/protocols",
@@ -269,7 +269,7 @@ export const metadata: Metadata = {
   // generic homepage hero instead of the protocols-index branding.
   twitter: {
     card:        "summary_large_image",
-    title:       "Token Unlock Trackers — Sablier, Hedgey, UNCX, Team Finance & More | Vestream",
+    title:       "Token Unlock Trackers for Every Vesting Protocol | Vestream",
     description: "Live on-chain unlock trackers for every major vesting protocol. Track your wallet, get alerts before every cliff.",
   },
 };

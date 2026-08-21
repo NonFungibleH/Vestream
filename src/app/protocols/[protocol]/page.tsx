@@ -310,7 +310,10 @@ export async function generateMetadata(
   // impressions for in GSC (e.g. "uncx locker", "hedgey pricing", "team
   // finance lock") — front-load the protocol name + "vesting / unlock
   // schedule / TVL" so the snippet matches intent and earns the click.
-  const title = `${meta.name} Token Vesting & Unlock Schedule — TVL, Alerts | Vestream`;
+  // Kept ≤60 chars (Bing "title too long" flag) while still leading with the
+  // protocol name + "token unlocks / vesting schedule". TVL + alerts moved to
+  // the description/on-page rather than the title.
+  const title = `${meta.name} Token Unlocks & Vesting Schedule | Vestream`;
   const description = `Track ${meta.name} token vesting and unlocks live — the upcoming unlock schedule, locked value (TVL), top recipients, and free alerts before every cliff. No sign-up.`;
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;

@@ -37,6 +37,9 @@ import { refreshStatusSummary } from "@/lib/vesting/cache-stats";
 import { refreshTokenRollups } from "@/lib/vesting/token-rollups";
 import { getTopSymbols, getTopTokens } from "@/lib/vesting/token-symbols";
 import { writeSitemapTokenCache } from "@/lib/sitemap-token-cache";
+import { submitToIndexNow } from "@/lib/indexnow";
+import { listProtocols } from "@/lib/protocol-constants";
+import { getAllArticles } from "@/lib/articles";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
@@ -102,6 +105,24 @@ async function runAll(): Promise<{ tokens: number | null; protocol: number | nul
     const [syms, toks] = await Promise.all([getTopSymbols(500), getTopTokens(1500)]);
     await writeSitemapTokenCache(syms, toks);
     console.log(`[cron/refresh-rollups] sitemap cache written: ${syms.length} symbols, ${toks.length} tokens`);
+
+    // IndexNow: ping Bing/DuckDuckGo/Copilot with our core, high-value pages so
+    // they re-index fast (Bing Webmaster flags this as a HIGH recommendation,
+    // and Bing's index feeds AI search). We submit a stable ~50-URL core set —
+    // homepage, protocol pages, unlock calendar, and every article — NOT the
+    // long tail of token pages (too many, low Bing value). Best-effort.
+    try {
+      const core = [
+        "/", "/protocols", "/unlocks", "/find-vestings", "/pricing", "/faq", "/developer", "/ai",
+        "/unlocks/today", "/unlocks/tomorrow", "/unlocks/this-week", "/unlocks/this-month",
+        "/unlocks/biggest-this-week",
+        ...listProtocols().map((p) => `/protocols/${p.slug}`),
+        ...getAllArticles().map((a) => `/resources/${a.slug}`),
+      ];
+      await submitToIndexNow(core);
+    } catch (e) {
+      console.warn("[cron/refresh-rollups] IndexNow submit failed (non-fatal):", e);
+    }
   } catch (e) {
     console.warn("[cron/refresh-rollups] sitemap cache write failed (non-fatal):", e);
   }
