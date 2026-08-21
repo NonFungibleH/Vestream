@@ -35,6 +35,7 @@ import { blockExplorerAddressUrl } from "@/lib/chain-links";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
+import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
@@ -829,6 +830,16 @@ export default async function TokenPage(
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="px-4 md:px-8 py-10" style={{ background: "#F5F5F3" }}>
+        <div className="max-w-4xl mx-auto">
+          <ScanWalletCTA
+            surface="token_page"
+            heading="See your own token vesting"
+            sub="Paste any wallet — every unlock across 10 protocols and 8 chains. Free, no sign-up."
+          />
         </div>
       </section>
 

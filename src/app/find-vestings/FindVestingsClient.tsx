@@ -163,6 +163,23 @@ export default function FindVestingsClient() {
     }
   }, []);
 
+  // Deep-link prefill (Aug 2026): SEO pages (token / protocol / article /
+  // unlocks) link here with ?a=<address> so an organic visitor's wallet is
+  // scanned the instant they land — turning a search landing into an immediate
+  // "here are YOUR vestings" activation moment. Read from window.location
+  // (not useSearchParams) so this client island needs no Suspense boundary.
+  const didUrlPrefill = useRef(false);
+  useEffect(() => {
+    if (didUrlPrefill.current) return;
+    didUrlPrefill.current = true;
+    const addr = (new URLSearchParams(window.location.search).get("a") || "").trim();
+    if (!addr) return;
+    setManualMode(true);
+    setManualAddress(addr);
+    scanAddress(addr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanAddress]);
+
   // Auto-scan when wallet becomes connected (or swaps).
   // Check sessionStorage first – if a recent result exists, show it
   // immediately without hitting the network again.

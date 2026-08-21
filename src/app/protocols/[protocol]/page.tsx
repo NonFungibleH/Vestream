@@ -21,6 +21,7 @@ import { after } from "next/server";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
+import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 import {
   chainIcon,
   getProtocol,
@@ -1145,6 +1146,16 @@ export default async function ProtocolLandingPage(
               Claims still happen on the audited {meta.name} contract – Vestream never touches your tokens. We&apos;re the alert layer above it.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="px-4 md:px-8 py-10">
+        <div className="max-w-4xl mx-auto">
+          <ScanWalletCTA
+            surface="protocol_page"
+            heading="Track your own vesting across every protocol"
+            sub="Paste any wallet — every unlock across 10 protocols and 8 chains. Free, no sign-up."
+          />
         </div>
       </section>
 

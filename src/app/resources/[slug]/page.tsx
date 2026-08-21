@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
 import { linkifyContent } from "@/lib/article-linkify";
+import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 
 // Reduce a block list to a single plain-text string for JSON-LD `articleBody`.
 // Strips tags, normalises whitespace, caps the length (Google ignores beyond a
@@ -517,6 +518,12 @@ export default async function ArticlePage(
                 <RenderBlock key={i} block={block} />
               ))}
             </article>
+
+            {/* Primary activation: scan your own wallet (turns a reader into a
+                user in one step). The app-download CTA below is the follow-up. */}
+            <div className="mt-14">
+              <ScanWalletCTA surface="article" />
+            </div>
 
             {/* ── In-article CTA ──────────────────────────────────────────── */}
             <div className="mt-16 rounded-3xl p-8 text-center"
