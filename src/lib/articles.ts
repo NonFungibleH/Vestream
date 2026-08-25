@@ -29,7 +29,7 @@ const articles: Article[] = [
   // ── SEO article: ARB unlock (targets "arbitrum token unlock schedule") ───────
   {
     slug:        "arbitrum-arb-token-unlock-schedule",
-    title:       "Arbitrum (ARB) Token Unlock Schedule & Vesting Explained (2026)",
+    title:       "Arbitrum (ARB) Token Unlock Schedule & Vesting (2026)",
     excerpt:     "Arbitrum's ARB token still has a large share of supply unlocking through 2027 via cliff-based vesting. Here's how ARB's tokenomics and unlock schedule are structured, and where to see the live figures.",
     publishedAt: "2026-08-14",
     updatedAt:   "2026-08-14",
@@ -77,7 +77,7 @@ const articles: Article[] = [
   // ── SEO article: PinkSale/PinkLock (targets "pinklock", "pinksale lock") ─────
   {
     slug:        "what-is-pinksale-pinklock-token-locker",
-    title:       "What Is PinkSale (PinkLock)? Token & Liquidity Locking Explained (2026)",
+    title:       "What Is PinkSale (PinkLock)? Token & Liquidity Locks",
     excerpt:     "PinkSale is one of the most-used launchpads in crypto, and its PinkLock product locks liquidity and vests team tokens. Here's how PinkLock works, which chains it covers, and how to verify any PinkSale lock.",
     publishedAt: "2026-08-08",
     updatedAt:   "2026-08-08",
@@ -115,7 +115,7 @@ const articles: Article[] = [
   // ── SEO article: Streamflow (targets "streamflow", Solana vesting) ───────────
   {
     slug:        "what-is-streamflow-solana-token-vesting",
-    title:       "What Is Streamflow? Solana Token Vesting & Streaming Explained (2026)",
+    title:       "What Is Streamflow? Solana Token Vesting Explained",
     excerpt:     "Streamflow is the leading token vesting and distribution platform on Solana. Here's how Streamflow vesting works, what it's used for, and how to track any Streamflow vesting schedule.",
     publishedAt: "2026-08-07",
     updatedAt:   "2026-08-07",
@@ -153,7 +153,7 @@ const articles: Article[] = [
   // ── SEO article: KAITO unlock (targets "kaito token unlock schedule / august 2026") ─
   {
     slug:        "kaito-token-unlock-schedule",
-    title:       "KAITO Token Unlock Schedule & Vesting: What Holders Should Know (2026)",
+    title:       "KAITO Token Unlock Schedule & Vesting (2026)",
     excerpt:     "KAITO has a large share of its supply still locked and vesting into 2029. Here's how KAITO's tokenomics and unlock schedule are structured, what to watch around the next unlock, and where to see the live figures.",
     publishedAt: "2026-08-13",
     updatedAt:   "2026-08-13",
@@ -206,7 +206,7 @@ const articles: Article[] = [
   // ── SEO article: Sablier (targets "sablier", "sablier crypto", "token streaming") ─
   {
     slug:        "what-is-sablier-token-streaming-vesting",
-    title:       "What Is Sablier? Real-Time Token Streaming & Vesting Explained (2026)",
+    title:       "What Is Sablier? Real-Time Token Streaming & Vesting",
     excerpt:     "Sablier pioneered real-time \"token streaming\" — vesting that releases tokens by the second instead of in monthly chunks. Here's how Sablier works, where it's used, and how to track any Sablier stream.",
     publishedAt: "2026-08-09",
     updatedAt:   "2026-08-09",
@@ -253,7 +253,7 @@ const articles: Article[] = [
   // ── SEO article: UNCX (targets "uncx", "uncx locker", "uncx token") ──────────
   {
     slug:        "what-is-uncx-token-locker-and-vesting",
-    title:       "What Is UNCX? The Token Locker & Vesting Platform Explained (2026)",
+    title:       "What Is UNCX? Token Locker & Vesting Platform (2026)",
     excerpt:     "UNCX Network (formerly Unicrypt) is one of the most widely used token lockers and vesting platforms in DeFi. Here's how UNCX locking and vesting work, which chains it supports, and how to track any UNCX vesting schedule.",
     publishedAt: "2026-08-12",
     updatedAt:   "2026-08-12",
