@@ -142,8 +142,9 @@ export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
 
   // Same reason as getTopSymbols: read the small pre-aggregated rollup rather
   // than a GROUP BY over the whole cache, which timed out and emptied the
-  // sitemap's /token/{chainId}/{address} URLs. token_address is already
-  // lower-cased + validated in the rollup.
+  // sitemap's /token/{chainId}/{address} URLs. EVM addresses are lower-cased
+  // in the rollup; Solana mints are stored case-preserved (base58 is
+  // case-sensitive) — normaliseAddress below keeps that distinction.
   const rows = await db
     .select({
       chainId: tokenVestingRollups.chainId,
@@ -170,7 +171,11 @@ export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
 
   return rows
     .filter((r) => r.address && r.address.length >= 32)
-    .map((r) => ({ chainId: r.chainId, address: r.address.toLowerCase() }));
+    // normaliseAddress lowercases EVM but preserves Solana base58 case.
+    // A plain .toLowerCase() here corrupted every Solana (chain 101) mint,
+    // so the sitemap fed Google dead /token/101/<lowercased> URLs that
+    // 404'd → the "Excluded by noindex" bucket (247 pages, Aug 2026).
+    .map((r) => ({ chainId: r.chainId, address: normaliseAddress(r.address) }));
 }
 
 /**
