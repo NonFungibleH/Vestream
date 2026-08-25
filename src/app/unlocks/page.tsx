@@ -158,6 +158,22 @@ export default async function UnlocksIndex() {
             );
           })}
         </div>
+
+        {/* Monthly reports — dated, shareable summaries of each month's unlocks. */}
+        <div className="mt-6 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+          style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
+          <div>
+            <h2 className="text-base font-bold" style={{ color: "#1A1D20" }}>Monthly Token Unlock Reports</h2>
+            <p className="text-xs leading-relaxed mt-1" style={{ color: "#8B8E92" }}>
+              The biggest unlocks each month, ranked by USD value across every protocol and chain.
+            </p>
+          </div>
+          <Link href="/unlocks/report"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap self-start"
+            style={{ background: "#0F8A8A", color: "white" }}>
+            View reports →
+          </Link>
+        </div>
       </section>
 
       <SiteFooter theme="light" />

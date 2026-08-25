@@ -123,11 +123,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.85,
   }));
 
+  // Monthly Token Unlock Reports — the hub + a window of dated reports
+  // (last 3 months through next 6). Pure date math, no DB.
+  const nowUtc = new Date();
+  const reportEntries: MetadataRoute.Sitemap = [
+    { url: `${SITE}/unlocks/report`, lastModified: today, changeFrequency: "daily", priority: 0.8 },
+  ];
+  for (let offset = 6; offset >= -3; offset--) {
+    const d = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth() + offset, 1));
+    const slug = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    reportEntries.push({
+      url:             `${SITE}/unlocks/report/${slug}`,
+      lastModified:    today,
+      changeFrequency: "weekly",
+      priority:        offset >= 0 ? 0.75 : 0.6,
+    });
+  }
+
   return [
     ...staticEntries,
     ...protocolEntries,
     ...protocolUnlockEntries,
     ...articleEntries,
     ...unlockWindowEntries,
+    ...reportEntries,
   ];
 }
