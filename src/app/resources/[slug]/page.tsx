@@ -384,11 +384,15 @@ export default async function ArticlePage(
       },
       {
         "@type": "BreadcrumbList",
+        // NOTE: the category is intentionally NOT a breadcrumb level here —
+        // categories have no landing page, and Google requires `item` (a URL)
+        // on every ListItem except the last. Including a category with no
+        // `item` triggered "Missing field item (in itemListElement)" in GSC.
+        // The visual breadcrumb can still show the category as plain text.
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home",      item: "https://www.vestream.io" },
           { "@type": "ListItem", position: 2, name: "Resources", item: "https://www.vestream.io/resources" },
-          { "@type": "ListItem", position: 3, name: article.category },
-          { "@type": "ListItem", position: 4, name: article.title, item: `https://www.vestream.io/resources/${article.slug}` },
+          { "@type": "ListItem", position: 3, name: article.title, item: `https://www.vestream.io/resources/${article.slug}` },
         ],
       },
       ...(faqBlock
