@@ -354,6 +354,32 @@ export default async function TokenPage(
     return slug ? { slug, name } : null;
   })();
 
+  // ── Answer-first summary (AEO / GEO) ────────────────────────────────────
+  // A plain-text, extractable factual sentence rendered server-side at the top
+  // of the page, so AI answer engines (Google AI Overviews, ChatGPT, Claude,
+  // Perplexity) and searchers get the vesting answer verbatim without executing
+  // JS or scrolling. Doubles as a human TL;DR. Only when the token has vesting.
+  const answerSummary = ((): string | null => {
+    if (!hasVesting || !overview) return null;
+    const dateFmt: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
+    const asOf = new Date().toLocaleDateString("en-US", dateFmt);
+    const names = [...overview.protocolMix]
+      .sort((a, b) => b.lockedTokensWhole - a.lockedTokensWhole)
+      .map((p) => protocolName(p.protocol));
+    const lockedStr = `${fmtTokens(overview.lockedTokensWhole)} ${symbol}${lockedUsd != null ? ` (${fmtUsd(lockedUsd)})` : ""}`;
+    const protoStr = names.length
+      ? ` across ${names.length} ${names.length === 1 ? "protocol" : "protocols"} (${names.join(", ")})`
+      : "";
+    let s = `As of ${asOf}, ${symbol} has ${lockedStr} still locked and vesting${protoStr} on ${CHAIN_NAMES[cid]}.`;
+    const next = upcoming.length > 0 ? upcoming[0] : null;
+    if (next) {
+      const d = new Date(next.timestamp * 1000).toLocaleDateString("en-US", dateFmt);
+      const usd = priceUsd ? ` (~${fmtUsd(next.tokensWhole * priceUsd)})` : "";
+      s += ` The next unlock is ${fmtTokens(next.tokensWhole)} ${symbol}${usd} on ${d}.`;
+    }
+    return s;
+  })();
+
   // BreadcrumbList JSON-LD. Google uses this to render the breadcrumb
   // trail directly in search results (rich-snippet format) – the structured
   // signal also reinforces the site hierarchy for ranking. Positions are
@@ -516,6 +542,19 @@ export default async function TokenPage(
           />
         </div>
       </section>
+
+      {/* ── Answer-first summary (AEO) — first content block, plain text so
+          answer engines lift it verbatim. ─────────────────────────────────── */}
+      {answerSummary && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <p
+            className="text-sm md:text-base leading-relaxed rounded-xl px-4 py-3"
+            style={{ color: "#3f4650", background: "white", border: "1px solid rgba(21,23,26,0.08)" }}
+          >
+            {answerSummary}
+          </p>
+        </section>
+      )}
 
       {/* ──────────────────────────────────────────────────────────────────
           Page ordering rationale – vesting-first, market-data later.

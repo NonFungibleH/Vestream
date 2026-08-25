@@ -254,6 +254,18 @@ export default async function WindowPage({ params }: PageParams) {
   // sorted). We don't fold it back into `result` – `result` stays the typed,
   // const fetch payload.
 
+  // Answer-first lead (AEO / GEO): a plain-text sentence naming the biggest
+  // unlocks in this window, rendered server-side at the top so answer engines
+  // (Google AI Overviews, ChatGPT, Claude, Perplexity) quote it for "biggest
+  // token unlocks {this week}"-style queries. Top 3 by USD value.
+  const rangeLabelLower = (def.dynamicLabel?.() ?? def.label).toLowerCase();
+  const topByUsd = byTokenWithUsd.filter((t) => t.usdValue != null).slice(0, 3);
+  const answerLead = topByUsd.length > 0
+    ? `The biggest token unlocks ${rangeLabelLower} are ${topByUsd
+        .map((t) => `${tokenLabel(t.symbol, t.address)} (~${fmtUsd(t.usdValue!)})`)
+        .join(", ")}.`
+    : null;
+
   // ItemList JSON-LD – every unlock as an Event so Google can render rich
   // event-result cards in SERPs. Capped at 50 items (Google's practical
   // upper bound for ItemList rich results). `eventStatus` +
@@ -340,9 +352,15 @@ export default async function WindowPage({ params }: PageParams) {
         <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>
           Token unlocks {(def.dynamicLabel?.() ?? def.label).toLowerCase()}
         </h1>
-        <p className="text-base max-w-2xl leading-relaxed mb-6" style={{ color: "#475569" }}>
+        <p className="text-base max-w-2xl leading-relaxed mb-4" style={{ color: "#475569" }}>
           {def.dynamicDescription?.() ?? def.description}
         </p>
+        {/* Answer-first lead — plain text so answer engines lift it verbatim. */}
+        {answerLead && (
+          <p className="text-sm md:text-base max-w-2xl leading-relaxed mb-6 font-medium" style={{ color: "#1A1D20" }}>
+            {answerLead}
+          </p>
+        )}
 
         {/* Stat strip */}
         <div className="rounded-2xl px-4 py-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-4 gap-4"
