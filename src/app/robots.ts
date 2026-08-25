@@ -30,7 +30,10 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${SITE}/sitemap.xml`,
+    // Two sitemaps (split Aug 2026): core human-authored pages + the
+    // high-volume programmatic token pages. Listed separately so GSC reports
+    // indexing coverage per section.
+    sitemap: [`${SITE}/sitemap.xml`, `${SITE}/sitemap-tokens.xml`],
     host: SITE,
   };
 }
