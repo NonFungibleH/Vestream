@@ -495,6 +495,19 @@ export default async function UnlocksIndexPage() {
         <UpcomingUnlockTicker initialData={initialUpcoming} />
       </section>
 
+      {/* Server-rendered link to the full upcoming-unlocks calendar. The ticker
+          above is client-side (polls the API), so this static link is what
+          crawlers follow to the SEO-owning /unlocks surface. */}
+      <div className="px-4 md:px-8 pb-8 max-w-5xl mx-auto w-full text-center">
+        <Link
+          href="/unlocks"
+          className="inline-flex items-center gap-2 text-sm font-semibold"
+          style={{ color: "#0F8A8A" }}
+        >
+          See all upcoming token unlocks across every protocol →
+        </Link>
+      </div>
+
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-12 md:pb-16 max-w-5xl mx-auto">
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
