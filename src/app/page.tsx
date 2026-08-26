@@ -87,7 +87,14 @@ const homepageJsonLd = {
       name:      "Vestream",
       url:       "https://www.vestream.io",
       logo:      "https://www.vestream.io/logo.svg",
-      sameAs:    ["https://x.com/Vestream_"],
+      // sameAs strengthens Google's brand-entity graph — helps vestream.io
+      // rank for the bare "Vestream" brand query + build a knowledge panel.
+      // List every official profile.
+      sameAs: [
+        "https://x.com/Vestream_",
+        "https://apps.apple.com/us/app/vestream-token-unlocks/id6769799911",
+        "https://play.google.com/store/apps/details?id=io.vestream.app",
+      ],
     },
     {
       "@type":   "WebSite",

@@ -37,10 +37,11 @@ const SITE = "https://www.vestream.io";
 // Regenerate every 10 min so per-protocol lastmod stays fresh after deploys.
 export const revalidate = 600;
 
-// Fixed content-revision date for genuinely static marketing pages. Bump this
-// when their copy materially changes — NOT on every deploy. A stable value is
-// the honest signal for pages that rarely change; a render-time date is not.
-const CONTENT_REV = new Date("2026-08-25");
+// Fixed content-revision date for genuinely static marketing pages — the date
+// their copy last MATERIALLY changed (not a deploy/plumbing date). Bump only on
+// real copy edits. A too-fresh value makes Google show a "N days ago" byline on
+// the homepage as if it were a blog post; an honest, older date suppresses that.
+const CONTENT_REV = new Date("2026-07-18");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Date-only "today" (midnight UTC) — stable within a day, so daily data pages
