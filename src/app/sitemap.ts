@@ -19,7 +19,8 @@
 // lastModified strategy (Google only trusts lastmod when it's verifiably
 // accurate — a render-time `new Date()` on every URL made every page claim it
 // changed "now" on every fetch, so Google ignored the signal):
-// - Truly-static marketing pages → CONTENT_REV, a fixed date bumped on edits.
+// - Truly-static marketing pages → NO lastmod (avoids a blog-style date byline
+//   on the homepage snippet; there's no meaningful per-fetch change to report).
 // - Daily-changing data pages (/protocols, /unlocks, ranking/window pages) →
 //   TODAY (date-only, stable within a day).
 // - /protocols/[slug](/unlocks) → the cached stream table's real last-refresh.
@@ -37,12 +38,6 @@ const SITE = "https://www.vestream.io";
 // Regenerate every 10 min so per-protocol lastmod stays fresh after deploys.
 export const revalidate = 600;
 
-// Fixed content-revision date for genuinely static marketing pages — the date
-// their copy last MATERIALLY changed (not a deploy/plumbing date). Bump only on
-// real copy edits. A too-fresh value makes Google show a "N days ago" byline on
-// the homepage as if it were a blog post; an honest, older date suppresses that.
-const CONTENT_REV = new Date("2026-07-18");
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Date-only "today" (midnight UTC) — stable within a day, so daily data pages
   // advertise a change once per day instead of on every sitemap fetch.
@@ -52,11 +47,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Build-time guard. During `next build` there is no reliable DB — hitting it
   // risks a hung pooler connection blowing the 60s static-gen budget and
-  // failing the deploy (2026-05-13 incident). Fall back to CONTENT_REV.
+  // failing the deploy (2026-05-13 incident). Fall back to `today`.
   const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
   const protocolLastModified = isBuild
-    ? protocols.map(() => CONTENT_REV)
+    ? protocols.map(() => today)
     : await Promise.all(
         protocols.map(async (p) => {
           try {
@@ -68,30 +63,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }),
       );
 
+  // Static marketing pages deliberately carry NO lastModified. A homepage that
+  // advertises a recent change date gets a "N days ago" byline in Google's
+  // result snippet — makes a brand homepage look like a dated blog post. With
+  // no date in the content, structured data, or sitemap, Google has nothing to
+  // anchor a byline to. Daily data pages (protocols/unlocks/rankings) keep a
+  // date because freshness is genuinely relevant there.
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: `${SITE}/`,              lastModified: CONTENT_REV, changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${SITE}/invest`,        lastModified: CONTENT_REV, changeFrequency: "weekly",  priority: 0.95 },
+    { url: `${SITE}/`,              changeFrequency: "weekly",  priority: 1.0 },
+    { url: `${SITE}/invest`,        changeFrequency: "weekly",  priority: 0.95 },
     // /payroll is the coming-soon waitlist page — kept indexable so the
     // "crypto payroll tracker" search intent finds the roadmap surface,
     // but priority dropped to 0.5 so it doesn't out-rank /invest or /
     // for queries Vestream actually wants to convert today.
-    { url: `${SITE}/payroll`,                 lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE}/corporate/token-payroll`, lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/payroll`,                 changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/corporate/token-payroll`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: today,       changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/unlocks`,       lastModified: today,       changeFrequency: "daily",   priority: 0.9 },
     // Ranking pages — high-intent commercial queries ("biggest token unlocks
     // this week", "airdrop unlocks"). Same crawl cadence as /unlocks itself.
     { url: `${SITE}/unlocks/biggest-this-week`,   lastModified: today, changeFrequency: "daily",   priority: 0.85 },
     { url: `${SITE}/unlocks/mass-distributions`,  lastModified: today, changeFrequency: "daily",   priority: 0.85 },
-    { url: `${SITE}/demo`,          lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.85 },
-    { url: `${SITE}/find-vestings`, lastModified: CONTENT_REV, changeFrequency: "weekly",  priority: 0.85 },
-    { url: `${SITE}/developer`,     lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE}/ai`,            lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE}/pricing`,       lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE}/demo`,          changeFrequency: "monthly", priority: 0.85 },
+    { url: `${SITE}/find-vestings`, changeFrequency: "weekly",  priority: 0.85 },
+    { url: `${SITE}/developer`,     changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE}/ai`,            changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE}/pricing`,       changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE}/resources`,     lastModified: today,       changeFrequency: "weekly",  priority: 0.7 },
-    { url: `${SITE}/early-access`,  lastModified: CONTENT_REV, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE}/privacy`,       lastModified: CONTENT_REV, changeFrequency: "yearly",  priority: 0.3 },
-    { url: `${SITE}/terms`,         lastModified: CONTENT_REV, changeFrequency: "yearly",  priority: 0.3 },
+    { url: `${SITE}/early-access`,  changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE}/privacy`,       changeFrequency: "yearly",  priority: 0.3 },
+    { url: `${SITE}/terms`,         changeFrequency: "yearly",  priority: 0.3 },
   ];
 
   const protocolEntries: MetadataRoute.Sitemap = protocols.map((p, i) => ({
