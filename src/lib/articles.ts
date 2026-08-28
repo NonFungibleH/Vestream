@@ -26,6 +26,64 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── SEO article: Team Finance vesting (targets "team finance vesting" +
+  //    "how to track team finance vesting") — neutral, helps TF recipients ──────
+  {
+    slug:        "how-to-track-team-finance-vesting",
+    title:       "How to Track Team Finance Vesting (2026)",
+    excerpt:     "Team Finance vesting is on-chain but gives recipients no personal dashboard — so finding your own unlock schedule is hard. Here's how Team Finance vesting works and three ways to track it, including a free wallet scan that reconstructs your full schedule in seconds.",
+    publishedAt: "2026-08-28",
+    updatedAt:   "2026-08-28",
+    readingTime: "6 min read",
+    category:    "Guides",
+    tags:        ["Team Finance", "team finance vesting", "vesting tracker", "how to track vesting", "token unlock"],
+    content: [
+      { type: "p", html: "<strong>Team Finance</strong> is one of the most widely used on-chain token vesting and locking services — thousands of projects use it to vest team, advisor and investor allocations. But if you're a <em>recipient</em> of a Team Finance vesting plan, actually finding your own schedule — when your tokens unlock, how much, and how much is still locked — is surprisingly hard. This guide explains how <strong>Team Finance vesting</strong> works and the three ways to track it, including how to see your full schedule for free in seconds." },
+      { type: "callout", emoji: "🔍", title: "The short version", body: "Team Finance vesting is on-chain and non-custodial, but it doesn't give recipients a personal dashboard. To see your own unlock schedule, either read the vesting contract on a block explorer, or paste your wallet into a multi-protocol tracker that decodes it for you." },
+
+      { type: "h2", text: "What is Team Finance vesting?" },
+      { type: "p", html: "Team Finance (part of TrustSwap) lets project founders lock and vest tokens through audited, non-custodial smart contracts. A founder uploads a distribution — team, advisors, investors — and deploys a vesting contract that releases tokens on an agreed schedule: often a <strong>cliff</strong> (a date before which nothing unlocks) followed by <strong>linear</strong> or stepped releases. Because it's on-chain, the schedule is enforced by code, not trust — nobody can release the tokens early or change the terms." },
+      { type: "p", html: "For a primer on the mechanics — cliffs, linear vs stepped schedules, and what they mean for price — see our guide to <a href=\"/resources/what-is-token-vesting\">what token vesting is</a>." },
+
+      { type: "h2", text: "Why your Team Finance vesting is hard to find" },
+      { type: "p", html: "Team Finance's app is built for the <em>founder</em> who creates the plan, not the <em>recipient</em> waiting on it — there's no 'log in and see my unlocks' view for recipients. Worse, many Team Finance distributions are <strong>merkle-based</strong>: the individual allocations aren't stored as separate on-chain records, they're proven against a merkle root at claim time — which makes your personal schedule genuinely difficult to reconstruct by hand." },
+      { type: "ul", items: [
+        "No recipient dashboard — the app is founder-facing.",
+        "Merkle distribution hides individual schedules until you claim.",
+        "The data lives in a raw contract, not a human-readable page.",
+      ] },
+
+      { type: "h2", text: "3 ways to track Team Finance vesting" },
+      { type: "h3", text: "1. The Team Finance app" },
+      { type: "p", html: "If you're the founder who created the plan, the Team Finance dashboard shows the vesting you deployed. As a recipient, though, it won't surface your personal schedule." },
+      { type: "h3", text: "2. A block explorer (Etherscan / BscScan)" },
+      { type: "p", html: "You can read the vesting contract directly on a block explorer and inspect its state. This works, but it's technical — you need the correct contract address, you have to decode the schedule fields yourself, and merkle-distributed plans may not expose your allocation at all until you claim." },
+      { type: "h3", text: "3. A multi-protocol vesting tracker (the easy way)" },
+      { type: "p", html: "The fastest route is a tracker that already decodes Team Finance's contracts. <a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting across Ethereum, BNB Chain and Polygon — paste your wallet address and it reconstructs your full schedule: what's locked, what's claimable now, and every upcoming unlock date. No sign-up, no wallet connection." },
+
+      { type: "h2", text: "How to track your Team Finance vesting on Vestream" },
+      { type: "ol", items: [
+        "Open <a href=\"/find-vestings\">the free wallet scanner</a>.",
+        "Paste the wallet address that holds (or will receive) the vesting — read-only, EVM or Solana.",
+        "Vestream scans Team Finance plus 9 other vesting protocols and lists every position it finds.",
+        "Open the token to see the full unlock schedule, amounts and next unlock date — and turn on an alert so you're notified before each cliff.",
+      ] },
+      { type: "p", html: "You can also browse Team Finance activity directly: the <a href=\"/protocols/team-finance\">Team Finance unlock tracker</a> shows live locked value and stats, and the <a href=\"/protocols/team-finance/unlocks\">Team Finance unlock calendar</a> lists upcoming unlocks across every token vested on the protocol." },
+      { type: "p", html: "Want the deeper, more technical walkthrough — including how to handle merkle-distributed plans? Read <a href=\"/resources/how-to-track-team-finance-unlocks\">how to track Team Finance token unlocks</a>." },
+
+      { type: "h2", text: "Team Finance vesting FAQ" },
+      { type: "faq", items: [
+        { q: "Does Team Finance show my vesting schedule?", a: "Not directly for recipients. The Team Finance app is designed for the founder who creates the plan. To see your own schedule as a recipient, read the contract on a block explorer or use a tracker like Vestream that decodes it and shows your locked balance, claimable amount and next unlock date." },
+        { q: "How do I find my Team Finance unlock date?", a: "Paste your wallet into Vestream's free scanner — it reconstructs your Team Finance schedule and shows the exact date and amount of each upcoming unlock. Alternatively, inspect the vesting contract on Etherscan or BscScan, though merkle-distributed plans may not expose your allocation until you claim." },
+        { q: "Is Team Finance vesting on-chain and safe?", a: "Yes. Team Finance vesting runs on audited, non-custodial smart contracts — the release schedule is enforced by code, and no one can withdraw early or change the terms. Tracking your schedule just reads that on-chain data; it doesn't affect the security of the vesting itself." },
+        { q: "Which chains does Team Finance vesting run on?", a: "Team Finance supports vesting on several EVM chains including Ethereum, BNB Chain and Polygon. Vestream tracks Team Finance vesting across these chains alongside 9 other vesting protocols." },
+        { q: "How do I get alerted before a Team Finance unlock?", a: "Track the wallet on Vestream and enable unlock alerts — you'll get a push or email notification before each cliff or scheduled release, so you never miss a claim or get caught off guard by new supply hitting the market." },
+      ] },
+
+      { type: "p", html: "Team Finance is one of 10 vesting protocols Vestream tracks. To see every unlock across all of them — Sablier, Hedgey, UNCX, Streamflow and more — start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
+    ],
+  },
+
   // ── SEO article: ARB unlock (targets "arbitrum token unlock schedule") ───────
   {
     slug:        "arbitrum-arb-token-unlock-schedule",
