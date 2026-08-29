@@ -39,13 +39,21 @@ const EMPTY: PlatformStats = {
   tvlUsd: 0, byChain: [], byProtocol: [], computedAt: new Date(0).toISOString(), isEmpty: true,
 };
 
+// Distinct tokens with active vesting = one row per token in the rollup table.
+// Retry once — a transient pooler blip here previously cached "0 tokens".
+// Returns 0 only on genuine repeated failure (caller then falls back).
 async function getRollupTokenCount(): Promise<number> {
-  try {
-    const rows = (await db.execute(
-      sql`SELECT count(*)::int AS "count" FROM token_vesting_rollups`,
-    )) as unknown as Array<{ count: number }>;
-    return rows?.[0]?.count ?? 0;
-  } catch { return 0; }
+  for (let i = 0; i < 2; i++) {
+    try {
+      const rows = (await db.execute(
+        sql`SELECT count(*)::int AS "count" FROM token_vesting_rollups`,
+      )) as unknown as Array<{ count: number }>;
+      const c = rows?.[0]?.count;
+      if (typeof c === "number" && c > 0) return c;
+    } catch { /* retry */ }
+    if (i === 0) await new Promise((r) => setTimeout(r, 400));
+  }
+  return 0;
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {
@@ -56,14 +64,19 @@ export async function getPlatformStats(): Promise<PlatformStats> {
   // rows is slow enough to (a) hang the ISR render and (b) starve these two of
   // a pooler connection (which showed up as "0 tokens"). Wallet count is
   // dropped for now — re-add later from a cheap precomputed source.
-  const [snapshots, tokenCount] = await Promise.all([
+  const [snapshots, rollupTokens] = await Promise.all([
     withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "platform:snapshots"),
-    withTimeout(getRollupTokenCount(), 8_000, 0, "platform:tokens"),
+    withTimeout(getRollupTokenCount(), 10_000, 0, "platform:tokens"),
   ]);
 
   // Stream count from the cheap per-protocol snapshot rows (already fetched),
   // NOT a full stream-cache scan.
   const streamCount = snapshots.reduce((a, r) => a + (r.streamCount || 0), 0);
+  // Prefer the accurate distinct-token rollup count; if that query failed
+  // (returned 0), fall back to the snapshot token totals (already fetched, a
+  // slight over-count) so the page NEVER renders "0 tokens".
+  const snapshotTokens = snapshots.reduce((a, r) => a + (r.tokensTotal || 0), 0);
+  const tokenCount = rollupTokens > 0 ? rollupTokens : snapshotTokens;
   const walletCount = 0; // best-effort stat dropped; pages hide it when 0
 
   if (snapshots.length === 0 && streamCount === 0) return EMPTY;
