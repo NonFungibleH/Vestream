@@ -64,10 +64,12 @@ export async function getPlatformStats(): Promise<PlatformStats> {
   // rows is slow enough to (a) hang the ISR render and (b) starve these two of
   // a pooler connection (which showed up as "0 tokens"). Wallet count is
   // dropped for now — re-add later from a cheap precomputed source.
-  const [snapshots, rollupTokens] = await Promise.all([
-    withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "platform:snapshots"),
-    withTimeout(getRollupTokenCount(), 10_000, 0, "platform:tokens"),
-  ]);
+  // SEQUENTIAL, not Promise.all: the serverless pooler connection is scarce, and
+  // running these concurrently made the token-count query lose its connection
+  // and fall back to the inflated snapshot count (~18k vs the true ~8.8k). Run
+  // one at a time so each gets the connection → stable, accurate figures.
+  const snapshots = await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "platform:snapshots");
+  const rollupTokens = await withTimeout(getRollupTokenCount(), 10_000, 0, "platform:tokens");
 
   // Stream count from the cheap per-protocol snapshot rows (already fetched),
   // NOT a full stream-cache scan.
