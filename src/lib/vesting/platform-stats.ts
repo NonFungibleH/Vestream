@@ -17,7 +17,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
-import { getCacheStats } from "./dbcache";
 import { listProtocols } from "../protocol-constants";
 import { CHAIN_NAMES } from "./types";
 import { withTimeout } from "../with-timeout";
@@ -52,21 +51,20 @@ async function getRollupTokenCount(): Promise<number> {
 export async function getPlatformStats(): Promise<PlatformStats> {
   if (process.env.NEXT_PHASE === "phase-production-build") return EMPTY;
 
-  // Bound EVERY query so a slow one can never hang the ISR render (which would
-  // leave the page stuck on its empty build-time prerender). The DISTINCT-
-  // recipient scan over the full stream cache is the only pathologically slow
-  // one — hence the tight cap on getCacheStats + wallet count being best-effort.
-  const [snapshots, cache, tokenCount] = await Promise.all([
+  // Only two CHEAP queries, run concurrently + bounded. We deliberately do NOT
+  // call getCacheStats here: its COUNT(DISTINCT recipient) over ~192k stream
+  // rows is slow enough to (a) hang the ISR render and (b) starve these two of
+  // a pooler connection (which showed up as "0 tokens"). Wallet count is
+  // dropped for now — re-add later from a cheap precomputed source.
+  const [snapshots, tokenCount] = await Promise.all([
     withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "platform:snapshots"),
-    withTimeout(getCacheStats(), 4_000, { totalStreams: 0, uniqueWallets: 0 }, "platform:wallets"),
-    withTimeout(getRollupTokenCount(), 6_000, 0, "platform:tokens"),
+    withTimeout(getRollupTokenCount(), 8_000, 0, "platform:tokens"),
   ]);
 
   // Stream count from the cheap per-protocol snapshot rows (already fetched),
-  // NOT the full stream-cache scan. Only fall back to the cache count if
-  // snapshots are empty.
-  const streamsFromSnapshots = snapshots.reduce((a, r) => a + (r.streamCount || 0), 0);
-  const streamCount = streamsFromSnapshots > 0 ? streamsFromSnapshots : cache.totalStreams;
+  // NOT a full stream-cache scan.
+  const streamCount = snapshots.reduce((a, r) => a + (r.streamCount || 0), 0);
+  const walletCount = 0; // best-effort stat dropped; pages hide it when 0
 
   if (snapshots.length === 0 && streamCount === 0) return EMPTY;
 
@@ -107,7 +105,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     chainCount,
     tokenCount,
     streamCount,
-    walletCount: cache.uniqueWallets,   // best-effort — 0 if the DISTINCT scan timed out
+    walletCount,
     tvlUsd,
     byChain,
     byProtocol,
