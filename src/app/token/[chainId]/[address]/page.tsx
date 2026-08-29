@@ -36,6 +36,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
+import { Provenance } from "@/components/Provenance";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
@@ -341,6 +342,25 @@ export default async function TokenPage(
 
   const symbol  = overview?.tokenSymbol ?? market.tokenName ?? truncate(addr);
 
+  // ── Next-unlock impact (AEO/GEO) — "how big is this unlock vs the market?",
+  //    computed from data we already have. absorptionRatio = unlock ÷ 24h
+  //    volume (how many days of volume to absorb it); mcapShare = unlock ÷
+  //    market cap (how much of the tradeable token hits at once).
+  const nextUnlockEvt = upcoming.length > 0 ? upcoming[0] : null;
+  const nextUnlockUsd = nextUnlockEvt && priceUsd ? nextUnlockEvt.tokensWhole * priceUsd : null;
+  const absorptionRatio = nextUnlockUsd != null && market.volume24h && market.volume24h > 0
+    ? nextUnlockUsd / market.volume24h : null;
+  const nextUnlockMcapShare = nextUnlockUsd != null && market.marketCap && market.marketCap > 0
+    ? (nextUnlockUsd / market.marketCap) * 100 : null;
+  const impactRisk: "Low" | "Medium" | "High" | null =
+    (absorptionRatio == null && nextUnlockMcapShare == null) ? null
+      : ((absorptionRatio ?? 0) >= 1 || (nextUnlockMcapShare ?? 0) >= 5) ? "High"
+      : ((absorptionRatio ?? 0) >= 0.25 || (nextUnlockMcapShare ?? 0) >= 1) ? "Medium"
+      : "Low";
+  const riskColor = impactRisk === "High" ? { bg: "rgba(179,50,46,0.10)", fg: "#B3322E" }
+    : impactRisk === "Medium" ? { bg: "rgba(240,153,46,0.12)", fg: "#C77B18" }
+      : { bg: "rgba(45,179,106,0.12)", fg: "#1F8F52" };
+
   // Pick the dominant protocol for this token (the one with the largest locked
   // share). Used as the third breadcrumb so visitors landing on a token page
   // can navigate up to the protocol whose schedule dominates that token's
@@ -616,6 +636,48 @@ export default async function TokenPage(
           />
         </div>
       </section>
+
+      {/* ── Next-unlock impact (AEO) — extractable "how big vs the market" ─── */}
+      {hasVesting && impactRisk && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <div className="rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <h2 className="text-base font-bold" style={{ color: "#1A1D20" }}>Next-unlock impact</h2>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: riskColor.bg, color: riskColor.fg }}>
+                {impactRisk} sell-pressure risk
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {nextUnlockUsd != null && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Next unlock value</p>
+                  <p className="text-lg font-bold tabular-nums" style={{ color: "#1A1D20" }}>{fmtUsd(nextUnlockUsd)}</p>
+                </div>
+              )}
+              {absorptionRatio != null && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Absorption ratio</p>
+                  <p className="text-lg font-bold tabular-nums" style={{ color: "#1A1D20" }}>{absorptionRatio.toFixed(1)}×</p>
+                  <p className="text-[10px]" style={{ color: "#B8BABD" }}>of 24h volume</p>
+                </div>
+              )}
+              {nextUnlockMcapShare != null && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Share of market cap</p>
+                  <p className="text-lg font-bold tabular-nums" style={{ color: "#1A1D20" }}>{nextUnlockMcapShare.toFixed(1)}%</p>
+                </div>
+              )}
+            </div>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "#8B8E92" }}>
+              {absorptionRatio != null && (
+                <>The next {symbol} unlock is {absorptionRatio >= 1 ? `${absorptionRatio.toFixed(1)}×` : `${(absorptionRatio * 100).toFixed(0)}% of`} a full day&apos;s trading volume. </>
+              )}
+              A higher absorption ratio and market-cap share mean more potential sell pressure at unlock. Estimate, not financial advice.
+            </p>
+            <div className="mt-3"><Provenance /></div>
+          </div>
+        </section>
+      )}
 
       {/* ── Pulse summary (3-4 bullets, no See more). Hidden when there's
           nothing substantive to say – TokenPulse returns null on empty. */}

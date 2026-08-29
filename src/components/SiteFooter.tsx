@@ -58,6 +58,7 @@ const LINK_GROUPS = [
     links: [
       { label: "Protocols",            href: "/protocols" },
       { label: "Unlock calendar",      href: "/unlocks"   },
+      { label: "Vesting stats",        href: "/research/vesting-statistics" },
       { label: "Demo",                 href: "/demo"      },
       { label: "Pricing",              href: "/pricing"   },
       { label: "Payroll",                href: "/payroll"  },
@@ -69,8 +70,9 @@ const LINK_GROUPS = [
   {
     heading: "Developers",
     links: [
-      { label: "Developer API", href: "/developer" },
-      { label: "AI Agents",     href: "/ai"        },
+      { label: "Developer API",      href: "/developer" },
+      { label: "AI Agents",          href: "/ai"        },
+      { label: "Data & methodology", href: "/methodology" },
     ],
   },
   {

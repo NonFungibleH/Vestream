@@ -90,6 +90,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/ai`,            changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE}/pricing`,       changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE}/resources`,     lastModified: today,       changeFrequency: "weekly",  priority: 0.7 },
+    { url: `${SITE}/research/vesting-statistics`, lastModified: today, changeFrequency: "daily", priority: 0.75 },
+    { url: `${SITE}/methodology`,   lastModified: today,       changeFrequency: "weekly",  priority: 0.6 },
     { url: `${SITE}/early-access`,  changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE}/privacy`,       changeFrequency: "yearly",  priority: 0.3 },
     { url: `${SITE}/terms`,         changeFrequency: "yearly",  priority: 0.3 },
