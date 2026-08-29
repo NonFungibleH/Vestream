@@ -16,10 +16,11 @@
 
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { readAllSnapshots } from "./tvl-snapshot";
+import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
 import { getCacheStats } from "./dbcache";
 import { listProtocols } from "../protocol-constants";
 import { CHAIN_NAMES } from "./types";
+import { withTimeout } from "../with-timeout";
 
 export interface PlatformStats {
   protocolCount: number;
@@ -51,13 +52,23 @@ async function getRollupTokenCount(): Promise<number> {
 export async function getPlatformStats(): Promise<PlatformStats> {
   if (process.env.NEXT_PHASE === "phase-production-build") return EMPTY;
 
+  // Bound EVERY query so a slow one can never hang the ISR render (which would
+  // leave the page stuck on its empty build-time prerender). The DISTINCT-
+  // recipient scan over the full stream cache is the only pathologically slow
+  // one — hence the tight cap on getCacheStats + wallet count being best-effort.
   const [snapshots, cache, tokenCount] = await Promise.all([
-    readAllSnapshots().catch(() => []),
-    getCacheStats().catch(() => ({ totalStreams: 0, uniqueWallets: 0 })),
-    getRollupTokenCount(),
+    withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "platform:snapshots"),
+    withTimeout(getCacheStats(), 4_000, { totalStreams: 0, uniqueWallets: 0 }, "platform:wallets"),
+    withTimeout(getRollupTokenCount(), 6_000, 0, "platform:tokens"),
   ]);
 
-  if (snapshots.length === 0 && cache.totalStreams === 0) return EMPTY;
+  // Stream count from the cheap per-protocol snapshot rows (already fetched),
+  // NOT the full stream-cache scan. Only fall back to the cache count if
+  // snapshots are empty.
+  const streamsFromSnapshots = snapshots.reduce((a, r) => a + (r.streamCount || 0), 0);
+  const streamCount = streamsFromSnapshots > 0 ? streamsFromSnapshots : cache.totalStreams;
+
+  if (snapshots.length === 0 && streamCount === 0) return EMPTY;
 
   // readAllSnapshots() rows key `protocol` on the protocol SLUG.
   const protoBySlug = new Map(listProtocols().map((p) => [p.slug, p]));
@@ -95,8 +106,8 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     protocolCount: protocols.length,
     chainCount,
     tokenCount,
-    streamCount: cache.totalStreams,
-    walletCount: cache.uniqueWallets,
+    streamCount,
+    walletCount: cache.uniqueWallets,   // best-effort — 0 if the DISTINCT scan timed out
     tvlUsd,
     byChain,
     byProtocol,

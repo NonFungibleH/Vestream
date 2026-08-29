@@ -54,7 +54,7 @@ export default async function MethodologyPage() {
 
   const summary = s.isEmpty
     ? "Vestream is a non-custodial token-vesting data platform that indexes vesting and unlock schedules across every major protocol and chain."
-    : `Vestream indexes approximately ${n(s.streamCount)} vesting streams across ${n(s.tokenCount)} tokens and ${s.walletCount.toLocaleString()} recipient wallets, spanning ${s.protocolCount} vesting protocols and ${s.chainCount} chains — roughly ${fmtUsd(s.tvlUsd)} in vesting value locked (conservative headline; see methodology below).`;
+    : `Vestream indexes approximately ${n(s.streamCount)} vesting streams across ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` and ${s.walletCount.toLocaleString()} recipient wallets` : ""}, spanning ${s.protocolCount} vesting protocols and ${s.chainCount} chains — roughly ${fmtUsd(s.tvlUsd)} in vesting value locked (conservative headline; see methodology below).`;
 
   const jsonLd = [
     {
@@ -115,7 +115,7 @@ export default async function MethodologyPage() {
             <Stat label="Vesting TVL" value={fmtUsd(s.tvlUsd)} sub="conservative headline" />
             <Stat label="Vesting streams" value={n(s.streamCount)} />
             <Stat label="Tokens" value={n(s.tokenCount)} />
-            <Stat label="Recipient wallets" value={n(s.walletCount)} />
+            {s.walletCount > 0 && <Stat label="Recipient wallets" value={n(s.walletCount)} />}
             <Stat label="Protocols" value={n(s.protocolCount)} />
             <Stat label="Chains" value={n(s.chainCount)} />
           </div>

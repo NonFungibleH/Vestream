@@ -59,7 +59,7 @@ export default async function VestingStatisticsPage() {
 
   const answer = s.isEmpty
     ? "Vestream tracks the value locked in on-chain token vesting across every major protocol and chain."
-    : `Approximately ${fmtUsd(s.tvlUsd)} is currently locked in token vesting across the ${s.protocolCount} protocols and ${s.chainCount} chains indexed by Vestream — spread over ${n(s.streamCount)} vesting streams and ${n(s.tokenCount)} tokens.`;
+    : `Approximately ${fmtUsd(s.tvlUsd)} is currently locked in token vesting across the ${s.protocolCount} protocols and ${s.chainCount} chains indexed by Vestream — spread over ${n(s.streamCount)} vesting streams and ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` held by ${n(s.walletCount)} recipient wallets` : ""}.`;
 
   const topChain = s.byChain[0];
   const topProto = s.byProtocol[0];
@@ -114,7 +114,9 @@ export default async function VestingStatisticsPage() {
               <Stat label="Vesting TVL" value={fmtUsd(s.tvlUsd)} sub="conservative headline" />
               <Stat label="Vesting streams" value={n(s.streamCount)} />
               <Stat label="Tokens vesting" value={n(s.tokenCount)} />
-              <Stat label="Recipient wallets" value={n(s.walletCount)} />
+              {s.walletCount > 0
+                ? <Stat label="Recipient wallets" value={n(s.walletCount)} />
+                : <Stat label="Protocols" value={n(s.protocolCount)} sub="indexed" />}
             </div>
           </section>
 
