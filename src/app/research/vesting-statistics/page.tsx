@@ -13,7 +13,7 @@ import { Provenance } from "@/components/Provenance";
 import { getPlatformStats } from "@/lib/vesting/platform-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Token Vesting Statistics — TVL, Streams & Locked Supply",
