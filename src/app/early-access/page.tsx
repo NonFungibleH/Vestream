@@ -20,7 +20,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
-  description: "Download Vestream free on the App Store and Google Play. Track every token unlock across 10 vesting protocols and 8 chains — no account, no KYC. Upgrade to Pro in-app for unlimited alerts, the web dashboard, and tax exports.",
+  description: "Download Vestream free on iOS and Android. Track every token unlock across 10 vesting protocols and 8 chains — no account, no KYC. Pro adds unlimited alerts.",
   alternates:  { canonical: "https://www.vestream.io/early-access" },
   openGraph: {
     title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",

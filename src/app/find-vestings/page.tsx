@@ -17,7 +17,7 @@ import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
   title: "Find your token vestings – scan any wallet · Vestream",
-  description: "Paste a wallet address and instantly see every vesting schedule across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock. Free, no signup.",
+  description: "Paste a wallet address and instantly see every vesting owed to it across Sablier, Hedgey, Streamflow, Jupiter Lock and more — EVM and Solana. Free, no signup.",
   alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };
 

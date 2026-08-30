@@ -186,7 +186,7 @@ async function writeLastGood(payload: StatusPayload): Promise<void> {
 
 export const metadata: Metadata = {
   title:       "Status – Vestream",
-  description: "Live indexing freshness for every supported protocol and chain.",
+  description: "Vestream system status: live indexing freshness for every supported vesting protocol and chain, updated continuously.",
   robots:      { index: false, follow: false },
 };
 

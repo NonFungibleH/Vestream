@@ -18,7 +18,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Token Vesting Statistics — TVL, Streams & Locked Supply",
   description:
-    "Live token-vesting statistics from the Vestream index: total value locked in vesting, number of vesting streams and tokens, and a breakdown of vesting TVL by chain and by protocol.",
+    "Live token vesting statistics from Vestream's on-chain index: total value locked in vesting, stream and token counts, and TVL by chain and protocol.",
   alternates: { canonical: "https://www.vestream.io/research/vesting-statistics" },
   openGraph: {
     title: "Token Vesting Statistics",

@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   if (!parsed) return { title: "Token Unlock Report – Vestream" };
   const label = monthLabel(parsed.year, parsed.month);
   const title = `${label} Token Unlock Report | Vestream`;
-  const desc  = `The biggest token unlocks in ${label} — ranked by USD value across every protocol and chain Vestream tracks. Dates, amounts, and dollar impact for each unlock event.`;
+  const desc  = `The biggest token unlocks in ${label}, ranked by USD value across every protocol and chain Vestream tracks — dates, amounts, and dollar impact.`;
   const url   = `https://www.vestream.io/unlocks/report/${month}`;
   return {
     title,

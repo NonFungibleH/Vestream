@@ -254,7 +254,7 @@ const loadProtocolsData = unstable_cache(
 export const metadata: Metadata = {
   title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
   description:
-    "Live on-chain unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow and Jupiter Lock – across Ethereum, Base, BSC, Polygon and Solana.",
+    "Live token unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Streamflow, Jupiter Lock and more — across 8 chains, EVM and Solana.",
   alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
     title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",

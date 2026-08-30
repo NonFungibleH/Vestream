@@ -26,7 +26,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Vestream Invest – Track every token vesting unlock you're owed",
-  description: "Watch every token vesting unlock you're owed across 10 protocols and 8 chains. Push alerts the second a cliff hits, one-tap claim links, tax-ready exports. Free.",
+  description: "Never miss a token unlock from projects you've backed. Vestream tracks vestings across 10 protocols and 8 chains, with push alerts the second a cliff hits.",
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
     title:       "Vestream Invest – Track every vesting unlock",

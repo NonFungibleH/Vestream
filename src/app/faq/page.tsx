@@ -28,7 +28,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "FAQ – Vestream | Token vesting, unlock alerts, developer API",
   description:
-    "Answers to every common question about Vestream: supported protocols and chains, how unlock alerts work, pricing, security, the developer REST API and MCP server, mobile app, account management, and more.",
+    "Vestream FAQ: supported protocols and chains, how token unlock alerts work, pricing, security, the developer REST API and MCP server, and your account.",
   alternates: { canonical: "https://www.vestream.io/faq" },
   openGraph: {
     title: "Vestream FAQ",

@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API – Vestream",
   description:
-    "REST API + MCP server for token vesting data across Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – on Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche, and Solana. Normalised JSON, agent-native, ready in minutes.",
+    "Token vesting API for developers: REST + MCP server covering 10 protocols and 8 chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API – Vestream",

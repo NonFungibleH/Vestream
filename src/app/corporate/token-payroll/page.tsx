@@ -34,7 +34,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Live salary feed for crypto payroll · Vestream",
   description:
-    "Give your employees, contractors, and KOLs a real-time view of their vesting salary. Live to the second, with push notifications before every unlock and local-currency conversion anywhere in the world – regardless of which protocol you used to set up the vestings.",
+    "Token payroll your team can actually see. Give employees, contractors, and KOLs a live view of their vesting salary, with alerts before every unlock.",
   alternates: { canonical: "https://www.vestream.io/corporate/token-payroll" },
   openGraph: {
     title: "Live salary feed for crypto payroll · Vestream",

@@ -18,7 +18,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Vestream Data & Methodology — Token Vesting Index",
   description:
-    "How Vestream indexes token vesting: the dataset (protocols, chains, tokens, streams, wallets, TVL), where the data comes from, and exactly how USD values, TVL and unlock figures are calculated. Non-custodial, on-chain, updated continuously.",
+    "How Vestream indexes token vesting: where the on-chain data comes from and how USD values, TVL, and unlock figures are calculated. Updated continuously.",
   alternates: { canonical: "https://www.vestream.io/methodology" },
   openGraph: {
     title: "Vestream Data & Methodology",

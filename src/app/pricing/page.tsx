@@ -7,7 +7,7 @@ import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 
 export const metadata: Metadata = {
   title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
-  description: "Vestream is free for 3 wallets and 10 push alerts per month. Pro at $9.99/mo ($74.99/yr – save 37%) unlocks unlimited push + email alerts, 10 wallets, the web dashboard, and tax-ready CSV exports for Koinly, CoinTracker, and TurboTax.",
+  description: "Vestream is free for 3 wallets and 10 alerts a month. Pro at $9.99/mo unlocks unlimited alerts, 10 wallets, the web dashboard, and tax-ready CSV exports.",
   alternates:  { canonical: "https://www.vestream.io/pricing" },
   openGraph: {
     title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
