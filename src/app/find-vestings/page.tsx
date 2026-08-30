@@ -12,6 +12,7 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { protocolBrand, protocolIcon, chainBrand, chainIcon } from "@/lib/protocol-constants";
 import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
@@ -20,38 +21,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };
 
-// Display order mirrors the homepage "Integrated with" strip – same colours,
-// same row-1 / row-2 split, same chain pills. Single source of truth for the
-// visual would be nice but for now consistent literal lists keep the two
-// pages tightly aligned.
-const PROTOCOLS_ROW_1 = [
-  // 2026-05-15: aligned to canonical palette in protocol-constants.ts.
-  // Previous values had Hedgey #3b82f6 (collided with Base chain) and
-  // UNCX #F0992E (collided with Sablier). Both fixed.
-  { name: "Sablier",      color: "#F0992E", bg: "rgba(240,153,46,0.07)",  border: "rgba(240,153,46,0.15)"  },
-  { name: "Hedgey",       color: "#8169E0", bg: "rgba(129,105,224,0.07)", border: "rgba(129,105,224,0.15)" },
-  { name: "UNCX",         color: "#3D7FD0", bg: "rgba(61,127,208,0.07)",  border: "rgba(61,127,208,0.15)"  },
-  { name: "LlamaPay",     color: "#A26B3F", bg: "rgba(162,107,63,0.07)",  border: "rgba(162,107,63,0.15)"  },
-] as const;
+// Display order mirrors the homepage "Integrated with" strip – same row-1 /
+// row-2 split, same chain order. Colours + logo icons come from
+// protocol-constants.ts (single source of truth), which also fixes the
+// palette drift the old hardcoded lists here had accumulated.
+const PROTOCOL_ROW_1_SLUGS = ["sablier", "hedgey", "uncx", "llamapay"] as const;
+const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock", "team-finance"] as const;
 
-const PROTOCOLS_ROW_2 = [
-  { name: "Unvest",       color: "#0BA0CB", bg: "rgba(11,160,203,0.07)",  border: "rgba(11,160,203,0.15)"  },
-  { name: "Superfluid",   color: "#28B895", bg: "rgba(40,184,149,0.07)",  border: "rgba(40,184,149,0.15)"  },
-  { name: "PinkSale",     color: "#E063A0", bg: "rgba(224,99,160,0.07)",  border: "rgba(224,99,160,0.15)"  },
-  { name: "Team Finance", color: "#2F6BFF", bg: "rgba(47,107,255,0.07)",  border: "rgba(47,107,255,0.15)"  },
-  { name: "Streamflow",   color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",  border: "rgba(93,206,157,0.22)"  },
-  { name: "Jupiter Lock", color: "#F0B83D", bg: "rgba(240,184,61,0.08)",  border: "rgba(240,184,61,0.22)"  },
-] as const;
-
-const CHAINS = [
-  { name: "Ethereum",  color: "#6366f1", bg: "rgba(28,184,184,0.07)",   border: "rgba(28,184,184,0.16)"   },
-  { name: "BNB Chain", color: "#eab308", bg: "rgba(234,179,8,0.07)",    border: "rgba(234,179,8,0.16)"    },
-  { name: "Base",      color: "#3b82f6", bg: "rgba(59,130,246,0.07)",   border: "rgba(59,130,246,0.16)"   },
-  { name: "Polygon",   color: "#8b5cf6", bg: "rgba(139,92,246,0.07)",   border: "rgba(139,92,246,0.16)"   },
-  { name: "Arbitrum",  color: "#28A0F0", bg: "rgba(40,160,240,0.07)",   border: "rgba(40,160,240,0.16)"   },
-  { name: "Optimism",  color: "#FF0420", bg: "rgba(255,4,32,0.07)",     border: "rgba(255,4,32,0.16)"     },
-  { name: "Solana",    color: "#5DCE9D", bg: "rgba(93,206,157,0.08)",   border: "rgba(93,206,157,0.22)"   },
-] as const;
+// Homepage "Available on" order: Ethereum, BNB, Base, Polygon, Arbitrum,
+// Optimism, Avalanche, Solana. (The old literal list here was missing
+// Avalanche while the copy above promised 8 chains.)
+const CHAIN_IDS = [1, 56, 8453, 137, 42161, 10, 43114, 101] as const;
 
 // 2026-05-17 SEO/AI-search pass: HowTo + BreadcrumbList JSON-LD.
 // This page is the canonical landing target for "how do I find my vesting
@@ -147,26 +127,39 @@ export default function FindVestingsPage() {
             We scan
           </p>
           <div className="flex items-center justify-center gap-1.5 md:gap-2 flex-wrap mb-2">
-            {PROTOCOLS_ROW_1.map((p) => (
-              <ProtocolPill key={p.name} {...p} />
+            {PROTOCOL_ROW_1_SLUGS.map((slug) => (
+              <ProtocolPill key={slug} slug={slug} />
             ))}
           </div>
           <div className="flex items-center justify-center gap-1.5 md:gap-2 flex-wrap">
-            {PROTOCOLS_ROW_2.map((p) => (
-              <ProtocolPill key={p.name} {...p} />
+            {PROTOCOL_ROW_2_SLUGS.map((slug) => (
+              <ProtocolPill key={slug} slug={slug} />
             ))}
           </div>
           <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest mr-1" style={{ color: "#cbd5e1" }}>across</p>
-            {CHAINS.map((c) => (
-              <div
-                key={c.name}
-                className="flex items-center px-2.5 py-0.5 rounded-full"
-                style={{ background: c.bg, border: `1px solid ${c.border}` }}
-              >
-                <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
-              </div>
-            ))}
+            {CHAIN_IDS.map((id) => {
+              const c = chainBrand(id);
+              const icon = chainIcon(id);
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full"
+                  style={{ background: c.bg, border: `1px solid ${c.border}` }}
+                >
+                  {icon && (
+                    <span
+                      className="w-[16px] h-[16px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                      style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={icon} alt="" width={16} height={16} className="w-full h-full object-contain p-[1.5px]" />
+                    </span>
+                  )}
+                  <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -181,22 +174,29 @@ export default function FindVestingsPage() {
   );
 }
 
-// Compact pill that matches the homepage protocol-strip styling exactly.
-function ProtocolPill({
-  name, color, bg, border,
-}: { name: string; color: string; bg: string; border: string }) {
+// Compact pill matching the homepage protocol-strip treatment: real logo
+// mark in a white tile, colour-tinted monogram fallback for protocols with
+// no square mark upstream (Hedgey).
+function ProtocolPill({ slug }: { slug: string }) {
+  const b = protocolBrand(slug);
+  const icon = protocolIcon(slug);
   return (
     <div
       className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
-      style={{ background: bg, border: `1px solid ${border}` }}
+      style={{ background: b.bg, border: `1px solid ${b.border}` }}
     >
       <div
-        className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
-        style={{ background: color }}
+        className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden"
+        style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}
       >
-        <span className="text-white font-bold text-[9px] leading-none">{name[0]}</span>
+        {icon ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={icon} alt="" width={20} height={20} className="w-full h-full object-contain p-[2px]" />
+        ) : (
+          <span className="font-extrabold text-[11px] leading-none" style={{ color: b.color }}>{b.name[0]}</span>
+        )}
       </div>
-      <p className="text-[11px] font-bold leading-tight whitespace-nowrap" style={{ color }}>{name}</p>
+      <p className="text-[11px] font-bold leading-tight whitespace-nowrap" style={{ color: b.color }}>{b.name}</p>
     </div>
   );
 }
