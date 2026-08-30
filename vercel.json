@@ -13,7 +13,7 @@
       "schedule": "50 3 * * *"
     },
     {
-      "path": "/api/cron/tvl-snapshot?protocol=uncx,unvest,superfluid",
+      "path": "/api/cron/tvl-snapshot?protocol=uncx,unvest,superfluid,hoodlock",
       "schedule": "5 4 * * *"
     },
     {
@@ -87,6 +87,10 @@
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=10",
       "schedule": "56 5 * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=hoodlock&chainId=4663",
+      "schedule": "3 6 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=subgraphs",

@@ -59,6 +59,7 @@ export function blockExplorerUrl(chainId: number, address: string): string | nul
     case 42161:    return `https://arbiscan.io/token/${addr}`;
     case 10:       return `https://optimistic.etherscan.io/token/${addr}`;
     case 43114:    return `https://snowtrace.io/token/${addr}`;
+    case 4663:     return `https://robinhoodchain.blockscout.com/token/${addr}`;
     case 11155111: return `https://sepolia.etherscan.io/token/${addr}`;
     case 84532:    return `https://sepolia.basescan.org/token/${addr}`;
     default:       return null;
@@ -86,6 +87,7 @@ export function blockExplorerAddressUrl(chainId: number, address: string): strin
     case 42161:    return `https://arbiscan.io/address/${addr}`;
     case 10:       return `https://optimistic.etherscan.io/address/${addr}`;
     case 43114:    return `https://snowtrace.io/address/${addr}`;
+    case 4663:     return `https://robinhoodchain.blockscout.com/address/${addr}`;
     case 11155111: return `https://sepolia.etherscan.io/address/${addr}`;
     case 84532:    return `https://sepolia.basescan.org/address/${addr}`;
     default:       return null;
@@ -160,6 +162,7 @@ export function blockExplorerName(chainId: number): string | null {
     case 42161:    return "Arbiscan";
     case 10:       return "Optimistic Etherscan";
     case 43114:    return "Snowtrace";
+    case 4663:     return "Blockscout";
     case 11155111: return "Sepolia Etherscan";
     case 84532:    return "Sepolia BaseScan";
     case 101:      return "Solscan";

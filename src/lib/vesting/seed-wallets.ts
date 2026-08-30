@@ -56,5 +56,6 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   // remains BSC. Left empty until verified.
   [CHAIN_IDS.OPTIMISM]:     [],
   [CHAIN_IDS.AVALANCHE]:    [],
+  [CHAIN_IDS.ROBINHOOD]:    [], // PinkSale not on Robinhood Chain
   [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };

@@ -17,10 +17,12 @@
 import type { Indexer } from "./types";
 import { uncxVmIndexers } from "./uncx-vm";
 import { hedgeyIndexers } from "./hedgey";
+import { hoodlockIndexers } from "./hoodlock";
 
 export const INDEXERS: Indexer[] = [
   ...uncxVmIndexers,
   ...hedgeyIndexers,
+  ...hoodlockIndexers,
 ];
 
 /**

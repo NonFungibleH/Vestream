@@ -42,6 +42,7 @@ export const CHAIN_IDS = {
   ARBITRUM:     42161,     // Arbitrum One — largest L2 by TVL
   OPTIMISM:     10,        // OP Mainnet — major L2 (OP token vesting + ecosystem)
   AVALANCHE:    43114,     // Avalanche C-Chain — vesting TVL across Sablier/Hedgey/Team Finance/LlamaPay
+  ROBINHOOD:    4663,      // Robinhood Chain — EVM L2 (Arbitrum Orbit/Nitro), gas ETH; HoodLock locker
   SEPOLIA:      11155111,  // Ethereum Sepolia testnet
   BASE_SEPOLIA: 84532,     // Base Sepolia testnet
   SOLANA:       101,       // Solana mainnet-beta (non-EVM)
@@ -57,6 +58,7 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.ARBITRUM]:     "Arbitrum",
   [CHAIN_IDS.OPTIMISM]:     "Optimism",
   [CHAIN_IDS.AVALANCHE]:    "Avalanche",
+  [CHAIN_IDS.ROBINHOOD]:    "Robinhood Chain",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",
   [CHAIN_IDS.BASE_SEPOLIA]: "Base Sepolia",
   [CHAIN_IDS.SOLANA]:       "Solana",
@@ -82,6 +84,7 @@ export const EVM_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.ARBITRUM,
   CHAIN_IDS.OPTIMISM,
   CHAIN_IDS.AVALANCHE,
+  CHAIN_IDS.ROBINHOOD,
   CHAIN_IDS.SEPOLIA,
   CHAIN_IDS.BASE_SEPOLIA,
 ];

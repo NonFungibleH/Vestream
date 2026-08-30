@@ -44,6 +44,7 @@ import { ingestUnvestClaimsForUser } from "./unvest-claims";
 import { ingestSuperfluidClaimsForUser } from "./superfluid-claims";
 import { ingestStreamflowClaimsForUser } from "./streamflow-claims";
 import { ingestJupiterLockClaimsForUser } from "./jupiter-lock-claims";
+import { ingestHoodlockClaimsForUser } from "./hoodlock-claims";
 import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 export type AdapterId =
@@ -56,7 +57,8 @@ export type AdapterId =
   | "superfluid"
   | "pinksale"
   | "streamflow"
-  | "jupiter-lock";
+  | "jupiter-lock"
+  | "hoodlock";
 
 export interface IngestResult {
   protocol:        AdapterId;
@@ -79,6 +81,7 @@ export const SHIPPED_INGESTORS: AdapterId[] = [
   "superfluid",
   "streamflow",
   "jupiter-lock",
+  "hoodlock",
 ];
 
 /** Map each adapter id to its ingestor fn. Single source of truth used by
@@ -94,6 +97,7 @@ const INGESTOR_BY_PROTOCOL: Record<AdapterId, (u: string, w: string[], c?: Suppo
   "superfluid":   ingestSuperfluidClaimsForUser,
   "streamflow":   ingestStreamflowClaimsForUser,
   "jupiter-lock": ingestJupiterLockClaimsForUser,
+  "hoodlock":     ingestHoodlockClaimsForUser,
 };
 
 function runGated(protocol: AdapterId, run: () => Promise<number>): Promise<IngestResult> {
@@ -176,6 +180,9 @@ export async function ingestAllClaimsForUser(
     // between refreshes).
     gated("streamflow",   () => ingestStreamflowClaimsForUser(userId, wallets, chainIds)),
     gated("jupiter-lock", () => ingestJupiterLockClaimsForUser(userId, wallets, chainIds)),
+
+    // HoodLock — Robinhood Chain (4663). Withdrawn events → claim income.
+    gated("hoodlock",     () => ingestHoodlockClaimsForUser(userId, wallets, chainIds)),
   ];
 
   return Promise.all(tasks);

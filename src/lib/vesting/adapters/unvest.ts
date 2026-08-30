@@ -39,6 +39,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb"
                             ),
   [CHAIN_IDS.AVALANCHE]:    undefined, // Unvest has no Avalanche subgraph
+  [CHAIN_IDS.ROBINHOOD]:    undefined, // Unvest not on Robinhood Chain
   [CHAIN_IDS.SOLANA]:       undefined, // Unvest does not deploy on Solana
 };
 

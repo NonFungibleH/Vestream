@@ -69,6 +69,10 @@ const DS_CHAIN_SLUG: Record<number, string> = {
   // slugs are the bare "arbitrum"/"optimism" (verified live).
   42161: "arbitrum",
   10:    "optimism",
+  // Robinhood Chain — DexScreener slug is the bare "robinhood" (verified live:
+  // e.g. $LOCK 0xd5BF43…4B94 returns a robinhood/uniswap pair). Enables live
+  // pricing for HoodLock tokens on chain 4663.
+  4663:  "robinhood",
   // Solana — DexScreener uses the chain slug "solana"; chainId 101 is our
   // synthetic ID for the SVM ecosystem.
   101:   "solana",

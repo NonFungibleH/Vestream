@@ -57,6 +57,7 @@ const CHAIN_OPTIONS = [
   { id: "56",       label: "BNB Chain", short: "BSC"     },
   { id: "137",      label: "Polygon",   short: "Polygon" },
   { id: "8453",     label: "Base",      short: "Base"    },
+  { id: "4663",     label: "Robinhood Chain", short: "RH" },
   { id: "101",      label: "Solana",    short: "SOL"     },
   { id: "11155111", label: "Sepolia",   short: "Sepolia" },
 ];
@@ -68,6 +69,7 @@ const PROTOCOL_OPTIONS = [
   { id: "unvest",       label: "Unvest"        },
   { id: "superfluid",   label: "Superfluid"    },
   { id: "pinksale",     label: "PinkSale"      },
+  { id: "hoodlock",     label: "HoodLock"      },
 ];
 
 // Single source of truth – see protocol-constants.ts (PROTOCOL_CHIPS).

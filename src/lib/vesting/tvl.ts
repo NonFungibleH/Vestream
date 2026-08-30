@@ -81,6 +81,7 @@ const DS_CHAIN_SLUG: Record<number, string> = {
   // (quick-prices, DexScreener-only) showed "—" for all of them.
   42161: "arbitrum",
   10:    "optimism",
+  4663:  "robinhood",  // Robinhood Chain — verified live DexScreener slug
   101:   "solana",     // DexScreener Solana slug — works for SPL mints
 };
 

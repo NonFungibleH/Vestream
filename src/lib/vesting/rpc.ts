@@ -43,8 +43,22 @@
 // here by `excludeForLogs: true` on those entries.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { fallback, http, createPublicClient, type Chain, type PublicClient } from "viem";
+import { fallback, http, createPublicClient, defineChain, type Chain, type PublicClient } from "viem";
 import { mainnet, bsc, polygon, base, arbitrum, optimism, avalanche, sepolia, baseSepolia } from "viem/chains";
+
+// Robinhood Chain (4663) — EVM L2 (Arbitrum Orbit/Nitro), gas ETH. Not shipped
+// in viem/chains, so define it locally. No multicall3 assumption — callers that
+// need batching use bounded per-call reads (current on-chain volume is small).
+const robinhood = defineChain({
+  id: 4663,
+  name: "Robinhood Chain",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.mainnet.chain.robinhood.com"] } },
+  blockExplorers: { default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" } },
+  // Multicall3 is deployed at the canonical address (verified on-chain 2026-08-29),
+  // so client.multicall() works for batched reads.
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
+});
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 
 interface Provider {
@@ -201,6 +215,12 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://avalanche-c-chain-rpc.publicnode.com", excludeForLogs: true },
     { url: "https://rpc.ankr.com/avalanche",               excludeForLogs: true },
     { url: "https://1rpc.io/avax/c" },             // last resort
+  ]),
+  // Robinhood Chain (4663). Only the official Nitro RPC is known public today;
+  // it served a full-range eth_getLogs cleanly (log-safe). ROBINHOOD_RPC_URL is
+  // an OPTIONAL override (no required env), same pattern as the other chains.
+  [CHAIN_IDS.ROBINHOOD]: buildPool(process.env.ROBINHOOD_RPC_URL, [
+    { url: "https://rpc.mainnet.chain.robinhood.com" },
   ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
@@ -392,6 +412,7 @@ const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
   [CHAIN_IDS.ARBITRUM]:     arbitrum,
   [CHAIN_IDS.OPTIMISM]:     optimism,
   [CHAIN_IDS.AVALANCHE]:    avalanche,
+  [CHAIN_IDS.ROBINHOOD]:    robinhood,
   // Testnets added 2026-05-26 so makeFallbackClient can serve adapters
   // that need them (Hedgey/Sepolia, future Base-Sepolia paths).
   [CHAIN_IDS.SEPOLIA]:      sepolia,

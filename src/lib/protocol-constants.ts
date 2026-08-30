@@ -493,6 +493,46 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // Station). Our computed TVL from cache-read is the primary source here;
     // will switch to a DefiLlama entry if one appears later.
   },
+
+  hoodlock: {
+    slug: "hoodlock",
+    adapterIds: ["hoodlock"],
+    name: "HoodLock",
+    tagline: "Token locker on Robinhood Chain",
+    // CONTRACT: RobinhoodLocker, verified on Blockscout — see
+    // HOODLOCK_CONTRACTS in src/lib/vesting/adapters/hoodlock.ts. Three
+    // consumers (adapter, TVL walker, event indexer + claim ingestor) all
+    // import that single map + ABI.
+    description:
+      "HoodLock is the token & liquidity locker on Robinhood Chain — projects lock a token amount until a chosen date, then withdraw it in full once it unlocks. Vestream reads the verified locker contract directly (no subgraph) and lines up every lock's unlock date and status in one view. Vestream is the first vesting tracker to cover Robinhood Chain.",
+    color: "#00C805",
+    bg:    "rgba(0,200,5,0.08)",
+    border:"rgba(0,200,5,0.22)",
+    chainIds: [CHAIN_IDS.ROBINHOOD],
+    officialUrl: "https://hoodlock.tech",
+    claimUrl:   "https://hoodlock.tech/app",
+    searchKeywords: [
+      "robinhood chain vesting",
+      "robinhood chain token unlock",
+      "hoodlock unlock",
+      "hoodlock vesting tracker",
+      "robinhood chain token lock",
+    ],
+    useCases: [
+      { title: "Team & treasury locks",     body: "Projects launching on Robinhood Chain lock team supply or treasury tokens until a set date. Vestream shows each lock's unlock countdown and current status." },
+      { title: "Liquidity-lock proof",      body: "HoodLock is used to lock LP or project tokens as an on-chain trust signal. Buyers can verify the schedule live on Vestream instead of reading the contract by hand." },
+      { title: "First-mover chain coverage", body: "Vestream is the first vesting tracker to index Robinhood Chain — every HoodLock lock is searchable by wallet or token the moment it's created." },
+    ],
+    relatedSlugs: ["pinksale", "uncx", "team-finance"],
+    testimonials: [],
+    category: "vesting",
+    // No externalTvl: DefiLlama has no Robinhood Chain / HoodLock entry. We
+    // self-index the vesting-locked slice via tvl-walker/hoodlock.ts (enumerate
+    // nextLockId → getLock), priced through the standard pipeline. DexScreener
+    // covers Robinhood Chain (slug "robinhood", wired into DS_CHAIN_SLUG in
+    // quick-prices.ts + tvl.ts), so chain-4663 tokens price normally.
+    disabled: false,
+  },
 };
 
 /** Publicly-listed protocols in nav/footer/sitemap order. */
@@ -507,6 +547,7 @@ export const PROTOCOL_SLUGS = [
   "streamflow",
   "jupiter-lock",
   "llamapay",
+  "hoodlock",
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];

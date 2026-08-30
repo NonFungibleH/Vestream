@@ -74,6 +74,7 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
   // publicly catalogued. Action to unblock: ask UNCX team.
   [CHAIN_IDS.OPTIMISM]:     undefined,
   [CHAIN_IDS.AVALANCHE]:    undefined, // UNCX has no Avalanche TokenVesting subgraph
+  [CHAIN_IDS.ROBINHOOD]:    undefined, // UNCX not on Robinhood Chain
   [CHAIN_IDS.SOLANA]:       undefined, // UNCX does not deploy on Solana
 };
 
