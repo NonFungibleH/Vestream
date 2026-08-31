@@ -40,6 +40,7 @@ import { walkSablier }     from "./sablier";
 import { walkHedgey }      from "./hedgey";
 import { walkLlamapay }    from "./llamapay";
 import { walkHoodLock }    from "./hoodlock";
+import { walkMagna }       from "./magna";
 
 export type { WalkerResult, TokenAggregate, WalkerFn };
 
@@ -64,6 +65,7 @@ export const WALKER_REGISTRY: Record<string, WalkerFn> = {
   "hedgey":       walkHedgey,
   "llamapay":     walkLlamapay,
   "hoodlock":     walkHoodLock,
+  "magna":        walkMagna,
 };
 
 /**

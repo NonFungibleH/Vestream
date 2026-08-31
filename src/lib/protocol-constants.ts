@@ -533,6 +533,50 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // quick-prices.ts + tvl.ts), so chain-4663 tokens price normally.
     disabled: false,
   },
+
+  magna: {
+    slug: "magna",
+    adapterIds: ["magna"],
+    name: "Magna",
+    tagline: "Enterprise token vesting & distribution",
+    // CONTRACTS: published Airlock factory addresses (docs.magna.so → Magna
+    // Contract Deployments), verified live on-chain 2026-08-31. V2.1 factory
+    // = MerkleFactoryV2 (verified source on Blockscout); children are
+    // MerkleVester escrow contracts. See tvl-walker/magna.ts for the full
+    // discovery + escrow-balance methodology, and tvl-walker/magna-seed.ts
+    // for the explorer backfill of every existing vester.
+    description:
+      "Magna is the enterprise token-distribution platform behind vesting, unlocks and claim portals for major projects across Solana, Ethereum, and every large EVM chain. Distributions run through on-chain escrow contracts deployed from Magna's Airlock factories. Vestream indexes those factories directly, so you can see the value still locked in Magna vesting escrows per chain and per token, live.",
+    // Magna's brand mark is pink (#F88CE5 sampled from their webclip icon);
+    // accent darkened slightly for text-on-white legibility.
+    color: "#E05FCB",
+    bg:    "rgba(248,140,229,0.10)",
+    border:"rgba(248,140,229,0.28)",
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
+    officialUrl: "https://www.magna.so",
+    claimUrl:   "https://app.magna.so",
+    searchKeywords: [
+      "magna vesting",
+      "magna token unlock",
+      "magna airlock",
+      "magna claim portal",
+      "magna vesting tracker",
+    ],
+    useCases: [
+      { title: "Investor & team unlocks",  body: "Projects run investor and employee vesting through Magna's escrow contracts. Vestream shows the value still locked per token, per chain, straight from the contracts." },
+      { title: "TGE distributions",        body: "Magna powers claim portals for large token generation events. Vestream tracks the escrowed supply as it unlocks and gets claimed down." },
+      { title: "Cross-chain coverage",     body: "Magna deploys the same factory system on every major EVM chain. Vestream indexes all of them, one view of Magna vesting across 7 chains." },
+    ],
+    relatedSlugs: ["team-finance", "sablier", "streamflow"],
+    testimonials: [],
+    category: "vesting",
+    // No externalTvl: DefiLlama has no Magna entry. Self-indexed via
+    // tvl-walker/magna.ts — factory event scan → vester escrow balances —
+    // priced through the standard pipeline (contract-reads-v1). NOTE: Magna
+    // is merkle-based, so per-recipient allocations are off-chain; escrow
+    // balances (locked + claimable-unclaimed) are the honest on-chain TVL.
+    disabled: false,
+  },
 };
 
 /** Publicly-listed protocols in nav/footer/sitemap order. */
@@ -548,6 +592,7 @@ export const PROTOCOL_SLUGS = [
   "jupiter-lock",
   "llamapay",
   "hoodlock",
+  "magna",
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];
@@ -630,6 +675,9 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
     twitter: "https://x.com/HoodLockRH",
     docs:    "https://hoodlock.tech/docs",
   },
+  magna: {
+    docs: "https://docs.magna.so",
+  },
 };
 
 export function protocolLinks(slug: string): ProtocolLinks {
@@ -686,6 +734,7 @@ export const PROTOCOL_CHIPS: Record<string, ProtocolChip> =
 const SLUGS_WITH_ICON = new Set([
   "sablier", "superfluid", "uncx", "team-finance", "unvest",
   "pinksale", "streamflow", "jupiter-lock", "llamapay", "hoodlock",
+  "magna",
 ]);
 
 // Variant adapters that share a parent brand's mark — no separate asset needed.

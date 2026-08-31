@@ -1325,3 +1325,28 @@ export const pageFallback = pgTable("page_fallback", {
   payload:   jsonb("payload").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Magna vester registry (2026-08-31) ───────────────────────────────────────
+// One row per vesting contract ("vester") deployed by a Magna Airlock factory,
+// per chain. Seeded by the one-off explorer backfill (tvl-walker/magna-seed.ts)
+// and extended by the daily TVL walker's recent-window MerkleCreated log scan —
+// durable so a vester discovered once is never lost when it ages out of the
+// scan window (free-tier RPCs cap eth_getLogs ranges, so the walker can't
+// rescan from factory genesis every day). Also the discovery backbone for the
+// Phase 2 Magna claim indexer.
+export const magnaVesters = pgTable(
+  "magna_vesters",
+  {
+    chainId:         integer("chain_id").notNull(),
+    /** Vester (MerkleVester / Airlock child) contract address, lowercased. */
+    address:         text("address").notNull(),
+    /** Factory generation that deployed it: "v1" | "v2.1". Diagnostic only. */
+    factoryVersion:  text("factory_version"),
+    /** Block the MerkleCreated/AirlockCreated event landed in (0 = from seed). */
+    discoveredBlock: bigint("discovered_block", { mode: "number" }).notNull().default(0),
+    createdAt:       timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.chainId, t.address] }),
+  ]
+);
