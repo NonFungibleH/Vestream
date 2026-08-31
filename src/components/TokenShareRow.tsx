@@ -33,8 +33,8 @@ export function TokenShareRow({ pageUrl, symbol, chainName, lockedSummary }: Pro
   }, [pageUrl]);
 
   const tweetText = lockedSummary
-    ? `Track $${symbol} unlocks on @Vestream_ – ${lockedSummary} still vesting on ${chainName}. Full schedule:`
-    : `Track $${symbol} token vesting on @Vestream_ – live unlock calendar and alerts on ${chainName}.`;
+    ? `Track when $${symbol} unlocks on @Vestream_\n\n${lockedSummary} is still vesting on ${chainName}. Verify the full schedule:`
+    : `Track when $${symbol} unlocks on @Vestream_\n\nLive unlock schedule and cliff alerts on ${chainName}. Verify here:`;
 
   const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(pageUrl)}`;
 
