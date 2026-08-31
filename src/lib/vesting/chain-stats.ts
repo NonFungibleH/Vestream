@@ -32,6 +32,7 @@ export interface ChainStats {
   streamCount:    number;
   tokenCount:     number;
   protocolSlugs:  string[];       // enabled protocols integrated on this chain
+  byProtocol:     Array<{ slug: string; name: string; tvlUsd: number }>; // TVL split, desc
   upcoming:       ChainUnlock[];  // ranked upcoming unlocks (priced desc)
   upcomingCount:  number;         // total upcoming unlocks in the window
   totalUpcomingUsd: number;
@@ -40,7 +41,7 @@ export interface ChainStats {
 }
 
 const EMPTY = (chainId: number): ChainStats => ({
-  chainId, tvlUsd: 0, streamCount: 0, tokenCount: 0, protocolSlugs: [],
+  chainId, tvlUsd: 0, streamCount: 0, tokenCount: 0, protocolSlugs: [], byProtocol: [],
   upcoming: [], upcomingCount: 0, totalUpcomingUsd: 0,
   computedAt: new Date(0).toISOString(), isEmpty: true,
 });
@@ -73,14 +74,20 @@ export async function getChainStats(
   // TVL + totals from the snapshot rows for this chain.
   const snapshots = await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chain:snapshots");
   const chainRows = snapshots.filter((r) => r.chainId === chainId);
+  const protoMeta = new Map(listProtocols().map((p) => [p.slug, p.name]));
+  const protoTvl = new Map<string, number>();
   let tvlUsd = 0, streamCount = 0, tokenCount = 0, freshest = 0;
   for (const r of chainRows) {
     tvlUsd += r.tvlUsd;
     streamCount += r.streamCount || 0;
     tokenCount += r.tokensTotal || 0;
+    if (r.tvlUsd > 0) protoTvl.set(r.protocol, (protoTvl.get(r.protocol) ?? 0) + r.tvlUsd);
     const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
     if (t > freshest) freshest = t;
   }
+  const byProtocol = [...protoTvl.entries()]
+    .map(([slug, v]) => ({ slug, name: protoMeta.get(slug) ?? slug, tvlUsd: v }))
+    .sort((a, b) => b.tvlUsd - a.tvlUsd);
 
   // Upcoming unlocks on this chain over the window. Note getUnlocksInWindow's
   // 4th arg is adapterIds (string[]); chainIds is the 5th arg.
@@ -117,6 +124,7 @@ export async function getChainStats(
     streamCount,
     tokenCount,
     protocolSlugs,
+    byProtocol,
     upcoming,
     upcomingCount,
     totalUpcomingUsd,
