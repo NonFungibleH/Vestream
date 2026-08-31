@@ -18,7 +18,7 @@ import {
   chainBrand, chainIcon, chainSlug, chainIdFromSlug, publicChainIds,
   getProtocol, protocolIcon, listProtocols,
 } from "@/lib/protocol-constants";
-import { getChainStats } from "@/lib/vesting/chain-stats";
+import { getChainStats, type ChainUnlock } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
 export const revalidate = 600;
@@ -76,6 +76,39 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
+function UnlockList({ title, items }: { title: string; items: ChainUnlock[] }) {
+  return (
+    <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
+      <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>{title}</h2>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
+        {items.map((u, i) => {
+          const p = getProtocol(u.protocol);
+          const amt = fmtAmount(u.amount, u.decimals);
+          return (
+            <Link
+              key={`${u.protocol}-${u.address}-${u.eventTime}-${i}`}
+              href={`/token/${u.chainId}/${u.address}`}
+              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/[0.02]"
+              style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
+                  {u.symbol || `${u.address.slice(0, 6)}…${u.address.slice(-4)}`}
+                  {p && <span className="ml-2 text-xs font-medium" style={{ color: p.color }}>{p.name}</span>}
+                </p>
+                <p className="text-[11px]" style={{ color: "#8B8E92" }}>{fmtDate(u.eventTime)}{amt ? ` · ${amt} ${u.symbol ?? ""}`.trimEnd() : ""}</p>
+              </div>
+              <div className="text-right flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: "#0F8A8A" }}>
+                {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default async function ChainPage({ params }: { params: Promise<{ chain: string }> }) {
   const { chain } = await params;
   const chainId = chainIdFromSlug(chain);
@@ -88,7 +121,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
   // the page has real content even before the DB-backed stats fill in.
   const protocols = listProtocols().filter((p) => p.chainIds.includes(chainId as never));
 
-  const s = await getChainStats(chainId, { topN: 15 });
+  const s = await getChainStats(chainId);
   const protoMax = s.byProtocol[0]?.tvlUsd ?? 0;
   // Per-protocol stats (TVL + streams on this chain), keyed by slug, so the
   // static protocol list can be enriched + sorted by TVL.
@@ -208,35 +241,9 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
         </section>
       )}
 
-      {/* Biggest upcoming unlocks */}
-      {s.upcoming.length > 0 && (
-        <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Biggest upcoming unlocks on {brand.name}</h2>
-          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
-            {s.upcoming.map((u, i) => {
-              const p = getProtocol(u.protocol);
-              const amt = fmtAmount(u.amount, u.decimals);
-              return (
-                <div key={`${u.protocol}-${u.address}-${u.eventTime}-${i}`} className="flex items-center gap-3 px-4 py-3" style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
-                      {u.symbol || `${u.address.slice(0, 6)}…${u.address.slice(-4)}`}
-                      {p && <span className="ml-2 text-xs font-medium" style={{ color: p.color }}>{p.name}</span>}
-                    </p>
-                    <p className="text-[11px]" style={{ color: "#8B8E92" }}>{fmtDate(u.eventTime)}{amt ? ` · ${amt} ${u.symbol ?? ""}`.trimEnd() : ""}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: "#0F8A8A" }}>
-                    {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3">
-            <Link href="/unlocks" className="text-sm font-semibold hover:underline" style={{ color: "#0F8A8A" }}>View the full unlock calendar →</Link>
-          </div>
-        </section>
-      )}
+      {/* Next unlocks (chronological), then biggest (by USD). Rows link to token pages. */}
+      {s.nextUnlocks.length > 0 && <UnlockList title={`Next unlocks on ${brand.name}`} items={s.nextUnlocks} />}
+      {s.biggestUnlocks.length > 0 && <UnlockList title={`Biggest upcoming unlocks on ${brand.name}`} items={s.biggestUnlocks} />}
 
       {/* Calendar + explore links */}
       <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">

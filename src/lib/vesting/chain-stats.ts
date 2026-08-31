@@ -33,7 +33,8 @@ export interface ChainStats {
   tokenCount:     number;
   protocolSlugs:  string[];       // enabled protocols integrated on this chain
   byProtocol:     Array<{ slug: string; name: string; tvlUsd: number; streamCount: number }>; // per-protocol stats, TVL desc
-  upcoming:       ChainUnlock[];  // ranked upcoming unlocks (priced desc)
+  nextUnlocks:    ChainUnlock[];  // soonest first (chronological)
+  biggestUnlocks: ChainUnlock[];  // biggest by USD first
   upcomingCount:  number;         // total upcoming unlocks in the window
   totalUpcomingUsd: number;
   computedAt:     string;         // ISO of the freshest snapshot
@@ -42,7 +43,7 @@ export interface ChainStats {
 
 const EMPTY = (chainId: number): ChainStats => ({
   chainId, tvlUsd: 0, streamCount: 0, tokenCount: 0, protocolSlugs: [], byProtocol: [],
-  upcoming: [], upcomingCount: 0, totalUpcomingUsd: 0,
+  nextUnlocks: [], biggestUnlocks: [], upcomingCount: 0, totalUpcomingUsd: 0,
   computedAt: new Date(0).toISOString(), isEmpty: true,
 });
 
@@ -59,12 +60,11 @@ function rankEvents(a: WindowUnlockGroup, b: WindowUnlockGroup): number {
 
 export async function getChainStats(
   chainId: number,
-  opts: { days?: number; topN?: number } = {},
+  opts: { days?: number } = {},
 ): Promise<ChainStats> {
   if (process.env.NEXT_PHASE === "phase-production-build") return EMPTY(chainId);
 
   const days = opts.days ?? 90;
-  const topN = opts.topN ?? 25;
 
   // Protocols integrated on this chain (enabled only).
   const protocolSlugs = listProtocols()
@@ -107,17 +107,20 @@ export async function getChainStats(
     console.error(`[chain-stats/${chainId}] unlocks:`, err);
   }
 
-  let upcoming: ChainUnlock[] = [];
+  const mapU = (g: WindowUnlockGroup): ChainUnlock => ({
+    symbol: g.tokenSymbol, address: g.tokenAddress, chainId: g.chainId,
+    protocol: g.protocol, eventTime: g.eventTime, amount: g.amount,
+    decimals: g.tokenDecimals, usdValue: g.usdValue ?? null,
+  });
+  let nextUnlocks: ChainUnlock[] = [];
+  let biggestUnlocks: ChainUnlock[] = [];
   let totalUpcomingUsd = 0;
   if (groups.length > 0) {
     // redis:false — ISR-safe (see monthly-report.ts for the rationale).
     const priced = await enrichGroupsWithUsd(groups, { redis: false });
     totalUpcomingUsd = priced.reduce((s, g) => s + (g.usdValue ?? 0), 0);
-    upcoming = [...priced].sort(rankEvents).slice(0, topN).map((g) => ({
-      symbol: g.tokenSymbol, address: g.tokenAddress, chainId: g.chainId,
-      protocol: g.protocol, eventTime: g.eventTime, amount: g.amount,
-      decimals: g.tokenDecimals, usdValue: g.usdValue ?? null,
-    }));
+    nextUnlocks    = [...priced].sort((a, b) => a.eventTime - b.eventTime).slice(0, 15).map(mapU);
+    biggestUnlocks = [...priced].sort(rankEvents).slice(0, 10).map(mapU);
   }
 
   const isEmpty = chainRows.length === 0 && groups.length === 0 && protocolSlugs.length === 0;
@@ -129,7 +132,8 @@ export async function getChainStats(
     tokenCount,
     protocolSlugs,
     byProtocol,
-    upcoming,
+    nextUnlocks,
+    biggestUnlocks,
     upcomingCount,
     totalUpcomingUsd,
     computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),
