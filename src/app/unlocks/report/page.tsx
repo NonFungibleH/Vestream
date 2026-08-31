@@ -11,12 +11,12 @@ import { monthLabel } from "@/lib/vesting/monthly-report";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Token Unlock Reports — Monthly Archive | Vestream",
+  title: "Token Unlock Reports, Monthly Archive | Vestream",
   description:
     "Monthly token unlock reports: the biggest scheduled unlocks each month across every protocol and chain, ranked by USD value. Updated from live vesting data.",
   alternates: { canonical: "https://www.vestream.io/unlocks/report" },
   openGraph: {
-    title: "Token Unlock Reports — Monthly Archive",
+    title: "Token Unlock Reports, Monthly Archive",
     description: "The biggest token unlocks each month, ranked by USD value across every protocol and chain.",
     url: "https://www.vestream.io/unlocks/report",
     siteName: "Vestream",
@@ -58,7 +58,7 @@ export default function ReportHubPage() {
           Monthly Token Unlock Reports
         </h1>
         <p className="text-base max-w-2xl leading-relaxed mb-8" style={{ color: "#475569" }}>
-          The biggest scheduled token unlocks each month — ranked by USD value across every protocol and chain Vestream tracks. Built from live vesting-schedule data.
+          The biggest scheduled token unlocks each month, ranked by USD value across every protocol and chain Vestream tracks. Built from live vesting-schedule data.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

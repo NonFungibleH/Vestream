@@ -84,7 +84,7 @@ const VESTING_MANAGER_ABI = [
           type: "tuple[]",
           components: [
             { name: "time",   type: "uint256" },
-            { name: "amount", type: "uint256" }, // CUMULATIVE — see header
+            { name: "amount", type: "uint256" }, // CUMULATIVE, see header
             { name: "flag",   type: "uint256" },
           ],
         },

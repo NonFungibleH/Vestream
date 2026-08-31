@@ -104,7 +104,7 @@ function bLockedSupply(input: BuildPulseInput): string | null {
     ? ((overview.lockedTokensWhole * market.priceUsd) / market.fdv) * 100
     : null;
   if (fdvShare != null && fdvShare > 1) {
-    return `${tokens} ${symbol} worth ${usd} are locked in vesting — roughly ${fdvShare.toFixed(1)}% of fully diluted valuation.`;
+    return `${tokens} ${symbol} worth ${usd} are locked in vesting, roughly ${fdvShare.toFixed(1)}% of fully diluted valuation.`;
   }
   return `${tokens} ${symbol} worth ${usd} are currently locked in indexed vesting contracts.`;
 }
@@ -118,7 +118,7 @@ function bThirtyDay(input: BuildPulseInput): string | null {
     ? (overview.upcoming30dTokens / overview.lockedTokensWhole) * 100
     : 0;
   if (share >= 5) {
-    return `${tokens} ${symbol}${usd} unlock in the next 30 days — ${share.toFixed(1)}% of currently locked supply hits the market.`;
+    return `${tokens} ${symbol}${usd} unlock in the next 30 days, ${share.toFixed(1)}% of currently locked supply hits the market.`;
   }
   return `${tokens} ${symbol}${usd} are scheduled to unlock in the next 30 days.`;
 }
@@ -130,7 +130,7 @@ function bNextEvent(input: BuildPulseInput): string | null {
   const when = daysFromNow(next.timestamp);
   const whenStr = when === 0 ? "today" : when === 1 ? "tomorrow" : `in ${when} days`;
   const protocolLbl = PROTOCOL_DISPLAY[next.protocol] ?? next.protocol;
-  return `Next unlock is ${whenStr} on ${fmtDate(next.timestamp)} — ${fmtTokens(next.tokensWhole)} ${symbol} via ${protocolLbl}.`;
+  return `Next unlock is ${whenStr} on ${fmtDate(next.timestamp)}, ${fmtTokens(next.tokensWhole)} ${symbol} via ${protocolLbl}.`;
 }
 
 function bConcentration(input: BuildPulseInput): string | null {
@@ -141,7 +141,7 @@ function bConcentration(input: BuildPulseInput): string | null {
   const share = (top3Total / overview.lockedTokensWhole) * 100;
   // Only surface this bullet when concentration is actually notable.
   if (share < 30) return null;
-  return `The top 3 wallets hold ${share.toFixed(0)}% of locked ${symbol} — concentration worth knowing before a cliff.`;
+  return `The top 3 wallets hold ${share.toFixed(0)}% of locked ${symbol}, concentration worth knowing before a cliff.`;
 }
 
 function bProtocolMix(input: BuildPulseInput): string | null {
@@ -158,7 +158,7 @@ function bProtocolMix(input: BuildPulseInput): string | null {
     return `All indexed ${symbol} vesting sits on ${distinct[0][0]}.`;
   }
   const leaders = distinct.slice(0, 2).map((d) => d[0]).join(" and ");
-  return `Vesting spans ${distinct.length} protocols — led by ${leaders}.`;
+  return `Vesting spans ${distinct.length} protocols, led by ${leaders}.`;
 }
 
 // ─── Extended narrative — ties the bullets together in prose ────────────────
@@ -198,7 +198,7 @@ function buildExtended(input: BuildPulseInput): string {
     const next = upcoming[0];
     const protocolLbl = PROTOCOL_DISPLAY[next.protocol] ?? next.protocol;
     parts.push(
-      `The nearest scheduled event is on ${fmtDate(next.timestamp)} — about ${fmtTokens(next.tokensWhole)} ${symbol} unlocking via ${protocolLbl}.`,
+      `The nearest scheduled event is on ${fmtDate(next.timestamp)}, about ${fmtTokens(next.tokensWhole)} ${symbol} unlocking via ${protocolLbl}.`,
     );
   }
 

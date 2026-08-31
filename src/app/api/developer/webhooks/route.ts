@@ -134,6 +134,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     subscription: publicShape(inserted[0]),
-    secret, // ONE-TIME — store it now or you'll need to recreate
+    secret, // ONE-TIME, store it now or you'll need to recreate
   }, { status: 201 });
 }

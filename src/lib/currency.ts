@@ -159,7 +159,7 @@ async function fetchFreshRates(): Promise<RateBundle | null> {
 // hard: a historical rate for 2025-07-15 never changes, so the cache key is
 // per-(date, currency) with a long TTL.
 
-const HIST_RATE_TTL_SECONDS = 60 * 60 * 24 * 60; // 60 days — historical rates are immutable
+const HIST_RATE_TTL_SECONDS = 60 * 60 * 24 * 60; // 60 days, historical rates are immutable
 const HIST_FETCH_CONCURRENCY = 8;
 
 /** Fetch one day's USD→currency rate from Frankfurter's dated endpoint.
@@ -222,7 +222,7 @@ export async function getHistoricalRatesForDates(
     const rates = await Promise.all(batch.map((d) => fetchHistoricalRate(d, currency)));
     await Promise.all(batch.map(async (d, j) => {
       const rate = rates[j];
-      if (rate == null) return; // unresolved — omit, caller uses live fallback
+      if (rate == null) return; // unresolved, omit, caller uses live fallback
       result[d] = rate;
       if (redis) {
         try { await redis.set(`vestream:fx:hist:${d}:${currency}`, rate, { ex: HIST_RATE_TTL_SECONDS }); }
@@ -270,7 +270,7 @@ export function formatMoney(
   currency:  CurrencyCode,
   rate:      number,
 ): string {
-  if (usd == null || !isFinite(usd)) return "—";
+  if (usd == null || !isFinite(usd)) return "-";
   const meta = getCurrencyMeta(currency);
   const local = usd * rate;
   return new Intl.NumberFormat(meta.locale, {
@@ -290,7 +290,7 @@ export function formatMoneyCompact(
   currency: CurrencyCode,
   rate:     number,
 ): string {
-  if (usd == null || !isFinite(usd)) return "—";
+  if (usd == null || !isFinite(usd)) return "-";
   const meta  = getCurrencyMeta(currency);
   const local = usd * rate;
   const abs   = Math.abs(local);

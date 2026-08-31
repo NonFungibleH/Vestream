@@ -96,7 +96,7 @@ async function handle(req: NextRequest) {
         continue;
       }
     } catch {
-      continue; // unparseable stored URL — skip
+      continue; // unparseable stored URL, skip
     }
 
     let successCount = 0;

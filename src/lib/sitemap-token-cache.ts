@@ -22,7 +22,7 @@
 
 const SYMBOLS_KEY = "sitemap:top-symbols:v1";
 const TOKENS_KEY  = "sitemap:top-tokens:v1";
-const TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days — comfortably longer than the hourly refresh
+const TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days, comfortably longer than the hourly refresh
 
 export interface SitemapTokenEntry { chainId: number; address: string }
 

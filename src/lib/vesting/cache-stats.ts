@@ -120,7 +120,7 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
     fastPromise,
     new Promise<null>((resolve) =>
       setTimeout(() => {
-        console.warn("[cache-stats] status_summary fast path exceeded 15s — giving up");
+        console.warn("[cache-stats] status_summary fast path exceeded 15s, giving up");
         resolve(null);
       }, 15000),
     ),
@@ -140,7 +140,7 @@ export async function getCacheStatsCells(): Promise<CacheStatsCell[]> {
     }),
     new Promise<CacheStatsCell[]>((resolve) =>
       setTimeout(() => {
-        console.warn("[cache-stats] GROUP BY fallback exceeded 2s — returning empty");
+        console.warn("[cache-stats] GROUP BY fallback exceeded 2s, returning empty");
         resolve([]);
       }, 2000),
     ),
@@ -415,7 +415,7 @@ export async function getMaxLastRefreshedAt(): Promise<number | null> {
     queryPromise,
     new Promise<null>((resolve) =>
       setTimeout(() => {
-        console.warn("[cache-stats] getMaxLastRefreshedAt exceeded 2s — returning null");
+        console.warn("[cache-stats] getMaxLastRefreshedAt exceeded 2s, returning null");
         resolve(null);
       }, 2000),
     ),

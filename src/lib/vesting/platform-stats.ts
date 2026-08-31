@@ -30,7 +30,7 @@ export interface PlatformStats {
   tvlUsd:        number;   // conservative headline (THIN excluded, per-token capped)
   byChain:       Array<{ chainId: number; chainName: string; tvlUsd: number }>;
   byProtocol:    Array<{ slug: string; name: string; tvlUsd: number }>;
-  computedAt:    string;   // ISO — the freshest snapshot timestamp
+  computedAt:    string;   // ISO, the freshest snapshot timestamp
   isEmpty:       boolean;
 }
 

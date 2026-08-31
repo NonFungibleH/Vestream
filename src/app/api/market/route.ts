@@ -163,7 +163,7 @@ export async function GET(req: NextRequest) {
   // one batched call per page view) never hits it.
   const ip = getIp(req);
   const rl = await checkRateLimit("market", ip, 30, "1 m");
-  const blocked = rateLimitResponse(rl, "Too many market requests — try again in a minute.");
+  const blocked = rateLimitResponse(rl, "Too many market requests, try again in a minute.");
   if (blocked) return blocked;
 
   const { searchParams } = new URL(req.url);

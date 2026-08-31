@@ -39,7 +39,7 @@ export interface MonthlyUnlockReport {
   monthLabel:  string;       // "September 2026"
   startSec:    number;
   endSec:      number;
-  totalUsd:    number;       // sum of priced events (undercount — unpriced excluded)
+  totalUsd:    number;       // sum of priced events (undercount, unpriced excluded)
   pricedShare: number;       // 0-1: fraction of events we could price
   eventCount:  number;
   tokenCount:  number;

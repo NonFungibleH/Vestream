@@ -315,7 +315,7 @@ export async function generateMetadata(
   // protocol name + "token unlocks / vesting schedule". TVL + alerts moved to
   // the description/on-page rather than the title.
   const title = `${meta.name} Token Unlocks & Vesting Schedule | Vestream`;
-  const description = `Track ${meta.name} token vesting and unlocks live — the upcoming unlock schedule, locked value (TVL), top recipients, and free alerts before every cliff. No sign-up.`;
+  const description = `Track ${meta.name} token vesting and unlocks live, the upcoming unlock schedule, locked value (TVL), top recipients, and free alerts before every cliff. No sign-up.`;
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;
 
@@ -707,7 +707,7 @@ export default async function ProtocolLandingPage(
                         <span className="text-sm font-semibold tabular-nums" style={{ color: row.tvlUsd === 0 ? "#94A3B8" : "#1A1D20" }}>
                           {/* An integrated-but-empty chain (e.g. Team Finance on
                               Base) shows an explicit "$0" rather than the generic
-                              "—" no-value dash, so it reads as "covered, nothing
+                              "-" no-value dash, so it reads as "covered, nothing
                               locked yet" instead of "unknown". */}
                           {row.tvlUsd === 0 ? "$0" : formatUsdCompact(row.tvlUsd)}
                         </span>
@@ -1154,7 +1154,7 @@ export default async function ProtocolLandingPage(
           <ScanWalletCTA
             surface="protocol_page"
             heading="Track your own vesting across every protocol"
-            sub="Paste any wallet — every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
+            sub="Paste any wallet, every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
           />
           {/* Spoke → pillar link: anchors this protocol page to the token-vesting
               topic cluster. */}

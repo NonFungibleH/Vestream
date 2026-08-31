@@ -54,12 +54,12 @@ function readEnv(
     // secret in scope. Fall back to empty to let the build succeed; the
     // runtime will re-check when the var is actually needed.
     if (IS_BUILD) return spec.fallback ?? "";
-    problems.push(`${name} is required — ${spec.description}`);
+    problems.push(`${name} is required, ${spec.description}`);
     return spec.fallback;
   }
 
   if (spec.presence === "requiredInProd" && IS_PROD && !IS_BUILD) {
-    problems.push(`${name} is required in production — ${spec.description}`);
+    problems.push(`${name} is required in production, ${spec.description}`);
   }
 
   return spec.fallback;
@@ -99,7 +99,7 @@ const raw = {
   // Third-party services
   RESEND_API_KEY: readEnv("RESEND_API_KEY", {
     presence: "requiredInProd",
-    description: "Resend API key — without it OTP emails are not sent",
+    description: "Resend API key, without it OTP emails are not sent",
   }, problems),
 
   RESEND_FROM_EMAIL: readEnv("RESEND_FROM_EMAIL", {
@@ -109,7 +109,7 @@ const raw = {
 
   UPSTASH_REDIS_REST_URL: readEnv("UPSTASH_REDIS_REST_URL", {
     presence: "requiredInProd",
-    description: "Upstash Redis REST URL — rate limiting no-ops without it",
+    description: "Upstash Redis REST URL, rate limiting no-ops without it",
   }, problems),
 
   UPSTASH_REDIS_REST_TOKEN: readEnv("UPSTASH_REDIS_REST_TOKEN", {
@@ -129,7 +129,7 @@ const raw = {
 
   REVENUECAT_SECRET_KEY: readEnv("REVENUECAT_SECRET_KEY", {
     presence: "requiredInProd",
-    description: "RevenueCat secret API key (sk_...) for server-side entitlement verification — the /revenuecat-sync fallback no-ops without it",
+    description: "RevenueCat secret API key (sk_...) for server-side entitlement verification, the /revenuecat-sync fallback no-ops without it",
   }, problems),
 
   // Admin auth — split from CRON_SECRET so a leaked cron token can't be used
@@ -153,12 +153,12 @@ const raw = {
   // Feature flags / dev aids
   DEV_OTP: readEnv("DEV_OTP", {
     presence: "optional",
-    description: "fixed OTP code for dev — never active in production",
+    description: "fixed OTP code for dev, never active in production",
   }, problems),
 
   NEXT_PUBLIC_APP_URL: readEnv("NEXT_PUBLIC_APP_URL", {
     presence: "optional",
-    description: "absolute base URL — falls back to https://www.vestream.io",
+    description: "absolute base URL, falls back to https://www.vestream.io",
     fallback: "https://www.vestream.io",
   }, problems),
 };
@@ -176,7 +176,7 @@ const raw = {
 // process keep running. Each call site is responsible for its own fallback.
 if (problems.length > 0) {
   const header = IS_PROD
-    ? "[env] Missing environment variables in production — dependent features will be degraded or disabled:"
+    ? "[env] Missing environment variables in production, dependent features will be degraded or disabled:"
     : "[env] Missing environment variables (features that need them will no-op):";
   const body = problems.map((p) => `  - ${p}`).join("\n");
   console.warn(`\n${header}\n${body}\n`);

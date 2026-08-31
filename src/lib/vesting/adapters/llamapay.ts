@@ -154,7 +154,7 @@ async function fetchForChain(
   if (wallets.length === 0) return [];
 
   const url = buildGraphUrl(subgraphId);
-  if (!url) return []; // GRAPH_API_KEY missing — handled by buildGraphUrl warning
+  if (!url) return []; // GRAPH_API_KEY missing, handled by buildGraphUrl warning
 
   const lowercased = wallets.map((a) => a.toLowerCase());
 

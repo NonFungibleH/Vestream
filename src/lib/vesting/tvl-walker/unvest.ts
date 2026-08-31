@@ -42,7 +42,7 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
 };
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap
-const MAX_PAGES = 200;    // 200 × 1000 = 200k holder balances — plenty of headroom
+const MAX_PAGES = 200;    // 200 × 1000 = 200k holder balances, plenty of headroom
 const HOLDERS_QUERY = `
   query WalkHolderBalances($lastId: String!, $first: Int!) {
     holderBalances(
@@ -149,10 +149,10 @@ export async function walkUnvest(chainId: SupportedChainId): Promise<WalkerResul
 
     for (const raw of batch) {
       const locked = BigInt(raw.locked || "0");
-      if (locked === 0n) continue;                         // fully vested — skip
+      if (locked === 0n) continue;                         // fully vested, skip
 
       const underlying = raw.vestingToken?.underlyingToken;
-      if (!underlying?.id) continue;                       // malformed row — skip
+      if (!underlying?.id) continue;                       // malformed row, skip
 
       const tokenKey = underlying.id.toLowerCase();
       const existing = byToken.get(tokenKey);

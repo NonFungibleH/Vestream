@@ -625,7 +625,7 @@ export async function runWalkerSnapshot(
             `(${(100 * tokensPriced / tokensTotal).toFixed(1)}%) below ${100 * PRICING_GUARD_MIN_RATIO}% threshold`
           : `new TVL $${newTvl.toFixed(0)} dropped >${100 * (1 - PRICING_GUARD_DROP_RATIO)}% vs prior $${priorTvl.toFixed(0)}`;
         console.warn(
-          `[snapshot] ${protocol}/${chainId}: ${reason} — keeping prior row ` +
+          `[snapshot] ${protocol}/${chainId}: ${reason}, keeping prior row ` +
           `(computedAt=${priorRow.computedAt.toISOString()}, tvlUsd=$${priorTvl.toFixed(0)})`,
         );
         skipped = true;
@@ -640,7 +640,7 @@ export async function runWalkerSnapshot(
         const priorDays = (priorAgeMs / (24 * 60 * 60 * 1000)).toFixed(1);
         console.warn(
           `[snapshot] ${protocol}/${chainId}: guard would preserve but prior ` +
-          `is ${priorDays}d old (>${STALE_PRIOR_DAYS}d) — overriding, writing partial row`,
+          `is ${priorDays}d old (>${STALE_PRIOR_DAYS}d), overriding, writing partial row`,
         );
       }
 
@@ -782,7 +782,7 @@ export async function runDefiLlamaSnapshot(
 
   for (const row of snap.perChain) {
     const chainId = CHAIN_NAME_TO_ID[row.chain.toLowerCase()];
-    if (!chainId) continue; // e.g. Optimism, Arbitrum — we don't claim to support those
+    if (!chainId) continue; // e.g. Optimism, Arbitrum, we don't claim to support those
     if (row.usd <= 0) continue;
 
     await upsertSnapshot({
@@ -990,7 +990,7 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
     queryPromise,
     new Promise<ProtocolSnapshotRow[]>((resolve) =>
       setTimeout(() => {
-        console.warn("[tvl-snapshot] readAllSnapshots exceeded 2s — returning []");
+        console.warn("[tvl-snapshot] readAllSnapshots exceeded 2s, returning []");
         resolve([]);
       }, 2000),
     ),

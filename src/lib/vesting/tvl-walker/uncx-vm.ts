@@ -52,7 +52,7 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
 // is fine if a paid Alchemy/QuickNode URL is set in env (their block-range
 // caps are much higher), but the default fallback enforces the lower limit.
 const CHUNK_SIZE       = 9_999n;
-const CHUNK_BATCH      = 3;            // concurrent getLogs calls — tuned low for free-tier RPC rate limits
+const CHUNK_BATCH      = 3;            // concurrent getLogs calls, tuned low for free-tier RPC rate limits
 const MULTICALL_BATCH  = 500;          // schedules per multicall call
 const MAX_LOG_WINDOW   = 2_000_000n;   // same safety cap used in pinksale-style walkers
 

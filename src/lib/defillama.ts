@@ -202,7 +202,7 @@ export async function fetchDefiLlamaTvl(
     if (!snap) continue;
     any = true;
     totalUsd += snap.totalUsd;
-    fetchedAt = snap.fetchedAt; // Any entry's timestamp is fine — same fetch
+    fetchedAt = snap.fetchedAt; // Any entry's timestamp is fine, same fetch
     for (const row of snap.perChain) {
       perChainMap.set(row.chain, (perChainMap.get(row.chain) ?? 0) + row.usd);
     }

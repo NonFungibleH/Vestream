@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const demoSession = await getDemoSession();
   if (!demoSession.sessionId || !demoSession.startMs) {
     return NextResponse.json(
-      { error: "No active demo session — press Start first." },
+      { error: "No active demo session, press Start first." },
       { status: 400 },
     );
   }

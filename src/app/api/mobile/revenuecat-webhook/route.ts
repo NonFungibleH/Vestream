@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
   // could flip any user to tier="pro" with a crafted POST).
   const secret = env.REVENUECAT_WEBHOOK_SECRET;
   if (!secret) {
-    console.error("[RC Webhook] REVENUECAT_WEBHOOK_SECRET not set — rejecting request");
+    console.error("[RC Webhook] REVENUECAT_WEBHOOK_SECRET not set, rejecting request");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
   const authHeader = req.headers.get("Authorization");
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
   if (eventId) {
     const isFirstTime = await claimWebhookEvent(eventId, "revenuecat");
     if (!isFirstTime) {
-      console.log(`[RC Webhook] dedup hit — event ${eventId} already processed`);
+      console.log(`[RC Webhook] dedup hit, event ${eventId} already processed`);
       return NextResponse.json({ ok: true, dedup: true });
     }
   }
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
       } else {
         // CANCELLATION / BILLING_ISSUE — subscription still active until period end;
         // RevenueCat will fire EXPIRATION when it actually ends.
-        console.log(`[RC Webhook] ${type} for user ${userId} — no immediate tier change`);
+        console.log(`[RC Webhook] ${type} for user ${userId}, no immediate tier change`);
       }
     } else {
       console.log(`[RC Webhook] Unhandled event type: ${type}`);

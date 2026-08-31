@@ -519,7 +519,7 @@ export const notificationsSent = pgTable("notifications_sent", {
 // Key format: vstr_live_{32 random hex bytes}
 export const apiKeys = pgTable("api_keys", {
   id:               uuid("id").primaryKey().defaultRandom(),
-  keyHash:          text("key_hash").notNull().unique(),   // SHA-256(plaintext key) — unique() creates index
+  keyHash:          text("key_hash").notNull().unique(),   // SHA-256(plaintext key), unique() creates index
   keyPrefix:        text("key_prefix").notNull(),           // first 12 chars, for display
   ownerEmail:       text("owner_email").notNull(),
   ownerName:        text("owner_name"),
@@ -711,7 +711,7 @@ export const mobileTokens = pgTable("mobile_tokens", {
 export const mobileOtps = pgTable("mobile_otps", {
   id:        uuid("id").primaryKey().defaultRandom(),
   email:     text("email").notNull(),
-  otpHash:   text("otp_hash").notNull(),    // SHA-256 of OTP — don't store plaintext
+  otpHash:   text("otp_hash").notNull(),    // SHA-256 of OTP, don't store plaintext
   expiresAt: timestamp("expires_at").notNull(),
   used:      boolean("used").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -938,7 +938,7 @@ export const demoPushSubscriptions = pgTable(
   {
     id:              uuid("id").primaryKey().defaultRandom(),
     sessionId:       text("session_id").notNull(),          // UUID from demo iron-session
-    endpoint:        text("endpoint").notNull(),            // PushSubscription.endpoint — used as natural dedupe key
+    endpoint:        text("endpoint").notNull(),            // PushSubscription.endpoint, used as natural dedupe key
     subscription:    jsonb("subscription").$type<{
                        endpoint: string;
                        keys: { p256dh: string; auth: string };

@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
     if (reviewerEmail && process.env.REVIEWER_OTP && email === reviewerEmail) {
       // No console log of the email — keeps reviewer's identity out of
       // log aggregators if the env var ever points at a real address.
-      console.log("[Mobile OTP] reviewer send bypass — no email dispatched");
+      console.log("[Mobile OTP] reviewer send bypass, no email dispatched");
       return NextResponse.json({ ok: true });
     }
 
@@ -229,14 +229,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (!process.env.RESEND_API_KEY) {
-      console.warn("[Mobile OTP] RESEND_API_KEY not set — email not sent");
+      console.warn("[Mobile OTP] RESEND_API_KEY not set, email not sent");
       // Still succeed so DEV_OTP bypass works in testing
       return NextResponse.json({ ok: true });
     }
 
     const fromAddress = process.env.RESEND_FROM_EMAIL;
     if (!fromAddress) {
-      console.error("[Mobile OTP] RESEND_FROM_EMAIL not set — cannot send email");
+      console.error("[Mobile OTP] RESEND_FROM_EMAIL not set, cannot send email");
       return NextResponse.json({ error: "Email sending not configured. Contact support." }, { status: 503 });
     }
 

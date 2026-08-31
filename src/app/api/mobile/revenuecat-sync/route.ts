@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // Fail soft: without the secret key we simply can't verify. Report the
     // current tier so the client keeps working; the webhook is still the
     // primary path. Logged so the config gap surfaces.
-    console.error("[RC Sync] REVENUECAT_SECRET_KEY not set — cannot verify entitlements");
+    console.error("[RC Sync] REVENUECAT_SECRET_KEY not set, cannot verify entitlements");
     const user = await getMobileUser(userId);
     return NextResponse.json(
       { tier: user?.tier ?? "free", changed: false, verified: false },

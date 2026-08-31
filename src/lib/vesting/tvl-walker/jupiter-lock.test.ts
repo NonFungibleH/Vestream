@@ -191,7 +191,7 @@ describe("walkJupiterLock", () => {
   it("falls back to truncated mint label when token isn't in the Jupiter list", async () => {
     // Use a mint NOT present in the cached Jupiter token list (the list cache
     // from earlier tests may persist for the module-level TTL window).
-    const UNKNOWN_MINT = "So11111111111111111111111111111111111111112"; // wSOL — guaranteed valid base58 pubkey
+    const UNKNOWN_MINT = "So11111111111111111111111111111111111111112"; // wSOL, guaranteed valid base58 pubkey
     getProgramAccountsMock.mockResolvedValue([
       { pubkey: { toBase58: () => "p" }, account: { data: buildEscrowBuffer({
         mint: UNKNOWN_MINT, cliffUnlockAmount: 100n, amountPerPeriod: 0n, numberOfPeriod: 0n,

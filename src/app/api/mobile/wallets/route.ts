@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   const { address, label, chains, protocols, tokenAddress: rawToken } = body;
 
   if (!address || !isValidWalletAddress(address)) {
-    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
 
   const user = await getMobileUser(userId);
@@ -102,7 +102,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { address, label, chains, protocols, tokenAddress: rawToken } = body;
   if (!address || !isValidWalletAddress(address)) {
-    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
 
   const user = await getMobileUser(userId);
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest) {
 
   const { address } = await req.json().catch(() => ({}));
   if (!address || !isValidWalletAddress(address)) {
-    return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
   await db.delete(wallets)
     .where(and(eq(wallets.userId, userId), eq(wallets.address, normaliseAddress(address))));

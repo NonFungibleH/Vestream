@@ -62,7 +62,7 @@ function saveLinkEmailHtml(walletAddress: string): string {
             <p style="margin:0 0 10px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;line-height:1.3;">Your scan is saved 📌</p>
             <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.55;">
               We&rsquo;ve linked the wallet <strong style="color:#0f172a;font-family:'Courier New',monospace;">${shortAddr}</strong> to this email.
-              Install the Vestream app and sign in with the same address — your scan will be waiting in your portfolio.
+              Install the Vestream app and sign in with the same address, your scan will be waiting in your portfolio.
             </p>
 
             <!-- Wallet card -->
@@ -101,7 +101,7 @@ function saveLinkEmailHtml(walletAddress: string): string {
             </p>
 
             <p style="margin:16px 0 0;font-size:12px;color:#94a3b8;line-height:1.55;">
-              We&rsquo;ll keep your scan for 30 days. If you don&rsquo;t install in that time, it&rsquo;ll be cleared — no account is created until you sign in.
+              We&rsquo;ll keep your scan for 30 days. If you don&rsquo;t install in that time, it&rsquo;ll be cleared, no account is created until you sign in.
             </p>
           </td>
         </tr>
@@ -127,7 +127,7 @@ function saveLinkEmailText(walletAddress: string): string {
     "Your Vestream scan is saved.",
     "",
     `We've linked the wallet ${walletAddress} to your email.`,
-    "Install the Vestream app and sign in with the same address — your scan will be waiting in your portfolio.",
+    "Install the Vestream app and sign in with the same address, your scan will be waiting in your portfolio.",
     "",
     "Get the app:",
     "  iOS:     https://www.vestream.io/early-access",
@@ -139,7 +139,7 @@ function saveLinkEmailText(walletAddress: string): string {
     "Your scan is kept for 30 days. If you don't install in that time, it'll be cleared.",
     "No account is created until you sign in.",
     "",
-    "— Vestream · vestream.io",
+    "- Vestream · vestream.io",
   ].join("\n");
 }
 
@@ -158,13 +158,13 @@ function saveLinkEmailText(walletAddress: string): string {
 async function sendSaveLinkEmail(email: string, walletAddress: string): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     if (process.env.NODE_ENV !== "production") {
-      console.log("[save-link email] RESEND_API_KEY not set — skipping send");
+      console.log("[save-link email] RESEND_API_KEY not set, skipping send");
     }
     return;
   }
   const fromAddress = process.env.RESEND_FROM_EMAIL;
   if (!fromAddress) {
-    console.error("[save-link email] RESEND_FROM_EMAIL not set — skipping send");
+    console.error("[save-link email] RESEND_FROM_EMAIL not set, skipping send");
     return;
   }
   try {
@@ -315,11 +315,11 @@ export async function POST(req: NextRequest) {
     const lockedSummary = totalLockedUsd != null && totalLockedUsd > 1
       ? `Total locked: $${formatUsdCompact(totalLockedUsd)}.`
       : vestingsCount != null && vestingsCount > 0
-        ? `Tracking ${vestingsCount} ${vestingsCount === 1 ? "stream" : "streams"} — USD values appear once tokens have public pricing.`
+        ? `Tracking ${vestingsCount} ${vestingsCount === 1 ? "stream" : "streams"}, USD values appear once tokens have public pricing.`
         : "";
 
     const nextUnlockSummary = nextUnlockDate && nextTokenSymbol
-      ? `Next unlock: ${nextUnlockDate} — ${nextTokenSymbol}.`
+      ? `Next unlock: ${nextUnlockDate}, ${nextTokenSymbol}.`
       : vestingsCount != null && vestingsCount > 0
         ? "Open the Calendar tab in the app for the full schedule."
         : "";

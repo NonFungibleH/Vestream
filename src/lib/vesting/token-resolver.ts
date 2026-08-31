@@ -46,7 +46,7 @@ interface CacheEntry extends ResolvedTokenMeta {
   resolvedAt: number;
 }
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — token symbols don't change
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h, token symbols don't change
 const cache = new Map<string, CacheEntry>();
 
 function cacheKey(chainId: number, address: string): string {

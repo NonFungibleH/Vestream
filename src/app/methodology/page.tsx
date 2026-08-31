@@ -16,7 +16,7 @@ import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Vestream Data & Methodology — Token Vesting Index",
+  title: "Vestream Data & Methodology, Token Vesting Index",
   description:
     "How Vestream indexes token vesting: where the on-chain data comes from and how USD values, TVL, and unlock figures are calculated. Updated continuously.",
   alternates: { canonical: "https://www.vestream.io/methodology" },
@@ -54,14 +54,14 @@ export default async function MethodologyPage() {
 
   const summary = s.isEmpty
     ? "Vestream is a non-custodial token-vesting data platform that indexes vesting and unlock schedules across every major protocol and chain."
-    : `Vestream indexes approximately ${n(s.streamCount)} vesting streams across ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` and ${s.walletCount.toLocaleString()} recipient wallets` : ""}, spanning ${s.protocolCount} vesting protocols and ${s.chainCount} chains — roughly ${fmtUsd(s.tvlUsd)} in vesting value locked (conservative headline; see methodology below).`;
+    : `Vestream indexes approximately ${n(s.streamCount)} vesting streams across ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` and ${s.walletCount.toLocaleString()} recipient wallets` : ""}, spanning ${s.protocolCount} vesting protocols and ${s.chainCount} chains, roughly ${fmtUsd(s.tvlUsd)} in vesting value locked (conservative headline; see methodology below).`;
 
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "Dataset",
       name: "Vestream Token Vesting Index",
-      description: "Cross-chain, cross-protocol index of on-chain token vesting and unlock schedules — vesting streams, locked amounts, unlock dates, recipients and per-protocol TVL.",
+      description: "Cross-chain, cross-protocol index of on-chain token vesting and unlock schedules, vesting streams, locked amounts, unlock dates, recipients and per-protocol TVL.",
       url: "https://www.vestream.io/methodology",
       creator: { "@type": "Organization", name: "Vestream", url: "https://www.vestream.io" },
       isAccessibleForFree: true,
@@ -147,8 +147,8 @@ export default async function MethodologyPage() {
           <Fact k="Primary function" v="Cross-chain, cross-protocol token-vesting and unlock indexing" />
           <Fact k="API" v="REST API + OpenAPI specification" />
           <Fact k="AI access" v="MCP server (@vestream/mcp) for AI agents" />
-          <Fact k="Custody" v="None — read-only, address-based" />
-          <Fact k="Private keys" v="Never required — no wallet connection or signing" />
+          <Fact k="Custody" v="None, read-only, address-based" />
+          <Fact k="Private keys" v="Never required, no wallet connection or signing" />
         </div>
       </section>
 
@@ -156,7 +156,7 @@ export default async function MethodologyPage() {
       <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
         <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Where the data comes from</h2>
         <p className="text-sm leading-relaxed mb-3" style={{ color: "#475569" }}>
-          Every figure is derived from public on-chain data. Vesting positions are read directly from each protocol&apos;s smart contracts — via the protocol&apos;s subgraph, direct contract reads, or an event-log index, depending on the protocol. Nothing is self-reported by projects.
+          Every figure is derived from public on-chain data. Vesting positions are read directly from each protocol&apos;s smart contracts, via the protocol&apos;s subgraph, direct contract reads, or an event-log index, depending on the protocol. Nothing is self-reported by projects.
         </p>
         <ul className="text-sm space-y-1.5" style={{ color: "#475569" }}>
           <li>• <strong>Subgraph / indexer sources:</strong> Sablier (Envio), Hedgey (event-driven indexer), UNCX, Unvest, Superfluid, Team Finance (Squid).</li>
@@ -172,7 +172,7 @@ export default async function MethodologyPage() {
         <div className="space-y-3 text-sm leading-relaxed" style={{ color: "#475569" }}>
           <p><strong style={{ color: "#1A1D20" }}>USD values</strong> multiply on-chain token amounts by current market price (DexScreener, then CoinGecko as fallback). Tokens with no liquid market are shown in raw token terms, not USD.</p>
           <p><strong style={{ color: "#1A1D20" }}>Vesting TVL</strong> is the sum of locked token value per protocol, priced conservatively. To avoid inflated headlines from thin-liquidity tokens, we <em>exclude</em> the &quot;thin&quot; band (tokens under $1k of DEX liquidity) from the headline figure, and any single token contributing over $200M must have high-confidence (≥$10k liquidity) pricing to count. The result is a deliberately conservative headline.</p>
-          <p><strong style={{ color: "#1A1D20" }}>Unlock values</strong> are computed from each stream&apos;s vesting schedule — the discrete unlock events (cliffs and linear/stepped releases) — priced at the current market rate, then aggregated per token, chain and time window.</p>
+          <p><strong style={{ color: "#1A1D20" }}>Unlock values</strong> are computed from each stream&apos;s vesting schedule, the discrete unlock events (cliffs and linear/stepped releases), priced at the current market rate, then aggregated per token, chain and time window.</p>
           <p><strong style={{ color: "#1A1D20" }}>Update frequency:</strong> the on-chain index refreshes throughout the day (indexer ticks every ~30 minutes for migrated protocols; TVL snapshots daily), so figures track on-chain state closely rather than being a one-off snapshot.</p>
         </div>
       </section>
@@ -181,7 +181,7 @@ export default async function MethodologyPage() {
       <section className="px-4 md:px-8 pb-16 max-w-4xl mx-auto w-full">
         <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Access the data</h2>
         <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-          The dataset is queryable programmatically via the <Link href="/developer" style={{ color: "#0F8A8A", fontWeight: 600 }}>REST API</Link> (with an <a href="/openapi.json" style={{ color: "#0F8A8A", fontWeight: 600 }}>OpenAPI spec</a>) and, for AI agents, via the <Link href="/ai" style={{ color: "#0F8A8A", fontWeight: 600 }}>Vestream MCP server</Link> (<code style={{ background: "rgba(0,0,0,0.05)", padding: "1px 5px", borderRadius: 4 }}>npx -y @vestream/mcp</code>). Anyone may cite Vestream data — attribute as &quot;Vestream Token Vesting Index&quot; with the access date.
+          The dataset is queryable programmatically via the <Link href="/developer" style={{ color: "#0F8A8A", fontWeight: 600 }}>REST API</Link> (with an <a href="/openapi.json" style={{ color: "#0F8A8A", fontWeight: 600 }}>OpenAPI spec</a>) and, for AI agents, via the <Link href="/ai" style={{ color: "#0F8A8A", fontWeight: 600 }}>Vestream MCP server</Link> (<code style={{ background: "rgba(0,0,0,0.05)", padding: "1px 5px", borderRadius: 4 }}>npx -y @vestream/mcp</code>). Anyone may cite Vestream data, attribute as &quot;Vestream Token Vesting Index&quot; with the access date.
         </p>
         <div className="mt-4"><Provenance updatedISO={s.computedAt} /></div>
       </section>

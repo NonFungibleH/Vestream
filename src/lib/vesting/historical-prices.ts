@@ -55,7 +55,7 @@ const REDIS_NEGATIVE_KEY   = (chainId: number, addr: string) =>
 
 const TOKEN_LIST_TTL_SECONDS = 24 * 3600;          // 24h
 const PRICE_TTL_SECONDS       = 365 * 24 * 3600;   // ~forever
-const NEGATIVE_TTL_SECONDS    = 7 * 24 * 3600;     // 1 week — re-check in case CG added it
+const NEGATIVE_TTL_SECONDS    = 7 * 24 * 3600;     // 1 week, re-check in case CG added it
 
 function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;

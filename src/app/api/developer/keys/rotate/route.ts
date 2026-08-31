@@ -84,7 +84,7 @@ export async function POST() {
 
   return NextResponse.json({
     ok:     true,
-    key:    plaintext, // ONE-TIME — never retrievable again
+    key:    plaintext, // ONE-TIME, never retrievable again
     prefix,
     tier:   current.tier,
   });

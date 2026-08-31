@@ -21,9 +21,9 @@ export interface RawTransfer {
   hash:           string;
   from:           string;
   to:             string | null;   // null for contract-creation etc.
-  rawValueHex:    string | null;   // rawContract.value (hex, base units) — preferred
+  rawValueHex:    string | null;   // rawContract.value (hex, base units), preferred
   decimals:       number | null;   // rawContract.decimal (decoded)
-  value:          number | null;   // Alchemy decimal value (token units) — fallback
+  value:          number | null;   // Alchemy decimal value (token units), fallback
   blockTimestamp: string;          // metadata.blockTimestamp (ISO)
 }
 

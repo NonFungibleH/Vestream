@@ -25,7 +25,7 @@ export function withTimeout<T>(
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<T>((resolve) => {
     timer = setTimeout(() => {
-      if (label) console.warn(`[with-timeout] ${label} exceeded ${ms}ms — rendering with fallback`);
+      if (label) console.warn(`[with-timeout] ${label} exceeded ${ms}ms, rendering with fallback`);
       resolve(fallback);
     }, ms);
   });

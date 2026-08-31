@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const chainId  = Number(searchParams.get("chainId") ?? "1");
 
     if (!rawToken || !isValidWalletAddress(rawToken)) {
-      return NextResponse.json({ error: "Invalid token address — expected EVM 0x… or Solana SPL mint" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid token address, expected EVM 0x… or Solana SPL mint" }, { status: 400 });
     }
     if (!ALL_CHAIN_IDS.includes(chainId as SupportedChainId)) {
       return NextResponse.json({ error: "Unsupported chainId" }, { status: 400 });

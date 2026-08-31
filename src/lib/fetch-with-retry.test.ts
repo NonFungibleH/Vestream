@@ -49,7 +49,7 @@ describe("fetchWithRetry", () => {
     expect(mock).toHaveBeenCalledTimes(3);
   });
 
-  it("retries 429 (rate limit) — it's a transient, not a caller bug", async () => {
+  it("retries 429 (rate limit), it's a transient, not a caller bug", async () => {
     const mock = vi
       .fn<() => Promise<Response>>()
       .mockResolvedValueOnce(mockResponse(429))
@@ -61,13 +61,13 @@ describe("fetchWithRetry", () => {
     expect(mock).toHaveBeenCalledTimes(2);
   });
 
-  it("does NOT retry 4xx (other than 429) — that's a caller bug", async () => {
+  it("does NOT retry 4xx (other than 429), that's a caller bug", async () => {
     const mock = vi.fn<() => Promise<Response>>().mockResolvedValue(mockResponse(400));
     vi.stubGlobal("fetch", mock);
 
     const res = await fetchWithRetry("https://example.com", undefined, { retries: 5, backoffMs: 0, jitterMs: 0 });
     expect(res?.status).toBe(400);
-    expect(mock).toHaveBeenCalledTimes(1); // no retries — bad request stays bad
+    expect(mock).toHaveBeenCalledTimes(1); // no retries, bad request stays bad
   });
 
   it("returns the final 5xx response when retries exhaust", async () => {

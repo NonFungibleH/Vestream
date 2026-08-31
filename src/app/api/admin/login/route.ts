@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // `strict` — admin is the highest-value cookie surface. Cross-site
     // navigation should never transmit it (audit hardening).
     sameSite: "strict",
-    maxAge:   ADMIN_TOKEN_MAX_AGE_SEC, // 8 hours — matches the token TTL
+    maxAge:   ADMIN_TOKEN_MAX_AGE_SEC, // 8 hours, matches the token TTL
     path:     "/",
   });
   return res;

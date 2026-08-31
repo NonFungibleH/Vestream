@@ -307,7 +307,7 @@ export default async function TokenPage(
   const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
   if (settled[0].status === "rejected" && !isBuildPhase) {
     throw new Error(
-      `[token-page] overview load failed for ${cid}/${addr} — declining to cache empty render: ` +
+      `[token-page] overview load failed for ${cid}/${addr}, declining to cache empty render: ` +
       `${settled[0].reason instanceof Error ? settled[0].reason.message : String(settled[0].reason)}`,
     );
   }
@@ -565,7 +565,7 @@ export default async function TokenPage(
         </div>
       </section>
 
-      {/* ── Answer-first summary (AEO) — first content block, plain text so
+      {/* ── Answer-first summary (AEO), first content block, plain text so
           answer engines lift it verbatim. ─────────────────────────────────── */}
       {answerSummary && (
         <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
@@ -639,7 +639,7 @@ export default async function TokenPage(
         </div>
       </section>
 
-      {/* ── Next-unlock impact (AEO) — extractable "how big vs the market" ─── */}
+      {/* ── Next-unlock impact (AEO), extractable "how big vs the market" ─── */}
       {hasVesting && impactRisk && (
         <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
           <div className="rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
@@ -941,7 +941,7 @@ export default async function TokenPage(
           <ScanWalletCTA
             surface="token_page"
             heading="See your own token vesting"
-            sub="Paste any wallet — every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
+            sub="Paste any wallet, every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
           />
         </div>
       </section>

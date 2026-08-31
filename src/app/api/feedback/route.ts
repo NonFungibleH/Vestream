@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Service temporarily unavailable." }, { status: 503 });
     }
     return NextResponse.json(
-      { error: "Too many submissions — try again in an hour." },
+      { error: "Too many submissions, try again in an hour." },
       { status: 429 },
     );
   }

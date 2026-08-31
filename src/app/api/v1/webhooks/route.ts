@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
 
   const res = NextResponse.json({
     subscription: publicShape(inserted[0]),
-    secret, // ONE-TIME visible — store this safely on your end
+    secret, // ONE-TIME visible, store this safely on your end
   }, { status: 201 });
   return withRateLimitHeaders(res, auth);
 }

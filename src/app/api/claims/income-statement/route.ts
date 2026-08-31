@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
     chainId:       r.chainId,
     rows:          Number(r.rows),
     usd:           Number(r.usd),
-    units:         r.units, // keep as string — bigint precision
+    units:         r.units, // keep as string, bigint precision
   }));
 
   // ── byYearProtocol pivot ─────────────────────────────────────────────────

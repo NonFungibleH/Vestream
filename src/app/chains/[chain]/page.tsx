@@ -197,7 +197,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
                         <p className="text-[11px]" style={{ color: "#8B8E92" }}>{fmtDate(u.eventTime)}{amt ? ` · ${amt} ${u.symbol ?? ""}`.trimEnd() : ""}</p>
                       </div>
                       <div className="text-right flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: "#0F8A8A" }}>
-                        {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
+                        {u.usdValue != null ? fmtUsd(u.usdValue) : "-"}
                       </div>
                     </div>
                   );

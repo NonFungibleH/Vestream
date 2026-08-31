@@ -81,8 +81,8 @@ const DS_CHAIN_SLUG: Record<number, string> = {
   // (quick-prices, DexScreener-only) showed "—" for all of them.
   42161: "arbitrum",
   10:    "optimism",
-  4663:  "robinhood",  // Robinhood Chain — verified live DexScreener slug
-  101:   "solana",     // DexScreener Solana slug — works for SPL mints
+  4663:  "robinhood",  // Robinhood Chain, verified live DexScreener slug
+  101:   "solana",     // DexScreener Solana slug, works for SPL mints
 };
 
 const CG_PLATFORM_SLUG: Record<number, string> = {
@@ -90,7 +90,7 @@ const CG_PLATFORM_SLUG: Record<number, string> = {
   56:    "binance-smart-chain",
   137:   "polygon-pos",
   8453:  "base",
-  42161: "arbitrum-one",        // added May 5 2026 — was missing, so any
+  42161: "arbitrum-one",        // added May 5 2026, was missing, so any
   10:    "optimistic-ethereum", // Arbitrum/Optimism token DexScreener
                                  // missed got no Pass B fallback at all
   101:   "solana",              // CoinGecko platform slug for SPL tokens
@@ -849,7 +849,7 @@ export async function priceAggregates(
     const dsChain = DS_CHAIN_SLUG[a.chainId];
     if (!dsChain) continue;
     const info = prices.get(`${dsChain}:${a.tokenAddress}`);
-    if (!info) continue;  // truly unpriced — nothing to cache
+    if (!info) continue;  // truly unpriced, nothing to cache
     newEntries.push({
       chainId:      a.chainId,
       tokenAddress: a.tokenAddress,

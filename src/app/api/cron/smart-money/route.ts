@@ -39,7 +39,7 @@ import { sql, eq, and, inArray, notInArray } from "drizzle-orm";
 import { isSmartMoneyDenied, SMART_MONEY_DENYLIST } from "@/lib/vesting/smart-money-denylist";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5min ceiling — the aggregate alone is ~22s
+export const maxDuration = 300; // 5min ceiling, the aggregate alone is ~22s
 
 const LEADERBOARD_SIZE = 100;
 const TOP_TOKENS_PER_WALLET = 3;
@@ -115,7 +115,7 @@ async function handle(req: NextRequest) {
     )
     .groupBy(vestingStreamsCache.recipient)
     .orderBy(sql`distinct_token_count DESC`)
-    .limit(CANDIDATE_POOL); // Wide net — Phase 4 composite re-rank trims to LEADERBOARD_SIZE.
+    .limit(CANDIDATE_POOL); // Wide net, Phase 4 composite re-rank trims to LEADERBOARD_SIZE.
 
   const aggregateMs = Date.now() - t0;
   console.log(`[smart-money] phase 1 done: ${aggregateRows.length} rows in ${aggregateMs}ms`);

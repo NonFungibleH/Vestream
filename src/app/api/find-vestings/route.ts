@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const address = searchParams.get("address");
   if (!address || !isValidWalletAddress(address)) {
-    return NextResponse.json({ error: "Invalid wallet address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid wallet address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
   }
 
   // Log every search before any work happens — even searches that error
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
       aggregateVestingStreams([normaliseAddress(address)], SCAN_CHAINS),
       new Promise<never>((_, reject) =>
         setTimeout(
-          () => reject(new Error("Scan timed out — please try again")),
+          () => reject(new Error("Scan timed out, please try again")),
           SCAN_BUDGET_MS,
         )
       ),

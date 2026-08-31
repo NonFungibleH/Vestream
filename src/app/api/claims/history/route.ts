@@ -31,7 +31,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import type { SupportedChainId } from "@/lib/vesting/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60; // Vercel — refresh can take a while across adapters
+export const maxDuration = 60; // Vercel, refresh can take a while across adapters
 // force-dynamic + no-store: this GET varies by ?since/?until (the tax-page date
 // filter). Without it the handler was being cached and served the SAME response
 // for every date range — the year filter looked "broken" because every period

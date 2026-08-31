@@ -396,7 +396,7 @@ export function toUsdValue(
  * decimal for sub-dollar (relevant for stablecoin dust + memecoin trickle).
  */
 export function formatUsdCompact(usd: number | null | undefined): string {
-  if (usd == null || !Number.isFinite(usd) || usd <= 0) return "—";
+  if (usd == null || !Number.isFinite(usd) || usd <= 0) return "-";
   if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)}B`;
   if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)}M`;
   if (usd >= 1e3) return `$${(usd / 1e3).toFixed(1)}K`;

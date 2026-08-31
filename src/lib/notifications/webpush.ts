@@ -87,7 +87,7 @@ export async function sendWebPush(
     const result: SendResult = await webpush.sendNotification(
       sub as PushSubscription,
       body,
-      { TTL: 60 }, // short TTL — milestone pings are time-sensitive
+      { TTL: 60 }, // short TTL, milestone pings are time-sensitive
     );
     // web-push resolves with a status in the 2xx range on success
     const ok = result.statusCode >= 200 && result.statusCode < 300;

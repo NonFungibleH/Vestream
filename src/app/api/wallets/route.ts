@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     const rawTokenAddress: unknown = body.tokenAddress;
 
     if (!address || !isValidWalletAddress(address)) {
-      return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
 
     // Validate chains — must be subset of ALL_CHAIN_IDS
@@ -172,7 +172,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { address } = body;
     if (!address || !isValidWalletAddress(address)) {
-      return NextResponse.json({ error: "Invalid address — expected EVM 0x… or Solana pubkey" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid address, expected EVM 0x… or Solana pubkey" }, { status: 400 });
     }
 
     const rawChains:    unknown = body.chains;

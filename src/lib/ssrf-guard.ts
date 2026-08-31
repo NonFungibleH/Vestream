@@ -45,7 +45,7 @@ export function isBlockedWebhookHostLiteral(hostname: string): boolean {
   const h = hostname.toLowerCase().replace(/^\[|\]$/g, ""); // strip IPv6 brackets
   if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return true;
   if (/^[0-9.]+$/.test(h) || h.includes(":")) return isPrivateOrReservedIp(h); // IP literal
-  return false; // real hostname — needs DNS (see assertPublicWebhookUrl)
+  return false; // real hostname, needs DNS (see assertPublicWebhookUrl)
 }
 
 /**

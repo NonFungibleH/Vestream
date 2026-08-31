@@ -21,7 +21,7 @@ import { env } from "@/lib/env";
 // invalidated on deploy — sign in again at /admin/login.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TTL_MS = 8 * 60 * 60 * 1000; // 8 hours — matches the cookie maxAge
+const TTL_MS = 8 * 60 * 60 * 1000; // 8 hours, matches the cookie maxAge
 
 function sign(exp: number, secret: string): string {
   return crypto.createHmac("sha256", secret).update(`admin:${exp}`).digest("base64url");

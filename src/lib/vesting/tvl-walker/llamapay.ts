@@ -62,7 +62,7 @@ const SUPPORTED_CHAINS: SupportedChainId[] = Object.keys(SUBGRAPH_IDS).map(
 );
 
 const PAGE_SIZE = 1000;
-const MAX_PAGES = 200; // 200k streams cap per chain — generous headroom
+const MAX_PAGES = 200; // 200k streams cap per chain, generous headroom
 
 // Walker query — we paginate by createdTimestamp to keep ordering stable
 // across pages. Pull each stream's Withdraw events (capped at 100 per
@@ -140,7 +140,7 @@ export async function walkLlamapay(chainId: SupportedChainId): Promise<WalkerRes
       chainId,
       tokens:      [],
       streamCount: 0,
-      error:       "GRAPH_API_KEY missing — cannot build subgraph URL",
+      error:       "GRAPH_API_KEY missing, cannot build subgraph URL",
       elapsedMs:   Date.now() - started,
     };
   }

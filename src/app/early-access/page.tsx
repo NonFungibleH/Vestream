@@ -20,11 +20,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
-  description: "Download Vestream free on iOS and Android. Track every token unlock across 11+ vesting protocols and 9+ chains — no account, no KYC. Pro adds unlimited alerts.",
+  description: "Download Vestream free on iOS and Android. Track every token unlock across 11+ vesting protocols and 9+ chains, no account, no KYC. Pro adds unlimited alerts.",
   alternates:  { canonical: "https://www.vestream.io/early-access" },
   openGraph: {
     title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
-    description: "Download free on the App Store and Google Play. Track every token unlock — no account, no KYC. Pro unlocks unlimited alerts, the web dashboard, and tax exports.",
+    description: "Download free on the App Store and Google Play. Track every token unlock, no account, no KYC. Pro unlocks unlimited alerts, the web dashboard, and tax exports.",
     url:         "https://www.vestream.io/early-access",
     siteName:    "Vestream",
     type:        "website",
@@ -32,12 +32,12 @@ export const metadata: Metadata = {
   twitter: {
     card:        "summary_large_image",
     title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
-    description: "Download free on the App Store and Google Play. Track every token unlock — no account, no KYC.",
+    description: "Download free on the App Store and Google Play. Track every token unlock, no account, no KYC.",
   },
 };
 
 const STEPS = [
-  { n: "1", t: "Download the app", d: "Free on iOS and Android. Open it and you're ready — no account, no email, no KYC." },
+  { n: "1", t: "Download the app", d: "Free on iOS and Android. Open it and you're ready, no account, no email, no KYC." },
   { n: "2", t: "Add any wallet", d: "Paste an EVM 0x… address or a Solana pubkey. We auto-scan it across every protocol and chain." },
   { n: "3", t: "Never miss an unlock", d: "Get a push before every cliff and unlock. Upgrade to Pro in-app for unlimited alerts, email, the web dashboard, and tax exports." },
 ];

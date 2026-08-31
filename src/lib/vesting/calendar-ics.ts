@@ -190,7 +190,7 @@ async function buildEvents(userId: string): Promise<CalendarEvent[]> {
         const matchingStep = sd.unlockSteps.find((s) => s.timestamp === sd.nextUnlockTime);
         if (matchingStep) {
           const dec = sd.tokenDecimals ?? 18;
-          amountSuffix = ` — ${fmtTokenAmount(matchingStep.amount, dec)} ${tokenSymbol}`;
+          amountSuffix = `, ${fmtTokenAmount(matchingStep.amount, dec)} ${tokenSymbol}`;
         }
       }
       events.push({
@@ -236,7 +236,7 @@ export async function generateCalendarFeed(userId: string): Promise<string> {
     "PRODID:-//Vestream//Token Vesting Calendar//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:Vestream — Token unlocks",
+    "X-WR-CALNAME:Vestream, Token unlocks",
     "X-WR-CALDESC:Upcoming token vesting unlocks for your tracked wallets.",
     "X-WR-TIMEZONE:UTC",
     // Refresh hint — Apple Calendar respects this; Google ignores but

@@ -145,7 +145,7 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, maxAttempts = 5
         msg.toLowerCase().includes("request timeout") ||
         msg.toLowerCase().includes("http request failed");
       if (!isTransient || attempt === maxAttempts - 1) throw err;
-      void label;  // intentionally unused — retained for future telemetry
+      void label;  // intentionally unused, retained for future telemetry
       await new Promise((r) => setTimeout(r, 1_000 * Math.pow(2, attempt)));
     }
   }
@@ -237,11 +237,11 @@ async function chunkedMulticall<T>(
     // 22k tokens → ~440 multi-page calls) where blanket pass-2 retries
     // genuinely would waste time on a dead provider.
     if (calls.length > 50 && failedIndices.length > calls.length * 0.9) {
-      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls — RPC appears dead, skipping pass-2`);
+      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} calls, RPC appears dead, skipping pass-2`);
       return out;
     }
     if (failedIndices.length > calls.length / 2) {
-      console.warn(`[tvl-walker] ${label}: pass-1 failed for ${failedIndices.length}/${calls.length} (>50%) — pass-2 will be slow`);
+      console.warn(`[tvl-walker] ${label}: pass-1 failed for ${failedIndices.length}/${calls.length} (>50%), pass-2 will be slow`);
     }
     for (const idx of failedIndices) {
       const call = calls[idx];
@@ -504,7 +504,7 @@ export async function discoverPinkSaleOwners(chainId: SupportedChainId): Promise
   }
 
   if (totalTokens === 0n) {
-    console.warn(`[discoverPinkSaleOwners/${chainId}] contract returned totalTokens=0 — verify contract address ${contract} is the live PinkLock V2 deployment for this chain`);
+    console.warn(`[discoverPinkSaleOwners/${chainId}] contract returned totalTokens=0, verify contract address ${contract} is the live PinkLock V2 deployment for this chain`);
     return [];
   }
 

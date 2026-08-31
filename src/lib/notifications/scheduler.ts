@@ -535,28 +535,28 @@ function renderAlertCopy(
       const hrs = Math.max(1, Math.round((spec.eventTime - nowSec) / 3600));
       return {
         title: `${sym} unlocks in ${hrs}h`,
-        body:  `${sym} on chain ${stream.chainId} — tap to view.`,
+        body:  `${sym} on chain ${stream.chainId}, tap to view.`,
       };
     }
     case "cliff":
       return {
         title: `${sym} cliff reached`,
-        body:  `${sym} on chain ${stream.chainId} just hit its cliff — tap to view.`,
+        body:  `${sym} on chain ${stream.chainId} just hit its cliff, tap to view.`,
       };
     case "stream-end":
       return {
         title: `${sym} vesting complete`,
-        body:  `${sym} on chain ${stream.chainId} is fully vested — tap to view.`,
+        body:  `${sym} on chain ${stream.chainId} is fully vested, tap to view.`,
       };
     case "claim-ready":
       return {
         title: `${sym} is now claimable`,
-        body:  `${sym} on chain ${stream.chainId} — tap to view.`,
+        body:  `${sym} on chain ${stream.chainId}, tap to view.`,
       };
     case "vesting-start":
       return {
         title: `${sym} vesting has started`,
-        body:  `${sym} on chain ${stream.chainId} — tap to view your schedule.`,
+        body:  `${sym} on chain ${stream.chainId}, tap to view your schedule.`,
       };
   }
 }

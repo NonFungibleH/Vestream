@@ -159,7 +159,7 @@ export default async function UnlocksIndex() {
           })}
         </div>
 
-        {/* Monthly reports — dated, shareable summaries of each month's unlocks. */}
+        {/* Monthly reports, dated, shareable summaries of each month's unlocks. */}
         <div className="mt-6 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
           style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
           <div>

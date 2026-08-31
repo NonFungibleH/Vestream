@@ -222,7 +222,7 @@ export async function getGlobalStats(adapterId: string): Promise<GlobalProtocolS
       case "uncx":       return countUncxOnChain;
       case "unvest":     return countUnvestOnChain;
       case "superfluid": return countSuperfluidOnChain;
-      default:           return null; // Hedgey / PinkSale / Team Finance / UNCX-VM — no direct query
+      default:           return null; // Hedgey / PinkSale / Team Finance / UNCX-VM, no direct query
     }
   })();
 

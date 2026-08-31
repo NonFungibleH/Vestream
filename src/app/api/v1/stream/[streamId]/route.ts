@@ -32,7 +32,7 @@ export async function GET(
   if (!row) {
     return NextResponse.json(
       {
-        error: "Stream not found. The stream may not have been indexed yet — " +
+        error: "Stream not found. The stream may not have been indexed yet, " +
                "it will appear after the recipient wallet is queried via /api/v1/wallet/{address}/vestings.",
       },
       { status: 404 }

@@ -68,7 +68,7 @@ export async function GET() {
     topTokens = await fetchTokenListWithRetry(() => getTopTokens(1500), "getTopTokens");
     if (topTokens.length === 0) {
       topTokens = await readSitemapTokensCache();
-      if (topTokens.length > 0) console.warn("[sitemap-tokens] getTopTokens empty — served last-good cache");
+      if (topTokens.length > 0) console.warn("[sitemap-tokens] getTopTokens empty, served last-good cache");
     }
   }
 

@@ -78,7 +78,7 @@ export async function POST(
 
   // Alchemy calls are metered — cap scans per user.
   const rl = await checkRateLimit("detect-sales", userId, 5, "5 m");
-  const blocked = rateLimitResponse(rl, "Too many scans — try again in a few minutes.");
+  const blocked = rateLimitResponse(rl, "Too many scans, try again in a few minutes.");
   if (blocked) return blocked;
 
   const userWallets = await db.select({ address: wallets.address }).from(wallets).where(eq(wallets.userId, userId));

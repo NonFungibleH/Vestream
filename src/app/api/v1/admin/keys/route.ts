@@ -45,7 +45,7 @@ function isAuthorized(authHeader: string | null): boolean {
   if (!expected) {
     // Fail closed — admin routes should never serve traffic without an
     // explicit secret configured.
-    console.error("[admin/keys] ADMIN_API_SECRET not set — rejecting all requests");
+    console.error("[admin/keys] ADMIN_API_SECRET not set, rejecting all requests");
     return false;
   }
   if (!authHeader) return false;
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     prefix,
     tier,
     monthly_limit: limit,
-    warning: "Save this key immediately — it cannot be retrieved again.",
+    warning: "Save this key immediately, it cannot be retrieved again.",
   });
 }
 

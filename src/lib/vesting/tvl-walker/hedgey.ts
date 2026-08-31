@@ -48,7 +48,7 @@ const CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
 };
 
 const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
-const PAGE_SIZE = 200;     // multicall chunk size — fits well under free-tier 100KB resp cap
+const PAGE_SIZE = 200;     // multicall chunk size, fits well under free-tier 100KB resp cap
 const MAX_PLANS = 100_000; // hard cap (Hedgey's largest deployment is ~3k plans today)
 
 const VIEW = "view" as const;
@@ -178,7 +178,7 @@ async function chunkedMulticall<T>(
   // and the underlying RPC is plainly down. Same heuristic as PinkSale.
   if (failedIndices.length > 0) {
     if (calls.length > 50 && failedIndices.length > calls.length * 0.9) {
-      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length} — RPC appears dead`);
+      errors.push(`${label}: pass-1 failed for ${failedIndices.length}/${calls.length}, RPC appears dead`);
       return out;
     }
     for (const idx of failedIndices) {

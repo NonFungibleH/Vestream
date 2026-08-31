@@ -115,7 +115,7 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },
     { url: "https://cloudflare-eth.com",           excludeForLogs: true },
-    { url: "https://1rpc.io/eth" },                // last resort — see pool notes above
+    { url: "https://1rpc.io/eth" },                // last resort, see pool notes above
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
@@ -272,7 +272,7 @@ interface HealthState {
 }
 
 const QUARANTINE_FAIL_THRESHOLD = 3;
-const QUARANTINE_MS             = 60_000; // 1 minute — short enough that a recovering provider rejoins fast
+const QUARANTINE_MS             = 60_000; // 1 minute, short enough that a recovering provider rejoins fast
 const health = new Map<string, HealthState>();
 
 function recordSuccess(url: string): void {

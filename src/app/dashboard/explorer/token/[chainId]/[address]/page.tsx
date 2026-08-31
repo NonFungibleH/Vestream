@@ -378,7 +378,7 @@ export default async function ExplorerTokenPage({
         streamsTimedOut ? (
           <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
             <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text-2)" }}>Couldn&rsquo;t load this token&rsquo;s vesting in time</p>
-            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>The data service was slow just now — refresh to try again. This doesn&rsquo;t mean the token has no vesting.</p>
+            <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>The data service was slow just now, refresh to try again. This doesn&rsquo;t mean the token has no vesting.</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed p-10 text-center" style={{ borderColor: "var(--preview-border)" }}>
@@ -458,7 +458,7 @@ export default async function ExplorerTokenPage({
         </>
       )}
 
-      {/* Price chart (DexScreener embed) at the very bottom — supporting market
+      {/* Price chart (DexScreener embed) at the very bottom, supporting market
           context below the vesting data. theme=dark to match the dashboard;
           only when a priced pair with enough liquidity to actually chart
           exists (thin pairs get stuck on "Loading pair…"). dexscreener.com is

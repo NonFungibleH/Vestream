@@ -36,7 +36,7 @@ export default function TokenError({
             Couldn&apos;t load this token
           </h1>
           <p className="text-sm leading-relaxed mb-6" style={{ color: "#64748B" }}>
-            We hit a hiccup fetching this token&apos;s vesting data — usually a momentary
+            We hit a hiccup fetching this token&apos;s vesting data, usually a momentary
             blip. Give it another try.
           </p>
           <div className="flex items-center justify-center gap-3">

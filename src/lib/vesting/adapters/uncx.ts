@@ -237,7 +237,7 @@ export const uncxAdapter: VestingAdapter = {
     CHAIN_IDS.BSC,
     CHAIN_IDS.POLYGON,
     CHAIN_IDS.BASE,
-    CHAIN_IDS.ARBITRUM, // subgraph has no allocations — skips silently unless UNCX_SUBGRAPH_URL_ARBITRUM is set
+    CHAIN_IDS.ARBITRUM, // subgraph has no allocations, skips silently unless UNCX_SUBGRAPH_URL_ARBITRUM is set
     CHAIN_IDS.SEPOLIA,
   ],
   fetch: fetchForChain,

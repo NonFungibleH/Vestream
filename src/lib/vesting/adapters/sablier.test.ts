@@ -26,7 +26,7 @@ import fixture from "./__fixtures__/sablier.v2.json";
 // assertion below, which is the point — the test is about a fixed scenario.
 const FROZEN_NOW_SEC = 1_700_000_500; // 500 seconds into stream #1's 1000s schedule
 
-describe("sablierAdapter — Envio HyperIndex normalisation", () => {
+describe("sablierAdapter, Envio HyperIndex normalisation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(FROZEN_NOW_SEC * 1000);
@@ -99,7 +99,7 @@ describe("sablierAdapter — Envio HyperIndex normalisation", () => {
     expect(s2.claimEvents![0].amount).toBe("250000000");
   });
 
-  it("stream #3 is pre-cliff — nothing claimable, nextUnlockTime === cliffTime", async () => {
+  it("stream #3 is pre-cliff, nothing claimable, nextUnlockTime === cliffTime", async () => {
     const streams = await sablierAdapter.fetch(
       ["0x1111111111111111111111111111111111111111"],
       CHAIN_IDS.ETHEREUM,

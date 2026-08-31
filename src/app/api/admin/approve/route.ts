@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok:      true,
-    key:     plaintext,   // returned ONCE — never retrievable again
+    key:     plaintext,   // returned ONCE, never retrievable again
     prefix,
     tier,
     monthly_limit: limit,

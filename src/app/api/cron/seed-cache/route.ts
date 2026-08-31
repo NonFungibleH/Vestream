@@ -133,7 +133,7 @@ async function runOneGroupSync(group: SeedGroup, mode: SeedMode, protocolId: str
     const summary = summariseRun(results);
     const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
     const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
-    console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsedSec}s —`, summary);
+    console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsedSec}s -`, summary);
     revalidateSeedPages();
     return NextResponse.json({ ok: true, group, ...(protocolId ? { protocol: protocolId } : {}), mode, elapsedSec, summary });
   } catch (err) {
@@ -159,7 +159,7 @@ function runOneGroup(group: SeedGroup, mode: SeedMode, protocolId: string | null
       const summary = summariseRun(results);
       const elapsed = Math.round((Date.now() - startedAt) / 100) / 10;
       const tag = protocolId ? `group="${group}" protocol="${protocolId}"` : `group="${group}"`;
-      console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsed}s —`, summary);
+      console.log(`[cron/seed-cache] ${tag} mode="${mode}" complete in ${elapsed}s -`, summary);
       revalidateSeedPages();
     } catch (err) {
       reportCronError("seed-cache", err, { group, mode, protocolId, path: "background" });

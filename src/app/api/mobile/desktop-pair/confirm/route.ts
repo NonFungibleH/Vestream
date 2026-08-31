@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   //    sets its iron-session cookie.
   const result = await confirmPairing(code, user.address);
   if (result === "expired") {
-    return NextResponse.json({ error: "Code expired — show a new QR on the desktop." }, { status: 410 });
+    return NextResponse.json({ error: "Code expired, show a new QR on the desktop." }, { status: 410 });
   }
   if (result === false) {
     return NextResponse.json({ error: "Pairing service unavailable" }, { status: 503 });

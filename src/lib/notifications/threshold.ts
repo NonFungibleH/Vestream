@@ -185,7 +185,7 @@ export function renderThresholdCopy(
   const sym = stream.tokenSymbol;
   return {
     title: `${sym} passed $${fmtUsd(thresholdUsd)} claimable`,
-    body:  `${sym} on chain ${stream.chainId} — about $${fmtUsd(claimableUsd)} is claimable now. Tap to view.`,
+    body:  `${sym} on chain ${stream.chainId}, about $${fmtUsd(claimableUsd)} is claimable now. Tap to view.`,
   };
 }
 

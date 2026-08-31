@@ -42,7 +42,7 @@ if (
   (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)
 ) {
   console.error(
-    "[ratelimit] CRITICAL: UPSTASH env vars missing in production — all rate-limited routes will fail closed."
+    "[ratelimit] CRITICAL: UPSTASH env vars missing in production, all rate-limited routes will fail closed."
   );
 }
 

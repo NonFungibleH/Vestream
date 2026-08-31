@@ -17,7 +17,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Crypto Payroll Tracker – Sablier Flow, LlamaPay & Superfluid | Vestream",
-  description: "Track your crypto salary in real time. Vestream indexes Sablier Flow, LlamaPay, and Superfluid streams — accrued balances, stream ends, and income exports.",
+  description: "Track your crypto salary in real time. Vestream indexes Sablier Flow, LlamaPay, and Superfluid streams, accrued balances, stream ends, and income exports.",
   alternates:  { canonical: "https://www.vestream.io/payroll" },
   openGraph: {
     title:       "Crypto Payroll Tracker | Vestream",

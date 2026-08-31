@@ -355,7 +355,7 @@ export default async function WindowPage({ params }: PageParams) {
         <p className="text-base max-w-2xl leading-relaxed mb-4" style={{ color: "#475569" }}>
           {def.dynamicDescription?.() ?? def.description}
         </p>
-        {/* Answer-first lead — plain text so answer engines lift it verbatim. */}
+        {/* Answer-first lead, plain text so answer engines lift it verbatim. */}
         {answerLead && (
           <p className="text-sm md:text-base max-w-2xl leading-relaxed mb-6 font-medium" style={{ color: "#1A1D20" }}>
             {answerLead}

@@ -50,10 +50,10 @@ export function setDarkModePreference(dark: boolean): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(DARK_MODE_KEY, dark ? "1" : "0");
-  } catch { /* localStorage disabled — fall through to cookie */ }
+  } catch { /* localStorage disabled, fall through to cookie */ }
   try {
     document.cookie = `${DARK_MODE_COOKIE}=${dark ? "1" : "0"}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
-  } catch { /* doc not yet available — caller should retry on next event */ }
+  } catch { /* doc not yet available, caller should retry on next event */ }
 }
 
 /**

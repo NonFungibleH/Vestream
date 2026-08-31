@@ -194,7 +194,7 @@ async function fetchForChain(
 
   const rpcUrl = process.env.SOLANA_RPC_URL;
   if (!rpcUrl) {
-    console.error("[streamflow] SOLANA_RPC_URL not configured — adapter returning empty");
+    console.error("[streamflow] SOLANA_RPC_URL not configured, adapter returning empty");
     return [];
   }
 
@@ -218,7 +218,7 @@ async function fetchForChain(
       try {
         new PublicKey(wallet); // throws on malformed pubkey
       } catch {
-        return; // invalid pubkey — skip
+        return; // invalid pubkey, skip
       }
       const result = await client.get({
         address:   wallet,

@@ -156,7 +156,7 @@ export default async function OG(
             flex:           1,
           }}
         >
-          {/* Protocol logo tile — falls back to the brand-coloured initial */}
+          {/* Protocol logo tile, falls back to the brand-coloured initial */}
           <div
             style={{
               width:         180,

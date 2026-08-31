@@ -67,7 +67,7 @@ describe("summariseToken", () => {
 
   it("picks the earliest FUTURE unlock and ignores past ones", () => {
     const s = summariseToken([
-      stream({ nextUnlockTime: NOW - 500 }),               // past — ignored
+      stream({ nextUnlockTime: NOW - 500 }),               // past, ignored
       stream({ id: "s2", nextUnlockTime: NOW + 5_000 }),
       stream({ id: "s3", nextUnlockTime: NOW + 2_000 }),   // earliest future
     ], 1, "0xToKeN", NOW);
@@ -80,7 +80,7 @@ describe("summariseToken", () => {
         nextUnlockTime: NOW + 1_000,
         unlockSteps: [
           { timestamp: NOW + 1_000, amount: "40" }, // in window
-          { timestamp: NOW + 90_000, amount: "999" }, // next day — excluded
+          { timestamp: NOW + 90_000, amount: "999" }, // next day, excluded
         ],
       }),
       stream({

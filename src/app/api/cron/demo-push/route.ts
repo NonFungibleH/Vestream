@@ -54,7 +54,7 @@ function buildPayload(milestone: number, total: bigint, symbol: string): { title
 
   return {
     tag:   `demo-milestone-${Math.round(milestone * 100)}`,
-    title: fully ? "Fully unlocked — claim now" : `${pct(milestone)} unlocked`,
+    title: fully ? "Fully unlocked, claim now" : `${pct(milestone)} unlocked`,
     body:  fully
       ? `All ${humanAmount(total, symbol)} has vested. Tap to claim.`
       : `${amountStr} is now claimable in your demo schedule.`,
@@ -98,7 +98,7 @@ async function handle(req: NextRequest) {
 
       for (const m of MILESTONES) {
         if (alreadyFired.has(m)) continue;
-        if (progress < m) break; // ordered — no later milestone can have crossed
+        if (progress < m) break; // ordered, no later milestone can have crossed
 
         const payload = buildPayload(m, total, row.tokenSymbol);
         const result = await sendWebPush(row.subscription, {

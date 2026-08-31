@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   if (!parsed) return { title: "Token Unlock Report – Vestream" };
   const label = monthLabel(parsed.year, parsed.month);
   const title = `${label} Token Unlock Report | Vestream`;
-  const desc  = `The biggest token unlocks in ${label}, ranked by USD value across every protocol and chain Vestream tracks — dates, amounts, and dollar impact.`;
+  const desc  = `The biggest token unlocks in ${label}, ranked by USD value across every protocol and chain Vestream tracks, dates, amounts, and dollar impact.`;
   const url   = `https://www.vestream.io/unlocks/report/${month}`;
   return {
     title,
@@ -161,7 +161,7 @@ export default async function MonthlyReportPage({ params }: PageParams) {
         <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>
           {label} Token Unlock Report
         </h1>
-        {/* Answer-first lead — plain text so answer engines lift it verbatim. */}
+        {/* Answer-first lead, plain text so answer engines lift it verbatim. */}
         <p className="text-base md:text-lg max-w-3xl leading-relaxed mb-6 font-medium" style={{ color: "#1A1D20" }}>
           {answerLead}
         </p>
@@ -239,7 +239,7 @@ export default async function MonthlyReportPage({ params }: PageParams) {
         <ScanWalletCTA
           surface="unlock_report"
           heading="Track your own token unlocks"
-          sub="Paste any wallet — see every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
+          sub="Paste any wallet, see every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
         />
         <p className="text-sm mt-5 text-center" style={{ color: "#8B8E92" }}>
           See the <Link href="/unlocks" style={{ color: "#0F8A8A", fontWeight: 600 }}>live unlock calendar</Link>,{" "}

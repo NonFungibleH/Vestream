@@ -33,7 +33,7 @@ import {
 import { priceAggregates } from "@/lib/vesting/tvl";
 
 export const dynamic     = "force-dynamic";
-export const maxDuration = 300; // Needs headroom — 1000 tokens × live API calls can exceed 60s.
+export const maxDuration = 300; // Needs headroom, 1000 tokens × live API calls can exceed 60s.
 
 /**
  * How many tokens to refresh per run. Sized so 24 runs (one day) refreshes
@@ -116,7 +116,7 @@ async function handle(req: NextRequest) {
       chainId:       c.chainId,
       tokenAddress:  c.tokenAddress,
       tokenSymbol:   null,
-      tokenDecimals: 0,       // see comment above — keeps wholeTokens=1
+      tokenDecimals: 0,       // see comment above, keeps wholeTokens=1
       lockedAmount:  "1",
     });
   }

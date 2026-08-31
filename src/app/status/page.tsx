@@ -586,7 +586,7 @@ export default async function StatusPage() {
 
 
       <main className="mx-auto max-w-5xl px-4 md:px-8 pb-24 pt-12">
-        {/* Derived-data pipeline banner — only shown when a refresh cron has
+        {/* Derived-data pipeline banner, only shown when a refresh cron has
             frozen (a derived table is past its expected refresh window). This is
             the signal that was missing when token_vesting_rollups sat dead for
             11 days and the Vesting Explorer went blank. */}

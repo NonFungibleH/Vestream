@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const rl = await checkRateLimit("mobile:vestings:refresh", userId, 30, "1 m");
     if (!rl.allowed) {
       return NextResponse.json(
-        { error: "Too many refreshes — try again in a minute." },
+        { error: "Too many refreshes, try again in a minute." },
         { status: 429 },
       );
     }

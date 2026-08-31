@@ -567,7 +567,7 @@ const HEDGEY_PAGE_SIZE = 100;
 export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const contract = HEDGEY_CONTRACTS[chainId];
   if (!contract) {
-    console.log(`[seeder:hedgey/${chainId}] skipped — no contract address configured`);
+    console.log(`[seeder:hedgey/${chainId}] skipped, no contract address configured`);
     return [];
   }
 
@@ -580,7 +580,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
     // client retries down the pool on any single-provider failure.
     const client = makeFallbackClient(chainId, { batch: true });
     if (!client) {
-      console.log(`[seeder:hedgey/${chainId}] skipped — no fallback client available`);
+      console.log(`[seeder:hedgey/${chainId}] skipped, no fallback client available`);
       return [];
     }
 
@@ -591,7 +591,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
     }) as bigint;
 
     if (totalSupply === 0n) {
-      console.log(`[seeder:${tag}] totalSupply=0 — no plans minted yet on this chain`);
+      console.log(`[seeder:${tag}] totalSupply=0, no plans minted yet on this chain`);
       return [];
     }
 
@@ -810,7 +810,7 @@ async function withSolanaFallback<T>(
 ): Promise<T> {
   const urls = getSolanaRpcUrls();
   if (urls.length === 0) {
-    throw new Error(`[${label}] No Solana RPC URLs configured — set SOLANA_RPC_URL`);
+    throw new Error(`[${label}] No Solana RPC URLs configured, set SOLANA_RPC_URL`);
   }
   let lastErr: unknown;
   for (let i = 0; i < urls.length; i++) {
@@ -823,7 +823,7 @@ async function withSolanaFallback<T>(
       if (i < urls.length - 1) {
         console.warn(
           `[${label}] ${urlShort} failed (${err instanceof Error ? err.message.slice(0, 80) : err}) ` +
-          `— falling back to SOLANA_RPC_URL_${i + 2}`
+          `- falling back to SOLANA_RPC_URL_${i + 2}`
         );
       }
       lastErr = err;
@@ -858,7 +858,7 @@ export async function discoverStreamflowRecipients(
 ): Promise<string[]> {
   if (chainId !== CHAIN_IDS.SOLANA) return [];
   if (process.env.SOLANA_ENABLED !== "true") {
-    console.log("[seeder:streamflow] SOLANA_ENABLED flag off — skipping discovery");
+    console.log("[seeder:streamflow] SOLANA_ENABLED flag off, skipping discovery");
     return [];
   }
   if (getSolanaRpcUrls().length === 0) {
@@ -952,7 +952,7 @@ export async function discoverJupiterLockRecipients(
 ): Promise<string[]> {
   if (chainId !== CHAIN_IDS.SOLANA) return [];
   if (process.env.SOLANA_ENABLED !== "true") {
-    console.log("[seeder:jupiter-lock] SOLANA_ENABLED flag off — skipping discovery");
+    console.log("[seeder:jupiter-lock] SOLANA_ENABLED flag off, skipping discovery");
     return [];
   }
   if (getSolanaRpcUrls().length === 0) {
@@ -1073,7 +1073,7 @@ export async function discoverUncxVmRecipients(chainId: SupportedChainId, limit:
   const rpcUrl = getRpcUrl(chainId);
   const chain  = VIEM_CHAIN_MAP[chainId as keyof typeof VIEM_CHAIN_MAP];
   if (!config || !rpcUrl || !chain) {
-    console.log(`[seeder:uncx-vm/${chainId}] skipped — chain not supported or RPC not configured`);
+    console.log(`[seeder:uncx-vm/${chainId}] skipped, chain not supported or RPC not configured`);
     return [];
   }
 
@@ -1201,7 +1201,7 @@ export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
-  if (adapterId === "streamflow")    return "streamflow"; // own group — runs daily, separate from JL
+  if (adapterId === "streamflow")    return "streamflow"; // own group, runs daily, separate from JL
   if (adapterId === "jupiter-lock") return "solana";      // "solana" group = Jupiter Lock only
   if (adapterId === "sablier")       return "sablier";
   // 2026-05-28: sablier-flow moved from "subgraphs" to "sablier" group.
@@ -1696,7 +1696,7 @@ export async function seedAll(
   let jobs = SEED_JOBS.filter((j) => {
     const enabled = isAdapterEnabled(j.adapterId);
     if (!enabled) {
-      console.log(`[seeder] skipping ${j.adapterId}/${j.chainId} — protocol is disabled`);
+      console.log(`[seeder] skipping ${j.adapterId}/${j.chainId}, protocol is disabled`);
     }
     return enabled;
   });
@@ -1704,13 +1704,13 @@ export async function seedAll(
   // Optional group filter.
   if (group) {
     jobs = jobs.filter((j) => groupFor(j.adapterId) === group);
-    console.log(`[seeder] running group="${group}" — ${jobs.length} job(s)`);
+    console.log(`[seeder] running group="${group}", ${jobs.length} job(s)`);
   }
 
   // Optional protocol filter — narrows within the group to a single adapter.
   if (protocolId) {
     jobs = jobs.filter((j) => j.adapterId === protocolId);
-    console.log(`[seeder] protocol filter="${protocolId}" — ${jobs.length} job(s)`);
+    console.log(`[seeder] protocol filter="${protocolId}", ${jobs.length} job(s)`);
   }
 
   for (let i = 0; i < jobs.length; i += PARALLEL) {

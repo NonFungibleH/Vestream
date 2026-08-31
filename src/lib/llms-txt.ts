@@ -68,8 +68,8 @@ const API_SECTION = `## API and MCP (for developers and AI agents)
 
 const KEY_PAGES_SECTION = `## Key pages
 
-- [Homepage](${SITE}/): Token vesting tracker — free wallet scan.
-- [Find my vestings](${SITE}/find-vestings): Free scanner — paste any EVM or Solana address to see every vesting position across all supported protocols and chains.
+- [Homepage](${SITE}/): Token vesting tracker, free wallet scan.
+- [Find my vestings](${SITE}/find-vestings): Free scanner, paste any EVM or Solana address to see every vesting position across all supported protocols and chains.
 - [Token unlock calendar](${SITE}/unlocks): Live calendar of upcoming unlock events (today / this week / this month / 30-60-90-day windows).
 - [Biggest unlocks this week](${SITE}/unlocks/biggest-this-week): The largest token unlocks in the next 7 days.
 - [All protocols](${SITE}/protocols): Every vesting protocol Vestream indexes, with live TVL and stream counts.
@@ -96,7 +96,7 @@ export function buildLlmsTxt(): string {
 
   return `# Vestream
 
-> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and 7 chains. Paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules — with push and email alerts before each event. Tracking is read-only and address-based; no wallet connection or signing is ever required. A REST API and MCP server make the vesting data queryable by AI agents and developers.
+> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and 7 chains. Paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules, with push and email alerts before each event. Tracking is read-only and address-based; no wallet connection or signing is ever required. A REST API and MCP server make the vesting data queryable by AI agents and developers.
 
 ${KEY_PAGES_SECTION}
 
@@ -134,26 +134,26 @@ export function buildLlmsFullTxt(): string {
   const articleSection = groupArticlesByCategory(getAllArticles())
     .map(([cat, items]) => {
       const lines = items
-        .map((a) => `- [${a.title}](${SITE}/resources/${a.slug}) — ${a.readingTime}\n  ${a.excerpt}`)
+        .map((a) => `- [${a.title}](${SITE}/resources/${a.slug}), ${a.readingTime}\n  ${a.excerpt}`)
         .join("\n");
       return `### ${cat}\n\n${lines}`;
     })
     .join("\n\n");
 
-  return `# Vestream — Full Reference
+  return `# Vestream, Full Reference
 
 > Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and 7 chains. This is the expanded reference; the concise index is at ${SITE}/llms.txt.
 
 ## What Vestream is
 
-Vestream indexes on-chain token vesting and unlock schedules across ${n} major protocols and seven blockchains, and gives every wallet one place to see its upcoming unlocks — plus email and push alerts before each one. It serves three audiences: (1) token holders who need to know when vested allocations unlock so they can claim, sell, or plan taxes; (2) funds and team treasuries tracking investor allocations, cliffs, and unlock schedules across many positions; (3) developers and AI-agent builders who want programmatic, normalised vesting data via the REST API or MCP server.
+Vestream indexes on-chain token vesting and unlock schedules across ${n} major protocols and seven blockchains, and gives every wallet one place to see its upcoming unlocks, plus email and push alerts before each one. It serves three audiences: (1) token holders who need to know when vested allocations unlock so they can claim, sell, or plan taxes; (2) funds and team treasuries tracking investor allocations, cliffs, and unlock schedules across many positions; (3) developers and AI-agent builders who want programmatic, normalised vesting data via the REST API or MCP server.
 
 ## How it works
 
-- You add a wallet by pasting its address — EVM \`0x…\` or a Solana pubkey. There is no wallet connection and no signing; Vestream is strictly a read-only, address-watching tracker.
+- You add a wallet by pasting its address, EVM \`0x…\` or a Solana pubkey. There is no wallet connection and no signing; Vestream is strictly a read-only, address-watching tracker.
 - Vestream auto-scans that address across every supported protocol and chain and surfaces each vesting stream: start, cliff, end, amount vested, amount claimable now, and the next unlock date.
 - Turn on alerts (email, push, or both) with a lead time, and Vestream notifies you before each unlock.
-- Data is public and on-chain — the same schedules the protocol's own UI shows.
+- Data is public and on-chain, the same schedules the protocol's own UI shows.
 
 ## Chains
 

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
-    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET missing — refusing event");
+    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET missing, refusing event");
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
   }
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   // analytics on every replay. Skip on dedup hit, return 200 OK.
   const isFirstTime = await claimWebhookEvent(event.id, "stripe");
   if (!isFirstTime) {
-    console.log(`[stripe-webhook] dedup hit — event ${event.id} already processed`);
+    console.log(`[stripe-webhook] dedup hit, event ${event.id} already processed`);
     return NextResponse.json({ received: true, dedup: true });
   }
 

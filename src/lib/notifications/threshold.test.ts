@@ -41,7 +41,7 @@ describe("resolveThresholdAlert", () => {
     expect(res!.fired).toBe(false);
   });
 
-  it("skips unpriced tokens (null / undefined / zero / NaN price) — never alerts on unpriced claimable", () => {
+  it("skips unpriced tokens (null / undefined / zero / NaN price), never alerts on unpriced claimable", () => {
     expect(resolveThresholdAlert(stream(), null, 100)).toBeNull();
     expect(resolveThresholdAlert(stream(), undefined, 100)).toBeNull();
     expect(resolveThresholdAlert(stream(), 0, 100)).toBeNull();
@@ -72,7 +72,7 @@ describe("resolveThresholdAlert", () => {
     expect(res!.claimableUsd).toBeCloseTo(250, 6);
   });
 
-  it("only reads claimableNow + tokenDecimals — works for continuous streams with no unlock schedule", () => {
+  it("only reads claimableNow + tokenDecimals, works for continuous streams with no unlock schedule", () => {
     // Superfluid/LlamaPay-shaped input: nothing but the two fields the
     // helper's type asks for. Compiles + evaluates without
     // nextUnlockTime/unlockSteps existing at all.
@@ -86,7 +86,7 @@ describe("resolveThresholdAlert", () => {
 });
 
 describe("thresholdDedupTimestamp", () => {
-  it("is stable — same threshold always yields the identical timestamp", () => {
+  it("is stable, same threshold always yields the identical timestamp", () => {
     const a = thresholdDedupTimestamp(1000);
     const b = thresholdDedupTimestamp(1000);
     expect(a.getTime()).toBe(b.getTime());
@@ -169,14 +169,14 @@ describe("collectThresholdSlots", () => {
 });
 
 describe("renderThresholdCopy", () => {
-  it("matches the existing copy tone — plain text, no emoji", () => {
+  it("matches the existing copy tone, plain text, no emoji", () => {
     const { title, body } = renderThresholdCopy(
       { tokenSymbol: "NOVA", chainId: 8453 },
       1000,
       1523.7,
     );
     expect(title).toBe("NOVA passed $1,000 claimable");
-    expect(body).toBe("NOVA on chain 8453 — about $1,524 is claimable now. Tap to view.");
+    expect(body).toBe("NOVA on chain 8453, about $1,524 is claimable now. Tap to view.");
     // No emoji anywhere (existing renderAlertCopy uses none).
     expect(/\p{Extended_Pictographic}/u.test(title + body)).toBe(false);
   });

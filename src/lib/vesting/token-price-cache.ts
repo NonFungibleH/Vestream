@@ -120,7 +120,7 @@ export async function readPriceCache(
         const key = `${r.chainId}:${r.tokenAddress.toLowerCase()}`;
         if (!wantSet.has(key)) continue;
         const fetchedAtMs = r.fetchedAt.getTime();
-        if (fetchedAtMs < cutoffMs) continue;  // stale — skip
+        if (fetchedAtMs < cutoffMs) continue;  // stale, skip
         const priceUsd     = Number(r.priceUsd);
         const liquidityUsd = r.liquidityUsd === null ? null : Number(r.liquidityUsd);
         const marketCap    = r.marketCap === null ? null : Number(r.marketCap);
@@ -285,7 +285,7 @@ export async function pickStalestCachedTokens(
         fetchedAt:    tokenPricesCache.fetchedAt,
       })
       .from(tokenPricesCache)
-      .orderBy(tokenPricesCache.fetchedAt)  // ASC — oldest first
+      .orderBy(tokenPricesCache.fetchedAt)  // ASC, oldest first
       .limit(limit);
 
     const nowMs = Date.now();

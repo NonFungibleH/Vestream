@@ -16,13 +16,13 @@ import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Token Vesting Statistics — TVL, Streams & Locked Supply",
+  title: "Token Vesting Statistics, TVL, Streams & Locked Supply",
   description:
     "Live token vesting statistics from Vestream's on-chain index: total value locked in vesting, stream and token counts, and TVL by chain and protocol.",
   alternates: { canonical: "https://www.vestream.io/research/vesting-statistics" },
   openGraph: {
     title: "Token Vesting Statistics",
-    description: "How much crypto is locked in token vesting — by chain and by protocol.",
+    description: "How much crypto is locked in token vesting, by chain and by protocol.",
     url: "https://www.vestream.io/research/vesting-statistics",
     siteName: "Vestream",
     type: "article",
@@ -59,7 +59,7 @@ export default async function VestingStatisticsPage() {
 
   const answer = s.isEmpty
     ? "Vestream tracks the value locked in on-chain token vesting across every major protocol and chain."
-    : `Approximately ${fmtUsd(s.tvlUsd)} is currently locked in token vesting across the ${s.protocolCount} protocols and ${s.chainCount} chains indexed by Vestream — spread over ${n(s.streamCount)} vesting streams and ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` held by ${n(s.walletCount)} recipient wallets` : ""}.`;
+    : `Approximately ${fmtUsd(s.tvlUsd)} is currently locked in token vesting across the ${s.protocolCount} protocols and ${s.chainCount} chains indexed by Vestream, spread over ${n(s.streamCount)} vesting streams and ${n(s.tokenCount)} tokens${s.walletCount > 0 ? ` held by ${n(s.walletCount)} recipient wallets` : ""}.`;
 
   const topChain = s.byChain[0];
   const topProto = s.byProtocol[0];
@@ -73,7 +73,7 @@ export default async function VestingStatisticsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: "Token Vesting Statistics — Vestream Index",
+    name: "Token Vesting Statistics · Vestream Index",
     description: "Total value locked in token vesting, vesting stream and token counts, and vesting TVL broken down by blockchain and by protocol, from the Vestream on-chain index.",
     url: "https://www.vestream.io/research/vesting-statistics",
     creator: { "@type": "Organization", name: "Vestream", url: "https://www.vestream.io" },

@@ -349,7 +349,7 @@ export async function getTokenOverview(
     tokenSymbol,
     tokenDecimals,
     streamCount:        rows.length,
-    activeStreamCount:  rows.length, // by query — fully-vested rows are excluded
+    activeStreamCount:  rows.length, // by query, fully-vested rows are excluded
     recipientCount:     recipients.size,
     lockedTokensWhole:  lockedWhole,
     protocolMix,

@@ -99,7 +99,7 @@ async function runAll(protocolFilter: string | null): Promise<{
     : null;
   const protocols = listProtocols().filter((p) => !filterSet || filterSet.has(p.slug));
   if (protocolFilter && protocols.length === 0) {
-    console.log(`[cron/tvl-snapshot] no enabled protocol matches "${protocolFilter}" — skipping (may be disabled in protocol-constants.ts)`);
+    console.log(`[cron/tvl-snapshot] no enabled protocol matches "${protocolFilter}", skipping (may be disabled in protocol-constants.ts)`);
   }
 
   // Serial processing with brief inter-protocol delay (added May 11 2026).
@@ -191,7 +191,7 @@ async function handle(req: NextRequest) {
     after(async () => {
       const result = await runAll(protocolFilter);
       console.log(
-        `[cron/tvl-snapshot] background run complete in ${(result.durationMs / 1000).toFixed(1)}s — `
+        `[cron/tvl-snapshot] background run complete in ${(result.durationMs / 1000).toFixed(1)}s, `
         + `totalUsd=$${result.totalUsd.toLocaleString()}, `
         + `runs=${JSON.stringify(result.runs.map((r) => ({ slug: r.slug, ok: r.ok })))}`,
       );

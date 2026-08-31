@@ -61,7 +61,7 @@ function tokensWhole(amount: string, decimals: number): string {
     const fracStr = frac.toString().padStart(decimals, "0").slice(0, 8).replace(/0+$/, "");
     return fracStr ? `${whole}.${fracStr}` : whole.toString();
   } catch {
-    return "—";
+    return "-";
   }
 }
 
@@ -123,7 +123,7 @@ function annotationDescription(
   const parts: string[] = [];
   if (a.customName) parts.push(a.customName);
   if (a.notes)      parts.push(a.notes);
-  return parts.join(" — ");
+  return parts.join(", ");
 }
 
 /** Pipe-separated tag list — chosen so a tag value can never collide with
@@ -214,14 +214,14 @@ function buildKoinly(rows: ClaimRow[], annotations?: AnnotationsByStreamId): str
     // see context first, technical detail second.
     const ann = annotationDescription(annotations, r.streamId);
     const machine = `Vesting claim on ${r.protocol} (${CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`})`;
-    const description = ann ? `${ann} — ${machine}` : machine;
+    const description = ann ? `${ann}, ${machine}` : machine;
     return csvRow([
       isoDateTime(r.claimedAt) + " UTC",
-      "",                                    // Sent Amount (empty — nothing left wallet)
+      "",                                    // Sent Amount (empty, nothing left wallet)
       "",                                    // Sent Currency
       tokensWhole(r.amount, r.tokenDecimals),
       r.tokenSymbol ?? r.tokenAddress.slice(0, 8),
-      "",                                    // Fee Amount (gas not yet captured — Phase 2)
+      "",                                    // Fee Amount (gas not yet captured, Phase 2)
       "",                                    // Fee Currency
       r.usdValueAtClaim ?? "",
       r.usdValueAtClaim ? "USD" : "",
@@ -283,7 +283,7 @@ function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): s
   const body = rows.map((r) => {
     const ann = annotationDescription(annotations, r.streamId);
     const machine = `${tokensWhole(r.amount, r.tokenDecimals)} ${r.tokenSymbol ?? r.tokenAddress.slice(0, 8)} via ${r.protocol}`;
-    const description = ann ? `${ann} — ${machine}` : machine;
+    const description = ann ? `${ann}, ${machine}` : machine;
     return csvRow([
       isoDate(r.claimedAt),
       description,
@@ -319,12 +319,12 @@ function buildPayrollIncome(
     "Source",                   // free-form: annotation customName, else "<protocol> via <chain>"
     "Token",
     "Amount Received",
-    "Unit Price USD at Receipt", // per-token FMV — Amount Received × this = FMV total
+    "Unit Price USD at Receipt", // per-token FMV, Amount Received × this = FMV total
     "FMV USD at Receipt",       // canonical income figure for tax filing
-    "Pricing Confidence",       // high / medium / low / missing — auditable
-    "Income Type",              // "salary" | "vesting income" | "grant" — derived from stream category
+    "Pricing Confidence",       // high / medium / low / missing, auditable
+    "Income Type",              // "salary" | "vesting income" | "grant", derived from stream category
     "Tags",                     // user-supplied taxonomy ("Investor", "Salary", "Advisor", etc.)
-    "Stream Address",           // payer contract — proxy for the "employer" / payer
+    "Stream Address",           // payer contract, proxy for the "employer" / payer
     "Tx Hash",
   ]);
   const body = rows.map((r) => {
@@ -345,7 +345,7 @@ function buildPayrollIncome(
       r.priceConfidence,
       incomeType,
       tagList(tags, r.streamId),
-      r.streamId,                   // composite "<protocol>-<chain>-<id>" — recognisable to the user
+      r.streamId,                   // composite "<protocol>-<chain>-<id>", recognisable to the user
       r.txHash,
     ]);
   });
@@ -478,7 +478,7 @@ function buildPayrollSummaryUk(rows: ClaimRow[], annotations?: AnnotationsByStre
     "Chain",
     "Token",
     "Tokens Received",
-    "Gross Income (USD)",          // SA103 Turnover — convert to GBP at year-end
+    "Gross Income (USD)",          // SA103 Turnover, convert to GBP at year-end
     "Number of Receipts",
     "Period Start",
     "Period End",

@@ -31,24 +31,24 @@ const articles: Article[] = [
   {
     slug:        "how-to-track-team-finance-vesting",
     title:       "How to Track Team Finance Vesting (2026)",
-    excerpt:     "Team Finance vesting is on-chain but gives recipients no personal dashboard — so finding your own unlock schedule is hard. Here's how Team Finance vesting works and three ways to track it, including a free wallet scan that reconstructs your full schedule in seconds.",
+    excerpt:     "Team Finance vesting is on-chain but gives recipients no personal dashboard, so finding your own unlock schedule is hard. Here's how Team Finance vesting works and three ways to track it, including a free wallet scan that reconstructs your full schedule in seconds.",
     publishedAt: "2026-08-28",
     updatedAt:   "2026-08-28",
     readingTime: "6 min read",
     category:    "Guides",
     tags:        ["Team Finance", "team finance vesting", "vesting tracker", "how to track vesting", "token unlock"],
     content: [
-      { type: "p", html: "<strong>Team Finance</strong> is one of the most widely used on-chain token vesting and locking services — thousands of projects use it to vest team, advisor and investor allocations. But if you're a <em>recipient</em> of a Team Finance vesting plan, actually finding your own schedule — when your tokens unlock, how much, and how much is still locked — is surprisingly hard. This guide explains how <strong>Team Finance vesting</strong> works and the three ways to track it, including how to see your full schedule for free in seconds." },
+      { type: "p", html: "<strong>Team Finance</strong> is one of the most widely used on-chain token vesting and locking services, thousands of projects use it to vest team, advisor and investor allocations. But if you're a <em>recipient</em> of a Team Finance vesting plan, actually finding your own schedule, when your tokens unlock, how much, and how much is still locked, is surprisingly hard. This guide explains how <strong>Team Finance vesting</strong> works and the three ways to track it, including how to see your full schedule for free in seconds." },
       { type: "callout", emoji: "🔍", title: "The short version", body: "Team Finance vesting is on-chain and non-custodial, but it doesn't give recipients a personal dashboard. To see your own unlock schedule, either read the vesting contract on a block explorer, or paste your wallet into a multi-protocol tracker that decodes it for you." },
 
       { type: "h2", text: "What is Team Finance vesting?" },
-      { type: "p", html: "Team Finance (part of TrustSwap) lets project founders lock and vest tokens through audited, non-custodial smart contracts. A founder uploads a distribution — team, advisors, investors — and deploys a vesting contract that releases tokens on an agreed schedule: often a <strong>cliff</strong> (a date before which nothing unlocks) followed by <strong>linear</strong> or stepped releases. Because it's on-chain, the schedule is enforced by code, not trust — nobody can release the tokens early or change the terms." },
-      { type: "p", html: "For a primer on the mechanics — cliffs, linear vs stepped schedules, and what they mean for price — see our guide to <a href=\"/resources/what-is-token-vesting\">what token vesting is</a>." },
+      { type: "p", html: "Team Finance (part of TrustSwap) lets project founders lock and vest tokens through audited, non-custodial smart contracts. A founder uploads a distribution, team, advisors, investors, and deploys a vesting contract that releases tokens on an agreed schedule: often a <strong>cliff</strong> (a date before which nothing unlocks) followed by <strong>linear</strong> or stepped releases. Because it's on-chain, the schedule is enforced by code, not trust, nobody can release the tokens early or change the terms." },
+      { type: "p", html: "For a primer on the mechanics, cliffs, linear vs stepped schedules, and what they mean for price, see our guide to <a href=\"/resources/what-is-token-vesting\">what token vesting is</a>." },
 
       { type: "h2", text: "Why your Team Finance vesting is hard to find" },
-      { type: "p", html: "Team Finance's app is built for the <em>founder</em> who creates the plan, not the <em>recipient</em> waiting on it — there's no 'log in and see my unlocks' view for recipients. Worse, many Team Finance distributions are <strong>merkle-based</strong>: the individual allocations aren't stored as separate on-chain records, they're proven against a merkle root at claim time — which makes your personal schedule genuinely difficult to reconstruct by hand." },
+      { type: "p", html: "Team Finance's app is built for the <em>founder</em> who creates the plan, not the <em>recipient</em> waiting on it, there's no 'log in and see my unlocks' view for recipients. Worse, many Team Finance distributions are <strong>merkle-based</strong>: the individual allocations aren't stored as separate on-chain records, they're proven against a merkle root at claim time, which makes your personal schedule genuinely difficult to reconstruct by hand." },
       { type: "ul", items: [
-        "No recipient dashboard — the app is founder-facing.",
+        "No recipient dashboard, the app is founder-facing.",
         "Merkle distribution hides individual schedules until you claim.",
         "The data lives in a raw contract, not a human-readable page.",
       ] },
@@ -57,30 +57,30 @@ const articles: Article[] = [
       { type: "h3", text: "1. The Team Finance app" },
       { type: "p", html: "If you're the founder who created the plan, the Team Finance dashboard shows the vesting you deployed. As a recipient, though, it won't surface your personal schedule." },
       { type: "h3", text: "2. A block explorer (Etherscan / BscScan)" },
-      { type: "p", html: "You can read the vesting contract directly on a block explorer and inspect its state. This works, but it's technical — you need the correct contract address, you have to decode the schedule fields yourself, and merkle-distributed plans may not expose your allocation at all until you claim." },
+      { type: "p", html: "You can read the vesting contract directly on a block explorer and inspect its state. This works, but it's technical, you need the correct contract address, you have to decode the schedule fields yourself, and merkle-distributed plans may not expose your allocation at all until you claim." },
       { type: "h3", text: "3. A multi-protocol vesting tracker (the easy way)" },
-      { type: "p", html: "The fastest route is a tracker that already decodes Team Finance's contracts. <a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting across Ethereum, BNB Chain and Polygon — paste your wallet address and it reconstructs your full schedule: what's locked, what's claimable now, and every upcoming unlock date. No sign-up, no wallet connection." },
+      { type: "p", html: "The fastest route is a tracker that already decodes Team Finance's contracts. <a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting across Ethereum, BNB Chain and Polygon, paste your wallet address and it reconstructs your full schedule: what's locked, what's claimable now, and every upcoming unlock date. No sign-up, no wallet connection." },
 
       { type: "h2", text: "How to track your Team Finance vesting on Vestream" },
       { type: "ol", items: [
         "Open <a href=\"/find-vestings\">the free wallet scanner</a>.",
-        "Paste the wallet address that holds (or will receive) the vesting — read-only, EVM or Solana.",
+        "Paste the wallet address that holds (or will receive) the vesting, read-only, EVM or Solana.",
         "Vestream scans Team Finance plus 9 other vesting protocols and lists every position it finds.",
-        "Open the token to see the full unlock schedule, amounts and next unlock date — and turn on an alert so you're notified before each cliff.",
+        "Open the token to see the full unlock schedule, amounts and next unlock date, and turn on an alert so you're notified before each cliff.",
       ] },
       { type: "p", html: "You can also browse Team Finance activity directly: the <a href=\"/protocols/team-finance\">Team Finance unlock tracker</a> shows live locked value and stats, and the <a href=\"/protocols/team-finance/unlocks\">Team Finance unlock calendar</a> lists upcoming unlocks across every token vested on the protocol." },
-      { type: "p", html: "Want the deeper, more technical walkthrough — including how to handle merkle-distributed plans? Read <a href=\"/resources/how-to-track-team-finance-unlocks\">how to track Team Finance token unlocks</a>." },
+      { type: "p", html: "Want the deeper, more technical walkthrough, including how to handle merkle-distributed plans? Read <a href=\"/resources/how-to-track-team-finance-unlocks\">how to track Team Finance token unlocks</a>." },
 
       { type: "h2", text: "Team Finance vesting FAQ" },
       { type: "faq", items: [
         { q: "Does Team Finance show my vesting schedule?", a: "Not directly for recipients. The Team Finance app is designed for the founder who creates the plan. To see your own schedule as a recipient, read the contract on a block explorer or use a tracker like Vestream that decodes it and shows your locked balance, claimable amount and next unlock date." },
-        { q: "How do I find my Team Finance unlock date?", a: "Paste your wallet into Vestream's free scanner — it reconstructs your Team Finance schedule and shows the exact date and amount of each upcoming unlock. Alternatively, inspect the vesting contract on Etherscan or BscScan, though merkle-distributed plans may not expose your allocation until you claim." },
-        { q: "Is Team Finance vesting on-chain and safe?", a: "Yes. Team Finance vesting runs on audited, non-custodial smart contracts — the release schedule is enforced by code, and no one can withdraw early or change the terms. Tracking your schedule just reads that on-chain data; it doesn't affect the security of the vesting itself." },
+        { q: "How do I find my Team Finance unlock date?", a: "Paste your wallet into Vestream's free scanner, it reconstructs your Team Finance schedule and shows the exact date and amount of each upcoming unlock. Alternatively, inspect the vesting contract on Etherscan or BscScan, though merkle-distributed plans may not expose your allocation until you claim." },
+        { q: "Is Team Finance vesting on-chain and safe?", a: "Yes. Team Finance vesting runs on audited, non-custodial smart contracts, the release schedule is enforced by code, and no one can withdraw early or change the terms. Tracking your schedule just reads that on-chain data; it doesn't affect the security of the vesting itself." },
         { q: "Which chains does Team Finance vesting run on?", a: "Team Finance supports vesting on several EVM chains including Ethereum, BNB Chain and Polygon. Vestream tracks Team Finance vesting across these chains alongside 9 other vesting protocols." },
-        { q: "How do I get alerted before a Team Finance unlock?", a: "Track the wallet on Vestream and enable unlock alerts — you'll get a push or email notification before each cliff or scheduled release, so you never miss a claim or get caught off guard by new supply hitting the market." },
+        { q: "How do I get alerted before a Team Finance unlock?", a: "Track the wallet on Vestream and enable unlock alerts, you'll get a push or email notification before each cliff or scheduled release, so you never miss a claim or get caught off guard by new supply hitting the market." },
       ] },
 
-      { type: "p", html: "Team Finance is one of 11+ vesting protocols Vestream tracks. To see every unlock across all of them — Sablier, Hedgey, UNCX, Streamflow and more — start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
+      { type: "p", html: "Team Finance is one of 11+ vesting protocols Vestream tracks. To see every unlock across all of them, Sablier, Hedgey, UNCX, Streamflow and more, start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
     ],
   },
 
@@ -95,13 +95,13 @@ const articles: Article[] = [
     category:    "Token Unlocks",
     tags:        ["Arbitrum", "ARB", "ARB token unlock", "ARB vesting", "token unlock schedule"],
     content: [
-      { type: "p", html: "Arbitrum's <strong>ARB</strong> is one of the most-watched token-unlock schedules in the market — sizeable allocations are still locked and releasing through 2027, and its larger cliff unlocks are among the biggest single-day supply events in DeFi. This guide explains how ARB's <strong>tokenomics</strong> and <strong>unlock schedule</strong> work, and where to check the live numbers." },
-      { type: "callout", emoji: "🗓️", title: "Unlock data changes — verify before you trade", body: "Exact unlock dates and amounts shift as schedules and circulating supply update. Use the figures here as structural context and confirm current numbers on a live tracker (linked below) before any decision. Not financial advice." },
+      { type: "p", html: "Arbitrum's <strong>ARB</strong> is one of the most-watched token-unlock schedules in the market, sizeable allocations are still locked and releasing through 2027, and its larger cliff unlocks are among the biggest single-day supply events in DeFi. This guide explains how ARB's <strong>tokenomics</strong> and <strong>unlock schedule</strong> work, and where to check the live numbers." },
+      { type: "callout", emoji: "🗓️", title: "Unlock data changes, verify before you trade", body: "Exact unlock dates and amounts shift as schedules and circulating supply update. Use the figures here as structural context and confirm current numbers on a live tracker (linked below) before any decision. Not financial advice." },
 
       { type: "h2", text: "ARB tokenomics at a glance" },
       { type: "p", html: "ARB has a <strong>maximum supply of 10 billion tokens</strong>. As of mid-2026, roughly 61% of that supply had been unlocked into circulation, with the remainder still vesting. The allocation is split across several buckets:" },
       { type: "ul", items: [
-        "<strong>Arbitrum DAO Treasury</strong> — the largest allocation, governed on-chain by the DAO",
+        "<strong>Arbitrum DAO Treasury</strong>, the largest allocation, governed on-chain by the DAO",
         "<strong>Team</strong> and <strong>Future Team + Advisors</strong>",
         "<strong>Investors</strong>",
         "<strong>Individual wallets</strong> (airdrop recipients) and <strong>DAOs in the Arbitrum ecosystem</strong>",
@@ -109,22 +109,22 @@ const articles: Article[] = [
       { type: "p", html: "The <strong>Team</strong> and <strong>Investor</strong> buckets are the ones to watch for unlock pressure, since those are the tokens that vest to insiders on a cliff schedule." },
 
       { type: "h2", text: "How ARB's vesting works" },
-      { type: "p", html: "Most ARB allocations release through a <strong>cliff mechanism</strong> — tokens are held back entirely, then a large tranche unlocks on a specific date, rather than dripping out continuously. That's why ARB's unlocks land as concentrated single-day events, and why they draw so much attention: a cliff can add a substantial share of new supply at once. The vesting schedule extends into 2027." },
+      { type: "p", html: "Most ARB allocations release through a <strong>cliff mechanism</strong>, tokens are held back entirely, then a large tranche unlocks on a specific date, rather than dripping out continuously. That's why ARB's unlocks land as concentrated single-day events, and why they draw so much attention: a cliff can add a substantial share of new supply at once. The vesting schedule extends into 2027." },
 
       { type: "h2", text: "The 2026 ARB unlocks" },
-      { type: "p", html: "Per public unlock trackers, ARB has scheduled cliff unlocks through 2026 — including one of its <strong>largest single unlocks around August 2026</strong> (reported at roughly 92.65M ARB across trackers). Whether an unlock moves the price depends on its <strong>size relative to circulating supply</strong>, <strong>who receives the tokens</strong>, and market conditions — released tokens can be held, staked, or deposited, not only sold. Historically, ARB has shown relatively low volatility in the week after past unlocks, but that's not a guarantee." },
-      { type: "p", html: "For the <strong>exact upcoming date and amount</strong> (which update over time), always check a live tracker rather than a static article — including this one." },
+      { type: "p", html: "Per public unlock trackers, ARB has scheduled cliff unlocks through 2026, including one of its <strong>largest single unlocks around August 2026</strong> (reported at roughly 92.65M ARB across trackers). Whether an unlock moves the price depends on its <strong>size relative to circulating supply</strong>, <strong>who receives the tokens</strong>, and market conditions, released tokens can be held, staked, or deposited, not only sold. Historically, ARB has shown relatively low volatility in the week after past unlocks, but that's not a guarantee." },
+      { type: "p", html: "For the <strong>exact upcoming date and amount</strong> (which update over time), always check a live tracker rather than a static article, including this one." },
 
       { type: "h2", text: "How to track ARB and other token unlocks" },
       { type: "ol", items: [
         "Browse the <a href=\"/unlocks\">token unlock calendar</a> for upcoming unlocks across every tracked protocol and chain.",
-        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see your own vesting positions — no sign-up.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see your own vesting positions, no sign-up.",
         "Set an alert so you're notified before an unlock, not after it hits the market.",
       ] },
 
       { type: "faq", items: [
         { q: "When does ARB unlock next?", a: "Arbitrum releases ARB through scheduled cliff unlocks running into 2027, with a notably large unlock around August 2026. Because exact dates and amounts change as the schedule updates, check a live unlock tracker for current figures." },
-        { q: "How much ARB is still locked?", a: "ARB has a 10 billion maximum supply. As of mid-2026 roughly 61% had unlocked, leaving a significant share still vesting — primarily across the DAO treasury, team, and investor allocations." },
+        { q: "How much ARB is still locked?", a: "ARB has a 10 billion maximum supply. As of mid-2026 roughly 61% had unlocked, leaving a significant share still vesting, primarily across the DAO treasury, team, and investor allocations." },
         { q: "Will an ARB unlock crash the price?", a: "Not necessarily. Impact depends on the unlock size relative to circulating supply, who receives the tokens, and market conditions. Unlocked tokens don't have to be sold. ARB has historically shown low volatility shortly after past unlocks." },
       ] },
 
@@ -146,25 +146,25 @@ const articles: Article[] = [
       { type: "p", html: "If you've aped into a new token on BNB Chain, you've almost certainly seen a <strong>PinkSale</strong> launch and a <strong>PinkLock</strong> badge. PinkSale is one of the highest-volume launchpads in crypto, and its PinkLock product is what locks a project's liquidity and vests its team tokens on-chain. This guide covers what PinkLock does and how to check any lock." },
 
       { type: "h2", text: "What is PinkSale?" },
-      { type: "p", html: "PinkSale is a launchpad that lets projects run token presales and fair launches. Alongside the launchpad, it offers <strong>PinkLock</strong> — a locker that holds a project's liquidity-pool (LP) tokens and vests team/allocation tokens on-chain, so buyers can verify the lockups rather than trust a promise." },
+      { type: "p", html: "PinkSale is a launchpad that lets projects run token presales and fair launches. Alongside the launchpad, it offers <strong>PinkLock</strong>, a locker that holds a project's liquidity-pool (LP) tokens and vests team/allocation tokens on-chain, so buyers can verify the lockups rather than trust a promise." },
       { type: "callout", emoji: "🔒", title: "In one line", body: "PinkLock is PinkSale's on-chain locker: it locks LP tokens (anti-rug) and vests team/allocation tokens on a schedule, verifiable by anyone." },
 
       { type: "h2", text: "PinkLock: liquidity locks vs token vesting" },
       { type: "ul", items: [
-        "<strong>Liquidity lock:</strong> Locks the LP tokens so the team can't withdraw liquidity — the core anti-rug guarantee buyers look for on a new launch.",
-        "<strong>Token vesting:</strong> Releases team/allocation tokens on a <strong>TGE + cycle-based schedule</strong> — an initial release at launch, then further releases at set intervals.",
+        "<strong>Liquidity lock:</strong> Locks the LP tokens so the team can't withdraw liquidity, the core anti-rug guarantee buyers look for on a new launch.",
+        "<strong>Token vesting:</strong> Releases team/allocation tokens on a <strong>TGE + cycle-based schedule</strong>, an initial release at launch, then further releases at set intervals.",
       ] },
-      { type: "p", html: "For assessing future sell pressure, the <strong>token vesting</strong> side is what to read — it tells you how many tokens unlock and when." },
+      { type: "p", html: "For assessing future sell pressure, the <strong>token vesting</strong> side is what to read, it tells you how many tokens unlock and when." },
 
       { type: "h2", text: "Which chains does PinkSale support?" },
       { type: "p", html: "PinkSale / PinkLock runs across major EVM networks including <strong>BNB Chain, Ethereum, Polygon and Base</strong>. BNB Chain is where the bulk of PinkSale activity lives, given the high volume of BSC token launches." },
 
       { type: "h2", text: "How to verify a PinkSale lock or vesting schedule" },
-      { type: "p", html: "To see a token's PinkSale vesting and upcoming unlocks — or to check a specific wallet's locks — use the <a href=\"/protocols/pinksale\">PinkSale unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. You'll see locked value, the release schedule, and can set an alert before each unlock." },
+      { type: "p", html: "To see a token's PinkSale vesting and upcoming unlocks, or to check a specific wallet's locks, use the <a href=\"/protocols/pinksale\">PinkSale unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. You'll see locked value, the release schedule, and can set an alert before each unlock." },
 
       { type: "faq", items: [
         { q: "What is PinkLock?", a: "PinkLock is PinkSale's on-chain locker. It locks a project's liquidity-pool tokens (to prevent liquidity being pulled) and vests team/allocation tokens on a schedule, all verifiable on-chain." },
-        { q: "Does a PinkSale lock mean a token is safe?", a: "It reduces the specific risk of a liquidity rug pull, but it isn't a guarantee. Check how much liquidity is locked and for how long, plus the team's token vesting schedule — not just the presence of a lock." },
+        { q: "Does a PinkSale lock mean a token is safe?", a: "It reduces the specific risk of a liquidity rug pull, but it isn't a guarantee. Check how much liquidity is locked and for how long, plus the team's token vesting schedule, not just the presence of a lock." },
         { q: "How do I see PinkSale token unlocks?", a: "Use a cross-protocol tracker like Vestream, which indexes PinkSale (PinkLock) vesting on-chain and shows upcoming unlock dates and amounts per token and wallet, with free alerts." },
       ] },
     ],
@@ -184,8 +184,8 @@ const articles: Article[] = [
       { type: "p", html: "On Solana, when a project vests team tokens, distributes an airdrop, or runs token payments, <strong>Streamflow</strong> is very often the rails underneath it. It's the leading <strong>token vesting and distribution</strong> platform in the Solana ecosystem. This guide explains what Streamflow does and how to track a Streamflow vesting schedule." },
 
       { type: "h2", text: "What is Streamflow?" },
-      { type: "p", html: "Streamflow provides on-chain infrastructure for distributing SPL tokens over time on Solana — vesting, token lockups, streaming payments, and airdrop distribution. Recipients' tokens unlock according to a schedule (cliff and/or linear), enforced by Solana programs rather than a team's discretion." },
-      { type: "callout", emoji: "◎", title: "In one line", body: "Streamflow = Solana's go-to vesting and token-distribution layer — cliffs, linear release, streaming payments, and airdrops, all on-chain." },
+      { type: "p", html: "Streamflow provides on-chain infrastructure for distributing SPL tokens over time on Solana, vesting, token lockups, streaming payments, and airdrop distribution. Recipients' tokens unlock according to a schedule (cliff and/or linear), enforced by Solana programs rather than a team's discretion." },
+      { type: "callout", emoji: "◎", title: "In one line", body: "Streamflow = Solana's go-to vesting and token-distribution layer, cliffs, linear release, streaming payments, and airdrops, all on-chain." },
 
       { type: "h2", text: "What Streamflow is used for" },
       { type: "ul", items: [
@@ -195,14 +195,14 @@ const articles: Article[] = [
       ] },
 
       { type: "h2", text: "Streamflow vs EVM vesting protocols" },
-      { type: "p", html: "Streamflow plays the role on Solana that protocols like Sablier, Hedgey and UNCX play on EVM chains — the difference is the ecosystem. Because Solana uses a different address format and program model, Solana vesting positions are tracked separately from EVM ones, so a genuinely cross-chain tracker needs to cover both." },
+      { type: "p", html: "Streamflow plays the role on Solana that protocols like Sablier, Hedgey and UNCX play on EVM chains, the difference is the ecosystem. Because Solana uses a different address format and program model, Solana vesting positions are tracked separately from EVM ones, so a genuinely cross-chain tracker needs to cover both." },
 
       { type: "h2", text: "How to track Streamflow vesting" },
-      { type: "p", html: "To see Streamflow vesting for a Solana wallet or token — including claimable vs locked amounts and the schedule — use the <a href=\"/protocols/streamflow\">Streamflow unlock tracker on Vestream</a>, or paste a Solana address into the <a href=\"/find-vestings\">free wallet scanner</a>." },
+      { type: "p", html: "To see Streamflow vesting for a Solana wallet or token, including claimable vs locked amounts and the schedule, use the <a href=\"/protocols/streamflow\">Streamflow unlock tracker on Vestream</a>, or paste a Solana address into the <a href=\"/find-vestings\">free wallet scanner</a>." },
 
       { type: "faq", items: [
-        { q: "What is Streamflow used for?", a: "Streamflow is Solana's leading token vesting and distribution platform — used for team/investor vesting, airdrops, token lockups, and streaming payments, all enforced on-chain." },
-        { q: "Is Streamflow only on Solana?", a: "Streamflow is best known as the Solana vesting standard. When tracking a token's total vesting, remember Solana positions are separate from EVM ones — you need a tracker that covers both ecosystems." },
+        { q: "What is Streamflow used for?", a: "Streamflow is Solana's leading token vesting and distribution platform, used for team/investor vesting, airdrops, token lockups, and streaming payments, all enforced on-chain." },
+        { q: "Is Streamflow only on Solana?", a: "Streamflow is best known as the Solana vesting standard. When tracking a token's total vesting, remember Solana positions are separate from EVM ones, you need a tracker that covers both ecosystems." },
         { q: "How do I track a Streamflow vesting schedule?", a: "Use a cross-chain tracker like Vestream, which indexes Streamflow on Solana and shows claimable vs locked amounts and upcoming unlocks for any wallet, free." },
       ] },
     ],
@@ -219,11 +219,11 @@ const articles: Article[] = [
     category:    "Token Unlocks",
     tags:        ["KAITO", "KAITO token unlock", "KAITO vesting", "token unlock schedule", "tokenomics"],
     content: [
-      { type: "p", html: "KAITO is one of the more closely watched token-unlock schedules of 2026 — a large portion of its supply is still locked and vesting over several years. This guide explains how KAITO's <strong>tokenomics</strong> and <strong>unlock schedule</strong> are structured, what an unlock event actually means for supply, and where to find the live, up-to-date figures." },
-      { type: "callout", emoji: "🗓️", title: "Unlock data changes — verify before you trade", body: "Exact unlock dates and amounts move as schedules and circulating supply update. Treat the figures here as structural context and always confirm the current numbers on a live tracker (linked below) before making any decision. This is not financial advice." },
+      { type: "p", html: "KAITO is one of the more closely watched token-unlock schedules of 2026, a large portion of its supply is still locked and vesting over several years. This guide explains how KAITO's <strong>tokenomics</strong> and <strong>unlock schedule</strong> are structured, what an unlock event actually means for supply, and where to find the live, up-to-date figures." },
+      { type: "callout", emoji: "🗓️", title: "Unlock data changes, verify before you trade", body: "Exact unlock dates and amounts move as schedules and circulating supply update. Treat the figures here as structural context and always confirm the current numbers on a live tracker (linked below) before making any decision. This is not financial advice." },
 
       { type: "h2", text: "KAITO tokenomics at a glance" },
-      { type: "p", html: "KAITO has a <strong>total supply of 1,000,000,000 tokens</strong>. As of mid-2026, roughly a quarter of that supply was circulating — meaning a large majority remained locked and scheduled to unlock over the following years. The allocation is split across ecosystem, contributor, backer, and community buckets:" },
+      { type: "p", html: "KAITO has a <strong>total supply of 1,000,000,000 tokens</strong>. As of mid-2026, roughly a quarter of that supply was circulating, meaning a large majority remained locked and scheduled to unlock over the following years. The allocation is split across ecosystem, contributor, backer, and community buckets:" },
       { type: "table", headers: ["Allocation", "Share of supply"], rows: [
         ["Ecosystem & Network Growth", "32.2%"],
         ["Core Contributors", "25.0%"],
@@ -234,26 +234,26 @@ const articles: Article[] = [
         ["Liquidity Incentives", "5.0%"],
         ["Binance Holder Airdrop", "2.0%"],
       ] },
-      { type: "p", html: "The two largest buckets — <strong>Ecosystem &amp; Network Growth (32.2%)</strong> and <strong>Core Contributors (25%)</strong> — are the ones that matter most for future supply, because they represent the biggest pools of tokens still to be released." },
+      { type: "p", html: "The two largest buckets, <strong>Ecosystem &amp; Network Growth (32.2%)</strong> and <strong>Core Contributors (25%)</strong>, are the ones that matter most for future supply, because they represent the biggest pools of tokens still to be released." },
 
       { type: "h2", text: "How KAITO's vesting works" },
-      { type: "p", html: "KAITO uses <strong>cliff-style vesting</strong> for major allocations such as Ecosystem &amp; Network Growth — meaning tokens are held back entirely for a period and then released in a step at the cliff, rather than dripping out continuously. Cliff unlocks concentrate supply into specific dates, which is exactly why unlock calendars matter: a single cliff can add a meaningful chunk of new supply on one day." },
+      { type: "p", html: "KAITO uses <strong>cliff-style vesting</strong> for major allocations such as Ecosystem &amp; Network Growth, meaning tokens are held back entirely for a period and then released in a step at the cliff, rather than dripping out continuously. Cliff unlocks concentrate supply into specific dates, which is exactly why unlock calendars matter: a single cliff can add a meaningful chunk of new supply on one day." },
 
       { type: "h2", text: "What the next KAITO unlock means" },
-      { type: "p", html: "Because so much of KAITO's supply is still locked, each scheduled unlock adds to the circulating amount. Whether that moves the price depends on the <strong>size of the unlock relative to circulating supply</strong>, <strong>who receives the tokens</strong> (long-term ecosystem vs short-term holders), and broader market conditions. Historically, KAITO has shown relatively low volatility in the week after past unlocks — but past behaviour doesn't guarantee future results." },
-      { type: "p", html: "For the <strong>exact next unlock date and amount</strong> (which update over time), check a live unlock tracker rather than any static article — including this one." },
+      { type: "p", html: "Because so much of KAITO's supply is still locked, each scheduled unlock adds to the circulating amount. Whether that moves the price depends on the <strong>size of the unlock relative to circulating supply</strong>, <strong>who receives the tokens</strong> (long-term ecosystem vs short-term holders), and broader market conditions. Historically, KAITO has shown relatively low volatility in the week after past unlocks, but past behaviour doesn't guarantee future results." },
+      { type: "p", html: "For the <strong>exact next unlock date and amount</strong> (which update over time), check a live unlock tracker rather than any static article, including this one." },
 
       { type: "h2", text: "How to track KAITO and other token unlocks" },
-      { type: "p", html: "To stay ahead of unlocks across the market — and to track your own vesting positions — use a live tracker:" },
+      { type: "p", html: "To stay ahead of unlocks across the market, and to track your own vesting positions, use a live tracker:" },
       { type: "ol", items: [
         "Browse the <a href=\"/unlocks\">token unlock calendar</a> for upcoming unlocks across every tracked protocol and chain.",
-        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see what you personally have vesting — no sign-up.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> to see what you personally have vesting, no sign-up.",
         "Set an alert so you're notified before an unlock, not after it hits the market.",
       ] },
 
       { type: "faq", items: [
         { q: "When does KAITO unlock?", a: "KAITO unlocks in scheduled events that run into 2029, with cliff-style releases for major allocations like Ecosystem & Network Growth. Because exact dates and amounts change as the schedule updates, check a live unlock tracker for the current figures." },
-        { q: "How much of KAITO's supply is still locked?", a: "KAITO has a 1 billion total supply, and as of mid-2026 only around a quarter was circulating — so the large majority remained locked and vesting, primarily across the Ecosystem & Network Growth and Core Contributors allocations." },
+        { q: "How much of KAITO's supply is still locked?", a: "KAITO has a 1 billion total supply, and as of mid-2026 only around a quarter was circulating, so the large majority remained locked and vesting, primarily across the Ecosystem & Network Growth and Core Contributors allocations." },
         { q: "Do KAITO unlocks crash the price?", a: "Not necessarily. Impact depends on the unlock size relative to circulating supply, who receives the tokens, and market conditions. KAITO has historically shown low volatility shortly after past unlocks, but that's not a guarantee." },
       ] },
 
@@ -265,26 +265,26 @@ const articles: Article[] = [
   {
     slug:        "what-is-sablier-token-streaming-vesting",
     title:       "What Is Sablier? Real-Time Token Streaming & Vesting",
-    excerpt:     "Sablier pioneered real-time \"token streaming\" — vesting that releases tokens by the second instead of in monthly chunks. Here's how Sablier works, where it's used, and how to track any Sablier stream.",
+    excerpt:     "Sablier pioneered real-time \"token streaming\", vesting that releases tokens by the second instead of in monthly chunks. Here's how Sablier works, where it's used, and how to track any Sablier stream.",
     publishedAt: "2026-08-09",
     updatedAt:   "2026-08-09",
     readingTime: "7 min read",
     category:    "Protocols",
     tags:        ["Sablier", "token streaming", "streaming payments", "token vesting", "vesting stream"],
     content: [
-      { type: "p", html: "<strong>Sablier</strong> is the protocol that popularised <strong>real-time token streaming</strong> — the idea that instead of unlocking tokens in monthly steps, you can release them continuously, by the second. If you've heard the phrase \"money streaming\" in crypto, Sablier is where it started. This guide explains what Sablier is, how its vesting works, and how to see any Sablier stream's live schedule." },
+      { type: "p", html: "<strong>Sablier</strong> is the protocol that popularised <strong>real-time token streaming</strong>, the idea that instead of unlocking tokens in monthly steps, you can release them continuously, by the second. If you've heard the phrase \"money streaming\" in crypto, Sablier is where it started. This guide explains what Sablier is, how its vesting works, and how to see any Sablier stream's live schedule." },
 
       { type: "h2", text: "What is Sablier?" },
-      { type: "p", html: "Sablier is an on-chain protocol for distributing ERC-20 tokens over time. Rather than a recipient claiming a lump sum at each unlock, tokens accrue to them <strong>every second</strong> and can be withdrawn at any point. It's used for token vesting, payroll, grants, and airdrops — anywhere you want a smooth, verifiable, continuous release instead of cliff-and-chunk unlocks." },
-      { type: "callout", emoji: "💧", title: "The core idea", body: "Sablier streams tokens by the second. At any moment, a recipient's 'claimable' balance is exactly what has streamed so far — no waiting for a monthly unlock date." },
+      { type: "p", html: "Sablier is an on-chain protocol for distributing ERC-20 tokens over time. Rather than a recipient claiming a lump sum at each unlock, tokens accrue to them <strong>every second</strong> and can be withdrawn at any point. It's used for token vesting, payroll, grants, and airdrops, anywhere you want a smooth, verifiable, continuous release instead of cliff-and-chunk unlocks." },
+      { type: "callout", emoji: "💧", title: "The core idea", body: "Sablier streams tokens by the second. At any moment, a recipient's 'claimable' balance is exactly what has streamed so far, no waiting for a monthly unlock date." },
 
       { type: "h2", text: "How Sablier vesting works: Lockup vs Flow" },
       { type: "p", html: "Sablier has two main flavours of stream:" },
       { type: "ul", items: [
-        "<strong>Lockup (vesting):</strong> A fixed-total stream — often with a cliff, then linear or tranched release over a set duration. This is the classic vesting use case (team/investor allocations).",
-        "<strong>Flow (open-ended streaming):</strong> A continuous stream with no fixed end — used for ongoing payments like salaries and grants.",
+        "<strong>Lockup (vesting):</strong> A fixed-total stream, often with a cliff, then linear or tranched release over a set duration. This is the classic vesting use case (team/investor allocations).",
+        "<strong>Flow (open-ended streaming):</strong> A continuous stream with no fixed end, used for ongoing payments like salaries and grants.",
       ] },
-      { type: "p", html: "For token holders assessing unlock pressure, the <strong>Lockup</strong> streams are the vesting positions that matter — they define how much of a token's supply is still locked and how fast it releases." },
+      { type: "p", html: "For token holders assessing unlock pressure, the <strong>Lockup</strong> streams are the vesting positions that matter, they define how much of a token's supply is still locked and how fast it releases." },
 
       { type: "h2", text: "Which chains does Sablier support?" },
       { type: "p", html: "Sablier is deployed across many EVM networks, including <strong>Ethereum, BNB Chain, Polygon, Base, Arbitrum and Optimism</strong>. A single project can run Sablier streams on several chains at once, which is why a cross-chain view helps when you're totalling a token's real vesting." },
@@ -294,16 +294,16 @@ const articles: Article[] = [
         ["Release cadence", "Per second (continuous)", "At discrete unlock dates"],
         ["Claimable balance", "Grows smoothly every block", "Jumps at each unlock"],
         ["Best for", "Payroll, grants, smooth vesting", "Cliff-heavy investor/team schedules"],
-        ["Market impact", "Spread out — less spiky", "Concentrated on unlock days"],
+        ["Market impact", "Spread out, less spiky", "Concentrated on unlock days"],
       ] },
 
       { type: "h2", text: "How to track a Sablier stream or unlock" },
-      { type: "p", html: "To see live Sablier vesting for a wallet or token — including how much has streamed, what's still locked, and the schedule — use the <a href=\"/protocols/sablier\">Sablier unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. No sign-up required." },
+      { type: "p", html: "To see live Sablier vesting for a wallet or token, including how much has streamed, what's still locked, and the schedule, use the <a href=\"/protocols/sablier\">Sablier unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. No sign-up required." },
 
       { type: "faq", items: [
-        { q: "What does Sablier do?", a: "Sablier streams ERC-20 tokens over time — releasing them by the second rather than in lump-sum unlocks. It's used for token vesting, payroll, grants, and airdrops on-chain." },
+        { q: "What does Sablier do?", a: "Sablier streams ERC-20 tokens over time, releasing them by the second rather than in lump-sum unlocks. It's used for token vesting, payroll, grants, and airdrops on-chain." },
         { q: "Is Sablier a payment or a vesting tool?", a: "Both. Its Lockup product handles fixed-total vesting (with cliffs), while its Flow product handles open-ended streaming payments like salaries." },
-        { q: "How do I see my Sablier stream's schedule?", a: "Use a cross-protocol tracker like Vestream, which indexes Sablier on-chain and shows claimable vs locked amounts, the release schedule, and alerts — for any wallet, free." },
+        { q: "How do I see my Sablier stream's schedule?", a: "Use a cross-protocol tracker like Vestream, which indexes Sablier on-chain and shows claimable vs locked amounts, the release schedule, and alerts, for any wallet, free." },
       ] },
     ],
   },
@@ -319,35 +319,35 @@ const articles: Article[] = [
     category:    "Protocols",
     tags:        ["UNCX", "UNCX locker", "UNCX Network", "token locker", "liquidity lock", "token vesting"],
     content: [
-      { type: "p", html: "If you have ever bought a newly launched token, you have almost certainly relied on <strong>UNCX</strong> without knowing it. UNCX Network — formerly Unicrypt — is one of the oldest and most widely used <strong>token lockers</strong> and <strong>vesting platforms</strong> in DeFi. When a project says its liquidity is \"locked\" or its team tokens are \"vested,\" UNCX is frequently the contract enforcing it." },
-      { type: "p", html: "This guide explains what UNCX is, the difference between its <strong>locker</strong> and <strong>vesting</strong> products, which chains it runs on, and — importantly — how to see the live unlock schedule for any UNCX vesting position." },
+      { type: "p", html: "If you have ever bought a newly launched token, you have almost certainly relied on <strong>UNCX</strong> without knowing it. UNCX Network, formerly Unicrypt, is one of the oldest and most widely used <strong>token lockers</strong> and <strong>vesting platforms</strong> in DeFi. When a project says its liquidity is \"locked\" or its team tokens are \"vested,\" UNCX is frequently the contract enforcing it." },
+      { type: "p", html: "This guide explains what UNCX is, the difference between its <strong>locker</strong> and <strong>vesting</strong> products, which chains it runs on, and, importantly, how to see the live unlock schedule for any UNCX vesting position." },
 
       { type: "h2", text: "What is UNCX (UNCX Network)?" },
       { type: "p", html: "UNCX is an on-chain infrastructure provider that lets token projects <strong>lock</strong> and <strong>vest</strong> tokens using audited smart contracts. Rather than trusting a team's promise not to sell, holders can verify on-chain that liquidity or allocations are locked for a defined period. It launched as Unicrypt in 2020 and rebranded to UNCX Network as it expanded across chains." },
       { type: "callout", emoji: "🔒", title: "In one line", body: "UNCX = audited smart contracts that lock LP tokens and vest team/investor allocations, so anyone can verify a project's lockups on-chain instead of taking the team's word for it." },
 
-      { type: "h2", text: "UNCX locker vs UNCX vesting — what's the difference?" },
+      { type: "h2", text: "UNCX locker vs UNCX vesting, what's the difference?" },
       { type: "p", html: "People search for the \"UNCX locker\" and \"UNCX vesting\" as if they're one thing, but they solve two different problems:" },
       { type: "ul", items: [
         "<strong>Liquidity locker:</strong> Locks a project's liquidity-pool (LP) tokens for a set time so the team can't pull liquidity (a \"rug pull\"). This is the classic \"liquidity locked via UNCX\" badge you see on launchpads and DEX tools.",
-        "<strong>Token vesting:</strong> Releases a team, investor, or advisor allocation gradually on a schedule (cliff + linear or stepped tranches) — the same mechanics as any vesting contract, enforced on-chain.",
+        "<strong>Token vesting:</strong> Releases a team, investor, or advisor allocation gradually on a schedule (cliff + linear or stepped tranches), the same mechanics as any vesting contract, enforced on-chain.",
       ] },
-      { type: "p", html: "For token holders trying to understand future sell pressure, the <strong>vesting</strong> side is what matters — it tells you how many tokens unlock, and when." },
+      { type: "p", html: "For token holders trying to understand future sell pressure, the <strong>vesting</strong> side is what matters, it tells you how many tokens unlock, and when." },
 
       { type: "h2", text: "Which chains does UNCX support?" },
-      { type: "p", html: "UNCX is multi-chain. Its locker and vesting products are deployed across major EVM networks including <strong>Ethereum, BNB Chain, Polygon and Base</strong>, among others. Because the contracts are chain-specific, a single token can have separate UNCX locks on each chain it lives on — which is why a cross-chain view matters when you're assessing a token's real unlock schedule." },
+      { type: "p", html: "UNCX is multi-chain. Its locker and vesting products are deployed across major EVM networks including <strong>Ethereum, BNB Chain, Polygon and Base</strong>, among others. Because the contracts are chain-specific, a single token can have separate UNCX locks on each chain it lives on, which is why a cross-chain view matters when you're assessing a token's real unlock schedule." },
 
       { type: "h2", text: "How do you track a UNCX vesting or unlock schedule?" },
-      { type: "p", html: "UNCX's own dashboard shows individual locks, but it doesn't give you a wallet-level or cross-protocol view. To see every UNCX vesting position for a wallet or token — plus the upcoming unlock dates and amounts — you can use a dedicated tracker:" },
+      { type: "p", html: "UNCX's own dashboard shows individual locks, but it doesn't give you a wallet-level or cross-protocol view. To see every UNCX vesting position for a wallet or token, plus the upcoming unlock dates and amounts, you can use a dedicated tracker:" },
       { type: "ol", items: [
         "Open the <a href=\"/protocols/uncx\">UNCX unlock tracker on Vestream</a> to see live UNCX vesting activity, locked value, and upcoming unlocks.",
-        "Or paste any wallet address into the <a href=\"/find-vestings\">free wallet scanner</a> — it finds UNCX vestings (and every other major protocol) with no sign-up.",
+        "Or paste any wallet address into the <a href=\"/find-vestings\">free wallet scanner</a>, it finds UNCX vestings (and every other major protocol) with no sign-up.",
         "Set an alert so you're notified before each UNCX unlock cliff, rather than finding out after the tokens hit the market.",
       ] },
 
       { type: "faq", items: [
         { q: "Is UNCX the same as Unicrypt?", a: "Yes. UNCX Network is the rebranded name for Unicrypt, which launched in 2020. The contracts and products are the same lineage." },
-        { q: "Does 'liquidity locked on UNCX' mean a token is safe?", a: "It reduces one specific risk — the team pulling liquidity — but it is not a guarantee of safety. Always check the lock duration, how much of the supply is locked, and the team/investor vesting schedule, not just whether a lock exists." },
+        { q: "Does 'liquidity locked on UNCX' mean a token is safe?", a: "It reduces one specific risk, the team pulling liquidity, but it is not a guarantee of safety. Always check the lock duration, how much of the supply is locked, and the team/investor vesting schedule, not just whether a lock exists." },
         { q: "How can I see when UNCX tokens unlock?", a: "Use a cross-protocol unlock tracker. Vestream indexes UNCX vesting on-chain and shows the upcoming unlock dates and amounts per token and per wallet, with free alerts before each cliff." },
       ] },
     ],
@@ -367,12 +367,12 @@ const articles: Article[] = [
       { type: "p", html: "<strong>Hedgey Finance</strong> is one of the most widely used on-chain platforms for <strong>token vesting</strong>, token grants, and lockups. If a project distributed team or investor tokens as vesting \"plans,\" there's a good chance Hedgey issued them. This guide covers how Hedgey works, how its <strong>pricing</strong> is structured, and the main alternatives." },
 
       { type: "h2", text: "What is Hedgey?" },
-      { type: "p", html: "Hedgey provides smart contracts and tooling for distributing tokens with conditions attached — vesting schedules, lockups, token grants, and OTC deals. A distinctive feature is that Hedgey vesting <strong>plans are represented as NFTs</strong> (ERC-721): each recipient's vesting position is a transferable on-chain token, which makes plans easy to view, manage, and (where allowed) transfer." },
-      { type: "callout", emoji: "🎟️", title: "The NFT detail", body: "Each Hedgey vesting plan is minted as an NFT to the recipient's wallet. That's why a Hedgey position shows up as an NFT — the NFT *is* the claim on the vesting tokens." },
+      { type: "p", html: "Hedgey provides smart contracts and tooling for distributing tokens with conditions attached, vesting schedules, lockups, token grants, and OTC deals. A distinctive feature is that Hedgey vesting <strong>plans are represented as NFTs</strong> (ERC-721): each recipient's vesting position is a transferable on-chain token, which makes plans easy to view, manage, and (where allowed) transfer." },
+      { type: "callout", emoji: "🎟️", title: "The NFT detail", body: "Each Hedgey vesting plan is minted as an NFT to the recipient's wallet. That's why a Hedgey position shows up as an NFT, the NFT *is* the claim on the vesting tokens." },
 
       { type: "h2", text: "How does Hedgey pricing work?" },
-      { type: "p", html: "This is the question most people search for — so here's the honest answer. Hedgey's <strong>core on-chain vesting and lockup contracts do not charge a subscription fee</strong>; when you create or claim a plan you pay <strong>network gas</strong> like any on-chain transaction. Hedgey has historically monetised through value-added and enterprise services (advanced tooling, support, and custom deal structures) rather than a per-seat SaaS price on basic vesting." },
-      { type: "callout", emoji: "⚠️", title: "Always confirm current terms", body: "Pricing and fee models for on-chain platforms change. For the current, authoritative pricing, check hedgey.finance directly — don't rely on any third-party page (including this one) for exact figures." },
+      { type: "p", html: "This is the question most people search for, so here's the honest answer. Hedgey's <strong>core on-chain vesting and lockup contracts do not charge a subscription fee</strong>; when you create or claim a plan you pay <strong>network gas</strong> like any on-chain transaction. Hedgey has historically monetised through value-added and enterprise services (advanced tooling, support, and custom deal structures) rather than a per-seat SaaS price on basic vesting." },
+      { type: "callout", emoji: "⚠️", title: "Always confirm current terms", body: "Pricing and fee models for on-chain platforms change. For the current, authoritative pricing, check hedgey.finance directly, don't rely on any third-party page (including this one) for exact figures." },
 
       { type: "h2", text: "Which chains does Hedgey support?" },
       { type: "p", html: "Hedgey deploys the same contracts across many EVM networks, including <strong>Ethereum, Arbitrum, Optimism, Base, BNB Chain and Polygon</strong>. Because it's the same contract address pattern on each chain, a project can run Hedgey vesting on several networks at once." },
@@ -392,8 +392,8 @@ const articles: Article[] = [
       { type: "p", html: "To see live Hedgey vesting positions and upcoming unlock dates for a token or wallet, use the <a href=\"/protocols/hedgey\">Hedgey unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. You'll see the schedule, locked value, and can set an alert before each unlock." },
 
       { type: "faq", items: [
-        { q: "Is Hedgey free?", a: "Hedgey's core on-chain vesting and lockup contracts don't charge a subscription — you pay network gas to create or claim a plan. Enterprise/advanced services may be quoted separately. Check hedgey.finance for current terms." },
-        { q: "Why is my Hedgey vesting an NFT?", a: "Hedgey represents each vesting plan as an ERC-721 NFT minted to the recipient. The NFT is the on-chain claim on the vesting tokens — holding it lets you claim as tokens unlock." },
+        { q: "Is Hedgey free?", a: "Hedgey's core on-chain vesting and lockup contracts don't charge a subscription, you pay network gas to create or claim a plan. Enterprise/advanced services may be quoted separately. Check hedgey.finance for current terms." },
+        { q: "Why is my Hedgey vesting an NFT?", a: "Hedgey represents each vesting plan as an ERC-721 NFT minted to the recipient. The NFT is the on-chain claim on the vesting tokens, holding it lets you claim as tokens unlock." },
         { q: "How do I see when my Hedgey tokens unlock?", a: "Use a cross-protocol unlock tracker like Vestream, which indexes Hedgey on-chain and shows upcoming unlock dates and amounts, with free alerts before each cliff." },
       ] },
     ],
@@ -403,14 +403,14 @@ const articles: Article[] = [
   {
     slug:        "best-crypto-token-unlock-trackers",
     title:       "Best Crypto Token Unlock Calendars & Trackers (2026)",
-    excerpt:     "Token unlocks move markets — but only if you see them coming. Here's what makes a good token unlock tracker, and how the main crypto token unlock calendars and trackers compare in 2026.",
+    excerpt:     "Token unlocks move markets, but only if you see them coming. Here's what makes a good token unlock tracker, and how the main crypto token unlock calendars and trackers compare in 2026.",
     publishedAt: "2026-08-10",
     updatedAt:   "2026-08-10",
     readingTime: "7 min read",
     category:    "Guides",
     tags:        ["token unlock calendar", "token unlock tracker", "crypto unlocks", "vesting tracker", "unlock schedule"],
     content: [
-      { type: "p", html: "A large <strong>token unlock</strong> can add millions of dollars of new supply to the market in a single day. If you hold the token — or trade around it — knowing the unlock schedule in advance is one of the highest-value pieces of information you can have. The problem is that unlock data is scattered across dozens of protocols and chains. That's what a <strong>token unlock tracker</strong> solves." },
+      { type: "p", html: "A large <strong>token unlock</strong> can add millions of dollars of new supply to the market in a single day. If you hold the token, or trade around it, knowing the unlock schedule in advance is one of the highest-value pieces of information you can have. The problem is that unlock data is scattered across dozens of protocols and chains. That's what a <strong>token unlock tracker</strong> solves." },
 
       { type: "h2", text: "What makes a good token unlock tracker?" },
       { type: "p", html: "Not all trackers are equal. When you're choosing a crypto unlock calendar, look for:" },
@@ -418,12 +418,12 @@ const articles: Article[] = [
         "<strong>Cross-protocol coverage:</strong> Real vesting lives across many protocols (Sablier, Hedgey, UNCX, Unvest, Streamflow and more). A tracker that only reads one source misses most of it.",
         "<strong>On-chain accuracy:</strong> The best data comes straight from the vesting contracts, not a manually maintained spreadsheet that can drift out of date.",
         "<strong>Alerts:</strong> A calendar you have to remember to check is a calendar you'll forget. Push/email alerts before each unlock are the point.",
-        "<strong>Wallet-level view:</strong> Being able to paste your own wallet and see exactly what you're owed and when — not just market-wide unlocks.",
+        "<strong>Wallet-level view:</strong> Being able to paste your own wallet and see exactly what you're owed and when, not just market-wide unlocks.",
         "<strong>Free access:</strong> You shouldn't have to pay just to see when your own tokens unlock.",
       ] },
 
       { type: "h2", text: "The main crypto unlock trackers in 2026" },
-      { type: "p", html: "Here's an honest overview of the tools people use — including the well-known market-wide calendars and the on-chain, wallet-first approach:" },
+      { type: "p", html: "Here's an honest overview of the tools people use, including the well-known market-wide calendars and the on-chain, wallet-first approach:" },
       { type: "table", headers: ["Tool", "Strength", "Watch-out"], rows: [
         ["Vestream", "On-chain, cross-protocol, free wallet scan + alerts", "Focused on on-chain vesting (not every off-chain schedule)"],
         ["TokenUnlocks", "Broad coverage of major-token unlock schedules", "Emphasis on large caps; less wallet-level detail"],
@@ -436,12 +436,12 @@ const articles: Article[] = [
       { type: "p", html: "The fastest way to see what you personally have vesting is to scan your wallet. On Vestream you can:" },
       { type: "ol", items: [
         "Open the <a href=\"/unlocks\">token unlock calendar</a> to see upcoming unlocks across every tracked protocol and chain.",
-        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a> — no sign-up, no KYC — to find your own vestings in seconds.",
+        "Paste any wallet into the <a href=\"/find-vestings\">free wallet scanner</a>, no sign-up, no KYC, to find your own vestings in seconds.",
         "Set a push or email alert so you're notified before each unlock instead of after.",
       ] },
 
       { type: "faq", items: [
-        { q: "What is a token unlock calendar?", a: "A token unlock calendar shows the upcoming dates when locked (vesting) tokens will be released to teams, investors, and other holders — along with how many tokens unlock. It's used to anticipate changes in circulating supply and potential sell pressure." },
+        { q: "What is a token unlock calendar?", a: "A token unlock calendar shows the upcoming dates when locked (vesting) tokens will be released to teams, investors, and other holders, along with how many tokens unlock. It's used to anticipate changes in circulating supply and potential sell pressure." },
         { q: "What's the best free token unlock tracker?", a: "For seeing your own tokens across every protocol, a wallet-first on-chain tracker like Vestream is free and requires no sign-up. For a market-wide view of large-cap unlocks, calendars like TokenUnlocks and CryptoRank are widely used." },
         { q: "Do token unlocks always crash the price?", a: "No. The impact depends on how large the unlock is relative to circulating supply, who receives the tokens, market conditions, and whether the event was already 'priced in.' Large unlocks to short-term holders tend to have the biggest effect." },
       ] },
@@ -693,29 +693,29 @@ const articles: Article[] = [
       { type: "h2", text: "Track & explore token vesting on Vestream" },
       {
         type: "p",
-        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 11+ protocols and 9+ chains — no sign-up. Start here:",
+        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 11+ protocols and 9+ chains, no sign-up. Start here:",
       },
       {
         type: "ul",
         items: [
-          "<a href=\"/find-vestings\">Scan any wallet for its vestings</a> — free, instant, no account.",
-          "<a href=\"/unlocks\">Token unlock calendar</a> — every upcoming unlock across all tracked protocols.",
-          "<a href=\"/protocols\">All vesting protocols</a> — live trackers for each platform below.",
+          "<a href=\"/find-vestings\">Scan any wallet for its vestings</a>, free, instant, no account.",
+          "<a href=\"/unlocks\">Token unlock calendar</a>, every upcoming unlock across all tracked protocols.",
+          "<a href=\"/protocols\">All vesting protocols</a>, live trackers for each platform below.",
         ],
       },
       { type: "h3", text: "Token vesting by protocol" },
       {
         type: "ul",
         items: [
-          "<a href=\"/protocols/sablier\">Sablier</a> — real-time streaming vesting.",
-          "<a href=\"/protocols/hedgey\">Hedgey</a> — NFT-based vesting plans & token grants.",
-          "<a href=\"/protocols/uncx\">UNCX</a> — token & liquidity locker with vesting.",
-          "<a href=\"/protocols/unvest\">Unvest</a> — step/milestone vesting.",
-          "<a href=\"/protocols/superfluid\">Superfluid</a> — continuous streaming vesting.",
-          "<a href=\"/protocols/pinksale\">PinkSale (PinkLock)</a> — launchpad token & LP locks.",
-          "<a href=\"/protocols/streamflow\">Streamflow</a> — Solana token vesting.",
-          "<a href=\"/protocols/jupiter-lock\">Jupiter Lock</a> — Solana token locker.",
-          "<a href=\"/protocols/llamapay\">LlamaPay</a> — per-second token streaming.",
+          "<a href=\"/protocols/sablier\">Sablier</a>, real-time streaming vesting.",
+          "<a href=\"/protocols/hedgey\">Hedgey</a>, NFT-based vesting plans & token grants.",
+          "<a href=\"/protocols/uncx\">UNCX</a>, token & liquidity locker with vesting.",
+          "<a href=\"/protocols/unvest\">Unvest</a>, step/milestone vesting.",
+          "<a href=\"/protocols/superfluid\">Superfluid</a>, continuous streaming vesting.",
+          "<a href=\"/protocols/pinksale\">PinkSale (PinkLock)</a>, launchpad token & LP locks.",
+          "<a href=\"/protocols/streamflow\">Streamflow</a>, Solana token vesting.",
+          "<a href=\"/protocols/jupiter-lock\">Jupiter Lock</a>, Solana token locker.",
+          "<a href=\"/protocols/llamapay\">LlamaPay</a>, per-second token streaming.",
         ],
       },
       { type: "h3", text: "Keep reading" },
@@ -723,7 +723,7 @@ const articles: Article[] = [
         type: "ul",
         items: [
           "<a href=\"/resources/token-vesting-schedules-explained\">Token vesting schedules explained: cliff, linear & stepped</a>",
-          "<a href=\"/resources/the-vesting-cliff-explained\">The vesting cliff explained — and why it moves markets</a>",
+          "<a href=\"/resources/the-vesting-cliff-explained\">The vesting cliff explained, and why it moves markets</a>",
           "<a href=\"/resources/how-to-estimate-the-price-impact-of-a-token-unlock-event\">How to estimate the price impact of a token unlock</a>",
           "<a href=\"/resources/how-to-track-your-token-vesting\">How to track your token vesting</a>",
           "<a href=\"/resources/best-crypto-token-unlock-trackers\">Best crypto token unlock trackers (2026)</a>",
@@ -4821,7 +4821,7 @@ const articles: Article[] = [
   {
     slug:        "how-to-track-sablier-unlocks",
     title:       "How to Track Your Sablier Stream Unlocks (2026)",
-    excerpt:     "A step-by-step guide to finding your Sablier vesting streams, reading their unlock schedule, and getting alerted before every tranche unlocks — manual methods vs automated tracking, compared.",
+    excerpt:     "A step-by-step guide to finding your Sablier vesting streams, reading their unlock schedule, and getting alerted before every tranche unlocks, manual methods vs automated tracking, compared.",
     publishedAt: "2026-07-04",
     updatedAt:   "2026-07-04",
     readingTime: "7 min read",
@@ -4830,12 +4830,12 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "If you received tokens through <strong>Sablier</strong> — the most widely used on-chain token streaming protocol — your allocation is released continuously or in tranches according to a schedule enforced by a smart contract. The hard part isn't the vesting; it's <em>keeping track of it</em>: knowing exactly how much has unlocked, what's claimable right now, and when the next unlock lands so you don't miss it. This guide covers every way to do that, from manual lookups to automated alerts.",
+        html: "If you received tokens through <strong>Sablier</strong>, the most widely used on-chain token streaming protocol, your allocation is released continuously or in tranches according to a schedule enforced by a smart contract. The hard part isn't the vesting; it's <em>keeping track of it</em>: knowing exactly how much has unlocked, what's claimable right now, and when the next unlock lands so you don't miss it. This guide covers every way to do that, from manual lookups to automated alerts.",
       },
       { type: "h2", text: "How Sablier vesting works (in one paragraph)" },
       {
         type: "p",
-        html: "Sablier's Lockup contracts stream tokens from a sender to a recipient over time. A <strong>linear</strong> stream releases a constant amount every second; a <strong>tranched</strong> stream unlocks in discrete steps (e.g. monthly), often after an initial <a href=\"/resources/vesting-cliff-explained\">cliff</a>. Vested tokens are claimable by the recipient at any time via <code>withdraw</code>; unvested tokens stay locked. Because it's fully on-chain, anyone can read the exact schedule — the challenge is surfacing it in a readable way and being reminded before each unlock.",
+        html: "Sablier's Lockup contracts stream tokens from a sender to a recipient over time. A <strong>linear</strong> stream releases a constant amount every second; a <strong>tranched</strong> stream unlocks in discrete steps (e.g. monthly), often after an initial <a href=\"/resources/vesting-cliff-explained\">cliff</a>. Vested tokens are claimable by the recipient at any time via <code>withdraw</code>; unvested tokens stay locked. Because it's fully on-chain, anyone can read the exact schedule, the challenge is surfacing it in a readable way and being reminded before each unlock.",
       },
       { type: "h2", text: "Method 1: The Sablier app (manual)" },
       {
@@ -4848,17 +4848,17 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This works, but it has real limits: it only shows <strong>Sablier</strong> streams (not any other protocol you're vesting on), there are <strong>no alerts</strong> — you have to remember to check — and if your tokens are split across multiple wallets or chains you'll be flipping between views. It's fine for a single stream you check often; it doesn't scale to a real portfolio.",
+        html: "This works, but it has real limits: it only shows <strong>Sablier</strong> streams (not any other protocol you're vesting on), there are <strong>no alerts</strong>, you have to remember to check, and if your tokens are split across multiple wallets or chains you'll be flipping between views. It's fine for a single stream you check often; it doesn't scale to a real portfolio.",
       },
       { type: "h2", text: "Method 2: Block explorer (advanced, tedious)" },
       {
         type: "p",
-        html: "You can read the Sablier Lockup contract directly on Etherscan (or the relevant chain's explorer) and call the view functions for your stream ID. This gives you ground truth but requires knowing your stream ID, the contract address for your chain, and how to interpret raw amounts and timestamps. Almost nobody does this for ongoing tracking — it's a spot-check tool, not a monitoring one.",
+        html: "You can read the Sablier Lockup contract directly on Etherscan (or the relevant chain's explorer) and call the view functions for your stream ID. This gives you ground truth but requires knowing your stream ID, the contract address for your chain, and how to interpret raw amounts and timestamps. Almost nobody does this for ongoing tracking, it's a spot-check tool, not a monitoring one.",
       },
       { type: "h2", text: "Method 3: Automated tracking with alerts (recommended)" },
       {
         type: "p",
-        html: "The fastest way to stay on top of Sablier unlocks is to let a tracker watch the wallet for you. With <a href=\"/find-vestings\">Vestream</a> you paste the recipient address — no wallet connection, no signing, read-only — and it finds every Sablier stream on that wallet across Ethereum, Base, BNB Chain, Polygon, Arbitrum, and Optimism, shows the full unlock calendar, and sends an <strong>email or push alert before each unlock</strong>. It also picks up vesting from 10 other protocols on the same wallet, so a treasury or team member sees everything in one place.",
+        html: "The fastest way to stay on top of Sablier unlocks is to let a tracker watch the wallet for you. With <a href=\"/find-vestings\">Vestream</a> you paste the recipient address, no wallet connection, no signing, read-only, and it finds every Sablier stream on that wallet across Ethereum, Base, BNB Chain, Polygon, Arbitrum, and Optimism, shows the full unlock calendar, and sends an <strong>email or push alert before each unlock</strong>. It also picks up vesting from 10 other protocols on the same wallet, so a treasury or team member sees everything in one place.",
       },
       {
         type: "table",
@@ -4868,7 +4868,7 @@ const articles: Article[] = [
           ["Other protocols on the same wallet", "No", "No", "Yes (11 protocols)"],
           ["Multi-wallet / multi-chain in one view", "No", "No", "Yes"],
           ["Alerts before an unlock", "No", "No", "Email + push"],
-          ["Wallet connection required", "To claim", "No", "No — read-only"],
+          ["Wallet connection required", "To claim", "No", "No, read-only"],
           ["Tax-ready CSV export", "No", "No", "Yes (Pro)"],
         ],
       },
@@ -4876,14 +4876,14 @@ const articles: Article[] = [
         type: "callout",
         emoji: "⏱️",
         title: "The 30-second setup",
-        body:  "Paste your wallet at Vestream's free scanner, turn on alerts, and you'll never manually check a Sablier stream again — you'll get a heads-up before every unlock instead.",
+        body:  "Paste your wallet at Vestream's free scanner, turn on alerts, and you'll never manually check a Sablier stream again, you'll get a heads-up before every unlock instead.",
       },
       {
         type: "faq",
         items: [
           { q: "How do I see when my Sablier tokens unlock?", a: "Either open your stream on app.sablier.com to read its schedule, or paste your wallet address into a tracker like Vestream to see the full unlock calendar and get alerted before each tranche unlocks." },
           { q: "Can I get notified before a Sablier unlock?", a: "The Sablier app itself does not send unlock reminders. A tracker such as Vestream sends email and push notifications before each Sablier unlock at a lead time you choose." },
-          { q: "Do I need to connect my wallet to track Sablier vesting?", a: "No. Sablier vesting data is public and on-chain. Vestream tracks it read-only from just the wallet address — no wallet connection or signing. You only connect a wallet when you want to claim on Sablier itself." },
+          { q: "Do I need to connect my wallet to track Sablier vesting?", a: "No. Sablier vesting data is public and on-chain. Vestream tracks it read-only from just the wallet address, no wallet connection or signing. You only connect a wallet when you want to claim on Sablier itself." },
           { q: "Does tracking work across chains?", a: "Yes. Sablier is deployed on Ethereum, Base, BNB Chain, Polygon, Arbitrum, and Optimism, and Vestream scans a wallet across all of them at once." },
         ],
       },
@@ -4907,12 +4907,12 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "<strong>Hedgey</strong> is one of the largest token vesting platforms in crypto, and it does vesting differently: each vesting or lockup plan is represented as an <strong>ERC-721 NFT</strong> held by the recipient. That design is elegant — your claim is a transferable token — but it also means your unlock schedule lives inside an NFT you might rarely look at. This guide shows how to find your Hedgey plans and never miss an unlock.",
+        html: "<strong>Hedgey</strong> is one of the largest token vesting platforms in crypto, and it does vesting differently: each vesting or lockup plan is represented as an <strong>ERC-721 NFT</strong> held by the recipient. That design is elegant, your claim is a transferable token, but it also means your unlock schedule lives inside an NFT you might rarely look at. This guide shows how to find your Hedgey plans and never miss an unlock.",
       },
       { type: "h2", text: "How Hedgey vesting works" },
       {
         type: "p",
-        html: "When a project grants you tokens through Hedgey, it mints you a vesting-plan NFT. The NFT encodes the schedule — start, cliff, rate, and end — and gates how much of the underlying token you can <code>redeem</code> at any point. As time passes, more of the plan becomes redeemable. Read more in <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey NFT vesting plans explained</a>.",
+        html: "When a project grants you tokens through Hedgey, it mints you a vesting-plan NFT. The NFT encodes the schedule, start, cliff, rate, and end, and gates how much of the underlying token you can <code>redeem</code> at any point. As time passes, more of the plan becomes redeemable. Read more in <a href=\"/resources/hedgey-nft-vesting-plans-explained\">Hedgey NFT vesting plans explained</a>.",
       },
       { type: "h2", text: "Method 1: The Hedgey app (manual)" },
       {
@@ -4930,7 +4930,7 @@ const articles: Article[] = [
       { type: "h2", text: "Method 2: Automated tracking with alerts (recommended)" },
       {
         type: "p",
-        html: "To track Hedgey unlocks without babysitting the dapp, use a read-only tracker. Paste your address into <a href=\"/find-vestings\">Vestream</a> and it finds your Hedgey plans (and any other vesting on that wallet), lays out the unlock calendar, and sends an alert before each unlock. No wallet connection — it reads the public on-chain plan data from the address alone.",
+        html: "To track Hedgey unlocks without babysitting the dapp, use a read-only tracker. Paste your address into <a href=\"/find-vestings\">Vestream</a> and it finds your Hedgey plans (and any other vesting on that wallet), lays out the unlock calendar, and sends an alert before each unlock. No wallet connection, it reads the public on-chain plan data from the address alone.",
       },
       {
         type: "table",
@@ -4939,7 +4939,7 @@ const articles: Article[] = [
           ["Shows your Hedgey plans", "Yes", "Yes"],
           ["Other protocols on the same wallet", "No", "Yes (11 protocols)"],
           ["Alerts before an unlock", "No", "Email + push"],
-          ["Wallet connection required", "Yes (to view + redeem)", "No — read-only to view"],
+          ["Wallet connection required", "Yes (to view + redeem)", "No, read-only to view"],
           ["Multi-wallet in one view", "No", "Yes"],
         ],
       },
@@ -4947,14 +4947,14 @@ const articles: Article[] = [
         type: "callout",
         emoji: "🔔",
         title: "Don't rely on remembering",
-        body:  "NFT-based plans are the easiest to forget about — the schedule is buried in a token you don't check. Set an alert once and Vestream reminds you before every Hedgey unlock.",
+        body:  "NFT-based plans are the easiest to forget about, the schedule is buried in a token you don't check. Set an alert once and Vestream reminds you before every Hedgey unlock.",
       },
       {
         type: "faq",
         items: [
-          { q: "Where do I see my Hedgey vesting schedule?", a: "Connect your wallet at app.hedgey.finance to view each plan, or paste your wallet address into Vestream to see all Hedgey plans plus their unlock calendar and alerts — without connecting a wallet." },
+          { q: "Where do I see my Hedgey vesting schedule?", a: "Connect your wallet at app.hedgey.finance to view each plan, or paste your wallet address into Vestream to see all Hedgey plans plus their unlock calendar and alerts, without connecting a wallet." },
           { q: "Can I track Hedgey unlocks without connecting my wallet?", a: "Yes. Hedgey plan data is on-chain and public. Vestream reads it from the wallet address in read-only mode, so no connection or signing is needed to track it." },
-          { q: "I hold plans in more than one wallet — can I see them together?", a: "Yes. Add each address to Vestream and every Hedgey plan (and other vesting) appears in a single unified calendar." },
+          { q: "I hold plans in more than one wallet, can I see them together?", a: "Yes. Add each address to Vestream and every Hedgey plan (and other vesting) appears in a single unified calendar." },
         ],
       },
     ],
@@ -4973,12 +4973,12 @@ const articles: Article[] = [
     content: [
       {
         type: "p",
-        html: "<strong>Team Finance</strong> is a long-standing tool for locking and vesting team and treasury tokens with transparent on-chain proof — the standard many launchpad-era projects rely on. But tracking <em>your own</em> Team Finance unlocks is harder than with most protocols, for one specific reason: many Team Finance vestings are <strong>merkle-distributed</strong>. This guide explains why that matters and how to see your unlocks anyway.",
+        html: "<strong>Team Finance</strong> is a long-standing tool for locking and vesting team and treasury tokens with transparent on-chain proof, the standard many launchpad-era projects rely on. But tracking <em>your own</em> Team Finance unlocks is harder than with most protocols, for one specific reason: many Team Finance vestings are <strong>merkle-distributed</strong>. This guide explains why that matters and how to see your unlocks anyway.",
       },
       { type: "h2", text: "Why Team Finance unlocks are hard to track" },
       {
         type: "p",
-        html: "In a merkle distribution, the full list of recipients and amounts is committed on-chain as a single <em>merkle root</em> — a cryptographic fingerprint — rather than as an individual on-chain record per person. Your allocation is a <em>leaf</em> in that tree. The upside is efficiency; the downside is that until you claim, there's often no obvious per-wallet on-chain entry to read, so a normal block-explorer lookup won't surface your schedule. That's why holders frequently don't know when their next Team Finance unlock is.",
+        html: "In a merkle distribution, the full list of recipients and amounts is committed on-chain as a single <em>merkle root</em>, a cryptographic fingerprint, rather than as an individual on-chain record per person. Your allocation is a <em>leaf</em> in that tree. The upside is efficiency; the downside is that until you claim, there's often no obvious per-wallet on-chain entry to read, so a normal block-explorer lookup won't surface your schedule. That's why holders frequently don't know when their next Team Finance unlock is.",
       },
       { type: "h2", text: "Method 1: The Team Finance app (manual)" },
       {
@@ -4991,12 +4991,12 @@ const articles: Article[] = [
       },
       {
         type: "p",
-        html: "This is the canonical source, but it only covers Team Finance, offers <strong>no advance alerts</strong>, and requires you to remember to check a dapp that you might visit only a few times a year — exactly the pattern that leads to missed unlocks.",
+        html: "This is the canonical source, but it only covers Team Finance, offers <strong>no advance alerts</strong>, and requires you to remember to check a dapp that you might visit only a few times a year, exactly the pattern that leads to missed unlocks.",
       },
       { type: "h2", text: "Method 2: Automated tracking with alerts (recommended)" },
       {
         type: "p",
-        html: "<a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting directly from its on-chain data across Ethereum, BNB Chain, and Polygon, and resolves per-wallet schedules so you can see your own unlocks without hunting through a claim portal. Paste your address, see the unlock calendar alongside any other vesting on that wallet, and get an email or push alert before each unlock. It's read-only — no wallet connection required to track.",
+        html: "<a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting directly from its on-chain data across Ethereum, BNB Chain, and Polygon, and resolves per-wallet schedules so you can see your own unlocks without hunting through a claim portal. Paste your address, see the unlock calendar alongside any other vesting on that wallet, and get an email or push alert before each unlock. It's read-only, no wallet connection required to track.",
       },
       {
         type: "table",
@@ -5005,14 +5005,14 @@ const articles: Article[] = [
           ["Surfaces your unlock schedule", "Yes (connect wallet)", "Often no (merkle)", "Yes"],
           ["Alerts before an unlock", "No", "No", "Email + push"],
           ["Other protocols on the same wallet", "No", "No", "Yes (11 protocols)"],
-          ["Wallet connection required", "Yes", "No", "No — read-only"],
+          ["Wallet connection required", "Yes", "No", "No, read-only"],
         ],
       },
       {
         type: "callout",
         emoji: "🧩",
         title: "Merkle vesting, made visible",
-        body:  "Because merkle-distributed vesting hides your schedule from ordinary lookups, an indexer that resolves per-wallet data is the practical way to see Team Finance unlocks — and to be reminded before they happen.",
+        body:  "Because merkle-distributed vesting hides your schedule from ordinary lookups, an indexer that resolves per-wallet data is the practical way to see Team Finance unlocks, and to be reminded before they happen.",
       },
       {
         type: "faq",
@@ -5020,7 +5020,7 @@ const articles: Article[] = [
           { q: "Why can't I see my Team Finance vesting on Etherscan?", a: "Many Team Finance vestings are merkle-distributed: recipients are committed as a single merkle root rather than one on-chain record each, so there's often no per-wallet entry to read until you claim. A tracker that indexes and resolves the data per wallet (like Vestream) surfaces it for you." },
           { q: "How do I get alerted before a Team Finance unlock?", a: "The Team Finance app doesn't send reminders. Paste your wallet into Vestream, turn on alerts, and you'll get an email or push notification before each Team Finance unlock." },
           { q: "Which chains does Team Finance tracking cover?", a: "Vestream indexes Team Finance vesting on Ethereum, BNB Chain, and Polygon." },
-          { q: "Do I need to connect my wallet?", a: "No — tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
+          { q: "Do I need to connect my wallet?", a: "No, tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
         ],
       },
       {

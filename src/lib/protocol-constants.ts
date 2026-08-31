@@ -504,7 +504,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // consumers (adapter, TVL walker, event indexer + claim ingestor) all
     // import that single map + ABI.
     description:
-      "HoodLock is the token & liquidity locker on Robinhood Chain — projects lock a token amount until a chosen date, then withdraw it in full once it unlocks. Vestream reads the verified locker contract directly (no subgraph) and lines up every lock's unlock date and status in one view. Vestream is the first vesting tracker to cover Robinhood Chain.",
+      "HoodLock is the token & liquidity locker on Robinhood Chain, projects lock a token amount until a chosen date, then withdraw it in full once it unlocks. Vestream reads the verified locker contract directly (no subgraph) and lines up every lock's unlock date and status in one view. Vestream is the first vesting tracker to cover Robinhood Chain.",
     color: "#00C805",
     bg:    "rgba(0,200,5,0.08)",
     border:"rgba(0,200,5,0.22)",
@@ -521,7 +521,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     useCases: [
       { title: "Team & treasury locks",     body: "Projects launching on Robinhood Chain lock team supply or treasury tokens until a set date. Vestream shows each lock's unlock countdown and current status." },
       { title: "Liquidity-lock proof",      body: "HoodLock is used to lock LP or project tokens as an on-chain trust signal. Buyers can verify the schedule live on Vestream instead of reading the contract by hand." },
-      { title: "First-mover chain coverage", body: "Vestream is the first vesting tracker to index Robinhood Chain — every HoodLock lock is searchable by wallet or token the moment it's created." },
+      { title: "First-mover chain coverage", body: "Vestream is the first vesting tracker to index Robinhood Chain, every HoodLock lock is searchable by wallet or token the moment it's created." },
     ],
     relatedSlugs: ["pinksale", "uncx", "team-finance"],
     testimonials: [],

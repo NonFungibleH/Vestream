@@ -149,7 +149,7 @@ async function handle(req: NextRequest) {
     after(async () => {
       const t = Date.now();
       const r = await runAll();
-      console.log(`[cron/refresh-rollups] background complete in ${((Date.now() - t) / 1000).toFixed(1)}s — ${JSON.stringify(r)}`);
+      console.log(`[cron/refresh-rollups] background complete in ${((Date.now() - t) / 1000).toFixed(1)}s, ${JSON.stringify(r)}`);
     });
     return NextResponse.json({ ok: true, accepted: true, message: "Refresh running in background." }, { status: 202 });
   }
@@ -157,7 +157,7 @@ async function handle(req: NextRequest) {
   const startedAt = Date.now();
   const result = await runAll();
   const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
-  console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s — ${JSON.stringify(result)}`);
+  console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s, ${JSON.stringify(result)}`);
   return NextResponse.json({ ok: true, durationSec: elapsedSec, ...result });
 }
 

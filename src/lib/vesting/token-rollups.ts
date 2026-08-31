@@ -69,7 +69,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     SELECT chain_id AS "chainId",
            lower(token_address) AS "tok",
            -- Canonical stored address: lowercase for EVM (case-insensitive),
-           -- but ORIGINAL case for Solana — base58 is case-sensitive, so
+           -- but ORIGINAL case for Solana, base58 is case-sensitive, so
            -- lowercasing corrupts the mint and breaks every token deep-link.
            CASE WHEN chain_id = ${SOLANA_CHAIN_ID} THEN max(token_address)
                 ELSE lower(token_address) END AS "addr",
@@ -510,7 +510,7 @@ export interface ExplorerDatasetRow {
   le:  number | null;   // last end (unix sec)
   n:   number | null;   // next unlock (unix sec)
   p:   string[];        // protocols
-  cv:  string | null;   // unlock curve — comma-joined cumulative-% samples (parsed client-side)
+  cv:  string | null;   // unlock curve, comma-joined cumulative-% samples (parsed client-side)
 }
 
 export async function getExplorerDataset(): Promise<ExplorerDatasetRow[]> {

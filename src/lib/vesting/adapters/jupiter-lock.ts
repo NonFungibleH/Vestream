@@ -200,7 +200,7 @@ async function fetchForChain(
 
   const rpcUrl = process.env.SOLANA_RPC_URL;
   if (!rpcUrl) {
-    console.error("[jupiter-lock] SOLANA_RPC_URL not configured — adapter returning empty");
+    console.error("[jupiter-lock] SOLANA_RPC_URL not configured, adapter returning empty");
     return [];
   }
 
@@ -229,7 +229,7 @@ async function fetchForChain(
       try {
         new PublicKey(wallet);
       } catch {
-        return; // invalid pubkey — skip
+        return; // invalid pubkey, skip
       }
 
       const accounts = await connection.getProgramAccounts(programId, {
@@ -377,7 +377,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   const candidateUrls = bulkUrls.filter((u) => !seenUrls.has(u) && seenUrls.add(u));
 
   if (candidateUrls.length === 0) {
-    console.error("[jupiter-lock] No Solana RPC URLs configured — bulk fetch returning null");
+    console.error("[jupiter-lock] No Solana RPC URLs configured, bulk fetch returning null");
     return null;
   }
 
@@ -415,7 +415,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
       if (result.length === 0) {
         // Silent empty response — some providers (e.g. Alchemy) return []
         // for programs they don't fully index instead of throwing. Try next.
-        console.warn(`[jupiter-lock] phase 1: ${urlShort} returned 0 pubkeys (silent provider failure) — trying next`);
+        console.warn(`[jupiter-lock] phase 1: ${urlShort} returned 0 pubkeys (silent provider failure), trying next`);
         lastFailure = `${urlShort}: returned 0 accounts (provider doesn't index this program / silent failure)`;
         continue;
       }
@@ -435,7 +435,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
     // serves getProgramAccounts on a large program; Alchemy 429s it on CU/s,
     // so set JUPITER_LOCK_RPC_URL to a Helius (or paid) endpoint.
     console.error(
-      `[jupiter-lock] DISCOVERY FAILED — getProgramAccounts exhausted on all ${candidateUrls.length} RPC URL(s). ` +
+      `[jupiter-lock] DISCOVERY FAILED, getProgramAccounts exhausted on all ${candidateUrls.length} RPC URL(s). ` +
       `Last reason: ${lastFailure ?? "unknown"}. ` +
       `Jupiter Lock will NOT refresh until SOLANA_RPC_URL / JUPITER_LOCK_RPC_URL points at an RPC that serves ` +
       `getProgramAccounts at scale (Helius). Cache rows will go stale.`,
@@ -456,7 +456,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
   const PHASE1_ACCOUNT_CAP = 50_000;
   if (pubkeys.length > PHASE1_ACCOUNT_CAP) {
     console.warn(
-      `[jupiter-lock] phase 1: ${pubkeys.length} pubkeys exceeds cap of ${PHASE1_ACCOUNT_CAP} — truncating for free-tier Helius budget`,
+      `[jupiter-lock] phase 1: ${pubkeys.length} pubkeys exceeds cap of ${PHASE1_ACCOUNT_CAP}, truncating for free-tier Helius budget`,
     );
     pubkeys = pubkeys.slice(0, PHASE1_ACCOUNT_CAP);
   }
@@ -499,7 +499,7 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
         }
       }
     },
-    500, // 500ms inter-batch pacing — concurrency 1 at 500ms = ~2 req/s, safe for Helius free tier.
+    500, // 500ms inter-batch pacing, concurrency 1 at 500ms = ~2 req/s, safe for Helius free tier.
   );
   console.log(
     `[jupiter-lock] phase 2 decode: ${escrows.length} active escrows from ${pubkeys.length} pubkeys (${chunkErrors} chunk errors)`,

@@ -1258,7 +1258,7 @@ export async function getProtocolFunStats(
     const sd = r.streamData as { totalAmount?: string; tokenDecimals?: number };
     biggestStream = {
       streamId:     r.streamId,
-      tokenSymbol:  r.tokenSymbol ?? "—",
+      tokenSymbol:  r.tokenSymbol ?? "-",
       tokenAddress: r.tokenAddress ?? "",
       chainId:      r.chainId,
       recipient:    r.recipient,
@@ -1271,7 +1271,7 @@ export async function getProtocolFunStats(
   if (settled[1].status === "fulfilled" && settled[1].value.length > 0) {
     const r = settled[1].value[0];
     mostPopularToken = {
-      tokenSymbol:  r.tokenSymbol ?? "—",
+      tokenSymbol:  r.tokenSymbol ?? "-",
       tokenAddress: r.tokenAddress ?? null,
       chainId:      r.chainId,
       streamCount:  Number(r.streamCount ?? 0),
@@ -1397,13 +1397,13 @@ export function formatAmountCompact(
   tokenSymbol: string | null,
   decimals = 18,
 ): string {
-  if (!amount) return tokenSymbol ?? "—";
+  if (!amount) return tokenSymbol ?? "-";
   let whole: number;
   try {
     // BigInt → number conversion is lossy above 2^53 but fine for display
     whole = Number(BigInt(amount)) / 10 ** decimals;
   } catch {
-    return tokenSymbol ?? "—";
+    return tokenSymbol ?? "-";
   }
   const sym = tokenSymbol ? ` ${tokenSymbol}` : "";
   // Tiers above M (July 2026 audit): without B/T a trillion-supply memecoin

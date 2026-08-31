@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const { tokenAddress: rawToken, chainId: rawChain, label } = body;
 
   if (!rawToken || !isValidWalletAddress(rawToken)) {
-    return NextResponse.json({ error: "Invalid token address — expected EVM 0x… or Solana SPL mint" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid token address, expected EVM 0x… or Solana SPL mint" }, { status: 400 });
   }
   const chainId = Number(rawChain);
   if (!ALL_CHAIN_IDS.includes(chainId as SupportedChainId)) {

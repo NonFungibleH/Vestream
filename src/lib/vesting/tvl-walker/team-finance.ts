@@ -42,7 +42,7 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
 ];
 
 const PAGE_SIZE = 1000;
-const MAX_PAGES = 200; // 200 × 1000 = 200k vestings — plenty of headroom
+const MAX_PAGES = 200; // 200 × 1000 = 200k vestings, plenty of headroom
 
 const VESTINGS_QUERY = `
   query WalkVestings($chainId: Int!, $limit: Int!, $offset: Int!) {

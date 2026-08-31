@@ -76,7 +76,7 @@ export async function sendLoopsEvent(args: SendLoopsEventArgs): Promise<void> {
     // Dev / staging without the key — log once but don't error. The Resend
     // fallback path (where applicable) handles email delivery instead.
     if (process.env.NODE_ENV !== "production") {
-      console.log(`[loops] LOOPS_API_KEY not set — skipping event '${args.eventName}'`);
+      console.log(`[loops] LOOPS_API_KEY not set, skipping event '${args.eventName}'`);
     }
     return;
   }
@@ -109,7 +109,7 @@ export async function sendLoopsEvent(args: SendLoopsEventArgs): Promise<void> {
     if (!res.ok) {
       const body = await res.text().catch(() => "(no body)");
       console.error(
-        `[loops] event '${args.eventName}' failed: ${res.status} ${res.statusText} — ${body.slice(0, 200)}`,
+        `[loops] event '${args.eventName}' failed: ${res.status} ${res.statusText}, ${body.slice(0, 200)}`,
       );
       return;
     }

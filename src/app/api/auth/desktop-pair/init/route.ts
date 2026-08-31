@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const rl = await checkRateLimit("desktop-pair:init", ip, 30, "1 m");
   if (!rl.allowed) {
     return NextResponse.json(
-      { error: "Too many pairing requests — wait a moment and reload." },
+      { error: "Too many pairing requests, wait a moment and reload." },
       { status: 429 }
     );
   }

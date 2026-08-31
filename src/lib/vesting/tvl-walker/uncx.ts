@@ -39,7 +39,7 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
 };
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap
-const MAX_PAGES = 200;    // 200 × 1000 = 200k locks — plenty of headroom
+const MAX_PAGES = 200;    // 200 × 1000 = 200k locks, plenty of headroom
 // Cursor-based pagination — but on `lockDate` rather than `id`. Background:
 //
 // The Graph indexers cap internal skip operations at 5000. The naive cursor

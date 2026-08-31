@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
 
 async function sendNewKeyEmail(email: string, name: string, plaintext: string, prefix: string): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("[api-access] RESEND_API_KEY missing — skipping welcome email");
+    console.warn("[api-access] RESEND_API_KEY missing, skipping welcome email");
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -168,7 +168,7 @@ async function sendNewKeyEmail(email: string, name: string, plaintext: string, p
     text: [
       `Hi ${name},`,
       "",
-      "Welcome to Vestream — your free-tier API key is ready.",
+      "Welcome to Vestream, your free-tier API key is ready.",
       "",
       `API key: ${plaintext}`,
       `Prefix:  ${prefix}`,
@@ -186,14 +186,14 @@ async function sendNewKeyEmail(email: string, name: string, plaintext: string, p
       "  npx -y @vestream/mcp",
       "",
       "Need higher limits? Pro tier is rolling out via early-access while",
-      "we finish payment-processor verification — reply to this email and",
+      "we finish payment-processor verification, reply to this email and",
       "we'll provision a Pro key (5,000 req/day + webhook subscriptions)",
       "manually for you.",
       "",
-      "This key is shown only once. Store it securely — losing it means",
+      "This key is shown only once. Store it securely, losing it means",
       "requesting a new key. We can revoke any compromised key on request.",
       "",
-      "— The Vestream team (3UILD LLC)",
+      "- The Vestream team (3UILD LLC)",
     ].join("\n"),
   });
 }
@@ -208,7 +208,7 @@ async function sendNewKeyEmail(email: string, name: string, plaintext: string, p
  */
 async function sendExistingKeyEmail(email: string, name: string, prefix: string, tier: string): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("[api-access] RESEND_API_KEY missing — skipping existing-key email");
+    console.warn("[api-access] RESEND_API_KEY missing, skipping existing-key email");
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -221,7 +221,7 @@ async function sendExistingKeyEmail(email: string, name: string, prefix: string,
     text: [
       `Hi ${name},`,
       "",
-      "You already have a Vestream API key on file for this email — we",
+      "You already have a Vestream API key on file for this email, we",
       "haven't issued a new one.",
       "",
       `Tier:   ${tier}`,
@@ -230,9 +230,9 @@ async function sendExistingKeyEmail(email: string, name: string, prefix: string,
       "If you have your key stored, you can keep using it as normal. If",
       "you've lost the plaintext, reply to this email and we'll revoke",
       "the existing key and issue a fresh one. We can't recover lost keys",
-      "directly — only the hash is stored, never the plaintext.",
+      "directly, only the hash is stored, never the plaintext.",
       "",
-      "— The Vestream team (3UILD LLC)",
+      "- The Vestream team (3UILD LLC)",
     ].join("\n"),
   });
 }

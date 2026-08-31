@@ -109,13 +109,13 @@ function parsePutBody(raw: unknown):
     if (!tag) {
       return {
         ok: false,
-        error: `Invalid tag "${entry.tag}" — must be ${STREAM_TAG_VALUE_MAX} chars or fewer, alphanumeric + spaces/hyphens/underscores/ampersands`,
+        error: `Invalid tag "${entry.tag}", must be ${STREAM_TAG_VALUE_MAX} chars or fewer, alphanumeric + spaces/hyphens/underscores/ampersands`,
       };
     }
     let color: string | null = null;
     if (entry.color !== undefined && entry.color !== null) {
       if (typeof entry.color !== "string" || !COLOR_HEX_RE.test(entry.color)) {
-        return { ok: false, error: `Invalid color "${entry.color}" — must be #RRGGBB hex` };
+        return { ok: false, error: `Invalid color "${entry.color}", must be #RRGGBB hex` };
       }
       color = entry.color.toLowerCase();
     }
