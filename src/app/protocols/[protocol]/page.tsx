@@ -27,6 +27,7 @@ import {
   getProtocol,
   listProtocols,
   protocolIcon,
+  protocolLinks,
   type ProtocolMeta,
 } from "@/lib/protocol-constants";
 import {
@@ -434,9 +435,29 @@ export default async function ProtocolLandingPage(
   const accentWash = meta.bg.replace("0.08", "0.12");
   const accentHalo = meta.bg.replace("0.08", "0.22");
 
+  // Entity node for the protocol itself — `sameAs` ties this page to the
+  // protocol's canonical presence (official site + socials + docs), which
+  // strengthens Google entity association and makes the page more citable by
+  // LLMs. Links come from the curated PROTOCOL_LINKS map (vetted, single source
+  // of truth).
+  const links = protocolLinks(meta.slug);
+  const sameAs = [
+    meta.officialUrl,
+    links.twitter, links.discord, links.telegram, links.github, links.docs,
+  ].filter((u): u is string => !!u);
+  const orgId = `https://www.vestream.io/protocols/${meta.slug}#organization`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "Organization",
+        "@id": orgId,
+        name: meta.name,
+        description: meta.tagline,
+        url: meta.officialUrl,
+        ...(sameAs.length > 0 ? { sameAs } : {}),
+      },
       {
         "@type": "WebPage",
         "@id": `https://www.vestream.io/protocols/${meta.slug}`,
@@ -444,6 +465,7 @@ export default async function ProtocolLandingPage(
         description: meta.description,
         url: `https://www.vestream.io/protocols/${meta.slug}`,
         isPartOf: { "@id": "https://www.vestream.io/#website" },
+        about: { "@id": orgId },
         dateModified: (toDateSafe(stats?.lastIndexedAt ?? null) ?? new Date()).toISOString(),
       },
       {
@@ -1029,6 +1051,45 @@ export default async function ProtocolLandingPage(
             </Link>
           </div>
         )}
+      </section>
+
+      {/* ── Official & community ─────────────────────────────────────────── */}
+      {/* Secondary, low on the page (below our own data + CTAs). Followed
+          outbound links to the protocol's canonical presence — a trust +
+          topical-authority signal (also emitted as sameAs entity markup).
+          target=_blank keeps the Vestream tab open. */}
+      <section className="px-4 md:px-8 pb-8 max-w-5xl mx-auto w-full">
+        <div className="rounded-2xl p-6" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <h2 className="text-sm font-bold mb-1" style={{ color: "#1A1D20" }}>Official {meta.name} links</h2>
+          <p className="text-[13px] leading-relaxed mb-4" style={{ color: "#8B8E92" }}>
+            {meta.name}&rsquo;s own site, app and community channels. Vestream is an independent tracker and is not affiliated with {meta.name}.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { label: "Website",     href: meta.officialUrl },
+              { label: "Launch app",  href: meta.claimUrl },
+              { label: "X (Twitter)", href: links.twitter },
+              { label: "Discord",     href: links.discord },
+              { label: "Telegram",    href: links.telegram },
+              { label: "GitHub",      href: links.github },
+              { label: "Docs",        href: links.docs },
+            ].filter((l): l is { label: string; href: string } => !!l.href)).map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-opacity hover:opacity-80"
+                style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color }}
+              >
+                {l.label}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M7 17L17 7M17 7H8M17 7v9" />
+                </svg>
+              </a>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── Related protocols ────────────────────────────────────────────── */}

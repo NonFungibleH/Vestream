@@ -557,6 +557,85 @@ export function getProtocol(slug: string): ProtocolMeta | undefined {
   return PROTOCOLS[slug];
 }
 
+// ── Official & community links ───────────────────────────────────────────────
+// Curated outbound links per protocol, rendered as an "Official & community"
+// card on /protocols/[slug] and emitted as schema.org `sameAs` (entity markup
+// → better Google entity association + LLM citability). `officialUrl` already
+// lives on ProtocolMeta; these are the socials/docs.
+//
+// ⚠️ ACCURACY MATTERS — a wrong link in crypto reads as a scam. Vet every URL
+// here before shipping. Keyed by slug; only set fields you're confident are the
+// protocol's OFFICIAL channel. Omit anything uncertain rather than guess.
+export interface ProtocolLinks {
+  twitter?:  string;   // X / Twitter
+  discord?:  string;
+  telegram?: string;
+  github?:   string;
+  docs?:     string;
+}
+
+export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
+  sablier: {
+    twitter: "https://x.com/Sablier",
+    github:  "https://github.com/sablier-labs",
+    docs:    "https://docs.sablier.com",
+  },
+  "sablier-flow": {
+    twitter: "https://x.com/Sablier",
+    github:  "https://github.com/sablier-labs",
+    docs:    "https://docs.sablier.com",
+  },
+  hedgey: {
+    twitter: "https://x.com/hedgeyfinance",
+    github:  "https://github.com/hedgey-finance",
+    docs:    "https://docs.hedgey.finance",
+  },
+  "team-finance": {
+    twitter: "https://x.com/TeamFinance_",
+    docs:    "https://docs.team.finance",
+  },
+  uncx: {
+    twitter: "https://x.com/UNCX_token",
+    docs:    "https://docs.uncx.network",
+  },
+  unvest: {
+    twitter: "https://x.com/unvest_io",
+    docs:    "https://docs.unvest.io",
+  },
+  superfluid: {
+    twitter: "https://x.com/Superfluid_HQ",
+    github:  "https://github.com/superfluid-finance",
+    docs:    "https://docs.superfluid.finance",
+  },
+  pinksale: {
+    twitter: "https://x.com/pinkecosystem",
+    docs:    "https://docs.pinksale.finance",
+  },
+  streamflow: {
+    twitter: "https://x.com/streamflow_fi",
+    github:  "https://github.com/streamflow-finance",
+    docs:    "https://docs.streamflow.finance",
+  },
+  llamapay: {
+    twitter: "https://x.com/llamapay_io",
+    github:  "https://github.com/LlamaPay",
+    docs:    "https://docs.llamapay.io",
+  },
+  "jupiter-lock": {
+    twitter: "https://x.com/JupiterExchange",
+    github:  "https://github.com/jup-ag",
+    docs:    "https://dev.jup.ag",
+  },
+  hoodlock: {
+    twitter: "https://x.com/HoodLockRH",
+    docs:    "https://hoodlock.tech/docs",
+  },
+};
+
+export function protocolLinks(slug: string): ProtocolLinks {
+  return PROTOCOL_LINKS[slug] ?? {};
+}
+
 // ── Single source of truth for protocol brand colours ───────────────────────
 // Derived from PROTOCOLS so changing a ProtocolMeta `color`/`bg`/`border`
 // updates EVERY surface (homepage strip, tickers, find-vestings, dashboard,
