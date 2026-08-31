@@ -32,6 +32,7 @@ import { getAllArticles } from "@/lib/articles";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
+import { DOC_SLUGS } from "@/lib/docs";
 
 const SITE = "https://www.vestream.io";
 
@@ -89,6 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/developer`,     changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE}/ai`,            changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE}/pricing`,       changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE}/docs`,          changeFrequency: "weekly",  priority: 0.7 },
     { url: `${SITE}/resources`,     lastModified: today,       changeFrequency: "weekly",  priority: 0.7 },
     { url: `${SITE}/research/vesting-statistics`, lastModified: today, changeFrequency: "daily", priority: 0.75 },
     { url: `${SITE}/methodology`,   lastModified: today,       changeFrequency: "weekly",  priority: 0.6 },
@@ -144,8 +146,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  const docsEntries: MetadataRoute.Sitemap = DOC_SLUGS.map((slug) => ({
+    url:             `${SITE}/docs/${slug}`,
+    changeFrequency: "monthly",
+    priority:        0.6,
+  }));
+
   return [
     ...staticEntries,
+    ...docsEntries,
     ...protocolEntries,
     ...protocolUnlockEntries,
     ...articleEntries,
