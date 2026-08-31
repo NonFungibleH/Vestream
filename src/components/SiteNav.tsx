@@ -2,30 +2,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import {
+  listProtocols, protocolIcon,
+  publicChainIds, chainSlug, chainBrand, chainIcon,
+} from "@/lib/protocol-constants";
 
 interface Props {
   /**
-   * "light"  = white/grey consumer pages (default) – homepage, pricing, resources
-   * "navy"   = dark navy developer page – /developer
-   * "dark"   = near-black AI/technical pages – /ai
+   * "light"  = white/grey consumer pages (default) - homepage, pricing, resources
+   * "navy"   = dark navy developer page - /developer
+   * "dark"   = near-black AI/technical pages - /ai
    */
   theme?: "light" | "navy" | "dark";
 }
 
-// "Find Vestings" lives in the CTA slot below – it's the primary funnel
-// entry point so it gets the loud gradient button rather than a regular
-// nav link. Keeping it out of NAV_LINKS prevents it appearing twice.
-//
-// May 5 2026 strategy reset: focusing the marketing surface on vesting
-// while Payroll moves to the roadmap. Top nav drops the Invest / Payroll
-// dual links – /invest still exists as a vesting-focused SEO landing
-// page, /payroll redirects to a coming-soon waitlist (linked from the
-// footer instead of the nav).
-const NAV_LINKS = [
-  { label: "Protocols", href: "/protocols" },
-  { label: "Demo",      href: "/demo"      },
-  { label: "Pricing",   href: "/pricing"   },
-] as const;
+// Dropdown item lists, built from the single source of truth in
+// protocol-constants so the nav never drifts from the real integrations.
+const PROTOCOL_ITEMS = listProtocols().map((p) => ({
+  label: p.name, href: `/protocols/${p.slug}`, icon: protocolIcon(p.slug), color: p.color, bg: p.bg, border: p.border,
+}));
+const CHAIN_ITEMS = publicChainIds()
+  .map((id) => ({ id, slug: chainSlug(id), brand: chainBrand(id), icon: chainIcon(id) }))
+  .filter((c) => c.slug)
+  .map((c) => ({ label: c.brand.name, href: `/chains/${c.slug}`, icon: c.icon, color: c.brand.color, bg: c.brand.bg, border: c.brand.border }));
+
+type NavItem = { label: string; href: string; items?: typeof PROTOCOL_ITEMS };
+const NAV_ITEMS: NavItem[] = [
+  { label: "Protocols", href: "/protocols", items: PROTOCOL_ITEMS },
+  { label: "Chains",    href: "/chains",    items: CHAIN_ITEMS },
+  { label: "Demo",      href: "/demo" },
+  { label: "Pricing",   href: "/pricing" },
+];
 
 const THEME = {
   light: {
@@ -33,14 +40,12 @@ const THEME = {
     navBorder:      "rgba(21,23,26,0.10)",
     linkBase:       "#8B8E92",
     linkActive:     "#1A1D20",
-    // White for the dropdown so it sits *on top of* the warm-paper page bg
-    // rather than blending into it. The shadow + bottom-rounded corners
-    // do the rest of the lifting.
-    mobileMenuBg:   "white",
-    mobileMenuShadow: "0 12px 32px rgba(21,23,26,0.10), 0 2px 8px rgba(21,23,26,0.05)",
+    menuBg:         "white",
+    menuShadow:     "0 12px 32px rgba(21,23,26,0.10), 0 2px 8px rgba(21,23,26,0.05)",
     mobileBackdropBg: "rgba(15,23,42,0.18)",
     activeDot:      "#1CB8B8",
     mobileActiveBg: "rgba(28,184,184,0.08)",
+    itemText:       "#334155",
     logo:           "/logo.svg",
   },
   navy: {
@@ -48,12 +53,12 @@ const THEME = {
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
     linkActive:     "white",
-    // Slight lift over the page bg so the panel reads as a card.
-    mobileMenuBg:   "#122040",
-    mobileMenuShadow: "0 12px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.25)",
+    menuBg:         "#122040",
+    menuShadow:     "0 12px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.25)",
     mobileBackdropBg: "rgba(0,0,0,0.45)",
     activeDot:      "white",
     mobileActiveBg: "rgba(28,184,184,0.12)",
+    itemText:       "rgba(255,255,255,0.8)",
     logo:           "/logo-dark.svg",
   },
   dark: {
@@ -61,41 +66,41 @@ const THEME = {
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
     linkActive:     "white",
-    mobileMenuBg:   "#141720",
-    mobileMenuShadow: "0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.35)",
+    menuBg:         "#141720",
+    menuShadow:     "0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.35)",
     mobileBackdropBg: "rgba(0,0,0,0.55)",
     activeDot:      "white",
     mobileActiveBg: "rgba(28,184,184,0.12)",
+    itemText:       "rgba(255,255,255,0.8)",
     logo:           "/logo-dark.svg",
   },
 } as const;
+
+function Caret() {
+  return (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="opacity-60">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
 
 export function SiteNav({ theme = "light" }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const { navBg, navBorder, linkBase, linkActive, mobileMenuBg, mobileMenuShadow, mobileBackdropBg, mobileActiveBg, logo } = THEME[theme];
+  const t = THEME[theme];
+  const { navBg, navBorder, linkBase, linkActive, menuBg, menuShadow, mobileBackdropBg, mobileActiveBg, itemText, logo } = t;
 
-  // Primary funnel CTA – drives users to paste a wallet, see their vestings,
-  // then convert via the in-results "Open in app" CTA. App is publicly live
-  // (no longer early-access gated) so /find-vestings is the right top-of-
-  // funnel target, not /early-access.
   const ctaHref       = "/find-vestings";
   const ctaLabel      = "Find My Vestings →";
-  const ctaLabelShort = "Find Vestings";   // mobile – narrower button
+  const ctaLabelShort = "Find Vestings";
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <>
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 h-14 md:h-16"
-        // `transform: translateZ(0)` forces the fixed bar onto its own GPU
-        // compositing layer. Without it, iOS Safari fails to repaint a
-        // `position: fixed` element that also has `backdrop-filter` during
-        // momentum scroll — the bar detaches and appears to drift with the
-        // page content (reported "menu moves instead of staying stuck"). The
-        // -webkit prefixes cover older iOS. Safe: the mobile dropdown + its
-        // full-screen backdrop are SIBLINGS of <nav>, so promoting the nav to
-        // a containing block doesn't reposition them.
         style={{
           background: navBg,
           borderBottom: `1px solid ${navBorder}`,
@@ -107,41 +112,71 @@ export function SiteNav({ theme = "light" }: Props) {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
-          <img
-            src={logo}
-            alt="Vestream"
-            width={140}
-            height={35}
-            style={{ height: 35, width: "auto" }}
-          />
+          <img src={logo} alt="Vestream" width={140} height={35} style={{ height: 35, width: "auto" }} />
         </Link>
 
         {/* Desktop links + CTA */}
         <div className="hidden md:flex items-center gap-2">
           <div className="flex items-center gap-1">
-            {NAV_LINKS.map(({ label, href }) => {
-              const isActive = pathname === href || pathname.startsWith(href + "/");
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href);
+              const linkStyle = {
+                color: active ? linkActive : linkBase,
+                fontWeight: active ? 600 : 500,
+                background: active ? mobileActiveBg : "transparent",
+              };
+              if (!item.items) {
+                return (
+                  <Link key={item.href} href={item.href} className="relative text-sm transition-colors px-3 py-1.5 rounded-lg" style={linkStyle}>
+                    {item.label}
+                  </Link>
+                );
+              }
+              // Dropdown (CSS hover): trigger links to the index page, panel
+              // lists each protocol/chain. pt-2 bridge keeps hover alive over
+              // the gap between trigger and panel.
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="relative text-sm transition-colors px-3 py-1.5 rounded-lg"
-                  style={{
-                    color: isActive ? linkActive : linkBase,
-                    fontWeight: isActive ? 600 : 500,
-                    background: isActive ? mobileActiveBg : "transparent",
-                  }}
-                >
-                  {label}
-                </Link>
+                <div key={item.href} className="relative group">
+                  <Link href={item.href} className="relative text-sm transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1" style={linkStyle}>
+                    {item.label}
+                    <Caret />
+                  </Link>
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
+                    <div
+                      className="rounded-2xl p-2 w-[420px]"
+                      style={{ background: menuBg, border: `1px solid ${navBorder}`, boxShadow: menuShadow }}
+                    >
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {item.items.map((it) => (
+                          <Link
+                            key={it.href}
+                            href={it.href}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors hover:bg-black/[0.04]"
+                            style={{ color: itemText }}
+                          >
+                            <span className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: it.bg, border: `1px solid ${it.border}` }}>
+                              {it.icon
+                                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={it.icon} alt="" width={24} height={24} className="w-full h-full object-contain p-0.5" />
+                                : <span className="font-bold text-[11px]" style={{ color: it.color }}>{it.label[0]}</span>}
+                            </span>
+                            <span className="text-[13px] font-medium truncate">{it.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                      <Link
+                        href={item.href}
+                        className="block mt-1 px-2.5 py-2 rounded-lg text-[13px] font-semibold"
+                        style={{ color: "#1CB8B8", borderTop: `1px solid ${navBorder}` }}
+                      >
+                        View all {item.label.toLowerCase()} →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
 
-          {/* "Log in" sits to the LEFT of the gradient CTA – same nav slot
-              that's been free since SIWE was demoted. Returning users get a
-              clear way back to /dashboard without competing with the
-              acquisition CTA visually. */}
           <Link
             href="/login"
             className="text-sm font-medium px-3 rounded-xl transition-colors hover:opacity-80 inline-flex items-center min-h-[40px]"
@@ -150,9 +185,6 @@ export function SiteNav({ theme = "light" }: Props) {
             Log in
           </Link>
 
-          {/* CTA – min-h-[40px] ensures a WCAG-compliant tap target (44px
-              target counting natural padding). Previously `py-1.5` alone
-              gave ~32px, below the 44px accessibility floor. */}
           <a
             href={ctaHref}
             className="text-sm font-semibold px-4 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
@@ -162,8 +194,7 @@ export function SiteNav({ theme = "light" }: Props) {
           </a>
         </div>
 
-        {/* Mobile right – CTA button + hamburger. Both bumped to min-h-[40px]
-            / w-11 h-11 for touch accessibility. */}
+        {/* Mobile right - CTA + hamburger */}
         <div className="flex md:hidden items-center gap-2">
           <a
             href={ctaHref}
@@ -188,9 +219,7 @@ export function SiteNav({ theme = "light" }: Props) {
                 style={{
                   background: linkActive,
                   top: "50%",
-                  transform: open
-                    ? `translateY(-50%) rotate(${deg}deg)`
-                    : `translateY(calc(-50% + ${offset}px))`,
+                  transform: open ? `translateY(-50%) rotate(${deg}deg)` : `translateY(calc(-50% + ${offset}px))`,
                   opacity: hide && open ? 0 : 1,
                 }}
               />
@@ -199,49 +228,60 @@ export function SiteNav({ theme = "light" }: Props) {
         </div>
       </nav>
 
-      {/* Mobile dropdown menu – sits as a floating panel below the nav,
-          inset from the edges with rounded corners and a soft shadow so
-          it reads as a layer on top of the page rather than a tonally
-          identical strip that "gets lost". */}
+      {/* Mobile dropdown menu */}
       {open && (
         <div
-          className="fixed left-3 right-3 z-40 md:hidden p-2 space-y-1"
+          className="fixed left-3 right-3 z-40 md:hidden p-2 space-y-1 max-h-[75vh] overflow-y-auto"
           style={{
-            top:        "calc(56px + 8px)", // h-14 nav + small gap
-            background: mobileMenuBg,
+            top:        "calc(56px + 8px)",
+            background: menuBg,
             border:     `1px solid ${navBorder}`,
             borderRadius: "16px",
-            boxShadow:  mobileMenuShadow,
+            boxShadow:  menuShadow,
           }}
         >
-          {NAV_LINKS.map(({ label, href }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.href);
+            if (!item.items) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-colors"
+                  style={{ color: active ? linkActive : linkBase, background: active ? mobileActiveBg : "transparent", fontWeight: active ? 600 : 500 }}
+                >
+                  <span>{item.label}</span>
+                  {active && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#1CB8B8" }} />}
+                </Link>
+              );
+            }
+            // Expandable section (native details) for the dropdown groups.
             return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-colors"
-                style={{
-                  color: isActive ? linkActive : linkBase,
-                  background: isActive ? mobileActiveBg : "transparent",
-                  fontWeight: isActive ? 600 : 500,
-                }}
-              >
-                <span>{label}</span>
-                {isActive && (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: "#1CB8B8" }}
-                  />
-                )}
-              </Link>
+              <details key={item.href} className="rounded-xl overflow-hidden" style={{ background: active ? mobileActiveBg : "transparent" }}>
+                <summary className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl text-sm font-medium cursor-pointer select-none list-none" style={{ color: active ? linkActive : linkBase, fontWeight: active ? 600 : 500 }}>
+                  <span>{item.label}</span>
+                  <Caret />
+                </summary>
+                <div className="px-2 pb-2 grid grid-cols-2 gap-0.5">
+                  <Link href={item.href} onClick={() => setOpen(false)} className="col-span-2 px-2.5 py-2 rounded-lg text-[13px] font-semibold" style={{ color: "#1CB8B8" }}>
+                    All {item.label.toLowerCase()} →
+                  </Link>
+                  {item.items.map((it) => (
+                    <Link key={it.href} href={it.href} onClick={() => setOpen(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-lg" style={{ color: itemText }}>
+                      <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: it.bg, border: `1px solid ${it.border}` }}>
+                        {it.icon
+                          ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={it.icon} alt="" width={20} height={20} className="w-full h-full object-contain p-0.5" />
+                          : <span className="font-bold text-[10px]" style={{ color: it.color }}>{it.label[0]}</span>}
+                      </span>
+                      <span className="text-[12px] font-medium truncate">{it.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </details>
             );
           })}
 
-          {/* Returning-user login – visually separated from the navigation
-              links above with a hairline, so it reads as account action
-              rather than another product page. */}
           <div className="pt-2 mt-2" style={{ borderTop: `1px solid ${navBorder}` }}>
             <Link
               href="/login"
@@ -260,8 +300,6 @@ export function SiteNav({ theme = "light" }: Props) {
         </div>
       )}
 
-      {/* Backdrop – dims the page so the panel reads as elevated and
-          gives the user an obvious tap-target to dismiss the menu. */}
       {open && (
         <div
           className="fixed inset-0 z-30 md:hidden transition-opacity"
