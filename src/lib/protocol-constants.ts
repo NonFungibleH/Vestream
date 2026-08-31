@@ -606,7 +606,7 @@ export const PROTOCOL_CHIPS: Record<string, ProtocolChip> =
 // matching how the homepage "Available on" strip renders it.
 const SLUGS_WITH_ICON = new Set([
   "sablier", "superfluid", "uncx", "team-finance", "unvest",
-  "pinksale", "streamflow", "jupiter-lock", "llamapay",
+  "pinksale", "streamflow", "jupiter-lock", "llamapay", "hoodlock",
 ]);
 
 // Variant adapters that share a parent brand's mark — no separate asset needed.

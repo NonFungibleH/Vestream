@@ -509,6 +509,7 @@ export default async function Home() {
               { name: "Hedgey",       color: "#33406B", bg: "rgba(51,64,107,0.07)",  border: "rgba(51,64,107,0.16)",  icon: "" },
               { name: "UNCX",         color: "#22C55E", bg: "rgba(34,197,94,0.07)",  border: "rgba(34,197,94,0.16)",  icon: "/protocols/icons/uncx.png"  },
               { name: "LlamaPay",     color: "#1FBE9A", bg: "rgba(31,190,154,0.07)", border: "rgba(31,190,154,0.16)", icon: "/protocols/icons/llamapay.png"  },
+              { name: "HoodLock",     color: "#00C805", bg: "rgba(0,200,5,0.07)",    border: "rgba(0,200,5,0.16)",    icon: "/protocols/icons/hoodlock.png"  },
             ].map((p) => (
               <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
