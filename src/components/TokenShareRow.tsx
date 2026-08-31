@@ -21,7 +21,7 @@ interface Props {
   lockedSummary?: string | null;
 }
 
-export function TokenShareRow({ pageUrl, symbol, chainName, lockedSummary }: Props) {
+export function TokenShareRow({ pageUrl, symbol }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = useCallback(async () => {
@@ -32,9 +32,7 @@ export function TokenShareRow({ pageUrl, symbol, chainName, lockedSummary }: Pro
     } catch { /* silent fallback */ }
   }, [pageUrl]);
 
-  const tweetText = lockedSummary
-    ? `$${symbol} still has ${lockedSummary} locked and vesting on ${chainName}.\n\nTrack every upcoming unlock, with the exact dates and USD value, live on @Vestream_ 👇`
-    : `$${symbol} has token vesting live on ${chainName}, and the unlocks are still coming.\n\nSee every one, with exact dates and USD value, on @Vestream_ 👇`;
+  const tweetText = `Track $${symbol} on @Vestream_.\n\nView the full vesting schedule across all holders, check upcoming unlock dates, and set up mobile push notifications for your token unlocks.`;
 
   const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(pageUrl)}`;
 
