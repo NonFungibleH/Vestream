@@ -16,14 +16,52 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { after } from "next/server";
+import { unstable_cache } from "next/cache";
 import { getUnlocksInWindow, enrichGroupsWithUsd, type WindowUnlockGroup } from "./unlock-windows";
 import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
 import { listProtocols, publicChainIds, chainSlug } from "../protocol-constants";
-import { withTimeout } from "../with-timeout";
 import {
   getLastGoodChainData, setLastGoodChainData,
   getLastGoodChainsData, setLastGoodChainsData,
 } from "./page-data-fallback";
+
+// Shared, cached whole-table snapshot read for every chain surface.
+//
+// readAllSnapshots() races a HARD 2s timeout and returns [] if the read is
+// slow (cold Supabase pooler). Called raw per-render across 9 chain pages +
+// the index, that empty branch fired often enough that pages cached an empty
+// TVL. /protocols never hits this because it reads through unstable_cache — one
+// sub-2s read is cached for 5 min and reused. Mirror that here: wrap the read
+// so a single good read serves every chain surface, and THROW on an empty
+// result so unstable_cache (which never caches thrown errors) retries next
+// render instead of poisoning a 5-min window with []. The caller's last-good
+// net covers the gap while the retry lands. The table always has rows, so
+// "empty" only ever means "the 2s read timed out".
+const readSnapshotsCached = unstable_cache(
+  async (): Promise<ProtocolSnapshotRow[]> => {
+    const rows = await readAllSnapshots();
+    if (rows.length === 0) throw new Error("readAllSnapshots empty — skip caching");
+    return rows;
+  },
+  ["chain-stats:all-snapshots:v1"],
+  { revalidate: 300 },
+);
+
+async function loadSnapshots(): Promise<ProtocolSnapshotRow[]> {
+  try {
+    return await readSnapshotsCached();
+  } catch {
+    return [];
+  }
+}
+
+// unstable_cache JSON-serialises its payload, so computedAt comes back as an
+// ISO string (not a Date). Coerce defensively either way.
+function snapshotMs(computedAt: unknown): number {
+  if (!computedAt) return 0;
+  const t = new Date(computedAt as string | number | Date).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
 
 export interface ChainUnlock {
   symbol:    string | null;
@@ -79,8 +117,8 @@ export async function getChainStats(
     .filter((p) => p.chainIds.includes(chainId as never))
     .map((p) => p.slug);
 
-  // TVL + totals from the snapshot rows for this chain.
-  const snapshots = await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chain:snapshots");
+  // TVL + totals from the snapshot rows for this chain (shared cached read).
+  const snapshots = await loadSnapshots();
   const chainRows = snapshots.filter((r) => r.chainId === chainId);
   const protoMeta = new Map(listProtocols().map((p) => [p.slug, p.name]));
   const protoTvl = new Map<string, number>();
@@ -92,7 +130,7 @@ export async function getChainStats(
     tokenCount += r.tokensTotal || 0;
     protoTvl.set(r.protocol, (protoTvl.get(r.protocol) ?? 0) + r.tvlUsd);
     protoStream.set(r.protocol, (protoStream.get(r.protocol) ?? 0) + (r.streamCount || 0));
-    const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
+    const t = snapshotMs(r.computedAt);
     if (t > freshest) freshest = t;
   }
   // One entry per protocol that has a snapshot row on this chain (TVL and/or
@@ -205,10 +243,10 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
     }
   }
 
-  // No build-phase guard: readAllSnapshots falls back to [] via withTimeout
-  // rather than throwing, so the build prerenders the real leaderboard instead
-  // of an empty page that ISR has to backfill.
-  const snapshots = await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chains:snapshots");
+  // Shared cached read (see readSnapshotsCached) — same source the chain pages
+  // use, so the index and the per-chain pages agree and one good read serves
+  // all of them.
+  const snapshots = await loadSnapshots();
 
   const tvl = new Map<number, number>();
   const streams = new Map<number, number>();
@@ -227,7 +265,7 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
       cell.set(r.chainId, row);
       protoTotal.set(r.protocol, (protoTotal.get(r.protocol) ?? 0) + r.tvlUsd);
     }
-    const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
+    const t = snapshotMs(r.computedAt);
     if (t > freshest) freshest = t;
   }
 
