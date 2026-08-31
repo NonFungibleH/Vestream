@@ -677,6 +677,36 @@ export function chainIcon(chainId: number): string | null {
   return f ? `/chains/icons/${f}.png` : null;
 }
 
+// ── Chain URL slugs ──────────────────────────────────────────────────────────
+// Powers the per-chain pages at /chains/<slug>. Mainnets only; testnets have no
+// public page. Keep in sync with CHAIN_ICON_FILE + CHAIN_BASE.
+const CHAIN_SLUG: Record<number, string> = {
+  1:     "ethereum",
+  56:    "bnb-chain",
+  137:   "polygon",
+  8453:  "base",
+  42161: "arbitrum",
+  10:    "optimism",
+  43114: "avalanche",
+  4663:  "robinhood-chain",
+  101:   "solana",
+};
+const SLUG_TO_CHAIN: Record<string, number> =
+  Object.fromEntries(Object.entries(CHAIN_SLUG).map(([id, slug]) => [slug, Number(id)]));
+
+/** URL slug for a chain id (e.g. 4663 → "robinhood-chain"), or null if none. */
+export function chainSlug(chainId: number): string | null {
+  return CHAIN_SLUG[chainId] ?? null;
+}
+/** Resolve a chain slug back to its chain id (e.g. "robinhood-chain" → 4663). */
+export function chainIdFromSlug(slug: string): number | undefined {
+  return SLUG_TO_CHAIN[slug];
+}
+/** All public (mainnet) chain ids that have a /chains/<slug> page. */
+export function publicChainIds(): number[] {
+  return Object.keys(CHAIN_SLUG).map(Number);
+}
+
 /**
  * All protocols in display order.
  *

@@ -29,7 +29,7 @@
 
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/articles";
-import { listProtocols } from "@/lib/protocol-constants";
+import { listProtocols, publicChainIds, chainSlug } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { DOC_SLUGS } from "@/lib/docs";
@@ -81,6 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/corporate/token-payroll`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: today,       changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/unlocks`,       lastModified: today,       changeFrequency: "daily",   priority: 0.9 },
+    { url: `${SITE}/chains`,        lastModified: today,       changeFrequency: "daily",   priority: 0.8 },
     // Ranking pages — high-intent commercial queries ("biggest token unlocks
     // this week", "airdrop unlocks"). Same crawl cadence as /unlocks itself.
     { url: `${SITE}/unlocks/biggest-this-week`,   lastModified: today, changeFrequency: "daily",   priority: 0.85 },
@@ -152,11 +153,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.6,
   }));
 
+  // Per-chain unlock pages — one per public (mainnet) chain.
+  const chainEntries: MetadataRoute.Sitemap = publicChainIds()
+    .map((id) => chainSlug(id))
+    .filter((s): s is string => !!s)
+    .map((slug) => ({
+      url:             `${SITE}/chains/${slug}`,
+      lastModified:    today,
+      changeFrequency: "daily" as const,
+      priority:        0.8,
+    }));
+
   return [
     ...staticEntries,
     ...docsEntries,
     ...protocolEntries,
     ...protocolUnlockEntries,
+    ...chainEntries,
     ...articleEntries,
     ...unlockWindowEntries,
     ...reportEntries,

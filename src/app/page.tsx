@@ -560,17 +560,17 @@ export default async function Home() {
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {[
               // Brand-accurate chain colours + official marks in /public/chains/icons.
-              { name: "Ethereum",  color: "#627EEA", icon: "/chains/icons/ethereum.png" },
-              { name: "BNB Chain", color: "#F0B90B", icon: "/chains/icons/bnb.png" },
-              { name: "Base",      color: "#0052FF", icon: "/chains/icons/base.png" },
-              { name: "Polygon",   color: "#8247E5", icon: "/chains/icons/polygon.png" },
-              { name: "Arbitrum",  color: "#12AAFF", icon: "/chains/icons/arbitrum.png" },
-              { name: "Optimism",  color: "#FF0420", icon: "/chains/icons/optimism.png" },
-              { name: "Avalanche", color: "#E84142", icon: "/chains/icons/avalanche.png" },
-              { name: "Solana",    color: "#9945FF", icon: "/chains/icons/solana.png" },
-              { name: "Robinhood", color: "#5B8C00", icon: "/chains/icons/robinhood.png" },
+              { name: "Ethereum",  slug: "ethereum",        color: "#627EEA", icon: "/chains/icons/ethereum.png" },
+              { name: "BNB Chain", slug: "bnb-chain",       color: "#F0B90B", icon: "/chains/icons/bnb.png" },
+              { name: "Base",      slug: "base",            color: "#0052FF", icon: "/chains/icons/base.png" },
+              { name: "Polygon",   slug: "polygon",         color: "#8247E5", icon: "/chains/icons/polygon.png" },
+              { name: "Arbitrum",  slug: "arbitrum",        color: "#12AAFF", icon: "/chains/icons/arbitrum.png" },
+              { name: "Optimism",  slug: "optimism",        color: "#FF0420", icon: "/chains/icons/optimism.png" },
+              { name: "Avalanche", slug: "avalanche",       color: "#E84142", icon: "/chains/icons/avalanche.png" },
+              { name: "Solana",    slug: "solana",          color: "#9945FF", icon: "/chains/icons/solana.png" },
+              { name: "Robinhood", slug: "robinhood-chain", color: "#5B8C00", icon: "/chains/icons/robinhood.png" },
             ].map((c) => (
-              <div key={c.name} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full"
+              <Link key={c.name} href={`/chains/${c.slug}`} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full hover:opacity-80 transition-opacity"
                 style={{ background: `${c.color}12`, border: `1px solid ${c.color}2e` }}>
                 <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
                   style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
@@ -578,7 +578,7 @@ export default async function Home() {
                   <img src={c.icon} alt="" width={18} height={18} className="w-full h-full object-contain p-[1.5px]" />
                 </span>
                 <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
