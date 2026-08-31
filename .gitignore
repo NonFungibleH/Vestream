@@ -43,3 +43,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Design sync artifacts (generated/vendored, not part of the app)
+ds-bundle/
+.ds-sync/
+types/

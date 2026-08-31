@@ -1,9 +1,0 @@
-{
-  "namespace": "Vestream",
-  "source": "vestr@0.1.0",
-  "shape": "package",
-  "provider": null,
-  "componentCount": 41,
-  "skippedStoryIds": [],
-  "runtimeFontPrefixes": []
-}
