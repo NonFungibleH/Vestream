@@ -12,7 +12,7 @@
 
 import { getUnlocksInWindow, enrichGroupsWithUsd, type WindowUnlockGroup } from "./unlock-windows";
 import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
-import { listProtocols } from "../protocol-constants";
+import { listProtocols, publicChainIds } from "../protocol-constants";
 import { withTimeout } from "../with-timeout";
 
 export interface ChainUnlock {
@@ -130,5 +130,64 @@ export async function getChainStats(
     totalUpcomingUsd,
     computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),
     isEmpty,
+  };
+}
+
+// ── Chains index overview ────────────────────────────────────────────────────
+
+export interface ChainOverview {
+  chainId:       number;
+  tvlUsd:        number;
+  streamCount:   number;
+  protocolCount: number;  // enabled protocols integrated on this chain (static)
+}
+export interface ChainsOverview {
+  chains:       ChainOverview[];  // public chains, sorted by TVL desc
+  totalTvl:     number;
+  totalStreams: number;
+  computedAt:   string;
+}
+
+/** Per-chain TVL + protocol/stream counts for the /chains index leaderboard.
+ *  Protocol counts are static (listProtocols); TVL/streams come from the
+ *  snapshot table and fill via ISR (build-phase returns zeros for those). */
+export async function getChainsOverview(): Promise<ChainsOverview> {
+  const publics = publicChainIds();
+  const publicSet = new Set(publics);
+
+  const protoCount = new Map<number, number>();
+  for (const p of listProtocols()) {
+    for (const c of p.chainIds) {
+      if (publicSet.has(c as number)) protoCount.set(c as number, (protoCount.get(c as number) ?? 0) + 1);
+    }
+  }
+
+  const build = process.env.NEXT_PHASE === "phase-production-build";
+  const snapshots = build
+    ? [] as ProtocolSnapshotRow[]
+    : await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chains:snapshots");
+
+  const tvl = new Map<number, number>();
+  const streams = new Map<number, number>();
+  let totalTvl = 0, totalStreams = 0, freshest = 0;
+  for (const r of snapshots) {
+    if (!publicSet.has(r.chainId)) continue;
+    tvl.set(r.chainId, (tvl.get(r.chainId) ?? 0) + r.tvlUsd);
+    streams.set(r.chainId, (streams.get(r.chainId) ?? 0) + (r.streamCount || 0));
+    totalTvl += r.tvlUsd;
+    totalStreams += r.streamCount || 0;
+    const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
+    if (t > freshest) freshest = t;
+  }
+
+  const chains = publics
+    .map((id) => ({ chainId: id, tvlUsd: tvl.get(id) ?? 0, streamCount: streams.get(id) ?? 0, protocolCount: protoCount.get(id) ?? 0 }))
+    .sort((a, b) => b.tvlUsd - a.tvlUsd || b.protocolCount - a.protocolCount);
+
+  return {
+    chains,
+    totalTvl,
+    totalStreams,
+    computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),
   };
 }
