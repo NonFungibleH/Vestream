@@ -79,7 +79,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 function UnlockList({ title, items }: { title: string; items: ChainUnlock[] }) {
   return (
     <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-      <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>{title}</h2>
+      <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>{title}</h2>
       <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
         {items.map((u, i) => {
           const p = getProtocol(u.protocol);
@@ -162,30 +162,57 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      <section className="px-4 md:px-8 pt-20 md:pt-24 pb-8 max-w-4xl mx-auto w-full">
-        <nav aria-label="Breadcrumb" className="mb-4">
-          <ol className="flex items-center gap-1.5 text-xs" style={{ color: "#B8BABD" }}>
-            <li><Link href="/" style={{ color: "#8B8E92" }}>Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href="/chains" style={{ color: "#8B8E92" }}>Chains</Link></li>
-            <li aria-hidden>/</li>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-20 pb-10 md:pt-24 md:pb-14 px-4 md:px-8 text-center">
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${brand.color}14 0%, transparent 70%)`,
+        }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{
+          background: `linear-gradient(90deg, transparent, ${brand.color}80, transparent)`,
+        }} />
+
+        {/* Breadcrumb — left-aligned, inside the chain's halo */}
+        <nav aria-label="Breadcrumb" className="relative max-w-4xl mx-auto mb-8 text-left">
+          <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
+            <li><Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>Home</Link></li>
+            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+            <li><Link href="/chains" className="hover:underline" style={{ color: "#8B8E92" }}>Chains</Link></li>
+            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
             <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{brand.name}</li>
           </ol>
         </nav>
 
-        <div className="flex items-center gap-3 mb-4">
-          <span className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: brand.bg, border: `1px solid ${brand.border}` }}>
-            {icon
-              ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={icon} alt="" width={44} height={44} className="w-full h-full object-contain p-1.5" />
-              : <span className="font-extrabold text-lg" style={{ color: brand.color }}>{brand.name[0]}</span>}
-          </span>
-          <h1 className="text-3xl md:text-4xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>
-            {brand.name} token unlocks
-          </h1>
-        </div>
+        <div className="relative max-w-4xl mx-auto">
+          {/* Live pill in the chain's colour */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-8"
+            style={{ background: brand.bg, borderColor: brand.border, color: brand.color }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: brand.color }} />
+            Live · indexing {n(protocols.length)} {protocols.length === 1 ? "protocol" : "protocols"} on {brand.name}
+          </div>
 
-        <p className="text-base md:text-lg max-w-3xl leading-relaxed mb-3 font-medium" style={{ color: "#1A1D20" }}>{answer}</p>
-        <Provenance updatedISO={s.computedAt} className="mb-2" />
+          {/* Chain logo tile */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden"
+              style={{ background: brand.bg, border: `1px solid ${brand.border}`, boxShadow: `0 6px 20px ${brand.color}22` }}>
+              {icon ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={icon} alt="" width={40} height={40} className="w-full h-full object-contain p-2" />
+              ) : (
+                <span className="font-extrabold text-2xl" style={{ color: brand.color }}>{brand.name[0]}</span>
+              )}
+            </div>
+          </div>
+
+          <h1 className="font-bold tracking-tight mb-4" style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#1A1D20" }}>
+            {brand.name} token unlocks<br />
+            <span style={{ color: "#1CB8B8" }}>tracker &amp; alerts</span>
+          </h1>
+
+          <p className="text-sm md:text-base leading-relaxed max-w-2xl mx-auto mb-6" style={{ color: "#475569" }}>{answer}</p>
+          <div className="flex justify-center">
+            <Provenance updatedISO={s.computedAt} />
+          </div>
+        </div>
       </section>
 
       {/* Stats */}
@@ -202,7 +229,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
           Static list (always renders); TVL/streams fill via ISR. Sorted by TVL. */}
       {protocols.length > 0 && (
         <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Protocols on {brand.name}</h2>
+          <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>Protocols on {brand.name}</h2>
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
             {protocolsSorted.map((p, i) => {
               const pIcon = protocolIcon(p.slug);
@@ -247,7 +274,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
 
       {/* Calendar + explore links */}
       <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-        <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Explore unlocks</h2>
+        <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>Explore unlocks</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             { title: "Full unlock calendar", body: "Every upcoming unlock across protocols and chains.", href: "/unlocks" },
