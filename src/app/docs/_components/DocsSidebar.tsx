@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { docsByCategory } from "@/lib/docs";
+import { DocsIcon } from "./DocsIcon";
 
 const groups = docsByCategory();
 
@@ -35,8 +36,8 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                   ? { background: "rgba(37,99,235,0.1)", color: "#2563eb", fontWeight: 600 }
                   : { color: "#475569" }}
               >
-                <span className="text-[13px]">{p.icon}</span>
-                <span>{p.title.replace(/ — .*$/, "")}</span>
+                <span style={{ color: active ? "#2563eb" : "#94a3b8" }} className="flex-shrink-0"><DocsIcon name={p.icon} size={15} /></span>
+                <span>{p.title}</span>
               </Link>
             );
           })}

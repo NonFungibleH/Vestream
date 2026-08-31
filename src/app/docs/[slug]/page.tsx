@@ -11,10 +11,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const page = getDocPage(slug);
-  if (!page) return { title: "Not found — Vestream Docs" };
+  if (!page) return { title: "Not found · Vestream Docs" };
   const url = `https://www.vestream.io/docs/${slug}`;
   return {
-    title: `${page.title} — Vestream Docs`,
+    title: `${page.title} · Vestream Docs`,
     description: page.description,
     alternates: { canonical: url },
     openGraph: { title: page.title, description: page.description, url, siteName: "Vestream", type: "article" },
@@ -64,13 +64,13 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         {prev ? (
           <Link href={`/docs/${prev.slug}`} className="p-4 rounded-xl" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)" }}>
             <p className="text-xs mb-1" style={{ color: "#94a3b8" }}>← Previous</p>
-            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>{prev.title.replace(/ — .*$/, "")}</p>
+            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>{prev.title}</p>
           </Link>
         ) : <span />}
         {next ? (
           <Link href={`/docs/${next.slug}`} className="p-4 rounded-xl sm:text-right" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)" }}>
             <p className="text-xs mb-1" style={{ color: "#94a3b8" }}>Next →</p>
-            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>{next.title.replace(/ — .*$/, "")}</p>
+            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>{next.title}</p>
           </Link>
         ) : <span />}
       </div>

@@ -1,4 +1,4 @@
-// Server component — renders a DocPage's typed content blocks to JSX.
+// Server component that renders a DocPage's typed content blocks to JSX.
 // Includes the two "live" blocks (protocols grid, chains grid) that read from
 // protocol-constants so docs coverage never drifts from the real integrations.
 import React from "react";
