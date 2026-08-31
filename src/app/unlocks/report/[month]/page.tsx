@@ -239,7 +239,7 @@ export default async function MonthlyReportPage({ params }: PageParams) {
         <ScanWalletCTA
           surface="unlock_report"
           heading="Track your own token unlocks"
-          sub="Paste any wallet — see every unlock across 10 protocols and 8 chains. Free, no sign-up."
+          sub="Paste any wallet — see every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
         />
         <p className="text-sm mt-5 text-center" style={{ color: "#8B8E92" }}>
           See the <Link href="/unlocks" style={{ color: "#0F8A8A", fontWeight: 600 }}>live unlock calendar</Link>,{" "}

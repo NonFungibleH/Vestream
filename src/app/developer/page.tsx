@@ -10,12 +10,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API – Vestream",
   description:
-    "Token vesting API for developers: REST + MCP server covering 10 protocols and 8 chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
+    "Token vesting API for developers: REST + MCP server covering 11+ protocols and 9+ chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API – Vestream",
     description:
-      "REST + MCP for 10 vesting protocols across 8 chains – EVM and Solana. Normalised JSON, agent-native.",
+      "REST + MCP for 11+ vesting protocols across 9+ chains – EVM and Solana. Normalised JSON, agent-native.",
     url: "https://www.vestream.io/developer",
     siteName: "Vestream",
     type: "website",
@@ -503,7 +503,7 @@ export default function DeveloperPage() {
                 {[
                   "30 req/min burst · 150/day",
                   "All 3 endpoints",
-                  "10 protocols indexed (EVM + Solana)",
+                  "11+ protocols indexed (EVM + Solana)",
                   "Standard JSON responses",
                   { html: <>Email support – <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
                 ].map((f, i) => (
@@ -545,7 +545,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "10 protocols · 8 chains (EVM + Solana)",
+                  "11+ protocols · 9+ chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

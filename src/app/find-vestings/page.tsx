@@ -4,7 +4,7 @@
 //
 // Flow:
 //   1. User pastes an address
-//   2. /api/find-vestings scans all 10 protocols × 8 chains (EVM + Solana)
+//   2. /api/find-vestings scans all 11+ protocols × 9+ chains (EVM + Solana)
 //   3. Results render as a grouped summary (protocol × chain × token)
 //   4. Strong mobile app CTAs prompt them to install for push alerts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
 // protocol-constants.ts (single source of truth), which also fixes the
 // palette drift the old hardcoded lists here had accumulated.
 const PROTOCOL_ROW_1_SLUGS = ["sablier", "hedgey", "uncx", "llamapay"] as const;
-const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock", "team-finance"] as const;
+const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock", "team-finance", "hoodlock"] as const;
 
 // Homepage "Available on" order: Ethereum, BNB, Base, Polygon, Arbitrum,
 // Optimism, Avalanche, Solana. (The old literal list here was missing
-// Avalanche while the copy above promised 8 chains.)
+// Avalanche while the copy above promised 9+ chains.)
 const CHAIN_IDS = [1, 56, 8453, 137, 42161, 10, 43114, 4663, 101] as const;
 
 // 2026-05-17 SEO/AI-search pass: HowTo + BreadcrumbList JSON-LD.
@@ -49,7 +49,7 @@ const findVestingsJsonLd = {
       "@id":   "https://www.vestream.io/find-vestings#howto",
       name:    "How to find every token vesting unlock for a wallet",
       description:
-        "Scan any wallet address across 10 vesting protocols and 8 chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana) to surface every unlock schedule – cliffs, linear streams, step releases, claimable balances.",
+        "Scan any wallet address across 11+ vesting protocols and 9+ chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana) to surface every unlock schedule – cliffs, linear streams, step releases, claimable balances.",
       totalTime: "PT30S",
       supply:    { "@type": "HowToSupply", name: "An EVM or Solana wallet address" },
       tool:      { "@type": "HowToTool",   name: "A web browser" },
@@ -106,7 +106,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
-          Free · No signup · 10 protocols · 8 chains
+          Free · No signup · 11+ protocols · 9+ chains
         </div>
 
         <h1

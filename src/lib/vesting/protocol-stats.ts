@@ -924,7 +924,7 @@ async function getUpcomingUnlockGroupsAcrossUncached(
   // Per-protocol cap exists to prevent a single high-volume protocol
   // (Sablier or Hedgey can each have 100+ groups in a 30-day window)
   // from monopolising the displayed calendar. Previous value of 3 was
-  // far too aggressive — a homepage calendar showing "10 protocols × 3
+  // far too aggressive — a homepage calendar showing "11+ protocols × 3
   // unlocks each = 27 events" was reading as far smaller than the
   // protocol-page totals users were comparing it against. Setting it to
   // a fraction of the requested limit gives diversity without starving:
@@ -1304,6 +1304,7 @@ export function chainLabel(chainId: number): string {
     case 42161: return "Arbitrum";
     case 10:    return "Optimism";
     case 43114: return "Avalanche";
+    case 4663:  return "Robinhood Chain";
     case 101:   return "Solana";
     case 11155111: return "Sepolia";
     case 84532:    return "Base Sepolia";

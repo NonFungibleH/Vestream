@@ -42,7 +42,7 @@ export function ScanWalletCTA({ heading, sub, surface = "seo_page" }: Props) {
             {heading ?? "Track your own token vesting"}
           </p>
           <p className="text-sm mt-1 leading-relaxed" style={{ color: "#5b6470" }}>
-            {sub ?? "Paste any wallet — see every unlock across 10 protocols and 8 chains. Free, no sign-up."}
+            {sub ?? "Paste any wallet — see every unlock across 11+ protocols and 9+ chains. Free, no sign-up."}
           </p>
         </div>
         <form

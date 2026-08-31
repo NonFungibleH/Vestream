@@ -3864,7 +3864,7 @@ function DarkToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void })
 // ─── Chain / protocol label maps (used by WalletRow badges + loading skeleton) ─
 const CHAIN_LABELS: Record<string, string> = {
   "1": "ETH", "56": "BSC", "137": "Polygon", "8453": "Base",
-  "42161": "Arbitrum", "43114": "Avalanche", "101": "SOL", "11155111": "Sepolia",
+  "42161": "Arbitrum", "43114": "Avalanche", "4663": "Robinhood", "101": "SOL", "11155111": "Sepolia",
 };
 const PROTOCOL_LABELS: Record<string, string> = {
   "sablier": "Sablier", "uncx": "UNCX",

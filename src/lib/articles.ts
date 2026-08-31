@@ -80,7 +80,7 @@ const articles: Article[] = [
         { q: "How do I get alerted before a Team Finance unlock?", a: "Track the wallet on Vestream and enable unlock alerts — you'll get a push or email notification before each cliff or scheduled release, so you never miss a claim or get caught off guard by new supply hitting the market." },
       ] },
 
-      { type: "p", html: "Team Finance is one of 10 vesting protocols Vestream tracks. To see every unlock across all of them — Sablier, Hedgey, UNCX, Streamflow and more — start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
+      { type: "p", html: "Team Finance is one of 11+ vesting protocols Vestream tracks. To see every unlock across all of them — Sablier, Hedgey, UNCX, Streamflow and more — start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
     ],
   },
 
@@ -693,7 +693,7 @@ const articles: Article[] = [
       { type: "h2", text: "Track & explore token vesting on Vestream" },
       {
         type: "p",
-        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 10 protocols and 8 chains — no sign-up. Start here:",
+        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 11+ protocols and 9+ chains — no sign-up. Start here:",
       },
       {
         type: "ul",
@@ -4647,7 +4647,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📊",
         title: "Skip the 6-hour January reconciliation",
-        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 10 supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax – in about 60 seconds.",
+        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 11+ supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax – in about 60 seconds.",
       },
     ],
   },

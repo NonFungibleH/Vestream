@@ -57,7 +57,7 @@ const PROTOCOL_LABELS: Record<string, string> = {
 
 const CHAIN_LABELS: Record<number, string> = {
   1: "Ethereum", 56: "BNB", 137: "Polygon", 8453: "Base",
-  42161: "Arbitrum", 10: "Optimism", 101: "Solana",
+  42161: "Arbitrum", 10: "Optimism", 43114: "Avalanche", 4663: "Robinhood Chain", 101: "Solana",
 };
 
 /** Format a unix-second timestamp as an RFC 5545 UTC timestamp (`YYYYMMDDTHHMMSSZ`). */

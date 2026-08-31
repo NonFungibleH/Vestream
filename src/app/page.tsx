@@ -30,7 +30,7 @@ async function getHomepageLiveStats() {
     return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
   }
 
-  // Aggregate across all 10 protocols. Any single-protocol failure must not
+  // Aggregate across all 11+ protocols. Any single-protocol failure must not
   // sink the homepage render – silently fall back to nulls.
   try {
     const protocols = listProtocols();
@@ -122,7 +122,7 @@ const homepageJsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Track token vestings across 10+ protocols",
+        "Track token vestings across 11+ protocols",
         "Real-time unlock alerts via push and email",
         "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana",
         "P&L tracking and CSV export",
@@ -238,7 +238,7 @@ export default async function Home() {
               Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              10+ protocols. Eight chains. Mobile app and desktop dashboard.
+              11+ protocols. 9+ chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs – app badges lead (mobile is the primary product),
@@ -1219,7 +1219,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "10+ protocols scanned simultaneously - every one listed above",
+                "11+ protocols scanned simultaneously - every one listed above",
                 "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -1267,7 +1267,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 10 protocols &amp; 8 chains</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 11+ protocols &amp; 9+ chains</p>
           </div>
         </div>
       </section>
@@ -1756,7 +1756,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 10+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), and Jupiter Lock (time-released token vesting on Solana) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 11+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), Jupiter Lock (time-released token vesting on Solana), and HoodLock (Robinhood Chain token locker) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
@@ -1780,7 +1780,7 @@ export default async function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 10+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year – saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 11+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year – saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -1828,7 +1828,7 @@ export default async function Home() {
               {[
                 "3 wallets on the mobile app",
                 "Free web wallet scanner – any address",
-                "All 10+ vesting protocols",
+                "All 11+ vesting protocols",
                 "Claimable balance + unlock calendar",
                 "10 push alerts / month (resets monthly)",
                 "No email alerts (upgrade for email)",
@@ -1931,7 +1931,7 @@ export default async function Home() {
             style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>See every token you&rsquo;re owed.</h2>
           <p className="relative text-base mb-8 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-            Paste any wallet and Vestream returns every active vesting across 10+ protocols in seconds. No sign-up. No KYC.
+            Paste any wallet and Vestream returns every active vesting across 11+ protocols in seconds. No sign-up. No KYC.
           </p>
           <div className="relative flex justify-center w-full">
             <Link

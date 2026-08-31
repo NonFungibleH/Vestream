@@ -110,7 +110,7 @@ function runGated(protocol: AdapterId, run: () => Promise<number>): Promise<Inge
 /**
  * Scoped ingest for a single token: only run the ingestor(s) for the
  * token's protocol(s) on its chain. Much cheaper than the full fan-out
- * (one chain, 1–2 protocols vs 10 protocols × all chains) — this powers
+ * (one chain, 1–2 protocols vs 11+ protocols × all chains) — this powers
  * the per-token "Run report" button on the Tax page. The ingestors don't
  * filter by token address themselves, but the per-token history GET
  * filters on read; ingesting the user's other claims on the same

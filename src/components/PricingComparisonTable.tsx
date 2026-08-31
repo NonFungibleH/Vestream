@@ -1,7 +1,7 @@
 const ROWS: [string, string | boolean, string | boolean][] = [
   ["Wallet addresses",            "3",                  "10"],
   ["Auto-scan all chains",        true,                 true],
-  ["All 10+ vesting protocols",   true,                 true],
+  ["All 11+ vesting protocols",   true,                 true],
   ["Real-time mobile app",        true,                 true],
   ["Claimable balance tracking",  true,                 true],
   ["Unlock calendar",             true,                 true],

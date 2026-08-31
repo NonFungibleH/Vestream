@@ -72,7 +72,7 @@ import {
 //   CoinGecko pricing pipeline (UNCX, Unvest, Superfluid, Team Finance,
 //   PinkSale, Jupiter Lock). Results land in `protocolTvlSnapshots`.
 //
-// This page reads that table – one SELECT across all 10 protocols × up to 4
+// This page reads that table – one SELECT across all 11+ protocols × up to 4
 // chains each, sums per protocol for the headline, preserves per-chain
 // breakdown for the bar, and surfaces the `methodology` + `computedAt`
 // columns to the UI so every TVL number is traceable to how it was derived
@@ -254,7 +254,7 @@ const loadProtocolsData = unstable_cache(
 export const metadata: Metadata = {
   title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
   description:
-    "Live token unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Streamflow, Jupiter Lock and more — across 8 chains, EVM and Solana.",
+    "Live token unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Streamflow, Jupiter Lock and more — across 9+ chains, EVM and Solana.",
   alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
     title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
@@ -606,7 +606,7 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Paste any address – we&apos;ll scan all 10 protocols across EVM and Solana
+              Paste any address – we&apos;ll scan all 11+ protocols across EVM and Solana
               and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link
