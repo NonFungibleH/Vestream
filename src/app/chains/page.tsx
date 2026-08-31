@@ -113,6 +113,58 @@ export default async function ChainsIndexPage() {
         </div>
       </section>
 
+      {/* Chain × protocol TVL matrix */}
+      {o.protocolCols.length > 0 && (
+        <section className="px-4 md:px-8 pb-16 max-w-5xl mx-auto w-full">
+          <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1D20" }}>Vesting TVL by chain and protocol</h2>
+          <p className="text-[13px] mb-3" style={{ color: "#8B8E92" }}>How each protocol&rsquo;s vesting TVL breaks down across chains. Scroll to see every protocol.</p>
+          <div className="rounded-2xl overflow-x-auto" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
+            <table className="text-sm" style={{ borderCollapse: "collapse", minWidth: "100%" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
+                  <th className="text-left font-semibold px-3 py-3 sticky left-0 z-10 whitespace-nowrap" style={{ color: "#475569", background: "white" }}>Chain</th>
+                  {o.protocolCols.map((c) => (
+                    <th key={c.slug} className="text-right font-semibold px-3 py-3 whitespace-nowrap" style={{ color: "#475569" }}>{c.name}</th>
+                  ))}
+                  <th className="text-right font-bold px-3 py-3 whitespace-nowrap" style={{ color: "#1A1D20" }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {o.chains.map((ch) => {
+                  const brand = chainBrand(ch.chainId);
+                  const icon  = chainIcon(ch.chainId);
+                  return (
+                    <tr key={ch.chainId} style={{ borderBottom: "1px solid rgba(21,23,26,0.05)" }}>
+                      <td className="px-3 py-2.5 sticky left-0 z-10 whitespace-nowrap" style={{ background: "white" }}>
+                        <Link href={`/chains/${chainSlug(ch.chainId)}`} className="flex items-center gap-2 font-semibold hover:underline" style={{ color: "#1A1D20" }}>
+                          <span className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: brand.bg, border: `1px solid ${brand.border}` }}>
+                            {icon
+                              ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={icon} alt="" width={20} height={20} className="w-full h-full object-contain p-0.5" />
+                              : <span className="font-bold text-[10px]" style={{ color: brand.color }}>{brand.name[0]}</span>}
+                          </span>
+                          {brand.name}
+                        </Link>
+                      </td>
+                      {o.protocolCols.map((c) => {
+                        const v = ch.byProtocol[c.slug] ?? 0;
+                        return (
+                          <td key={c.slug} className="text-right px-3 py-2.5 tabular-nums whitespace-nowrap" style={{ color: v > 0 ? "#0F8A8A" : "#CBD5E1" }}>
+                            {v > 0 ? fmtUsd(v) : "—"}
+                          </td>
+                        );
+                      })}
+                      <td className="text-right px-3 py-2.5 font-bold tabular-nums whitespace-nowrap" style={{ color: "#0F8A8A" }}>
+                        {ch.tvlUsd > 0 ? fmtUsd(ch.tvlUsd) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <SiteFooter theme="light" />
     </div>
   );

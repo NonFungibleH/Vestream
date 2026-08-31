@@ -32,7 +32,7 @@ export interface ChainStats {
   streamCount:    number;
   tokenCount:     number;
   protocolSlugs:  string[];       // enabled protocols integrated on this chain
-  byProtocol:     Array<{ slug: string; name: string; tvlUsd: number }>; // TVL split, desc
+  byProtocol:     Array<{ slug: string; name: string; tvlUsd: number; streamCount: number }>; // per-protocol stats, TVL desc
   upcoming:       ChainUnlock[];  // ranked upcoming unlocks (priced desc)
   upcomingCount:  number;         // total upcoming unlocks in the window
   totalUpcomingUsd: number;
@@ -76,18 +76,22 @@ export async function getChainStats(
   const chainRows = snapshots.filter((r) => r.chainId === chainId);
   const protoMeta = new Map(listProtocols().map((p) => [p.slug, p.name]));
   const protoTvl = new Map<string, number>();
+  const protoStream = new Map<string, number>();
   let tvlUsd = 0, streamCount = 0, tokenCount = 0, freshest = 0;
   for (const r of chainRows) {
     tvlUsd += r.tvlUsd;
     streamCount += r.streamCount || 0;
     tokenCount += r.tokensTotal || 0;
-    if (r.tvlUsd > 0) protoTvl.set(r.protocol, (protoTvl.get(r.protocol) ?? 0) + r.tvlUsd);
+    protoTvl.set(r.protocol, (protoTvl.get(r.protocol) ?? 0) + r.tvlUsd);
+    protoStream.set(r.protocol, (protoStream.get(r.protocol) ?? 0) + (r.streamCount || 0));
     const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
     if (t > freshest) freshest = t;
   }
-  const byProtocol = [...protoTvl.entries()]
-    .map(([slug, v]) => ({ slug, name: protoMeta.get(slug) ?? slug, tvlUsd: v }))
-    .sort((a, b) => b.tvlUsd - a.tvlUsd);
+  // One entry per protocol that has a snapshot row on this chain (TVL and/or
+  // streams), so the page can show per-protocol TVL + stream counts.
+  const byProtocol = [...new Set([...protoTvl.keys(), ...protoStream.keys()])]
+    .map((slug) => ({ slug, name: protoMeta.get(slug) ?? slug, tvlUsd: protoTvl.get(slug) ?? 0, streamCount: protoStream.get(slug) ?? 0 }))
+    .sort((a, b) => b.tvlUsd - a.tvlUsd || b.streamCount - a.streamCount);
 
   // Upcoming unlocks on this chain over the window. Note getUnlocksInWindow's
   // 4th arg is adapterIds (string[]); chainIds is the 5th arg.
@@ -140,9 +144,13 @@ export interface ChainOverview {
   tvlUsd:        number;
   streamCount:   number;
   protocolCount: number;  // enabled protocols integrated on this chain (static)
+  byProtocol:    Record<string, number>;  // protocol slug -> TVL on this chain
 }
 export interface ChainsOverview {
   chains:       ChainOverview[];  // public chains, sorted by TVL desc
+  /** Protocol columns for the chain×protocol matrix, sorted by total TVL desc
+   *  (only protocols with any TVL). */
+  protocolCols: Array<{ slug: string; name: string; tvlUsd: number }>;
   totalTvl:     number;
   totalStreams: number;
   computedAt:   string;
@@ -156,7 +164,9 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
   const publicSet = new Set(publics);
 
   const protoCount = new Map<number, number>();
+  const protoName  = new Map<string, string>();
   for (const p of listProtocols()) {
+    protoName.set(p.slug, p.name);
     for (const c of p.chainIds) {
       if (publicSet.has(c as number)) protoCount.set(c as number, (protoCount.get(c as number) ?? 0) + 1);
     }
@@ -169,6 +179,8 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
 
   const tvl = new Map<number, number>();
   const streams = new Map<number, number>();
+  const cell = new Map<number, Record<string, number>>();   // chainId -> {slug: tvl}
+  const protoTotal = new Map<string, number>();             // slug -> total tvl across chains
   let totalTvl = 0, totalStreams = 0, freshest = 0;
   for (const r of snapshots) {
     if (!publicSet.has(r.chainId)) continue;
@@ -176,16 +188,33 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
     streams.set(r.chainId, (streams.get(r.chainId) ?? 0) + (r.streamCount || 0));
     totalTvl += r.tvlUsd;
     totalStreams += r.streamCount || 0;
+    if (r.tvlUsd > 0) {
+      const row = cell.get(r.chainId) ?? {};
+      row[r.protocol] = (row[r.protocol] ?? 0) + r.tvlUsd;
+      cell.set(r.chainId, row);
+      protoTotal.set(r.protocol, (protoTotal.get(r.protocol) ?? 0) + r.tvlUsd);
+    }
     const t = r.computedAt instanceof Date ? r.computedAt.getTime() : 0;
     if (t > freshest) freshest = t;
   }
 
+  const protocolCols = [...protoTotal.entries()]
+    .map(([slug, v]) => ({ slug, name: protoName.get(slug) ?? slug, tvlUsd: v }))
+    .sort((a, b) => b.tvlUsd - a.tvlUsd);
+
   const chains = publics
-    .map((id) => ({ chainId: id, tvlUsd: tvl.get(id) ?? 0, streamCount: streams.get(id) ?? 0, protocolCount: protoCount.get(id) ?? 0 }))
+    .map((id) => ({
+      chainId: id,
+      tvlUsd: tvl.get(id) ?? 0,
+      streamCount: streams.get(id) ?? 0,
+      protocolCount: protoCount.get(id) ?? 0,
+      byProtocol: cell.get(id) ?? {},
+    }))
     .sort((a, b) => b.tvlUsd - a.tvlUsd || b.protocolCount - a.protocolCount);
 
   return {
     chains,
+    protocolCols,
     totalTvl,
     totalStreams,
     computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),

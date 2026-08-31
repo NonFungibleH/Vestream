@@ -76,22 +76,6 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-function BarRow({ name, value, max, href }: { name: string; value: number; max: number; href?: string }) {
-  const pct = max > 0 ? Math.max(2, (value / max) * 100) : 0;
-  const label = href
-    ? <Link href={href} className="hover:underline" style={{ color: "#1A1D20" }}>{name}</Link>
-    : <span style={{ color: "#1A1D20" }}>{name}</span>;
-  return (
-    <div className="flex items-center gap-3 py-1.5">
-      <div className="w-28 sm:w-36 flex-shrink-0 text-sm font-medium truncate">{label}</div>
-      <div className="flex-1 h-5 rounded" style={{ background: "rgba(15,138,138,0.08)" }}>
-        <div className="h-5 rounded" style={{ width: `${pct}%`, background: "#0F8A8A" }} />
-      </div>
-      <div className="w-20 text-right text-sm tabular-nums font-semibold flex-shrink-0" style={{ color: "#0F8A8A" }}>{fmtUsd(value)}</div>
-    </div>
-  );
-}
-
 export default async function ChainPage({ params }: { params: Promise<{ chain: string }> }) {
   const { chain } = await params;
   const chainId = chainIdFromSlug(chain);
@@ -106,6 +90,12 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
 
   const s = await getChainStats(chainId, { topN: 15 });
   const protoMax = s.byProtocol[0]?.tvlUsd ?? 0;
+  // Per-protocol stats (TVL + streams on this chain), keyed by slug, so the
+  // static protocol list can be enriched + sorted by TVL.
+  const statBySlug = new Map(s.byProtocol.map((p) => [p.slug, p]));
+  const protocolsSorted = [...protocols].sort(
+    (a, b) => (statBySlug.get(b.slug)?.tvlUsd ?? 0) - (statBySlug.get(a.slug)?.tvlUsd ?? 0),
+  );
 
   const protoClause = `${n(protocols.length)} ${protocols.length === 1 ? "protocol" : "protocols"}`;
   const upClause = s.upcomingCount > 0
@@ -175,35 +165,41 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
         </div>
       </section>
 
-      {/* TVL split across protocols */}
-      {s.byProtocol.length > 0 && (
-        <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Vesting TVL by protocol on {brand.name}</h2>
-          <div className="rounded-2xl p-4 md:p-5" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
-            {s.byProtocol.map((p) => (
-              <BarRow key={p.slug} name={p.name} value={p.tvlUsd} max={protoMax} href={`/protocols/${p.slug}`} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Protocols on chain (static, always renders) */}
+      {/* Protocols on chain - rich list with per-protocol TVL + streams.
+          Static list (always renders); TVL/streams fill via ISR. Sorted by TVL. */}
       {protocols.length > 0 && (
         <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
           <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1D20" }}>Protocols on {brand.name}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {protocols.map((p) => {
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
+            {protocolsSorted.map((p, i) => {
               const pIcon = protocolIcon(p.slug);
+              const st = statBySlug.get(p.slug);
+              const tvl = st?.tvlUsd ?? 0;
+              const streams = st?.streamCount ?? 0;
+              const pct = protoMax > 0 && tvl > 0 ? Math.max(3, (tvl / protoMax) * 100) : 0;
               return (
-                <Link key={p.slug} href={`/protocols/${p.slug}`} className="flex items-center gap-3 p-4 rounded-2xl transition-colors" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
-                  <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: p.bg, border: `1px solid ${p.border}` }}>
+                <Link
+                  key={p.slug}
+                  href={`/protocols/${p.slug}`}
+                  className="flex items-center gap-3 md:gap-4 px-4 py-3"
+                  style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}
+                >
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                     {pIcon
-                      ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={pIcon} alt="" width={40} height={40} className="w-full h-full object-contain p-1.5" />
-                      : <span className="font-extrabold text-lg" style={{ color: p.color }}>{p.name[0]}</span>}
+                      ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={pIcon} alt="" width={36} height={36} className="w-full h-full object-contain p-1.5" />
+                      : <span className="font-extrabold text-base" style={{ color: p.color }}>{p.name[0]}</span>}
                   </span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-sm truncate" style={{ color: "#1A1D20" }}>{p.name}</p>
-                    <p className="text-xs truncate" style={{ color: "#64748b" }}>{p.tagline}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="font-bold text-sm truncate" style={{ color: "#1A1D20" }}>{p.name}</p>
+                      <p className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: tvl > 0 ? "#0F8A8A" : "#CBD5E1" }}>{tvl > 0 ? fmtUsd(tvl) : "—"}</p>
+                    </div>
+                    <div className="mt-1.5 h-2 rounded-full overflow-hidden" style={{ background: "rgba(15,138,138,0.08)" }}>
+                      <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: p.color }} />
+                    </div>
+                    <p className="text-[11px] mt-1 truncate" style={{ color: "#8B8E92" }}>
+                      {streams > 0 ? `${n(streams)} ${streams === 1 ? "stream" : "streams"}` : p.tagline}
+                    </p>
                   </div>
                 </Link>
               );
