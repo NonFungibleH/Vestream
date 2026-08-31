@@ -195,6 +195,30 @@ export function setLastGoodProtocolsData<T>(data: T): void {
   writeFallback(indexKey, data);
 }
 
+// ── /chains/[slug] ───────────────────────────────────────────────────────────
+
+const chainKey = (slug: string) => `${KEY_PREFIX}:chain:${slug}`;
+
+export function getLastGoodChainData<T>(slug: string): Promise<T | null> {
+  return readFallback<T>(chainKey(slug));
+}
+
+export function setLastGoodChainData<T>(slug: string, data: T): void {
+  writeFallback(chainKey(slug), data);
+}
+
+// ── /chains (index) ──────────────────────────────────────────────────────────
+
+const chainsIndexKey = `${KEY_PREFIX}:chains-index`;
+
+export function getLastGoodChainsData<T>(): Promise<T | null> {
+  return readFallback<T>(chainsIndexKey);
+}
+
+export function setLastGoodChainsData<T>(data: T): void {
+  writeFallback(chainsIndexKey, data);
+}
+
 // ── /status (durable L2 only) ───────────────────────────────────────────────────
 // /status keeps its own Upstash-SDK Redis as L1 (it's force-dynamic, so the
 // no-store SDK is safe there); these add a durable Postgres L2 underneath so a

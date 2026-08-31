@@ -6,14 +6,24 @@
 //   - getUnlocksInWindow() → upcoming unlocks on this chain (chainId-filtered)
 //   - listProtocols()      → which protocols are integrated on this chain
 //
-// Build-phase guarded (no reliable DB during `next build`) so ISR fills on the
-// first runtime request, same pattern as every other DB helper.
+// "Never empty" UX, same as /protocols: readAllSnapshots short-circuits to []
+// during `next build` (no reliable DB), which would prerender an empty page
+// until ISR backfilled it. So on a good render we persist the result to the
+// durable last-good store (page-data-fallback), and on an empty/degraded
+// render (build phase, or a snapshot-read timeout) we serve that last-good
+// instead of all-dashes. The store's READ deliberately runs at build too, so
+// the build bakes real data from the previous deploy's last-good.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { after } from "next/server";
 import { getUnlocksInWindow, enrichGroupsWithUsd, type WindowUnlockGroup } from "./unlock-windows";
 import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
-import { listProtocols, publicChainIds } from "../protocol-constants";
+import { listProtocols, publicChainIds, chainSlug } from "../protocol-constants";
 import { withTimeout } from "../with-timeout";
+import {
+  getLastGoodChainData, setLastGoodChainData,
+  getLastGoodChainsData, setLastGoodChainsData,
+} from "./page-data-fallback";
 
 export interface ChainUnlock {
   symbol:    string | null;
@@ -41,12 +51,6 @@ export interface ChainStats {
   isEmpty:        boolean;
 }
 
-const EMPTY = (chainId: number): ChainStats => ({
-  chainId, tvlUsd: 0, streamCount: 0, tokenCount: 0, protocolSlugs: [], byProtocol: [],
-  nextUnlocks: [], biggestUnlocks: [], upcomingCount: 0, totalUpcomingUsd: 0,
-  computedAt: new Date(0).toISOString(), isEmpty: true,
-});
-
 // Same ranking intent as the monthly report: priced desc, then unpriced by amount.
 function rankEvents(a: WindowUnlockGroup, b: WindowUnlockGroup): number {
   const au = a.usdValue ?? null, bu = b.usdValue ?? null;
@@ -62,8 +66,12 @@ export async function getChainStats(
   chainId: number,
   opts: { days?: number } = {},
 ): Promise<ChainStats> {
-  if (process.env.NEXT_PHASE === "phase-production-build") return EMPTY(chainId);
-
+  // NOTE: no build-phase EMPTY guard. readAllSnapshots (via withTimeout) and the
+  // unlock query both fall back gracefully instead of throwing, so we let the
+  // build prerender REAL data (TVL, streams, per-protocol) rather than serving
+  // an empty page until ISR regenerates. Only the expensive unlock pricing is
+  // skipped at build (below) to keep build times sane; it fills via ISR.
+  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
   const days = opts.days ?? 90;
 
   // Protocols integrated on this chain (enabled only).
@@ -99,12 +107,15 @@ export async function getChainStats(
   const endSec = nowSec + days * 86_400;
   let groups: WindowUnlockGroup[] = [];
   let upcomingCount = 0;
-  try {
-    const win = await getUnlocksInWindow(nowSec, endSec, 5000, undefined, [chainId]);
-    groups = win.groups;
-    upcomingCount = win.stats.unlockCount || win.groups.length;
-  } catch (err) {
-    console.error(`[chain-stats/${chainId}] unlocks:`, err);
+  // Skip the (heavy) unlock-window pricing at build time only; it fills via ISR.
+  if (!isBuild) {
+    try {
+      const win = await getUnlocksInWindow(nowSec, endSec, 5000, undefined, [chainId]);
+      groups = win.groups;
+      upcomingCount = win.stats.unlockCount || win.groups.length;
+    } catch (err) {
+      console.error(`[chain-stats/${chainId}] unlocks:`, err);
+    }
   }
 
   const mapU = (g: WindowUnlockGroup): ChainUnlock => ({
@@ -123,9 +134,12 @@ export async function getChainStats(
     biggestUnlocks = [...priced].sort(rankEvents).slice(0, 10).map(mapU);
   }
 
+  // "Has data" = the snapshot read actually returned rows for this chain. The
+  // static protocol list is always populated, so it can't be the signal.
+  const hasData = chainRows.length > 0;
   const isEmpty = chainRows.length === 0 && groups.length === 0 && protocolSlugs.length === 0;
 
-  return {
+  const result: ChainStats = {
     chainId,
     tvlUsd,
     streamCount,
@@ -139,6 +153,21 @@ export async function getChainStats(
     computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),
     isEmpty,
   };
+
+  const slug = chainSlug(chainId);
+  // No slug (unknown chain) → no stable last-good key; just return what we have.
+  if (!slug) return result;
+  if (hasData) {
+    // Good render — keep the durable last-good fresh. In after() so the
+    // fire-and-forget write can't flip this ISR render dynamic.
+    after(() => setLastGoodChainData(slug, result));
+    return result;
+  }
+  // Empty/degraded (build phase or snapshot timeout) — serve last-good if we
+  // have one, else the genuinely-empty result (only until the first good
+  // render populates the store).
+  const lastGood = await getLastGoodChainData<ChainStats>(slug);
+  return lastGood ?? result;
 }
 
 // ── Chains index overview ────────────────────────────────────────────────────
@@ -176,10 +205,10 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
     }
   }
 
-  const build = process.env.NEXT_PHASE === "phase-production-build";
-  const snapshots = build
-    ? [] as ProtocolSnapshotRow[]
-    : await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chains:snapshots");
+  // No build-phase guard: readAllSnapshots falls back to [] via withTimeout
+  // rather than throwing, so the build prerenders the real leaderboard instead
+  // of an empty page that ISR has to backfill.
+  const snapshots = await withTimeout(readAllSnapshots(), 8_000, [] as ProtocolSnapshotRow[], "chains:snapshots");
 
   const tvl = new Map<number, number>();
   const streams = new Map<number, number>();
@@ -216,11 +245,21 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
     }))
     .sort((a, b) => b.tvlUsd - a.tvlUsd || b.protocolCount - a.protocolCount);
 
-  return {
+  const result: ChainsOverview = {
     chains,
     protocolCols,
     totalTvl,
     totalStreams,
     computedAt: freshest ? new Date(freshest).toISOString() : new Date().toISOString(),
   };
+
+  // Same last-good net as getChainStats: persist good renders, serve last-good
+  // on an empty snapshot read (build phase / timeout) so the index is never
+  // all-dashes on landing.
+  if (snapshots.length > 0) {
+    after(() => setLastGoodChainsData(result));
+    return result;
+  }
+  const lastGood = await getLastGoodChainsData<ChainsOverview>();
+  return lastGood ?? result;
 }
