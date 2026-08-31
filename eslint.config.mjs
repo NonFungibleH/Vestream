@@ -12,6 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Design sync artifacts (added in d87a81d): a vendored JS bundle
+    // (_ds_bundle.js embeds React's own reconciler internals) + generated
+    // .d.ts files. Linting them produced hundreds of errors — no-this-alias,
+    // rules-of-hooks on React internals, empty-interface .d.ts — that broke
+    // CI's Lint step. These are generated/vendored; never lint them.
+    "ds-bundle/**",
+    ".ds-sync/**",
+    "types/**",
   ]),
   {
     // eslint-plugin-react-hooks v6 (shipped with Next 16.2+) introduced two

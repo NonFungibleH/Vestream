@@ -12,7 +12,7 @@
 
 import { parseAbi, getAddress, type GetLogsReturnType } from "viem";
 import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
-import { CHAIN_IDS, type SupportedChainId } from "../types";
+import { type SupportedChainId } from "../types";
 import { makeFallbackClient } from "../rpc";
 import { HOODLOCK_CONTRACTS, HOODLOCK_GENESIS_BLOCK, readLocks, fetchTokenMeta } from "../adapters/hoodlock";
 

@@ -10,7 +10,7 @@
 // and drops to 0 once unlocked (vested → claimable, no longer locked TVL).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CHAIN_IDS, type SupportedChainId } from "../types";
+import { type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 import { makeFallbackClient } from "../rpc";
 import {
