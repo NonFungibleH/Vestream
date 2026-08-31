@@ -1,11 +1,20 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   listProtocols, protocolIcon,
   publicChainIds, chainSlug, chainBrand, chainIcon,
 } from "@/lib/protocol-constants";
+import { GlobalSearchOverlay } from "@/components/GlobalSearchOverlay";
+
+function SearchIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+    </svg>
+  );
+}
 
 interface Props {
   /**
@@ -87,6 +96,23 @@ function Caret() {
 export function SiteNav({ theme = "light" }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global shortcuts: ⌘K / Ctrl+K anywhere, or "/" when not typing in a field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      } else if (e.key === "/" && !searchOpen) {
+        const el = document.activeElement as HTMLElement | null;
+        const typing = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+        if (!typing) { e.preventDefault(); setSearchOpen(true); }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchOpen]);
 
   const t = THEME[theme];
   const { navBg, navBorder, linkBase, linkActive, menuBg, menuShadow, mobileBackdropBg, mobileActiveBg, itemText, logo } = t;
@@ -177,6 +203,16 @@ export function SiteNav({ theme = "light" }: Props) {
             })}
           </div>
 
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search tokens"
+            className="inline-flex items-center gap-2 text-sm px-3 rounded-xl transition-colors hover:opacity-80 min-h-[40px]"
+            style={{ color: linkBase }}
+          >
+            <SearchIcon />
+            <span className="hidden lg:inline text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: mobileActiveBg, color: linkBase }}>⌘K</span>
+          </button>
+
           <Link
             href="/login"
             className="text-sm font-medium px-3 rounded-xl transition-colors hover:opacity-80 inline-flex items-center min-h-[40px]"
@@ -194,8 +230,16 @@ export function SiteNav({ theme = "light" }: Props) {
           </a>
         </div>
 
-        {/* Mobile right - CTA + hamburger */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Mobile right - search + CTA + hamburger */}
+        <div className="flex md:hidden items-center gap-1">
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search tokens"
+            className="w-10 h-10 flex items-center justify-center rounded-lg"
+            style={{ color: linkBase }}
+          >
+            <SearchIcon />
+          </button>
           <a
             href={ctaHref}
             className="text-xs font-semibold px-3 rounded-xl transition-all duration-150 hover:opacity-90 inline-flex items-center min-h-[40px]"
@@ -307,6 +351,8 @@ export function SiteNav({ theme = "light" }: Props) {
           onClick={() => setOpen(false)}
         />
       )}
+
+      <GlobalSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
