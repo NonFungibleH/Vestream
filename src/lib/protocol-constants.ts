@@ -638,6 +638,7 @@ const CHAIN_BASE: Record<number, { color: string; name: string }> = {
   42161:    { color: "#12AAFF", name: "Arbitrum" },
   10:       { color: "#FF0420", name: "Optimism" },
   43114:    { color: "#E84142", name: "Avalanche" },
+  4663:     { color: "#5B8C00", name: "Robinhood Chain" },
   101:      { color: "#9945FF", name: "Solana" },
   11155111: { color: "#B8BABD", name: "Sepolia" },
   84532:    { color: "#9AA0A6", name: "Base Sepolia" },
@@ -666,6 +667,7 @@ const CHAIN_ICON_FILE: Record<number, string> = {
   42161: "arbitrum",
   10:    "optimism",
   43114: "avalanche",
+  4663:  "robinhood",
   101:   "solana",
 };
 

@@ -511,7 +511,8 @@ export default async function Home() {
               { name: "LlamaPay",     color: "#1FBE9A", bg: "rgba(31,190,154,0.07)", border: "rgba(31,190,154,0.16)", icon: "/protocols/icons/llamapay.png"  },
               { name: "HoodLock",     color: "#00C805", bg: "rgba(0,200,5,0.07)",    border: "rgba(0,200,5,0.16)",    icon: "/protocols/icons/hoodlock.png"  },
             ].map((p) => (
-              <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+              <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
                   {p.icon ? (
@@ -522,7 +523,7 @@ export default async function Home() {
                   )}
                 </div>
                 <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
-              </div>
+              </Link>
             ))}
           </div>
           {/* Row 2 – 5 cards (Unvest / Superfluid / PinkSale / Streamflow /
@@ -538,7 +539,8 @@ export default async function Home() {
               { name: "Jupiter Lock", color: "#14B8A6", bg: "rgba(20,184,166,0.08)", border: "rgba(20,184,166,0.22)", icon: "/protocols/icons/jupiter-lock.png"  },
               { name: "Team Finance", color: "#2563EB", bg: "rgba(37,99,235,0.07)", border: "rgba(37,99,235,0.16)", icon: "/protocols/icons/team-finance.png" },
             ].map((p) => (
-              <div key={p.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+              <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
                 style={{ background: p.bg, border: `1px solid ${p.border}` }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
                   {p.icon ? (
@@ -549,7 +551,7 @@ export default async function Home() {
                   )}
                 </div>
                 <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
-              </div>
+              </Link>
             ))}
           </div>
           {/* Eyebrow heading above the chains – mirrors "Integrated with" above
@@ -566,6 +568,7 @@ export default async function Home() {
               { name: "Optimism",  color: "#FF0420", icon: "/chains/icons/optimism.png" },
               { name: "Avalanche", color: "#E84142", icon: "/chains/icons/avalanche.png" },
               { name: "Solana",    color: "#9945FF", icon: "/chains/icons/solana.png" },
+              { name: "Robinhood", color: "#5B8C00", icon: "/chains/icons/robinhood.png" },
             ].map((c) => (
               <div key={c.name} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full"
                 style={{ background: `${c.color}12`, border: `1px solid ${c.color}2e` }}>

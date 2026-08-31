@@ -31,7 +31,7 @@ const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", 
 // Homepage "Available on" order: Ethereum, BNB, Base, Polygon, Arbitrum,
 // Optimism, Avalanche, Solana. (The old literal list here was missing
 // Avalanche while the copy above promised 8 chains.)
-const CHAIN_IDS = [1, 56, 8453, 137, 42161, 10, 43114, 101] as const;
+const CHAIN_IDS = [1, 56, 8453, 137, 42161, 10, 43114, 4663, 101] as const;
 
 // 2026-05-17 SEO/AI-search pass: HowTo + BreadcrumbList JSON-LD.
 // This page is the canonical landing target for "how do I find my vesting
