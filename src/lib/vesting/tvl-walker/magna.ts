@@ -162,10 +162,17 @@ export async function walkMagna(chainId: SupportedChainId): Promise<WalkerResult
   const errors: string[] = [];
 
   // ── Discovery: seed ∪ DB registry ∪ recent-window scan ─────────────────────
-  const vesters = new Set<string>(
-    (MAGNA_SEED_VESTERS[chainId as number] ?? []).map((a) => a.toLowerCase()),
-  );
-  for (const a of await readRegistry(chainId as number)) vesters.add(a.toLowerCase());
+  const seeded = (MAGNA_SEED_VESTERS[chainId as number] ?? []).map((a) => a.toLowerCase());
+  const vesters = new Set<string>(seeded);
+  const known = await readRegistry(chainId as number);
+  for (const a of known) vesters.add(a.toLowerCase());
+
+  // Persist the static seed into the registry on first run, so downstream
+  // consumers (the Phase 2 claim indexer) can rely on the DB alone rather than
+  // re-importing the seed file. onConflictDoNothing makes this a no-op after.
+  if (seeded.length > known.length) {
+    writeRegistry(chainId as number, seeded.map((a) => ({ address: a, version: "seed", block: 0 })));
+  }
 
   try {
     const latest = await withRetry(() => client.getBlockNumber());

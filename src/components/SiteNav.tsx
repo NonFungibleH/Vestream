@@ -210,7 +210,6 @@ export function SiteNav({ theme = "light" }: Props) {
             style={{ color: linkBase }}
           >
             <SearchIcon />
-            <span className="hidden lg:inline text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: mobileActiveBg, color: linkBase }}>⌘K</span>
           </button>
 
           <Link

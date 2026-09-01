@@ -604,6 +604,33 @@ export default async function ProtocolLandingPage(
       </section>
 
       {/* ── Live stat strip ──────────────────────────────────────────────── */}
+      {/* WIP variant: for protocols whose per-wallet indexing is still rolling
+          out (merkle-based, e.g. Magna — claim indexer ships in a later phase),
+          the cache-derived cells would all read "–" and look broken. Show only
+          the populated stat plus an honest rolling-out note instead. */}
+      {!hasData && meta.perWalletIndexingPending ? (
+        <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
+          <div
+            className="rounded-2xl px-4 py-5 md:px-8 md:py-6 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 text-center"
+            style={{ background: "white", border: `1px solid ${meta.border}`, boxShadow: `0 2px 10px ${accentWash}` }}
+          >
+            <Stat label="Chains covered" value={meta.chainIds.length.toString()} color={meta.color} />
+            <div className="max-w-md">
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-2"
+                style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#d97706" }}
+              >
+                Per-wallet indexing rolling out
+              </span>
+              <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
+                Locked value below is live from {meta.name}&apos;s on-chain escrow contracts.
+                Individual stream and recipient stats arrive as our {meta.name} claim
+                indexer rolls out.
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : (
       <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto">
         <div
           className="rounded-2xl px-4 py-5 md:px-8 md:py-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-2"
@@ -661,6 +688,7 @@ export default async function ProtocolLandingPage(
           </p>
         )}
       </section>
+      )}
 
       {/* ── TVL by chain ────────────────────────────────────────────────── */}
       {tvlPerChain.length > 0 && (() => {

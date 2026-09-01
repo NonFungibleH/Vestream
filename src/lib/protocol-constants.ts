@@ -52,6 +52,13 @@ export interface ProtocolMeta {
   /** Testimonials – empty array renders a "collecting" call-out instead. */
   testimonials: Testimonial[];
   /**
+   * True while per-wallet stream indexing is still rolling out for this
+   * protocol (e.g. a merkle-based protocol whose claim indexer hasn't shipped
+   * yet). The protocol page then hides the empty cache-derived stat cells and
+   * shows an honest "rolling out" note instead of the seed-scanner copy.
+   */
+  perWalletIndexingPending?: boolean;
+  /**
    * Optional: use an external TVL source instead of computing from the
    * local cache. Set for protocols where we don't run our own seeder (e.g.
    * Streamflow → DefiLlama). When set, the /protocols card displays this
@@ -570,6 +577,9 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     relatedSlugs: ["team-finance", "sablier", "streamflow"],
     testimonials: [],
     category: "vesting",
+    // Per-wallet stream indexing ships with the Phase 2 claim indexer — until
+    // then the cache-derived stat strip has nothing to show for Magna.
+    perWalletIndexingPending: true,
     // No externalTvl: DefiLlama has no Magna entry. Self-indexed via
     // tvl-walker/magna.ts — factory event scan → vester escrow balances —
     // priced through the standard pipeline (contract-reads-v1). NOTE: Magna

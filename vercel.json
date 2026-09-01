@@ -127,13 +127,44 @@
     {
       "path": "/api/cron/webhook-deliveries",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=1",
+      "schedule": "3 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=8453",
+      "schedule": "11 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=56",
+      "schedule": "19 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=137",
+      "schedule": "27 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=42161",
+      "schedule": "35 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=10",
+      "schedule": "43 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=magna&chainId=43114",
+      "schedule": "51 * * * *"
     }
   ],
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
       "headers": [
-        { "key": "Content-Type", "value": "application/json" }
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
       ]
     }
   ]
