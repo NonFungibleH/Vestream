@@ -128,12 +128,24 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     ],
     relatedSlugs: ["superfluid", "hedgey", "uncx"],
     testimonials: [],
-    // DefiLlama publishes per-chain `chainTvls.{Chain}-vesting` breakdowns;
-    // runDefiLlamaSnapshot filters to chains we index (CHAIN_NAME_TO_ID in
-    // tvl-snapshot.ts) and sums. Apples-to-apples with our self-indexed
-    // protocols, but using DefiLlama's curated pricing – orders of
-    // magnitude more accurate than DexScreener-only at the per-token level.
-    externalTvl: { source: "defillama", slug: "sablier-lockup" },
+    // SELF-INDEXED (2026-09-01). No externalTvl → runWalkerSnapshot dispatches
+    // to walkSablier, which paginates the Envio LockupStream entity per chain.
+    //
+    // walkSablier has existed for months but was dead code: externalTvl was
+    // still set here, so runDefiLlamaSnapshot always won. The passthrough was
+    // badly wrong. DefiLlama put Sablier's Arbitrum-vesting at $6.98B — 94% of
+    // their whole $7.4B headline — while the walker measures $16.4M on that
+    // chain, a ~425x overstatement, and their row has been broken since May
+    // ($4.93B → $7.09B → $6.98B). Our per-chain cap only masked it, clamping to
+    // a flat $1.00B that looked like real TVL and made Arbitrum read as the #2
+    // vesting chain on the site.
+    //
+    // Measured walker totals across the 7 chains we index: ETH $66.2M, Base
+    // $52.0M, Arbitrum $16.4M, BSC $13.7M, OP $1.4M, Polygon $0.8M, AVAX $0 —
+    // $150.4M total, vs the $1.00B previously displayed. Self-indexing also
+    // puts Sablier through the same per-token confidence bands and ceilings as
+    // UNCX/Team Finance, and makes the number one a user could reproduce by
+    // summing their own wallets in our app.
   },
 
   // Sablier Flow – distinct product from Sablier Lockup. Per-second
