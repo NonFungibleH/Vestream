@@ -36,6 +36,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
+import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { Provenance } from "@/components/Provenance";
 import { PROTOCOLS } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
@@ -363,6 +364,21 @@ export default async function TokenPage(
     : impactRisk === "Medium" ? { bg: "rgba(240,153,46,0.12)", fg: "#C77B18" }
       : { bg: "rgba(45,179,106,0.12)", fg: "#1F8F52" };
 
+  // ── Holder concentration (differentiator) ────────────────────────────────
+  // `recipients` IS the top-N list (getTokenRecipients(…, 10)), so summing it
+  // against the token's total locked gives "top N hold X%" for free — no extra
+  // query. This is the number no schedule-scraping competitor can produce:
+  // they index a project's PUBLISHED tokenomics, we index who actually holds
+  // the position on-chain. Concentration is the best cheap proxy for whether
+  // an unlock lands on a few wallets that can move the market or is spread
+  // thin across many.
+  const topNShare = (() => {
+    if (!overview || overview.lockedTokensWhole <= 0 || recipients.length === 0) return null;
+    const top = recipients.reduce((sum, r) => sum + r.lockedTokensWhole, 0);
+    const pct = (top / overview.lockedTokensWhole) * 100;
+    return Number.isFinite(pct) ? Math.min(100, pct) : null;
+  })();
+
   // Pick the dominant protocol for this token (the one with the largest locked
   // share). Used as the third breadcrumb so visitors landing on a token page
   // can navigate up to the protocol whose schedule dominates that token's
@@ -578,6 +594,36 @@ export default async function TokenPage(
         </section>
       )}
 
+      {/* ── Next-unlock countdown ──────────────────────────────────────────
+          Deliberately NOT inside the "Next-unlock impact" card below: that
+          card is gated on price/volume data, so tokens without market data
+          (plenty of pre-listing vesting tokens) would lose the countdown
+          entirely. A countdown only needs a date, which we always have. The
+          absolute date sits beside it so the block still reads correctly
+          before the client island mounts, and for crawlers. ─────────────── */}
+      {hasVesting && nextUnlockEvt && (
+        <section className="px-4 md:px-8 pb-6 max-w-5xl mx-auto">
+          <div
+            className="rounded-2xl px-4 py-3 md:px-5 md:py-4 flex items-center justify-between gap-4 flex-wrap"
+            style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#8B8E92" }}>
+                Next {symbol} unlock
+              </p>
+              <p className="text-sm font-bold" style={{ color: "#1A1D20" }}>
+                {fmtTokens(nextUnlockEvt.tokensWhole)} {symbol}
+                {nextUnlockUsd != null && <span style={{ color: "#8B8E92" }}> · {fmtUsd(nextUnlockUsd)}</span>}
+                <span className="font-medium" style={{ color: "#8B8E92" }}>
+                  {" · "}{new Date(nextUnlockEvt.timestamp * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
+                </span>
+              </p>
+            </div>
+            <UnlockCountdown unlockTimeSec={nextUnlockEvt.timestamp} />
+          </div>
+        </section>
+      )}
+
       {/* ──────────────────────────────────────────────────────────────────
           Page ordering rationale – vesting-first, market-data later.
           Vestream is a vesting platform first; price/liquidity are
@@ -633,7 +679,13 @@ export default async function TokenPage(
           <HeroStat
             label="Recipients"
             value={overview ? overview.recipientCount.toLocaleString() : "–"}
-            sub={overview ? `${overview.streamCount} active streams` : ""}
+            sub={overview
+              ? (topNShare != null
+                  // Concentration first — it's the more decision-useful of the
+                  // two and the stat competitors can't compute.
+                  ? `top ${recipients.length} hold ${topNShare.toFixed(0)}% · ${overview.streamCount} streams`
+                  : `${overview.streamCount} active streams`)
+              : ""}
             accent="#0BA0CB"
           />
         </div>
@@ -649,7 +701,7 @@ export default async function TokenPage(
                 {impactRisk} sell-pressure risk
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {nextUnlockUsd != null && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Next unlock value</p>
@@ -667,6 +719,13 @@ export default async function TokenPage(
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Share of market cap</p>
                   <p className="text-lg font-bold tabular-nums" style={{ color: "#1A1D20" }}>{nextUnlockMcapShare.toFixed(1)}%</p>
+                </div>
+              )}
+              {topNShare != null && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8B8E92" }}>Holder concentration</p>
+                  <p className="text-lg font-bold tabular-nums" style={{ color: "#1A1D20" }}>{topNShare.toFixed(0)}%</p>
+                  <p className="text-[10px]" style={{ color: "#B8BABD" }}>held by top {recipients.length}</p>
                 </div>
               )}
             </div>
