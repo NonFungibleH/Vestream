@@ -52,15 +52,26 @@ type Summary = WalkerSnapshotSummary | DefiLlamaSnapshotSummary;
  * keyed by adapter ID; the /protocols page already aggregates rows whose
  * `protocol` column appears in the meta's `adapterIds` array.
  */
-async function snapshotProtocol(p: ProtocolMeta): Promise<{ slug: string; kind: "defillama" | "walker"; summary: Summary }> {
+async function snapshotProtocol(
+  p: ProtocolMeta,
+  chainFilter: Set<number> | null,
+): Promise<{ slug: string; kind: "defillama" | "walker"; summary: Summary }> {
   if (p.externalTvl) {
     const summary = await runDefiLlamaSnapshot(p.slug, p.externalTvl.slug, p.externalTvl.category);
     return { slug: p.slug, kind: "defillama", summary };
   }
 
   // Walker mode — fan out across every adapter ID, collect results.
+  // chainFilter narrows which chains are walked. Needed because a protocol
+  // with many heavy chains cannot finish inside one 300s invocation: Sablier
+  // walks 48k-183k streams PER CHAIN across 7 chains, and a full run only got
+  // through Optimism before the function was killed, leaving every other chain
+  // on its stale row forever. Same shape as the seed-cache group split.
+  const chainIds = chainFilter
+    ? p.chainIds.filter((c) => chainFilter.has(c as number))
+    : p.chainIds;
   const perAdapter = await Promise.all(
-    p.adapterIds.map((adapterId) => runWalkerSnapshot(adapterId, p.chainIds)),
+    p.adapterIds.map((adapterId) => runWalkerSnapshot(adapterId, chainIds)),
   );
 
   // Combine into a single summary that surfaces aggregate health for the
@@ -78,7 +89,7 @@ async function snapshotProtocol(p: ProtocolMeta): Promise<{ slug: string; kind: 
   return { slug: p.slug, kind: "walker", summary: combined };
 }
 
-async function runAll(protocolFilter: string | null): Promise<{
+async function runAll(protocolFilter: string | null, chainFilter: Set<number> | null): Promise<{
   runs:     Array<{ slug: string; kind: string; ok: boolean; summary: Summary }>;
   totalUsd: number;
   durationMs: number;
@@ -129,7 +140,7 @@ async function runAll(protocolFilter: string | null): Promise<{
       await new Promise((r) => setTimeout(r, INTER_PROTOCOL_DELAY_MS));
     }
     try {
-      const result = await snapshotProtocol(p);
+      const result = await snapshotProtocol(p, chainFilter);
       const ok = "error" in result.summary
         ? result.summary.error === null
         : result.summary.chainsOk > 0;
@@ -182,6 +193,13 @@ async function handle(req: NextRequest) {
   }
 
   const protocolFilter = req.nextUrl.searchParams.get("protocol");
+  // ?chainId=1,56 — walker mode only; narrows which chains are snapshotted so
+  // a heavy protocol can be split across cron slots or driven one chain at a
+  // time during a backfill.
+  const chainParam = req.nextUrl.searchParams.get("chainId");
+  const chainFilter = chainParam
+    ? new Set(chainParam.split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n)))
+    : null;
   const background     = req.nextUrl.searchParams.get("background") === "true";
 
   // Background mode — useful for manual invocations of slow walkers (PinkSale
@@ -189,7 +207,7 @@ async function handle(req: NextRequest) {
   // 5 minutes. Returns immediately; work continues via after().
   if (background) {
     after(async () => {
-      const result = await runAll(protocolFilter);
+      const result = await runAll(protocolFilter, chainFilter);
       console.log(
         `[cron/tvl-snapshot] background run complete in ${(result.durationMs / 1000).toFixed(1)}s, `
         + `totalUsd=$${result.totalUsd.toLocaleString()}, `
@@ -204,7 +222,7 @@ async function handle(req: NextRequest) {
     }, { status: 202 });
   }
 
-  const result = await runAll(protocolFilter);
+  const result = await runAll(protocolFilter, chainFilter);
   return NextResponse.json({
     ok:         true,
     filter:     protocolFilter,

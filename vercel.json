@@ -5,6 +5,22 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=1,43114,10",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=8453",
+      "schedule": "15 2 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=137",
+      "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=56,42161",
+      "schedule": "45 2 * * *"
+    },
+    {
       "path": "/api/cron/tvl-snapshot?protocol=pinksale",
       "schedule": "15 3 * * *"
     },
@@ -17,7 +33,7 @@
       "schedule": "5 4 * * *"
     },
     {
-      "path": "/api/cron/tvl-snapshot?protocol=sablier,sablier-flow,hedgey,streamflow,llamapay",
+      "path": "/api/cron/tvl-snapshot?protocol=sablier-flow,hedgey,streamflow,llamapay",
       "schedule": "20 4 * * *"
     },
     {
