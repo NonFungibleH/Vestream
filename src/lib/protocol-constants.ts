@@ -577,9 +577,6 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     relatedSlugs: ["team-finance", "sablier", "streamflow"],
     testimonials: [],
     category: "vesting",
-    // Per-wallet stream indexing ships with the Phase 2 claim indexer — until
-    // then the cache-derived stat strip has nothing to show for Magna.
-    perWalletIndexingPending: true,
     // No externalTvl: DefiLlama has no Magna entry. Self-indexed via
     // tvl-walker/magna.ts — factory event scan → vester escrow balances —
     // priced through the standard pipeline (contract-reads-v1). NOTE: Magna
