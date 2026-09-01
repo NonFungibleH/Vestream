@@ -1432,15 +1432,25 @@ function chunk<T>(arr: T[], size: number): T[][] {
  * Timing out into a normal error result breaks the loop: the attempt IS
  * recorded, the cell shows its error on /status instead of silently aging,
  * and the job sorts to the back so everything else gets a turn.
+ *
+ * The cap is the run's REMAINING budget, not a flat number. A flat cap would
+ * re-break exactly what the dedicated-group split was for: Team Finance is
+ * genuinely slow (its per-wallet fetch loop, not discovery — the Squid answers
+ * in <100ms), so it was given its own group precisely so it could use a whole
+ * budget. A short fixed cap would hand it 240s and then refuse to let it spend
+ * more than a fraction. Deadline-based keeps both properties: a job alone in
+ * its group may use the entire budget, and every job still resolves before the
+ * lambda is killed, so the attempt row always lands.
  */
-const JOB_TIMEOUT_MS = 90_000;
+const MIN_JOB_TIMEOUT_MS = 30_000;
 
-function withJobTimeout(job: SeedJob, p: Promise<SeedRunResult>): Promise<SeedRunResult> {
+function withJobTimeout(job: SeedJob, p: Promise<SeedRunResult>, budgetLeftMs: number): Promise<SeedRunResult> {
+  const capMs = Math.max(MIN_JOB_TIMEOUT_MS, budgetLeftMs);
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
-      console.error(`[seeder:${job.adapterId}/${job.chainId}] timed out after ${JOB_TIMEOUT_MS}ms`);
-      resolve(emptyResult(job, `job timed out after ${JOB_TIMEOUT_MS / 1000}s`));
-    }, JOB_TIMEOUT_MS);
+      console.error(`[seeder:${job.adapterId}/${job.chainId}] timed out after ${capMs}ms`);
+      resolve(emptyResult(job, `job timed out after ${Math.round(capMs / 1000)}s`));
+    }, capMs);
     p.then(
       (r)   => { clearTimeout(timer); resolve(r); },
       (err) => { clearTimeout(timer); resolve(emptyResult(job, String(err))); },
@@ -1787,7 +1797,8 @@ export async function seedAll(
       break;
     }
     const batch   = jobs.slice(i, i + PARALLEL);
-    const batchR  = await Promise.all(batch.map((j) => withJobTimeout(j, runJob(j, limit))));
+    const budgetLeft = SEED_BUDGET_MS - (Date.now() - seedStartedAt);
+    const batchR  = await Promise.all(batch.map((j) => withJobTimeout(j, runJob(j, limit), budgetLeft)));
     results.push(...batchR);
     // Record one seeder_state row per job — success or failure — so the
     // admin /status grid can show "checked Xh ago" for every cell even
