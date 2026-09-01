@@ -36,6 +36,8 @@ export interface RunResult {
   durationMs:         number;
   skipped?:           "caught-up" | "no-client";
   error?:             string;
+  /** Consecutive windows scanned this invocation (catch-up loop). */
+  windows?:           number;
 }
 
 export async function runIndexer(indexer: Indexer): Promise<RunResult> {
@@ -71,7 +73,13 @@ export async function runIndexer(indexer: Indexer): Promise<RunResult> {
   // tick gets stuck scanning from block 1 forever — Hedgey/137 was hitting
   // this (2026-05-26): fromBlock=0x1 instead of the configured 71_700_000.
   const existingBlock = existing[0]?.lastConfirmedBlock ?? 0;
-  const lastConfirmed = existingBlock > 0
+  // Clamp to genesis. A stored cursor BELOW the protocol's genesis block is
+  // always junk — either the touchAttempt() stub (0) or a value left by an
+  // earlier misconfiguration. Observed live: uncx-vm/1 sat at block 3,957,531
+  // while its factory wasn't deployed until 23,143,944, so every tick burned
+  // its budget scanning 19M blocks of chain that could not contain a single
+  // event. Starting at genesis is both correct and vastly cheaper.
+  const lastConfirmed = existingBlock > 0 && BigInt(existingBlock) >= genesisBlock
     ? BigInt(existingBlock)
     : genesisBlock - 1n;
 
@@ -91,25 +99,64 @@ export async function runIndexer(indexer: Indexer): Promise<RunResult> {
     };
   }
 
-  const windowEnd  = fromBlock + maxBlocksPerScan - 1n;
-  const toBlock    = windowEnd < safeHead ? windowEnd : safeHead;
-
-  // 4. Run the protocol-specific decoder.
+  // 4. Catch-up loop — scan as many consecutive windows as the time budget
+  //    allows, committing state after EACH window.
+  //
+  // Why a loop: the runner used to scan exactly ONE window per invocation,
+  // sized by `maxBlocksPerScan` (2,000-9,999 blocks). But the indexer crons
+  // effectively run about once a day, and Ethereum alone produces ~7,200
+  // blocks/day — so a 2,000-block indexer advanced ~7 hours of chain per day
+  // against 24 produced and fell further behind FOREVER. That's why uncx-vm/1
+  // reported "82d stale" while every tick said "ok, 0 events": it was
+  // faithfully scanning blocks from months ago.
+  //
+  // Now each invocation keeps going until it reaches the confirmed head or
+  // exhausts SCAN_BUDGET_MS, so a daily cron catches up fully regardless of
+  // cadence. Per-window state commits mean a mid-loop lambda kill (the route's
+  // maxDuration is 60s) loses at most one window, never the whole run, and the
+  // next tick resumes exactly where this one left off.
+  let cursor     = fromBlock;
   let eventCount = 0;
-  try {
-    const result = await indexer.scanWindow(client, fromBlock, toBlock);
-    eventCount   = result.eventCount;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    await touchAttempt(protocol, chainId, message);
-    return {
-      protocol, chainId, fromBlock, toBlock,
-      eventCount: 0, durationMs: Date.now() - startedAt,
-      error: message,
-    };
+  let windows    = 0;
+  let lastTo     = fromBlock;
+
+  while (cursor <= safeHead && Date.now() - startedAt < SCAN_BUDGET_MS) {
+    const windowEnd = cursor + maxBlocksPerScan - 1n;
+    const toBlock   = windowEnd < safeHead ? windowEnd : safeHead;
+
+    try {
+      const result = await indexer.scanWindow(client, cursor, toBlock);
+      eventCount  += result.eventCount;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await touchAttempt(protocol, chainId, message);
+      return {
+        protocol, chainId, fromBlock, toBlock: lastTo,
+        eventCount, durationMs: Date.now() - startedAt,
+        error: `window ${cursor}-${toBlock} (after ${windows} ok): ${message}`,
+      };
+    }
+
+    await commitState(protocol, chainId, toBlock, eventCount);
+    lastTo  = toBlock;
+    cursor  = toBlock + 1n;
+    windows += 1;
   }
 
-  // 5. Commit new state — `toBlock` becomes the new confirmed tip.
+  return {
+    protocol, chainId, fromBlock, toBlock: lastTo,
+    eventCount, durationMs: Date.now() - startedAt,
+    windows,
+  };
+}
+
+// Leave headroom under the indexer route's 60s maxDuration for the final
+// state commit + response. Each window is bounded (a few RPC calls), so the
+// overshoot past this line is small.
+const SCAN_BUDGET_MS = 45_000;
+
+/** Persist the new confirmed tip. Called after every successful window. */
+async function commitState(protocol: string, chainId: number, toBlock: bigint, eventCount: number): Promise<void> {
   const now = new Date();
   await db.insert(indexerState).values({
     protocol,
@@ -133,11 +180,6 @@ export async function runIndexer(indexer: Indexer): Promise<RunResult> {
       updatedAt:          now,
     },
   });
-
-  return {
-    protocol, chainId, fromBlock, toBlock,
-    eventCount, durationMs: Date.now() - startedAt,
-  };
 }
 
 // Update lastAttemptAt + lastError without bumping lastRunAt — used for

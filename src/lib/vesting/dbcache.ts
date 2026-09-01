@@ -386,6 +386,38 @@ export async function bumpSeedHeartbeat(
  * Failures here are swallowed: this is diagnostic instrumentation, not
  * load-bearing. The seed job itself succeeded before this was called.
  */
+/**
+ * Last attempt time per (adapterId, chainId), for seed-job prioritisation.
+ *
+ * The seeder runs a group's jobs in fixed array order. When a group has more
+ * jobs than fit in the lambda's 300s budget, the tail is killed mid-run and
+ * those cells are NEVER attempted — deterministically, every single day. That
+ * starved Team Finance (all chains) and Unvest on Optimism/Arbitrum for 1-2
+ * months while the earlier jobs stayed fresh. Ordering least-recently-attempted
+ * first makes the starvation self-healing.
+ *
+ * Returns an empty map on failure — callers fall back to declaration order.
+ */
+export async function readSeederAttemptTimes(): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (process.env.NEXT_PHASE === "phase-production-build") return out;
+  try {
+    const rows = await db
+      .select({
+        adapterId:     seederState.adapterId,
+        chainId:       seederState.chainId,
+        lastAttemptAt: seederState.lastAttemptAt,
+      })
+      .from(seederState);
+    for (const r of rows) {
+      out.set(`${r.adapterId}:${r.chainId}`, r.lastAttemptAt ? r.lastAttemptAt.getTime() : 0);
+    }
+  } catch (err) {
+    console.error("[dbcache] readSeederAttemptTimes failed:", err);
+  }
+  return out;
+}
+
 export async function recordSeederAttempt(
   adapterId:      string,
   chainId:        number,

@@ -694,7 +694,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
-import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt } from "./dbcache";
+import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
@@ -1687,6 +1687,10 @@ export async function seedAll(
   // concurrent requests easily and Postgres writes are batched per job.
   const PARALLEL = 6;
   const results: SeedRunResult[] = [];
+  const seedStartedAt = Date.now();
+  // Vercel kills the cron lambda at 300s. Stop starting new batches at 240s so
+  // the in-flight batch and the derived-table refreshes finish inside it.
+  const SEED_BUDGET_MS = 240_000;
 
   // Filter out jobs whose protocol is flagged `disabled: true` in the
   // protocol-constants registry. This is the temporary-pause hatch — see
@@ -1713,7 +1717,37 @@ export async function seedAll(
     console.log(`[seeder] protocol filter="${protocolId}", ${jobs.length} job(s)`);
   }
 
+  // ── Fair ordering: least-recently-attempted first ──────────────────────────
+  // The loop below runs jobs in array order and the lambda has a hard 300s
+  // ceiling. A group with more jobs than fit (subgraphs carries 19: uncx,
+  // uncx-vm, unvest, team-finance, llamapay) therefore got its TAIL killed
+  // mid-run every single day — the same jobs, deterministically. Team Finance
+  // (all 5 chains) and Unvest on Optimism/Arbitrum went 1-2 months without a
+  // single attempt while earlier jobs stayed fresh, which is exactly what the
+  // /status grid was reporting as "28d / 30d / 61d ago".
+  //
+  // Sorting by last attempt (never-attempted first) means whatever got cut off
+  // yesterday runs first today, so coverage rotates instead of starving. Cheap
+  // (one small indexed read) and self-healing.
+  try {
+    const attempts = await readSeederAttemptTimes();
+    jobs = [...jobs].sort((a, b) =>
+      (attempts.get(`${a.adapterId}:${a.chainId}`) ?? 0) -
+      (attempts.get(`${b.adapterId}:${b.chainId}`) ?? 0));
+  } catch (err) {
+    console.error("[seeder] attempt-time sort failed, using declaration order:", err);
+  }
+
   for (let i = 0; i < jobs.length; i += PARALLEL) {
+    // Stop launching new batches once we're close to the ceiling, so the run
+    // ends CLEANLY — the status_summary / protocol_summaries refreshes below
+    // still get to run, instead of the lambda being killed mid-batch with the
+    // derived tables left stale.
+    if (Date.now() - seedStartedAt > SEED_BUDGET_MS) {
+      const skipped = jobs.length - i;
+      console.log(`[seeder] budget reached after ${i}/${jobs.length} jobs, deferring ${skipped} to the next run (they now sort first)`);
+      break;
+    }
     const batch   = jobs.slice(i, i + PARALLEL);
     const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
     results.push(...batchR);
