@@ -58,7 +58,7 @@ const redisKey = (chainId: number, address: string) =>
 
 // Mirror of the chain-slug map in tvl.ts. Kept local so callers don't need
 // the (heavier) tvl.ts import path.
-const DS_CHAIN_SLUG: Record<number, string> = {
+export const DS_CHAIN_SLUG: Record<number, string> = {
   1:     "ethereum",
   56:    "bsc",
   137:   "polygon",

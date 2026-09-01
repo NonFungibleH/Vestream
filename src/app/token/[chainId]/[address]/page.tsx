@@ -881,13 +881,21 @@ export default async function TokenPage(
 
       {/* ── Price chart (DexScreener embed) – sits directly below the market
           stats card (vesting-first: price data is supporting context). Only
-          when a priced pair exists AND it has enough liquidity to actually
-          chart: ultra-thin pairs leave DexScreener stuck on "Loading pair…"
-          forever, so below the floor we skip the embed (the market-stats card
-          still carries a "DexScreener ↗" link). pairUrl is the most-liquid
-          base-token pair; ?embed=1 strips their chrome to just the candles.
-          dexscreener.com is allow-listed in the CSP frame-src (next.config.ts). */}
-      {market.pairUrl && (market.liquidity ?? 0) >= 5_000 && (
+          when a priced pair exists. pairUrl is the most-liquid base-token pair;
+          ?embed=1 strips their chrome to just the candles. dexscreener.com is
+          allow-listed in the CSP frame-src (next.config.ts).
+
+          Floor lowered $5,000 → $100 (2026-09-01). The old floor existed
+          because ultra-thin pairs used to leave DexScreener stuck on "Loading
+          pair…" forever. Re-tested against live embeds and that is no longer
+          true: NUTS/USDT at $3.3k liquidity renders full candle history, and
+          NUTS/USDC at $114 renders too — it just takes a few seconds past a
+          "Loading chart settings…" state. The old floor was silently hiding the
+          chart on most small-cap tokens, which is exactly where a reader has
+          the least other context. $100 matches LIQUIDITY_FLOOR_USD, the
+          codebase's existing "below this is dust" line, so only genuinely dead
+          pairs are skipped. */}
+      {market.pairUrl && (market.liquidity ?? 0) >= 100 && (
         // w-full is REQUIRED here: the page root is `flex flex-col` and this
         // section uses `mx-auto`, which on a flex item cancels the default
         // stretch and shrink-wraps to content. The chart's content is an iframe
