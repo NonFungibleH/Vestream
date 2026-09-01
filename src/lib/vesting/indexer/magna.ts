@@ -249,11 +249,15 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // 2. Transfers OUT of a vester = claim payouts.
       //
       // NOTE: we filter by the TOKEN contract (log `address`), not by a
-      // from-address topic. Verified on dRPC: a topics[1] address filter is
-      // SILENTLY IGNORED — asking for one `from` returned logs from 68 distinct
-      // senders — and a topic-only query (no address) is rejected outright. So
-      // `address` is the only filter we can trust, and `from ∈ vesters` is
-      // matched in code, which is exact.
+      // from-address topic. Verified on dRPC (2026-09-01), precisely:
+      //   • a SCALAR topics[1] (one padded address) IS honoured correctly;
+      //   • an ARRAY topics[1] (OR of many addresses) is SILENTLY IGNORED —
+      //     asking for a set returned logs from 68 unrelated senders;
+      //   • a topic-only query with no `address` is rejected outright.
+      // Since a window spans many vesters, the OR form is the one we'd need,
+      // and it can't be trusted — so we filter by `address` and match
+      // `from ∈ vesters` in code, which is exact. (A per-vester scalar query
+      // would be trustworthy but costs one request per vester per window.)
       //
       // Consequence: the response contains EVERY transfer of those tokens, not
       // just claims, so it can be huge for a popular token. Free-tier RPCs cap
