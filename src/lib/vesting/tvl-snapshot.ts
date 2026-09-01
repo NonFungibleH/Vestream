@@ -218,6 +218,14 @@ export interface WalkerSnapshotSummary {
 export async function runWalkerSnapshot(
   protocol: string,
   chainIds: SupportedChainId[],
+  /**
+   * Prune rows for chains outside `chainIds`. MUST be false whenever
+   * `chainIds` is a SUBSET of the protocol's chains — otherwise a per-chain
+   * run deletes every other chain's row. The cron's ?chainId= filter passes
+   * false for exactly that reason; a Sablier run scoped to chain 1 wiped the
+   * six other rows, including an Optimism row that was already correct.
+   */
+  prune = true,
 ): Promise<WalkerSnapshotSummary> {
   const started = Date.now();
   const summary: WalkerSnapshotSummary = {
@@ -705,7 +713,7 @@ export async function runWalkerSnapshot(
     if (r.walker.error) summary.errors.push(`chain ${r.chainId}: ${r.walker.error}`);
   }
 
-  await pruneOtherChains(protocol, chainIds);
+  if (prune) await pruneOtherChains(protocol, chainIds);
 
   summary.durationMs = Date.now() - started;
   return summary;

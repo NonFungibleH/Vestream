@@ -70,8 +70,11 @@ async function snapshotProtocol(
   const chainIds = chainFilter
     ? p.chainIds.filter((c) => chainFilter.has(c as number))
     : p.chainIds;
+  // prune=false when a chain filter is active: pruneOtherChains deletes rows
+  // for chains outside the list it is handed, so a scoped run would wipe every
+  // chain it did not walk.
   const perAdapter = await Promise.all(
-    p.adapterIds.map((adapterId) => runWalkerSnapshot(adapterId, chainIds)),
+    p.adapterIds.map((adapterId) => runWalkerSnapshot(adapterId, chainIds, chainFilter === null)),
   );
 
   // Combine into a single summary that surfaces aggregate health for the
