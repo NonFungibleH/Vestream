@@ -1418,6 +1418,36 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+/**
+ * Per-job wall-clock cap.
+ *
+ * Without this, ONE job that never resolves is unbounded damage, not just a
+ * slow cell: it blocks its whole `Promise.all` batch, so the lambda is killed
+ * at 300s BEFORE `recordSeederAttempt` runs for any job in that batch. The
+ * job's `last_attempt_at` therefore never advances — which, under the
+ * least-recently-attempted sort, guarantees it runs FIRST again next time,
+ * hangs again, and starves the rest of the group forever. That's the loop
+ * that left Team Finance unattempted for 63 days.
+ *
+ * Timing out into a normal error result breaks the loop: the attempt IS
+ * recorded, the cell shows its error on /status instead of silently aging,
+ * and the job sorts to the back so everything else gets a turn.
+ */
+const JOB_TIMEOUT_MS = 90_000;
+
+function withJobTimeout(job: SeedJob, p: Promise<SeedRunResult>): Promise<SeedRunResult> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      console.error(`[seeder:${job.adapterId}/${job.chainId}] timed out after ${JOB_TIMEOUT_MS}ms`);
+      resolve(emptyResult(job, `job timed out after ${JOB_TIMEOUT_MS / 1000}s`));
+    }, JOB_TIMEOUT_MS);
+    p.then(
+      (r)   => { clearTimeout(timer); resolve(r); },
+      (err) => { clearTimeout(timer); resolve(emptyResult(job, String(err))); },
+    );
+  });
+}
+
 function emptyResult(job: SeedJob, error?: string): SeedRunResult {
   return {
     adapterId:            job.adapterId,
@@ -1757,7 +1787,7 @@ export async function seedAll(
       break;
     }
     const batch   = jobs.slice(i, i + PARALLEL);
-    const batchR  = await Promise.all(batch.map((j) => runJob(j, limit)));
+    const batchR  = await Promise.all(batch.map((j) => withJobTimeout(j, runJob(j, limit))));
     results.push(...batchR);
     // Record one seeder_state row per job — success or failure — so the
     // admin /status grid can show "checked Xh ago" for every cell even
