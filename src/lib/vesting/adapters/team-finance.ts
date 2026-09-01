@@ -21,6 +21,8 @@
  */
 
 import { VestingAdapter } from "./index";
+import { fetchWithRetry } from "@/lib/fetch-with-retry";
+import { mapBounded } from "@/lib/vesting/rpc";
 import { VestingStream, SupportedChainId, CHAIN_IDS, nextUnlockTime } from "../types";
 
 // ─── Endpoints ───────────────────────────────────────────────────────────────
@@ -64,12 +66,18 @@ export async function fetchWalletVestings(wallet: string): Promise<TFVesting[]> 
   if (entry && Date.now() - entry.ts < CACHE_TTL_MS) return entry.vestings;
 
   try {
-    const res = await fetch(`${REST_BASE}/api/vesting/${addr}`, {
+    // fetchWithRetry, not bare fetch: this call had NO timeout, so a single
+    // hung request blocked its caller forever. Combined with the unbounded
+    // Promise.all below that was enough to wedge the whole Team Finance seed
+    // job — which is how TF went 63 days without a completed run.
+    // (fetchWithRetry races a timer instead of passing an AbortSignal, which
+    // would poison Next's data cache — see the note in fetch-with-retry.ts.)
+    const res = await fetchWithRetry(`${REST_BASE}/api/vesting/${addr}`, {
       headers: { Accept: "application/json" },
       next: { revalidate: 60 },
-    });
-    if (!res.ok) {
-      console.error(`Team Finance REST (wallet ${addr}) HTTP ${res.status}`);
+    }, { tag: `team-finance/${addr}`, timeoutMs: 8_000, retries: 1 });
+    if (!res || !res.ok) {
+      console.error(`Team Finance REST (wallet ${addr}) HTTP ${res?.status ?? "timeout"}`);
       return [];
     }
     const parsed: unknown = await res.json();
@@ -230,8 +238,12 @@ async function fetchForChain(
   wallets:  string[],
   chainId:  SupportedChainId,
 ): Promise<VestingStream[]> {
-  // Fetch vestings for all wallets (REST; results cached cross-chain)
-  const perWallet = await Promise.all(wallets.map(fetchWalletVestings));
+  // Fetch vestings for all wallets (REST; results cached cross-chain).
+  // Bounded, not Promise.all: firing all ~500 seeded wallets at TF's REST API
+  // simultaneously got us throttled, and the resulting tail latency is what
+  // made this job outlast a full 240s seed budget on ETH/BSC/Polygon.
+  const settled = await mapBounded(wallets, 8, (w) => fetchWalletVestings(w));
+  const perWallet = settled.map((r) => (r.status === "fulfilled" ? r.value : []));
 
   // Filter to the requested chain and attach the wallet address.
   // chainId in the REST response can be a hex string ("0x1") or a decimal number (1).
