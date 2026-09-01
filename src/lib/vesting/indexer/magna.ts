@@ -224,10 +224,11 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
     protocol:         "magna",
     chainId,
     genesisBlock,
-    // Claims are sparse (enterprise vesting, not retail churn), but we scan
-    // Transfer logs filtered by vester address list, so windows stay cheap.
-    // 9,999 fits dRPC's free-tier 10k eth_getLogs cap.
-    maxBlocksPerScan: 9_999n,
+    // 2,000 rather than the 9,999 dRPC allows: the token-address filter (see
+    // scanWindow) returns every transfer of those tokens, so window width
+    // drives response size far more than claim frequency does. Claims are
+    // sparse enough that a narrower window costs nothing in coverage.
+    maxBlocksPerScan: 2_000n,
     reorgLag:         12n,
 
     async scanWindow(client: PublicClient, fromBlock: bigint, toBlock: bigint) {
@@ -248,15 +249,20 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // 2. Transfers OUT of a vester = claim payouts.
       //
       // NOTE: we filter by the TOKEN contract (log `address`), not by a
-      // from-address topic. An address-array in topics[1] is an OR filter that
-      // several free-tier RPCs silently ignore — verified: it returned ~100k
-      // unfiltered logs on dRPC — whereas the `address` filter is honoured
-      // everywhere. We then match `from ∈ vesters` in code, which is exact.
-      // Token list comes from the vesters' token() (cached in the registry
-      // walk), so the query stays narrow.
+      // from-address topic. Verified on dRPC: a topics[1] address filter is
+      // SILENTLY IGNORED — asking for one `from` returned logs from 68 distinct
+      // senders — and a topic-only query (no address) is rejected outright. So
+      // `address` is the only filter we can trust, and `from ∈ vesters` is
+      // matched in code, which is exact.
+      //
+      // Consequence: the response contains EVERY transfer of those tokens, not
+      // just claims, so it can be huge for a popular token. Free-tier RPCs cap
+      // response size (~100KB — see the CLAUDE.md landmine), and 20 tokens over
+      // a 9,999-block window measured ~8.5k logs, right at the edge. ADDR_BATCH
+      // is therefore deliberately small; keep it that way.
       const tokensToWatch = new Set<string>();
       const vesterTokenPre = new Map<string, string>();
-      const ADDR_BATCH = 60;
+      const ADDR_BATCH = 12;
       for (let i = 0; i < vesters.length; i += ADDR_BATCH) {
         const slice = vesters.slice(i, i + ADDR_BATCH);
         try {
