@@ -11,6 +11,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
 import { readTokenRollups } from "@/lib/vesting/token-rollups";
+import { publicChainIds } from "@/lib/protocol-constants";
 import { getProtocol, chainBrand } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 import { withTimeout } from "@/lib/with-timeout";
@@ -67,15 +68,30 @@ async function getUpcomingTable(limit = 25): Promise<UpcomingRow[]> {
   const nowSec = Math.floor(Date.now() / 1000);
   const endSec = nowSec + 30 * 86_400;
 
-  const win = await withTimeout(
-    getUnlocksInWindow(nowSec, endSec, 1000),
-    10_000,
-    EMPTY_WINDOW_RESULT,
-    "unlocks-table:window",
-  );
-  if (win.groups.length === 0) return [];
+  // Per-chain fan-out rather than one unscoped call.
+  //
+  // Measured on prod: an UNSCOPED getUnlocksInWindow does not return inside its
+  // timeout in the Vercel runtime, while the CHAIN-SCOPED form is fast — the
+  // /chains/[chain] pages render 20 unlock rows each in ~0.5s off the very same
+  // function. That is also why every window count on this page renders "–" and
+  // /unlocks/[range] is empty in production: a pre-existing outage of the
+  // unscoped path, not something this table introduced. Nine scoped queries at
+  // roughly half a second each comfortably beat one that never lands.
+  //
+  // Sequential, one pooler connection at a time, matching getWindowCounts above.
+  const groups = [];
+  for (const chainId of publicChainIds()) {
+    const win = await withTimeout(
+      getUnlocksInWindow(nowSec, endSec, 300, undefined, [chainId]),
+      6_000,
+      EMPTY_WINDOW_RESULT,
+      `unlocks-table:chain-${chainId}`,
+    );
+    groups.push(...win.groups);
+  }
+  if (groups.length === 0) return [];
 
-  const priced = await enrichGroupsWithUsd(win.groups, { redis: false, liveFallback: false });
+  const priced = await enrichGroupsWithUsd(groups, { redis: false, liveFallback: false });
   const next = [...priced].sort((a, b) => a.eventTime - b.eventTime).slice(0, limit);
 
   // Rollups are a best-effort enrichment: roughly 1 in 5 rows has no row yet
