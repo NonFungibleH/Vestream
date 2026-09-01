@@ -19,7 +19,7 @@
 //   - Year filter
 //   - Per-row table with USD value at claim + price-confidence flag
 //   - Download CSV in 4 formats (Vestream generic / Koinly / CoinTracker / TurboTax)
-//   - Coverage banner (1 of 11+ protocols indexed)
+//   - Coverage banner (1 of 12+ protocols indexed)
 //
 // Phase 3 follow-ups:
 //   - Date-range picker (currently year only)

@@ -60,7 +60,7 @@ export default function GetTheAppPage() {
             Track every token unlock.
           </h1>
           <p className="text-base md:text-lg mb-8 leading-relaxed" style={{ color: "#8B8E92" }}>
-            Vestream watches your vesting across 11+ protocols and 9+ chains, and
+            Vestream watches your vesting across 12+ protocols and 9+ chains, and
             tells you before every cliff and unlock. Get the free app to start.
           </p>
 

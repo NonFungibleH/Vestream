@@ -30,7 +30,7 @@ async function getHomepageLiveStats() {
     return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
   }
 
-  // Aggregate across all 11+ protocols. Any single-protocol failure must not
+  // Aggregate across all 12+ protocols. Any single-protocol failure must not
   // sink the homepage render – silently fall back to nulls.
   try {
     const protocols = listProtocols();
@@ -122,7 +122,7 @@ const homepageJsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Track token vestings across 11+ protocols",
+        "Track token vestings across 12+ protocols",
         "Real-time unlock alerts via push and email",
         "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana",
         "P&L tracking and CSV export",
@@ -238,7 +238,7 @@ export default async function Home() {
               Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
             </p>
             <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              11+ protocols. 9+ chains. Mobile app and desktop dashboard.
+              12+ protocols. 9+ chains. Mobile app and desktop dashboard.
             </p>
 
             {/* CTAs – app badges lead (mobile is the primary product),
@@ -538,6 +538,7 @@ export default async function Home() {
               { name: "Streamflow",   color: "#2F54EB", bg: "rgba(47,84,235,0.08)",  border: "rgba(47,84,235,0.22)",  icon: "/protocols/icons/streamflow.png"  },
               { name: "Jupiter Lock", color: "#14B8A6", bg: "rgba(20,184,166,0.08)", border: "rgba(20,184,166,0.22)", icon: "/protocols/icons/jupiter-lock.png"  },
               { name: "Team Finance", color: "#2563EB", bg: "rgba(37,99,235,0.07)", border: "rgba(37,99,235,0.16)", icon: "/protocols/icons/team-finance.png" },
+              { name: "Magna",        color: "#E05FCB", bg: "rgba(248,140,229,0.08)", border: "rgba(248,140,229,0.20)", icon: "/protocols/icons/magna.png" },
             ].map((p) => (
               <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
                 className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
@@ -1117,7 +1118,7 @@ export default async function Home() {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
               color: "#1CB8B8", bg: "rgba(28,184,184,0.08)", border: "rgba(28,184,184,0.14)",
               title: "Live on-chain data",
-              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, and Solana.",
+              body: "Real-time positions pulled from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock – across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, and Solana.",
             },
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
@@ -1195,6 +1196,8 @@ export default async function Home() {
                   { name: "UNCX",         color: "#22C55E" },
                   { name: "Unvest",       color: "#2563EB" },
                   { name: "Team Finance", color: "#2F6BFF" },
+                  { name: "HoodLock", color: "#00C805" },
+                  { name: "Magna", color: "#E05FCB" },
                   { name: "LlamaPay",     color: "#1FBE9A" },
                   { name: "Superfluid",   color: "#16B364" },
                   { name: "PinkSale",     color: "#F23E8C" },
@@ -1219,7 +1222,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "11+ protocols scanned simultaneously - every one listed above",
+                "12+ protocols scanned simultaneously - every one listed above",
                 "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -1267,7 +1270,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 11+ protocols &amp; 9+ chains</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 12+ protocols &amp; 9+ chains</p>
           </div>
         </div>
       </section>
@@ -1756,7 +1759,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 11+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), Jupiter Lock (time-released token vesting on Solana), and HoodLock (Robinhood Chain token locker) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: "Vestream supports 12+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), Jupiter Lock (time-released token vesting on Solana), and HoodLock (Robinhood Chain token locker) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
             },
             {
               q: "How do unlock notifications work?",
@@ -1931,7 +1934,7 @@ export default async function Home() {
             style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
           <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.02em" }}>See every token you&rsquo;re owed.</h2>
           <p className="relative text-base mb-8 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-            Paste any wallet and Vestream returns every active vesting across 11+ protocols in seconds. No sign-up. No KYC.
+            Paste any wallet and Vestream returns every active vesting across 12+ protocols in seconds. No sign-up. No KYC.
           </p>
           <div className="relative flex justify-center w-full">
             <Link

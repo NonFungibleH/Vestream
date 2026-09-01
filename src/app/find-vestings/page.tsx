@@ -4,7 +4,7 @@
 //
 // Flow:
 //   1. User pastes an address
-//   2. /api/find-vestings scans all 11+ protocols × 9+ chains (EVM + Solana)
+//   2. /api/find-vestings scans all 12+ protocols × 9+ chains (EVM + Solana)
 //   3. Results render as a grouped summary (protocol × chain × token)
 //   4. Strong mobile app CTAs prompt them to install for push alerts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ const findVestingsJsonLd = {
           "@type": "HowToStep",
           position: 2,
           name: "Run the scan",
-          text: "Vestream queries Sablier, Hedgey, UNCX, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
+          text: "Vestream queries Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock in parallel. Results return in 10–30 seconds.",
           url: "https://www.vestream.io/find-vestings#step-2",
         },
         {
@@ -106,7 +106,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
-          Free · No signup · 11+ protocols · 9+ chains
+          Free · No signup · 12+ protocols · 9+ chains
         </div>
 
         <h1

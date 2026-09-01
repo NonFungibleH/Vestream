@@ -72,7 +72,7 @@ import {
 //   CoinGecko pricing pipeline (UNCX, Unvest, Superfluid, Team Finance,
 //   PinkSale, Jupiter Lock). Results land in `protocolTvlSnapshots`.
 //
-// This page reads that table – one SELECT across all 11+ protocols × up to 4
+// This page reads that table – one SELECT across all 12+ protocols × up to 4
 // chains each, sums per protocol for the headline, preserves per-chain
 // breakdown for the bar, and surfaces the `methodology` + `computedAt`
 // columns to the UI so every TVL number is traceable to how it was derived
@@ -476,7 +476,7 @@ export default async function UnlocksIndexPage() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
             style={{ color: "#8B8E92" }}
           >
-            Every major vesting schedule across Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche and Solana – indexed in real time. Pick a protocol below to see live activity.
+            Every major vesting schedule across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain and Solana – indexed in real time. Pick a protocol below to see live activity.
           </p>
         </div>
       </section>
@@ -606,7 +606,7 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Paste any address – we&apos;ll scan all 11+ protocols across EVM and Solana
+              Paste any address – we&apos;ll scan all 12+ protocols across EVM and Solana
               and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link

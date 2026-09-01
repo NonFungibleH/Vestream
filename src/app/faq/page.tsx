@@ -68,7 +68,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is Vestream?",
-        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from ten major platforms – Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, Streamflow, and Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
+        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from twelve major platforms – Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
       },
       {
         q: "Who is Vestream for?",
@@ -76,7 +76,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I start using Vestream?",
-        a: "Download the free Vestream app (iOS or Android), then add any wallet – an EVM 0x… address or a Solana pubkey – and Vestream automatically scans it across all 11+ protocols and 9+ chains. The Free plan tracks 3 wallets; Pro tracks 10. Prefer your browser? Paste a wallet at /find-vestings for an instant scan, no install.",
+        a: "Download the free Vestream app (iOS or Android), then add any wallet – an EVM 0x… address or a Solana pubkey – and Vestream automatically scans it across all 12+ protocols and 9+ chains. The Free plan tracks 3 wallets; Pro tracks 10. Prefer your browser? Paste a wallet at /find-vestings for an instant scan, no install.",
       },
       {
         q: "Do I need to connect my wallet to use Vestream?",
@@ -95,11 +95,11 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Which vesting protocols does Vestream support?",
-        a: "Ten as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), Team Finance (team token vesting + on-chain lock proof, via its Squid subgraph), PinkSale PinkLock (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (time-released token vesting on Solana). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
+        a: "Twelve as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), Team Finance (team token vesting + on-chain lock proof, via its Squid subgraph), PinkSale PinkLock (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (time-released token vesting on Solana). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
       },
       {
         q: "Which blockchains are supported?",
-        a: "Seven production EVM chains plus Solana: Ethereum mainnet (chainId 1), BNB Chain (56), Polygon (137), Base (8453), Arbitrum One (42161), OP Mainnet (10), Avalanche C-Chain (43114), and Solana mainnet-beta (101). Ethereum Sepolia (11155111) and Base Sepolia (84532) are also supported for testing and contract deployments that haven't yet shipped on mainnet.",
+        a: "Eight production EVM chains plus Solana: Ethereum mainnet (chainId 1), BNB Chain (56), Polygon (137), Base (8453), Arbitrum One (42161), OP Mainnet (10), Avalanche C-Chain (43114), Robinhood Chain (4663), and Solana mainnet-beta (101). Ethereum Sepolia (11155111) and Base Sepolia (84532) are also supported for testing and contract deployments that haven't yet shipped on mainnet.",
       },
       {
         q: "How does Vestream get the vesting data?",
@@ -184,7 +184,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",
-        a: "A wallet is a distinct address you want scanned – EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet – we auto-scan all 11+ protocols and all 9+ chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
+        a: "A wallet is a distinct address you want scanned – EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet – we auto-scan all 12+ protocols and all 9+ chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
       },
       {
         q: "Can I cancel my subscription anytime?",

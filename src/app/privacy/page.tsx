@@ -136,9 +136,8 @@ export default function Privacy() {
             <p>
               Vestream maintains an aggregated, anonymised index of public
               vesting positions across the protocols and chains we support
-              (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, PinkSale,
-              Streamflow, Jupiter Lock – across Ethereum, BNB Chain,
-              Polygon, Base, Arbitrum, Optimism, Avalanche, and Solana). This index is
+              (Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance,
+              PinkSale, HoodLock, Magna, Streamflow, Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana). This index is
               built from publicly available on-chain data and protocol
               subgraphs.
             </p>

@@ -693,7 +693,7 @@ const articles: Article[] = [
       { type: "h2", text: "Track & explore token vesting on Vestream" },
       {
         type: "p",
-        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 11+ protocols and 9+ chains, no sign-up. Start here:",
+        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 12+ protocols and 9+ chains, no sign-up. Start here:",
       },
       {
         type: "ul",

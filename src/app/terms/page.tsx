@@ -65,10 +65,7 @@ export default function Terms() {
             <p>
               Vestream is a read-only token-vesting tracker and developer
               data platform. We aggregate publicly available on-chain vesting
-              data from supported protocols (currently Sablier, Hedgey,
-              Superfluid, LlamaPay, UNCX, Unvest, PinkSale, Streamflow, and
-              Jupiter Lock) across supported chains (Ethereum, BNB Chain,
-              Polygon, Base, Arbitrum, Optimism, Avalanche, and Solana) and present it
+              data from supported protocols (currently Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock) across supported chains (Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana) and present it
               through the website,
               the mobile app, the developer API, and the MCP server. The
               Service does{" "}

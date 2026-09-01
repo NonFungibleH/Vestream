@@ -168,8 +168,10 @@ server.tool(
   "get_wallet_vestings",
   "Get all token vesting streams for a wallet across every supported protocol " +
   "and chain (including Solana). EVM protocols: Sablier, Hedgey, UNCX, Unvest, " +
-  "Superfluid, PinkSale. Solana protocols: Streamflow, Jupiter Lock. " +
-  "EVM chains: Ethereum, BSC, Polygon, Base. Non-EVM chains: Solana. " +
+  "Team Finance, Superfluid, PinkSale, LlamaPay, HoodLock, Magna. " +
+  "Solana protocols: Streamflow, Jupiter Lock. " +
+  "EVM chains: Ethereum, BSC, Polygon, Base, Arbitrum, Optimism, Avalanche, " +
+  "Robinhood Chain. Non-EVM chains: Solana. " +
   "Returns normalised stream data: token, amounts locked/claimable/withdrawn, " +
   "schedule dates, cliff time, next unlock, and claim history — identical " +
   "JSON shape regardless of source protocol or ecosystem.",
@@ -181,7 +183,7 @@ server.tool(
     protocol: protocolFilter,
     chain: z.string().optional().describe(
       "Comma-separated chain ID filter, e.g. '1,101,8453'. " +
-      "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 101 (Solana)"
+      "Supported: 1 (Ethereum), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 10 (Optimism), 43114 (Avalanche), 4663 (Robinhood Chain), 101 (Solana)"
     ),
     active_only: z.boolean().optional().describe(
       "If true, only return streams that are not yet fully vested (default: false)"

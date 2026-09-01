@@ -1,6 +1,6 @@
 # `@vestream/mcp`
 
-> MCP server for [Vestream](https://vestream.io) — give your AI agent live token-vesting data across 9 protocols and 5 chains.
+> MCP server for [Vestream](https://vestream.io) — give your AI agent live token-vesting data across 12 protocols and 9 chains.
 
 > ### ✅ Official package
 > The only official Vestream MCP server is published as **`@vestream/mcp`** under the `vestream` npm org, with builds signed via [npm provenance](https://docs.npmjs.com/generating-provenance-statements). Any package with a different scope or name (`vestream-mcp`, `vestream-data`, `@anything-else/vestream*`, etc.) is unofficial and may proxy your API key to a third party. Verify the provenance badge on the [npm page](https://www.npmjs.com/package/@vestream/mcp) before installing.
@@ -22,9 +22,9 @@ Six tools, all schema-validated:
 | `create_webhook_subscription` | **Pro** | Register a new webhook with optional filters (wallet, protocol, chain) and a lookahead window. Returns a signing secret once — store it for HMAC verification. **Cap: 50 active subscriptions per API key** — delete unused ones with `delete_webhook_subscription`. |
 | `delete_webhook_subscription` | **Pro** | Remove a subscription by id. |
 
-Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Superfluid · PinkSale · Streamflow · Jupiter Lock.
+Supported **protocols**: Sablier · Hedgey · UNCX · Unvest · Team Finance · Superfluid · PinkSale · LlamaPay · HoodLock · Magna · Streamflow · Jupiter Lock.
 
-Supported **chains**: Ethereum (`1`) · BNB Chain (`56`) · Polygon (`137`) · Base (`8453`) · Solana (`101`).
+Supported **chains**: Ethereum (`1`) · BNB Chain (`56`) · Polygon (`137`) · Base (`8453`) · Arbitrum (`42161`) · Optimism (`10`) · Avalanche (`43114`) · Robinhood Chain (`4663`) · Solana (`101`).
 
 ---
 

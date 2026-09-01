@@ -56,7 +56,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: "getting-started",
     title: "Getting started with Vestream",
     description:
-      "What Vestream does, how to download the app, and how to start tracking token vesting unlocks across 11+ protocols and 9+ chains in a few minutes.",
+      "What Vestream does, how to download the app, and how to start tracking token vesting unlocks across 12+ protocols and 9+ chains in a few minutes.",
     category: "Getting started",
     icon: "rocket",
     summary: "What Vestream is and how to get up and running.",
@@ -312,7 +312,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: "protocols",
     title: "Integrated protocols",
     description:
-      "Every vesting protocol Vestream indexes: Sablier, Hedgey, UNCX, Team Finance, PinkSale, Superfluid, Unvest, Streamflow, Jupiter Lock, LlamaPay, and HoodLock.",
+      "Every vesting protocol Vestream indexes: Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock.",
     category: "Reference",
     icon: "plug",
     summary: "Every vesting protocol Vestream indexes.",

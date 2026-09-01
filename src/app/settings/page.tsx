@@ -7,6 +7,7 @@ import { UpsellModal } from "@/components/UpsellModal";
 import { CalendarSubscribeCard } from "@/components/CalendarSubscribeCard";
 import { track } from "@/lib/analytics";
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "@/lib/currency";
+import { publicChainOptions, publicProtocolOptions } from "@/lib/protocol-constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,25 +38,10 @@ const HOURS_OPTIONS = [1, 6, 12, 24, 48, 72];
 // Polygon scans from Settings even though everything below the UI
 // supported them. Dropped Sepolia (testnet, not relevant for consumer
 // wallet tracking) and restored Polygon.
-const CHAIN_OPTIONS = [
-  { id: "1",    label: "Ethereum",  short: "ETH"   },
-  { id: "56",   label: "BNB Chain", short: "BSC"   },
-  { id: "137",  label: "Polygon",   short: "MATIC" },
-  { id: "8453", label: "Base",      short: "Base"  },
-  { id: "4663", label: "Robinhood Chain", short: "RH" },
-  { id: "101",  label: "Solana",    short: "SOL"   },
-];
+const CHAIN_OPTIONS = publicChainOptions();
 
 // UI-visible protocols (UNCX covers both uncx + uncx-vm on the backend)
-const PROTOCOL_OPTIONS = [
-  { id: "sablier",      label: "Sablier"      },
-  { id: "uncx",         label: "UNCX"         },
-  { id: "hedgey",       label: "Hedgey"       },
-  { id: "unvest",       label: "Unvest"       },
-  { id: "superfluid",   label: "Superfluid"   },
-  { id: "pinksale",     label: "PinkSale"     },
-  { id: "hoodlock",     label: "HoodLock"     },
-];
+const PROTOCOL_OPTIONS = publicProtocolOptions();
 
 // All backend protocol IDs (includes uncx-vm which is hidden in UI but treated as part of UNCX).
 // team-finance is omitted – paused, not surfaced to users.

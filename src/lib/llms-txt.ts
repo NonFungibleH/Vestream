@@ -14,7 +14,7 @@
 //                    fetch)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { listProtocols } from "./protocol-constants";
+import { listProtocols, publicChainIds, chainBrand } from "./protocol-constants";
 import { getAllArticles, type Article } from "./articles";
 import { CHAIN_NAMES, type SupportedChainId } from "./vesting/types";
 
@@ -28,6 +28,14 @@ function chainNames(chainIds: readonly number[]): string {
     .map((c) => CHAIN_NAMES[c as SupportedChainId] ?? String(c))
     .join(", ");
 }
+
+/** Every public chain as prose, derived so this can't go stale (it read
+ *  "7 chains" / omitted Avalanche + Robinhood Chain while 9 were live). */
+const ALL_CHAIN_NAMES = publicChainIds().map((id) => chainBrand(id).name);
+const ALL_CHAINS_PROSE = ALL_CHAIN_NAMES.length > 1
+  ? `${ALL_CHAIN_NAMES.slice(0, -1).join(", ")}, and ${ALL_CHAIN_NAMES[ALL_CHAIN_NAMES.length - 1]}`
+  : (ALL_CHAIN_NAMES[0] ?? "");
+const CHAIN_COUNT = ALL_CHAIN_NAMES.length;
 
 // Stable ordering for the article category sections.
 const CATEGORY_ORDER = ["Guides", "Fundamentals", "Tokenomics", "Research", "Market Analysis", "Analysis", "Taxes"];
@@ -96,7 +104,7 @@ export function buildLlmsTxt(): string {
 
   return `# Vestream
 
-> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and 7 chains. Paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules, with push and email alerts before each event. Tracking is read-only and address-based; no wallet connection or signing is ever required. A REST API and MCP server make the vesting data queryable by AI agents and developers.
+> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and ${CHAIN_COUNT} chains. Paste any EVM or Solana wallet address to instantly see all active vesting positions, upcoming cliff dates, claimable balances, and unlock schedules, with push and email alerts before each event. Tracking is read-only and address-based; no wallet connection or signing is ever required. A REST API and MCP server make the vesting data queryable by AI agents and developers.
 
 ${KEY_PAGES_SECTION}
 
@@ -106,7 +114,7 @@ ${QUESTIONS_SECTION}
 
 ${protocolLines}
 
-Chains: Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana.
+Chains: ${ALL_CHAINS_PROSE}.
 
 ${API_SECTION}
 
@@ -142,11 +150,11 @@ export function buildLlmsFullTxt(): string {
 
   return `# Vestream, Full Reference
 
-> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and 7 chains. This is the expanded reference; the concise index is at ${SITE}/llms.txt.
+> Vestream is a free token vesting tracker and alert service that monitors every unlock event across ${n} protocols and ${CHAIN_COUNT} chains. This is the expanded reference; the concise index is at ${SITE}/llms.txt.
 
 ## What Vestream is
 
-Vestream indexes on-chain token vesting and unlock schedules across ${n} major protocols and seven blockchains, and gives every wallet one place to see its upcoming unlocks, plus email and push alerts before each one. It serves three audiences: (1) token holders who need to know when vested allocations unlock so they can claim, sell, or plan taxes; (2) funds and team treasuries tracking investor allocations, cliffs, and unlock schedules across many positions; (3) developers and AI-agent builders who want programmatic, normalised vesting data via the REST API or MCP server.
+Vestream indexes on-chain token vesting and unlock schedules across ${n} major protocols and ${CHAIN_COUNT} blockchains, and gives every wallet one place to see its upcoming unlocks, plus email and push alerts before each one. It serves three audiences: (1) token holders who need to know when vested allocations unlock so they can claim, sell, or plan taxes; (2) funds and team treasuries tracking investor allocations, cliffs, and unlock schedules across many positions; (3) developers and AI-agent builders who want programmatic, normalised vesting data via the REST API or MCP server.
 
 ## How it works
 
@@ -157,7 +165,7 @@ Vestream indexes on-chain token vesting and unlock schedules across ${n} major p
 
 ## Chains
 
-Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, and Solana.
+${ALL_CHAINS_PROSE}.
 
 ${QUESTIONS_SECTION}
 

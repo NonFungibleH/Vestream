@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.vestream/mcp",
-  "description": "Real-time token vesting data for AI agents. Query wallet vestings, upcoming token unlocks, individual stream details, and manage unlock webhooks across 9 vesting protocols (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, Streamflow, Jupiter Lock) on 5 chains (Ethereum, BNB Chain, Polygon, Base, Solana).",
+  "description": "Real-time token vesting data for AI agents. Query wallet vestings, upcoming token unlocks, individual stream details, and manage unlock webhooks across 12 vesting protocols (Sablier, Hedgey, UNCX, Unvest, Team Finance, Superfluid, PinkSale, LlamaPay, HoodLock, Magna, Streamflow, Jupiter Lock) on 9 chains (Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche, Robinhood Chain, Solana).",
   "repository": {
     "url": "https://github.com/NonFungibleH/Vestream",
     "source": "github"

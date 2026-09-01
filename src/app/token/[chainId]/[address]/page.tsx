@@ -711,7 +711,7 @@ export default async function TokenPage(
             </div>
             <p className="text-sm max-w-md mx-auto" style={{ color: "#8B8E92" }}>
               We haven&apos;t seen any active vesting streams for this token yet.
-              It may not use any of the 11+ protocols we track, or no streams have
+              It may not use any of the 12+ protocols we track, or no streams have
               reached our cache. If you have a wallet with {symbol} vesting,
               searching it on Vestream will add it here.
             </p>
@@ -920,7 +920,7 @@ export default async function TokenPage(
             >
               Get a push and email notification the moment {symbol} tokens
               are ready to claim – plus coverage for every other wallet you
-              track, across all 11+ protocols and 9+ chains – EVM and Solana.
+              track, across all 12+ protocols and 9+ chains – EVM and Solana.
             </p>
             <AppStoreBadges align="center" />
             <div className="mt-5">
@@ -941,7 +941,7 @@ export default async function TokenPage(
           <ScanWalletCTA
             surface="token_page"
             heading="See your own token vesting"
-            sub="Paste any wallet, every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
+            sub="Paste any wallet, every unlock across 12+ protocols and 9+ chains. Free, no sign-up."
           />
         </div>
       </section>

@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API – Vestream",
   description:
-    "Token vesting API for developers: REST + MCP server covering 11+ protocols and 9+ chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
+    "Token vesting API for developers: REST + MCP server covering 12+ protocols and 9+ chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API – Vestream",
@@ -70,8 +70,7 @@ export default function DeveloperPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Normalised, chain-indexed vesting data from Sablier, UNCX, Hedgey, Unvest, Superfluid, LlamaPay, Team Finance, PinkSale, Streamflow, and Jupiter Lock –
-            across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche and Solana.
+            Normalised, chain-indexed vesting data from Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana.
             Clean REST API with OpenAPI spec and native MCP support.
           </p>
 
@@ -503,7 +502,7 @@ export default function DeveloperPage() {
                 {[
                   "30 req/min burst · 150/day",
                   "All 3 endpoints",
-                  "11+ protocols indexed (EVM + Solana)",
+                  "12+ protocols indexed (EVM + Solana)",
                   "Standard JSON responses",
                   { html: <>Email support – <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
                 ].map((f, i) => (
@@ -545,7 +544,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "11+ protocols · 9+ chains (EVM + Solana)",
+                  "12+ protocols · 9+ chains (EVM + Solana)",
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

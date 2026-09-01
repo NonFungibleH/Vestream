@@ -859,6 +859,59 @@ export function listProtocols(opts: { includeDisabled?: boolean } = {}): Protoco
   return opts.includeDisabled ? all : all.filter((p) => !p.disabled);
 }
 
+// ── Derived marketing counts ────────────────────────────────────────────────
+// Marketing copy across the site quotes "N+ protocols" / "N+ chains". Those
+// were hardcoded and repeatedly went stale as integrations shipped (they read
+// "11+" while 12 protocols were live). Import these instead of typing a
+// number, and the copy tracks the registry automatically.
+//
+// Both are floors ("12+"), so they stay honest even if a surface renders
+// slightly ahead of a deploy.
+export const PUBLIC_PROTOCOL_COUNT = listProtocols().length;
+export const PUBLIC_CHAIN_COUNT    = publicChainIds().length;
+
+// ── Derived filter options (chain / protocol pickers) ───────────────────────
+// The wallet-settings and Discover filter UIs each carried their own literal
+// option arrays. They drifted badly: both were missing Arbitrum, Optimism and
+// Avalanche, plus LlamaPay, Team Finance, Streamflow, Jupiter Lock and Magna —
+// so users literally could not scope a wallet to those chains or protocols.
+// Deriving them from the registry makes that class of bug impossible.
+
+/** Short ticker for a chain, e.g. 1 → "ETH". Falls back to the brand name. */
+const CHAIN_SHORT: Record<number, string> = {
+  1: "ETH", 56: "BSC", 137: "MATIC", 8453: "Base", 42161: "ARB",
+  10: "OP", 43114: "AVAX", 4663: "RH", 101: "SOL",
+};
+
+/** Display order for chain pickers (roughly by vesting TVL, Solana last of the
+ *  mainnets). publicChainIds() returns numeric-ascending order, which reads as
+ *  arbitrary in a UI (Optimism between Ethereum and BNB Chain). */
+const CHAIN_DISPLAY_ORDER = [1, 56, 137, 8453, 42161, 10, 43114, 4663, 101];
+
+export function publicChainOptions(): { id: string; label: string; short: string }[] {
+  const ids = publicChainIds();
+  const rank = (id: number) => {
+    const i = CHAIN_DISPLAY_ORDER.indexOf(id);
+    return i === -1 ? CHAIN_DISPLAY_ORDER.length : i;   // unknown chains sort last
+  };
+  return [...ids].sort((a, b) => rank(a) - rank(b)).map((id) => ({
+    id:    String(id),
+    label: chainBrand(id).name,
+    short: CHAIN_SHORT[id] ?? chainBrand(id).name,
+  }));
+}
+
+/**
+ * UI-visible protocol filter options. `uncx-vm` is deliberately absent — it's
+ * the same product as `uncx` from a user's POV, and the backend expands the
+ * `uncx` filter to cover both.
+ */
+export function publicProtocolOptions(): { id: string; label: string }[] {
+  return listProtocols()
+    .filter((p) => p.slug !== "uncx-vm")
+    .map((p) => ({ id: p.slug, label: p.name }));
+}
+
 /**
  * Adapter-id-level enabled check. Used by the seeder + TVL snapshot cron to
  * skip outbound calls for paused protocols. Note this checks the PROTOCOL

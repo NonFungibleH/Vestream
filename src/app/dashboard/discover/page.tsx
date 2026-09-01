@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
-import { PROTOCOL_CHIPS } from "@/lib/protocol-constants";
+import { PROTOCOL_CHIPS, publicChainOptions, publicProtocolOptions } from "@/lib/protocol-constants";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
@@ -52,25 +52,9 @@ interface TrackedWallet {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CHAIN_OPTIONS = [
-  { id: "1",        label: "Ethereum",  short: "ETH"     },
-  { id: "56",       label: "BNB Chain", short: "BSC"     },
-  { id: "137",      label: "Polygon",   short: "Polygon" },
-  { id: "8453",     label: "Base",      short: "Base"    },
-  { id: "4663",     label: "Robinhood Chain", short: "RH" },
-  { id: "101",      label: "Solana",    short: "SOL"     },
-  { id: "11155111", label: "Sepolia",   short: "Sepolia" },
-];
+const CHAIN_OPTIONS = publicChainOptions();
 
-const PROTOCOL_OPTIONS = [
-  { id: "sablier",      label: "Sablier"       },
-  { id: "uncx",         label: "UNCX"          },
-  { id: "hedgey",       label: "Hedgey"        },
-  { id: "unvest",       label: "Unvest"        },
-  { id: "superfluid",   label: "Superfluid"    },
-  { id: "pinksale",     label: "PinkSale"      },
-  { id: "hoodlock",     label: "HoodLock"      },
-];
+const PROTOCOL_OPTIONS = publicProtocolOptions();
 
 // Single source of truth – see protocol-constants.ts (PROTOCOL_CHIPS).
 const PROTOCOL_COLORS = PROTOCOL_CHIPS;
@@ -564,7 +548,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Wallet Scanner</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 11+ protocols × 9+ chains to find every active vesting for a wallet
+              Scan 12+ protocols × 9+ chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -631,7 +615,7 @@ export default function DiscoverPage() {
                   Find every vesting on a wallet – live
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Paste any wallet address. We hit all 11+ protocols across 9+ chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
+                  Paste any wallet address. We hit all 12+ protocols across 9+ chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
                   Click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   pin individual vestings to your dashboard.
                 </p>
@@ -795,7 +779,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 11+ protocols × 9+ chains. This may take 10–20 seconds.
+                Checking 12+ protocols × 9+ chains. This may take 10–20 seconds.
               </p>
             </div>
           )}

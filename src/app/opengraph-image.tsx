@@ -15,7 +15,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime  = "edge";
-export const alt      = "Vestream – Free Token Vesting Tracker for 9 Protocols";
+export const alt      = "Vestream – Free Token Vesting Tracker for 12 Protocols";
 export const size     = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -90,7 +90,7 @@ export default async function OG() {
               lineHeight:    1.4,
             }}
           >
-            Across Sablier, Hedgey, UNCX, Streamflow + 5 more protocols. Free, no signup.
+            Across Sablier, Hedgey, UNCX, Streamflow + 8 more protocols. Free, no signup.
           </span>
         </div>
 
@@ -111,7 +111,7 @@ export default async function OG() {
             }}
           >
             <span style={{ width: 10, height: 10, background: "#0F8A8A", borderRadius: "50%" }} />
-            11+ protocols · 9+ chains · Live indexing
+            12+ protocols · 9+ chains · Live indexing
           </div>
           <span style={{ fontSize: 22, color: "#8B8E92" }}>vestream.io</span>
         </div>

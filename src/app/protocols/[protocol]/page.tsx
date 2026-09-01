@@ -794,7 +794,7 @@ export default async function ProtocolLandingPage(
               Vestream Pro
             </div>
             <p className="text-sm font-medium leading-snug" style={{ color: "#1A1D20" }}>
-              Get push and email alerts before every {meta.name} unlock – plus full portfolio tracking across all 11+ protocols.
+              Get push and email alerts before every {meta.name} unlock – plus full portfolio tracking across all 12+ protocols.
             </p>
             <p className="text-xs mt-1" style={{ color: "#8B8E92" }}>
               Available to Pro subscribers on iOS &amp; Android.
@@ -1243,7 +1243,7 @@ export default async function ProtocolLandingPage(
           <ScanWalletCTA
             surface="protocol_page"
             heading="Track your own vesting across every protocol"
-            sub="Paste any wallet, every unlock across 11+ protocols and 9+ chains. Free, no sign-up."
+            sub="Paste any wallet, every unlock across 12+ protocols and 9+ chains. Free, no sign-up."
           />
           {/* Spoke → pillar link: anchors this protocol page to the token-vesting
               topic cluster. */}

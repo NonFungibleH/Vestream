@@ -287,7 +287,7 @@ export default function AiPage() {
             params={[
               { name: "address", type: "string",  required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "days",    type: "number",  required: false, desc: "Lookahead window in days (default: 30, max: 365)" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol (any of the 11+ protocols above)" },
+              { name: "protocol", type: "string", required: false, desc: "Filter by protocol (any of the 12+ protocols above)" },
             ]}
             example={`get_upcoming_unlocks({
   address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",

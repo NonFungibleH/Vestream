@@ -16,7 +16,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
-import { protocolBrand } from "@/lib/protocol-constants";
+import { protocolBrand, listProtocols, publicChainIds, chainBrand } from "@/lib/protocol-constants";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
@@ -251,7 +251,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 11+ protocols and 9+ chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across 12+ protocols and 9+ chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the
@@ -472,18 +472,19 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
 // Scanning indicator – animated progress signal during the 10-30s scan
 // ─────────────────────────────────────────────────────────────────────────
 
-const SCAN_PROTOCOLS = [
-  "Sablier",
-  "Hedgey",
-  "Superfluid",
-  "LlamaPay",
-  "UNCX",
-  "Unvest",
-  "Team Finance",
-  "PinkSale",
-  "Streamflow",
-  "Jupiter Lock",
-];
+// Derived from the protocol registry so the scan indicator always names every
+// protocol we actually scan — it previously omitted HoodLock and Magna.
+const SCAN_PROTOCOLS = listProtocols()
+  .filter((p) => p.slug !== "uncx-vm")
+  .map((p) => p.name);
+
+/** Every chain we scan, as an Oxford-comma prose list, for empty-state copy. */
+const CHAIN_LIST = (() => {
+  const names = publicChainIds().map((id) => chainBrand(id).name);
+  return names.length > 1
+    ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+    : names[0] ?? "";
+})();
 
 function ScanningIndicator({ scanningLabel }: { scanningLabel: string }) {
   // Cycle through protocol names every ~1s so the user can see progress
@@ -1286,7 +1287,7 @@ function NoResults({ address }: { address: string }) {
         {truncateAddr(address)}
       </p>
       <p className="text-sm max-w-md mx-auto mt-3" style={{ color: "#8B8E92" }}>
-        We scanned 11+ vesting protocols across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche and Solana. If this wallet has vestings elsewhere, let us know – we add new protocols every month.
+        {`We scanned ${SCAN_PROTOCOLS.length} vesting protocols across ${CHAIN_LIST}.`} If this wallet has vestings elsewhere, let us know – we add new protocols every month.
       </p>
     </div>
   );
