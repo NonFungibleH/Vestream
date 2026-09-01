@@ -39,6 +39,10 @@ type NavItem = { label: string; href: string; items?: typeof PROTOCOL_ITEMS };
 const NAV_ITEMS: NavItem[] = [
   { label: "Protocols", href: "/protocols", items: PROTOCOL_ITEMS },
   { label: "Chains",    href: "/chains",    items: CHAIN_ITEMS },
+  // Added 2026-09-01 at Howard's explicit request ("an easy way to view our
+  // unlocks page from the homepage and menu"). The no-new-nav-links rule in
+  // CLAUDE.md stands for everything else.
+  { label: "Unlocks",   href: "/unlocks" },
   { label: "Demo",      href: "/demo" },
   { label: "Pricing",   href: "/pricing" },
 ];

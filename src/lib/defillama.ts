@@ -132,10 +132,41 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
         //
         // When a row IS clamped we also reduce totalUsd by the difference
         // so the headline matches the post-cap sum.
+        // 2026-09-01: the $1B floor is now applied ONLY to protocols that are
+        // genuinely concentrated on one chain. It exists for Streamflow and
+        // Jupiter Lock, where Solana legitimately holds ~all the TVL and a
+        // relative cap would clip real value. It was never meant to shelter a
+        // BROADLY multi-chain protocol whose top chain is an obvious outlier —
+        // but that is what it was doing: Sablier's Arbitrum row (DefiLlama
+        // $6.98B, 94% of their $7.4B headline, against Ethereum $128M / Base
+        // $180M / BSC $153M) exceeded 3x-second at $539M, so the floor let it
+        // through at a flat $1.00B. That single fabricated-looking figure was
+        // the largest chain number on the site and made Arbitrum read as the
+        // #2 vesting chain.
+        //
+        // "Concentrated" = fewer than 3 chains carrying real weight (>$10M).
+        // Streamflow/Jupiter keep the floor; Sablier falls back to the
+        // relative cap, which is the rule that actually encodes "this chain is
+        // wildly out of line with its siblings".
         const ABSOLUTE_CHAIN_CAP_USD = 1_000_000_000;
+        const MEANINGFUL_CHAIN_USD   = 10_000_000;
+        // Only an EXTREME multiple counts as bad data. Applying second x 3 to
+        // every multi-chain protocol was tested and rejected: it clipped
+        // Hedgey's Ethereum row from $189.7M to $173.4M, and a lead chain at
+        // 3.3x the next is simply what a healthy vesting protocol looks like.
+        // Sablier's Arbitrum row is 39x its second chain. 8x separates the two
+        // cleanly with room to spare on both sides.
+        const OUTLIER_MULTIPLE = 8;
         if (perChain.length >= 1) {
           const second = perChain[1]?.usd ?? 0;
-          const cap    = Math.max(second * 3, ABSOLUTE_CHAIN_CAP_USD);
+          const meaningfulChains = perChain.filter((c) => c.usd >= MEANINGFUL_CHAIN_USD).length;
+          const isSingleChainish = meaningfulChains < 3;
+          // Single-chain protocols keep the absolute floor (their lead chain is
+          // legitimately everything). Multi-chain protocols are clamped only
+          // when the lead is an extreme outlier, and then down to 3x second.
+          const cap = isSingleChainish
+            ? Math.max(second * 3, ABSOLUTE_CHAIN_CAP_USD)
+            : (perChain[0].usd > second * OUTLIER_MULTIPLE ? second * 3 : Number.POSITIVE_INFINITY);
           if (perChain[0].usd > cap) {
             const reduction = perChain[0].usd - cap;
             perChain[0] = { ...perChain[0], usd: cap };

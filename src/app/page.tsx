@@ -268,6 +268,30 @@ export default async function Home() {
                 </Link>
               </div>
             </div>
+
+            {/* Explore row. The homepage was a pure funnel to /find-vestings
+                with no route at all into the public data — /unlocks, /chains
+                and /protocols were reachable only from the nav. Added with the
+                Unlocks nav entry at Howard's request. */}
+            <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2">
+              <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+                Or explore
+              </span>
+              {[
+                { href: "/unlocks",   label: "Unlock calendar" },
+                { href: "/chains",    label: "Chains" },
+                { href: "/protocols", label: "Protocols" },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="text-sm font-semibold transition-opacity hover:opacity-70"
+                  style={{ color: "#0F8A8A" }}
+                >
+                  {l.label} →
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* ── Right: phone mockup ─────────────────────────────────────
