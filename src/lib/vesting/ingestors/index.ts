@@ -25,6 +25,7 @@
 //   superfluid   — Subgraph cliff + end events             ✅ shipped (flow accrual N/A)
 //   streamflow   — Solana program account snapshot diffs   ✅ shipped (Solana-gated)
 //   jupiter-lock — Solana program account snapshot diffs   ✅ shipped (Solana-gated)
+//   magna        — explorer transfers from known vesters   ✅ shipped (ETH/OP/Polygon/ARB)
 //
 // All 10 ingestors shipped. EVM ingestors run unconditionally. Solana
 // ingestors (streamflow, jupiter-lock) self-gate on SOLANA_ENABLED=true
@@ -45,6 +46,7 @@ import { ingestSuperfluidClaimsForUser } from "./superfluid-claims";
 import { ingestStreamflowClaimsForUser } from "./streamflow-claims";
 import { ingestJupiterLockClaimsForUser } from "./jupiter-lock-claims";
 import { ingestHoodlockClaimsForUser } from "./hoodlock-claims";
+import { ingestMagnaClaimsForUser } from "./magna-claims";
 import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 export type AdapterId =
@@ -58,7 +60,8 @@ export type AdapterId =
   | "pinksale"
   | "streamflow"
   | "jupiter-lock"
-  | "hoodlock";
+  | "hoodlock"
+  | "magna";
 
 export interface IngestResult {
   protocol:        AdapterId;
@@ -82,6 +85,7 @@ export const SHIPPED_INGESTORS: AdapterId[] = [
   "streamflow",
   "jupiter-lock",
   "hoodlock",
+  "magna",
 ];
 
 /** Map each adapter id to its ingestor fn. Single source of truth used by
@@ -98,6 +102,7 @@ const INGESTOR_BY_PROTOCOL: Record<AdapterId, (u: string, w: string[], c?: Suppo
   "streamflow":   ingestStreamflowClaimsForUser,
   "jupiter-lock": ingestJupiterLockClaimsForUser,
   "hoodlock":     ingestHoodlockClaimsForUser,
+  "magna":        ingestMagnaClaimsForUser,
 };
 
 function runGated(protocol: AdapterId, run: () => Promise<number>): Promise<IngestResult> {
@@ -183,6 +188,7 @@ export async function ingestAllClaimsForUser(
 
     // HoodLock — Robinhood Chain (4663). Withdrawn events → claim income.
     gated("hoodlock",     () => ingestHoodlockClaimsForUser(userId, wallets, chainIds)),
+    gated("magna",        () => ingestMagnaClaimsForUser(userId, wallets, chainIds)),
   ];
 
   return Promise.all(tasks);
