@@ -307,18 +307,51 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // 3. For each claim tx: decode withdraw() calldata → leaf views → stream.
       const tokenCache  = new Map<string, { symbol: string; decimals: number }>();
       const vesterToken = vesterTokenPre; // reuse token() reads from step 2
-      const nowSec  = Math.floor(Date.now() / 1000);
       const streams: VestingStream[] = [];
 
       for (const [txHash, involved] of candidateTxs) {
+        streams.push(...await decodeClaimTx(client, chainId, txHash, involved, vesterToken, tokenCache));
+      }
+
+      if (streams.length > 0) await writeToCache(streams);
+      return { eventCount: streams.length };
+    },
+  };
+}
+
+/**
+ * Decode every Magna claim contained in ONE transaction into VestingStreams.
+ *
+ * Shared by the live indexer (which finds claim txs via logs) and the
+ * historical backfill (which gets tx hashes straight from an explorer, and so
+ * skips log scanning entirely — see the RPC notes in scanWindow for why that
+ * matters). One decode path means both produce identical stream shapes.
+ *
+ * `involved` is the set of vester addresses that paid out in this tx. The two
+ * caches are passed in so a caller processing many txs pays each token()/
+ * symbol()/decimals() read only once.
+ */
+export async function decodeClaimTx(
+  client:      PublicClient,
+  chainId:     SupportedChainId,
+  txHash:      Hex,
+  involved:    Iterable<string>,
+  vesterToken: Map<string, string>,
+  tokenCache:  Map<string, { symbol: string; decimals: number }>,
+): Promise<VestingStream[]> {
+  const streams: VestingStream[] = [];
+  const nowSec  = Math.floor(Date.now() / 1000);
+  {
+    {
+      {
         let input: Hex;
         try {
           const tx = await client.getTransaction({ hash: txHash });
           input = tx.input;
-        } catch { continue; }
+        } catch { return streams; }
 
         const calls = extractWithdrawCalls(input);
-        if (calls.length === 0) continue;
+        if (calls.length === 0) return streams;
 
         for (const vester of involved) {
           const vesterAddr = vester as `0x${string}`;
@@ -445,11 +478,9 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
           }
         }
       }
-
-      if (streams.length > 0) await writeToCache(streams);
-      return { eventCount: streams.length };
-    },
-  };
+    }
+  }
+  return streams;
 }
 
 export const magnaIndexers: Indexer[] = [
