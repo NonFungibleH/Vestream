@@ -4,8 +4,8 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Provenance } from "@/components/Provenance";
-import { chainSlug, chainBrand, chainIcon, listProtocols } from "@/lib/protocol-constants";
-import { getChainsOverview } from "@/lib/vesting/chain-stats";
+import { chainSlug, chainBrand, chainIcon, listProtocols, getProtocol } from "@/lib/protocol-constants";
+import { getChainsOverview, getUpcomingUnlocksAcrossChains } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
 export const revalidate = 600;
@@ -24,8 +24,40 @@ export const metadata: Metadata = {
 
 function n(x: number) { return x.toLocaleString("en-US"); }
 
+/**
+ * Faint grid texture for hero sections.
+ *
+ * The page was flat #F5F5F3 with nothing behind it, so it read as a blank
+ * sheet rather than a surface. Two repeating gradients cost nothing (no image
+ * request) and give the eye something to register depth against; kept at ~3%
+ * so it reads as paper, not graph paper.
+ */
+const GRID_TEXTURE = {
+  backgroundImage:
+    "repeating-linear-gradient(0deg, rgba(21,23,26,0.028) 0 1px, transparent 1px 64px)," +
+    "repeating-linear-gradient(90deg, rgba(21,23,26,0.028) 0 1px, transparent 1px 64px)",
+  maskImage:        "radial-gradient(ellipse 75% 65% at 50% 20%, #000 30%, transparent 78%)",
+  WebkitMaskImage:  "radial-gradient(ellipse 75% 65% at 50% 20%, #000 30%, transparent 78%)",
+} as const;
+
+/** Same idea on the dark band, drawn in light instead of ink. */
+const GRID_TEXTURE_DARK = {
+  backgroundImage:
+    "repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 64px)," +
+    "repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 64px)",
+  maskImage:        "radial-gradient(ellipse 70% 70% at 50% 0%, #000 20%, transparent 75%)",
+  WebkitMaskImage:  "radial-gradient(ellipse 70% 70% at 50% 0%, #000 20%, transparent 75%)",
+} as const;
+
+function fmtUnlockDate(sec: number) {
+  return new Date(sec * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default async function ChainsIndexPage() {
-  const o = await getChainsOverview();
+  // Sequential, not Promise.all: both are heavy DB reads and running them
+  // concurrently had them fighting for the same pool connections.
+  const feed = await getUpcomingUnlocksAcrossChains(8);
+  const o    = await getChainsOverview();
   const max = o.chains[0]?.tvlUsd ?? 0;
   const total = o.chains.reduce((sum, c) => sum + (c.tvlUsd > 0 ? c.tvlUsd : 0), 0);
   const protocolCount = listProtocols().length;
@@ -51,8 +83,9 @@ export default async function ChainsIndexPage() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-24 pb-12 md:pt-32 md:pb-16 px-4 md:px-8 text-center">
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 85% 55% at 50% -5%, rgba(28,184,184,0.16) 0%, rgba(28,184,184,0.05) 45%, transparent 72%)",
         }} />
+        <div className="absolute inset-0 pointer-events-none" style={GRID_TEXTURE} />
         <div className="absolute top-0 left-0 right-0 h-px" style={{
           background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.3), transparent)",
         }} />
@@ -250,6 +283,89 @@ export default async function ChainsIndexPage() {
           })}
         </div>
       </section>
+
+      {/* ── Dark band ────────────────────────────────────────────────────
+          One dark section mid-page. Every Vestream surface was the same
+          off-white value, so nothing carried emphasis; a light -> dark -> light
+          rhythm is what gives the page a centre of gravity, and it costs
+          nothing in palette terms (this navy is the same #0d1b35 the
+          /developer page already owns). The content is deliberately the
+          highest-value thing we have: live money, dated, across every chain. */}
+      {feed.length > 0 && (
+        <section className="relative overflow-hidden px-4 md:px-8 py-16 md:py-24" style={{ background: "#0d1b35" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(28,184,184,0.14) 0%, transparent 70%)",
+          }} />
+          <div className="absolute inset-0 pointer-events-none" style={GRID_TEXTURE_DARK} />
+          <div className="absolute top-0 left-0 right-0 h-px" style={{
+            background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.45), transparent)",
+          }} />
+
+          <div className="relative max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-5"
+                style={{ background: "rgba(28,184,184,0.1)", borderColor: "rgba(28,184,184,0.28)", color: "#5FD4D4" }}
+              >
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#1CB8B8" }} />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#1CB8B8" }} />
+                </span>
+                NEXT 7 DAYS
+              </div>
+              <h2 className="font-bold mb-3" style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", letterSpacing: "-0.03em", color: "white", lineHeight: 1.1 }}>
+                The biggest unlocks coming up
+              </h2>
+              <p className="text-sm md:text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.55)" }}>
+                Across every chain and protocol we index, ranked by value at today&apos;s prices.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {feed.map((u, i) => {
+                const b  = chainBrand(u.chainId);
+                const pr = getProtocol(u.protocol);
+                return (
+                  <Link
+                    key={`${u.chainId}-${u.address}-${u.eventTime}-${i}`}
+                    href={`/token/${u.chainId}/${u.address}`}
+                    className="flex items-center gap-3 p-4 rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
+                    style={{ background: "#122040", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <span
+                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-[11px] font-extrabold"
+                      style={{ background: `${b.color}1f`, border: `1px solid ${b.color}44`, color: b.color }}
+                      title={b.name}
+                    >{b.name.slice(0, 2).toUpperCase()}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate" style={{ color: "white" }}>
+                        {u.symbol || `${u.address.slice(0, 6)}…${u.address.slice(-4)}`}
+                        {pr && <span className="ml-2 text-[11px] font-medium" style={{ color: pr.color }}>{pr.name}</span>}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
+                        {b.name} · {fmtUnlockDate(u.eventTime)}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: "#5FD4D4" }}>
+                      {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 text-center">
+              <Link
+                href="/unlocks"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.28)" }}
+              >
+                See the full unlock calendar →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <SiteFooter theme="light" />
     </div>

@@ -16,6 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { after } from "next/server";
+import { withTimeout } from "../with-timeout";
 import { unstable_cache } from "next/cache";
 import { getUnlocksInWindow, enrichGroupsWithUsd, type WindowUnlockGroup } from "./unlock-windows";
 import { readAllSnapshots, type ProtocolSnapshotRow } from "./tvl-snapshot";
@@ -300,4 +301,79 @@ export async function getChainsOverview(): Promise<ChainsOverview> {
   }
   const lastGood = await getLastGoodChainsData<ChainsOverview>();
   return lastGood ?? result;
+}
+
+// ── Cross-chain unlock feed ──────────────────────────────────────────────────
+
+/** Uncached compute. Only ever called through the bounded wrapper below. */
+async function computeCrossChainUnlocks(limit: number, days: number): Promise<ChainUnlock[]> {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const endSec = nowSec + days * 86_400;
+
+  // Pool 1000, matching /unlocks/[range] — the existing precedent for this
+  // exact query on a render path. A 5000 pool is what the per-chain callers
+  // use, but they scope to one chainId; unscoped at 5000 this did not return
+  // inside 90s in-render (vs 1.8s standalone), which is the same unbounded-
+  // render-work shape that produced the explorer's 524s.
+  const win = await getUnlocksInWindow(nowSec, endSec, 1000);
+  if (win.groups.length === 0) return [];
+  // redis:false — ISR-safe (the Upstash SDK forces cache:"no-store", which
+  // hard-errors inside an ISR render).
+  // liveFallback:false — pure-DB pricing, the same opt-out the explorer uses.
+  // This was the whole reason the band never rendered: live-pricing the miss
+  // set added unbounded network latency on a synchronous render (~120 live
+  // DexScreener lookups per render), which is fast in a standalone script with
+  // a warm cache but blew a 15s bound inside Next. Cache misses just don't make
+  // the list; the hourly refresh-prices cron keeps the cache warm, and we only
+  // need the top few priced unlocks anyway.
+  const priced = await enrichGroupsWithUsd(win.groups, { redis: false, liveFallback: false });
+  const publicSet = new Set(publicChainIds());
+  return [...priced]
+    .filter((g) => publicSet.has(g.chainId) && (g.usdValue ?? 0) > 0)
+    .sort(rankEvents)
+    .slice(0, limit)
+    .map((g): ChainUnlock => ({
+      symbol: g.tokenSymbol, address: g.tokenAddress, chainId: g.chainId,
+      protocol: g.protocol, eventTime: g.eventTime, amount: g.amount,
+      decimals: g.tokenDecimals, usdValue: g.usdValue ?? null,
+    }));
+}
+
+/**
+ * The biggest upcoming unlocks across EVERY public chain, for the /chains
+ * feature band.
+ *
+ * NOT wrapped in unstable_cache: the /chains page already exports
+ * `revalidate = 600`, so ISR alone guarantees this runs at most once per ten
+ * minutes. readSnapshotsCached earns its wrapper by being shared across ten
+ * chain surfaces; this feed serves one page, so the extra layer bought nothing
+ * and cost real behaviour — with it in place the wrapper hung without ever
+ * invoking the callback (verified: a timing log inside it never printed) and
+ * the band silently never rendered.
+ *
+ * Hard-bounded, though, because this IS the unfiltered version of the query the
+ * chain pages run per-chain. Unbounded on a render path is exactly how the
+ * explorer used to throw Cloudflare 524s. A timeout degrades to [] and the band
+ * simply doesn't render, rather than hanging the page.
+ *
+ * Window is 30 days, not 90: measured 2.5s vs 8.1s with the SAME 5000 pool, so
+ * nothing big inside the window is missed — the window shrinks, not the sample.
+ * Skipped at build (the USD enrichment is the expensive half), matching how
+ * getChainStats handles the same query.
+ */
+export async function getUpcomingUnlocksAcrossChains(
+  limit = 8,
+  opts: { days?: number } = {},
+): Promise<ChainUnlock[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  const days = opts.days ?? 7;
+  return withTimeout(
+    computeCrossChainUnlocks(limit, days).catch((err) => {
+      console.error("[chain-stats] cross-chain unlocks:", err);
+      return [] as ChainUnlock[];
+    }),
+    15_000,
+    [] as ChainUnlock[],
+    "cross-chain-unlocks",
+  );
 }
