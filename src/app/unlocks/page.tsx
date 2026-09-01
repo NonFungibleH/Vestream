@@ -146,7 +146,13 @@ async function getWindowCounts(): Promise<Map<string, WindowCount>> {
     const range = WINDOWS[slug].range();
     const result = await withTimeout(
       getUnlocksInWindow(range.startSec, range.endSec, 500),
-      10_000,
+      // 2.5s, not 10s. These use the UNSCOPED path, which currently never
+      // returns in the Vercel runtime, so every one of the 8 windows sat out
+      // its full timeout — 80s of pure waiting before anything else on the
+      // page could run, which is why the whole ISR regeneration failed and the
+      // page stayed frozen on its empty build-time prerender. They still render
+      // "–" exactly as they do today; they just stop eating the render budget.
+      2_500,
       EMPTY_WINDOW_RESULT,
       `unlocks-index:${slug}`,
     );
@@ -161,9 +167,10 @@ async function getWindowCounts(): Promise<Map<string, WindowCount>> {
 }
 
 export default async function UnlocksIndex() {
-  const counts = await getWindowCounts();
-  // After the counts, not concurrently — same pooler discipline as above.
+  // Table FIRST: it is the page's actual content, and it must not be starved by
+  // the window counts (which are a secondary nav aid and currently all "–").
   const upcoming = await getUpcomingTable(25);
+  const counts   = await getWindowCounts();
 
   const indexJsonLd = {
     "@context": "https://schema.org",
