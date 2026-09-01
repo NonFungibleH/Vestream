@@ -101,6 +101,10 @@
       "schedule": "5 6 * * *"
     },
     {
+      "path": "/api/cron/seed-cache?group=team-finance",
+      "schedule": "15 6 * * *"
+    },
+    {
       "path": "/api/cron/seed-cache?group=hedgey",
       "schedule": "25 6 * * *"
     },

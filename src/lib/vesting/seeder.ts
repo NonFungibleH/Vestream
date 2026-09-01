@@ -1195,14 +1195,22 @@ function limitFor(mode: SeedMode): number {
 // causing sustained 429 storms and Vercel 300s timeouts. Running sequentially
 // in separate cron jobs with a 30-min gap eliminates the contention.
 // Streamflow runs daily; Jupiter Lock every 2 days.
-export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey";
+export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey" | "team-finance";
 
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey", "team-finance"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
   if (adapterId === "streamflow")    return "streamflow"; // own group, runs daily, separate from JL
   if (adapterId === "jupiter-lock") return "solana";      // "solana" group = Jupiter Lock only
+  // Team Finance gets its own group for the same reason Hedgey and Superfluid
+  // did: it's slow. Its Squid GraphQL walk across 5 chains doesn't finish
+  // inside a shared budget — a targeted 5-job run still hadn't committed after
+  // 95s — so inside "subgraphs" it was always the tail that got killed, and it
+  // went 63 days without a single attempt. Least-recently-attempted ordering
+  // (added alongside this) would otherwise just rotate that starvation onto
+  // UNCX/Unvest instead of ending it. A dedicated slot gives TF the full 300s.
+  if (adapterId === "team-finance")  return "team-finance";
   if (adapterId === "sablier")       return "sablier";
   // 2026-05-28: sablier-flow moved from "subgraphs" to "sablier" group.
   // Both adapters use the same Envio Hasura endpoint and have comparable
