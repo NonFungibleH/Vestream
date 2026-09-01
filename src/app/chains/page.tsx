@@ -27,6 +27,7 @@ function n(x: number) { return x.toLocaleString("en-US"); }
 export default async function ChainsIndexPage() {
   const o = await getChainsOverview();
   const max = o.chains[0]?.tvlUsd ?? 0;
+  const total = o.chains.reduce((sum, c) => sum + (c.tvlUsd > 0 ? c.tvlUsd : 0), 0);
   const protocolCount = listProtocols().length;
   const protoMeta = new Map(listProtocols().map((p) => [p.slug, p]));
 
@@ -94,6 +95,42 @@ export default async function ChainsIndexPage() {
           <div className="mt-5 flex justify-center">
             <Provenance updatedISO={o.computedAt} />
           </div>
+
+          {/* The whole index as ONE shape. Nine separate cards never showed the
+              reader how the total splits — this does it before they scroll,
+              and gives the hero something to look at besides text. */}
+          {total > 0 && (
+            <div className="mt-10 max-w-3xl mx-auto">
+              <div
+                className="h-4 rounded-full overflow-hidden flex"
+                style={{ background: "rgba(15,138,138,0.06)", boxShadow: "inset 0 1px 2px rgba(21,23,26,0.06)" }}
+              >
+                {o.chains.filter((c) => c.tvlUsd > 0).map((c) => {
+                  const b = chainBrand(c.chainId);
+                  return (
+                    <div
+                      key={c.chainId}
+                      className="h-full first:rounded-l-full last:rounded-r-full"
+                      style={{ width: `${(c.tvlUsd / total) * 100}%`, background: b.color, boxShadow: "inset -1px 0 0 rgba(255,255,255,0.7)" }}
+                      title={`${b.name}: ${fmtUsd(c.tvlUsd)}`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+                {o.chains.filter((c) => c.tvlUsd > 0).slice(0, 5).map((c) => {
+                  const b = chainBrand(c.chainId);
+                  return (
+                    <span key={c.chainId} className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "#475569" }}>
+                      <span className="w-2 h-2 rounded-full" style={{ background: b.color }} />
+                      {b.name}
+                      <span className="tabular-nums" style={{ color: "#8B8E92" }}>{Math.round((c.tvlUsd / total) * 100)}%</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -107,7 +144,13 @@ export default async function ChainsIndexPage() {
             const brand = chainBrand(c.chainId);
             const icon  = chainIcon(c.chainId);
             const slug  = chainSlug(c.chainId);
-            const pct   = max > 0 && c.tvlUsd > 0 ? Math.max(3, (c.tvlUsd / max) * 100) : 0;
+            // Bar LENGTH is share-of-leader, so chains are comparable at a
+            // glance. Previously the composition bar filled 100% of every card
+            // regardless of value, which made $1B and $4M render identically —
+            // the reason nine rows read as one flat, sizeless list.
+            const pct   = max > 0 && c.tvlUsd > 0 ? Math.max(2, (c.tvlUsd / max) * 100) : 0;
+            const share = total > 0 && c.tvlUsd > 0 ? (c.tvlUsd / total) * 100 : 0;
+            const feat  = i < 3 && c.tvlUsd > 0;
 
             // Protocol composition on this chain — sorted by TVL, for the
             // stacked bar + top-protocol chips (replaces the scroll matrix).
@@ -120,11 +163,20 @@ export default async function ChainsIndexPage() {
               <Link
                 key={c.chainId}
                 href={`/chains/${slug}`}
-                className="block p-4 md:p-5 rounded-2xl transition-all hover:shadow-md"
-                style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}
+                className="block p-4 md:p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                style={{
+                  background: "white",
+                  border: `1px solid ${feat ? "rgba(15,138,138,0.18)" : "rgba(21,23,26,0.08)"}`,
+                  boxShadow: feat
+                    ? "0 2px 10px rgba(15,138,138,0.07), 0 1px 3px rgba(0,0,0,0.03)"
+                    : "0 1px 3px rgba(0,0,0,0.03)",
+                }}
               >
                 <div className="flex items-center gap-3 md:gap-4">
-                  <span className="text-sm font-bold tabular-nums w-5 text-center flex-shrink-0" style={{ color: "#B8BABD" }}>{i + 1}</span>
+                  <span
+                    className="text-sm font-bold tabular-nums w-5 text-center flex-shrink-0"
+                    style={{ color: feat ? "#0F8A8A" : "#B8BABD" }}
+                  >{i + 1}</span>
                   <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: brand.bg, border: `1px solid ${brand.border}` }}>
                     {icon ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -139,6 +191,12 @@ export default async function ChainsIndexPage() {
                       <p className="text-base font-bold tabular-nums flex-shrink-0" style={{ color: "#0F8A8A" }}>{c.tvlUsd > 0 ? fmtUsd(c.tvlUsd) : "—"}</p>
                     </div>
                     <p className="text-[11px] mt-0.5" style={{ color: "#8B8E92" }}>
+                      {share > 0 && (
+                        <span className="font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+                          {share >= 1 ? share.toFixed(0) : share.toFixed(1)}% of index
+                        </span>
+                      )}
+                      {share > 0 ? " · " : ""}
                       {n(c.protocolCount)} {c.protocolCount === 1 ? "protocol" : "protocols"}
                       {c.streamCount > 0 ? ` · ${n(c.streamCount)} streams` : ""}
                     </p>
@@ -148,20 +206,25 @@ export default async function ChainsIndexPage() {
                 {/* Composition bar: one segment per protocol, coloured by
                     protocol brand. Falls back to a single scaled teal bar
                     when we have no per-protocol split (e.g. cold data). */}
-                <div className="mt-3 h-2.5 rounded-full overflow-hidden flex" style={{ background: "rgba(15,138,138,0.06)" }}>
-                  {comp.length > 0 && compTotal > 0
-                    ? comp.map(([slugP, v]) => {
-                        const m = protoMeta.get(slugP);
-                        return (
-                          <div
-                            key={slugP}
-                            className="h-full first:rounded-l-full last:rounded-r-full"
-                            style={{ width: `${(v / compTotal) * 100}%`, background: m?.color ?? "#94a3b8", boxShadow: "inset -1px 0 0 rgba(255,255,255,0.6)" }}
-                            title={`${m?.name ?? slugP}: ${fmtUsd(v)}`}
-                          />
-                        );
-                      })
-                    : <div className="h-full rounded-full" style={{ width: `${pct}%`, background: brand.color }} />}
+                <div
+                  className="mt-3 h-2.5 rounded-full overflow-hidden"
+                  style={{ background: "rgba(21,23,26,0.04)", boxShadow: "inset 0 1px 2px rgba(21,23,26,0.05)" }}
+                >
+                  <div className="h-full rounded-full overflow-hidden flex" style={{ width: `${pct}%` }}>
+                    {comp.length > 0 && compTotal > 0
+                      ? comp.map(([slugP, v]) => {
+                          const m = protoMeta.get(slugP);
+                          return (
+                            <div
+                              key={slugP}
+                              className="h-full"
+                              style={{ width: `${(v / compTotal) * 100}%`, background: m?.color ?? "#94a3b8", boxShadow: "inset -1px 0 0 rgba(255,255,255,0.6)" }}
+                              title={`${m?.name ?? slugP}: ${fmtUsd(v)}`}
+                            />
+                          );
+                        })
+                      : <div className="h-full w-full" style={{ background: brand.color }} />}
+                  </div>
                 </div>
 
                 {/* Top-protocol legend chips */}

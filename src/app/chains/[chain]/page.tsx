@@ -76,11 +76,20 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-function UnlockList({ title, items }: { title: string; items: ChainUnlock[] }) {
+/**
+ * One unlock column. Rendered as a pair inside `UnlockColumns` — these used to
+ * be two full-width stacked sections, which pushed "biggest upcoming" a whole
+ * screen below "next" even though the two are meant to be read against each
+ * other (soonest vs largest is the comparison that matters).
+ *
+ * `rank` numbers the biggest-unlocks column, so the two columns stay visually
+ * distinct at a glance instead of reading as one long repeated list.
+ */
+function UnlockList({ title, items, rank = false }: { title: string; items: ChainUnlock[]; rank?: boolean }) {
   return (
-    <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
-      <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>{title}</h2>
-      <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)" }}>
+    <div className="min-w-0">
+      <h2 className="text-base md:text-lg font-bold mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>{title}</h2>
+      <div className="rounded-2xl overflow-hidden h-full" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
         {items.map((u, i) => {
           const p = getProtocol(u.protocol);
           const amt = fmtAmount(u.amount, u.decimals);
@@ -91,6 +100,12 @@ function UnlockList({ title, items }: { title: string; items: ChainUnlock[] }) {
               className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/[0.02]"
               style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}
             >
+              {rank && (
+                <span
+                  className="w-5 text-[11px] font-bold tabular-nums flex-shrink-0 text-center"
+                  style={{ color: i < 3 ? "#0F8A8A" : "#B4B7BA" }}
+                >{i + 1}</span>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate" style={{ color: "#1A1D20" }}>
                   {u.symbol || `${u.address.slice(0, 6)}…${u.address.slice(-4)}`}
@@ -104,6 +119,19 @@ function UnlockList({ title, items }: { title: string; items: ChainUnlock[] }) {
             </Link>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/** Soonest and largest side by side — one comparison, not two scrolls. */
+function UnlockColumns({ next, biggest, chainName }: { next: ChainUnlock[]; biggest: ChainUnlock[]; chainName: string }) {
+  if (next.length === 0 && biggest.length === 0) return null;
+  return (
+    <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 items-start">
+        {next.length    > 0 && <UnlockList title={`Next unlocks on ${chainName}`}    items={next.slice(0, 10)} />}
+        {biggest.length > 0 && <UnlockList title={`Biggest upcoming on ${chainName}`} items={biggest.slice(0, 10)} rank />}
       </div>
     </section>
   );
@@ -269,8 +297,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
       )}
 
       {/* Next unlocks (chronological), then biggest (by USD). Rows link to token pages. */}
-      {s.nextUnlocks.length > 0 && <UnlockList title={`Next unlocks on ${brand.name}`} items={s.nextUnlocks} />}
-      {s.biggestUnlocks.length > 0 && <UnlockList title={`Biggest upcoming unlocks on ${brand.name}`} items={s.biggestUnlocks} />}
+      <UnlockColumns next={s.nextUnlocks} biggest={s.biggestUnlocks} chainName={brand.name} />
 
       {/* Calendar + explore links */}
       <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
