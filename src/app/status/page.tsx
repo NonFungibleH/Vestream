@@ -363,7 +363,7 @@ const loadStatusData = unstable_cache(
   //       in favour of deriving the max from the cells we already load.
   // With (1) in place an empty payload can no longer be cached (the durable L2
   // is always served instead), so this should be the LAST v-bump for this class.
-  ["status-page-data-v12"],
+  ["status-page-data-v13"],
   { revalidate: 600, tags: ["status-page"] },
 );
 
@@ -376,6 +376,11 @@ const CHAIN_COLUMNS: SupportedChainId[] = [
   CHAIN_IDS.BASE,
   CHAIN_IDS.ARBITRUM,
   CHAIN_IDS.OPTIMISM,
+  // Avalanche (Sablier, Team Finance, Magna) and Robinhood Chain (HoodLock)
+  // were never added when those integrations shipped, so /status silently
+  // omitted two live chains and could not show a stale cell on either.
+  CHAIN_IDS.AVALANCHE,
+  CHAIN_IDS.ROBINHOOD,
   CHAIN_IDS.SOLANA,
 ];
 
