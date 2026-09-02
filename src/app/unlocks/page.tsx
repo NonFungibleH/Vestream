@@ -100,9 +100,16 @@ async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCoun
   const nowSec = Math.floor(Date.now() / 1000);
   const endSec = nowSec + 90 * 86_400;   // widest window any card asks for
 
+  // Pool 1000, not 2000. Measured against prod: 90d at pool 2000 costs 2,447ms
+  // and returns 1,367 groups; at pool 1000 it costs 320ms for 782 — 7.6x
+  // cheaper, and 782 groups over 90 days is ample for eight window counts plus
+  // a 25-row table. The wider pool is what pushed this render past the route's
+  // 60s ceiling, which made the page serve empty again.
+  // Bound is 15s rather than 25s so a slow read fails fast and leaves budget
+  // for the rest of the render instead of consuming it.
   const win = await withTimeout(
-    getUnlocksInWindow(nowSec, endSec, 2000),
-    25_000,
+    getUnlocksInWindow(nowSec, endSec, 1000),
+    15_000,
     EMPTY_WINDOW_RESULT,
     "unlocks:all",
   );
