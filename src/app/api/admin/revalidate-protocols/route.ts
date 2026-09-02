@@ -103,14 +103,32 @@ export async function POST(req: NextRequest) {
     // so the first person to open /unlocks still saw a table-less page. Render
     // them here so the cache holds real content before any visitor arrives.
     // Sequential and no-store, same discipline as the warm cron.
+    // TWO passes, not one. Under stale-while-revalidate the first request after
+    // an invalidation is served the STALE payload immediately (measured: 0.27s,
+    // x-vercel-cache: STALE, empty table) while regeneration runs behind it. A
+    // single warm fetch therefore returned in ~1s having achieved nothing, and
+    // the next real visitor still got the empty build prerender — which is
+    // exactly what Howard kept seeing on /unlocks. Pass 1 triggers the
+    // regeneration, we wait for it to land, then pass 2 confirms the fresh
+    // payload is in cache before anyone arrives.
     for (const path of ["/unlocks", "/chains", "/"]) {
-      try {
-        await fetch(`https://www.vestream.io${path}`, {
-          cache: "no-store",
-          headers: { "x-vestream-warm": "1" },
-        });
-      } catch (err) {
-        console.error(`[revalidate] warm ${path} failed:`, err);
+      for (let pass = 1; pass <= 2; pass++) {
+        try {
+          const res = await fetch(`https://www.vestream.io${path}`, {
+            cache: "no-store",
+            headers: { "x-vestream-warm": "1" },
+          });
+          const state = res.headers.get("x-vercel-cache");
+          console.log(`[revalidate] warm ${path} pass ${pass}: ${res.status} ${state}`);
+          // Fresh already? No need for the second pass.
+          if (pass === 1 && state !== "STALE") break;
+        } catch (err) {
+          console.error(`[revalidate] warm ${path} pass ${pass} failed:`, err);
+          break;
+        }
+        // Give the background regeneration time to finish (/unlocks renders in
+        // ~8s) before the confirming pass.
+        if (pass === 1) await new Promise((r) => setTimeout(r, 12_000));
       }
     }
   }

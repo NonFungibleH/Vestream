@@ -23,7 +23,9 @@ import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { PROTOCOL_SLUGS, getProtocol } from "@/lib/protocol-constants";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// Raised for the two-pass warm: a STALE page costs an extra 12s wait plus a
+// re-fetch, and with ~16 URLs the old 120s budget could be exceeded.
+export const maxDuration = 300;
 
 const BASE = "https://www.vestream.io";
 
@@ -61,7 +63,15 @@ export async function GET(req: NextRequest) {
       // no-store on OUR fetch so the warmer never serves itself a cached
       // response — the page still renders server-side and repopulates its own
       // unstable_cache Data Cache.
-      const res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
+      let res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
+      // Under stale-while-revalidate a STALE hit returns instantly and warms
+      // nothing: the regeneration it kicked off finishes after we have already
+      // moved on, so the next real visitor still gets the stale payload. Wait
+      // for it, then re-fetch so the fresh render is actually in cache.
+      if (res.headers.get("x-vercel-cache") === "STALE") {
+        await new Promise((r) => setTimeout(r, 12_000));
+        res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
+      }
       warmed.push({ url, status: res.status, ms: Date.now() - started });
     } catch (err) {
       warmed.push({ url, error: String(err).slice(0, 120) });
