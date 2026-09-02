@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { GradientCta } from "@/components/GradientCta";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
 import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon } from "@/lib/protocol-constants";
@@ -1202,7 +1203,16 @@ export default async function Home() {
       </section>
 
       {/* ── Features grid ────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
+      {/* Drawn with BORDERS, not cards. Every other section on the page is a
+          grid of raised cards; doing it once more here made the page read as
+          one texture end to end. A bordered grid gives the same information a
+          different rhythm, and it is the section the design singles out for
+          exactly that reason. The hairlines come from a 1px grid gap with the
+          line colour behind it, so they resolve correctly at every breakpoint
+          without per-cell border juggling. */}
+      <section className="px-4 md:px-8 py-16 md:py-24"
+        style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+        <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
             Everything in one place
@@ -1212,7 +1222,8 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px"
+          style={{ background: "rgba(21,23,26,0.09)", border: "1px solid rgba(21,23,26,0.09)" }}>
           {[
             {
               icon: <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
@@ -1251,16 +1262,15 @@ export default async function Home() {
               body: "Download a full CSV of vesting positions and sell transactions – or print a PDF report – directly from the dashboard.",
             },
           ].map((f) => (
-            <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
-              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color }}>
-                {f.icon}
-              </div>
-              <h3 className="text-sm font-semibold mb-2" style={{ color: "#1A1D20" }} dangerouslySetInnerHTML={{ __html: f.title }} />
-              <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>{f.body}</p>
+            <div key={f.title} className="p-6 md:p-7 transition-colors" style={{ background: "#FFFFFF" }}>
+              {/* Line icon in the brand teal, not a tinted tile: the tiles were
+                  what made these read as cards. */}
+              <div className="mb-4" style={{ color: "#1CB8B8" }}>{f.icon}</div>
+              <h3 className="text-[17px] font-semibold mb-2" style={{ color: "#1A1D20", letterSpacing: "-0.015em" }} dangerouslySetInnerHTML={{ __html: f.title }} />
+              <p className="text-[14.5px] leading-relaxed" style={{ color: "#5B6064" }}>{f.body}</p>
             </div>
           ))}
+        </div>
         </div>
       </section>
 
@@ -2050,33 +2060,16 @@ export default async function Home() {
         <PricingComparisonTable />
       </section>
 
-      {/* ── Final CTA ───────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-20 md:pb-32 flex flex-col items-center text-center">
-        <div className="relative max-w-2xl w-full rounded-3xl overflow-hidden px-6 md:px-10 py-12 md:py-16"
-          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(147,197,253,0.12) 0%, transparent 70%)" }} />
-          <div className="absolute -left-8 bottom-0 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(28,184,184,0.12) 0%, transparent 70%)" }} />
-          <h2 className="relative text-3xl font-bold text-white mb-3" style={{ letterSpacing: "-0.032em" }}>See every token you&rsquo;re owed.</h2>
-          <p className="relative text-base mb-8 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-            Paste any wallet and Vestream returns every active vesting across 12+ protocols in seconds. No sign-up. No KYC.
-          </p>
-          <div className="relative flex justify-center w-full">
-            <Link
-              href="/find-vestings"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
-              style={{
-                background: "white",
-                color: "#0F8A8A",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
-              }}
-            >
-              Find my vestings →
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Closing block, full-bleed to mirror the ink hero: the page opens on
+          ink and closes on the gradient. Was a max-w-2xl rounded card, which
+          left the page trailing off into a strip of grey before the footer. */}
+      <GradientCta
+        eyebrow="Takes about a minute"
+        title="See every token you&rsquo;re owed."
+        sub="Paste any wallet and Vestream returns every active vesting across 12 protocols in seconds. No sign-up, no wallet connection, read-only."
+        primary={{ href: "/find-vestings", label: "Find my vestings →" }}
+        secondary={{ href: "#download", label: "Get the app" }}
+      />
 
       <SiteFooter theme="light" />
 
