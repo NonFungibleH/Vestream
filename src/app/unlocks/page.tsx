@@ -60,7 +60,7 @@ type UpcomingRow = {
   eventTime: number; amount: string | null; decimals: number; usdValue: number | null;
   // Concentration — the columns nobody else has. Sourced from
   // token_vesting_rollups, which the refresh-rollups cron keeps warm.
-  walletCount: number | null; topHolderShare: number | null;
+  walletCount: number | null;
   // Total locked for the token, so a row can say how big THIS unlock is
   // relative to everything still vesting (explorer-style context).
   totalLocked: bigint | null;
@@ -129,7 +129,7 @@ async function getUpcomingTable(limit = 25): Promise<UpcomingRow[]> {
       symbol: g.tokenSymbol, address: g.tokenAddress, chainId: g.chainId,
       protocol: g.protocol, eventTime: g.eventTime, amount: g.amount,
       decimals: g.tokenDecimals, usdValue: g.usdValue ?? null,
-      walletCount: r?.walletCount ?? null, topHolderShare: r?.topHolderShare ?? null,
+      walletCount: r?.walletCount ?? null,
       totalLocked: r?.totalLocked ?? null,
     };
   });
@@ -251,17 +251,17 @@ export default async function UnlocksIndex() {
             <span className="text-xs" style={{ color: "#8B8E92" }}>Across every protocol and chain we index</span>
           </div>
           <p className="text-sm mb-5" style={{ color: "#475569" }}>
-            Including who actually holds them. A $4M unlock reads very differently when one wallet owns
-            most of it than when it&apos;s split across hundreds.
+            Every protocol and chain we index, soonest first, with a live countdown to each one and how
+            much of the token&apos;s locked supply it releases.
           </p>
 
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
             {/* Wide table scrolls inside its own container, never the page body. */}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: "980px" }}>
+              <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: "880px" }}>
                 <thead>
                   <tr style={{ background: "rgba(21,23,26,0.02)" }}>
-                    {["Token", "Protocol", "Unlocks", "Countdown", "Amount", "Value", "% of locked", "Holders", "Top holder"].map((h, i) => (
+                    {["Token", "Protocol", "Unlocks", "Countdown", "Amount", "Value", "% of locked", "Holders"].map((h, i) => (
                       <th
                         key={h}
                         className="text-[11px] font-semibold uppercase tracking-wider px-4 py-3 whitespace-nowrap"
@@ -280,13 +280,6 @@ export default async function UnlocksIndex() {
                     const b = chainBrand(u.chainId);
                     const w = whenLabel(u.eventTime);
                     const amt = fmtAmt(u.amount, u.decimals);
-                    // Concentration drives the colour: a single wallet holding
-                    // most of an unlock is the thing worth noticing.
-                    // topHolderShare is stored as a FRACTION (0-1), not a
-                    // percentage — see token-rollups.ts, which divides by 1e6,
-                    // and the maxTopHolder < 1 filter. Rendering it raw showed
-                    // a 90%-concentrated token as "1%".
-                    const sharePct = u.topHolderShare != null ? u.topHolderShare * 100 : null;
                     // How much of everything still locked for this token is
                     // releasing in THIS event. Both sides are raw base units of
                     // the same token, so decimals cancel and no conversion is
@@ -300,8 +293,6 @@ export default async function UnlocksIndex() {
                         return Number.isFinite(v) ? Math.min(100, v) : null;
                       } catch { return null; }
                     })();
-                    const shareColor = sharePct == null ? "#B8BABD"
-                      : sharePct >= 75 ? "#DC2626" : sharePct >= 40 ? "#D97706" : "#0F8A8A";
                     return (
                       <tr key={`${u.chainId}-${u.address}-${u.eventTime}-${i}`} className="transition-colors hover:bg-black/[0.015]">
                         <td className="px-4 py-3" style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
@@ -335,9 +326,6 @@ export default async function UnlocksIndex() {
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" style={{ color: u.walletCount != null ? "#475569" : "#B8BABD", borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
                           {u.walletCount != null ? u.walletCount.toLocaleString("en-US") : "–"}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-semibold whitespace-nowrap" style={{ color: shareColor, borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
-                          {sharePct != null ? `${sharePct < 1 ? sharePct.toFixed(1) : sharePct.toFixed(0)}%` : "–"}
-                        </td>
                       </tr>
                     );
                   })}
@@ -346,8 +334,8 @@ export default async function UnlocksIndex() {
             </div>
           </div>
           <p className="text-[11px] mt-3" style={{ color: "#B8BABD" }}>
-            Holders and top-holder share come from Vestream&apos;s per-wallet index. A dash means we haven&apos;t
-            finished indexing that token&apos;s recipients yet.
+            Holder counts come from Vestream&apos;s per-wallet index. A dash means we haven&apos;t finished
+            indexing that token&apos;s recipients yet.
           </p>
         </section>
       )}
