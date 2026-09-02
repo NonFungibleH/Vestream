@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
-import { listProtocols, publicChainIds } from "@/lib/protocol-constants";
+import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon } from "@/lib/protocol-constants";
 import { loadSnapshots } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import {
@@ -195,7 +195,8 @@ export default async function Home() {
       />
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <SiteNav />
+      {/* Ink hero: nav sits on it, so it must be the dark variant. */}
+      <SiteNav theme="dark" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────
           Split-layout hero: copy left, phone-mockup right. Per the May 5
@@ -209,12 +210,22 @@ export default async function Home() {
               preview shown deeper down the page.
             - Mobile (<lg) stacks: copy on top, phone below.
             - Desktop (lg+): two columns, copy left + phone right. */}
-      <section className="relative px-5 pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(circle, rgba(21,23,26,0.10) 1px, transparent 1px)`, backgroundSize: "28px 28px" }} />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at top, rgba(28,184,184,0.07) 0%, transparent 65%)" }} />
-        <div className="absolute top-24 left-1/4 w-72 h-72 pointer-events-none rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(15,138,138,0.06) 0%, transparent 70%)" }} />
+      {/* ── Hero: the one ink block ──────────────────────────────────────
+          Pinned dark regardless of the rest of the page. Every Vestream
+          surface previously sat on the same warm grey, so nothing carried
+          emphasis; an ink hero into paper sections gives the page a centre of
+          gravity. Two overlays, both pointer-events:none — the teal wash and a
+          76px grid masked to fade out before the content. */}
+      <section className="relative px-5 pt-24 pb-16 md:pt-28 md:pb-24 overflow-hidden isolate" style={{ background: "#0B0E12", color: "#FFFFFF" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(900px 520px at 80% -10%, rgba(28,184,184,0.24), transparent 62%), radial-gradient(680px 480px at 4% 106%, rgba(15,138,138,0.16), transparent 66%)",
+        }} />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "76px 76px",
+          maskImage: "radial-gradient(1000px 620px at 50% 0%, #000, transparent 76%)",
+          WebkitMaskImage: "radial-gradient(1000px 620px at 50% 0%, #000, transparent 76%)",
+        }} />
 
         <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 lg:gap-12 lg:items-center">
 
@@ -227,8 +238,8 @@ export default async function Home() {
                 Tailwind `animate-pulse` class. */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
               style={{
-                background: "rgba(28,184,184,0.07)",
-                border: "1px solid rgba(28,184,184,0.20)",
+                background: "rgba(28,184,184,0.10)",
+                border: "1px solid rgba(28,184,184,0.26)",
               }}>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
@@ -237,38 +248,49 @@ export default async function Home() {
                   style={{ background: "#1CB8B8" }} />
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-widest"
-                style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
+                style={{ color: "#5FDCDC", letterSpacing: "0.12em" }}>
                 {streamLabel} streams{liveStats.totalTvlUsd > 0 ? ` · ${formatUsdCompact(liveStats.totalTvlUsd)} tracked` : ""}
               </span>
             </div>
 
-            <h1 className="text-[2.4rem] md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-6"
-              style={{ letterSpacing: "-0.03em", color: "#1A1D20" }}>
+            <h1 className="font-semibold mb-6"
+              style={{ fontSize: "clamp(2.25rem, 5vw, 3.375rem)", lineHeight: 1.06, letterSpacing: "-0.034em", color: "#FFFFFF", textWrap: "balance" }}>
               Never miss a <br />
-              <span style={{ color: "#1CB8B8" }}>
+              {/* Gradient only on the payoff line — the design system's single
+                  gradient, clipped to the text. */}
+              <span style={{
+                background: "linear-gradient(135deg,#5FDCDC 0%,#1CB8B8 52%,#0F8A8A 100%)",
+                WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+              }}>
                 token unlock.
               </span>
             </h1>
 
-            <p className="text-lg max-w-xl mb-3 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
-              Find and track every token vesting you&rsquo;re owed - across all chains and protocols. Get notified the moment the token is claimable.
+            <p className="text-lg max-w-xl mb-5 leading-relaxed mx-auto lg:mx-0" style={{ color: "rgba(255,255,255,0.64)" }}>
+              Vestream reads the vestings you already have — on Sablier, Hedgey, UNCX and nine more — and taps you on the shoulder the moment tokens are claimable. No spreadsheets, no contract hunting.
             </p>
-            <p className="text-base max-w-xl mb-10 leading-relaxed mx-auto lg:mx-0" style={{ color: "#B8BABD" }}>
-              12+ protocols. 9+ chains. Mobile app and desktop dashboard.
-            </p>
+            {/* Reassurance row: the objection ("do I have to connect a wallet?")
+                answered before the CTA, not buried in an FAQ. */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-9 text-[13px]" style={{ color: "rgba(255,255,255,0.44)" }}>
+              <span>Read-only. No account, no wallet connection.</span>
+              <span className="hidden sm:inline" style={{ width: 1, height: 13, background: "rgba(255,255,255,0.10)" }} />
+              <Link href="/find-vestings" className="font-medium hover:opacity-80 transition-opacity" style={{ color: "#5FDCDC" }}>
+                Or check a wallet in your browser →
+              </Link>
+            </div>
 
             {/* CTAs – app badges lead (mobile is the primary product),
                 scanner below as the no-install discovery path. */}
             <div className="flex flex-col items-center lg:items-start gap-5">
               <div className="flex flex-col items-center lg:items-start gap-2">
-                <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+                <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.44)" }}>
                   Get the app - iOS &amp; Android
                 </p>
                 <AppStoreBadges align="start" />
               </div>
 
               <div className="flex flex-col items-center lg:items-start gap-1.5">
-                <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+                <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.44)" }}>
                   Or search in browser
                 </p>
                 <Link
@@ -285,12 +307,32 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Explore row. The homepage was a pure funnel to /find-vestings
-                with no route at all into the public data — /unlocks, /chains
-                and /protocols were reachable only from the nav. Added with the
-                Unlocks nav entry at Howard's request. */}
+            {/* Stat row. The redesign proposed "42,800 people tracking
+                unlocks" and a "4.8★ App Store rating" — we have 70 users and no
+                published rating, so those were dropped. These three are live
+                figures from getHomepageLiveStats, and they say something better
+                anyway: the index is real. Tabular numerals throughout. */}
+            <div className="mt-9 pt-7 flex flex-wrap items-center justify-center lg:justify-start gap-x-7 gap-y-4"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+              {[
+                { v: streamLabel, l: "vestings indexed" },
+                { v: `${liveStats.protocolCount}`, l: "protocols read for you" },
+                { v: `${PUBLIC_CHAIN_COUNT}`, l: "chains covered" },
+              ].map((s2, i) => (
+                <div key={s2.l} className="flex items-center gap-7">
+                  {i > 0 && <span className="hidden sm:inline" style={{ width: 1, height: 34, background: "rgba(255,255,255,0.10)" }} />}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xl font-semibold tabular-nums" style={{ letterSpacing: "-0.03em", color: "#FFFFFF" }}>{s2.v}</span>
+                    <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.44)" }}>{s2.l}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Explore links kept — they are the only route from the homepage
+                into the public data — but demoted below the stats. */}
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2">
-              <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "#B8BABD" }}>
+              <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.44)" }}>
                 Or explore
               </span>
               {[
@@ -302,7 +344,7 @@ export default async function Home() {
                   key={l.href}
                   href={l.href}
                   className="text-sm font-semibold transition-opacity hover:opacity-70"
-                  style={{ color: "#0F8A8A" }}
+                  style={{ color: "#5FDCDC" }}
                 >
                   {l.label} →
                 </Link>
@@ -337,7 +379,7 @@ export default async function Home() {
                 background: "#0a0e14",
                 borderRadius: 36,
                 padding: 6,
-                boxShadow: "0 28px 64px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.14), 0 0 90px -10px rgba(28,184,184,0.35), 0 50px 90px -30px rgba(0,0,0,0.9)",
                 transform: "rotate(4deg)",
                 transformOrigin: "center center",
               }}
@@ -621,6 +663,43 @@ export default async function Home() {
                 <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Protocol strip — ink, continues the hero ─────────────────────
+          The positioning in one line: we are the layer ON TOP of these
+          protocols, not a competitor to them. "We read your vestings from"
+          says complement, where a logo wall labelled "integrations" would say
+          compete. Real marks in colour, per the design (greyscaling opaque
+          colour PNGs turns them to mush). */}
+      <section className="px-4 md:px-8 py-6" style={{ background: "#0B0E12", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center lg:justify-between gap-x-7 gap-y-4">
+          <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "rgba(255,255,255,0.44)" }}>
+            We read your vestings from
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {listProtocols().slice(0, 8).map((pr) => {
+              const icon = protocolIcon(pr.slug);
+              return (
+                <Link
+                  key={pr.slug}
+                  href={`/protocols/${pr.slug}`}
+                  className="inline-flex items-center gap-2 pl-[7px] pr-3 py-1.5 rounded-[10px] transition-opacity hover:opacity-80"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                >
+                  {icon && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={icon} alt="" width={19} height={19} style={{ width: 19, height: 19, borderRadius: 6, objectFit: "cover" }} />
+                  )}
+                  <span className="text-[12.5px] font-medium" style={{ color: "rgba(255,255,255,0.82)" }}>{pr.name}</span>
+                </Link>
+              );
+            })}
+            <Link href="/protocols" className="inline-flex items-center px-3 py-1.5 rounded-[10px] text-[12.5px] font-medium transition-opacity hover:opacity-80"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.44)" }}>
+              +{Math.max(0, listProtocols().length - 8)} more
+            </Link>
           </div>
         </div>
       </section>
