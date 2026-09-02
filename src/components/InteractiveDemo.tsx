@@ -923,7 +923,7 @@ function ClaimStep({
             </div>
 
             {/* Numbers */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
               <SablierStat
                 label="Total"
                 value={FEATURED.totalAmount.toLocaleString()}

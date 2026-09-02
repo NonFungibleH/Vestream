@@ -13,7 +13,7 @@ export default function Terms() {
     <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
 
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 h-16"
+      <nav className="flex items-center justify-between px-4 md:px-8 h-16"
         style={{ background: "white", borderBottom: "1px solid rgba(21,23,26,0.10)" }}>
         <Link href="/" className="flex items-center gap-2.5">
           <img src="/logo-icon.svg" alt="Vestream" className="w-7 h-7" />

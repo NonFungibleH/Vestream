@@ -52,7 +52,7 @@ export default async function DeveloperAccount() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0f14", color: "white" }}>
 
       {/* ── Nav ── */}
-      <nav className="flex items-center justify-between px-8 h-16"
+      <nav className="flex items-center justify-between px-4 md:px-8 h-16"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(13,15,20,0.95)" }}>
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <img src="/logo-icon-dark.svg" alt="Vestream" className="w-7 h-7" />

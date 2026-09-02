@@ -170,7 +170,7 @@ export function TokenMetaPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 md:flex md:items-center md:gap-5 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:flex md:items-center md:gap-5 text-xs">
           <Stat label="Liquidity" value={fmtUsd(market.liquidity)} />
           <Stat label="24h volume" value={fmtUsd(market.volume24h)} />
           <Stat label="FDV"       value={fmtUsd(market.fdv ?? market.marketCap)} />

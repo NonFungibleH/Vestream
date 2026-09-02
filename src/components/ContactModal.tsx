@@ -156,7 +156,7 @@ export default function ContactModal({
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
 
               {/* Name + Company row */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: "#374151" }}>
                     Name <span style={{ color: "#B3322E" }}>*</span>

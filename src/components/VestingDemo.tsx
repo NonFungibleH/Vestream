@@ -557,7 +557,7 @@ function DemoConfigForm({
           <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#8B8E92" }}>
             Vesting duration
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {DURATION_PRESETS.map((p) => {
               const active = config.durationSec === p.value;
               return (

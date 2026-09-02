@@ -1410,7 +1410,7 @@ export default async function Home() {
               <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#2DB36A" }}>
                 Income · 2026
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: "This month", value: "$5,200", sub: "received" },
                   { label: "Next 30 days", value: "$5,800", sub: "forecast", highlight: true },
