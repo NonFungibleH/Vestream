@@ -235,7 +235,7 @@ export default async function ChainsIndexPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="font-bold text-base truncate" style={{ color: "#1A1D20" }}>{brand.name}</p>
-                      <p className="text-base font-bold tabular-nums flex-shrink-0" style={{ color: "#0F8A8A" }}>{c.tvlUsd > 0 ? fmtUsd(c.tvlUsd) : "—"}</p>
+                      <p className="text-base font-bold tabular-nums flex-shrink-0" style={{ color: "#0F8A8A" }}>{c.tvlUsd > 0 ? fmtUsd(c.tvlUsd) : "–"}</p>
                     </div>
                     <p className="text-[11px] mt-0.5" style={{ color: "#8B8E92" }}>
                       {share > 0 && (
@@ -361,7 +361,7 @@ export default async function ChainsIndexPage() {
                       </p>
                     </div>
                     <span className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: "#5FD4D4" }}>
-                      {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
+                      {u.usdValue != null ? fmtUsd(u.usdValue) : "–"}
                     </span>
                   </Link>
                 );

@@ -11,6 +11,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
 import { readTokenRollups } from "@/lib/vesting/token-rollups";
+import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { publicChainIds } from "@/lib/protocol-constants";
 import { getProtocol, chainBrand } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
@@ -60,6 +61,9 @@ type UpcomingRow = {
   // Concentration — the columns nobody else has. Sourced from
   // token_vesting_rollups, which the refresh-rollups cron keeps warm.
   walletCount: number | null; topHolderShare: number | null;
+  // Total locked for the token, so a row can say how big THIS unlock is
+  // relative to everything still vesting (explorer-style context).
+  totalLocked: bigint | null;
 };
 
 /**
@@ -126,6 +130,7 @@ async function getUpcomingTable(limit = 25): Promise<UpcomingRow[]> {
       protocol: g.protocol, eventTime: g.eventTime, amount: g.amount,
       decimals: g.tokenDecimals, usdValue: g.usdValue ?? null,
       walletCount: r?.walletCount ?? null, topHolderShare: r?.topHolderShare ?? null,
+      totalLocked: r?.totalLocked ?? null,
     };
   });
 }
@@ -246,23 +251,23 @@ export default async function UnlocksIndex() {
             <span className="text-xs" style={{ color: "#8B8E92" }}>Across every protocol and chain we index</span>
           </div>
           <p className="text-sm mb-5" style={{ color: "#475569" }}>
-            Including who actually holds them — a $4M unlock reads very differently when one wallet owns
+            Including who actually holds them. A $4M unlock reads very differently when one wallet owns
             most of it than when it&apos;s split across hundreds.
           </p>
 
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
             {/* Wide table scrolls inside its own container, never the page body. */}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: "760px" }}>
+              <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: "980px" }}>
                 <thead>
                   <tr style={{ background: "rgba(21,23,26,0.02)" }}>
-                    {["Token", "Protocol", "Unlocks", "Amount", "Value", "Holders", "Top holder"].map((h, i) => (
+                    {["Token", "Protocol", "Unlocks", "Countdown", "Amount", "Value", "% of locked", "Holders", "Top holder"].map((h, i) => (
                       <th
                         key={h}
                         className="text-[11px] font-semibold uppercase tracking-wider px-4 py-3 whitespace-nowrap"
                         style={{
                           color: "#8B8E92",
-                          textAlign: i >= 3 ? "right" : "left",
+                          textAlign: i >= 4 ? "right" : "left",
                           borderBottom: "1px solid rgba(21,23,26,0.08)",
                         }}
                       >{h}</th>
@@ -282,6 +287,19 @@ export default async function UnlocksIndex() {
                     // and the maxTopHolder < 1 filter. Rendering it raw showed
                     // a 90%-concentrated token as "1%".
                     const sharePct = u.topHolderShare != null ? u.topHolderShare * 100 : null;
+                    // How much of everything still locked for this token is
+                    // releasing in THIS event. Both sides are raw base units of
+                    // the same token, so decimals cancel and no conversion is
+                    // needed; done in BigInt to avoid precision loss on large
+                    // supplies, then scaled to a percent.
+                    const pctLocked = (() => {
+                      if (!u.amount || u.totalLocked == null || u.totalLocked <= 0n) return null;
+                      try {
+                        const bps = (BigInt(u.amount) * 10_000n) / u.totalLocked;
+                        const v = Number(bps) / 100;
+                        return Number.isFinite(v) ? Math.min(100, v) : null;
+                      } catch { return null; }
+                    })();
                     const shareColor = sharePct == null ? "#B8BABD"
                       : sharePct >= 75 ? "#DC2626" : sharePct >= 40 ? "#D97706" : "#0F8A8A";
                     return (
@@ -299,11 +317,20 @@ export default async function UnlocksIndex() {
                           <span style={{ color: "#1A1D20" }}>{w.date}</span>
                           <span className="ml-1.5 text-[11px]" style={{ color: "#8B8E92" }}>{w.rel}</span>
                         </td>
+                        {/* Live ticking countdown. Client island, mount-gated,
+                            so the server markup stays stable and this cannot
+                            cause a hydration mismatch. */}
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
+                          <UnlockCountdown unlockTimeSec={u.eventTime} compact />
+                        </td>
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" style={{ color: "#475569", borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
                           {amt ?? "–"}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums font-semibold whitespace-nowrap" style={{ color: u.usdValue != null ? "#0F8A8A" : "#B8BABD", borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
                           {u.usdValue != null ? fmtUsd(u.usdValue) : "–"}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" style={{ color: pctLocked != null ? "#475569" : "#B8BABD", borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
+                          {pctLocked != null ? `${pctLocked < 1 ? pctLocked.toFixed(1) : pctLocked.toFixed(0)}%` : "–"}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" style={{ color: u.walletCount != null ? "#475569" : "#B8BABD", borderTop: i === 0 ? "none" : "1px solid rgba(21,23,26,0.06)" }}>
                           {u.walletCount != null ? u.walletCount.toLocaleString("en-US") : "–"}

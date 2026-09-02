@@ -29,10 +29,18 @@ function parts(msLeft: number) {
 export function UnlockCountdown({
   unlockTimeSec,
   color = "#0F8A8A",
+  compact = false,
 }: {
   /** Unix seconds of the next unlock. */
   unlockTimeSec: number;
   color?: string;
+  /**
+   * Inline single-line form ("2d 14h 30m"), for dense contexts like the
+   * /unlocks table where the four stacked D/H/M/S cells would blow the row
+   * height out. Drops to "14h 30m 12s" inside a day so the seconds are
+   * visible exactly when they are worth watching.
+   */
+  compact?: boolean;
 }) {
   const [now, setNow] = useState<number | null>(null);
 
@@ -47,13 +55,23 @@ export function UnlockCountdown({
   const msLeft = unlockTimeSec * 1000 - now;
   if (msLeft <= 0) {
     return (
-      <span className="text-xs font-semibold" style={{ color }}>
+      <span className="text-xs font-semibold whitespace-nowrap" style={{ color }}>
         Unlocking now
       </span>
     );
   }
 
   const { d, h, m, s } = parts(msLeft);
+
+  if (compact) {
+    const text = d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`;
+    return (
+      <span className="text-xs font-semibold tabular-nums whitespace-nowrap" style={{ color }}>
+        {text}
+      </span>
+    );
+  }
+
   const cells: [number, string][] = [[d, "D"], [h, "H"], [m, "M"], [s, "S"]];
 
   return (
