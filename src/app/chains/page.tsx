@@ -91,24 +91,23 @@ export default async function ChainsIndexPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
-      <SiteNav theme="light" />
+      <SiteNav theme="ink" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-24 pb-12 md:pt-32 md:pb-16 px-4 md:px-8 text-center">
+      {/* Ink, matching the homepage hero. */}
+      <section className="relative overflow-hidden isolate pt-24 pb-12 md:pt-28 md:pb-16 px-4 md:px-8 text-center"
+        style={{ background: "#0B0E12", color: "#FFFFFF" }}>
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(ellipse 85% 55% at 50% -5%, rgba(28,184,184,0.16) 0%, rgba(28,184,184,0.05) 45%, transparent 72%)",
+          background: "radial-gradient(900px 520px at 80% -10%, rgba(28,184,184,0.24), transparent 62%), radial-gradient(680px 480px at 4% 106%, rgba(15,138,138,0.16), transparent 66%)",
         }} />
-        <div className="absolute inset-0 pointer-events-none" style={GRID_TEXTURE} />
-        <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.3), transparent)",
-        }} />
+        <div className="absolute inset-0 pointer-events-none" style={GRID_TEXTURE_DARK} />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Live stats pill — mirrors /protocols */}
           <div
             className="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-4 py-2 rounded-full border text-xs sm:text-sm font-semibold mb-8"
-            style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#0F8A8A" }}
+            style={{ background: "rgba(28,184,184,0.10)", borderColor: "rgba(28,184,184,0.26)", color: "#5FDCDC" }}
           >
             <span className="inline-flex items-center gap-1.5">
               <span className="relative flex h-1.5 w-1.5">
@@ -119,24 +118,24 @@ export default async function ChainsIndexPage() {
             </span>
             {o.totalTvl > 0 && <>
               <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-              <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{fmtUsd(o.totalTvl)}</span> TVL</span>
+              <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{fmtUsd(o.totalTvl)}</span> TVL</span>
             </>}
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{n(o.chains.length)}</span> chains</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{n(o.chains.length)}</span> chains</span>
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{n(protocolCount)}</span> protocols</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{n(protocolCount)}</span> protocols</span>
             {o.totalStreams > 0 && <>
               <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-              <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{n(o.totalStreams)}</span> streams</span>
+              <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{n(o.totalStreams)}</span> streams</span>
             </>}
           </div>
 
-          <h1 className="font-bold tracking-tight mb-6" style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em", color: "#1A1D20" }}>
+          <h1 className="font-bold tracking-tight mb-6" style={{ fontSize: "clamp(2.25rem, 5vw, 3.375rem)", lineHeight: 1.06, letterSpacing: "-0.034em", color: "#FFFFFF", textWrap: "balance" }}>
             Token vesting on every chain,<br />
-            <span style={{ color: "#1CB8B8" }}>in one live index</span>
+            <span style={{ background: "linear-gradient(135deg,#5FDCDC 0%,#1CB8B8 52%,#0F8A8A 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>in one live index</span>
           </h1>
 
-          <p className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto" style={{ color: "#8B8E92" }}>
+          <p className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.64)" }}>
             Every major EVM chain plus Solana and Robinhood Chain, indexed in real time. Pick a chain to see its vesting TVL, the protocols on it, and every upcoming unlock.
           </p>
           <div className="mt-5 flex justify-center">
@@ -150,7 +149,7 @@ export default async function ChainsIndexPage() {
             <div className="mt-10 max-w-3xl mx-auto">
               <div
                 className="h-4 rounded-full overflow-hidden flex"
-                style={{ background: "rgba(15,138,138,0.06)", boxShadow: "inset 0 1px 2px rgba(21,23,26,0.06)" }}
+                style={{ background: "rgba(255,255,255,0.06)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.4)" }}
               >
                 {o.chains.filter((c) => c.tvlUsd > 0).map((c) => {
                   const b = chainBrand(c.chainId);
@@ -168,10 +167,10 @@ export default async function ChainsIndexPage() {
                 {o.chains.filter((c) => c.tvlUsd > 0).slice(0, 5).map((c) => {
                   const b = chainBrand(c.chainId);
                   return (
-                    <span key={c.chainId} className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "#475569" }}>
+                    <span key={c.chainId} className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.72)" }}>
                       <span className="w-2 h-2 rounded-full" style={{ background: b.color }} />
                       {b.name}
-                      <span className="tabular-nums" style={{ color: "#8B8E92" }}>{Math.round((c.tvlUsd / total) * 100)}%</span>
+                      <span className="tabular-nums" style={{ color: "rgba(255,255,255,0.44)" }}>{Math.round((c.tvlUsd / total) * 100)}%</span>
                     </span>
                   );
                 })}

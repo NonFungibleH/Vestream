@@ -14,6 +14,7 @@ import { readTokenRollups } from "@/lib/vesting/token-rollups";
 import { after } from "next/server";
 import { getLastGoodUnlocksData, setLastGoodUnlocksData } from "@/lib/vesting/page-data-fallback";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
+import { InkHero } from "@/components/InkHero";
 import { getProtocol, chainBrand } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 import { withTimeout } from "@/lib/with-timeout";
@@ -227,30 +228,23 @@ export default async function UnlocksIndex() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(indexJsonLd) }}
       />
 
-      <SiteNav theme="light" />
+      <SiteNav theme="ink" />
 
-      {/* ── Hero (breadcrumb integrated, no separate bordered bar) ─────── */}
-      <section className="px-4 md:px-8 pt-20 md:pt-24 pb-12 md:pb-16 max-w-5xl mx-auto w-full">
-        <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
-            <li><Link href="/" className="hover:underline" style={{ color: "#8B8E92" }}>Home</Link></li>
-            <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
-            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>Unlocks</li>
+      {/* Shared ink hero, same block as the homepage. */}
+      <InkHero
+        eyebrow="Live unlock calendar"
+        title="Every upcoming token unlock,"
+        accent="indexed live."
+        sub="Every vesting protocol and chain we watch, soonest first, with a live countdown to each one. Free, no account needed."
+      >
+        <nav aria-label="Breadcrumb" className="mt-7">
+          <ol className="flex items-center justify-center gap-1.5 text-[11px]" style={{ color: "rgba(255,255,255,0.44)" }}>
+            <li><Link href="/" className="hover:underline" style={{ color: "rgba(255,255,255,0.44)" }}>Home</Link></li>
+            <li aria-hidden style={{ color: "rgba(255,255,255,0.2)" }}>›</li>
+            <li aria-current="page" style={{ color: "rgba(255,255,255,0.82)", fontWeight: 600 }}>Unlocks</li>
           </ol>
         </nav>
-        <div className="text-center mb-6">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
-            Live Unlock Calendar
-          </p>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.03em" }}>
-            Every upcoming token unlock,<br />
-            <span style={{ color: "#1CB8B8" }}>indexed live.</span>
-          </h1>
-          <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: "#475569" }}>
-            View upcoming unlocks across 11+ vesting protocols and 9+ chains. Pick a window – today, this week, this month, or rolling 30/60/90-day – to see exactly what unlocks when.
-          </p>
-        </div>
-      </section>
+      </InkHero>
 
       {/* ── Next unlocks table ────────────────────────────────────────
           The hub used to be window cards only — a reader had to pick a

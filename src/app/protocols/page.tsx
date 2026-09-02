@@ -411,23 +411,21 @@ export default async function UnlocksIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <SiteNav theme="light" />
+      <SiteNav theme="ink" />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-24 pb-14 md:pt-36 md:pb-20 px-4 md:px-8 text-center">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(28,184,184,0.08) 0%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{
-            background: "linear-gradient(90deg, transparent, rgba(28,184,184,0.3), transparent)",
-          }}
-        />
+      {/* Ink, matching the homepage hero. */}
+      <section className="relative overflow-hidden isolate pt-24 pb-14 md:pt-28 md:pb-20 px-4 md:px-8 text-center"
+        style={{ background: "#0B0E12", color: "#FFFFFF" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(900px 520px at 80% -10%, rgba(28,184,184,0.24), transparent 62%), radial-gradient(680px 480px at 4% 106%, rgba(15,138,138,0.16), transparent 66%)",
+        }} />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "76px 76px",
+          maskImage: "radial-gradient(1000px 620px at 50% 0%, #000, transparent 76%)",
+          WebkitMaskImage: "radial-gradient(1000px 620px at 50% 0%, #000, transparent 76%)",
+        }} />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Headline stats bar – four aggregate scale figures with the
@@ -439,9 +437,9 @@ export default async function UnlocksIndexPage() {
           <div
             className="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-4 py-2 rounded-full border text-xs sm:text-sm font-semibold mb-8"
             style={{
-              background: "rgba(28,184,184,0.06)",
-              borderColor: "rgba(28,184,184,0.2)",
-              color: "#0F8A8A",
+              background: "rgba(28,184,184,0.10)",
+              borderColor: "rgba(28,184,184,0.26)",
+              color: "#5FDCDC",
             }}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -452,13 +450,13 @@ export default async function UnlocksIndexPage() {
               <span className="uppercase tracking-wide" style={{ letterSpacing: "0.08em" }}>Live</span>
             </span>
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{protocols.length}</span> protocols</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{protocols.length}</span> protocols</span>
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandTokens.toLocaleString()}</span> tokens</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{grandTokens.toLocaleString()}</span> tokens</span>
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandWallets.toLocaleString()}</span> wallets</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{grandWallets.toLocaleString()}</span> wallets</span>
             <span aria-hidden style={{ color: "rgba(28,184,184,0.4)" }}>·</span>
-            <span><span className="font-bold tabular-nums" style={{ color: "#0B6E6E" }}>{grandTotal.toLocaleString()}</span> streams</span>
+            <span><span className="font-bold tabular-nums" style={{ color: "#FFFFFF" }}>{grandTotal.toLocaleString()}</span> streams</span>
           </div>
 
           <h1
@@ -467,18 +465,18 @@ export default async function UnlocksIndexPage() {
               fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
               lineHeight: 1.08,
               letterSpacing: "-0.03em",
-              color: "#1A1D20",
+              color: "#FFFFFF",
             }}
           >
             Every major token unlock,<br />
-            <span style={{ color: "#1CB8B8" }}>
+            <span style={{ background: "linear-gradient(135deg,#5FDCDC 0%,#1CB8B8 52%,#0F8A8A 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
               in one live index
             </span>
           </h1>
 
           <p
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto"
-            style={{ color: "#8B8E92" }}
+            style={{ color: "rgba(255,255,255,0.64)" }}
           >
             Every major vesting schedule across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain and Solana – indexed in real time. Pick a protocol below to see live activity.
           </p>
