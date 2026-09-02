@@ -83,10 +83,23 @@ export async function POST(req: NextRequest) {
     revalidatePath("/sitemap.xml");
     revalidated.push("sitemap.xml");
   }
+  // Same deploy-resets-to-empty problem as the sitemap, for the heavy ISR
+  // pages: /unlocks (30m), /unlocks/[range] (1h), /chains (10m) and the
+  // homepage (10m) all bake empty data at build time and stay that way until
+  // their window elapses. Found 2026-09-02 when the new /unlocks table and the
+  // /chains unlock band "never rendered" — every push had reset the clock.
+  // POST ?scope=pages right after a deploy to force them to fill.
+  if (scope === "all" || scope === "pages") {
+    revalidatePath("/unlocks");
+    revalidatePath("/unlocks/[range]", "page");
+    revalidatePath("/chains");
+    revalidatePath("/");
+    revalidated.push("/unlocks", "/unlocks/[range]", "/chains", "/");
+  }
 
   if (revalidated.length === 0) {
     return NextResponse.json(
-      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index' | 'unlocks' | 'sitemap'.` },
+      { error: `Unknown scope '${scope}'. Use 'all' | 'detail' | 'index' | 'unlocks' | 'sitemap' | 'pages'.` },
       { status: 400 },
     );
   }

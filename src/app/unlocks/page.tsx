@@ -183,11 +183,8 @@ async function getWindowCounts(): Promise<Map<string, WindowCount>> {
 export default async function UnlocksIndex() {
   // Table FIRST: it is the page's actual content, and it must not be starved by
   // the window counts (which are a secondary nav aid and currently all "–").
-  const _t0 = Date.now();
   const upcoming = await getUpcomingTable(25);
-  const _tableMs = Date.now() - _t0;
   const counts   = await getWindowCounts();
-  const _countsMs = Date.now() - _t0 - _tableMs;
 
   const indexJsonLd = {
     "@context": "https://schema.org",
@@ -211,8 +208,6 @@ export default async function UnlocksIndex() {
       />
 
       <SiteNav theme="light" />
-      {/* TEMP diagnostic (remove once prod renders): what this ISR render saw. */}
-      <meta name="x-unlocks-debug" content={`rows=${upcoming.length} tableMs=${_tableMs} countsMs=${_countsMs} rendered=${new Date().toISOString()}`} />
 
       {/* ── Hero (breadcrumb integrated, no separate bordered bar) ─────── */}
       <section className="px-4 md:px-8 pt-20 md:pt-24 pb-12 md:pb-16 max-w-5xl mx-auto w-full">
