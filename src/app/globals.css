@@ -139,3 +139,7 @@
     flex-shrink: 0;
   }
 }
+/* Nav dropdown row hover. Theme-aware via a --hov custom property set inline
+   by SiteNav: the old hover:bg-black/[0.04] was invisible on the dark and ink
+   dropdowns. */
+.nav-drop-item:hover { background: var(--hov); }

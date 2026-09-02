@@ -49,6 +49,8 @@ const NAV_ITEMS: NavItem[] = [
 
 const THEME = {
   light: {
+    iconTileBg:     "#FFFFFF",
+    itemHoverBg:    "rgba(21,23,26,0.04)",
     navBg:          "rgba(248,250,252,0.85)",
     navBorder:      "rgba(21,23,26,0.10)",
     linkBase:       "#8B8E92",
@@ -62,6 +64,8 @@ const THEME = {
     logo:           "/logo.svg",
   },
   navy: {
+    iconTileBg:     "#FFFFFF",
+    itemHoverBg:    "rgba(255,255,255,0.06)",
     navBg:          "rgba(13,27,53,0.92)",
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
@@ -80,6 +84,8 @@ const THEME = {
   // dropdown panel sat at a third shade again. Same family, own row, so /ai is
   // untouched.
   ink: {
+    iconTileBg:     "#FFFFFF",
+    itemHoverBg:    "rgba(255,255,255,0.06)",
     navBg:          "rgba(11,14,18,0.92)",
     navBorder:      "rgba(255,255,255,0.10)",
     linkBase:       "rgba(255,255,255,0.44)",
@@ -93,6 +99,8 @@ const THEME = {
     logo:           "/logo-dark.svg",
   },
   dark: {
+    iconTileBg:     "#FFFFFF",
+    itemHoverBg:    "rgba(255,255,255,0.06)",
     navBg:          "rgba(13,15,20,0.92)",
     navBorder:      "rgba(255,255,255,0.06)",
     linkBase:       "rgba(255,255,255,0.45)",
@@ -137,7 +145,7 @@ export function SiteNav({ theme = "light" }: Props) {
   }, [searchOpen]);
 
   const t = THEME[theme];
-  const { navBg, navBorder, linkBase, linkActive, menuBg, menuShadow, mobileBackdropBg, mobileActiveBg, itemText, logo } = t;
+  const { navBg, navBorder, linkBase, linkActive, menuBg, menuShadow, mobileBackdropBg, mobileActiveBg, itemText, logo, iconTileBg, itemHoverBg } = t;
 
   const ctaHref       = "/find-vestings";
   const ctaLabel      = "Find My Vestings →";
@@ -199,13 +207,19 @@ export function SiteNav({ theme = "light" }: Props) {
                           <Link
                             key={it.href}
                             href={it.href}
-                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors hover:bg-black/[0.04]"
-                            style={{ color: itemText }}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors nav-drop-item"
+                            style={{ color: itemText, ["--hov" as string]: itemHoverBg }}
                           >
-                            <span className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: it.bg, border: `1px solid ${it.border}` }}>
+                            {/* White tile, not the protocol's brand tint. The
+                                marks are opaque colour PNGs drawn for light
+                                backgrounds, and at ~7% those tints were
+                                invisible on the dark dropdown while the
+                                transparent-background marks blended into it.
+                                Same treatment as the hero chips. */}
+                            <span className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: iconTileBg }}>
                               {it.icon
-                                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={it.icon} alt="" width={24} height={24} className="w-full h-full object-contain p-0.5" />
-                                : <span className="font-bold text-[11px]" style={{ color: it.color }}>{it.label[0]}</span>}
+                                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={it.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-0.5" />
+                                : <span className="font-bold text-[12px]" style={{ color: it.color }}>{it.label[0]}</span>}
                             </span>
                             <span className="text-[13px] font-medium truncate">{it.label}</span>
                           </Link>

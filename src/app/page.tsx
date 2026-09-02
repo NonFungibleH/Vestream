@@ -324,10 +324,10 @@ export default async function Home() {
                 { v: `${PUBLIC_CHAIN_COUNT}`, l: "chains covered" },
               ].map((s2, i) => (
                 <div key={s2.l} className="flex items-center gap-7">
-                  {i > 0 && <span className="hidden sm:inline" style={{ width: 1, height: 34, background: "rgba(255,255,255,0.10)" }} />}
+                  {i > 0 && <span className="hidden sm:inline" style={{ width: 1, height: 46, background: "rgba(255,255,255,0.10)" }} />}
                   <div className="flex flex-col gap-1">
-                    <span className="text-xl font-semibold tabular-nums" style={{ letterSpacing: "-0.03em", color: "#FFFFFF" }}>{s2.v}</span>
-                    <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.44)" }}>{s2.l}</span>
+                    <span className="text-2xl md:text-[34px] font-semibold tabular-nums leading-none" style={{ letterSpacing: "-0.03em", color: "#FFFFFF" }}>{s2.v}</span>
+                    <span className="text-[12.5px] md:text-[13.5px]" style={{ color: "rgba(255,255,255,0.44)" }}>{s2.l}</span>
                   </div>
                 </div>
               ))}
@@ -583,7 +583,7 @@ export default async function Home() {
             separation from the hero so it reads as its own block, not
             an appendage to the right column. */}
         <div className="relative mt-16">
-          <p className="text-[10px] font-semibold tracking-widest uppercase mb-5 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>We read your vestings from</p>
+          <p className="text-[10.5px] md:text-[11.5px] font-semibold tracking-widest uppercase mb-6 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>We read your vestings from</p>
           {/* Row 1 – text-name cards. (Logo wall reverted 2026-06-05 pending
               uniform square icons; the images live in /public/protocols/.) */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
@@ -598,13 +598,13 @@ export default async function Home() {
               { name: "HoodLock",     color: "#00C805", bg: "rgba(0,200,5,0.07)",    border: "rgba(0,200,5,0.16)",    icon: "/protocols/icons/hoodlock.png"  },
             ].map((p) => (
               <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
-                className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl transition-colors"
+                className="flex items-center gap-3 pl-2 pr-4 py-2 md:pl-2.5 md:pr-5 md:py-2.5 rounded-xl transition-colors hover:bg-white/[0.09]"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {/* Chip fill is neutral white-on-ink, not the brand tint: at 7%
                     those tints were invisible on #0B0E12. The mark keeps its
                     own colour on a white tile, which is what makes it legible
                     and is how the design specifies it (never greyscaled). */}
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
+                <div className="w-9 h-9 md:w-11 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
                   {p.icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.icon} alt="" width={36} height={36} className="w-full h-full object-contain p-[3px]" />
@@ -612,7 +612,7 @@ export default async function Home() {
                     <span className="font-extrabold text-[18px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
                   )}
                 </div>
-                <p className="text-[13.5px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
+                <p className="text-[13.5px] md:text-[15px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
               </Link>
             ))}
           </div>
@@ -631,13 +631,13 @@ export default async function Home() {
               { name: "Magna",        color: "#E05FCB", bg: "rgba(248,140,229,0.08)", border: "rgba(248,140,229,0.20)", icon: "/protocols/icons/magna.png" },
             ].map((p) => (
               <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
-                className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl transition-colors"
+                className="flex items-center gap-3 pl-2 pr-4 py-2 md:pl-2.5 md:pr-5 md:py-2.5 rounded-xl transition-colors hover:bg-white/[0.09]"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
                 {/* Chip fill is neutral white-on-ink, not the brand tint: at 7%
                     those tints were invisible on #0B0E12. The mark keeps its
                     own colour on a white tile, which is what makes it legible
                     and is how the design specifies it (never greyscaled). */}
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
+                <div className="w-9 h-9 md:w-11 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
                   {p.icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.icon} alt="" width={36} height={36} className="w-full h-full object-contain p-[3px]" />
@@ -645,13 +645,13 @@ export default async function Home() {
                     <span className="font-extrabold text-[18px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
                   )}
                 </div>
-                <p className="text-[13.5px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
+                <p className="text-[13.5px] md:text-[15px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
               </Link>
             ))}
           </div>
           {/* Eyebrow heading above the chains – mirrors "Integrated with" above
               the protocols so the two groups read as distinct sections. */}
-          <p className="text-[10px] font-semibold tracking-widest uppercase mt-9 mb-4 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>Across these chains</p>
+          <p className="text-[10.5px] md:text-[11.5px] font-semibold tracking-widest uppercase mt-12 mb-5 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>Across these chains</p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {[
               // Brand-accurate chain colours + official marks in /public/chains/icons.
@@ -665,14 +665,14 @@ export default async function Home() {
               { name: "Solana",    slug: "solana",          color: "#9945FF", icon: "/chains/icons/solana.png" },
               { name: "Robinhood", slug: "robinhood-chain", color: "#5B8C00", icon: "/chains/icons/robinhood.png" },
             ].map((c) => (
-              <Link key={c.name} href={`/chains/${c.slug}`} className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full transition-colors"
+              <Link key={c.name} href={`/chains/${c.slug}`} className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 md:pl-2 md:pr-4 md:py-2 rounded-full transition-colors hover:bg-white/[0.09]"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                <span className="w-[22px] h-[22px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                <span className="w-[22px] h-[22px] md:w-[28px] md:h-[28px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
                   style={{ background: "#fff" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.icon} alt="" width={22} height={22} className="w-full h-full object-contain p-[1.5px]" />
+                  <img src={c.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-[1.5px]" />
                 </span>
-                <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.82)" }}>{c.name}</span>
+                <span className="text-[12px] md:text-[13.5px] font-semibold" style={{ color: "rgba(255,255,255,0.82)" }}>{c.name}</span>
               </Link>
             ))}
           </div>
@@ -948,7 +948,7 @@ export default async function Home() {
               {/* PortfolioHero gradient card – kept as the brand-defining element */}
               <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#0F8A8A 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Your vestings</p>
-                <p className="text-2xl font-bold text-white tabular-nums">$4,238</p>
+                <p className="text-2xl font-bold tabular-nums text-white">$4,238</p>
                 <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $215 claimable now · 2 wallets tracked</p>
                 <div className="flex gap-2 mt-3">
                   {[
@@ -1040,7 +1040,10 @@ export default async function Home() {
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Deeper than a simple tracker</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
+            <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Deeper than a simple tracker</span>
+          </div>
           <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
             Built for the full lifecycle
           </h2>
@@ -1052,7 +1055,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Panel 1: Monthly Forecast */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             <div className="px-4 pt-4 pb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Monthly Forecast</p>
               <p className="text-xs font-semibold" style={{ color: "#1A1D20" }}>Unlock cashflow by month</p>
@@ -1092,7 +1095,7 @@ export default async function Home() {
           </div>
 
           {/* Panel 2: P&L Tracker */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             <div className="px-4 pt-4 pb-2 flex items-start justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>P&L Tracker</p>
@@ -1147,7 +1150,7 @@ export default async function Home() {
           </div>
 
           {/* Panel 3: Tax-ready exports */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#B8BABD" }}>Tax-Ready Exports</p>
@@ -1249,7 +1252,7 @@ export default async function Home() {
             },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl p-5 transition-all duration-200 hover:shadow-md"
-              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
                 style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color }}>
                 {f.icon}
@@ -1336,7 +1339,7 @@ export default async function Home() {
             </ul>
           </div>
           {/* Mockup */}
-          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             {/* Search bar */}
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ background: "#FAFAFA", border: "1px solid rgba(21,23,26,0.10)" }}>
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#8B8E92" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1392,7 +1395,7 @@ export default async function Home() {
             </p>
           </div>
           {/* Mockup */}
-          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -1457,7 +1460,7 @@ export default async function Home() {
             </p>
           </div>
           {/* Mockup */}
-          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)" }}>
+          <div className="flex-1 w-full rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
             {/* Segmented toggle */}
             <div className="flex rounded-full p-1 mb-5" style={{ background: "rgba(21,23,26,0.04)", border: "1px solid rgba(21,23,26,0.06)" }}>
               <div className="flex-1 text-center py-1.5 rounded-full text-xs font-semibold" style={{ color: "#8B8E92" }}>
@@ -1650,7 +1653,10 @@ export default async function Home() {
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Built for</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
+            <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Built for</span>
+          </div>
           <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
             Who uses Vestream?
           </h2>
@@ -1684,7 +1690,7 @@ export default async function Home() {
             },
           ].map((card) => (
             <div key={card.audience} className="rounded-2xl p-6"
-              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
                 style={{ background: card.bg, border: `1px solid ${card.border}`, color: card.color }}>
                 {card.icon}
@@ -1721,7 +1727,10 @@ export default async function Home() {
           not the SIWE login page. */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Simple by design</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
+            <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Simple by design</span>
+          </div>
           <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
             Up and running in 60 seconds
           </h2>
@@ -1848,7 +1857,10 @@ export default async function Home() {
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#B8BABD" }}>Got questions</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
+            <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Got questions</span>
+          </div>
           <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12]" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>Frequently asked</h2>
         </div>
 
@@ -1963,7 +1975,7 @@ export default async function Home() {
             </div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro</p>
             <p className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
-              $9.99<span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
+              <span className="tabular-nums">$9.99</span><span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <p className="text-sm mb-1 mt-2" style={{ color: "#8B8E92" }}>
               Or <span className="font-semibold" style={{ color: "#0F8A8A" }}>$74.99/year</span> – save 37%.
@@ -2072,7 +2084,7 @@ export default async function Home() {
 function FAQItem({ q, a }: { q: string; a: string }) {
   return (
     <details className="group rounded-2xl border overflow-hidden"
-      style={{ background: "white", borderColor: "rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      style={{ background: "white", borderColor: "rgba(21,23,26,0.10)", boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 24px -14px rgba(16,24,40,0.16)" }}>
       <summary className="flex items-center justify-between gap-4 px-6 py-4 cursor-pointer list-none select-none"
         style={{ color: "#1A1D20" }}>
         <span className="text-sm font-semibold">{q}</span>
