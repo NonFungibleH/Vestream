@@ -17,6 +17,7 @@ import { Provenance } from "@/components/Provenance";
 import {
   chainBrand, chainIcon, chainSlug, chainIdFromSlug, publicChainIds,
   getProtocol, protocolIcon, listProtocols,
+  upcomingChain, upcomingChainSlugs,
 } from "@/lib/protocol-constants";
 import { getChainStats, type ChainUnlock } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
@@ -24,18 +25,29 @@ import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 export const revalidate = 600;
 
 export function generateStaticParams() {
-  return publicChainIds()
+  const live = publicChainIds()
     .map((id) => chainSlug(id))
-    .filter((s): s is string => !!s)
-    .map((chain) => ({ chain }));
+    .filter((s): s is string => !!s);
+  // Upcoming (not-yet-indexed) chains get a static page too — see
+  // UPCOMING_CHAINS in protocol-constants.
+  return [...live, ...upcomingChainSlugs()].map((chain) => ({ chain }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ chain: string }> }): Promise<Metadata> {
   const { chain } = await params;
   const chainId = chainIdFromSlug(chain);
-  if (chainId === undefined) return { title: "Chain not found · Vestream" };
-  const name = chainBrand(chainId).name;
   const url  = `https://www.vestream.io/chains/${chain}`;
+  if (chainId === undefined) {
+    const up = upcomingChain(chain);
+    if (!up) return { title: "Chain not found · Vestream" };
+    return {
+      title: `${up.name} Token Unlocks & Vesting`,
+      description: `Token vesting on ${up.name}: which vesting protocols are deployed there, why unlock schedules matter on ${up.name}, and when Vestream will index it. ${up.tagline}`,
+      alternates: { canonical: url },
+      openGraph: { title: `${up.name} Token Unlocks & Vesting`, description: up.tagline, url, siteName: "Vestream", type: "website" },
+    };
+  }
+  const name = chainBrand(chainId).name;
   return {
     title: `${name} Token Unlocks & Vesting Tracker`,
     description: `Live token vesting on ${name}: total value locked, the protocols integrated on ${name}, and the biggest upcoming token unlocks, priced in USD. Free, updated continuously.`,
@@ -137,10 +149,105 @@ function UnlockColumns({ next, biggest, chainName }: { next: ChainUnlock[]; bigg
   );
 }
 
+/**
+ * Page for a chain we talk about but do not index yet (UPCOMING_CHAINS).
+ * Deliberately honest: no TVL, no counts, no mock unlocks — just what vesting
+ * looks like on that chain, which protocols are there, and a route into the
+ * product. Same URL the live page will take over, so ranking carries across.
+ */
+function UpcomingChainPage({ up, slug }: { up: import("@/lib/protocol-constants").UpcomingChain; slug: string }) {
+  const liveChains = publicChainIds().map((id) => ({ id, slug: chainSlug(id), brand: chainBrand(id) })).filter((c) => !!c.slug).slice(0, 6);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${up.name} Token Unlocks & Vesting`,
+    description: `Token vesting on ${up.name}: deployed vesting protocols and Vestream's integration status.`,
+    url: `https://www.vestream.io/chains/${slug}`,
+    isPartOf: { "@type": "WebSite", name: "Vestream", url: "https://www.vestream.io" },
+  };
+  return (
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+      <SiteNav theme="light" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <section className="relative overflow-hidden pt-24 pb-10 md:pt-32 md:pb-14 px-4 md:px-8">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 85% 55% at 50% -5%, rgba(28,184,184,0.14) 0%, transparent 70%)" }} />
+        <div className="relative max-w-4xl mx-auto">
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-1.5 text-[11px]" style={{ color: "#8B8E92" }}>
+              <li><Link href="/" className="hover:underline">Home</Link></li>
+              <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+              <li><Link href="/chains" className="hover:underline">Chains</Link></li>
+              <li aria-hidden style={{ color: "#D1D5DB" }}>›</li>
+              <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{up.name}</li>
+            </ol>
+          </nav>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5"
+            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#d97706" }}>
+            Integration on the roadmap
+          </div>
+          <h1 className="font-bold tracking-tight mb-4" style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.08, letterSpacing: "-0.03em" }}>
+            {up.name} token unlocks<br /><span style={{ color: "#1CB8B8" }}>and vesting</span>
+          </h1>
+          <p className="text-base md:text-lg leading-relaxed max-w-2xl" style={{ color: "#5B6064" }}>{up.tagline}</p>
+        </div>
+      </section>
+
+      <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
+        <div className="rounded-2xl p-6 md:p-7" style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+          <h2 className="text-lg md:text-xl font-bold mb-3" style={{ letterSpacing: "-0.02em" }}>Vesting on {up.name}</h2>
+          <p className="text-sm md:text-[15px] leading-relaxed" style={{ color: "#475569" }}>{up.body}</p>
+          <div className="mt-5 pt-5" style={{ borderTop: "1px solid rgba(21,23,26,0.07)" }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#8B8E92" }}>Vesting protocols deployed on {up.name}</p>
+            {up.protocols.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {up.protocols.map((name) => (
+                  <span key={name} className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: "rgba(21,23,26,0.035)", border: "1px solid rgba(21,23,26,0.08)" }}>{name}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: "#8B8E92" }}>No vesting or locker protocol has announced a {up.name} deployment yet. This page will list them as they go live.</p>
+            )}
+          </div>
+          <p className="mt-5 text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
+            Vestream does not index {up.name} yet. Nothing on this page is a live figure. When the integration ships, this URL becomes the live {up.name} unlock calendar with TVL, protocols and upcoming unlocks.
+          </p>
+        </div>
+      </section>
+
+      <section className="px-4 md:px-8 pb-16 max-w-4xl mx-auto w-full">
+        <h2 className="text-lg md:text-xl font-bold mb-4" style={{ letterSpacing: "-0.02em" }}>Chains Vestream indexes today</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {liveChains.map((c) => (
+            <Link key={c.id} href={`/chains/${c.slug}`} className="rounded-xl px-4 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5"
+              style={{ background: "white", border: "1px solid rgba(21,23,26,0.08)", color: "#1A1D20" }}>
+              {c.brand.name} →
+            </Link>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <Link href="/find-vestings" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm"
+            style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)", color: "white", boxShadow: "0 4px 20px rgba(28,184,184,0.28)" }}>
+            Check a wallet on a live chain →
+          </Link>
+          <Link href="/contact" className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-sm"
+            style={{ background: "white", border: "1px solid rgba(21,23,26,0.1)", color: "#0F8A8A" }}>
+            Ask us to prioritise {up.name}
+          </Link>
+        </div>
+      </section>
+      <SiteFooter theme="light" />
+    </div>
+  );
+}
+
 export default async function ChainPage({ params }: { params: Promise<{ chain: string }> }) {
   const { chain } = await params;
   const chainId = chainIdFromSlug(chain);
-  if (chainId === undefined) notFound();
+  if (chainId === undefined) {
+    const up = upcomingChain(chain);
+    if (!up) notFound();
+    return <UpcomingChainPage up={up} slug={chain} />;
+  }
 
   const brand = chainBrand(chainId);
   const icon  = chainIcon(chainId);

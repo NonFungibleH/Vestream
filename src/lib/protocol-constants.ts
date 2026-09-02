@@ -849,6 +849,61 @@ export function chainSlug(chainId: number): string | null {
 export function chainIdFromSlug(slug: string): number | undefined {
   return SLUG_TO_CHAIN[slug];
 }
+// ── Upcoming chains (SEO pages before integration) ───────────────────────────
+// Chains with real vesting activity that Vestream does NOT index yet. Each gets
+// a /chains/<slug> page so the "<chain> token unlocks / vesting" query is ours
+// before the integration ships, instead of being built from zero on launch.
+// Everything here is factual and stated as such: which vesting protocols are
+// deployed there (per their own deployment docs / DefiLlama vesting slices),
+// and that we are not indexing it. No mock TVL, no fake counts. When a chain
+// goes live, delete its entry here and add it to CHAIN_SLUG — same URL, so the
+// ranking carries over.
+export interface UpcomingChain {
+  slug:      string;
+  name:      string;
+  /** One-line positioning, factual. */
+  tagline:   string;
+  /** Short explainer of why vesting matters on this chain right now. */
+  body:      string;
+  /** Vesting/locker protocols known to be deployed there. */
+  protocols: string[];
+  evm:       boolean;
+}
+export const UPCOMING_CHAINS: Record<string, UpcomingChain> = {
+  "arc": {
+    slug: "arc", name: "Arc", evm: true,
+    tagline: "Circle's Layer-1 for stablecoin finance, with USDC as native gas.",
+    body: "Arc is built for regulated, dollar-denominated on-chain finance. Token launches that settle in USDC bring the same problem every other chain has: team, investor and community allocations that vest on a schedule nobody is watching. Vestream will index Arc vesting as the first lockers and streaming protocols deploy there.",
+    protocols: [],
+  },
+  "monad": {
+    slug: "monad", name: "Monad", evm: true,
+    tagline: "High-throughput EVM Layer-1 with a fast-growing set of token launches.",
+    body: "Monad's launch cohort of projects is vesting founder, investor and airdrop allocations on-chain today. Sablier already runs vesting streams on Monad. Vestream's Monad integration will bring those schedules into the same calendar and alerts as every other chain we index.",
+    protocols: ["Sablier"],
+  },
+  "berachain": {
+    slug: "berachain", name: "Berachain", evm: true,
+    tagline: "Proof-of-liquidity EVM chain with a large, active token ecosystem.",
+    body: "Berachain's ecosystem tokens lean heavily on vesting to align validators, LPs and teams, and Sablier's lockup contracts are live on it. Vestream is not indexing Berachain yet; this page will become the live Berachain unlock calendar when the integration ships.",
+    protocols: ["Sablier"],
+  },
+  "sonic": {
+    slug: "sonic", name: "Sonic", evm: true,
+    tagline: "The Fantom successor chain, EVM-compatible, with sub-second finality.",
+    body: "Sonic migrated a mature DeFi ecosystem and its token vesting with it. Sablier streams are deployed on Sonic today. Vestream will index Sonic vesting so holders get the same unlock alerts they get on Ethereum and Base.",
+    protocols: ["Sablier"],
+  },
+  "hyperliquid": {
+    slug: "hyperliquid", name: "Hyperliquid", evm: true,
+    tagline: "The HyperEVM chain behind the Hyperliquid exchange and HYPE ecosystem.",
+    body: "HYPE and the ecosystem tokens launching on HyperEVM carry some of the most-watched vesting schedules in the market. Sablier vesting is live on HyperEVM. Vestream is not indexing Hyperliquid yet; when it does, this page becomes the live Hyperliquid unlock calendar.",
+    protocols: ["Sablier"],
+  },
+};
+export function upcomingChain(slug: string): UpcomingChain | undefined { return UPCOMING_CHAINS[slug]; }
+export function upcomingChainSlugs(): string[] { return Object.keys(UPCOMING_CHAINS); }
+
 /** All public (mainnet) chain ids that have a /chains/<slug> page. */
 export function publicChainIds(): number[] {
   return Object.keys(CHAIN_SLUG).map(Number);

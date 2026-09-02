@@ -29,7 +29,7 @@
 
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/articles";
-import { listProtocols, publicChainIds, chainSlug } from "@/lib/protocol-constants";
+import { listProtocols, publicChainIds, chainSlug, upcomingChainSlugs } from "@/lib/protocol-constants";
 import { getProtocolStats, toDateSafe } from "@/lib/vesting/protocol-stats";
 import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { DOC_SLUGS } from "@/lib/docs";
@@ -163,6 +163,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily" as const,
       priority:        0.8,
     }));
+  // Not-yet-indexed chains (UPCOMING_CHAINS): static explainer pages that hold
+  // the URL and the ranking until the integration ships.
+  const upcomingChainEntries: MetadataRoute.Sitemap = upcomingChainSlugs().map((slug) => ({
+    url:             `${SITE}/chains/${slug}`,
+    lastModified:    today,
+    changeFrequency: "weekly" as const,
+    priority:        0.5,
+  }));
 
   return [
     ...staticEntries,
@@ -170,6 +178,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...protocolEntries,
     ...protocolUnlockEntries,
     ...chainEntries,
+    ...upcomingChainEntries,
     ...articleEntries,
     ...unlockWindowEntries,
     ...reportEntries,
