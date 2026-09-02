@@ -191,10 +191,9 @@ export default async function ChainsIndexPage() {
             const brand = chainBrand(c.chainId);
             const icon  = chainIcon(c.chainId);
             const slug  = chainSlug(c.chainId);
-            // Bar LENGTH is share-of-leader, so chains are comparable at a
-            // glance. Previously the composition bar filled 100% of every card
-            // regardless of value, which made $1B and $4M render identically —
-            // the reason nine rows read as one flat, sizeless list.
+            // Only used for the no-composition fallback bar below, where there
+            // is nothing to show proportions BETWEEN, so share-of-leader is the
+            // only meaningful thing the bar can encode.
             const pct   = max > 0 && c.tvlUsd > 0 ? Math.max(2, (c.tvlUsd / max) * 100) : 0;
             const share = total > 0 && c.tvlUsd > 0 ? (c.tvlUsd / total) * 100 : 0;
             const feat  = i < 3 && c.tvlUsd > 0;
@@ -257,7 +256,14 @@ export default async function ChainsIndexPage() {
                   className="mt-3 h-2.5 rounded-full overflow-hidden"
                   style={{ background: "rgba(21,23,26,0.04)", boxShadow: "inset 0 1px 2px rgba(21,23,26,0.05)" }}
                 >
-                  <div className="h-full rounded-full overflow-hidden flex" style={{ width: `${pct}%` }}>
+                  {/* Full-width composition, not scaled by share-of-leader.
+                      Scaling the fill made the split unreadable exactly where
+                      it matters most: a chain holding 0.1% of the index had its
+                      three protocols crammed into a 2px stub. Magnitude is
+                      already carried by the TVL figure and the "% of index"
+                      label next to it, so the bar is free to do the one job a
+                      bar is good at, which is showing proportion. */}
+                  <div className="h-full rounded-full overflow-hidden flex" style={{ width: "100%" }}>
                     {comp.length > 0 && compTotal > 0
                       ? comp.map(([slugP, v]) => {
                           const m = protoMeta.get(slugP);
@@ -270,7 +276,7 @@ export default async function ChainsIndexPage() {
                             />
                           );
                         })
-                      : <div className="h-full w-full" style={{ background: brand.color }} />}
+                      : <div className="h-full" style={{ width: `${pct}%`, background: brand.color }} />}
                   </div>
                 </div>
 

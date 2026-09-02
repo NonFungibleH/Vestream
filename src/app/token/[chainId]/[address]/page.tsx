@@ -1803,12 +1803,20 @@ function UpcomingEvents({
                       target="_blank"
                       rel="noopener noreferrer nofollow"
                       title={e.lockTxKind === "claim"
-                        ? `View the claim that revealed this allocation · ${e.lockTxHash.slice(0, 10)}… (a past withdrawal, not this unlock)`
+                        ? `Source transaction · ${e.lockTxHash.slice(0, 10)}… This is an earlier withdrawal that revealed the schedule, not this unlock. These tokens are still locked.`
                         : `View lock transaction · ${e.lockTxHash.slice(0, 10)}…`}
                       className="inline-flex items-center px-1 rounded text-[9px] font-bold tracking-wider hover:opacity-80 transition-opacity"
                       style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 16 }}
                     >
-                      {e.lockTxKind === "claim" ? "CLAIM ↗" : "TX ↗"}
+                      {/* Never "CLAIM" here. This block is UPCOMING unlocks, so
+                          the tokens are by definition still locked and nothing
+                          is claimable. For merkle protocols the hash we hold is
+                          an earlier withdrawal that revealed the allocation, and
+                          labelling that "CLAIM" next to a future date read as a
+                          claim-it-now affordance pointing at an Etherscan page
+                          showing tokens already moved. "SOURCE" keeps the
+                          verifiable provenance link without the false promise. */}
+                      {e.lockTxKind === "claim" ? "SOURCE ↗" : "TX ↗"}
                     </a>
                   )}
                 </div>
