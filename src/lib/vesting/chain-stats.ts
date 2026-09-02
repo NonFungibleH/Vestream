@@ -48,7 +48,7 @@ const readSnapshotsCached = unstable_cache(
   { revalidate: 300 },
 );
 
-async function loadSnapshots(): Promise<ProtocolSnapshotRow[]> {
+export async function loadSnapshots(): Promise<ProtocolSnapshotRow[]> {
   try {
     return await readSnapshotsCached();
   } catch {

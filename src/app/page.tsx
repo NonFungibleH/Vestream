@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
 import { listProtocols, publicChainIds } from "@/lib/protocol-constants";
-import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
+import { loadSnapshots } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import {
   getProtocolStats,
@@ -51,10 +51,13 @@ async function getHomepageLiveStats() {
     // public chains. This used to be a hardcoded "$3B+" string, which drifted
     // from the real figure (the /protocols page said $1.6B at the time) and
     // was flatly wrong once Sablier's inflated DefiLlama row was corrected.
-    // readAllSnapshots already races its own 2s guard and returns [] on a
-    // slow read, in which case the pill just omits the dollar figure.
+    // loadSnapshots is the SHARED unstable_cache'd read the chain pages use
+    // (5-min TTL, throw-on-empty so a degraded read is never cached). The raw
+    // readAllSnapshots races a 2s guard and returns [] under pooler load —
+    // prod logs show it tripping — which left this pill with no dollar figure
+    // on the first runtime render. One good read now serves every surface.
     const publicSet = new Set<number>(publicChainIds());
-    const totalTvlUsd = (await readAllSnapshots().catch(() => []))
+    const totalTvlUsd = (await loadSnapshots().catch(() => []))
       .filter((r) => publicSet.has(r.chainId))
       .reduce((sum, r) => sum + r.tvlUsd, 0);
     // Defensive coercion: lastIndexedAt is typed Date | string | null because

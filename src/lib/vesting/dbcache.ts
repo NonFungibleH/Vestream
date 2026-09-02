@@ -31,6 +31,11 @@ function hydrateCachedStream(blob: Record<string, unknown>): VestingStream {
   if (!s.category) {
     s.category = categoryForProtocol(s.protocol);
   }
+  // Magna rows written before lockTxKind existed (Sept 2026) carry a claim
+  // hash in lockTxHash with no kind. Magna is merkle-based and its indexer is
+  // its only writer, so the hash is ALWAYS a claim — default it here so the
+  // dashboard/token page label "CLAIM" without waiting for a full re-index.
+  if (s.protocol === "magna" && s.lockTxHash && !s.lockTxKind) s.lockTxKind = "claim";
   return s as VestingStream;
 }
 

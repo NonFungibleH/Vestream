@@ -561,7 +561,10 @@ export async function getTokenUpcomingEvents(
         timestamp:   ev.timestamp,
         tokensWhole: ev.tokensWhole,
         lockTxHash:  (sd.lockTxHash as string | null | undefined) ?? null,
-        lockTxKind:  (sd.lockTxKind as "lock" | "claim" | undefined) ?? "lock",
+        // Pre-Sept-2026 Magna rows have no lockTxKind but their hash is always a
+        // claim (see hydrateCachedStream in dbcache.ts for the same default).
+        lockTxKind:  (sd.lockTxKind as "lock" | "claim" | undefined)
+                     ?? (r.protocol === "magna" ? "claim" : "lock"),
         chainId,
       });
     }
