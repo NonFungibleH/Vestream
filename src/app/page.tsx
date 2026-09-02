@@ -1040,7 +1040,7 @@ export default async function Home() {
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="inline-flex items-center gap-2.5 mb-3">
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Deeper than a simple tracker</span>
           </div>
@@ -1534,15 +1534,20 @@ export default async function Home() {
       </section>
 
       {/* ── Mobile app ──────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-5xl mx-auto">
-        <div className="rounded-3xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 md:gap-0 p-8 md:p-12"
-          style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)", border: "1px solid rgba(28,184,184,0.25)" }}>
-
-          {/* Gradient glow – teal halo on the right where the phone sits, so the
+      {/* Full-bleed, not a rounded card sitting on grey. As a card it left a
+          band of page background above and below the gradient, which read as a
+          gap rather than a section. Full width makes this the page's second
+          bold block after the ink hero, which is what the app pitch deserves. */}
+      <section className="relative w-full px-4 md:px-8 py-16 md:py-24 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1A1D20 0%, #0F8A8A 100%)" }}>
+        {/* Gradient glow – teal halo on the right where the phone sits, so the
               device shadow reads against the warm-ink-to-teal field. */}
-          <div className="absolute inset-0 pointer-events-none" style={{
+        <div className="absolute inset-0 pointer-events-none" style={{
             background: "radial-gradient(ellipse 55% 60% at 85% 50%, rgba(28,184,184,0.22) 0%, transparent 70%)",
-          }} />
+        }} />
+        <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-0">
+
+
 
           {/* Text */}
           <div className="relative flex-1 md:pr-8">
@@ -1653,7 +1658,7 @@ export default async function Home() {
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="inline-flex items-center gap-2.5 mb-3">
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Built for</span>
           </div>
@@ -1727,7 +1732,7 @@ export default async function Home() {
           not the SIWE login page. */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="inline-flex items-center gap-2.5 mb-3">
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Simple by design</span>
           </div>
@@ -1857,7 +1862,7 @@ export default async function Home() {
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 pb-16 md:pb-28 max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="inline-flex items-center gap-2.5 mb-3">
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Got questions</span>
           </div>
