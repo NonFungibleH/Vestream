@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { GradientCta } from "@/components/GradientCta";
 import { Provenance } from "@/components/Provenance";
 import { chainSlug, chainBrand, chainIcon, listProtocols, getProtocol } from "@/lib/protocol-constants";
 import { getChainsOverview, getUpcomingUnlocksAcrossChains } from "@/lib/vesting/chain-stats";
@@ -181,7 +182,9 @@ export default async function ChainsIndexPage() {
       </section>
 
       {/* ── TVL leaderboard — rich, clickable card per chain ─────────────── */}
-      <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-4xl mx-auto w-full">
+      <section className="px-4 md:px-8 py-16 md:py-24"
+        style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+        <div className="max-w-4xl mx-auto w-full">
         <h2 className="text-xl md:text-2xl font-bold mb-6" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
           Vesting TVL by chain
         </h2>
@@ -301,6 +304,7 @@ export default async function ChainsIndexPage() {
             );
           })}
         </div>
+        </div>
       </section>
 
       {/* ── Dark band ────────────────────────────────────────────────────
@@ -385,6 +389,14 @@ export default async function ChainsIndexPage() {
           </div>
         </section>
       )}
+
+      <GradientCta
+        eyebrow="Across every chain"
+        title="Your unlocks, wherever they live."
+        sub="You should not have to remember which chain a grant is on. Add a wallet once and Vestream watches all of them for you."
+        primary={{ href: "/find-vestings", label: "Check my wallet →" }}
+        secondary={{ href: "/#download", label: "Get the app" }}
+      />
 
       <SiteFooter theme="light" />
     </div>

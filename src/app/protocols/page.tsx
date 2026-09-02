@@ -20,6 +20,7 @@ import { unstable_cache } from "next/cache";
 import { after } from "next/server";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { GradientCta } from "@/components/GradientCta";
 // LiveActivityTicker intentionally removed from this page – it polls
 // /api/unlocks/live-activity and renders recent-activity rows. Pre-launch we
 // don't have enough platform traffic to make the feed feel alive, and an empty
@@ -511,7 +512,9 @@ export default async function UnlocksIndexPage() {
       </div>
 
       {/* ── Protocol grid ────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-12 md:pb-16 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 py-12 md:py-16"
+        style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+        <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h2
@@ -535,6 +538,7 @@ export default async function UnlocksIndexPage() {
               isExternalSource={externallySourced.has(p.slug)}
             />
           ))}
+        </div>
         </div>
       </section>
 
@@ -582,7 +586,9 @@ export default async function UnlocksIndexPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-24 max-w-5xl mx-auto">
+      <section className="px-4 md:px-8 pb-24"
+        style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+        <div className="max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
           style={{
@@ -624,7 +630,16 @@ export default async function UnlocksIndexPage() {
             </Link>
           </div>
         </div>
+        </div>
       </section>
+
+      <GradientCta
+        eyebrow="One app, every protocol"
+        title="Stop checking twelve dashboards."
+        sub="Your grants probably sit in three protocols on two chains. Vestream reads them all and tells you when something is claimable."
+        primary={{ href: "/find-vestings", label: "Check my wallet →" }}
+        secondary={{ href: "/#download", label: "Get the app" }}
+      />
 
       <SiteFooter theme="light" />
     </div>

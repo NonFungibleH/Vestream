@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { GradientCta } from "@/components/GradientCta";
 import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
 import { readTokenRollups } from "@/lib/vesting/token-rollups";
 import { after } from "next/server";
@@ -350,7 +351,9 @@ export default async function UnlocksIndex() {
       )}
 
       {/* ── Window cards ──────────────────────────────────────────────── */}
-      <section className="px-4 md:px-8 pb-20 md:pb-28 max-w-5xl mx-auto w-full">
+      <section className="px-4 md:px-8 py-20 md:py-28"
+        style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
+        <div className="max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {ALL_WINDOW_SLUGS.map((slug) => {
             const def = WINDOWS[slug];
@@ -415,7 +418,16 @@ export default async function UnlocksIndex() {
             View reports →
           </Link>
         </div>
+        </div>
       </section>
+
+      <GradientCta
+        eyebrow="Never miss one"
+        title="Get told the moment your tokens unlock."
+        sub="This calendar is every unlock we track. The app tracks only yours, and buzzes your phone the moment a claim is ready."
+        primary={{ href: "/find-vestings", label: "Check my wallet →" }}
+        secondary={{ href: "/#download", label: "Get the app" }}
+      />
 
       <SiteFooter theme="light" />
     </div>
