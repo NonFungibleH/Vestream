@@ -126,7 +126,7 @@ function UnlockList({ title, items, rank = false }: { title: string; items: Chai
                 <p className="text-[11px]" style={{ color: "#8B8E92" }}>{fmtDate(u.eventTime)}{amt ? ` · ${amt} ${u.symbol ?? ""}`.trimEnd() : ""}</p>
               </div>
               <div className="text-right flex-shrink-0 text-sm font-bold tabular-nums" style={{ color: "#0F8A8A" }}>
-                {u.usdValue != null ? fmtUsd(u.usdValue) : "—"}
+                {u.usdValue != null ? fmtUsd(u.usdValue) : "–"}
               </div>
             </Link>
           );
@@ -353,10 +353,10 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
       {/* Stats */}
       <section className="px-4 md:px-8 pb-10 max-w-4xl mx-auto w-full">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Stat label="Vesting TVL" value={s.tvlUsd > 0 ? fmtUsd(s.tvlUsd) : "—"} sub="conservative headline" />
+          <Stat label="Vesting TVL" value={s.tvlUsd > 0 ? fmtUsd(s.tvlUsd) : "–"} sub="conservative headline" />
           <Stat label="Upcoming (90d)" value={n(s.upcomingCount)} sub={s.totalUpcomingUsd > 0 ? `${fmtUsd(s.totalUpcomingUsd)} unlocking` : undefined} />
           <Stat label="Protocols" value={n(protocols.length)} sub="integrated here" />
-          <Stat label="Streams" value={s.streamCount > 0 ? n(s.streamCount) : "—"} sub="indexed" />
+          <Stat label="Streams" value={s.streamCount > 0 ? n(s.streamCount) : "–"} sub="indexed" />
         </div>
       </section>
 
@@ -387,7 +387,7 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="font-bold text-sm truncate" style={{ color: "#1A1D20" }}>{p.name}</p>
-                      <p className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: tvl > 0 ? "#0F8A8A" : "#CBD5E1" }}>{tvl > 0 ? fmtUsd(tvl) : "—"}</p>
+                      <p className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: tvl > 0 ? "#0F8A8A" : "#CBD5E1" }}>{tvl > 0 ? fmtUsd(tvl) : "–"}</p>
                     </div>
                     <div className="mt-1.5 h-2 rounded-full overflow-hidden" style={{ background: "rgba(15,138,138,0.08)" }}>
                       <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: p.color }} />

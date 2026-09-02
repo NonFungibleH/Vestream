@@ -22,7 +22,7 @@ interface Props {
    * "navy"   = dark navy developer page - /developer
    * "dark"   = near-black AI/technical pages - /ai
    */
-  theme?: "light" | "navy" | "dark";
+  theme?: "light" | "navy" | "dark" | "ink";
 }
 
 // Dropdown item lists, built from the single source of truth in
@@ -72,6 +72,24 @@ const THEME = {
     activeDot:      "white",
     mobileActiveBg: "rgba(28,184,184,0.12)",
     itemText:       "rgba(255,255,255,0.8)",
+    logo:           "/logo-dark.svg",
+  },
+  // "ink" matches the homepage hero exactly (#0B0E12). The "dark" variant was
+  // tuned for /ai, whose page background is #0d0f14 — one step lighter — so on
+  // the hero it read as a distinctly lighter band across the top, and the
+  // dropdown panel sat at a third shade again. Same family, own row, so /ai is
+  // untouched.
+  ink: {
+    navBg:          "rgba(11,14,18,0.92)",
+    navBorder:      "rgba(255,255,255,0.10)",
+    linkBase:       "rgba(255,255,255,0.44)",
+    linkActive:     "#FFFFFF",
+    menuBg:         "#141A20",
+    menuShadow:     "0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px -24px rgba(0,0,0,0.9)",
+    mobileBackdropBg: "rgba(0,0,0,0.6)",
+    activeDot:      "#5FDCDC",
+    mobileActiveBg: "rgba(28,184,184,0.12)",
+    itemText:       "rgba(255,255,255,0.82)",
     logo:           "/logo-dark.svg",
   },
   dark: {
