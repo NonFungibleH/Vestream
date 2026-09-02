@@ -57,6 +57,20 @@ const TEASER_VISIBLE_ROWS = 10;
 // build); the first runtime revalidation fills them.
 export const revalidate = 3600;
 
+// Vercel's default function duration is short (~15s) unless a route raises it,
+// and it applies to ISR REGENERATION too. This page's data work runs well past
+// that — the per-chain unlock fan-out alone measures ~10.6s in the production
+// runtime — so every regeneration was being killed mid-render and Vercel kept
+// serving the empty build-time prerender indefinitely. That, not a slow query,
+// is why the unlock calendar showed "-" for every window and the tables were
+// blank in production: an /api/admin/unlocks-debug probe run inside the real
+// runtime returned the unscoped window query in 1,076ms with 237 groups, so
+// the data layer was healthy the whole time.
+//
+// /status and /admin/growth already set this for the same reason.
+export const maxDuration = 60;
+
+
 export function generateStaticParams() {
   return ALL_WINDOW_SLUGS.map((range) => ({ range }));
 }
