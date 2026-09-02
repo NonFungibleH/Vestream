@@ -579,7 +579,7 @@ export default async function Home() {
             separation from the hero so it reads as its own block, not
             an appendage to the right column. */}
         <div className="relative mt-16">
-          <p className="text-[10px] font-semibold tracking-widest uppercase mb-4 text-center" style={{ color: "#B8BABD" }}>Integrated with</p>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-5 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>We read your vestings from</p>
           {/* Row 1 – text-name cards. (Logo wall reverted 2026-06-05 pending
               uniform square icons; the images live in /public/protocols/.) */}
           <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
@@ -594,17 +594,21 @@ export default async function Home() {
               { name: "HoodLock",     color: "#00C805", bg: "rgba(0,200,5,0.07)",    border: "rgba(0,200,5,0.16)",    icon: "/protocols/icons/hoodlock.png"  },
             ].map((p) => (
               <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
-                style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+                className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                {/* Chip fill is neutral white-on-ink, not the brand tint: at 7%
+                    those tints were invisible on #0B0E12. The mark keeps its
+                    own colour on a white tile, which is what makes it legible
+                    and is how the design specifies it (never greyscaled). */}
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
                   {p.icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-[3px]" />
+                    <img src={p.icon} alt="" width={36} height={36} className="w-full h-full object-contain p-[3px]" />
                   ) : (
-                    <span className="font-extrabold text-[16px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
+                    <span className="font-extrabold text-[18px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
                   )}
                 </div>
-                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
+                <p className="text-[13.5px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
               </Link>
             ))}
           </div>
@@ -623,23 +627,27 @@ export default async function Home() {
               { name: "Magna",        color: "#E05FCB", bg: "rgba(248,140,229,0.08)", border: "rgba(248,140,229,0.20)", icon: "/protocols/icons/magna.png" },
             ].map((p) => (
               <Link key={p.name} href={`/protocols/${p.name.toLowerCase().replace(/\s+/g, "-")}`}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
-                style={{ background: p.bg, border: `1px solid ${p.border}` }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+                className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                {/* Chip fill is neutral white-on-ink, not the brand tint: at 7%
+                    those tints were invisible on #0B0E12. The mark keeps its
+                    own colour on a white tile, which is what makes it legible
+                    and is how the design specifies it (never greyscaled). */}
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "#fff" }}>
                   {p.icon ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.icon} alt="" width={28} height={28} className="w-full h-full object-contain p-[3px]" />
+                    <img src={p.icon} alt="" width={36} height={36} className="w-full h-full object-contain p-[3px]" />
                   ) : (
-                    <span className="font-extrabold text-[16px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
+                    <span className="font-extrabold text-[18px] leading-none" style={{ color: p.color }}>{p.name[0]}</span>
                   )}
                 </div>
-                <p className="text-xs font-bold leading-tight" style={{ color: p.color }}>{p.name}</p>
+                <p className="text-[13.5px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.88)" }}>{p.name}</p>
               </Link>
             ))}
           </div>
           {/* Eyebrow heading above the chains – mirrors "Integrated with" above
               the protocols so the two groups read as distinct sections. */}
-          <p className="text-[10px] font-semibold tracking-widest uppercase mt-8 mb-3 text-center" style={{ color: "#B8BABD" }}>Available on</p>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mt-9 mb-4 text-center" style={{ color: "rgba(255,255,255,0.44)", letterSpacing: "0.18em" }}>Across these chains</p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {[
               // Brand-accurate chain colours + official marks in /public/chains/icons.
@@ -653,53 +661,16 @@ export default async function Home() {
               { name: "Solana",    slug: "solana",          color: "#9945FF", icon: "/chains/icons/solana.png" },
               { name: "Robinhood", slug: "robinhood-chain", color: "#5B8C00", icon: "/chains/icons/robinhood.png" },
             ].map((c) => (
-              <Link key={c.name} href={`/chains/${c.slug}`} className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full hover:opacity-80 transition-opacity"
-                style={{ background: `${c.color}12`, border: `1px solid ${c.color}2e` }}>
-                <span className="w-[18px] h-[18px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-                  style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+              <Link key={c.name} href={`/chains/${c.slug}`} className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                <span className="w-[22px] h-[22px] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                  style={{ background: "#fff" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.icon} alt="" width={18} height={18} className="w-full h-full object-contain p-[1.5px]" />
+                  <img src={c.icon} alt="" width={22} height={22} className="w-full h-full object-contain p-[1.5px]" />
                 </span>
-                <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.name}</span>
+                <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.82)" }}>{c.name}</span>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Protocol strip — ink, continues the hero ─────────────────────
-          The positioning in one line: we are the layer ON TOP of these
-          protocols, not a competitor to them. "We read your vestings from"
-          says complement, where a logo wall labelled "integrations" would say
-          compete. Real marks in colour, per the design (greyscaling opaque
-          colour PNGs turns them to mush). */}
-      <section className="px-4 md:px-8 py-6" style={{ background: "#0B0E12", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center lg:justify-between gap-x-7 gap-y-4">
-          <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "rgba(255,255,255,0.44)" }}>
-            We read your vestings from
-          </span>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {listProtocols().slice(0, 8).map((pr) => {
-              const icon = protocolIcon(pr.slug);
-              return (
-                <Link
-                  key={pr.slug}
-                  href={`/protocols/${pr.slug}`}
-                  className="inline-flex items-center gap-2 pl-[7px] pr-3 py-1.5 rounded-[10px] transition-opacity hover:opacity-80"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
-                >
-                  {icon && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={icon} alt="" width={19} height={19} style={{ width: 19, height: 19, borderRadius: 6, objectFit: "cover" }} />
-                  )}
-                  <span className="text-[12.5px] font-medium" style={{ color: "rgba(255,255,255,0.82)" }}>{pr.name}</span>
-                </Link>
-              );
-            })}
-            <Link href="/protocols" className="inline-flex items-center px-3 py-1.5 rounded-[10px] text-[12.5px] font-medium transition-opacity hover:opacity-80"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.44)" }}>
-              +{Math.max(0, listProtocols().length - 8)} more
-            </Link>
           </div>
         </div>
       </section>
