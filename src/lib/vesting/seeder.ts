@@ -164,6 +164,16 @@ const DEEP_SEED_LIMIT = 5000;
 // limits exist because the free tier is the bottleneck, not the discovery
 // path (which is one cheap getProgramAccounts call).
 const STREAMFLOW_INCREMENTAL_LIMIT = 200;
+// Team Finance is merkle-distributed: the Squid's vesting entity has NO
+// recipient field (creator/merkleRoot/tokenTotal/claimed only), so recipients
+// are discoverable solely as past claimants, and each one must then be
+// hydrated via TF's per-wallet REST API. 500 wallets at concurrency 8 with an
+// 8s cap per attempt outruns the whole 240s budget — ETH/BSC/Polygon timed out
+// with wrote=0 on 2026-09-02 even after the adapter got a request timeout and
+// bounded concurrency. 150 fits; stalest-first ordering in getCachedRecipients
+// rotates the slice so the full set is covered across runs instead of the
+// same 150 being refreshed forever.
+const TEAM_FINANCE_INCREMENTAL_LIMIT = 150;
 const STREAMFLOW_DEEP_LIMIT        = 500;
 
 // Subgraph single-query cap. Most The Graph deployments enforce
@@ -473,7 +483,9 @@ async function discoverTeamFinanceRecipients(chainId: SupportedChainId, limit: n
     `[seeder:team-finance/${chainId}] discovery: squid=${squidRecipients.length}, cached=${cachedRecipients.length}, combined=${recipients.length}`,
   );
 
-  return recipients.slice(0, limit);
+  const isDeep = limit > SEED_LIMIT;
+  const effectiveLimit = isDeep ? limit : Math.min(limit, TEAM_FINANCE_INCREMENTAL_LIMIT);
+  return recipients.slice(0, effectiveLimit);
 }
 
 // ─── Hedgey discovery (on-chain ERC721Enumerable reads) ─────────────────────

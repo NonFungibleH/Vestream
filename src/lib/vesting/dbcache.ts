@@ -482,10 +482,19 @@ export async function getCachedRecipients(
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
   try {
     const result = await db.execute(
-      sql`SELECT DISTINCT recipient
+      // Stalest-first, not arbitrary order. With a bare LIMIT the same slice
+      // of recipients came back every run, so a protocol whose recipient set
+      // exceeds `limit` refreshed the same wallets forever and never touched
+      // the rest (Team Finance: ~thousands of claimants, limit 500, and the
+      // per-wallet REST fan-out for even that slice outran a 240s budget).
+      // Ordering by each recipient's oldest refresh makes successive runs
+      // walk through the whole set.
+      sql`SELECT recipient
           FROM vesting_streams_cache
           WHERE protocol = ${protocol}
             AND chain_id = ${chainId}
+          GROUP BY recipient
+          ORDER BY MIN(last_refreshed_at) ASC NULLS FIRST
           LIMIT ${limit}`
     );
     return result.map((row) => (row as { recipient: string }).recipient);
