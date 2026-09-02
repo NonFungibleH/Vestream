@@ -19,6 +19,10 @@ import { CHAIN_NAMES } from "@/lib/vesting/types";
 
 // ISR – symbol → (chain, address) mapping rarely changes; cache for 6h.
 export const revalidate = 21600;
+// Vercel's default function duration governs ISR regeneration too; without
+// this, a slow render is killed and the stale/empty prerender (or a 5xx) is
+// served instead. See the token page for the Search Console fallout.
+export const maxDuration = 60;
 
 // Pre-render top 200 symbols at build time. Long-tail symbols fall through
 // to on-demand ISR – Next.js generates them on first request and caches.
@@ -62,7 +66,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   if (matches.length === 0) return { title: "Token not found – Vestream" };
 
   const display = matches[0]?.symbol ?? symbol.toUpperCase();
-  const url     = `https://vestream.io/tokens/${symbol.toLowerCase()}`;
+  const url     = `https://www.vestream.io/tokens/${symbol.toLowerCase()}`;
 
   // Single-chain symbol → metadata for the redirect target. Even though
   // the page never renders for single matches (we redirect), Next.js
@@ -74,7 +78,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     return {
       title:       `${display} unlock schedule on ${chain} – Vestream`,
       description: `Track ${display} vesting on ${chain} – ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
-      alternates:  { canonical: `https://vestream.io/token/${m.chainId}/${m.address}` },
+      alternates:  { canonical: `https://www.vestream.io/token/${m.chainId}/${m.address}` },
     };
   }
 
@@ -132,7 +136,7 @@ export default async function TokenSymbolPage({ params }: PageParams) {
       item: {
         "@type": "WebPage",
         name:    `${display} vesting on ${CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`}`,
-        url:     `https://vestream.io/token/${m.chainId}/${m.address}`,
+        url:     `https://www.vestream.io/token/${m.chainId}/${m.address}`,
       },
     })),
   };

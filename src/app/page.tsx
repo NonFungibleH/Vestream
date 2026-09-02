@@ -20,6 +20,10 @@ import {
 // old snapshot to the next visitor saves five DB aggregations per stale
 // minute without any visible UX impact.
 export const revalidate = 600;
+// Vercel's default function duration governs ISR regeneration too; without
+// this, a slow render is killed and the stale/empty prerender (or a 5xx) is
+// served instead. See the token page for the Search Console fallout.
+export const maxDuration = 60;
 
 async function getHomepageLiveStats() {
   // Skip DB work during the build phase. Postgres-js hangs for 60s on

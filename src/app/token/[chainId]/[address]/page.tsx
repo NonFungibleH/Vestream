@@ -63,6 +63,13 @@ import { withTimeout } from "@/lib/with-timeout";
 import { getTokenTotalSupplyRaw, totalSupplyWhole } from "@/lib/vesting/token-supply";
 
 export const revalidate = 1800;
+// Search Console reported these as "Server error (5xx)". Same trap as /unlocks:
+// Vercel's default function duration also governs ISR REGENERATION, and this
+// page's fan-out (4 DB queries + a DexScreener price fetch) can exceed it on a
+// cold pooler, so the regeneration is killed and Googlebot gets a 5xx. Every
+// heavy ISR page needs this set explicitly — /status, /admin/growth, /unlocks
+// and /chains already do.
+export const maxDuration = 60;
 
 // REQUIRED for ISR on this canary (2026-06-12): without at least one
 // static-params sample, `await params` counts as a request-time API and

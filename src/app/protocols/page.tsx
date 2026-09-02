@@ -82,6 +82,10 @@ import {
 // (Data Cache hit) is ~50-100ms – and with ISR, no visitor ever waits on
 // either: renders happen in the background revalidation, off the user path.
 export const revalidate = 300;
+// Vercel's default function duration governs ISR regeneration too; without
+// this, a slow render is killed and the stale/empty prerender (or a 5xx) is
+// served instead. See the token page for the Search Console fallout.
+export const maxDuration = 60;
 // 1800s (30 min) – was 300s. Bumped 2026-05-10 as part of the egress-
 // reduction pass after Supabase Free's 5 GB/month quota was exceeded.
 // /protocols data (per-protocol stream counts + TVL snapshots) is updated

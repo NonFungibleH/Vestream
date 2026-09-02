@@ -18,7 +18,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io";
+// Canonical host. The env var wins for previews/local, but a bare
+// "vestream.io" is normalised up to "www.vestream.io" because that is the host
+// the site is actually served on. Production had NEXT_PUBLIC_APP_URL set
+// without the www, so every page emitted <link rel="canonical"> pointing at a
+// DIFFERENT host than the one Google crawled — which is why Search Console
+// filed 16 pages under "Alternate page with proper canonical tag" and dropped
+// them from the index. Normalising here means the canonical can never again be
+// broken by an env var.
+function canonicalHost(raw: string): string {
+  try {
+    const u = new URL(raw);
+    if (u.hostname === "vestream.io") u.hostname = "www.vestream.io";
+    return u.origin;
+  } catch { return "https://www.vestream.io"; }
+}
+const APP_URL = canonicalHost(process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vestream.io");
 
 // iOS App Store ID – populated AFTER first eas submit when Apple assigns
 // the 10-digit ID. Until set, the Smart App Banner meta tag is omitted
