@@ -31,6 +31,8 @@ import { isAdminAuthorized } from "@/lib/admin-auth";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
+// The scope=pages warm renders three heavy ISR pages inline.
+export const maxDuration = 120;
 
 // Tags must stay in sync with the `tags:` option on the corresponding
 // `unstable_cache(...)` calls. If those change, update here too.
@@ -95,6 +97,22 @@ export async function POST(req: NextRequest) {
     revalidatePath("/chains");
     revalidatePath("/");
     revalidated.push("/unlocks", "/unlocks/[range]", "/chains", "/");
+    // Marking stale is not enough on its own. stale-while-revalidate serves the
+    // PREVIOUS payload to the next visitor while regenerating behind them, and
+    // right after a deploy that previous payload is the empty build prerender —
+    // so the first person to open /unlocks still saw a table-less page. Render
+    // them here so the cache holds real content before any visitor arrives.
+    // Sequential and no-store, same discipline as the warm cron.
+    for (const path of ["/unlocks", "/chains", "/"]) {
+      try {
+        await fetch(`https://www.vestream.io${path}`, {
+          cache: "no-store",
+          headers: { "x-vestream-warm": "1" },
+        });
+      } catch (err) {
+        console.error(`[revalidate] warm ${path} failed:`, err);
+      }
+    }
   }
 
   if (revalidated.length === 0) {

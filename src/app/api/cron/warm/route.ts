@@ -37,6 +37,16 @@ export async function GET(req: NextRequest) {
   const urls = [
     `${BASE}/protocols`,
     `${BASE}/status`,
+    // The heavy ISR pages. These bake EMPTY at build time and every deploy
+    // resets their ISR clock to that empty snapshot, so without traffic they
+    // stay blank: /unlocks showed the window cards with no table for exactly
+    // this reason. revalidatePath alone does not fix it either — it only marks
+    // the page stale, and stale-while-revalidate then serves the empty version
+    // to the next visitor while regenerating behind them. Warming actually
+    // renders them, so the cache holds real content before anyone arrives.
+    `${BASE}/`,
+    `${BASE}/unlocks`,
+    `${BASE}/chains`,
     ...slugs.map((s) => `${BASE}/protocols/${s}`),
   ];
 
