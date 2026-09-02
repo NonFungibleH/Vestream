@@ -4,7 +4,9 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
-import { listProtocols } from "@/lib/protocol-constants";
+import { listProtocols, publicChainIds } from "@/lib/protocol-constants";
+import { readAllSnapshots } from "@/lib/vesting/tvl-snapshot";
+import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import {
   getProtocolStats,
   toDateSafe,
@@ -27,7 +29,7 @@ async function getHomepageLiveStats() {
   // it with real data on the first runtime request after deploy. Same
   // pattern as /protocols/[protocol] – see its loadProtocolData comment.
   if (process.env.NEXT_PHASE === "phase-production-build") {
-    return { totalStreams: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
+    return { totalStreams: 0, totalTvlUsd: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
   }
 
   // Aggregate across all 12+ protocols. Any single-protocol failure must not
@@ -45,6 +47,16 @@ async function getHomepageLiveStats() {
     );
     const valid = results.filter((s): s is ProtocolStats => !!s);
     const totalStreams = valid.reduce((sum, s) => sum + s.totalStreams, 0);
+    // Headline TVL from the SAME snapshot rows /protocols sums, scoped to the
+    // public chains. This used to be a hardcoded "$3B+" string, which drifted
+    // from the real figure (the /protocols page said $1.6B at the time) and
+    // was flatly wrong once Sablier's inflated DefiLlama row was corrected.
+    // readAllSnapshots already races its own 2s guard and returns [] on a
+    // slow read, in which case the pill just omits the dollar figure.
+    const publicSet = new Set<number>(publicChainIds());
+    const totalTvlUsd = (await readAllSnapshots().catch(() => []))
+      .filter((r) => publicSet.has(r.chainId))
+      .reduce((sum, r) => sum + r.tvlUsd, 0);
     // Defensive coercion: lastIndexedAt is typed Date | string | null because
     // some upstream code paths run inside unstable_cache which serializes
     // Dates to ISO strings. toDateSafe normalizes to Date | null.
@@ -56,11 +68,12 @@ async function getHomepageLiveStats() {
     }, null);
     return {
       totalStreams,
+      totalTvlUsd,
       lastIndexedAt,
       protocolCount: protocols.length,
     };
   } catch {
-    return { totalStreams: 0, lastIndexedAt: null, protocolCount: 7 };
+    return { totalStreams: 0, totalTvlUsd: 0, lastIndexedAt: null, protocolCount: 7 };
   }
 }
 
@@ -222,7 +235,7 @@ export default async function Home() {
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-widest"
                 style={{ color: "#0F8A8A", letterSpacing: "0.12em" }}>
-                {streamLabel} streams · $3B+ tracked
+                {streamLabel} streams{liveStats.totalTvlUsd > 0 ? ` · ${formatUsdCompact(liveStats.totalTvlUsd)} tracked` : ""}
               </span>
             </div>
 

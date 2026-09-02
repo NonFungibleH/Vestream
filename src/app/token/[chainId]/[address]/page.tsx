@@ -1802,11 +1802,13 @@ function UpcomingEvents({
                       href={`${BLOCK_EXPLORERS_PUBLIC[e.chainId] ?? "https://etherscan.io"}/tx/${e.lockTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
-                      title={`View lock transaction · ${e.lockTxHash.slice(0, 10)}…`}
+                      title={e.lockTxKind === "claim"
+                        ? `View the claim that revealed this allocation · ${e.lockTxHash.slice(0, 10)}… (a past withdrawal, not this unlock)`
+                        : `View lock transaction · ${e.lockTxHash.slice(0, 10)}…`}
                       className="inline-flex items-center px-1 rounded text-[9px] font-bold tracking-wider hover:opacity-80 transition-opacity"
                       style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 16 }}
                     >
-                      TX ↗
+                      {e.lockTxKind === "claim" ? "CLAIM ↗" : "TX ↗"}
                     </a>
                   )}
                 </div>

@@ -2154,11 +2154,13 @@ function VestingTable({ streams, prices, imageUrls = {}, onClaim }: { streams: V
                     </a>
                     {s.lockTxHash && (
                       <a href={`${explorerBase}/tx/${s.lockTxHash}`} target="_blank" rel="noopener noreferrer"
-                        title={`View originating lock transaction · ${s.lockTxHash.slice(0, 10)}…`}
+                        title={s.lockTxKind === "claim"
+                          ? `View the claim that revealed this allocation · ${s.lockTxHash.slice(0, 10)}… (a past withdrawal)`
+                          : `View originating lock transaction · ${s.lockTxHash.slice(0, 10)}…`}
                         className="inline-flex items-center justify-center px-1 rounded text-[9px] font-bold tracking-wider transition-all duration-150"
                         style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 18 }}
                         onClick={(e) => e.stopPropagation()}>
-                        TX
+                        {s.lockTxKind === "claim" ? "CLAIM" : "TX"}
                       </a>
                     )}
                   </div>

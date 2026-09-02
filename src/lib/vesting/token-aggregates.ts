@@ -99,6 +99,7 @@ export interface TokenUpcomingEvent {
    *  adapters). Surfaced as a tap-to-explorer link next to each event.
    *  Added 2026-05-14 for the public-transparency push. */
   lockTxHash?:        string | null;
+  lockTxKind?:        "lock" | "claim";  // see VestingStream.lockTxKind
   chainId?:           number;     // duplicated from query context so consumers can build explorer URLs without re-passing chainId
 }
 
@@ -560,6 +561,7 @@ export async function getTokenUpcomingEvents(
         timestamp:   ev.timestamp,
         tokensWhole: ev.tokensWhole,
         lockTxHash:  (sd.lockTxHash as string | null | undefined) ?? null,
+        lockTxKind:  (sd.lockTxKind as "lock" | "claim" | undefined) ?? "lock",
         chainId,
       });
     }

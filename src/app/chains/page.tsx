@@ -70,7 +70,9 @@ function fmtUnlockDate(sec: number) {
 export default async function ChainsIndexPage() {
   // Sequential, not Promise.all: both are heavy DB reads and running them
   // concurrently had them fighting for the same pool connections.
+  const _t0 = Date.now();
   const feed = await getUpcomingUnlocksAcrossChains(8);
+  const _feedMs = Date.now() - _t0;
   const o    = await getChainsOverview();
   const max = o.chains[0]?.tvlUsd ?? 0;
   const total = o.chains.reduce((sum, c) => sum + (c.tvlUsd > 0 ? c.tvlUsd : 0), 0);
@@ -92,6 +94,8 @@ export default async function ChainsIndexPage() {
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
       <SiteNav theme="light" />
+      {/* TEMP diagnostic (remove once prod renders): what this ISR render saw. */}
+      <meta name="x-chains-debug" content={`feed=${feed.length} feedMs=${_feedMs} chains=${o.chains.length} rendered=${new Date().toISOString()}`} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}

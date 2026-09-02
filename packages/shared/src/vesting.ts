@@ -215,6 +215,13 @@ export interface VestingStream {
    *  2026-05-14 for the retail-transparency push: a verifiable on-chain
    *  link from each vesting back to its creation event. */
   lockTxHash?: string | null;
+  /** What lockTxHash actually points at. "lock" (default) is the creation
+   *  event. "claim" means the hash is a historical WITHDRAWAL that revealed
+   *  the allocation — Magna is merkle-based, so there is no per-recipient
+   *  creation tx; we only learn a leaf exists when someone claims from it.
+   *  Rendering a claim hash under a "lock transaction" label made upcoming
+   *  unlocks look like already-withdrawn tokens (Howard, 2026-09-02). */
+  lockTxKind?: "lock" | "claim";
   /** In-app claiming (2026-06, Phase 1: Sablier + Hedgey).
    *  claimContract — the on-chain contract holding the claim function
    *  (Sablier: per-stream Lockup contract from Envio's `contract` field;

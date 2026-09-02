@@ -475,7 +475,10 @@ export async function decodeClaimTx(
               shape:           "steps",
               unlockSteps,
               cancelable:      cancelable || terminatedAt > 0,
+              // This is the CLAIM tx that revealed the leaf, not a creation
+              // tx — flagged so the UI labels it honestly.
               lockTxHash:      txHash,
+              lockTxKind:      "claim",
               // Claiming happens on Magna's own portal (needs the merkle proof,
               // which we don't persist) — no in-app claim wiring.
             });
