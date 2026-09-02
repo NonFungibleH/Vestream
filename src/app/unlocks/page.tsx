@@ -80,40 +80,62 @@ type UpcomingRow = {
  * explorer's opt-out); bounded so a slow read degrades to hiding the table
  * rather than hanging an ISR render.
  */
-async function getUpcomingTable(limit = 25): Promise<UpcomingRow[]> {
-  if (process.env.NEXT_PHASE === "phase-production-build") return [];
-  const nowSec = Math.floor(Date.now() / 1000);
-  const endSec = nowSec + 30 * 86_400;
+/**
+ * ONE query powers the whole page.
+ *
+ * This used to be nine: eight window-count queries plus the table's own. All
+ * eight counts were rendering "-" in production and still charging their full
+ * timeout, roughly 20s of pure waiting per render, and the table query then ran
+ * on an exhausted pool and timed out too. The page took 33s to produce nothing.
+ * Every window is a sub-range of the widest one, so a single 90-day fetch
+ * answers all of them and the counts become in-memory filters.
+ *
+ * Counts are computed BEFORE USD enrichment (they need no prices); only the
+ * ~25 rows actually rendered get priced.
+ */
+async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[] }> {
+  const empty = { counts: new Map<string, WindowCount>(), upcoming: [] as UpcomingRow[] };
+  if (process.env.NEXT_PHASE === "phase-production-build") return empty;
 
-  // ONE unscoped query. An earlier version fanned out per chain because I
-  // believed the unscoped path was broken in the Vercel runtime; a probe run
-  // inside that runtime disproved it (1,076ms, 237 groups). The fan-out was
-  // strictly worse: 9 sequential queries at up to 6s each pushed the whole
-  // render past this route's 60s ceiling, so regeneration failed and the page
-  // served its empty build prerender. Measured 30d/pool1000: ~1.5s.
+  const nowSec = Math.floor(Date.now() / 1000);
+  const endSec = nowSec + 90 * 86_400;   // widest window any card asks for
+
   const win = await withTimeout(
-    getUnlocksInWindow(nowSec, endSec, 1000),
-    12_000,
+    getUnlocksInWindow(nowSec, endSec, 2000),
+    25_000,
     EMPTY_WINDOW_RESULT,
-    "unlocks-table:window",
+    "unlocks:all",
   );
   const groups = win.groups;
-  if (groups.length === 0) return [];
+  if (groups.length === 0) return empty;
 
-  const priced = await enrichGroupsWithUsd(groups, { redis: false, liveFallback: false });
-  const next = [...priced].sort((a, b) => a.eventTime - b.eventTime).slice(0, limit);
+  const counts = new Map<string, WindowCount>();
+  for (const slug of ALL_WINDOW_SLUGS) {
+    const r = WINDOWS[slug].range();
+    const inWindow = groups.filter((g) => g.eventTime >= r.startSec && g.eventTime <= r.endSec);
+    counts.set(slug, {
+      slug,
+      unlockCount: inWindow.length,
+      tokenCount:  new Set(inWindow.map((g) => `${g.chainId}:${g.tokenAddress.toLowerCase()}`)).size,
+      chainCount:  new Set(inWindow.map((g) => g.chainId)).size,
+    });
+  }
 
-  // Rollups are a best-effort enrichment: roughly 1 in 5 rows has no row yet
-  // (a token the rollup cron has not covered), and those render "–" rather
-  // than dropping the unlock, which is the more honest failure.
+  const next = [...groups].sort((x, y) => x.eventTime - y.eventTime).slice(0, limit);
+  // redis:false is ISR-safe; liveFallback:false keeps pricing pure-DB (the
+  // explorer's own opt-out) so no DexScreener latency lands on the render path.
+  const priced = await enrichGroupsWithUsd(next, { redis: false, liveFallback: false });
+
+  // Rollups are best-effort: roughly 1 in 5 tokens has no row yet and renders
+  // "-" rather than the unlock being dropped.
   const rollups = await withTimeout(
-    readTokenRollups(next.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }))),
+    readTokenRollups(priced.map((g) => ({ chainId: g.chainId, tokenAddress: g.tokenAddress }))),
     5_000,
     new Map(),
-    "unlocks-table:rollups",
+    "unlocks:rollups",
   );
 
-  return next.map((g) => {
+  const upcoming: UpcomingRow[] = priced.map((g) => {
     const r = rollups.get(`${g.chainId}:${g.tokenAddress.toLowerCase()}`)
            ?? rollups.get(`${g.chainId}:${g.tokenAddress}`);
     return {
@@ -124,6 +146,8 @@ async function getUpcomingTable(limit = 25): Promise<UpcomingRow[]> {
       totalLocked: r?.totalLocked ?? null,
     };
   });
+
+  return { counts, upcoming };
 }
 
 function fmtAmt(amount: string | null, decimals: number): string | null {
@@ -146,41 +170,10 @@ function whenLabel(sec: number): { date: string; rel: string } {
   return { date, rel };
 }
 
-async function getWindowCounts(): Promise<Map<string, WindowCount>> {
-  // SEQUENTIAL — one pooler connection at a time (the concurrent 8-at-once
-  // version caused the ECHECKOUTTIMEOUT saturation). Uses the proven
-  // getUnlocksInWindow; each window has a 10s budget and degrades to "–" on
-  // failure without hanging the page.
-  const out = new Map<string, WindowCount>();
-  for (const slug of ALL_WINDOW_SLUGS) {
-    const range = WINDOWS[slug].range();
-    const result = await withTimeout(
-      getUnlocksInWindow(range.startSec, range.endSec, 500),
-      // 2.5s, not 10s. These use the UNSCOPED path, which currently never
-      // returns in the Vercel runtime, so every one of the 8 windows sat out
-      // its full timeout — 80s of pure waiting before anything else on the
-      // page could run, which is why the whole ISR regeneration failed and the
-      // page stayed frozen on its empty build-time prerender. They still render
-      // "–" exactly as they do today; they just stop eating the render budget.
-      2_500,
-      EMPTY_WINDOW_RESULT,
-      `unlocks-index:${slug}`,
-    );
-    out.set(slug, {
-      slug,
-      unlockCount: result.stats.unlockCount,
-      tokenCount:  result.stats.tokenCount,
-      chainCount:  result.stats.chainCount,
-    });
-  }
-  return out;
-}
-
 export default async function UnlocksIndex() {
   // Table FIRST: it is the page's actual content, and it must not be starved by
   // the window counts (which are a secondary nav aid and currently all "–").
-  const upcoming = await getUpcomingTable(25);
-  const counts   = await getWindowCounts();
+  const { counts, upcoming } = await getPageData(25);
 
   const indexJsonLd = {
     "@context": "https://schema.org",
