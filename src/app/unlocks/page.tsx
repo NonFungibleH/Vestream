@@ -11,6 +11,8 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ALL_WINDOW_SLUGS, WINDOWS, getUnlocksInWindow, EMPTY_WINDOW_RESULT, enrichGroupsWithUsd } from "@/lib/vesting/unlock-windows";
 import { readTokenRollups } from "@/lib/vesting/token-rollups";
+import { after } from "next/server";
+import { getLastGoodUnlocksData, setLastGoodUnlocksData } from "@/lib/vesting/page-data-fallback";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { getProtocol, chainBrand } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
@@ -93,9 +95,23 @@ type UpcomingRow = {
  * Counts are computed BEFORE USD enrichment (they need no prices); only the
  * ~25 rows actually rendered get priced.
  */
+type Persisted = { counts: WindowCount[]; upcoming: Array<Omit<UpcomingRow, "totalLocked"> & { totalLocked: string | null }> };
+
+/** Last good render, so a degraded read never shows an empty page. */
+async function lastGood(): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[] } | null> {
+  const saved = await getLastGoodUnlocksData<Persisted>();
+  if (!saved || saved.upcoming.length === 0) return null;
+  return {
+    counts: new Map(saved.counts.map((c) => [c.slug, c])),
+    // BigInt does not survive JSON, so totalLocked round-trips as a string.
+    upcoming: saved.upcoming.map((u) => ({ ...u, totalLocked: u.totalLocked == null ? null : BigInt(u.totalLocked) })),
+  };
+}
+
 async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[] }> {
   const empty = { counts: new Map<string, WindowCount>(), upcoming: [] as UpcomingRow[] };
-  if (process.env.NEXT_PHASE === "phase-production-build") return empty;
+  // Build phase: serve the last good render rather than baking an empty page.
+  if (process.env.NEXT_PHASE === "phase-production-build") return (await lastGood()) ?? empty;
 
   const nowSec = Math.floor(Date.now() / 1000);
   const endSec = nowSec + 90 * 86_400;   // widest window any card asks for
@@ -114,7 +130,7 @@ async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCoun
     "unlocks:all",
   );
   const groups = win.groups;
-  if (groups.length === 0) return empty;
+  if (groups.length === 0) return (await lastGood()) ?? empty;
 
   const counts = new Map<string, WindowCount>();
   for (const slug of ALL_WINDOW_SLUGS) {
@@ -154,6 +170,14 @@ async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCoun
     };
   });
 
+  // Good render: keep the durable copy fresh. In after() so the write cannot
+  // flip this ISR render dynamic.
+  if (upcoming.length > 0) {
+    after(() => setLastGoodUnlocksData<Persisted>({
+      counts: [...counts.values()],
+      upcoming: upcoming.map((u) => ({ ...u, totalLocked: u.totalLocked == null ? null : u.totalLocked.toString() })),
+    }));
+  }
   return { counts, upcoming };
 }
 

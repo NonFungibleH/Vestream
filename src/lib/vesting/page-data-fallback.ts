@@ -219,6 +219,25 @@ export function setLastGoodChainsData<T>(data: T): void {
   writeFallback(chainsIndexKey, data);
 }
 
+// ── /unlocks (index) ─────────────────────────────────────────────────────────
+//
+// This page bakes EMPTY at build time (the DB helpers short-circuit on
+// NEXT_PHASE), every deploy resets ISR to that empty snapshot, and each Vercel
+// edge region caches independently — so warming from one region left other
+// regions serving a table-less page for as long as their own stale window
+// lasted. Persisting the last good render means a degraded or build-phase read
+// falls back to real data instead of nothing, in every region.
+
+const unlocksIndexKey = `${KEY_PREFIX}:unlocks-index`;
+
+export function getLastGoodUnlocksData<T>(): Promise<T | null> {
+  return readFallback<T>(unlocksIndexKey);
+}
+
+export function setLastGoodUnlocksData<T>(data: T): void {
+  writeFallback(unlocksIndexKey, data);
+}
+
 // ── /status (durable L2 only) ───────────────────────────────────────────────────
 // /status keeps its own Upstash-SDK Redis as L1 (it's force-dynamic, so the
 // no-store SDK is safe there); these add a durable Postgres L2 underneath so a
