@@ -43,6 +43,30 @@ function hydrateCachedStream(blob: Record<string, unknown>): VestingStream {
 const ACTIVE_TTL_SECONDS   = 30 * 60;      // 30 min for active streams (tighten when needed)
 const VESTED_TTL_SECONDS   = 24 * 60 * 60; // 24 hrs for fully-vested streams (never change)
 
+/**
+ * Freshness tolerance for the NOTIFIER, which is a different question from the
+ * one the dashboards ask.
+ *
+ * The interactive read paths want recent BALANCES, and when a row is stale they
+ * kick off a background re-fetch, so a tight TTL is right for them. The notifier
+ * reads SCHEDULES: nextUnlockTime, cliff, end. Those are fixed at lock time and
+ * do not drift, so a row that has not been rewritten in a fortnight is still
+ * perfectly good for "your tokens unlock tomorrow".
+ *
+ * This exists because the tight TTL silently killed all alerting. `writeToCache`
+ * only rewrites rows whose data actually CHANGED (commit df6a6b3, a deliberate
+ * ~90% write-IO saving), so `lastRefreshedAt` means "when the data last moved",
+ * not "when the seeder last looked". A vesting schedule sitting quietly between
+ * unlocks is the normal state: it stops being rewritten, ages past 30 minutes,
+ * and disappears from the notifier. Measured 2026-09-02: 0 of 38,936 active
+ * streams were visible to it, and no alert had been sent since 15 June.
+ *
+ * 30 days is generous on purpose. Under-alerting is the failure we just had;
+ * a schedule read from a three-week-old row is not a failure at all. The
+ * notifications_sent dedup table still prevents any repeat send.
+ */
+export const NOTIFIER_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
 // ─── Read ─────────────────────────────────────────────────────────────────────
 
 export interface CacheReadResult {
@@ -56,8 +80,16 @@ export interface CacheReadResult {
 /**
  * Returns cached streams for the given wallets.
  * Wallets with no rows or stale rows are listed in `staleWallets`.
+ *
+ * `maxAgeSeconds` overrides the per-row TTL for callers that care about the
+ * vesting SCHEDULE rather than live balances — see NOTIFIER_MAX_AGE_SECONDS.
+ * Omit it and the original active/vested TTLs apply, so every existing caller
+ * is unchanged.
  */
-export async function readFromCache(wallets: string[]): Promise<CacheReadResult> {
+export async function readFromCache(
+  wallets: string[],
+  opts?: { maxAgeSeconds?: number },
+): Promise<CacheReadResult> {
   if (wallets.length === 0) return { streams: [], isFresh: true, staleWallets: [] };
 
   // Ecosystem-aware normalisation — EVM → lowercase, Solana → as-is.
@@ -86,7 +118,8 @@ export async function readFromCache(wallets: string[]): Promise<CacheReadResult>
     // aren't licensed/agreed to show. The seeder already skips disabled
     // adapters, so this is belt-and-braces.
     if (!isAdapterEnabled(row.protocol)) continue;
-    const ttl = row.isFullyVested ? VESTED_TTL_SECONDS : ACTIVE_TTL_SECONDS;
+    const ttl = opts?.maxAgeSeconds
+      ?? (row.isFullyVested ? VESTED_TTL_SECONDS : ACTIVE_TTL_SECONDS);
     const ageSeconds = (now.getTime() - row.lastRefreshedAt.getTime()) / 1000;
     const fresh = ageSeconds < ttl;
 

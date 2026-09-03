@@ -1,4 +1,4 @@
-import { readFromCache } from "@/lib/vesting/dbcache";
+import { readFromCache, NOTIFIER_MAX_AGE_SECONDS } from "@/lib/vesting/dbcache";
 import { sendEmailNotification } from "./email";
 import { sendExpoPush } from "./push";
 import {
@@ -113,6 +113,7 @@ export async function runNotificationJob(): Promise<number> {
   const FUTURE_SLOP_SEC = 300;
 
   const usersToNotify = await getAllUsersWithAnyAlertEnabled();
+  let streamsExamined = 0;   // for the silence alarm below
 
   // Process up to 8 users in parallel. Each user's work is:
   //   1 DB query (readFromCache) + dedup checks + email/push sends.
@@ -139,8 +140,9 @@ export async function runNotificationJob(): Promise<number> {
       // 2h-stale stream data is accurate enough for unlock notifications.
       let streams: VestingStream[];
       try {
-        const cacheResult = await readFromCache(addresses);
+        const cacheResult = await readFromCache(addresses, { maxAgeSeconds: NOTIFIER_MAX_AGE_SECONDS });
         streams = cacheResult.streams;
+      streamsExamined += streams.length;
       } catch (err) {
         console.error(`Failed to read cache for user ${userId}:`, err);
         return 0;
@@ -377,10 +379,25 @@ export async function runNotificationJob(): Promise<number> {
     },
   );
 
-  return notifiedCounts.reduce(
+  const totalSent = notifiedCounts.reduce(
     (sum, r) => sum + (r.status === "fulfilled" ? r.value : 0),
     0,
   );
+
+  // Silence alarm. This job returned ok:true every 15 minutes for eleven weeks
+  // while sending nothing: a stale-cache filter made every stream invisible,
+  // and "sent 0" is indistinguishable from "0 were due". If we had real users
+  // and could not see a single stream, that is a fault, not a quiet night.
+  if (usersToNotify.length > 0 && streamsExamined === 0) {
+    console.error(
+      `[notify] ALARM: ${usersToNotify.length} alert-enabled users but ZERO streams visible. ` +
+      "Cache freshness is hiding everything (see NOTIFIER_MAX_AGE_SECONDS in dbcache.ts).",
+    );
+  } else {
+    console.log(`[notify] users=${usersToNotify.length} streamsExamined=${streamsExamined} sent=${totalSent}`);
+  }
+
+  return totalSent;
 }
 
 /**
