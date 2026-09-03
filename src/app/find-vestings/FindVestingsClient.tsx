@@ -883,17 +883,27 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/find-vestings/save-link", {
+      // The alert subscription is the thing the visitor actually asked for, so
+      // its failure is the one that surfaces. The app handoff still fires
+      // alongside it (it is what makes the scan appear in the app after an
+      // install) but is best-effort: losing attribution should never cost
+      // someone their alerts.
+      const res = await fetch("/api/alerts/subscribe", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: email.trim().toLowerCase(), walletAddress }),
+        body:    JSON.stringify({ email: email.trim().toLowerCase(), walletAddress, hoursBefore: 24 }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error || "Couldn't save – try again");
+        throw new Error(body?.error || "Couldn't set that up – try again");
       }
+      void fetch("/api/find-vestings/save-link", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim().toLowerCase(), walletAddress }),
+      }).catch(() => {});
       setSaved(true);
-      track("cta_clicked", { cta_id: "find_vestings_save_to_app", surface: "find_vestings_results" });
+      track("cta_clicked", { cta_id: "find_vestings_alert_subscribe", surface: "find_vestings_results" });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Couldn't save – try again");
     } finally {
@@ -917,10 +927,10 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
-              Saved to <span style={{ color: "#0F8A8A" }}>{email}</span>
+              Alerts on for <span style={{ color: "#0F8A8A" }}>{email}</span>
             </h3>
             <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-              Install the app and sign in with the same email – your scan will be ready in the portfolio. App Store and Play Store links are further down this page.
+              We&rsquo;ll email you a day before this wallet&rsquo;s next unlock. No account needed, and every email has a one-click unsubscribe. Want a push notification instead, and every wallet in one place? The app is further down this page.
             </p>
           </div>
         </div>
@@ -945,10 +955,10 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-bold mb-1" style={{ color: "#0f172a", letterSpacing: "-0.01em" }}>
-            Continue in the app
+            Get told before the next unlock
           </h3>
           <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
-            On desktop? Drop your email – this scan will be waiting when you open the app. No password, just OTP sign-in.
+            Drop your email and we&rsquo;ll tell you a day before anything in this wallet unlocks. No account, no wallet connection, no app needed.
           </p>
         </div>
       </div>
@@ -983,7 +993,7 @@ function SaveToAppCard({ walletAddress }: { walletAddress: string }) {
             cursor: busy || !isValidEmail ? "not-allowed" : "pointer",
           }}
         >
-          {busy ? "Saving…" : "Save my scan →"}
+          {busy ? "Setting up…" : "Email me before it unlocks →"}
         </button>
       </form>
 

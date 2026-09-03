@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runNotificationJob } from "@/lib/notifications/scheduler";
+import { runWebAlertJob } from "@/lib/notifications/web-alerts";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
@@ -18,7 +19,13 @@ async function handle(req: NextRequest) {
 
   try {
     const notified = await runNotificationJob();
-    return NextResponse.json({ ok: true, notified });
+    // Web (no-account) subscribers, from the same tick. Independent of the
+    // user job: a failure in one must not stop the other, since these are
+    // different audiences reading different tables.
+    let webSent = 0;
+    try { webSent = await runWebAlertJob(); }
+    catch (err) { console.error("[cron/notify] web alerts failed:", err); }
+    return NextResponse.json({ ok: true, notified, webSent });
   } catch (err) {
     console.error("Cron notification job failed:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

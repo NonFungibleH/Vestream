@@ -67,6 +67,8 @@ function renderEmail(
   appUrl: string,
   // "threshold" only — the USD line crossed + current claimable value.
   usd?: { thresholdUsd?: number; claimableUsd?: number },
+  // Web subscribers only — see sendEmailNotification's option of the same name.
+  unsubscribeToken?: string,
 ): { subject: string; body: string } {
   const amount = formatAmount(stream.totalAmount, stream.tokenDecimals);
   const sym = stream.tokenSymbol;
@@ -77,7 +79,12 @@ function renderEmail(
   const chainDisplay = CHAIN_NAMES[stream.chainId as SupportedChainId] ?? `Chain ${stream.chainId}`;
   const eventDateStr = formatDate(Math.floor(eventTime.getTime() / 1000), tz);
 
-  const footer = `\n\n---\nYou're receiving this because you enabled email notifications on Vestream.\nTo unsubscribe, visit ${appUrl}/settings`;
+  // Web subscribers have no account, so "manage in settings" is a dead end for
+  // them; they get a one-click unsubscribe instead. Registered users keep the
+  // settings link, where they can tune triggers rather than only opt out.
+  const footer = unsubscribeToken
+    ? `\n\n---\nYou're getting this because you asked Vestream to watch this wallet. No account needed.\nUnsubscribe: ${appUrl}/api/alerts/unsubscribe?t=${unsubscribeToken}`
+    : `\n\n---\nYou're receiving this because you enabled email notifications on Vestream.\nTo unsubscribe, visit ${appUrl}/settings`;
 
   switch (trigger) {
     case "cliff":
@@ -183,6 +190,13 @@ export async function sendEmailNotification(
     /** "threshold" trigger only — USD line crossed + current claimable. */
     thresholdUsd?: number;
     claimableUsd?: number;
+    /**
+     * Web (no-account) subscribers only. When present, the email carries a
+     * one-click unsubscribe link instead of the app's settings link — those
+     * recipients have no account to change preferences in, and an
+     * unsubscribe path is non-negotiable for a public sign-up form.
+     */
+    unsubscribeToken?: string;
   },
 ) {
   const trigger  = options?.trigger  ?? "before-unlock";
@@ -193,7 +207,7 @@ export async function sendEmailNotification(
   const { subject, body } = renderEmail(trigger, stream, eventTime, timezone, appUrl, {
     thresholdUsd: options?.thresholdUsd,
     claimableUsd: options?.claimableUsd,
-  });
+  }, options?.unsubscribeToken);
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {

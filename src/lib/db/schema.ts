@@ -1014,6 +1014,34 @@ export const webhookEventDedup = pgTable(
 // vector. Returning users get the same treatment (claim is idempotent).
 //
 // Rows live for 30 days (`expiresAt`) and are swept by a daily cleanup job.
+// ── Web unlock-alert subscriptions ───────────────────────────────────────────
+//
+// The consumer-layer promise, delivered without an install. A visitor scans a
+// wallet on /find-vestings and asks to be told before its next unlock; that is
+// one row here. No account, no wallet connection, no app.
+//
+// Distinct from notificationPreferences (which belongs to a registered user
+// and gates email on tier === "pro") and from pendingWalletLinks (which is an
+// install-attribution token, not a subscription). See drizzle/0040.
+export const walletAlertSubscriptions = pgTable(
+  "wallet_alert_subscriptions",
+  {
+    id:               uuid("id").primaryKey().defaultRandom(),
+    email:            text("email").notNull(),
+    walletAddress:    text("wallet_address").notNull(),
+    hoursBefore:      integer("hours_before").notNull().default(24),
+    unsubscribeToken: text("unsubscribe_token").notNull(),
+    unsubscribedAt:   timestamp("unsubscribed_at"),
+    lastSentAt:       timestamp("last_sent_at"),
+    // Dedup: notifications_sent cannot be reused (its user_id has a FK to
+    // users, and a web subscriber has no user row). One alert per unlock event.
+    lastStreamId:     text("last_stream_id"),
+    lastUnlockAt:     timestamp("last_unlock_at"),
+    sentCount:        integer("sent_count").notNull().default(0),
+    createdAt:        timestamp("created_at").defaultNow().notNull(),
+  },
+);
+
 export const pendingWalletLinks = pgTable(
   "pending_wallet_links",
   {
