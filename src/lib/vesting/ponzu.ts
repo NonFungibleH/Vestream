@@ -66,10 +66,9 @@ export const PONZU_CLAIMED_TOPIC =
 
 /** Presale reads. There is no `launched()` — launchTime() > 0 means graduated. */
 export const PONZU_PRESALE_ABI = parseAbi([
-  // NOTE: a `tokensClaimed` flag exists per bottle (confirmed by Ponzu) but is
-  // absent from their published ABI reference, so its exact signature is not
-  // pinned here yet. Add it once confirmed — it is the reconciliation path for
-  // cold-indexing a wallet without replaying claim logs.
+  // A per-bottle `tokensClaimed` flag exists on-chain but we deliberately do
+  // not read it: TokensClaimed is a terminal event and we index from genesis,
+  // so the event is authoritative. See the note on PonzuClaim.
   "function getUserBottle(address user) view returns (uint256)",
   "function claimWeight(uint256 tokenId) view returns (uint256)",
   "function ethContributions(uint256 tokenId) view returns (uint256)",
@@ -97,9 +96,14 @@ export const PONZU_PRESALE_ABI = parseAbi([
  *     hands. Treating a fresh Transfer as a new position would invent an
  *     allocation that does not exist.
  *
- * Practically: the event is the primary signal (it carries amounts and timing),
- * the flag is the reconciliation path when we index a wallet cold without
- * replaying logs.
+ * DECISION (with Ponzu, 2026-09-03): the event alone is sufficient. Once a
+ * bottle claims it is "effectively dead", so a single TokensClaimed log is a
+ * permanent terminal state we can record and never revisit. The flag would
+ * only earn its place if we could miss the event — indexing a wallet cold past
+ * a pruned log window, say — and that risk does not apply here: Ponzu is new
+ * enough that we index from the factory's first block and therefore hold
+ * complete claim history. Revisit only if we ever backfill from a partial
+ * cursor.
  */
 export interface PonzuClaim {
   chainId:        SupportedChainId;
