@@ -66,6 +66,10 @@ export const PONZU_CLAIMED_TOPIC =
 
 /** Presale reads. There is no `launched()` — launchTime() > 0 means graduated. */
 export const PONZU_PRESALE_ABI = parseAbi([
+  // NOTE: a `tokensClaimed` flag exists per bottle (confirmed by Ponzu) but is
+  // absent from their published ABI reference, so its exact signature is not
+  // pinned here yet. Add it once confirmed — it is the reconciliation path for
+  // cold-indexing a wallet without replaying claim logs.
   "function getUserBottle(address user) view returns (uint256)",
   "function claimWeight(uint256 tokenId) view returns (uint256)",
   "function ethContributions(uint256 tokenId) view returns (uint256)",
@@ -79,6 +83,23 @@ export const PONZU_PRESALE_ABI = parseAbi([
  * claimed/forfeited and a ZERO remaining allocation — never a phantom balance
  * that can no longer be claimed. This is the one Ponzu-specific rule that does
  * not fall out of our normal vesting model.
+ *
+ * IMPORTANT (confirmed with Ponzu 2026-09-03): claiming does NOT burn the
+ * bottle. The NFT persists with a `tokensClaimed = true` flag and can only be
+ * claimed once. Two consequences:
+ *
+ *  1. There is no Transfer-to-zero signal. Holder discovery via ERC-721
+ *     Transfer tells us WHO holds a bottle and nothing about whether it is
+ *     spent, so a spent bottle and a live one are indistinguishable from
+ *     ownership alone. Claim state MUST come from the TokensClaimed event or
+ *     the on-chain flag — never inferred from holding.
+ *  2. Bottles stay transferable after claiming, so a spent bottle can change
+ *     hands. Treating a fresh Transfer as a new position would invent an
+ *     allocation that does not exist.
+ *
+ * Practically: the event is the primary signal (it carries amounts and timing),
+ * the flag is the reconciliation path when we index a wallet cold without
+ * replaying logs.
  */
 export interface PonzuClaim {
   chainId:        SupportedChainId;
