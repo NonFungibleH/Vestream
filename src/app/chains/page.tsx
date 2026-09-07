@@ -82,6 +82,10 @@ export default async function ChainsIndexPage() {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Token vesting by chain",
+    // Real snapshot time, not "now". These pages genuinely change as the
+    // index updates, and dateModified is how Google learns that; faking it
+    // with the render time would be a freshness signal we have not earned.
+    dateModified: o.computedAt,
     itemListElement: o.chains.map((c, i) => ({
       "@type": "ListItem",
       position: i + 1,

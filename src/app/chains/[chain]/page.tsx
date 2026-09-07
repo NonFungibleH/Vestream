@@ -277,6 +277,8 @@ export default async function ChainPage({ params }: { params: Promise<{ chain: s
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `${brand.name} Token Unlocks & Vesting`,
+    // Real snapshot time from the TVL/unlock computation, not the render time.
+    dateModified: s.computedAt,
     description: `Live token vesting on ${brand.name}: TVL, integrated protocols, and upcoming unlocks.`,
     url: `https://www.vestream.io/chains/${chain}`,
     isPartOf: { "@type": "WebSite", name: "Vestream", url: "https://www.vestream.io" },

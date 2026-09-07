@@ -238,6 +238,10 @@ export async function ProtocolUnlocksView({
           // omitting it caused "Invalid object type for field location".
           description:          `Scheduled ${label} token unlock on ${meta.name}.`,
           startDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
+          // An unlock happens at a point in time, so endDate == startDate.
+          // Google flags a missing endDate as an incomplete Event; this is the
+          // honest value rather than inventing a duration.
+          endDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
           eventStatus:          "https://schema.org/EventScheduled",
           eventAttendanceMode:  "https://schema.org/OnlineEventAttendanceMode",
           url:                  tokenUrl,
