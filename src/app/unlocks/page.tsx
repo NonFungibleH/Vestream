@@ -253,7 +253,7 @@ export default async function UnlocksIndex() {
           first, and carries the two columns competitors can't: how many
           wallets share each unlock, and what the largest holder takes. */}
       {upcoming.length > 0 && (
-        <section className="px-4 md:px-8 pb-14 max-w-6xl mx-auto w-full">
+        <section className="px-4 md:px-8 pt-12 md:pt-16 pb-14 max-w-6xl mx-auto w-full">
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
             <h2 className="text-xl md:text-2xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
               The next 25 unlocks

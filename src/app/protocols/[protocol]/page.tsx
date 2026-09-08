@@ -306,7 +306,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { protocol } = await params;
   const meta = getProtocol(protocol);
-  if (!meta || meta.disabled) return { title: "Not found" };
+  if (!meta || meta.disabled || meta.unlisted) return { title: "Not found" };
 
   // Title + description tuned to the terms this protocol actually gets
   // impressions for in GSC (e.g. "uncx locker", "hedgey pricing", "team
@@ -371,7 +371,9 @@ export default async function ProtocolLandingPage(
 ) {
   const { protocol } = await params;
   const meta = getProtocol(protocol);
-  if (!meta || meta.disabled) notFound();
+  // `unlisted` protocols are indexed for wallet scans + alerts but have no
+  // public page yet (see ProtocolMeta.unlisted).
+  if (!meta || meta.disabled || meta.unlisted) notFound();
 
   // Single-cached fetch for the page's data – see CACHE_TTL_SECONDS comment.
   //

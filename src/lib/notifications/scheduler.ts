@@ -16,6 +16,7 @@ import {
   resolveThresholdAlert,
   renderThresholdCopy,
   thresholdDedupTimestamp,
+  thresholdLiquidityBlock,
 } from "./threshold";
 
 type AlertTriggerType =
@@ -311,6 +312,16 @@ export async function runNotificationJob(): Promise<number> {
           // and we skip silently. Never alert on unpriced claimable.
           const resolved = resolveThresholdAlert(stream, price?.priceUsd, tSlot.thresholdUsd);
           if (!resolved || !resolved.fired) continue;
+
+          // Liquidity gate: a price with almost nothing behind it (thin
+          // launch tokens, Bankr/Doppler especially) crosses any threshold
+          // on noise. Block rather than tell a user their position is
+          // worth $N when nobody could sell it for that. See threshold.ts.
+          const blocked = thresholdLiquidityBlock(price, resolved.claimableUsd);
+          if (blocked) {
+            console.log(`[notify] threshold blocked (${blocked}) stream=${stream.id} liq=${price?.liquidityUsd ?? "n/a"} claimableUsd=${resolved.claimableUsd.toFixed(0)}`);
+            continue;
+          }
 
           // Synthetic dedup timestamp — threshold alerts have no event
           // time, so the key is derived from the threshold itself (see

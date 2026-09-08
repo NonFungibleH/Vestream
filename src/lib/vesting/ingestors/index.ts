@@ -47,6 +47,7 @@ import { ingestStreamflowClaimsForUser } from "./streamflow-claims";
 import { ingestJupiterLockClaimsForUser } from "./jupiter-lock-claims";
 import { ingestHoodlockClaimsForUser } from "./hoodlock-claims";
 import { ingestMagnaClaimsForUser } from "./magna-claims";
+import { ingestDopplerClaimsForUser } from "./doppler-claims";
 import { isAdapterEnabled } from "@/lib/protocol-constants";
 
 export type AdapterId =
@@ -61,7 +62,8 @@ export type AdapterId =
   | "streamflow"
   | "jupiter-lock"
   | "hoodlock"
-  | "magna";
+  | "magna"
+  | "doppler";
 
 export interface IngestResult {
   protocol:        AdapterId;
@@ -86,6 +88,7 @@ export const SHIPPED_INGESTORS: AdapterId[] = [
   "jupiter-lock",
   "hoodlock",
   "magna",
+  "doppler",
 ];
 
 /** Map each adapter id to its ingestor fn. Single source of truth used by
@@ -103,6 +106,7 @@ const INGESTOR_BY_PROTOCOL: Record<AdapterId, (u: string, w: string[], c?: Suppo
   "jupiter-lock": ingestJupiterLockClaimsForUser,
   "hoodlock":     ingestHoodlockClaimsForUser,
   "magna":        ingestMagnaClaimsForUser,
+  "doppler":      ingestDopplerClaimsForUser,
 };
 
 function runGated(protocol: AdapterId, run: () => Promise<number>): Promise<IngestResult> {
@@ -189,6 +193,8 @@ export async function ingestAllClaimsForUser(
     // HoodLock — Robinhood Chain (4663). Withdrawn events → claim income.
     gated("hoodlock",     () => ingestHoodlockClaimsForUser(userId, wallets, chainIds)),
     gated("magna",        () => ingestMagnaClaimsForUser(userId, wallets, chainIds)),
+    // Doppler (Bankr) — TokensReleased on each DERC20 → claim income.
+    gated("doppler",      () => ingestDopplerClaimsForUser(userId, wallets, chainIds)),
   ];
 
   return Promise.all(tasks);

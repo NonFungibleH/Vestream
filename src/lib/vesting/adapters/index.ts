@@ -32,6 +32,7 @@ import { streamflowAdapter }  from "./streamflow";
 import { jupiterLockAdapter } from "./jupiter-lock";
 import { llamapayAdapter }    from "./llamapay";
 import { hoodlockAdapter }    from "./hoodlock";
+import { dopplerAdapter }     from "./doppler";
 
 export const ADAPTER_REGISTRY: VestingAdapter[] = [
   sablierAdapter,
@@ -45,6 +46,9 @@ export const ADAPTER_REGISTRY: VestingAdapter[] = [
   pinksaleAdapter,
   llamapayAdapter,
   hoodlockAdapter,
+  // Doppler (Bankr launches). Registry-backed: returns [] until the
+  // indexer has discovered a position for the wallet.
+  dopplerAdapter,
   // Streamflow + Jupiter Lock are both Solana-only and behind
   // SOLANA_ENABLED=true. Adapters return [] when the flag is off, so
   // EVM-only environments are unaffected.

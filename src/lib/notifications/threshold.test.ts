@@ -8,6 +8,8 @@ import {
   validateStreamPrefs,
   THRESHOLD_USD_MIN,
   THRESHOLD_USD_MAX,
+  thresholdLiquidityBlock,
+  THRESHOLD_MIN_LIQUIDITY_USD,
 } from "./threshold";
 
 // 500 tokens at 18 decimals.
@@ -242,5 +244,34 @@ describe("validateStreamPrefs (mobile prefs route)", () => {
     expect(validateStreamPrefs(null)).toEqual({ ok: true, value: {} });
     expect(validateStreamPrefs([1, 2])).toEqual({ ok: true, value: {} });
     expect(validateStreamPrefs("nope")).toEqual({ ok: true, value: {} });
+  });
+});
+
+describe("thresholdLiquidityBlock", () => {
+  it("allows a price with no liquidity figure (CoinGecko-style source)", () => {
+    expect(thresholdLiquidityBlock({ liquidityUsd: null }, 50_000)).toBeNull();
+  });
+
+  it("blocks when there is no price at all", () => {
+    expect(thresholdLiquidityBlock(null, 100)).toBe("no-price");
+    expect(thresholdLiquidityBlock(undefined, 100)).toBe("no-price");
+  });
+
+  it("blocks thin liquidity below the floor", () => {
+    expect(thresholdLiquidityBlock({ liquidityUsd: THRESHOLD_MIN_LIQUIDITY_USD - 1 }, 10)).toBe("thin-liquidity");
+    expect(thresholdLiquidityBlock({ liquidityUsd: 0 }, 10)).toBe("thin-liquidity");
+  });
+
+  it("allows liquidity at or above the floor when claimable is realisable", () => {
+    expect(thresholdLiquidityBlock({ liquidityUsd: THRESHOLD_MIN_LIQUIDITY_USD }, 1_000)).toBeNull();
+    expect(thresholdLiquidityBlock({ liquidityUsd: 100_000 }, 200_000)).toBeNull(); // exactly 2x
+  });
+
+  it("blocks a claimable value the pool could not absorb", () => {
+    expect(thresholdLiquidityBlock({ liquidityUsd: 10_000 }, 20_001)).toBe("claimable-exceeds-liquidity");
+  });
+
+  it("treats a non-finite liquidity figure as thin", () => {
+    expect(thresholdLiquidityBlock({ liquidityUsd: Number.NaN }, 10)).toBe("thin-liquidity");
   });
 });

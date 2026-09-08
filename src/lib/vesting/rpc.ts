@@ -115,7 +115,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },
     { url: "https://cloudflare-eth.com",           excludeForLogs: true },
-    { url: "https://1rpc.io/eth" },                // last resort, see pool notes above
+    // 2026-09-08: tagged excludeForLogs — 1rpc caps eth_getLogs at 50 blocks
+    // ("eth_getLogs is limited to 0 - 50 blocks range"); the Doppler backfill
+    // looped on it 11 times. Kept for contract reads.
+    { url: "https://1rpc.io/eth",                  excludeForLogs: true },
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
@@ -170,7 +173,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://base.api.onfinality.io/public" },
     { url: "https://base-rpc.publicnode.com",      excludeForLogs: true },
     { url: "https://rpc.ankr.com/base",            excludeForLogs: true },
-    { url: "https://1rpc.io/base" },               // last resort
+    // 2026-09-08: tagged excludeForLogs — same 50-block getLogs cap as
+    // 1rpc.io/eth (hit by the Doppler backfill). Kept for contract reads.
+    { url: "https://1rpc.io/base",                 excludeForLogs: true },
   ]),
   // Arbitrum One. Free pool drawn from the same provider universe as our
   // other EVM chains. publicnode is `excludeForLogs: true` because they

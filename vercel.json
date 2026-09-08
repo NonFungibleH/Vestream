@@ -113,6 +113,14 @@
       "schedule": "3 6 * * *"
     },
     {
+      "path": "/api/cron/indexer?protocol=doppler&chainId=8453",
+      "schedule": "7 * * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=doppler&chainId=1",
+      "schedule": "37 * * * *"
+    },
+    {
       "path": "/api/cron/seed-cache?group=subgraphs",
       "schedule": "5 6 * * *"
     },

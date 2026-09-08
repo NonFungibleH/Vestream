@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Only active (non-disabled) protocols have a live /protocols/[slug] page.
-  const slugs = PROTOCOL_SLUGS.filter((s) => !getProtocol(s)?.disabled);
+  const slugs = PROTOCOL_SLUGS.filter((s) => !getProtocol(s)?.disabled && !getProtocol(s)?.unlisted);
   const urls = [
     `${BASE}/protocols`,
     `${BASE}/status`,

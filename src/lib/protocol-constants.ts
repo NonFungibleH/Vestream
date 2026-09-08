@@ -86,6 +86,16 @@ export interface ProtocolMeta {
    */
   disabled?: boolean;
   /**
+   * If true, the protocol is hidden from PUBLIC surfaces (cards, /protocols
+   * index, sitemap, counts) but its adapter, indexer, seeder and claim
+   * ingestor all still run – wallet scans and alerts see it. This is the
+   * "index it, don't advertise it yet" state, distinct from `disabled`
+   * (which stops all outbound work). Doppler ships in this state so Bankr
+   * creators get alerts without 900 memecoin launches a day flooding the
+   * token pages and sitemap.
+   */
+  unlisted?: boolean;
+  /**
    * Primary product category – drives the /protocols category-split UI
    * and the homepage messaging. "vesting" = cliff/unlock investor or
    * team-grant tokens; "stream" = continuous per-second payments
@@ -513,6 +523,42 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // will switch to a DefiLlama entry if one appears later.
   },
 
+  doppler: {
+    slug: "doppler",
+    adapterIds: ["doppler"],
+    name: "Doppler",
+    tagline: "Token launches with creator vesting (Bankr)",
+    // CONTRACTS: Airlock (orchestrator) + DERC20 (vesting inside the token).
+    // See DOPPLER_AIRLOCK / DERC20_ABI in src/lib/vesting/adapters/doppler.ts.
+    // Only launches by DOPPLER_ENABLED_INTEGRATORS (Bankr today) become
+    // streams; the registry records every vesting-enabled launch.
+    description:
+      "Doppler is the launch infrastructure behind Bankr, Zora, Paragraph and Pure Markets. Tokens launched with vesting keep the vested allocation inside the token contract and release it to the creator on a cliff-then-linear schedule. Vestream reads every allocation straight from the token so creators get told the moment their cliff passes.",
+    color: "#7C5CFF",
+    bg:    "rgba(124,92,255,0.08)",
+    border:"rgba(124,92,255,0.22)",
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.ROBINHOOD],
+    officialUrl: "https://bankr.bot",
+    claimUrl:   "https://bankr.bot/terminal",
+    searchKeywords: [
+      "bankr token vesting",
+      "bankr vesting unlock",
+      "doppler vesting",
+      "bankr creator vesting claim",
+    ],
+    useCases: [
+      { title: "Creator vesting",  body: "Bankr launches vest 15% of supply to the creator over a year with a 30-day cliff. Vestream tracks the cliff and the running claimable balance." },
+      { title: "Value alerts",     body: "After the cliff the allocation vests continuously, so alerts fire on claimable value crossing a threshold rather than on a date." },
+      { title: "Claims for tax",   body: "Every release is recorded and priced on the day, so creator income lands in the same exports as any other vesting claim." },
+    ],
+    relatedSlugs: ["hoodlock", "sablier", "hedgey"],
+    testimonials: [],
+    category: "vesting",
+    // 2026-09: indexed for wallet scans + alerts, NOT listed publicly until
+    // volume and token quality have been measured against real users.
+    unlisted: true,
+  },
+
   hoodlock: {
     slug: "hoodlock",
     adapterIds: ["hoodlock"],
@@ -612,6 +658,7 @@ export const PROTOCOL_SLUGS = [
   "llamapay",
   "hoodlock",
   "magna",
+  "doppler",   // unlisted: filtered out of listProtocols() by default
 ] as const;
 
 export type ProtocolSlug = typeof PROTOCOL_SLUGS[number];
@@ -918,9 +965,11 @@ export function publicChainIds(): number[] {
  * surfaces that need the full registry (e.g. an internal "all protocols
  * including paused" view).
  */
-export function listProtocols(opts: { includeDisabled?: boolean } = {}): ProtocolMeta[] {
+export function listProtocols(opts: { includeDisabled?: boolean; includeUnlisted?: boolean } = {}): ProtocolMeta[] {
   const all = PROTOCOL_SLUGS.map((s) => PROTOCOLS[s]);
-  return opts.includeDisabled ? all : all.filter((p) => !p.disabled);
+  return all.filter((p) =>
+    (opts.includeDisabled || !p.disabled) &&
+    (opts.includeUnlisted || !p.unlisted));
 }
 
 // ── Derived marketing counts ────────────────────────────────────────────────

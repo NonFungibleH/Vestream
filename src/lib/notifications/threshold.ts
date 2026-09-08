@@ -258,3 +258,41 @@ export function validateStreamPrefs(raw: unknown): StreamPrefsValidation {
 
   return { ok: true, value: out };
 }
+
+/**
+ * Liquidity floor for threshold alerts, in USD of DEX liquidity behind the
+ * cached price. Below this a quoted price is not a price anyone could sell
+ * into, so "your claimable is worth $N" would be a lie that fires on noise.
+ * $5k sits between quick-prices' "medium" ($1k) and "high" ($10k) bands.
+ */
+export const THRESHOLD_MIN_LIQUIDITY_USD = 5_000;
+
+/**
+ * Even above the floor, a claimable position several times larger than the
+ * pool that prices it cannot be realised at that price. Cap the ratio.
+ */
+export const THRESHOLD_MAX_CLAIMABLE_TO_LIQUIDITY = 2;
+
+/**
+ * Should a threshold alert be allowed to fire on this price?
+ *
+ * `liquidityUsd === null` means the source did not report liquidity (e.g. a
+ * CoinGecko-listed token) — allowed, because blocking would silently break
+ * thresholds on established tokens. A NUMERIC liquidity below the floor, or
+ * a claimable value more than THRESHOLD_MAX_CLAIMABLE_TO_LIQUIDITY × the
+ * liquidity, is blocked. Added 2026-09 with the Doppler/Bankr integration,
+ * where thinly-traded launch tokens are the norm rather than the exception.
+ *
+ * Pure. Returns a reason string on block so the scheduler can log it.
+ */
+export function thresholdLiquidityBlock(
+  price: { liquidityUsd: number | null } | null | undefined,
+  claimableUsd: number,
+): string | null {
+  if (!price) return "no-price";
+  const liq = price.liquidityUsd;
+  if (liq == null) return null;
+  if (!Number.isFinite(liq) || liq < THRESHOLD_MIN_LIQUIDITY_USD) return "thin-liquidity";
+  if (Number.isFinite(claimableUsd) && claimableUsd > liq * THRESHOLD_MAX_CLAIMABLE_TO_LIQUIDITY) return "claimable-exceeds-liquidity";
+  return null;
+}

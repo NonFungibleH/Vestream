@@ -19,12 +19,14 @@ import { uncxVmIndexers } from "./uncx-vm";
 import { hedgeyIndexers } from "./hedgey";
 import { hoodlockIndexers } from "./hoodlock";
 import { magnaIndexers } from "./magna";
+import { dopplerIndexers } from "./doppler";
 
 export const INDEXERS: Indexer[] = [
   ...uncxVmIndexers,
   ...hedgeyIndexers,
   ...hoodlockIndexers,
   ...magnaIndexers,
+  ...dopplerIndexers,
 ];
 
 /**
