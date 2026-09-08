@@ -109,7 +109,9 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     // when they have a more reliable free tier or once we move to paid
     // providers across the board.
     { url: "https://ethereum.blockpi.network/v1/rpc/public", excludeForLogs: true },
-    { url: "https://eth-mainnet.public.blastapi.io" },
+    // 2026-09-08: tagged excludeForLogs — "eth_getLogs requests with up to a
+    // 10 block range" (Doppler Ethereum backfill). Kept for contract reads.
+    { url: "https://eth-mainnet.public.blastapi.io", excludeForLogs: true },
     // 2026-09-08: tagged excludeForLogs — "The method eth_getLogs is not
     // supported" (Doppler Ethereum indexer stalled on it, indexer_state
     // last_error). Same family as the BSC/Polygon meowrpc tags.

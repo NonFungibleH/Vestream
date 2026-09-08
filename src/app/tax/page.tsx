@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { InkHero } from "@/components/InkHero";
 import { GradientCta } from "@/components/GradientCta";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
+import { SectionHeading } from "@/components/SectionHeading";
 import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -196,21 +197,6 @@ const INK   = "#1A1D20";
 const MUTED = "#8B8E92";
 const HAIR  = "rgba(21,23,26,0.10)";
 
-function SectionHeading({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
-  return (
-    <div className="max-w-2xl mx-auto text-center mb-10 md:mb-12">
-      <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] mb-4" style={{ color: "#0F8A8A" }}>
-        <span aria-hidden className="block w-6 h-px" style={{ background: "#1CB8B8" }} />
-        {eyebrow}
-      </div>
-      <h2 className="text-2xl md:text-[2rem] font-bold leading-tight" style={{ color: INK, letterSpacing: "-0.025em", textWrap: "balance" }}>
-        {title}
-      </h2>
-      {sub && <p className="mt-3 text-base leading-relaxed" style={{ color: MUTED }}>{sub}</p>}
-    </div>
-  );
-}
-
 export default function TaxPage() {
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: INK }}>
@@ -263,7 +249,7 @@ export default function TaxPage() {
       {/* ── The problem ───────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
-          <SectionHeading
+          <SectionHeading className="mb-10 md:mb-12"
             eyebrow="Why this is hard"
             title="Vesting income does not look like exchange income."
             sub="Nobody sends you a statement. The events are scattered across chains and dates, and each one needs a historical price."
@@ -286,7 +272,7 @@ export default function TaxPage() {
       {/* ── Income statement mockup ───────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24" style={{ background: "white", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
         <div className="max-w-5xl mx-auto">
-          <SectionHeading
+          <SectionHeading className="mb-10 md:mb-12"
             eyebrow="What you get"
             title="An income statement built from your claims."
             sub="Every claim as a row. Every row priced on its own day, with a flag that says how sure we are."
@@ -354,7 +340,7 @@ export default function TaxPage() {
       {/* ── How it works ──────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
-          <SectionHeading eyebrow="How it works" title="Three steps, and the first one is free." />
+          <SectionHeading className="mb-10 md:mb-12" eyebrow="How it works" title="Three steps, and the first one is free." />
           <ol className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {STEPS.map((s) => (
               <li key={s.n} className="rounded-2xl p-6" style={{ background: "white", border: `1px solid ${HAIR}` }}>
@@ -371,7 +357,7 @@ export default function TaxPage() {
       {/* ── Exports ───────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24" style={{ background: "white", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
         <div className="max-w-5xl mx-auto">
-          <SectionHeading
+          <SectionHeading className="mb-10 md:mb-12"
             eyebrow="Exports"
             title="Six formats. Your accountant picks one."
             sub="All built from the same claim rows, so the numbers agree with each other whichever file you send."
@@ -399,8 +385,8 @@ export default function TaxPage() {
               <span aria-hidden className="block w-6 h-px" style={{ background: "#1CB8B8" }} />
               Honest numbers
             </div>
-            <h2 className="text-2xl md:text-[2rem] font-bold leading-tight" style={{ color: INK, letterSpacing: "-0.025em", textWrap: "balance" }}>
-              We tell you how sure we are, row by row.
+            <h2 className="font-bold" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.625rem)", lineHeight: 1.08, color: "#0B0E12", letterSpacing: "-0.035em", textWrap: "balance" }}>
+              We tell you how sure we are, <span style={{ color: "#0F8A8A" }}>row by row.</span>
             </h2>
             <p className="mt-3 text-base leading-relaxed" style={{ color: MUTED }}>
               A tax figure is only as good as the price behind it. Every row carries one of three flags, and the income statement shows the mix up front so a report full of estimates never passes as a report full of facts.
@@ -421,7 +407,7 @@ export default function TaxPage() {
       {/* ── Audiences ─────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24" style={{ background: "white", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
         <div className="max-w-5xl mx-auto">
-          <SectionHeading eyebrow="Who this is for" title="Anyone who has ever clicked claim." />
+          <SectionHeading className="mb-10 md:mb-12" eyebrow="Who this is for" title="Anyone who has ever clicked claim." />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {AUDIENCES.map((a) => (
               <div key={a.title} className="rounded-2xl p-6" style={{ background: "#F5F5F3", border: `1px solid ${HAIR}` }}>
@@ -439,7 +425,7 @@ export default function TaxPage() {
       {/* ── FAQ ───────────────────────────────────────────────────────── */}
       <section className="px-4 md:px-8 py-16 md:py-24">
         <div className="max-w-3xl mx-auto">
-          <SectionHeading eyebrow="Questions" title="The ones accountants ask first." />
+          <SectionHeading className="mb-10 md:mb-12" eyebrow="Questions" title="The ones accountants ask first." />
           <div className="rounded-2xl overflow-hidden" style={{ background: "white", border: `1px solid ${HAIR}` }}>
             {FAQ.map((f, i) => (
               <details key={f.q} className="group" style={{ borderTop: i > 0 ? `1px solid ${HAIR}` : undefined }}>

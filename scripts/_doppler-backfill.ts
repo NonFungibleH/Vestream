@@ -13,8 +13,19 @@ async function main() {
   if (!idx) throw new Error(`no doppler indexer for chain ${chainId}`);
 
   let events = 0;
+  const pauseMs = Number(process.argv[4] ?? 1500); // breathing room for rate-limited RPCs
   for (let i = 0; i < maxRuns; i++) {
-    const r = await runIndexer(idx);
+    let r;
+    try {
+      r = await runIndexer(idx);
+    } catch (err) {
+      // e.g. a 429 on eth_blockNumber before the runner's own error handling
+      // kicks in. Back off and try again rather than dying mid-backfill.
+      console.log(`run ${i}: threw ${(err as Error)?.message?.split("\n")[0] ?? err}; backing off 20s`);
+      await new Promise((res) => setTimeout(res, 20_000));
+      continue;
+    }
+    await new Promise((res) => setTimeout(res, pauseMs));
     events += r.eventCount;
     console.log(`run ${i}: ${r.fromBlock}-${r.toBlock} windows=${r.windows ?? 0} events=${r.eventCount} ${r.durationMs}ms${r.skipped ? " " + r.skipped : ""}${r.error ? " ERR " + r.error : ""}`);
     if (r.skipped === "caught-up") break;

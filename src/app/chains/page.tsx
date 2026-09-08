@@ -189,8 +189,8 @@ export default async function ChainsIndexPage() {
       <section className="px-4 md:px-8 py-16 md:py-24"
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-4xl mx-auto w-full">
-        <h2 className="text-xl md:text-2xl font-bold mb-6" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
-          Vesting TVL by chain
+        <h2 className="font-bold mb-6" style={{ fontSize: "clamp(1.5rem, 2.6vw, 1.9rem)", color: "#0B0E12", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          Vesting TVL <span style={{ color: "#0F8A8A" }}>by chain</span>
         </h2>
         <div className="space-y-3">
           {o.chains.map((c, i) => {
@@ -340,10 +340,10 @@ export default async function ChainsIndexPage() {
                 </span>
                 NEXT 7 DAYS
               </div>
-              <h2 className="font-bold mb-3" style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", letterSpacing: "-0.03em", color: "white", lineHeight: 1.1 }}>
-                The biggest unlocks coming up
+              <h2 className="font-bold mb-3" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.625rem)", letterSpacing: "-0.035em", color: "#FFFFFF", lineHeight: 1.08, textWrap: "balance" }}>
+                The biggest unlocks <span style={{ color: "#5FDCDC" }}>coming up</span>
               </h2>
-              <p className="text-sm md:text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.55)" }}>
+              <p className="text-sm md:text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.74)" }}>
                 Across every chain and protocol we index, ranked by value at today&apos;s prices.
               </p>
             </div>

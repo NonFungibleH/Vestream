@@ -518,10 +518,10 @@ export default async function UnlocksIndexPage() {
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h2
-              className="text-xl md:text-2xl font-bold"
-              style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}
+              className="font-bold"
+              style={{ fontSize: "clamp(1.5rem, 2.6vw, 1.9rem)", color: "#0B0E12", letterSpacing: "-0.03em", lineHeight: 1.1 }}
             >
-              Browse by protocol
+              Browse <span style={{ color: "#0F8A8A" }}>by protocol</span>
             </h2>
             <p className="text-sm mt-1" style={{ color: "#8B8E92" }}>
               {protocols.length} protocols indexed · dive into any one for the full feed.

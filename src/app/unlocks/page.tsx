@@ -255,8 +255,8 @@ export default async function UnlocksIndex() {
       {upcoming.length > 0 && (
         <section className="px-4 md:px-8 pt-12 md:pt-16 pb-14 max-w-6xl mx-auto w-full">
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-            <h2 className="text-xl md:text-2xl font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
-              The next 25 unlocks
+            <h2 className="font-bold" style={{ fontSize: "clamp(1.5rem, 2.6vw, 1.9rem)", color: "#0B0E12", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+              The next <span style={{ color: "#0F8A8A" }}>25 unlocks</span>
             </h2>
             <span className="text-xs" style={{ color: "#8B8E92" }}>Across every protocol and chain we index</span>
           </div>

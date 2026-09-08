@@ -84,7 +84,7 @@ export function InkHero({
         </h1>
         {sub && (
           <p className={`text-base md:text-lg leading-relaxed ${centred ? "max-w-2xl mx-auto" : "max-w-2xl"}`}
-            style={{ color: "rgba(255,255,255,0.64)" }}>
+            style={{ color: "rgba(255,255,255,0.74)" }}>
             {sub}
           </p>
         )}

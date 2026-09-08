@@ -271,7 +271,7 @@ export default async function Home() {
               </span>
             </h1>
 
-            <p className="text-lg max-w-xl mb-5 leading-relaxed mx-auto lg:mx-0" style={{ color: "rgba(255,255,255,0.64)" }}>
+            <p className="text-lg max-w-xl mb-5 leading-relaxed mx-auto lg:mx-0" style={{ color: "rgba(255,255,255,0.74)" }}>
               The moment your tokens unlock, your phone buzzes. Vestream watches every vesting you&rsquo;re owed across Sablier, Hedgey, UNCX and nine more protocols, so a claim never slips past you again.
             </p>
             {/* Reassurance row: the objection ("do I have to connect a wallet?")
@@ -429,14 +429,14 @@ export default async function Home() {
                     <div
                       style={{
                         width: 18, height: 8, borderRadius: 2,
-                        border: "1px solid rgba(255,255,255,0.55)",
+                        border: "1px solid rgba(255,255,255,0.66)",
                         position: "relative",
                         padding: 1,
                       }}
                     >
                       <div style={{ width: "85%", height: "100%", background: "rgba(255,255,255,0.85)", borderRadius: 1 }} />
                     </div>
-                    <div style={{ width: 1.5, height: 4, background: "rgba(255,255,255,0.55)", borderRadius: 1 }} />
+                    <div style={{ width: 1.5, height: 4, background: "rgba(255,255,255,0.66)", borderRadius: 1 }} />
                   </div>
                 </div>
 
@@ -709,13 +709,13 @@ export default async function Home() {
               </span>
             </div>
 
-            <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] tracking-tight leading-[1.1] mb-5"
+            <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-5"
               style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
               Track your unlocks <br />
-              on the go.
+              <span style={{ color: "#0F8A8A" }}>on the go.</span>
             </h2>
 
-            <p className="text-base md:text-lg max-w-xl mb-8 leading-relaxed mx-auto lg:mx-0" style={{ color: "#8B8E92" }}>
+            <p className="text-base md:text-lg max-w-xl mb-8 leading-relaxed mx-auto lg:mx-0" style={{ color: "#5E6468" }}>
               Vestream is built mobile-first. Push alerts the moment a token unlocks, a live countdown to your next claim, and one tap to the protocol&rsquo;s claim page – all in your pocket.
             </p>
 
@@ -859,12 +859,12 @@ export default async function Home() {
               Desktop dashboard
             </span>
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] tracking-tight leading-[1.1] mb-4"
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4"
             style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
             Power tools when <br />
             you&rsquo;re at your desk.
           </h2>
-          <p className="text-base md:text-lg max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#8B8E92" }}>
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: "#5E6468" }}>
             The mobile app handles your day-to-day. The web dashboard is where you do tax season, dig into the Vesting Explorer, and search any wallet&rsquo;s positions.
           </p>
           <div className="flex flex-wrap justify-center gap-2 mb-2">
@@ -948,7 +948,7 @@ export default async function Home() {
             <div className="flex-1 p-4 space-y-3 overflow-hidden">
               {/* PortfolioHero gradient card – kept as the brand-defining element */}
               <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg,#1A1D20,#0F8A8A 55%,#1CB8B8)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Your vestings</p>
+                <p className="text-[8px] font-bold tracking-widest uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.66)" }}>Your vestings</p>
                 <p className="text-2xl font-bold tabular-nums text-white">$4,238</p>
                 <p className="text-[10px] mt-0.5" style={{ color: "rgba(168,242,200,1)" }}>● $215 claimable now · 2 wallets tracked</p>
                 <div className="flex gap-2 mt-3">
@@ -959,7 +959,7 @@ export default async function Home() {
                     { l: "Next",      v: "14d 6h",   c: "rgba(240,184,61,0.18)"  },
                   ].map((s) => (
                     <div key={s.l} className="rounded-lg px-2.5 py-1.5 flex-1" style={{ background: s.c, border: "1px solid rgba(255,255,255,0.10)" }}>
-                      <p className="text-[7px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.55)" }}>{s.l}</p>
+                      <p className="text-[7px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.66)" }}>{s.l}</p>
                       <p className="text-[11px] font-bold text-white tabular-nums">{s.v}</p>
                     </div>
                   ))}
@@ -1045,10 +1045,10 @@ export default async function Home() {
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Deeper than a simple tracker</span>
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
-            Built for the full lifecycle
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-3" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
+            Built for the <span style={{ color: "#0F8A8A" }}>full lifecycle</span>
           </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
+          <p className="text-base max-w-xl mx-auto" style={{ color: "#5E6468" }}>
             From the first cliff to the final claim – forecast cashflows, track every sale, and export your records.
           </p>
         </div>
@@ -1214,10 +1214,10 @@ export default async function Home() {
         style={{ background: "#FFFFFF", borderTop: "1px solid rgba(21,23,26,0.07)", borderBottom: "1px solid rgba(21,23,26,0.07)" }}>
         <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
-            Everything in one place
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-3" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
+            Everything in <span style={{ color: "#0F8A8A" }}>one place</span>
           </h2>
-          <p className="text-base" style={{ color: "#8B8E92" }}>
+          <p className="text-base" style={{ color: "#5E6468" }}>
             Built for teams and individuals managing token allocations across multiple protocols.
           </p>
         </div>
@@ -1285,10 +1285,10 @@ export default async function Home() {
               style={{ background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.14)", color: "#1CB8B8" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
-              Find every vesting in one search
+            <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ color: "#0B0E12", letterSpacing: "-0.035em" }}>
+              Find every vesting in <span style={{ color: "#0F8A8A" }}>one search</span>
             </h2>
-            <p className="text-base leading-relaxed mb-7" style={{ color: "#8B8E92" }}>
+            <p className="text-base leading-relaxed mb-7" style={{ color: "#5E6468" }}>
               Enter any wallet address and Vestream simultaneously scans every integrated protocol across all supported chains – returning every active vesting in seconds. No switching between platforms, no missed positions.
             </p>
 
@@ -1397,10 +1397,10 @@ export default async function Home() {
               style={{ background: "rgba(11,160,203,0.08)", border: "1px solid rgba(11,160,203,0.14)", color: "#0BA0CB" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
-              See who else is vesting your token
+            <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ color: "#0B0E12", letterSpacing: "-0.035em" }}>
+              See who else is <span style={{ color: "#0F8A8A" }}>vesting your token</span>
             </h2>
-            <p className="text-base leading-relaxed" style={{ color: "#8B8E92" }}>
+            <p className="text-base leading-relaxed" style={{ color: "#5E6468" }}>
               Search any token and see the complete global picture – every wallet, every protocol, every upcoming unlock. Large unlock events create selling pressure. Spotting a cluster 30 days out lets you hedge, hold, or exit with conviction – not guesswork.
             </p>
           </div>
@@ -1459,10 +1459,10 @@ export default async function Home() {
               style={{ background: "rgba(45,179,106,0.08)", color: "#2DB36A", border: "1px solid rgba(45,179,106,0.18)" }}>
               New · For stablecoin earners
             </div>
-            <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
-              Get paid in stablecoins? Track it like a salary.
+            <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ color: "#0B0E12", letterSpacing: "-0.035em" }}>
+              Get paid in stablecoins? <span style={{ color: "#0F8A8A" }}>Track it like a salary.</span>
             </h2>
-            <p className="text-base leading-relaxed mb-6" style={{ color: "#8B8E92" }}>
+            <p className="text-base leading-relaxed mb-6" style={{ color: "#5E6468" }}>
               Flip Vestream into <span className="font-semibold" style={{ color: "#1A1D20" }}>Income mode</span> with one tap. Sablier, Superfluid, LlamaPay streams paying USDC, USDT, DAI – all filtered into one view. Monthly income, 30-day forecast, year-to-date totals. Tag each source – Salary, Contract, Bonus, Grant – and the breakdown surfaces automatically.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: "#8B8E92" }}>
@@ -1566,13 +1566,13 @@ export default async function Home() {
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#2DB36A" }} />
               Available on iOS &amp; Android
             </div>
-            <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ color: "white", letterSpacing: "-0.032em" }}>
+            <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ color: "white", letterSpacing: "-0.035em" }}>
               Your vestings, in your pocket
             </h2>
             <p className="text-base leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>
               The Vestream mobile app tracks every token unlock in real time – and sends push notifications to your phone the moment a claim is ready.
             </p>
-            <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.55)" }}>
+            <p className="text-sm leading-relaxed mb-8" style={{ color: "rgba(255,255,255,0.66)" }}>
               Sign up for early access to the web dashboard – the mobile app is included with your account.
             </p>
             <ul className="flex flex-col gap-3.5">
@@ -1672,10 +1672,10 @@ export default async function Home() {
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Built for</span>
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
-            Who uses Vestream?
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
+            Who uses <span style={{ color: "#0F8A8A" }}>Vestream?</span>
           </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: "#8B8E92" }}>
+          <p className="text-base max-w-xl mx-auto" style={{ color: "#5E6468" }}>
             Token vesting spans multiple protocols, chains, and wallets. We make it simple for anyone with tokens on a schedule.
           </p>
         </div>
@@ -1746,10 +1746,10 @@ export default async function Home() {
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Simple by design</span>
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-4" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
-            Up and running in 60 seconds
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
+            Up and running in <span style={{ color: "#0F8A8A" }}>60 seconds</span>
           </h2>
-          <p className="text-base" style={{ color: "#8B8E92" }}>Download. Paste. Done. No sign-up forms, no email verification, no KYC.</p>
+          <p className="text-base" style={{ color: "#5E6468" }}>Download. Paste. Done. No sign-up forms, no email verification, no KYC.</p>
         </div>
 
         <div className="relative">
@@ -1813,7 +1813,7 @@ export default async function Home() {
               <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: "#0F8A8A" }}>
                 Tax season? Sorted.
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
+              <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-4" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
                 Six hours of January spreadsheets, in 60 seconds.
               </h2>
               <p className="text-base mb-7 leading-relaxed" style={{ color: "#5C6066" }}>
@@ -1842,7 +1842,7 @@ export default async function Home() {
                   <span className="text-[10px] font-mono" style={{ color: "#94A3B8" }}>VESTING_INCOME.pdf</span>
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#94A3B8" }}>Total income</p>
-                <p className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>$8,420.00</p>
+                <p className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-3" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>$8,420.00</p>
                 <div className="space-y-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
                   {[
                     { label: "Sablier",      value: "$4,470.00", pct: "53%" },
@@ -1876,7 +1876,7 @@ export default async function Home() {
             <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
             <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Got questions</span>
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12]" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>Frequently asked</h2>
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08]" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>Frequently asked</h2>
         </div>
 
         <div className="space-y-3">
@@ -1938,10 +1938,10 @@ export default async function Home() {
             style={{ background: "rgba(28,184,184,0.06)", borderColor: "rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
             Simple, transparent pricing
           </div>
-          <h2 className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-3" style={{ letterSpacing: "-0.032em", color: "#1A1D20" }}>
-            Start free. Scale when you&apos;re ready.
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-3" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>
+            Start free. <span style={{ color: "#0F8A8A" }}>Scale when you&apos;re ready.</span>
           </h2>
-          <p className="text-base" style={{ color: "#8B8E92" }}>
+          <p className="text-base" style={{ color: "#5E6468" }}>
             From a single wallet to your whole portfolio – simple pricing, no surprises.
           </p>
         </div>
@@ -1957,7 +1957,7 @@ export default async function Home() {
           {/* Free */}
           <div className="rounded-2xl p-4 md:p-7 min-w-0" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#B8BABD" }}>Free</p>
-            <p className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>$0</p>
+            <p className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>$0</p>
             <p className="text-sm mb-6" style={{ color: "#8B8E92" }}>Free forever. No credit card needed.</p>
             <Link href="/find-vestings" className="flex items-center justify-center w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-6"
               style={{ background: "rgba(28,184,184,0.06)", border: "1px solid rgba(28,184,184,0.2)", color: "#1CB8B8" }}>
@@ -1989,7 +1989,7 @@ export default async function Home() {
               </span>
             </div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#1CB8B8" }}>Pro</p>
-            <p className="text-3xl md:text-[38px] font-semibold leading-[1.12] mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
+            <p className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08] mb-1" style={{ color: "#1A1D20", letterSpacing: "-0.032em" }}>
               <span className="tabular-nums">$9.99</span><span className="text-base font-semibold" style={{ color: "#8B8E92" }}>/mo</span>
             </p>
             <p className="text-sm mb-1 mt-2" style={{ color: "#8B8E92" }}>

@@ -148,6 +148,10 @@ async function upsertAllocations(rows: DopplerAllocationRow[]): Promise<void> {
  */
 const WINDOW: Partial<Record<SupportedChainId, bigint>> = {
   [CHAIN_IDS.ROBINHOOD]: 20_000n,
+  // Ethereum's log-capable free providers are thin (dRPC public caps at 1,000;
+  // publicnode is archive-gated; blastapi caps at 10). Doppler volume on
+  // Ethereum is tiny, so 1,000 costs nothing and lets dRPC serve every window.
+  [CHAIN_IDS.ETHEREUM]:  1_000n,
 };
 
 function makeIndexer(chainId: SupportedChainId): Indexer {
