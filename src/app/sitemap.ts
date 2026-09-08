@@ -78,6 +78,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // but priority dropped to 0.5 so it doesn't out-rank /invest or /
     // for queries Vestream actually wants to convert today.
     { url: `${SITE}/payroll`,                 changeFrequency: "monthly", priority: 0.5 },
+    // /tax is the dedicated landing page for the claim-history tax feature.
+    // Commercial intent ("vesting tax", "tax on vested tokens") so it sits
+    // above the informational pages.
+    { url: `${SITE}/tax`,                     changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE}/corporate/token-payroll`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: today,       changeFrequency: "daily",   priority: 0.95 },
     { url: `${SITE}/unlocks`,       lastModified: today,       changeFrequency: "daily",   priority: 0.9 },
