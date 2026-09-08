@@ -110,7 +110,10 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     // providers across the board.
     { url: "https://ethereum.blockpi.network/v1/rpc/public", excludeForLogs: true },
     { url: "https://eth-mainnet.public.blastapi.io" },
-    { url: "https://eth.meowrpc.com" },
+    // 2026-09-08: tagged excludeForLogs — "The method eth_getLogs is not
+    // supported" (Doppler Ethereum indexer stalled on it, indexer_state
+    // last_error). Same family as the BSC/Polygon meowrpc tags.
+    { url: "https://eth.meowrpc.com",              excludeForLogs: true },
     { url: "https://eth.api.onfinality.io/public" },
     { url: "https://ethereum-rpc.publicnode.com",  excludeForLogs: true },
     { url: "https://rpc.ankr.com/eth",             excludeForLogs: true },

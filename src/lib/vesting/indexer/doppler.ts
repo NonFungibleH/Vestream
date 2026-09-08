@@ -134,6 +134,22 @@ async function upsertAllocations(rows: DopplerAllocationRow[]): Promise<void> {
   }
 }
 
+/**
+ * Per-chain scan window.
+ *  - Base / Ethereum / Arbitrum: 2,000 matches the Hedgey and Magna Base
+ *    indexers on the same pools. 5,000 was tried first and failed once the
+ *    fallback rotated onto a provider with a tighter range cap.
+ *  - Robinhood: ~570k blocks/day and ~4,000 Doppler launches/day (measured
+ *    2026-09-08), so 2,000 blocks is five minutes of chain and an hourly cron
+ *    could not keep up. The official RPC served a 2k Create window in 0.2s
+ *    and full-range HoodLock scans, so 20,000 (~50 min of chain) is safe.
+ * The runner's time-budgeted catch-up loop handles cold start; the local
+ * scripts/_doppler-backfill.ts drives it to caught-up.
+ */
+const WINDOW: Partial<Record<SupportedChainId, bigint>> = {
+  [CHAIN_IDS.ROBINHOOD]: 20_000n,
+};
+
 function makeIndexer(chainId: SupportedChainId): Indexer {
   const airlock = DOPPLER_AIRLOCK[chainId];
   const genesis = DOPPLER_GENESIS_BLOCK[chainId];
@@ -143,12 +159,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
     protocol:     "doppler",
     chainId,
     genesisBlock: genesis,
-    // 2,000 matches the Hedgey and Magna Base indexers, which run on this
-    // same pool in prod. 5,000 was tried first and failed once the fallback
-    // rotated onto a provider with a tighter range cap (2026-09-08 backfill).
-    // The runner's time-budgeted catch-up loop handles the cold start; the
-    // local scripts/_doppler-backfill.ts drives it to caught-up.
-    maxBlocksPerScan: 2_000n,
+    maxBlocksPerScan: WINDOW[chainId] ?? 2_000n,
     reorgLag: 30n,
 
     async scanWindow(client: PublicClient, fromBlock: bigint, toBlock: bigint) {
@@ -174,6 +185,11 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // integrator measurement repeatable), but only vesting-enabled assets
       // get schedules, allocations and streams.
       await upsertAssets(chainId, infos);
+      // Older DERC20s (pre-schedule interface: vestingDuration() + a single
+      // beneficiary, no vestingScheduleCount) land here with vestedTotal > 0
+      // and scheduleCount 0. They are registry-only for now; none of the
+      // enabled integrators use them (Bankr's February 2026 launches all have
+      // vestedTotal == 0, verified on-chain 2026-09-08).
       const vesting = infos.filter((a) => a.vestedTotal > 0n && a.scheduleCount > 0);
       if (vesting.length === 0) return { eventCount: createLogs.length };
 
@@ -248,4 +264,6 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
 export const dopplerIndexers: Indexer[] = [
   makeIndexer(CHAIN_IDS.BASE),
   makeIndexer(CHAIN_IDS.ETHEREUM),
+  makeIndexer(CHAIN_IDS.ARBITRUM),
+  makeIndexer(CHAIN_IDS.ROBINHOOD),
 ];

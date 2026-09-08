@@ -54,10 +54,7 @@ export const DOPPLER_AIRLOCK: Partial<Record<SupportedChainId, `0x${string}`>> =
 };
 
 /**
- * Indexer cold-start blocks. Only chains with a known genesis get an indexer;
- * Arbitrum and Robinhood are readable by the adapter but not yet scanned —
- * their public RPCs are not archive nodes and the explorer lookups failed.
- * Fill in and add to indexer/doppler.ts.
+ * Indexer cold-start blocks.
  *
  * Base: Airlock was deployed at 28,415,516 but Bankr only moved from Clanker
  * to Doppler on 10 Feb 2026 (block ~41.98M), and Bankr is the only enabled
@@ -65,10 +62,16 @@ export const DOPPLER_AIRLOCK: Partial<Record<SupportedChainId, `0x${string}`>> =
  * chain that cannot contain a Bankr launch. Widen backwards if another
  * integrator is enabled.
  * Ethereum: Airlock deployment block (eth_getCode bisection, 2026-09-08).
+ * Arbitrum: Airlock deployment block (eth_getCode bisection on blastapi).
+ * Robinhood: block of the Airlock deployment tx listed in Doppler's
+ * Deployments.md (0x8ffd957b…291a); the official RPC serves no historical
+ * state so bisection is impossible there.
  */
 export const DOPPLER_GENESIS_BLOCK: Partial<Record<SupportedChainId, bigint>> = {
-  [CHAIN_IDS.ETHEREUM]: 24_326_115n,
-  [CHAIN_IDS.BASE]:     41_900_000n,
+  [CHAIN_IDS.ETHEREUM]:  24_326_115n,
+  [CHAIN_IDS.BASE]:      41_900_000n,
+  [CHAIN_IDS.ARBITRUM]:  494_617_839n,
+  [CHAIN_IDS.ROBINHOOD]: 646_829n,
 };
 
 /** Launchpads whose vesting we surface as streams. Lowercase. */
@@ -255,7 +258,14 @@ export function allocationsToVestingStreams(
     const state = live.get(allocationKey(a));
     const released = state?.releasedAmount ?? 0n;
 
-    const computed = computeLinearVesting(a.allocated, released, start, end, nowSec, cliff);
+    // A zero-duration schedule (seen on Robinhood from other integrators) is
+    // "everything releasable at start". computeLinearVesting divides by the
+    // duration and would report nothing vested, so handle it directly.
+    const computed = a.durationSeconds === 0n
+      ? (nowSec >= start
+          ? { claimableNow: a.allocated > released ? a.allocated - released : 0n, lockedAmount: 0n, isFullyVested: true }
+          : { claimableNow: 0n, lockedAmount: a.allocated, isFullyVested: false })
+      : computeLinearVesting(a.allocated, released, start, end, nowSec, cliff);
     // The contract is authoritative for what is claimable right now.
     const claimableNow = state?.claimableNow ?? computed.claimableNow;
     const isFullyVested = computed.isFullyVested && released >= a.allocated;
