@@ -74,10 +74,19 @@ interface Provider {
  */
 function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Provider[] {
   const out: Provider[] = [];
-  if (envValue) out.push({ url: envValue });
+  // 2026-09-08: an env slot named ALCHEMY_* has been pointed at publicnode in
+  // at least one environment, which put an archive-gated node FIRST in the
+  // pool for every log scan ("Archive requests require a personal token",
+  // 91 times in one Doppler backfill). If the env URL is on a host we
+  // already know cannot serve event scans, carry the tag over so it is only
+  // used for contract reads, exactly like its free-pool twin.
+  if (envValue) out.push({ url: envValue, excludeForLogs: LOG_UNSAFE_HOSTS.some((h) => envValue.includes(h)) || undefined });
   out.push(...freeFallbacks);
   return out;
 }
+
+/** Hosts whose free tiers prune or cap eth_getLogs (see per-entry notes below). */
+const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.io", "rpc.ankr.com"];
 
 // ── Pool expansion notes (2026-05-14, updated 2026-05-28) ─────────────────
 // Free-tier pools widened so a paid-RPC-free deploy can ride out individual

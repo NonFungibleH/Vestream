@@ -20,6 +20,7 @@ import { hedgeyIndexers } from "./hedgey";
 import { hoodlockIndexers } from "./hoodlock";
 import { magnaIndexers } from "./magna";
 import { dopplerIndexers } from "./doppler";
+import { dopplerFeeIndexers } from "./doppler-fees";
 
 export const INDEXERS: Indexer[] = [
   ...uncxVmIndexers,
@@ -27,6 +28,8 @@ export const INDEXERS: Indexer[] = [
   ...hoodlockIndexers,
   ...magnaIndexers,
   ...dopplerIndexers,
+  // Registry only (who is owed a share of which pool's fees). Not vesting.
+  ...dopplerFeeIndexers,
 ];
 
 /**

@@ -1,7 +1,7 @@
 // Drive the Doppler indexer through the runner (which persists the cursor in
 // indexer_state) until it reports caught-up. Local cold-start backfill so the
 // hourly prod cron only ever does steady-state work. Usage:
-//   npx tsx scripts/_doppler-backfill.ts 8453 [maxRuns]
+//   npx tsx scripts/_doppler-backfill.ts <chainId> [maxRuns] [pauseMs] [protocol=doppler]
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
@@ -9,8 +9,9 @@ async function main() {
   const { findIndexer, runIndexer } = await import("../src/lib/vesting/indexer");
   const chainId = Number(process.argv[2] ?? 8453);
   const maxRuns = Number(process.argv[3] ?? 5000);
-  const idx = findIndexer("doppler", chainId);
-  if (!idx) throw new Error(`no doppler indexer for chain ${chainId}`);
+  const protocol = process.argv[5] ?? "doppler";
+  const idx = findIndexer(protocol, chainId);
+  if (!idx) throw new Error(`no ${protocol} indexer for chain ${chainId}`);
 
   let events = 0;
   const pauseMs = Number(process.argv[4] ?? 1500); // breathing room for rate-limited RPCs

@@ -41,51 +41,74 @@ interface AssetInfo {
   numeraire:     string;
   pool:          string;
   vestingStart:  bigint;
-  vestedTotal:   bigint;
+  /** null = not probed (integrator not enabled); 0n = vesting off at launch. */
+  vestedTotal:   bigint | null;
   scheduleCount: number;
   symbol:        string;
   decimals:      number;
   block:         bigint;
 }
 
-/** Read per-asset launch + vesting header fields via one multicall page. */
+/**
+ * Two-phase per-asset read.
+ *  1. getAssetData for EVERY launch (one call each): integrator, i.e. which
+ *     launchpad made it. Cheap, and it is what the registry is for.
+ *  2. Vesting header + token meta ONLY for enabled integrators (five calls
+ *     each). Everything else is recorded with vestedTotal = null.
+ * Splitting this took a 1,568-launch Base window from 97 minutes to a few
+ * (2026-09-09); the two biggest Doppler integrators never vest anyway.
+ */
 async function readAssetInfo(
   client:   PublicClient,
   airlock:  `0x${string}`,
   created:  { asset: `0x${string}`; numeraire: `0x${string}`; pool: `0x${string}`; block: bigint }[],
 ): Promise<AssetInfo[]> {
   const out: AssetInfo[] = [];
-  const PAGE = 25; // 6 calls per asset
-  for (let s = 0; s < created.length; s += PAGE) {
-    const page = created.slice(s, s + PAGE);
-    const contracts = page.flatMap((c) => [
-      { address: airlock, abi: AIRLOCK_ABI, functionName: "getAssetData" as const, args: [c.asset] as const },
-      { address: c.asset, abi: DERC20_ABI, functionName: "vestingStart" as const },
-      { address: c.asset, abi: DERC20_ABI, functionName: "vestedTotalAmount" as const },
-      { address: c.asset, abi: DERC20_ABI, functionName: "vestingScheduleCount" as const },
-      { address: c.asset, abi: DERC20_ABI, functionName: "symbol" as const },
-      { address: c.asset, abi: DERC20_ABI, functionName: "decimals" as const },
-    ]);
+  const PAGE1 = 60;
+  for (let s = 0; s < created.length; s += PAGE1) {
+    const page = created.slice(s, s + PAGE1);
+    const contracts = page.map((c) => ({ address: airlock, abi: AIRLOCK_ABI, functionName: "getAssetData" as const, args: [c.asset] as const }));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await client.multicall({ contracts: contracts as any, allowFailure: true });
     page.forEach((c, i) => {
-      const [g, vs, vt, sc, sy, de] = res.slice(i * 6, i * 6 + 6);
+      const g = res[i];
       if (g.status !== "success") return;
       const data = g.result as readonly unknown[];
-      const integrator = String(data[9]).toLowerCase();
-      const vestedTotal = vt.status === "success" ? (vt.result as bigint) : 0n;
       out.push({
         asset:         c.asset.toLowerCase(),
-        integrator,
+        integrator:    String(data[9]).toLowerCase(),
         numeraire:     c.numeraire.toLowerCase(),
         pool:          c.pool.toLowerCase(),
-        vestingStart:  vs.status === "success" ? (vs.result as bigint) : 0n,
-        vestedTotal,
-        scheduleCount: sc.status === "success" ? Number(sc.result as bigint) : 0,
-        symbol:        sy.status === "success" ? String(sy.result) : "???",
-        decimals:      de.status === "success" ? Number(de.result) : 18,
+        vestingStart:  0n,
+        vestedTotal:   null,
+        scheduleCount: 0,
+        symbol:        "???",
+        decimals:      18,
         block:         c.block,
       });
+    });
+  }
+
+  const probe = out.filter((a) => DOPPLER_ENABLED_INTEGRATORS.has(a.integrator));
+  const PAGE2 = 25; // 5 calls per asset
+  for (let s = 0; s < probe.length; s += PAGE2) {
+    const page = probe.slice(s, s + PAGE2);
+    const contracts = page.flatMap((a) => [
+      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestingStart" as const },
+      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestedTotalAmount" as const },
+      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestingScheduleCount" as const },
+      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "symbol" as const },
+      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "decimals" as const },
+    ]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await client.multicall({ contracts: contracts as any, allowFailure: true });
+    page.forEach((a, i) => {
+      const [vs, vt, sc, sy, de] = res.slice(i * 5, i * 5 + 5);
+      a.vestingStart  = vs.status === "success" ? (vs.result as bigint) : 0n;
+      a.vestedTotal   = vt.status === "success" ? (vt.result as bigint) : 0n;
+      a.scheduleCount = sc.status === "success" ? Number(sc.result as bigint) : 0;
+      a.symbol        = sy.status === "success" ? String(sy.result) : "???";
+      a.decimals      = de.status === "success" ? Number(de.result) : 18;
     });
   }
   return out;
@@ -99,13 +122,13 @@ async function upsertAssets(chainId: SupportedChainId, infos: AssetInfo[]): Prom
           (chain_id, asset, integrator, numeraire, pool, token_symbol, token_decimals,
            vesting_start, vested_total, schedule_count, discovered_block)
         VALUES (${chainId}, ${a.asset}, ${a.integrator}, ${a.numeraire}, ${a.pool}, ${a.symbol}, ${a.decimals},
-                ${a.vestingStart.toString()}, ${a.vestedTotal.toString()}, ${a.scheduleCount}, ${a.block.toString()})
+                ${a.vestingStart.toString()}, ${a.vestedTotal == null ? null : a.vestedTotal.toString()}, ${a.scheduleCount}, ${a.block.toString()})
         ON CONFLICT (chain_id, asset) DO UPDATE
           SET integrator     = EXCLUDED.integrator,
               token_symbol   = EXCLUDED.token_symbol,
               token_decimals = EXCLUDED.token_decimals,
               vesting_start  = EXCLUDED.vesting_start,
-              vested_total   = EXCLUDED.vested_total,
+              vested_total   = COALESCE(EXCLUDED.vested_total, doppler_assets.vested_total),
               schedule_count = EXCLUDED.schedule_count
       `);
     } catch (err) {
@@ -194,7 +217,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // and scheduleCount 0. They are registry-only for now; none of the
       // enabled integrators use them (Bankr's February 2026 launches all have
       // vestedTotal == 0, verified on-chain 2026-09-08).
-      const vesting = infos.filter((a) => a.vestedTotal > 0n && a.scheduleCount > 0);
+      const vesting = infos.filter((a) => a.vestedTotal != null && a.vestedTotal > 0n && a.scheduleCount > 0);
       if (vesting.length === 0) return { eventCount: createLogs.length };
 
       // Schedules: vestingSchedules(i) for every (asset, i).

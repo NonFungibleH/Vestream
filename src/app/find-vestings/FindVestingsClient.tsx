@@ -456,6 +456,12 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
         ))}
       </div>
 
+      {/* Fees owed – Doppler fee streams this wallet can claim. Rendered LAST
+          and only when there is something waiting: it is not vesting, and the
+          one-promise framing keeps the exceptions quiet. Fetched separately so
+          a slow locker RPC never delays the vestings above. */}
+      <FeesOwedBlock address={result.address} />
+
       {/* Secondary conversion – email capture, demoted to below the cards */}
       <SaveToAppCard walletAddress={result.address} />
 
@@ -465,6 +471,84 @@ function ResultsBlock({ result }: { result: ScanResponse }) {
         anchorRef={stripRef}
       />
     </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Fees owed – Doppler fee streams (StreamableFeesLockerV2) the wallet can
+// claim. Shape mirrored from /api/fees-owed.
+// ─────────────────────────────────────────────────────────────────────────
+
+interface FeeOwedSide { address: string; symbol: string; decimals: number; claimableRaw: string; claimableUsd: number | null }
+interface FeeOwed {
+  chainId: number; poolId: string; beneficiary: string; sharePct: number;
+  sides: FeeOwedSide[]; claimableUsd: number | null; isUnlocked: boolean;
+}
+interface FeesOwedResponse { address: string; fees: FeeOwed[]; totalUsd: number | null }
+
+function fmtUsd(n: number | null): string {
+  if (n == null) return "–";
+  if (n >= 1000) return `$${Math.round(n).toLocaleString()}`;
+  return `$${n.toFixed(2)}`;
+}
+
+function FeesOwedBlock({ address }: { address: string }) {
+  const [data, setData] = useState<FeesOwedResponse | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    fetch(`/api/fees-owed?address=${address}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: FeesOwedResponse | null) => { if (!cancelled && body) setData(body); })
+      .catch(() => { /* silent: fees are a bonus, never an error state */ });
+    return () => { cancelled = true; };
+  }, [address]);
+
+  if (!data || data.fees.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl p-5 md:p-6" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: "#0F8A8A" }} />
+          <div>
+            <div className="text-base font-bold" style={{ color: "#1A1D20" }}>Fees owed</div>
+            <div className="text-xs" style={{ color: "#8B8E92" }}>
+              Trading fees from {data.fees.length} pool{data.fees.length === 1 ? "" : "s"} you hold a share of, waiting to be claimed
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#8B8E92" }}>Claimable now</div>
+          <div className="text-xl font-bold" style={{ color: "#0F8A8A", fontVariantNumeric: "tabular-nums" }}>{fmtUsd(data.totalUsd)}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {data.fees.slice(0, 6).map((f) => (
+          <div key={`${f.chainId}-${f.poolId}`} className="rounded-xl px-3 py-3"
+            style={{ background: "#f8fafc", border: "1px solid rgba(0,0,0,0.05)" }}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-semibold text-sm" style={{ color: "#1A1D20" }}>
+                {f.sides.map((s) => s.symbol).join(" / ")}
+              </span>
+              <span className="text-[11px]" style={{ color: "#B8BABD" }}>{chainBrand(f.chainId).name} · {f.sharePct}% share</span>
+            </div>
+            <div className="flex items-center justify-between text-sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <span style={{ color: "#8B8E92" }}>
+                {f.sides.map((s) => `${fmtAmount(s.claimableRaw, s.decimals)} ${s.symbol}`).join(" + ")}
+              </span>
+              <span className="font-semibold" style={{ color: "#0F8A8A" }}>{fmtUsd(f.claimableUsd)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-3 text-[11px]" style={{ color: "#8B8E92" }}>
+        Fees already collected from the pool and held for you. Claim through the launchpad you launched with, or the Doppler app. Fees still accruing inside the pool are not counted.
+      </p>
+    </div>
   );
 }
 
