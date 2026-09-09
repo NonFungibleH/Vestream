@@ -19,7 +19,13 @@
 // the public surface.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, asc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, eq, gt, notInArray, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
+
+// Token pages never show `unlisted` protocols (Doppler). undefined = no-op in and().
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 import { db } from "../db";
 import { vestingStreamsCache, smartMoneySnapshot } from "../db/schema";
 import type { VestingStream } from "./types";
@@ -129,6 +135,7 @@ async function fetchActiveStreams(chainId: number, tokenAddress: string): Promis
     .where(
       and(
         eq(vestingStreamsCache.chainId, chainId),
+        excludeUnlisted,
         sql`lower(${vestingStreamsCache.tokenAddress}) = ${lowerAddr}`,
         eq(vestingStreamsCache.isFullyVested, false),
       ),
@@ -213,6 +220,7 @@ async function fetchAllStreams(chainId: number, tokenAddress: string): Promise<R
     .where(
       and(
         eq(vestingStreamsCache.chainId, chainId),
+        excludeUnlisted,
         sql`lower(${vestingStreamsCache.tokenAddress}) = ${lowerAddr}`,
       ),
     );
@@ -542,6 +550,7 @@ export async function getTokenUpcomingEvents(
     .where(
       and(
         eq(vestingStreamsCache.chainId, chainId),
+        excludeUnlisted,
         sql`lower(${vestingStreamsCache.tokenAddress}) = ${tokenAddress.toLowerCase()}`,
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),

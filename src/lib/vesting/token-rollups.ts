@@ -15,6 +15,14 @@ import { and, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { tokenVestingRollups } from "../db/schema";
 import { withTimeout } from "../with-timeout";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
+/** Raw-SQL twin of `excludeUnlisted` for db.execute() queries. */
+function unlistedProtocolSql(prefix = "") {
+  return UNLISTED_ADAPTER_IDS.length > 0
+    ? sql`AND ${sql.raw(prefix)}protocol NOT IN (${sql.join(UNLISTED_ADAPTER_IDS.map((p) => sql`${p}`), sql`, `)})`
+    : sql``;
+}
+
 
 export interface TokenRollup {
   totalLocked:    bigint;
@@ -58,6 +66,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
       FROM vesting_streams_cache
       WHERE is_fully_vested = false
         AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${unlistedProtocolSql()}
       GROUP BY chain_id, lower(token_address), lower(recipient)
     ) s
     GROUP BY chain_id, tok
@@ -97,6 +106,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     FROM vesting_streams_cache
     WHERE is_fully_vested = false
       AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${unlistedProtocolSql()}
     GROUP BY chain_id, lower(token_address)
   `);
 
@@ -221,6 +231,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
                min((stream_data->>'startTime')::numeric) AS fs, max(end_time)::numeric AS le
         FROM vesting_streams_cache
         WHERE is_fully_vested = false AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${unlistedProtocolSql()}
         GROUP BY 1, 2
       ),
       curve AS (
@@ -231,7 +242,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
                  ELSE GREATEST(0, LEAST(1, ((s.fs + (s.le - s.fs) * p.k / 11.0) - (v.stream_data->>'startTime')::numeric) / NULLIF(v.end_time - (v.stream_data->>'startTime')::numeric, 0))) END
           ) / NULLIF(SUM((v.stream_data->>'totalAmount')::numeric), 0)) AS frac
         FROM spans s
-        JOIN vesting_streams_cache v ON v.chain_id = s.chain_id AND lower(v.token_address) = s.tok AND v.is_fully_vested = false
+        JOIN vesting_streams_cache v ON v.chain_id = s.chain_id AND lower(v.token_address) = s.tok AND v.is_fully_vested = false ${unlistedProtocolSql("v.")}
         CROSS JOIN generate_series(0, 11) AS p(k)
         GROUP BY s.chain_id, s.tok, p.k, s.fs, s.le
       ),

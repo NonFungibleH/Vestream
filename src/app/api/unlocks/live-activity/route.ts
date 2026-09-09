@@ -19,7 +19,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from "next/server";
-import { desc, sql } from "drizzle-orm";
+import { and, desc, notInArray, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
+
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 import { db } from "@/lib/db";
 import { vestingStreamsCache } from "@/lib/db/schema";
 
@@ -74,6 +79,7 @@ export async function GET() {
         lastIndexed:   sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
       })
       .from(vestingStreamsCache)
+      .where(excludeUnlisted)
       .groupBy(vestingStreamsCache.protocol);
 
     const aggregate: LiveActivityAggregate[] = aggregateRows.map((r) => ({
@@ -97,6 +103,7 @@ export async function GET() {
         lastRefreshedAt: vestingStreamsCache.lastRefreshedAt,
       })
       .from(vestingStreamsCache)
+      .where(excludeUnlisted)
       .orderBy(desc(vestingStreamsCache.lastRefreshedAt))
       .limit(12);
 
@@ -134,7 +141,7 @@ export async function GET() {
     const [{ newInLastHour = 0 } = { newInLastHour: 0 }] = await db
       .select({ newInLastHour: sql<number>`count(*)::int` })
       .from(vestingStreamsCache)
-      .where(sql`${vestingStreamsCache.firstSeenAt} > ${hourAgoIso}`);
+      .where(and(sql`${vestingStreamsCache.firstSeenAt} > ${hourAgoIso}`, excludeUnlisted));
 
     return NextResponse.json(
       {

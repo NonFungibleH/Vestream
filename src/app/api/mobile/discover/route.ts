@@ -25,7 +25,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, notInArray, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
+
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 import { extractBearerToken, validateMobileToken } from "@/lib/mobile-auth";
 import { db } from "@/lib/db";
 import { vestingStreamsCache, protocolSummaries } from "@/lib/db/schema";
@@ -188,7 +193,7 @@ const loadCachedDiscoverStats = unstable_cache(
       db
         .select({ count: sql<number>`count(*)::int`.as("count") })
         .from(vestingStreamsCache)
-        .where(gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`)),
+        .where(and(gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`), excludeUnlisted)),
 
       // Protocol summaries — pre-aggregated rollup table (≤10 rows).
       // SUM activeStreams + tokensTracked across rows. UNCX-VM rolls into

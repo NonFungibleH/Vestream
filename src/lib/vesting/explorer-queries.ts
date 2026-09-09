@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, count, desc, eq, gt, ilike, inArray, lte, notInArray, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 import { normaliseAddress } from "../address-validation";
@@ -28,6 +29,12 @@ export const CONTINUOUS_PROTOCOL_IDS: string[] = Object.entries(PROTOCOL_DEFAULT
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
+// `unlisted` protocols (Doppler) stay in the cache for wallet scans + alerts
+// but never reach a public aggregate. undefined when nothing is unlisted so
+// and() simply drops it (notInArray rejects an empty list).
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 
 function isDbUnreachable(): boolean {
   const dbUrl = process.env.DATABASE_URL;
@@ -92,7 +99,7 @@ export async function getStreamsPage(
   if (isDbUnreachable()) return { rows: [], total: 0 };
 
   const status = filter.status ?? "active";
-  const wheres = [excludeTestnets];
+  const wheres = [excludeTestnets, excludeUnlisted];
   if (status === "active") {
     wheres.push(eq(vestingStreamsCache.isFullyVested, false));
     wheres.push(gt(vestingStreamsCache.endTime, Math.floor(Date.now() / 1000) + 60));
@@ -207,7 +214,7 @@ export async function getStreamingStreams(
     : CONTINUOUS_PROTOCOL_IDS;
   if (ids.length === 0) return { rows: [], total: 0 };
 
-  const wheres = [excludeTestnets, inArray(vestingStreamsCache.protocol, ids)];
+  const wheres = [excludeTestnets, excludeUnlisted, inArray(vestingStreamsCache.protocol, ids)];
   if (filter.chainIds && filter.chainIds.length > 0) {
     wheres.push(inArray(vestingStreamsCache.chainId, [...filter.chainIds]));
   }
@@ -260,7 +267,7 @@ export async function getStreamsForExplorer(filter: StreamsFilter = {}): Promise
   const limit = filter.limit ?? 200;
   const status = filter.status ?? "active";
 
-  const wheres = [excludeTestnets];
+  const wheres = [excludeTestnets, excludeUnlisted];
   if (status === "active") {
     wheres.push(eq(vestingStreamsCache.isFullyVested, false));
     wheres.push(gt(vestingStreamsCache.endTime, Math.floor(Date.now() / 1000) + 60));
@@ -341,7 +348,7 @@ export async function getStreamsByRecipient(
 
   const wheres = [
     eq(vestingStreamsCache.recipient, normalised),
-    excludeTestnets,
+    excludeTestnets, excludeUnlisted,
   ];
   const status = filter.status ?? "any";
   if (status === "active") {

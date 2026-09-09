@@ -1026,6 +1026,18 @@ export function publicProtocolOptions(): { id: string; label: string }[] {
 }
 
 /**
+ * Adapter ids of `unlisted` protocols. Every PUBLIC aggregate query over
+ * vesting_streams_cache (unlocks windows, token rollups, upcoming feeds,
+ * explorer, live activity, discover) must exclude these, the same way they
+ * exclude testnet chains. Their rows stay in the cache for wallet scans and
+ * alerts. Doppler alone is 27k+ streams on Robinhood; without this filter it
+ * would be the biggest thing on /unlocks within weeks.
+ */
+export const UNLISTED_ADAPTER_IDS: readonly string[] = Object.values(PROTOCOLS)
+  .filter((m) => m.unlisted)
+  .flatMap((m) => m.adapterIds);
+
+/**
  * Adapter-id-level enabled check. Used by the seeder + TVL snapshot cron to
  * skip outbound calls for paused protocols. Note this checks the PROTOCOL
  * meta (keyed by slug) – the merged `uncx` entry covers both `uncx` and

@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, desc, eq, gt, gte, inArray, lt, lte, notInArray, or, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
 import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
@@ -27,6 +28,12 @@ import { normaliseAddress } from "../address-validation";
 // + REST API still see every chain so devs / power users can opt in.
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
+// `unlisted` protocols (Doppler) stay in the cache for wallet scans + alerts
+// but never reach a public aggregate. undefined when nothing is unlisted so
+// and() simply drops it (notInArray rejects an empty list).
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 
 export interface ProtocolStats {
   /** Total streams of this protocol currently indexed, active + fully vested. */
@@ -438,7 +445,7 @@ async function computeProtocolStatsFromCache(
       lastIndexed: sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
     .from(vestingStreamsCache)
-    .where(and(filter, excludeTestnets));
+    .where(and(filter, excludeTestnets, excludeUnlisted));
 
   const [statsRow] = await Promise.race([
     queryPromise,
@@ -495,7 +502,7 @@ async function computeProtocolStatsFromCache(
  *
  * Testnets (Sepolia, Base Sepolia) are excluded so the public per-protocol
  * page totals match the /status page totals — both now apply the same
- * `excludeTestnets` filter. Previously /protocols included Sepolia
+ * `excludeTestnets, excludeUnlisted` filter. Previously /protocols included Sepolia
  * streams (Sablier had ~6.6K Sepolia rows inflating its total).
  *
  * Numeric-cast safety: stringified bigints in jsonb are bounded by the
@@ -566,7 +573,7 @@ export async function refreshProtocolSummaries(): Promise<{ rows: number }> {
       lastIndexed:     sql<Date | string | null>`max(${vestingStreamsCache.lastRefreshedAt})`,
     })
     .from(vestingStreamsCache)
-    .where(excludeTestnets)
+    .where(and(excludeTestnets, excludeUnlisted))
     .groupBy(vestingStreamsCache.protocol);
 
   if (aggregates.length === 0) return { rows: 0 };
@@ -656,7 +663,7 @@ export async function getLatestUnlock(
       adapterFilter(adapterIds),
       eq(vestingStreamsCache.isFullyVested, true),
       lte(vestingStreamsCache.endTime, nowSec),
-      excludeTestnets,
+      excludeTestnets, excludeUnlisted,
     ))
     .orderBy(desc(vestingStreamsCache.endTime))
     .limit(1);
@@ -692,7 +699,7 @@ export async function getNextUpcomingUnlock(
         adapterFilter(adapterIds),
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
-        excludeTestnets,
+        excludeTestnets, excludeUnlisted,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
@@ -841,7 +848,7 @@ async function getUpcomingUnlockGroupsAcrossUncached(
       and(
         eq(vestingStreamsCache.isFullyVested, false),
         gt(vestingStreamsCache.endTime, nowSec),
-        excludeTestnets,
+        excludeTestnets, excludeUnlisted,
       ),
     )
     .orderBy(asc(vestingStreamsCache.endTime))
@@ -1011,7 +1018,7 @@ export async function getUpcomingUnlocksForProtocol(
     adapterFilter(adapterIds),
     eq(vestingStreamsCache.isFullyVested, false),
     gt(vestingStreamsCache.endTime, cutoffSec),
-    excludeTestnets,
+    excludeTestnets, excludeUnlisted,
   );
 
   // Phase 1 — the earliest `limit` distinct groups.
@@ -1202,7 +1209,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           eq(vestingStreamsCache.isFullyVested, false),
-          excludeTestnets,
+          excludeTestnets, excludeUnlisted,
         ),
       )
       // Sort BY ::numeric on the stringified bigint inside streamData so
@@ -1225,7 +1232,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           eq(vestingStreamsCache.isFullyVested, false),
-          excludeTestnets,
+          excludeTestnets, excludeUnlisted,
         ),
       )
       .groupBy(
@@ -1246,7 +1253,7 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           gt(vestingStreamsCache.firstSeenAt, sql`now() - interval '24 hours'`),
-          excludeTestnets,
+          excludeTestnets, excludeUnlisted,
         ),
       ),
   ]);

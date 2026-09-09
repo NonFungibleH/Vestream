@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, eq, gt, ilike, inArray, lte, notInArray, sql } from "drizzle-orm";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
 import { db } from "../db";
 import { vestingStreamsCache } from "../db/schema";
 // Ecosystem-aware: lowercases EVM hex, preserves case-SENSITIVE Solana
@@ -100,6 +101,20 @@ export interface WindowUnlockGroup {
 
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
+// `unlisted` protocols (Doppler) stay in the cache for wallet scans + alerts
+// but never reach a public aggregate. undefined when nothing is unlisted so
+// and() simply drops it (notInArray rejects an empty list).
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
+
+/** Raw-SQL twin of `excludeUnlisted` for db.execute() queries. */
+function unlistedProtocolSql(prefix = "") {
+  return UNLISTED_ADAPTER_IDS.length > 0
+    ? sql`AND ${sql.raw(prefix)}protocol NOT IN (${sql.join(UNLISTED_ADAPTER_IDS.map((p) => sql`${p}`), sql`, `)})`
+    : sql``;
+}
+
 
 // ── Window definitions ──────────────────────────────────────────────────────
 
@@ -372,6 +387,7 @@ export async function getWindowCountsFast(
         AND end_time >  ${startSec}
         AND end_time <= ${endSec}
         AND chain_id NOT IN (11155111, 84532)
+        ${unlistedProtocolSql()}
       GROUP BY protocol, chain_id, token_address, hb
     ) g
   `);
@@ -465,7 +481,7 @@ export async function getUnlocksInWindow(
 
   const sharedWhere = [
     eq(vestingStreamsCache.isFullyVested, false),
-    excludeTestnets,
+    excludeTestnets, excludeUnlisted,
     ...(protocolFilter ? [protocolFilter] : []),
     ...(chainFilter ? [chainFilter] : []),
     ...(symbolFilter ? [symbolFilter] : []),
