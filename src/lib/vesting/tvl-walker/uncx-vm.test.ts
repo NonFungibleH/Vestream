@@ -33,6 +33,11 @@ vi.mock("viem", async (importOriginal) => {
   };
 });
 
+// The walker unions cached vesting ids with the log scan. These tests assert
+// the LOG path and the locked-amount maths, so the cache read is stubbed to
+// empty rather than reaching for a database that does not exist here.
+vi.mock("@/lib/db", () => ({ db: { execute: vi.fn(async () => ({ rows: [] })) } }));
+
 import { walkUncxVm } from "./uncx-vm";
 
 describe("walkUncxVm", () => {

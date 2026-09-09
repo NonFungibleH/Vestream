@@ -23,6 +23,7 @@ import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
+import { withTimeout } from "@/lib/with-timeout";
 
 // ─── Per-chain config ──────────────────────────────────────────────────────────
 
@@ -198,11 +199,20 @@ async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
  */
 async function readCachedVestingIds(chainId: SupportedChainId): Promise<bigint[]> {
   try {
-    const r = await db.execute(sql`
-      SELECT split_part(stream_id, '-', 4) AS vid
-        FROM vesting_streams_cache
-       WHERE protocol = 'uncx-vm' AND chain_id = ${chainId}
-    `);
+    // Bounded: this walker runs inside a cron with a hard ceiling, and the
+    // log scan below is a complete (if narrower) fallback, so a slow or
+    // unreachable DB degrades the result rather than hanging the snapshot.
+    const r = await withTimeout(
+      db.execute(sql`
+        SELECT split_part(stream_id, '-', 4) AS vid
+          FROM vesting_streams_cache
+         WHERE protocol = 'uncx-vm' AND chain_id = ${chainId}
+      `),
+      10_000,
+      null,
+      `uncx-vm:cached-ids:${chainId}`,
+    );
+    if (r == null) return [];
     const rows = (r as unknown as { rows?: { vid: string }[] }).rows ?? (r as unknown as { vid: string }[]);
     const out: bigint[] = [];
     for (const row of rows) {
