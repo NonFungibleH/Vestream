@@ -43,6 +43,8 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   [CHAIN_IDS.BSC]:          [],
   [CHAIN_IDS.POLYGON]:      [],
   [CHAIN_IDS.BASE]:         [],
+  [CHAIN_IDS.ARC]:          [],
+  [CHAIN_IDS.ARC_TESTNET]:  [],
   [CHAIN_IDS.SEPOLIA]:      [],
   [CHAIN_IDS.BASE_SEPOLIA]: [],
   // PinkSale: NOT deployed on Arbitrum. Confirmed 2026-05-02 by probing

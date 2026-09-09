@@ -205,7 +205,12 @@ export default async function TokenSymbolPage({ params }: PageParams) {
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold"
                     style={{ background: "linear-gradient(135deg, #1CB8B8, #0F8A8A)" }}
                   >
-                    {(m.symbol || "?").slice(0, 2).toUpperCase()}
+                    {/* String(): a token symbol is not guaranteed to arrive as
+                        one. A purely numeric symbol reaches here as a number
+                        and `.slice` then throws, which failed the whole
+                        production build on /tokens/waku rather than degrading
+                        this one avatar. */}
+                    {String(m.symbol ?? "").slice(0, 2).toUpperCase() || "?"}
                   </div>
                   <div>
                     <p className="text-base font-bold" style={{ color: "#1A1D20" }}>{m.symbol}</p>

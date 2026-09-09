@@ -59,6 +59,30 @@ const robinhood = defineChain({
   // so client.multicall() works for batched reads.
   contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
 });
+// Arc — Circle's EVM L1. Not in viem/chains, so define it locally.
+//
+// The native gas asset is USDC with SIX decimals, not an 18-decimal ETH-like
+// token. Every other chain in this file is 18; anything that formats a native
+// balance or a gas figure for Arc must read decimals from the chain rather
+// than assume 1e18. (Claim ingestion currently writes gasNative as null, so
+// today the blast radius is small — but it will not stay that way.)
+const arc = defineChain({
+  id: 5042,
+  name: "Arc",
+  nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
+  rpcUrls: { default: { http: ["https://rpc.arc.network"] } },
+  blockExplorers: { default: { name: "Arcscan", url: "https://arcscan.io" } },
+});
+
+const arcTestnet = defineChain({
+  id: 5042002,
+  name: "Arc Testnet",
+  nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
+  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
+  blockExplorers: { default: { name: "Arcscan Testnet", url: "https://testnet.arcscan.io" } },
+  testnet: true,
+});
+
 import { CHAIN_IDS, type SupportedChainId } from "./types";
 
 interface Provider {
@@ -255,6 +279,17 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ROBINHOOD]: buildPool(process.env.ROBINHOOD_RPC_URL, [
     { url: "https://rpc.mainnet.chain.robinhood.com" },
   ]),
+  // Arc mainnet opens 2026-09-16; the canonical RPC host is published at
+  // launch, so ARC_RPC_URL is the override that will carry it. The default
+  // below is the documented pattern and may 404 until then — the pool simply
+  // has nothing to fall through to, which is the honest state.
+  [CHAIN_IDS.ARC]: buildPool(process.env.ARC_RPC_URL, [
+    { url: "https://rpc.arc.network" },
+  ]),
+  // Testnet: verified live 2026-09-09 (chainId 5042002, head 61.2M).
+  [CHAIN_IDS.ARC_TESTNET]: buildPool(process.env.ARC_TESTNET_RPC_URL, [
+    { url: "https://rpc.testnet.arc.network" },
+  ]),
   [CHAIN_IDS.SEPOLIA]: buildPool(process.env.SEPOLIA_RPC_URL, [
     { url: "https://ethereum-sepolia-rpc.publicnode.com" },
     { url: "https://1rpc.io/sepolia" },
@@ -438,6 +473,8 @@ export function getRpcPoolSize(chainId: SupportedChainId, opts: { forLogs?: bool
 // during the daily cron.
 
 const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
+  [CHAIN_IDS.ARC]:         arc,
+  [CHAIN_IDS.ARC_TESTNET]: arcTestnet,
   [CHAIN_IDS.ETHEREUM]:     mainnet,
   [CHAIN_IDS.BSC]:          bsc,
   [CHAIN_IDS.POLYGON]:      polygon,

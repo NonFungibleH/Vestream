@@ -17,11 +17,19 @@ import { and, count, eq, notInArray, sql, sum } from "drizzle-orm";
 import { db } from "../db";
 import { vestingStreamsCache, tokenVestingRollups } from "../db/schema";
 import { normaliseAddress } from "../address-validation";
+import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
 
 // Same testnet exclusion convention as protocol-stats.ts — public surfaces
 // hide Sepolia / Base Sepolia.
 const PUBLIC_HIDDEN_CHAIN_IDS = [11155111, 84532] as const;
 const excludeTestnets = notInArray(vestingStreamsCache.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]);
+// /tokens/<symbol> is a public, statically-generated surface, so `unlisted`
+// protocols must be excluded here too. Missing this let Bankr launches into
+// the symbol pages, including tokens whose symbol is a bare number ("1",
+// "420", "4663"), which crashed the production build on /tokens/waku.
+const excludeUnlisted = UNLISTED_ADAPTER_IDS.length > 0
+  ? notInArray(vestingStreamsCache.protocol, [...UNLISTED_ADAPTER_IDS])
+  : undefined;
 
 // Build-time DB unreachable: missing DATABASE_URL OR localhost pointer
 // (CI sets a dummy `postgres://ci:ci@localhost:5432/ci` URL).
@@ -68,6 +76,7 @@ export async function getTokensBySymbol(symbol: string): Promise<SymbolMatch[]> 
         // ILIKE-equivalent in postgres via lower() comparison.
         sql`lower(${vestingStreamsCache.tokenSymbol}) = ${trimmed.toLowerCase()}`,
         excludeTestnets,
+        excludeUnlisted,
       ),
     )
     .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress, vestingStreamsCache.tokenSymbol)
@@ -223,6 +232,7 @@ export async function getChainSummariesForSymbol(symbol: string): Promise<ChainS
         sql`lower(${vestingStreamsCache.tokenSymbol}) = ${trimmed.toLowerCase()}`,
         eq(vestingStreamsCache.isFullyVested, false),
         excludeTestnets,
+        excludeUnlisted,
       ),
     )
     .groupBy(vestingStreamsCache.chainId, vestingStreamsCache.tokenAddress, vestingStreamsCache.tokenSymbol);

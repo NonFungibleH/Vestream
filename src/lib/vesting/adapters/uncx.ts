@@ -30,6 +30,10 @@ const UNCX_CLAIM_CONTRACTS: Partial<Record<SupportedChainId, string>> = {
 // ─── Subgraph URLs ─────────────────────────────────────────────────────────────
 // Each chain falls back to building the URL from GRAPH_API_KEY + bare subgraph ID.
 const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
+  // UNCX is not deployed on Arc. Both entries exist only because this map
+  // is exhaustive over SupportedChainId; undefined means "no subgraph".
+  [CHAIN_IDS.ARC]:          undefined,
+  [CHAIN_IDS.ARC_TESTNET]:  undefined,
   // Ethereum mainnet — UNCX TokenVesting V3
   [CHAIN_IDS.ETHEREUM]:     resolveSubgraphUrl(
                               process.env.UNCX_SUBGRAPH_URL_ETH,

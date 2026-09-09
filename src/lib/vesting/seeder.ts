@@ -1075,6 +1075,8 @@ const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.OPTIMISM]:              0n, // UNCX-VM not yet wired for Optimism
   [CHAIN_IDS.AVALANCHE]:             0n, // UNCX-VM not on Avalanche
   [CHAIN_IDS.ROBINHOOD]:             0n, // UNCX-VM not on Robinhood Chain
+  [CHAIN_IDS.ARC]:                   0n, // UNCX-VM not on Arc
+  [CHAIN_IDS.ARC_TESTNET]:           0n,
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
   [CHAIN_IDS.SEPOLIA]:               0n,
   [CHAIN_IDS.BASE_SEPOLIA]:          0n,

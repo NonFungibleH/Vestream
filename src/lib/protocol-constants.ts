@@ -836,6 +836,10 @@ const CHAIN_BASE: Record<number, { color: string; name: string }> = {
   10:       { color: "#FF0420", name: "Optimism" },
   43114:    { color: "#E84142", name: "Avalanche" },
   4663:     { color: "#5B8C00", name: "Robinhood Chain" },
+  // Arc — Circle's L1. Provisional colour until their brand kit is published;
+  // deliberately distinct from Base's #0052FF so the two do not read alike.
+  5042:     { color: "#1F7A6B", name: "Arc" },
+  5042002:  { color: "#9AA0A6", name: "Arc Testnet" },
   101:      { color: "#9945FF", name: "Solana" },
   11155111: { color: "#B8BABD", name: "Sepolia" },
   84532:    { color: "#9AA0A6", name: "Base Sepolia" },

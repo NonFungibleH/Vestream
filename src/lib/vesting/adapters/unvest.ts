@@ -5,6 +5,10 @@ import { resolveSubgraphUrl } from "../graph";
 // ─── Subgraph URLs ─────────────────────────────────────────────────────────────
 // Subgraph IDs are hardcoded as fallbacks; GRAPH_API_KEY is inserted at runtime.
 const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
+  // Unvest is not deployed on Arc. Both entries exist only because this map
+  // is exhaustive over SupportedChainId; undefined means "no subgraph".
+  [CHAIN_IDS.ARC]:          undefined,
+  [CHAIN_IDS.ARC_TESTNET]:  undefined,
   [CHAIN_IDS.ETHEREUM]:     resolveSubgraphUrl(
                               process.env.UNVEST_SUBGRAPH_URL_ETH,
                               "HR7owbk45vXNgf8XXyDd7fRLuVo6QGYY6XbGjRCPgUuD"

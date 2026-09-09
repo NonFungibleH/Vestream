@@ -43,6 +43,14 @@ export const CHAIN_IDS = {
   OPTIMISM:     10,        // OP Mainnet — major L2 (OP token vesting + ecosystem)
   AVALANCHE:    43114,     // Avalanche C-Chain — vesting TVL across Sablier/Hedgey/Team Finance/LlamaPay
   ROBINHOOD:    4663,      // Robinhood Chain — EVM L2 (Arbitrum Orbit/Nitro), gas ETH; HoodLock locker
+  // Arc — Circle's EVM L1 with USDC as the NATIVE gas asset (6 decimals, not
+  // 18 like every other chain here). Mainnet opens 2026-09-16. Testnet is
+  // listed so we can prove the pipeline against Superfluid's live testnet
+  // deployment first; it is in TESTNET_CHAIN_IDS so it never reaches a public
+  // surface. Arc has no /chains/<slug> entry yet — the page at /chains/arc is
+  // still the UPCOMING_CHAINS one until there is real data to show.
+  ARC:          5042,
+  ARC_TESTNET:  5042002,
   SEPOLIA:      11155111,  // Ethereum Sepolia testnet
   BASE_SEPOLIA: 84532,     // Base Sepolia testnet
   SOLANA:       101,       // Solana mainnet-beta (non-EVM)
@@ -59,6 +67,8 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.OPTIMISM]:     "Optimism",
   [CHAIN_IDS.AVALANCHE]:    "Avalanche",
   [CHAIN_IDS.ROBINHOOD]:    "Robinhood Chain",
+  [CHAIN_IDS.ARC]:          "Arc",
+  [CHAIN_IDS.ARC_TESTNET]:  "Arc Testnet",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",
   [CHAIN_IDS.BASE_SEPOLIA]: "Base Sepolia",
   [CHAIN_IDS.SOLANA]:       "Solana",
@@ -67,6 +77,10 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
 export const TESTNET_CHAIN_IDS: SupportedChainId[] = [
   CHAIN_IDS.SEPOLIA,
   CHAIN_IDS.BASE_SEPOLIA,
+  // Arc testnet is indexed while we prove the pipeline ahead of Arc mainnet
+  // (2026-09-16). Listing it here is what keeps it out of every public
+  // aggregate, the same way Sepolia is excluded.
+  CHAIN_IDS.ARC_TESTNET,
 ];
 
 // Explicit EVM / non-EVM partitioning — used by address validators,
@@ -77,6 +91,8 @@ export const NON_EVM_CHAIN_IDS: SupportedChainId[] = [
 ];
 
 export const EVM_CHAIN_IDS: SupportedChainId[] = [
+  CHAIN_IDS.ARC,
+  CHAIN_IDS.ARC_TESTNET,
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
   CHAIN_IDS.POLYGON,

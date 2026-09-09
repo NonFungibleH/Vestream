@@ -23,6 +23,14 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string>> = {
   [CHAIN_IDS.BASE]:     "https://subgraph-endpoints.superfluid.dev/base-mainnet/vesting-scheduler",
   [CHAIN_IDS.ARBITRUM]: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/vesting-scheduler",
   [CHAIN_IDS.OPTIMISM]: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/vesting-scheduler",
+  // Arc: Superfluid deployed SuperTokens, streams and distributions on Arc
+  // public testnet (2026-09), but that is the CORE protocol — this adapter
+  // reads the VestingScheduler subgraph, which is a separate deployment.
+  // Verified 2026-09-09: arc / arc-testnet / arc-mainnet all 403 on
+  // subgraph-endpoints.superfluid.dev while base-mainnet answers, so there is
+  // nothing to query yet. Uncomment the moment they publish it; if they never
+  // do, the fallback is an RPC indexer against the scheduler contract.
+  // [CHAIN_IDS.ARC]: "https://subgraph-endpoints.superfluid.dev/arc-mainnet/vesting-scheduler",
 };
 
 // ─── viem clients for ERC-20 metadata ─────────────────────────────────────────
