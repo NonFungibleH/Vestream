@@ -6,14 +6,23 @@
 // per schedule (sum of future-tranche amounts clamped to total-released;
 // cancelled → 0), and multicall symbol()/decimals() on the distinct tokens.
 // Polygon is not deployed → returns empty result cleanly.
-// MAX_LOG_WINDOW caps the scan so early-protocol RPC misconfig can't cause
-// an hours-long walk.
+// MAX_LOG_WINDOW caps the LOG scan so an RPC misconfig can't cause an
+// hours-long walk. That clamp alone silently zeroed this walker: the window
+// only covers recent blocks, VestingManager schedules are mostly older, so
+// every chain found zero ids and reported $0 TVL with no error while 5,023
+// schedules sat in the cache (found 2026-09-09). Discovery is therefore
+// cache-first now — the event indexer already owns full history behind a
+// persistent cursor — and the bounded log scan is kept only to catch
+// schedules created since the indexer's last tick. The two sets are unioned,
+// so neither source alone can zero the result.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createPublicClient, http, type Hex } from "viem";
 import { mainnet, bsc, base } from "viem/chains";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
+import { db } from "@/lib/db";
+import { sql } from "drizzle-orm";
 
 // ─── Per-chain config ──────────────────────────────────────────────────────────
 
@@ -182,6 +191,30 @@ async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
 
 // ─── Walker ────────────────────────────────────────────────────────────────────
 
+/**
+ * Vesting ids already indexed for this chain, from vesting_streams_cache.
+ * Stream ids are `uncx-vm-{chainId}-{vestingId}`. Returns an empty set on any
+ * DB error so the walker degrades to the log scan rather than failing.
+ */
+async function readCachedVestingIds(chainId: SupportedChainId): Promise<bigint[]> {
+  try {
+    const r = await db.execute(sql`
+      SELECT split_part(stream_id, '-', 4) AS vid
+        FROM vesting_streams_cache
+       WHERE protocol = 'uncx-vm' AND chain_id = ${chainId}
+    `);
+    const rows = (r as unknown as { rows?: { vid: string }[] }).rows ?? (r as unknown as { vid: string }[]);
+    const out: bigint[] = [];
+    for (const row of rows) {
+      if (row.vid && /^\d+$/.test(row.vid)) out.push(BigInt(row.vid));
+    }
+    return out;
+  } catch (err) {
+    console.error(`[uncx-vm/${chainId}] cached-id read failed:`, err);
+    return [];
+  }
+}
+
 function empty(chainId: SupportedChainId, started: number, error: string | null = null): WalkerResult {
   return { protocol: "uncx-vm", chainId, tokens: [], streamCount: 0, error, elapsedMs: Date.now() - started };
 }
@@ -255,6 +288,10 @@ export async function walkUncxVm(chainId: SupportedChainId): Promise<WalkerResul
       }
     }
   }
+
+  // Union the bounded log scan with everything the event indexer has already
+  // recorded, so a clamped window (or a stalled chain) cannot zero the walk.
+  for (const id of await readCachedVestingIds(chainId)) vestingIds.add(id);
 
   const ids = Array.from(vestingIds);
   if (ids.length === 0) {

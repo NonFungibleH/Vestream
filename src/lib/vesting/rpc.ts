@@ -142,6 +142,14 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   ]),
   [CHAIN_IDS.BSC]: buildPool(process.env.BSC_RPC_URL, [
     { url: "https://bsc.drpc.org" },
+    // 2026-09-09: added as the log-capable ARCHIVE endpoint for BSC. The
+    // uncx-vm indexer had been failing here every day since 2026-06-18 with
+    // "Invalid parameters" (a block-range cap) and its cursor sat 19.7M blocks
+    // behind. Probed twelve BSC endpoints: the dataseeds return "limit
+    // exceeded", blockrazor caps at 25 blocks, 0.48.club has no archive
+    // state ("header not found"), publicnode 403s on old ranges. This one
+    // served a 5,000-block getLogs at block 101.2M cleanly.
+    { url: "https://bsc.rpc.blxrbdn.com" },
     // Binance's official public RPCs — historically unrestricted.
     { url: "https://bsc-dataseed.binance.org" },
     { url: "https://bsc-dataseed1.defibit.io" },
