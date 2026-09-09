@@ -69,8 +69,12 @@
       "schedule": "15 4 * * *"
     },
     {
-      "path": "/api/cron/refresh-rollups",
+      "path": "/api/cron/refresh-rollups?scope=summaries",
       "schedule": "40 */12 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-rollups?scope=tokens",
+      "schedule": "50 */12 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=1",

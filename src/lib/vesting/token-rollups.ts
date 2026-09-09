@@ -227,11 +227,23 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
   try {
     await db.execute(sql`
       WITH spans AS (
-        SELECT chain_id, lower(token_address) AS tok,
-               min((stream_data->>'startTime')::numeric) AS fs, max(end_time)::numeric AS le
-        FROM vesting_streams_cache
-        WHERE is_fully_vested = false AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
-        ${unlistedProtocolSql()}
+        SELECT v.chain_id, lower(v.token_address) AS tok,
+               min((v.stream_data->>'startTime')::numeric) AS fs, max(v.end_time)::numeric AS le
+        FROM vesting_streams_cache v
+        -- Scoped to tokens that can actually show a sparkline. The curve is
+        -- explorer chrome, but it was being computed for all ~9,000 tokens:
+        -- this CTE joins a 277k-row table back to itself, CROSS JOINs 12
+        -- points and parses JSONB throughout, so it crossed the Postgres
+        -- statement timeout once the cache grew (2026-09-09) and silently
+        -- killed the whole rollup refresh — which is what feeds token pages
+        -- AND the sitemap. Restricting to priced tokens cuts the input by
+        -- roughly 85% and costs nothing: an unpriced token has no row in the
+        -- explorer for a sparkline to sit in.
+        JOIN token_vesting_rollups r
+          ON r.chain_id = v.chain_id AND lower(r.token_address) = lower(v.token_address)
+         AND r.locked_value_usd > 0
+        WHERE v.is_fully_vested = false AND v.chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${unlistedProtocolSql("v.")}
         GROUP BY 1, 2
       ),
       curve AS (

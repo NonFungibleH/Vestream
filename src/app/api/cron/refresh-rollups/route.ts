@@ -81,15 +81,34 @@ function flushTags(tags: string[]): void {
 // flushing their page caches immediately — means a slow/timing-out token rollup
 // can never starve the protocol-hero + /status stats again (the bug that left
 // the Team Finance hero frozen at 504 after a reseed).
-async function runAll(): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
+/**
+ * `?scope=` splits this job so each half gets its own function budget.
+ *
+ * It used to do everything in one request. refreshTokenRollups alone measured
+ * 267s against the 300s ceiling once the cache passed 277k rows, so the token
+ * half started losing the race while the cheap summaries half kept succeeding
+ * — leaving token_vesting_rollups 28h stale while the cron looked healthy.
+ * Those rollups feed the token pages AND the sitemap, so the SEO work was
+ * reading day-old data.
+ *
+ *   scope=summaries → protocol summaries + status matrix (seconds)
+ *   scope=tokens    → token rollups + sitemap cache + IndexNow (minutes)
+ *   scope=all       → both; the previous behaviour, kept for manual runs
+ */
+type Scope = "all" | "summaries" | "tokens";
+
+async function runAll(scope: Scope = "all"): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
   const out = { tokens: null as number | null, protocol: null as number | null, status: null as number | null };
 
-  // Cheap summaries first — they power the protocol hero + /status.
-  try { out.protocol = (await refreshProtocolSummaries()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshProtocolSummaries failed:", e); }
-  try { out.status   = (await refreshStatusSummary()).rows;     } catch (e) { console.error("[cron/refresh-rollups] refreshStatusSummary failed:", e); }
-  // Flush the summary-backed caches now, so even if the heavy token rollup
-  // below stalls, the hero/index/status pages already reflect fresh numbers.
-  flushTags(["protocol-page", "protocols-page", "status-page"]);
+  if (scope === "all" || scope === "summaries") {
+    // Cheap summaries first — they power the protocol hero + /status.
+    try { out.protocol = (await refreshProtocolSummaries()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshProtocolSummaries failed:", e); }
+    try { out.status   = (await refreshStatusSummary()).rows;     } catch (e) { console.error("[cron/refresh-rollups] refreshStatusSummary failed:", e); }
+    // Flush the summary-backed caches now, so even if the heavy token rollup
+    // below stalls, the hero/index/status pages already reflect fresh numbers.
+    flushTags(["protocol-page", "protocols-page", "status-page"]);
+    if (scope === "summaries") return out;
+  }
 
   // Heavy token rollup last — the Explorer's per-token aggregates.
   try { out.tokens = (await refreshTokenRollups()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
@@ -145,17 +164,20 @@ async function handle(req: NextRequest) {
   // the Cloudflare-fronted vestream.io domain (which would 524 at 100s on the
   // synchronous path). The scheduled Vercel cron hits the function directly and
   // uses the default synchronous path, which reliably runs to completion.
+  const scopeParam = req.nextUrl.searchParams.get("scope");
+  const scope: Scope = scopeParam === "summaries" || scopeParam === "tokens" ? scopeParam : "all";
+
   if (req.nextUrl.searchParams.get("background") === "true") {
     after(async () => {
       const t = Date.now();
-      const r = await runAll();
+      const r = await runAll(scope);
       console.log(`[cron/refresh-rollups] background complete in ${((Date.now() - t) / 1000).toFixed(1)}s, ${JSON.stringify(r)}`);
     });
     return NextResponse.json({ ok: true, accepted: true, message: "Refresh running in background." }, { status: 202 });
   }
 
   const startedAt = Date.now();
-  const result = await runAll();
+  const result = await runAll(scope);
   const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
   console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s, ${JSON.stringify(result)}`);
   return NextResponse.json({ ok: true, durationSec: elapsedSec, ...result });
