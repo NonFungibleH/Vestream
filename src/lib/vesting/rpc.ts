@@ -111,6 +111,12 @@ const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.
 const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ETHEREUM]: buildPool(process.env.ALCHEMY_RPC_URL_ETH, [
     { url: "https://eth.drpc.org" },
+    // 2026-09-09: added after the Doppler Ethereum indexer found NO working
+    // free log provider in this pool (dRPC "can't route", onfinality
+    // rate-limited, everything else capped or gated). Both served 1k and 5k
+    // block eth_getLogs windows in <1s when probed; Tenderly is the faster.
+    { url: "https://gateway.tenderly.co/public/mainnet" },
+    { url: "https://rpc.mevblocker.io" },
     // 2026-05-26: tagged excludeForLogs — BlockPI's free tier had a multi-
     // hour global Cloudflare 521 outage today (also hit polygon + bsc).
     // Unlike meowrpc/blastapi (hard block-range cap), BlockPI usually serves
