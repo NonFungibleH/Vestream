@@ -526,8 +526,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
   doppler: {
     slug: "doppler",
     adapterIds: ["doppler"],
-    name: "Doppler",
-    tagline: "Token launches with creator vesting (Bankr)",
+    // Display name is the launchpad people used, not the infrastructure under
+    // it: a creator launched "on Bankr". Rename if a second integrator is
+    // ever enabled (DOPPLER_ENABLED_INTEGRATORS).
+    name: "Bankr",
+    tagline: "Founder vesting on Bankr launches (Doppler)",
     // CONTRACTS: Airlock (orchestrator) + DERC20 (vesting inside the token).
     // See DOPPLER_AIRLOCK / DERC20_ABI in src/lib/vesting/adapters/doppler.ts.
     // Only launches by DOPPLER_ENABLED_INTEGRATORS (Bankr today) become

@@ -16,7 +16,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
-import { protocolBrand, listProtocols, publicChainIds, chainBrand } from "@/lib/protocol-constants";
+import { protocolBrand, listProtocols, publicChainIds, chainBrand, getProtocol } from "@/lib/protocol-constants";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
@@ -1212,8 +1212,22 @@ function ResultsSummary({ result }: { result: ScanResponse }) {
   );
 }
 
+/**
+ * Label only the exceptions. Allocation vesting is the product and carries no
+ * label; a per-second payment stream or a single-beneficiary founder lock
+ * gets a quiet pill so the user reads it as the thing it is. See the
+ * one-promise framing (feedback_one_promise_not_four_products).
+ */
+function positionKind(protocolId: string): string | null {
+  const meta = getProtocol(protocolId);
+  if (meta?.category === "stream") return "Salary stream";
+  if (protocolId === "doppler" || protocolId === "hoodlock") return "Founder allocation";
+  return null;
+}
+
 function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: string }) {
   const colour = protocolBrand(group.protocolId).color;
+  const kind = positionKind(group.protocolId);
 
   // Determine if any token in this group has a claimable balance.
   // Used to choose between "Claim in app →" and "See amounts →".
@@ -1233,8 +1247,12 @@ function TeaserCard({ group, walletAddress }: { group: Group; walletAddress: str
       <div className="flex items-center gap-3 mb-4">
         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colour }} />
         <div>
-          <div className="text-base font-bold" style={{ color: "#1A1D20" }}>
-            {group.protocolName}
+          <div className="flex items-center gap-2">
+            <span className="text-base font-bold" style={{ color: "#1A1D20" }}>{group.protocolName}</span>
+            {kind && (
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(28,184,184,0.10)", color: "#0F8A8A" }}>{kind}</span>
+            )}
           </div>
           <div className="text-xs" style={{ color: "#8B8E92" }}>
             {group.chainName} · {group.streamCount} stream{group.streamCount === 1 ? "" : "s"}

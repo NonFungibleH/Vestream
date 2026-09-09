@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isValidWalletAddress, normaliseAddress, detectEcosystem } from "@/lib/address-validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/ratelimit";
 import { readFeesOwed, DOPPLER_FEE_CHAINS, type FeeOwed } from "@/lib/vesting/doppler-fees";
+import { logWalletSearch } from "@/lib/search-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 25;
@@ -48,6 +49,9 @@ export async function GET(req: NextRequest) {
   const fees = perChain.flat().sort((a, b) => (b.claimableUsd ?? 0) - (a.claimableUsd ?? 0));
   const totalUsd = fees.reduce<number | null>(
     (acc, f) => (f.claimableUsd == null ? acc : (acc ?? 0) + f.claimableUsd), null);
+
+  // Outcome marker for the share-of-wallets measurement (see search-log.ts).
+  if (fees.length > 0) logWalletSearch({ walletAddress: address, source: "fees_owed_hit", ip });
 
   const body: FeesOwedResponse = { address, fees, totalUsd };
   return NextResponse.json(body, {

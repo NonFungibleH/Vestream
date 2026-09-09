@@ -24,7 +24,15 @@ export type SearchSource =
   | "find_vestings"      // public /find-vestings page (anonymous or email-capture)
   | "mobile_search"      // mobile in-app search box
   | "mobile_track"       // mobile user added a wallet to their portfolio
-  | "dashboard_discover";// web Token Vesting Explorer
+  | "dashboard_discover" // web Token Vesting Explorer
+  // Outcome markers (2026-09-09), logged alongside the search so the share of
+  // scanned wallets holding an "exception" kind can be measured in SQL:
+  //   count(distinct wallet_hash) filter (where source = 'fees_owed_hit')
+  //   / count(distinct wallet_hash) filter (where source = 'find_vestings').
+  // The framing rule says a kind earns public words only when that share
+  // justifies it (feedback_one_promise_not_four_products).
+  | "fees_owed_hit"        // /api/fees-owed returned > 0 fee streams
+  | "founder_allocation_hit"; // /api/find-vestings returned a doppler/hoodlock group
 
 interface LogOpts {
   walletAddress: string;

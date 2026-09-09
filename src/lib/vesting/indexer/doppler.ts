@@ -53,8 +53,9 @@ interface AssetInfo {
  * Two-phase per-asset read.
  *  1. getAssetData for EVERY launch (one call each): integrator, i.e. which
  *     launchpad made it. Cheap, and it is what the registry is for.
- *  2. Vesting header + token meta ONLY for enabled integrators (five calls
- *     each). Everything else is recorded with vestedTotal = null.
+ *  2. vestedTotalAmount ONLY for enabled integrators (one call each), then
+ *     the rest of the header only where it is non-zero. Everything else is
+ *     recorded with vestedTotal = null.
  * Splitting this took a 1,568-launch Base window from 97 minutes to a few
  * (2026-09-09); the two biggest Doppler integrators never vest anyway.
  */
@@ -89,13 +90,29 @@ async function readAssetInfo(
     });
   }
 
-  const probe = out.filter((a) => DOPPLER_ENABLED_INTEGRATORS.has(a.integrator));
-  const PAGE2 = 25; // 5 calls per asset
-  for (let s = 0; s < probe.length; s += PAGE2) {
-    const page = probe.slice(s, s + PAGE2);
+  // Phase 2a: one call per enabled-integrator launch. In Bankr's peak months
+  // (Feb-Aug 2026 on Base) nearly every launch had vesting OFF, so this is
+  // where the time went when all five fields were read up front.
+  const candidates = out.filter((a) => DOPPLER_ENABLED_INTEGRATORS.has(a.integrator));
+  const PAGE2A = 60;
+  for (let s = 0; s < candidates.length; s += PAGE2A) {
+    const page = candidates.slice(s, s + PAGE2A);
+    const contracts = page.map((a) => ({ address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestedTotalAmount" as const }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await client.multicall({ contracts: contracts as any, allowFailure: true });
+    page.forEach((a, i) => {
+      const vt = res[i];
+      a.vestedTotal = vt.status === "success" ? (vt.result as bigint) : 0n;
+    });
+  }
+
+  // Phase 2b: the rest of the header only where vesting is actually on.
+  const probe = candidates.filter((a) => a.vestedTotal != null && a.vestedTotal > 0n);
+  const PAGE2B = 30; // 4 calls per asset
+  for (let s = 0; s < probe.length; s += PAGE2B) {
+    const page = probe.slice(s, s + PAGE2B);
     const contracts = page.flatMap((a) => [
       { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestingStart" as const },
-      { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestedTotalAmount" as const },
       { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "vestingScheduleCount" as const },
       { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "symbol" as const },
       { address: a.asset as `0x${string}`, abi: DERC20_ABI, functionName: "decimals" as const },
@@ -103,9 +120,8 @@ async function readAssetInfo(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await client.multicall({ contracts: contracts as any, allowFailure: true });
     page.forEach((a, i) => {
-      const [vs, vt, sc, sy, de] = res.slice(i * 5, i * 5 + 5);
+      const [vs, sc, sy, de] = res.slice(i * 4, i * 4 + 4);
       a.vestingStart  = vs.status === "success" ? (vs.result as bigint) : 0n;
-      a.vestedTotal   = vt.status === "success" ? (vt.result as bigint) : 0n;
       a.scheduleCount = sc.status === "success" ? Number(sc.result as bigint) : 0;
       a.symbol        = sy.status === "success" ? String(sy.result) : "???";
       a.decimals      = de.status === "success" ? Number(de.result) : 18;
@@ -115,14 +131,20 @@ async function readAssetInfo(
 }
 
 async function upsertAssets(chainId: SupportedChainId, infos: AssetInfo[]): Promise<void> {
-  for (const a of infos) {
+  // Multi-row VALUES in chunks: one round trip per 200 assets instead of one
+  // per asset. At 3,900 launches in a single Base window (Bankr's peak), the
+  // per-row version spent longer on Supabase round trips than on the chain.
+  const CHUNK = 200;
+  for (let s = 0; s < infos.length; s += CHUNK) {
+    const chunk = infos.slice(s, s + CHUNK);
+    const values = chunk.map((a) => sql`(${chainId}, ${a.asset}, ${a.integrator}, ${a.numeraire}, ${a.pool}, ${a.symbol}, ${a.decimals},
+      ${a.vestingStart.toString()}, ${a.vestedTotal == null ? null : a.vestedTotal.toString()}, ${a.scheduleCount}, ${a.block.toString()})`);
     try {
       await db.execute(sql`
         INSERT INTO doppler_assets
           (chain_id, asset, integrator, numeraire, pool, token_symbol, token_decimals,
            vesting_start, vested_total, schedule_count, discovered_block)
-        VALUES (${chainId}, ${a.asset}, ${a.integrator}, ${a.numeraire}, ${a.pool}, ${a.symbol}, ${a.decimals},
-                ${a.vestingStart.toString()}, ${a.vestedTotal == null ? null : a.vestedTotal.toString()}, ${a.scheduleCount}, ${a.block.toString()})
+        VALUES ${sql.join(values, sql`, `)}
         ON CONFLICT (chain_id, asset) DO UPDATE
           SET integrator     = EXCLUDED.integrator,
               token_symbol   = EXCLUDED.token_symbol,
@@ -132,27 +154,29 @@ async function upsertAssets(chainId: SupportedChainId, infos: AssetInfo[]): Prom
               schedule_count = EXCLUDED.schedule_count
       `);
     } catch (err) {
-      console.error(`[doppler-indexer/${chainId}] asset upsert ${a.asset}:`, err);
+      console.error(`[doppler-indexer/${chainId}] asset upsert chunk @${s}:`, err);
     }
   }
 }
 
 async function upsertAllocations(rows: DopplerAllocationRow[]): Promise<void> {
-  for (const r of rows) {
+  const CHUNK = 200;
+  for (let s = 0; s < rows.length; s += CHUNK) {
+    const chunk = rows.slice(s, s + CHUNK);
+    const values = chunk.map((r) => sql`(${r.chainId}, ${r.asset}, ${r.beneficiary}, ${r.scheduleId},
+      ${r.cliffSeconds.toString()}, ${r.durationSeconds.toString()}, ${r.allocated.toString()}, ${r.discoveredBlock.toString()})`);
     try {
       await db.execute(sql`
         INSERT INTO doppler_vesting_allocations
           (chain_id, asset, beneficiary, schedule_id, cliff_seconds, duration_seconds, allocated, discovered_block)
-        VALUES (${r.chainId}, ${r.asset}, ${r.beneficiary}, ${r.scheduleId},
-                ${r.cliffSeconds.toString()}, ${r.durationSeconds.toString()},
-                ${r.allocated.toString()}, ${r.discoveredBlock.toString()})
+        VALUES ${sql.join(values, sql`, `)}
         ON CONFLICT (chain_id, asset, beneficiary, schedule_id) DO UPDATE
           SET cliff_seconds    = EXCLUDED.cliff_seconds,
               duration_seconds = EXCLUDED.duration_seconds,
               allocated        = EXCLUDED.allocated
       `);
     } catch (err) {
-      console.error(`[doppler-indexer/${r.chainId}] allocation upsert ${r.asset}/${r.beneficiary}:`, err);
+      console.error(`[doppler-indexer] allocation upsert chunk @${s}:`, err);
     }
   }
 }

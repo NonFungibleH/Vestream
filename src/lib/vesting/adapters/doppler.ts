@@ -312,7 +312,9 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
 
 export const dopplerAdapter: VestingAdapter = {
   id:   "doppler",
-  name: "Doppler",
+  // Personal-view display name: the launchpad the creator used, matching the
+  // protocol-constants entry. Rename if a second integrator is enabled.
+  name: "Bankr",
   supportedChainIds: Object.keys(DOPPLER_AIRLOCK).map(Number) as SupportedChainId[],
   fetch: fetchForChain,
 };

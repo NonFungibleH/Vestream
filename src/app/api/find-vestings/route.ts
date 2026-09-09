@@ -126,6 +126,10 @@ export async function GET(req: NextRequest) {
           .catch((e) => console.error("[find-vestings] background refresh failed:", e));
       }
       const { groups, totalStreams } = buildGroups(merged);
+      // Outcome marker for the share-of-wallets measurement (see search-log.ts).
+      if (groups.some((g) => g.protocolId === "doppler" || g.protocolId === "hoodlock")) {
+        logWalletSearch({ walletAddress: address, source: "founder_allocation_hit", ip });
+      }
       return NextResponse.json({
         address:      normAddr,
         totalStreams,
@@ -151,6 +155,10 @@ export async function GET(req: NextRequest) {
     }
 
     const { groups, totalStreams } = buildGroups(streams);
+    // Outcome marker for the share-of-wallets measurement (see search-log.ts).
+    if (groups.some((g) => g.protocolId === "doppler" || g.protocolId === "hoodlock")) {
+      logWalletSearch({ walletAddress: address, source: "founder_allocation_hit", ip });
+    }
     return NextResponse.json({
       address:      normAddr,
       totalStreams,
