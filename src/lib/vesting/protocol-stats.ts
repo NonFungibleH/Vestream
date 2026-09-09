@@ -1220,6 +1220,14 @@ export async function getProtocolFunStats(
       .limit(1),
 
     // Most popular = token with most active streams.
+    //
+    // "Active" MUST match the liveScope used by the hero counters and the
+    // protocol_summaries rollup: is_fully_vested = false AND the end time has
+    // not already passed. Filtering on is_fully_vested alone counted streams
+    // whose schedule ran out but which no adapter has marked vested yet, and
+    // that produced a card contradicting the hero on the same page: UNCX read
+    // "2,285 active now" beside "LUCKYMOON, 4,714 active streams" (the honest
+    // live figure is 1,045). Anyone checking the arithmetic saw a broken site.
     db
       .select({
         tokenSymbol:  vestingStreamsCache.tokenSymbol,
@@ -1232,6 +1240,9 @@ export async function getProtocolFunStats(
         and(
           inArray(vestingStreamsCache.protocol, ids),
           eq(vestingStreamsCache.isFullyVested, false),
+          sql`(${vestingStreamsCache.endTime} is null
+               or ${vestingStreamsCache.endTime} <= 0
+               or ${vestingStreamsCache.endTime} > extract(epoch from now()))`,
           excludeTestnets, excludeUnlisted,
         ),
       )

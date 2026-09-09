@@ -205,7 +205,17 @@ const loadCachedDiscoverStats = unstable_cache(
           activeStreams: protocolSummaries.activeStreams,
           tokensTracked: protocolSummaries.tokensTracked,
         })
-        .from(protocolSummaries),
+        // These rows are SUMMED below and the largest becomes
+        // `mostActiveProtocol`, so an `unlisted` protocol must not be here:
+        // Doppler's rollup row alone carries 25k+ active streams (Bankr
+        // launches on Robinhood Chain) and would both inflate the totals and
+        // take the "most active" slot on Discover.
+        .from(protocolSummaries)
+        .where(
+          UNLISTED_ADAPTER_IDS.length > 0
+            ? notInArray(protocolSummaries.protocol, [...UNLISTED_ADAPTER_IDS])
+            : undefined,
+        ),
     ]);
 
     const newStreamsLast24h =
