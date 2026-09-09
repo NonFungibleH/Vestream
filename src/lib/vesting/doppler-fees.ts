@@ -7,10 +7,21 @@ import { fetchTokenMeta } from "./adapters/hoodlock";
 import { getQuickUsdPrices, toUsdValue } from "./quick-prices";
 
 // ─── Doppler fee streams: "Fees owed" ────────────────────────────────────────
-// Every Doppler launch locks its pool's liquidity in StreamableFeesLockerV2
-// and streams the pool's trading fees to a set of beneficiaries, weighted by
-// shares that sum to WAD (1e18), forever. Verified from the locker's source
-// (Base, 0xcE3212e6…3D47, 2026-09-08):
+// Doppler streams a pool's trading fees to a set of beneficiaries, weighted
+// by shares that sum to WAD (1e18), forever. TWO contracts do it with the
+// same FeesManager math and the same getters:
+//   1. StreamableFeesLockerV2 (post-migration liquidity locks): discovery via
+//      Lock(poolId, beneficiaries[], unlockDate), address-filtered.
+//   2. Hook initializers (RehypeDopplerHookInitializer, several instances,
+//      including ones missing from Doppler's own deployments file): discovery
+//      via FeeBeneficiariesSet(poolId, beneficiaries[]) scanned topic-only
+//      across ALL addresses, because the emitting contract is the identity.
+//      This is where current Bankr launches put creator fee shares (2026-09-09:
+//      V2 locker and both migrators emitted nothing in 9,000 Base blocks while
+//      0x9982538f… emitted 50).
+// The registry stores the emitting contract per row (`locker`), so the live
+// reads below address the right one without caring which kind it is.
+// Verified from the locker's source (Base, 0xcE3212e6…3D47, 2026-09-08):
 //
 //              (cumulatedFees - lastCumulatedFees[beneficiary]) * shares
 //     fees  =  ─────────────────────────────────────────────────────────
@@ -52,6 +63,7 @@ export const DOPPLER_FEE_LOCKER_GENESIS: Partial<Record<SupportedChainId, bigint
 
 export const FEE_LOCKER_ABI = parseAbi([
   "event Lock(bytes32 indexed poolId, (address beneficiary, uint96 shares)[] beneficiaries, uint256 unlockDate)",
+  "event FeeBeneficiariesSet(bytes32 indexed poolId, (address beneficiary, uint96 shares)[] beneficiaries)",
   "event Unlock(bytes32 indexed poolId, address recipient)",
   "event UpdateBeneficiary(bytes32 poolId, address oldBeneficiary, address newBeneficiary)",
   "event Release(bytes32 indexed poolId, address indexed beneficiary, uint256 fees0, uint256 fees1)",
@@ -61,7 +73,13 @@ export const FEE_LOCKER_ABI = parseAbi([
   "function getLastCumulatedFees0(bytes32 poolId, address beneficiary) view returns (uint256)",
   "function getLastCumulatedFees1(bytes32 poolId, address beneficiary) view returns (uint256)",
   "function getShares(bytes32 poolId, address beneficiary) view returns (uint256)",
+  // Hook-initializer side (no streams()); the locker does not have this one.
+  "function getPoolKey(bytes32 poolId) view returns (address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks)",
 ]);
+
+/** keccak256("FeeBeneficiariesSet(bytes32,(address,uint96)[])") — matches live Base/Robinhood logs. */
+export const FEE_BENEFICIARIES_SET_TOPIC =
+  "0x0c90f8fcadd900399eb6c30bc91ec4531380b92bc2c4c364675528b1d30601e2" as const;
 
 /** Uniswap v4 uses address(0) for the chain's native currency. */
 export const NATIVE_CURRENCY = "0x0000000000000000000000000000000000000000";
@@ -175,7 +193,6 @@ export async function readFeesOwed(
 ): Promise<FeeOwed[]> {
   const rows = await readFeeStreamsForWallets(wallets, chainId);
   if (rows.length === 0) return [];
-  const locker = DOPPLER_FEE_LOCKER[chainId]!;
   const client = makeFallbackClient(chainId, { batch: true });
   if (!client) return [];
 
@@ -186,6 +203,7 @@ export async function readFeesOwed(
     const page = rows.slice(s, s + PAGE);
     const contracts = page.flatMap((r) => {
       const b = r.beneficiary as `0x${string}`;
+      const locker = r.locker as `0x${string}`; // locker OR hook initializer, per row
       return [
         { address: locker, abi: FEE_LOCKER_ABI, functionName: "getCumulatedFees0" as const, args: [r.poolId] as const },
         { address: locker, abi: FEE_LOCKER_ABI, functionName: "getCumulatedFees1" as const, args: [r.poolId] as const },
@@ -251,7 +269,7 @@ export async function readFeesOwed(
     const usd = sides.reduce<number | null>((acc, x) => (x.claimableUsd == null ? acc : (acc ?? 0) + x.claimableUsd), null);
     out.push({
       chainId,
-      locker,
+      locker:       r.locker,
       poolId:       r.poolId,
       beneficiary:  r.beneficiary,
       sharePct:     Number((shares * 10_000n) / WAD) / 100,
