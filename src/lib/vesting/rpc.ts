@@ -194,6 +194,14 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   ]),
   [CHAIN_IDS.POLYGON]: buildPool(process.env.POLYGON_RPC_URL, [
     { url: "https://polygon.drpc.org" },
+    // 2026-09-09: added as the log-capable ARCHIVE endpoint for Polygon.
+    // hedgey/137 and magna/137 were both failing daily with a block-range
+    // error, the same class that had killed uncx-vm/56 and hedgey/56. Probed
+    // ten Polygon endpoints: dRPC caps at 10k on the free plan, polygon-rpc
+    // returns "tenant disabled", publicnode has pruned history, blastapi is
+    // retired, ankr and onfinality demand keys, 1rpc caps at 50 blocks.
+    // Tenderly's gateway served 5k AND 10k windows at block 92.6M cleanly.
+    { url: "https://polygon.gateway.tenderly.co" },
     // 2026-05-26: polygon-rpc.com REMOVED — returns HTTP 401 "tenant disabled"
     // for ALL methods including eth_blockNumber (not just eth_getLogs). It is
     // a dead endpoint, not a restricted one. Keeping it wastes a fallback slot

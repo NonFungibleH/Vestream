@@ -12,6 +12,11 @@
 //   - the seeder is still writing fresh rows (max last_refreshed_at age)
 //   - no TVL snapshot cell is stuck failing (max consecutive_failures)
 //   - the derived tables (rollups / summaries / status) are being refreshed
+//   - per-row alarms (2026-09-09): WHICH protocol/chain is stalled, failing
+//     or walking to zero. The coarse checks above answer "is something
+//     wrong"; without the subjects you still have to go digging, and three
+//     failures ran for months (one for 102 days) because "tvl snapshot
+//     failing ×6" never said pinksale/137.
 //
 // No secrets are exposed — only coarse ages + a healthy/degraded verdict.
 // Read-only, single bounded query, force-dynamic so it never serves a cached
@@ -20,6 +25,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { getPipelineAlarms } from "@/lib/vesting/cache-stats";
 
 export const dynamic  = "force-dynamic";
 export const revalidate = 0;
@@ -67,9 +73,26 @@ export async function GET() {
       failures.push(`tvl snapshot failing ×${checks.tvlMaxConsecutiveFailures}`);
 
     const healthy = failures.length === 0;
+    // Name the broken things. Best-effort: getPipelineAlarms never throws and
+    // returns [] on failure, so a probe already reporting degraded is never
+    // downgraded to healthy by this call.
+    const alarms = await getPipelineAlarms().catch(() => []);
+    const stalled = alarms.filter((a) => a.kind === "indexer-stalled");
+    const zeroed  = alarms.filter((a) => a.kind === "walker-zero");
+    // Stalled cursors and zero-walking walkers are invisible to the coarse
+    // checks above, so they have to be able to fail the probe themselves.
+    const stillHealthy = healthy && stalled.length === 0 && zeroed.length === 0;
+    for (const a of [...stalled, ...zeroed]) failures.push(`${a.subject}: ${a.detail}`);
+
     return NextResponse.json(
-      { status: healthy ? "ok" : "degraded", failures, checks, ts: new Date().toISOString() },
-      { status: healthy ? 200 : 503 },
+      {
+        status: stillHealthy ? "ok" : "degraded",
+        failures,
+        checks,
+        alarms,
+        ts: new Date().toISOString(),
+      },
+      { status: stillHealthy ? 200 : 503 },
     );
   } catch (err) {
     // DB unreachable is itself a critical health signal.

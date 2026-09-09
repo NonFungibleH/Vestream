@@ -489,3 +489,119 @@ export async function getPipelineFreshness(): Promise<PipelineFreshnessEntry[]> 
     return [];
   }
 }
+
+// ─── Silent-failure alarms ───────────────────────────────────────────────────
+// getPipelineFreshness() above answers "did the pipeline run?" by reading
+// max(computed_at) per TABLE. That is exactly the blind spot that let three
+// real failures run for months undetected (found 2026-09-09):
+//
+//   - uncx-vm's TVL walker returned $0 on all three chains for an unknown
+//     period. consecutive_failures stayed 0 and last_error stayed null,
+//     because returning nothing is not an error. Table freshness looked fine.
+//   - The hedgey BSC indexer last succeeded 102 days earlier, failing every
+//     day on an RPC block-range cap. Its row was still being touched daily,
+//     so nothing downstream noticed the cursor had stopped moving.
+//   - Five protocols sat on guard-held TVL snapshots up to 158 hours old
+//     while max(last_attempt_at) across the table stayed current.
+//
+// The common shape: an aggregate looks healthy while individual rows are
+// frozen. These checks are per-row and deliberately loud.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AlarmKind = "indexer-stalled" | "snapshot-failing" | "walker-zero";
+
+export interface PipelineAlarm {
+  kind:    AlarmKind;
+  /** e.g. "hedgey/56" — protocol, plus chain where the failure is per-chain. */
+  subject: string;
+  /** One line, already human-readable; safe to render directly. */
+  detail:  string;
+}
+
+/** Hours a cursor may sit still before it counts as stalled (one missed daily
+ *  cron plus buffer). */
+const INDEXER_STALL_HOURS = 26;
+
+/**
+ * Per-row failures the table-level freshness checks cannot see. Never throws;
+ * an empty array means "no alarms" OR "could not check", and the caller
+ * should not treat emptiness as proof of health.
+ */
+export async function getPipelineAlarms(): Promise<PipelineAlarm[]> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return [];
+  const alarms: PipelineAlarm[] = [];
+
+  try {
+    // 1. Cursors that have stopped advancing. last_run_at only moves on a
+    //    SUCCESSFUL scan, so this catches a job that retries and fails daily.
+    const stalled = (await db.execute(sql`
+      SELECT protocol, chain_id,
+             round(extract(epoch from (now() - last_run_at)) / 3600)::int AS hours
+        FROM indexer_state
+       WHERE last_run_at < now() - (${INDEXER_STALL_HOURS} * interval '1 hour')
+       ORDER BY last_run_at ASC
+    `)) as unknown as Array<{ protocol: string; chain_id: number; hours: number }>;
+    for (const r of rowsOfResult<{ protocol: string; chain_id: number; hours: number }>(stalled)) {
+      alarms.push({
+        kind:    "indexer-stalled",
+        subject: `${r.protocol}/${r.chain_id}`,
+        detail:  `indexer cursor has not advanced for ${r.hours}h`,
+      });
+    }
+
+    // 2. TVL snapshots the guard is holding. consecutive_failures > 0 means
+    //    the walker ran and its result was rejected, so the displayed number
+    //    is older than it looks.
+    const failing = (await db.execute(sql`
+      SELECT protocol, chain_id, consecutive_failures AS fails,
+             round(extract(epoch from (now() - computed_at)) / 3600)::int AS hours
+        FROM protocol_tvl_snapshots
+       WHERE consecutive_failures > 0
+       ORDER BY consecutive_failures DESC
+    `)) as unknown as Array<{ protocol: string; chain_id: number; fails: number; hours: number }>;
+    for (const r of rowsOfResult<{ protocol: string; chain_id: number; fails: number; hours: number }>(failing)) {
+      alarms.push({
+        kind:    "snapshot-failing",
+        subject: `${r.protocol}/${r.chain_id}`,
+        detail:  `TVL snapshot rejected ${r.fails}x in a row; showing a figure ${r.hours}h old`,
+      });
+    }
+
+    // 3. Walkers reporting nothing for a protocol that demonstrably has
+    //    streams. This is the uncx-vm case: a $0 snapshot written with no
+    //    error while thousands of schedules sat in the cache.
+    //
+    //    Restricted to methodologies where WE walk the chain. Protocols on
+    //    'defillama-vesting' (hedgey, llamapay, streamflow) take their TVL
+    //    from DefiLlama and legitimately record stream_count = 0, so without
+    //    this filter they fire on every chain, every run — and an alarm that
+    //    cries wolf is one nobody reads.
+    const zeroed = (await db.execute(sql`
+      SELECT s.protocol, s.chain_id, count(v.stream_id)::int AS cached
+        FROM protocol_tvl_snapshots s
+        JOIN vesting_streams_cache v
+          ON v.protocol = s.protocol AND v.chain_id = s.chain_id
+       WHERE s.stream_count = 0
+         AND s.methodology <> 'defillama-vesting'
+         AND v.is_fully_vested = false
+       GROUP BY s.protocol, s.chain_id
+      HAVING count(v.stream_id) > 0
+    `)) as unknown as Array<{ protocol: string; chain_id: number; cached: number }>;
+    for (const r of rowsOfResult<{ protocol: string; chain_id: number; cached: number }>(zeroed)) {
+      alarms.push({
+        kind:    "walker-zero",
+        subject: `${r.protocol}/${r.chain_id}`,
+        detail:  `walker found 0 streams but ${r.cached} active rows are cached`,
+      });
+    }
+  } catch (err) {
+    console.warn(`[cache-stats] getPipelineAlarms failed: ${err instanceof Error ? err.message : err}`);
+  }
+
+  return alarms;
+}
+
+/** postgres-js returns rows directly; drizzle's execute wraps them in .rows. */
+function rowsOfResult<T>(r: unknown): T[] {
+  return ((r as { rows?: T[] }).rows ?? (r as T[])) || [];
+}
