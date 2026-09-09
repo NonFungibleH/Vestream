@@ -24,10 +24,15 @@ import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-consta
 //   - csv-exports.ts: generic, Koinly, CoinTracker, TurboTax, payroll-income,
 //     payroll-summary-us, payroll-summary-uk
 //
-// Deliberately NOT claimed here, because it is not built: a year-end PDF
-// report (listed on /pricing, no generator in the repo) and unlock-basis
-// (accrual) income recording (planned, not shipped). Do not add either until
-// the code exists.
+// The year-end report IS built: /dashboard/income-statement/print?year=YYYY
+// renders an A4 print-formatted report and the user saves it as a PDF from
+// the browser's print dialog (no PDF library shipped — see that page's header
+// for the reasoning). An earlier revision of this file wrongly called it
+// unbuilt after grepping for pdfkit/jspdf/puppeteer and finding nothing.
+//
+// Deliberately NOT claimed here, because it is not built: unlock-basis
+// (accrual) income recording (planned, not shipped). Do not add it until the
+// code exists.
 //
 // Fake tokens only (NOVA / FLUX / VEST / KLAR) per CLAUDE.md marketing rules.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +81,7 @@ const STEPS = [
   {
     n:     "3",
     title: "Export in the format your software imports",
-    body:  "One click for Koinly, CoinTracker or TurboTax. A generic CSV for anything else. Payroll formats for contributors paid by stream. Open the importer in a new tab and you are done.",
+    body:  "One click for Koinly, CoinTracker or TurboTax. A generic CSV for anything else. Payroll formats for contributors paid by stream. Or take the year-end report and send that to your accountant instead.",
   },
 ];
 
@@ -95,6 +100,7 @@ const EXPORTS = [
   { name: "Generic CSV",      tag: "Any software", body: "Clean columns that any tax tool with a CSV importer will accept." },
   { name: "Payroll income",   tag: "Contributors", body: "Per-claim ordinary income at fair market value on receipt, for people paid by stream." },
   { name: "Payroll summary",  tag: "US and UK",    body: "Payer-grouped totals shaped for a 1099-NEC summary or an HMRC SA103." },
+  { name: "Year-end report",  tag: "PDF",          body: "A dated A4 summary of the whole tax year, formatted to hand or email straight to your accountant." },
 ];
 
 const CONFIDENCE = [
@@ -140,6 +146,10 @@ const FAQ = [
     a: "Gas paid on each claim is recorded in USD alongside the income figure, so your accountant can decide how to treat it.",
   },
   {
+    q: "Can I get something I can just send to my accountant?",
+    a: "Yes. Alongside the CSV exports there is a year-end report: a dated A4 summary of the tax year with totals by token and by protocol, formatted to print or save as a PDF and hand over as-is.",
+  },
+  {
     q: "Is this free?",
     a: "Scanning a wallet and seeing your claim history is free with no account. The income statement, the CSV exports and the confidence breakdown are part of Vestream Pro at $9.99 a month or $74.99 a year.",
   },
@@ -177,6 +187,7 @@ const jsonLd = {
         "Koinly, CoinTracker and TurboTax CSV exports",
         "Payroll income and payer summary exports for US and UK",
         "Income statement by tax year, protocol and token",
+        "Year-end PDF report for an accountant",
       ],
     },
     {
@@ -359,8 +370,8 @@ export default function TaxPage() {
         <div className="max-w-5xl mx-auto">
           <SectionHeading className="mb-10 md:mb-12"
             eyebrow="Exports"
-            title="Six formats. Your accountant picks one."
-            sub="All built from the same claim rows, so the numbers agree with each other whichever file you send."
+            title="Seven ways out. Your accountant picks one."
+            sub="Six import formats and a year-end report, all built from the same claim rows, so the numbers agree with each other whichever one you send."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {EXPORTS.map((e) => (
