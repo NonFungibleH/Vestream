@@ -173,6 +173,25 @@ export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
         // via internal links; it's just no longer force-submitted.
         sql`${tokenVestingRollups.lastEnd} > ${Math.floor(Date.now() / 1000)}`,
         sql`${tokenVestingRollups.walletCount} >= 2`,
+        // Tightened 2026-09-09. The gate above still shipped 708 URLs, and
+        // Search Console showed Google had seen essentially all of them and
+        // indexed almost none: 356 "Discovered - currently not indexed" plus
+        // 359 "Crawled - currently not indexed" = 715.
+        //
+        // The reason is thinness at scale. Of 9,079 rollups, 85% carry no USD
+        // value, 91% have a single wallet and 87% have no market cap, so most
+        // submitted pages were a token nobody has heard of with no number on
+        // it. Hundreds of near-identical shells read as templated low-value
+        // content, and that judgement is domain-wide, not per-page.
+        //
+        // So the sitemap now submits only pages with a REASON to exist: a real
+        // locked value, and an unlock still ahead of them (the countdown is
+        // what makes the page unique and worth a visit). ~247 URLs instead of
+        // 708. Everything else stays crawlable via internal links; it is just
+        // no longer force-submitted. Widen this once Google is indexing what
+        // we do submit.
+        sql`${tokenVestingRollups.lockedValueUsd} > 1000`,
+        sql`${tokenVestingRollups.nextUnlock} is not null`,
       ),
     )
     .orderBy(sql`${tokenVestingRollups.streamCount} desc`)
