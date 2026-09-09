@@ -1016,23 +1016,33 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
  */
 export async function readSnapshotsForAdapters(
   adapterIds: readonly string[],
-): Promise<Array<{ chainId: number; tvlUsd: number }>> {
+): Promise<Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>> {
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
   if (adapterIds.length === 0) return [];
 
   try {
     const rows = await db
       .select({
-        chainId: protocolTvlSnapshots.chainId,
-        tvlUsd:  protocolTvlSnapshots.tvlUsd,
+        chainId:      protocolTvlSnapshots.chainId,
+        tvlUsd:       protocolTvlSnapshots.tvlUsd,
+        // Carried through so the page can say how much of the token universe
+        // the figure actually covers. Most vested tokens have no market at
+        // all — sampled 2026-09-09: 0 of 12 unpriced tokens had a DexScreener
+        // pair — so a bare TVL overstates our certainty.
+        tokensPriced: protocolTvlSnapshots.tokensPriced,
+        tokensTotal:  protocolTvlSnapshots.tokensTotal,
       })
       .from(protocolTvlSnapshots)
       .where(inArray(protocolTvlSnapshots.protocol, [...adapterIds]));
 
     // Sum across adapters — uncx + uncx-vm can have rows for the same chainId
-    const byChain = new Map<number, number>();
+    const byChain = new Map<number, { tvlUsd: number; tokensPriced: number; tokensTotal: number }>();
     for (const r of rows) {
-      byChain.set(r.chainId, (byChain.get(r.chainId) ?? 0) + Number(r.tvlUsd));
+      const cur = byChain.get(r.chainId) ?? { tvlUsd: 0, tokensPriced: 0, tokensTotal: 0 };
+      cur.tvlUsd       += Number(r.tvlUsd);
+      cur.tokensPriced += Number(r.tokensPriced ?? 0);
+      cur.tokensTotal  += Number(r.tokensTotal ?? 0);
+      byChain.set(r.chainId, cur);
     }
 
     // Keep $0 chains: a snapshot row exists only for a (protocol, chain) we
@@ -1042,8 +1052,8 @@ export async function readSnapshotsForAdapters(
     // declared chainIds, so untracked-chain dust never slips through). Only
     // drop genuinely-negative values, which shouldn't occur.
     return Array.from(byChain.entries())
-      .filter(([, usd]) => usd >= 0)
-      .map(([chainId, tvlUsd]) => ({ chainId, tvlUsd }))
+      .filter(([, v]) => v.tvlUsd >= 0)
+      .map(([chainId, v]) => ({ chainId, ...v }))
       .sort((a, b) => b.tvlUsd - a.tvlUsd);
   } catch (err) {
     console.warn(`[tvl-snapshot] readSnapshotsForAdapters failed: ${err instanceof Error ? err.message : err}`);

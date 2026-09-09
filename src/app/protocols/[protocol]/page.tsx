@@ -141,7 +141,7 @@ interface ProtocolPageData {
    *  token on this protocol, new-streams count for the past 24h. */
   funStats:     ProtocolFunStats | null;
   /** 2026-06-01: per-chain TVL breakdown from protocolTvlSnapshots. */
-  tvlPerChain:  Array<{ chainId: number; tvlUsd: number }>;
+  tvlPerChain:  Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>;
 }
 
 // Empty-shape default. Returned during the build phase (no DB access)
@@ -194,7 +194,7 @@ const loadProtocolData = unstable_cache(
     const upcoming     = settled[2].status === "fulfilled" ? settled[2].value : null;
     const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
     const funStats     = settled[4].status === "fulfilled" ? settled[4].value : null;
-    const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number }>) : [];
+    const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>) : [];
     for (let i = 0; i < settled.length; i++) {
       const r = settled[i];
       if (r.status === "rejected") {
@@ -712,11 +712,21 @@ export default async function ProtocolLandingPage(
         // noise here. The integration-breadth story is carried by the separate
         // "N chains covered" hero stat, not this card.
         const declared = (meta.chainIds as readonly number[]);
-        const bySnapshot = new Map(tvlPerChain.map((r) => [r.chainId, r.tvlUsd]));
+        // Keep the whole snapshot row, not just the dollar figure — the
+        // caption below reports pricing coverage from it.
+        const bySnapshot = new Map(tvlPerChain.map((r) => [r.chainId, r]));
         const chainTvl = (
           meta.externalTvl
             ? tvlPerChain.filter((r) => declared.includes(r.chainId))
-            : declared.map((chainId) => ({ chainId, tvlUsd: bySnapshot.get(chainId) ?? 0 }))
+            : declared.map((chainId) => {
+                const row = bySnapshot.get(chainId);
+                return {
+                  chainId,
+                  tvlUsd:       row?.tvlUsd ?? 0,
+                  tokensPriced: row?.tokensPriced ?? 0,
+                  tokensTotal:  row?.tokensTotal ?? 0,
+                };
+              })
         )
           .filter((r) => r.tvlUsd > 0)
           .sort((a, b) => b.tvlUsd - a.tvlUsd);
@@ -774,8 +784,23 @@ export default async function ProtocolLandingPage(
                   );
                 })}
               </div>
+              {/* Coverage, stated plainly. Most vested tokens have no market
+                  at all (sampled 2026-09-09: 0 of 12 unpriced tokens had a
+                  DexScreener pair), so this figure is a floor over the tokens
+                  we could actually value — not the total locked. Saying so is
+                  the same discipline as the per-row confidence flags on /tax,
+                  and it stops the number being read as more precise than it
+                  is. Only shown where WE do the pricing; DefiLlama-sourced
+                  protocols have no coverage figure of ours to report. */}
               <p className="text-xs mt-4" style={{ color: "#94A3B8" }}>
                 Vesting TVL only · updated daily · {tvlSourceLabel(meta.adapterIds, meta.name)}
+                {(() => {
+                  if (meta.externalTvl) return null;
+                  const priced = chainTvl.reduce((n, r) => n + (r.tokensPriced ?? 0), 0);
+                  const total  = chainTvl.reduce((n, r) => n + (r.tokensTotal  ?? 0), 0);
+                  if (total === 0) return null;
+                  return <> · priced {priced.toLocaleString()} of {total.toLocaleString()} tokens</>;
+                })()}
               </p>
             </div>
           </section>
