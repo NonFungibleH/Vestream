@@ -354,9 +354,20 @@ export async function generateMetadata(
 //     (team-finance's Squid API, superfluid/unvest/uncx subgraphs) and price
 //     them ourselves → "amounts from <Protocol>, market-priced". This is the
 //     Team-Finance case: their feed gives us the vesting amounts, NOT the TVL.
-function tvlSourceLabel(adapterIds: readonly string[], protocolName: string): string {
+// `usesExternalTvl` comes from the protocol's own externalTvl config rather
+// than a list repeated here. The list had gone stale: Sablier was made
+// self-indexed on 2026-09-01 (externalTvl removed after DefiLlama's Arbitrum
+// row proved 425x wrong) but stayed hardcoded here, so for nine days the page
+// credited DefiLlama for a figure we compute ourselves. Adding the pricing
+// coverage clause made the contradiction visible — "TVL via DefiLlama ·
+// priced 204 of 619 tokens" — because coverage is only ever ours.
+function tvlSourceLabel(
+  adapterIds: readonly string[],
+  protocolName: string,
+  usesExternalTvl: boolean,
+): string {
   const has = (id: string) => adapterIds.includes(id);
-  if (["sablier", "sablier-flow", "hedgey", "streamflow", "llamapay"].some(has)) return "TVL via DefiLlama";
+  if (usesExternalTvl) return "TVL via DefiLlama";
   if (["pinksale", "jupiter-lock"].some(has)) return "on-chain amounts, market-priced";
   // Non-breaking space inside the protocol name so it never splits across two
   // lines on mobile (the caption wraps as "data from Team Finance, market-priced"
@@ -793,7 +804,7 @@ export default async function ProtocolLandingPage(
                   is. Only shown where WE do the pricing; DefiLlama-sourced
                   protocols have no coverage figure of ours to report. */}
               <p className="text-xs mt-4" style={{ color: "#94A3B8" }}>
-                Vesting TVL only · updated daily · {tvlSourceLabel(meta.adapterIds, meta.name)}
+                Vesting TVL only · updated daily · {tvlSourceLabel(meta.adapterIds, meta.name, Boolean(meta.externalTvl))}
                 {(() => {
                   if (meta.externalTvl) return null;
                   const priced = chainTvl.reduce((n, r) => n + (r.tokensPriced ?? 0), 0);

@@ -175,9 +175,15 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     // served a 5,000-block getLogs at block 101.2M cleanly.
     { url: "https://bsc.rpc.blxrbdn.com" },
     // Binance's official public RPCs — historically unrestricted.
-    { url: "https://bsc-dataseed.binance.org" },
-    { url: "https://bsc-dataseed1.defibit.io" },
-    { url: "https://bsc-dataseed1.ninicoin.io" },
+    // 2026-09-10: tagged excludeForLogs. All three Binance dataseeds answer
+    // eth_getLogs with "limit exceeded" on any real range. They were untagged,
+    // so the rotating pool kept handing them to log scans: hedgey/56 attempted
+    // again at 04:28 today and failed with the same block-range error even
+    // after the archive endpoint above was added, because the dataseed came up
+    // first. Fine for contract reads, useless for event scans.
+    { url: "https://bsc-dataseed.binance.org",     excludeForLogs: true },
+    { url: "https://bsc-dataseed1.defibit.io",     excludeForLogs: true },
+    { url: "https://bsc-dataseed1.ninicoin.io",    excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://bsc.blockpi.network/v1/rpc/public", excludeForLogs: true },
     // 2026-05-26: tagged excludeForLogs — blastapi BSC also caps eth_getLogs
