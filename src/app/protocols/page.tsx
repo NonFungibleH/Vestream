@@ -489,7 +489,10 @@ export default async function UnlocksIndexPage() {
           isn't enough real traffic to fill it, and an empty "Reconnecting…"
           state undermines the rest of the page. Swapped in the TVL bar so
           the left column always has content and the two panels feel balanced. */}
-      <section className="px-4 md:px-8 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* pt: this is the first block on the paper ground after the ink hero,
+          and it had no top padding, so the two panels butted straight against
+          the boundary. Matches the same gap on /unlocks. */}
+      <section className="px-4 md:px-8 pt-12 md:pt-16 pb-10 md:pb-14 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TvlComparisonBar
           rows={tvlRows}
           externallySourced={externallySourced}
