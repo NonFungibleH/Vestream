@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -7,6 +8,7 @@ import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
 import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon } from "@/lib/protocol-constants";
 import { loadSnapshots } from "@/lib/vesting/chain-stats";
+import { getLastGoodHomeData, setLastGoodHomeData } from "@/lib/vesting/page-data-fallback";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
 import {
   getProtocolStats,
@@ -26,15 +28,28 @@ export const revalidate = 600;
 // served instead. See the token page for the Search Console fallout.
 export const maxDuration = 60;
 
-async function getHomepageLiveStats() {
+type HomeStats = { totalStreams: number; totalTvlUsd: number; lastIndexedAt: Date | null; protocolCount: number };
+// JSON shape of HomeStats in page_fallback (Date travels as ISO).
+type HomeStatsJson = Omit<HomeStats, "lastIndexedAt"> & { lastIndexedAt: string | null };
+
+const EMPTY_HOME = (): HomeStats =>
+  ({ totalStreams: 0, totalTvlUsd: 0, lastIndexedAt: null, protocolCount: listProtocols().length });
+
+async function lastGoodHome(): Promise<HomeStats | null> {
+  const j = await getLastGoodHomeData<HomeStatsJson>();
+  return j ? { ...j, lastIndexedAt: j.lastIndexedAt ? new Date(j.lastIndexedAt) : null } : null;
+}
+
+async function getHomepageLiveStats(): Promise<HomeStats> {
   // Skip DB work during the build phase. Postgres-js hangs for 60s on
   // ECONNREFUSED / mid-build connection drops (e.g. May 2 2026 build –
   // FATAL XX000 mid-collect, then `/page: /` retried 3× and exited 1).
-  // Returning the empty shape lets the build finish in seconds; ISR fills
-  // it with real data on the first runtime request after deploy. Same
-  // pattern as /protocols/[protocol] – see its loadProtocolData comment.
+  // Bake the LAST GOOD stats instead of the empty shape (2026-09-11): the
+  // empty shape rendered the hardcoded "150K+" pill after every deploy until
+  // the warm cron came round. The fallback read is a 2s-bounded, build-safe
+  // read of one row — see page-data-fallback.
   if (process.env.NEXT_PHASE === "phase-production-build") {
-    return { totalStreams: 0, totalTvlUsd: 0, lastIndexedAt: null, protocolCount: listProtocols().length };
+    return (await lastGoodHome()) ?? EMPTY_HOME();
   }
 
   // Aggregate across all 12+ protocols. Any single-protocol failure must not
@@ -74,14 +89,15 @@ async function getHomepageLiveStats() {
       if (!latest || d > latest) return d;
       return latest;
     }, null);
-    return {
-      totalStreams,
-      totalTvlUsd,
-      lastIndexedAt,
-      protocolCount: protocols.length,
-    };
+    const stats: HomeStats = { totalStreams, totalTvlUsd, lastIndexedAt, protocolCount: protocols.length };
+    if (totalStreams > 0) {
+      after(() => setLastGoodHomeData<HomeStatsJson>({ ...stats, lastIndexedAt: lastIndexedAt?.toISOString() ?? null }));
+      return stats;
+    }
+    // A zero read is a degraded read (pooler blip), not a real answer.
+    return (await lastGoodHome()) ?? stats;
   } catch {
-    return { totalStreams: 0, totalTvlUsd: 0, lastIndexedAt: null, protocolCount: 7 };
+    return (await lastGoodHome()) ?? EMPTY_HOME();
   }
 }
 

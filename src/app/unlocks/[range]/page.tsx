@@ -12,6 +12,7 @@
 //     until we ship per-window dynamic OGs)
 
 import type { Metadata } from "next";
+import { after } from "next/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
@@ -23,8 +24,10 @@ import {
   WindowSlug,
   getUnlocksInWindow,
   EMPTY_WINDOW_RESULT,
+  type WindowResult,
 } from "@/lib/vesting/unlock-windows";
 import { withTimeout } from "@/lib/with-timeout";
+import { getLastGoodUnlocksRangeData, setLastGoodUnlocksRangeData } from "@/lib/vesting/page-data-fallback";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { listProtocols } from "@/lib/protocol-constants";
 import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
@@ -226,12 +229,33 @@ export default async function WindowPage({ params }: PageParams) {
   // seconds instead of hanging the ISR render → a 524 (the same guardrail the
   // token pages got). withTimeout also catches rejects, so the old try/catch
   // is folded in.
-  const result = await withTimeout(
+  const live = await withTimeout(
     getUnlocksInWindow(ranges.startSec, ranges.endSec, 1000),
     12_000,
     EMPTY_WINDOW_RESULT,
     `unlocks-window:${range}`,
   );
+  // Last-good net (2026-09-11). These eight pages prerender EMPTY at build and
+  // every deploy resets ISR to that empty snapshot; the next visitor got the
+  // window cards with no table until a regeneration happened. On a good read,
+  // persist; on an empty one (build phase, timeout, pooler blip) serve the
+  // last good render instead of nothing. byToken.amount is a bigint, so it
+  // travels as a string.
+  type StoredWindow = Omit<WindowResult, "stats"> & {
+    stats: Omit<WindowResult["stats"], "byToken"> & { byToken: Array<Omit<WindowResult["stats"]["byToken"][number], "amount"> & { amount: string }> };
+  };
+  let result: WindowResult = live;
+  if (live.groups.length > 0) {
+    after(() => setLastGoodUnlocksRangeData<StoredWindow>(range, {
+      ...live,
+      stats: { ...live.stats, byToken: live.stats.byToken.map((t) => ({ ...t, amount: t.amount.toString() })) },
+    }));
+  } else {
+    const saved = await getLastGoodUnlocksRangeData<StoredWindow>(range);
+    if (saved && saved.groups.length > 0) {
+      result = { ...saved, stats: { ...saved.stats, byToken: saved.stats.byToken.map((t) => ({ ...t, amount: BigInt(t.amount) })) } };
+    }
+  }
 
   // Enrich the byToken aggregates with USD value and re-sort by USD (with
   // raw-amount as the tiebreaker for tokens we can't price). Users care

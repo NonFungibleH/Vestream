@@ -57,8 +57,15 @@ const TTL_SECONDS       = 60 * 60 * 24 * 7; // 7 days
 // safe at build because a hard 2s race + try/catch means it can only ever
 // resolve to data-or-null, never hang or throw (the precise failure the build
 // short-circuit guards against). WRITES are skipped at build.
-const DB_READ_TIMEOUT_MS = 2_000;
 const isBuildPhase = () => process.env.NEXT_PHASE === "phase-production-build";
+// Runtime: fail fast — this read sits on the degraded path of a live render,
+// and 2s is already generous for a primary-key lookup.
+// Build: be patient. `next build` prerenders the ~260 token pages in parallel
+// workers and the pooler queues under that burst; at 2s a few reads tripped
+// and each one baked an EMPTY page that would then sit empty for the full
+// 30-minute revalidate window after deploy. A slow bake costs seconds of
+// build time; an empty bake costs a visitor the page. 10s it is.
+const DB_READ_TIMEOUT_MS = () => (isBuildPhase() ? 10_000 : 2_000);
 
 async function readFallbackDb<T>(key: string): Promise<T | null> {
   try {
@@ -68,7 +75,7 @@ async function readFallbackDb<T>(key: string): Promise<T | null> {
         .where(eq(pageFallback.cacheKey, key))
         .limit(1),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("page-fallback DB read timeout")), DB_READ_TIMEOUT_MS),
+        setTimeout(() => reject(new Error("page-fallback DB read timeout")), DB_READ_TIMEOUT_MS()),
       ),
     ]);
     return (rows[0]?.payload ?? null) as T | null;
@@ -76,6 +83,18 @@ async function readFallbackDb<T>(key: string): Promise<T | null> {
     console.error(`[page-fallback] DB read failed for ${key}:`, err);
     return null;
   }
+}
+
+/** Awaited upsert — for cron writers, where after() is not available and a
+ *  fire-and-forget write would be killed when the function returns. */
+export async function persistFallbackDb<T>(key: string, value: T): Promise<void> {
+  if (isBuildPhase()) return;
+  await db.insert(pageFallback)
+    .values({ cacheKey: key, payload: value as object })
+    .onConflictDoUpdate({
+      target: pageFallback.cacheKey,
+      set:    { payload: value as object, updatedAt: new Date() },
+    });
 }
 
 function writeFallbackDb<T>(key: string, value: T): void {
@@ -236,6 +255,54 @@ export function getLastGoodUnlocksData<T>(): Promise<T | null> {
 
 export function setLastGoodUnlocksData<T>(data: T): void {
   writeFallback(unlocksIndexKey, data);
+}
+
+// ── / (homepage hero stats) ───────────────────────────────────────────────────
+//
+// The homepage bakes its hero stats EMPTY at build (the DB short-circuit) and
+// had no net, so the "N streams · $X tracked" pill showed the hardcoded
+// "150K+" fallback after every deploy until the warm cron came round. Same
+// last-good pattern as the other hubs.
+
+const homeKey = `${KEY_PREFIX}:home`;
+
+export function getLastGoodHomeData<T>(): Promise<T | null> {
+  return readFallback<T>(homeKey);
+}
+
+export function setLastGoodHomeData<T>(data: T): void {
+  writeFallback(homeKey, data);
+}
+
+// ── /unlocks/[range] ─────────────────────────────────────────────────────────
+
+const unlocksRangeKey = (slug: string) => `${KEY_PREFIX}:unlocks-range:${slug}`;
+
+export function getLastGoodUnlocksRangeData<T>(slug: string): Promise<T | null> {
+  return readFallback<T>(unlocksRangeKey(slug));
+}
+
+export function setLastGoodUnlocksRangeData<T>(slug: string, data: T): void {
+  writeFallback(unlocksRangeKey(slug), data);
+}
+
+// ── /token/[chainId]/[address] ───────────────────────────────────────────────
+//
+// The long tail. 259 sitemap token pages, none prerendered with data and none
+// warmed, on a site with little traffic — so nearly every organic visit was a
+// blocking cold render. These rows are what generateStaticParams bakes at
+// build (so a deploy ships the pages WITH data) and what the warm cron keeps
+// fresh in rotating slices (so the bake is never older than a couple of hours
+// even on a day nobody visits). Key uses the canonical (normalised) address.
+
+export const tokenKey = (chainId: number, address: string) => `${KEY_PREFIX}:token:${chainId}:${address}`;
+
+export function getLastGoodTokenData<T>(chainId: number, address: string): Promise<T | null> {
+  return readFallback<T>(tokenKey(chainId, address));
+}
+
+export function setLastGoodTokenData<T>(chainId: number, address: string, data: T): void {
+  writeFallback(tokenKey(chainId, address), data);
 }
 
 // ── /status (durable L2 only) ───────────────────────────────────────────────────

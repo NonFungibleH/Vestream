@@ -1122,6 +1122,24 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
        5. To verify a route is REALLY cached, don't trust timings or
           headers alone: `curl` it twice and byte-diff — re-renders leak
           through time-relative strings ("in 1 h 38 min").
+   - **Functions run in `dub1` (Dublin) — same AWS region as the Supabase
+     pooler (`aws-1-eu-west-1`). Set via `"regions": ["dub1"]` in vercel.json
+     (2026-09-11).** Before that they ran in Vercel's default `iad1` and every
+     query paid ~80ms transatlantic; cold token pages took 1.3–9.5s while the
+     same loaders total <1s from Europe. Never remove `regions`, and check
+     `x-vercel-id` (`<pop>::<function-region>::…`) before blaming a query.
+   - **Vercel's ISR cache is per-deployment** (their docs: "each new
+     deployment uses its own ISR cache and does not reuse the cache from a
+     previous deployment"). Every push to main puts every on-demand page back
+     to cold. That is why public pages must NEVER depend on computing data at
+     request time — the rule is **last-good first**: every ISR page reads its
+     `page_fallback` row (`lib/vesting/page-data-fallback.ts`) at build so the
+     prerender ships WITH data, persists good renders via `after()`, and
+     serves last-good on a degraded read. `/token/[chainId]/[address]`
+     prerenders the whole sitemap token list from those rows
+     (`generateStaticParams`), and the 15-min `warm` cron recomputes them in
+     rotating slices (`computeTokenSlice`) so the bake is never stale. Seed a
+     new page's rows before its first deploy or the first build bakes empty.
    - **`BSC_RPC_URL` / `POLYGON_RPC_URL` / `ALCHEMY_RPC_URL_BASE` are
      INTENTIONALLY OPTIONAL.** The user reviewed and rejected adding
      these as required env vars in `ef21b41` (Apr 29, 07:00). The

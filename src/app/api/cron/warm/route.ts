@@ -21,6 +21,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { PROTOCOL_SLUGS, getProtocol } from "@/lib/protocol-constants";
+import { listSitemapTokens } from "@/lib/sitemap-token-cache";
+import { computeTokenPageData } from "@/lib/vesting/token-page-data";
+import { persistFallbackDb, tokenKey } from "@/lib/vesting/page-data-fallback";
+import { normaliseAddress } from "@/lib/address-validation";
 
 export const runtime = "nodejs";
 // Raised for the two-pass warm: a STALE page costs an extra 12s wait plus a
@@ -79,5 +83,47 @@ export async function GET(req: NextRequest) {
   }
   const slow = warmed.filter((w) => typeof w.ms === "number" && w.ms > 1500);
 
-  return NextResponse.json({ ok: true, count: warmed.length, slow, warmed });
+  // ── Token page precompute, one rotating slice per tick ────────────────────
+  // The sitemap's ~260 token pages are prerendered at build from their
+  // page_fallback rows (see generateStaticParams on the token page). This is
+  // what keeps those rows fresh with no extra cron: every 15-minute tick
+  // computes the next TOKEN_SLICE tokens' payloads (data only — no page
+  // render, no HTTP) and awaits the upsert, so the whole list turns over
+  // roughly every two hours. Bounded so it can never push this function past
+  // its budget; a slow slice just finishes on a later tick.
+  const tokens = await computeTokenSlice();
+
+  return NextResponse.json({ ok: true, count: warmed.length, slow, warmed, tokens });
+}
+
+const TOKEN_SLICE       = 30;
+const TOKEN_CONCURRENCY = 3;
+const TOKEN_BUDGET_MS   = 90_000;
+
+async function computeTokenSlice(): Promise<{ slice: number; of: number; computed: number; failed: number; ms: number }> {
+  const started = Date.now();
+  const all = await listSitemapTokens();
+  if (all.length === 0) return { slice: 0, of: 0, computed: 0, failed: 0, ms: 0 };
+  const slices = Math.ceil(all.length / TOKEN_SLICE);
+  // Tick-indexed rotation: successive 15-minute ticks walk the list in order.
+  const slice = Math.floor(Date.now() / (15 * 60_000)) % slices;
+  const batch = all.slice(slice * TOKEN_SLICE, (slice + 1) * TOKEN_SLICE);
+
+  let computed = 0, failed = 0, i = 0;
+  const worker = async () => {
+    while (i < batch.length && Date.now() - started < TOKEN_BUDGET_MS) {
+      const t = batch[i++];
+      const addr = normaliseAddress(t.address);
+      try {
+        const data = await computeTokenPageData(t.chainId, addr);
+        // An empty overview is a real "no vesting" answer, not a last-good.
+        if (data.overview) { await persistFallbackDb(tokenKey(t.chainId, addr), data); computed++; }
+      } catch (err) {
+        failed++;
+        console.warn(`[cron/warm] token precompute failed ${t.chainId}/${addr}:`, String(err).slice(0, 120));
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: TOKEN_CONCURRENCY }, worker));
+  return { slice, of: slices, computed, failed, ms: Date.now() - started };
 }

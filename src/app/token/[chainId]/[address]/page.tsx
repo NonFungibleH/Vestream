@@ -69,7 +69,9 @@ import {
 const loadOverview = cache((cid: number, addr: string) => getTokenOverview(cid, addr));
 const loadMarket   = cache((cid: number, addr: string) => getTokenMarketData(cid, addr));
 import { withTimeout } from "@/lib/with-timeout";
-import { getTokenTotalSupplyRaw, totalSupplyWhole } from "@/lib/vesting/token-supply";
+import { loadTokenPageData, EMPTY_MARKET } from "@/lib/vesting/token-page-data";
+import { listSitemapTokens } from "@/lib/sitemap-token-cache";
+import { totalSupplyWhole } from "@/lib/vesting/token-supply";
 
 export const revalidate = 1800;
 // Search Console reported these as "Server error (5xx)". Same trap as /unlocks:
@@ -88,8 +90,33 @@ export const maxDuration = 60;
 // live). One stable sample is enough to flip `params` prerender-safe;
 // every other token renders on demand and is then ISR-cached. USDC on
 // Ethereum – guaranteed to exist forever.
-export function generateStaticParams() {
-  return [{ chainId: "1", address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }];
+//
+// Extended 2026-09-11 to the whole sitemap token list. These are the pages
+// Google sends people to, and until now every one of them rendered on demand:
+// a blocking cold render on first visit, and back to cold after every deploy
+// (Vercel's ISR cache is per-deployment). Prerendering them here means a deploy
+// ships them WITH data — each prerender reads its page_fallback row, which the
+// warm cron keeps fresh (see /api/cron/warm) — and ISR then regenerates behind
+// a served page instead of in front of a waiting visitor.
+//
+// The list comes from the sitemap's Redis cache (a plain REST GET, build-safe).
+// Bounded: if Redis is unreachable at build we fall back to the single USDC
+// sample so the build still completes; the rest render on demand as before.
+export async function generateStaticParams() {
+  const sample = [{ chainId: "1", address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }];
+  const tokens = await withTimeout(listSitemapTokens(), 8_000, [], "token:static-params");
+  if (tokens.length === 0) return sample;
+  const seen = new Set<string>();
+  const out: Array<{ chainId: string; address: string }> = [];
+  for (const t of tokens) {
+    if (!CHAIN_NAMES[t.chainId]) continue;
+    const address = normaliseAddress(t.address);
+    const key = `${t.chainId}:${address}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ chainId: String(t.chainId), address });
+  }
+  return out.length > 0 ? out : sample;
 }
 
 // ─── Small presentational helpers ───────────────────────────────────────────
@@ -257,89 +284,24 @@ export default async function TokenPage(
   // (308 before this page ever renders). Anything that reaches here is
   // already in canonical form.
 
-  // Promise.allSettled (not Promise.all): each loader hits a different
-  // dependency (4 × DB query, 1 × DexScreener fetch). If any one throws
-  // – a transient pool exhaustion, a DexScreener 5xx, an RPC blip – we
-  // do NOT want the whole render to fail and ISR-cache an empty page for
-  // the next 60 seconds. Each fallback keeps the page renderable from
-  // whatever data DID load. Same partial-failure-resilience pattern as
-  // /protocols/[slug] (commit 8ddabb7).
-  // Each loader is BOUNDED (withTimeout): allSettled waits for every promise
-  // to settle, so without per-call caps one stalled DB query (saturated
-  // pooler connection) hangs the whole render until Cloudflare's 100s gateway
-  // cuts it → a 524 the visitor sees as "this page couldn't load". A cap turns
-  // that into a partial render in seconds – the same graceful-degradation
-  // intent as the allSettled fallbacks, but for HANGS rather than throws.
-  // The OVERVIEW is the gatekeeper: it alone decides "has vesting" vs "no
-  // vesting". getTokenOverview returns null for a GENUINELY empty token (0 active
-  // streams) and an object otherwise — but a timeout/DB-blip is indistinguishable
-  // from genuine-empty if we let it degrade to a null fallback. That ambiguity is
-  // the AITECH bug: a cold-pooler timeout rendered "No vesting activity" and ISR
-  // cached THAT for 30 min, so a token with live streams showed empty.
-  //
-  // Fix: the overview load REJECTS on timeout (not a silent null fallback), and we
-  // throw on failure below so ISR never caches a failed render. On revalidation
-  // Next keeps serving the last good entry; only a first-ever blocking render hits
-  // the error boundary. The 4 loaders below stay soft (they're enhancements — a
-  // token still renders usefully if the calendar or recipient list degrades).
-  const settled = await Promise.allSettled([
-    Promise.race([
-      loadOverview(cid, addr),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("overview load exceeded 15s")), 15_000),
-      ),
-    ]),
-    // Past 12 + next 12 months = 24 monthly buckets. The calendar UI
-    // auto-folds the historical half away when it's all zero (fresh tokens
-    // with no tranche history to show), so passing monthsBack is safe even
-    // on brand-new listings.
-    withTimeout(getTokenUnlockCalendar(cid, addr, { monthsBack: 12, monthsForward: 12 }), 12_000, [], "pubtoken:calendar"),
-    withTimeout(getTokenRecipients(cid, addr, 10), 8_000, [], "pubtoken:recipients"),
-    withTimeout(getTokenUpcomingEvents(cid, addr, 8), 8_000, [], "pubtoken:upcoming"),
-    withTimeout(loadMarket(cid, addr), 8_000, null, "pubtoken:market"),
-    // On-chain total supply → "% of total supply" context. Nice-to-have; a 5s
-    // ceiling + null fallback means a slow/absent RPC never blocks the page.
-    withTimeout(getTokenTotalSupplyRaw(cid, addr), 5_000, null, "pubtoken:supply"),
-  ]);
+  // Everything below used to be an inline fan-out of six loaders. It now goes
+  // through loadTokenPageData, which keeps the same semantics — bounded soft
+  // loaders, an overview gatekeeper that throws rather than caching "no
+  // vesting" on a DB blip — and adds what the inline version could not do:
+  //   - at build it reads the page's last-good row so the prerender ships
+  //     WITH data (see generateStaticParams above);
+  //   - at runtime a failed live load serves last-good instead of erroring,
+  //     and only throws if there is no last-good either, so ISR still never
+  //     caches an empty render.
+  // overview + market are passed pre-memoised so generateMetadata and this
+  // body share one call each (React.cache above).
+  const data = await loadTokenPageData(cid, addr, { overview: loadOverview, market: loadMarket });
 
-  // Log every rejection – invisible failures are the whole reason cache
-  // poisoning bit us before. Production observability lives in logs.
-  settled.forEach((s, i) => {
-    if (s.status === "rejected") {
-      const stage = ["overview", "calendar", "recipients", "upcoming", "market", "supply"][i];
-      console.error(`[token-page] ${stage} failed for ${cid}/${addr}:`, s.reason);
-    }
-  });
-
-  // GATEKEEPER: a failed overview load must NOT be cached as an empty page.
-  // At runtime, throw → ISR declines to cache this render and retries on the next
-  // request, serving the previous good entry in the meantime, instead of poisoning
-  // the token with "No vesting activity" for the full 30-min revalidate window.
-  //
-  // But NEVER throw during `next build`: the generateStaticParams prerender has no
-  // reliable DB, and a throw there fails the whole build (getTokenOverview already
-  // guards the build phase, so this is belt-and-suspenders). Build renders are
-  // throwaway — ISR replaces them on the first runtime request — so a build-time
-  // failure is treated as empty.
-  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
-  if (settled[0].status === "rejected" && !isBuildPhase) {
-    throw new Error(
-      `[token-page] overview load failed for ${cid}/${addr}, declining to cache empty render: ` +
-      `${settled[0].reason instanceof Error ? settled[0].reason.message : String(settled[0].reason)}`,
-    );
-  }
-  const overview   = settled[0].status === "fulfilled" ? settled[0].value : null;
-  const calendar   = settled[1].status === "fulfilled" ? settled[1].value : [];
-  const recipients = settled[2].status === "fulfilled" ? settled[2].value : [];
-  const upcoming   = settled[3].status === "fulfilled" ? settled[3].value : [];
-  // settled[4].value can be null on a withTimeout fallback – coerce to the
-  // empty shell so `market.x` access stays safe.
-  const market: TokenMarketData = (settled[4].status === "fulfilled" && settled[4].value) ? settled[4].value : {
-    priceUsd: null, fdv: null, marketCap: null, change24h: null,
-    liquidity: null, volume24h: null, tokenName: null, tokenSymbol: null, imageUrl: null,
-    website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
-    dexScreenerUrl: null, dexToolsUrl: null, pairUrl: null,
-  };
+  const overview   = data?.overview ?? null;
+  const calendar   = data?.calendar ?? [];
+  const recipients = data?.recipients ?? [];
+  const upcoming   = data?.upcoming ?? [];
+  const market: TokenMarketData = data?.market ?? EMPTY_MARKET;
 
   const hasVesting  = overview !== null && overview.streamCount > 0;
   const priceUsd    = market.priceUsd;
@@ -353,7 +315,7 @@ export default async function TokenPage(
   // On-chain total supply → "% of total supply" context. Works even for
   // unpriced tokens (where FDV/marketCap are absent), so users can always see
   // how much of the whole token is locked / unlocking.
-  const rawSupply    = settled[5].status === "fulfilled" ? settled[5].value : null;
+  const rawSupply    = data?.supplyRaw != null ? BigInt(data.supplyRaw) : null;
   const totalSupply  = overview ? totalSupplyWhole(rawSupply, overview.tokenDecimals) : null;
   const lockedPctOfSupply = totalSupply && overview && totalSupply > 0
     ? (overview.lockedTokensWhole / totalSupply) * 100

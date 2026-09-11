@@ -80,3 +80,28 @@ export async function readSitemapSymbolsCache(): Promise<string[]> {
 export async function readSitemapTokensCache(): Promise<SitemapTokenEntry[]> {
   return (await restGet<SitemapTokenEntry[]>(TOKENS_KEY)) ?? [];
 }
+
+/**
+ * The canonical list of token pages worth prerendering / precomputing.
+ *
+ * Redis first (fast, build-safe REST read of the list the refresh-rollups
+ * cron writes); if that is empty or unreachable, the same rollup query the
+ * sitemap itself uses, bounded so a slow pooler can only cost 5s. Both the
+ * token page's generateStaticParams and the warm cron's precompute read
+ * through this, so neither has a single point of failure on the Redis key —
+ * an empty key would otherwise silently shrink the bake to the one USDC
+ * sample and leave the whole long tail cold again.
+ */
+export async function listSitemapTokens(): Promise<SitemapTokenEntry[]> {
+  const cached = await readSitemapTokensCache();
+  if (cached.length > 0) return cached;
+  try {
+    const { getTopTokens } = await import("./vesting/token-symbols");
+    const { withTimeout } = await import("./with-timeout");
+    const rows = await withTimeout(getTopTokens(1500), 5_000, [], "sitemap-tokens:db");
+    return rows.map((r) => ({ chainId: r.chainId, address: r.address }));
+  } catch (err) {
+    console.warn("[sitemap-cache] DB fallback for token list failed (non-fatal):", err);
+    return [];
+  }
+}
