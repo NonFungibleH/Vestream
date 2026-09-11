@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 import { PROTOCOL_SLUGS, getProtocol } from "@/lib/protocol-constants";
+import { ALL_WINDOW_SLUGS } from "@/lib/vesting/unlock-windows";
 import { listSitemapTokens } from "@/lib/sitemap-token-cache";
 import { computeTokenPageData } from "@/lib/vesting/token-page-data";
 import { persistFallbackDb, tokenKey } from "@/lib/vesting/page-data-fallback";
@@ -54,6 +55,11 @@ export async function GET(req: NextRequest) {
     `${BASE}/unlocks`,
     `${BASE}/chains`,
     ...slugs.map((s) => `${BASE}/protocols/${s}`),
+    // The eight /unlocks/[range] pages bake from their page_fallback rows at
+    // build (see the range page). Warming them here is what WRITES those rows
+    // — a page nobody visits between deploys would otherwise never have one,
+    // and the next build would bake it empty again. ~0.3s each.
+    ...ALL_WINDOW_SLUGS.map((r) => `${BASE}/unlocks/${r}`),
   ];
 
   // Warm SEQUENTIALLY, not in parallel. Firing 13 heavy renders at once

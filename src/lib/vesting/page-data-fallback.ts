@@ -97,16 +97,21 @@ export async function persistFallbackDb<T>(key: string, value: T): Promise<void>
     });
 }
 
-function writeFallbackDb<T>(key: string, value: T): void {
-  if (isBuildPhase()) return; // never write mid-prerender
-  // Fire-and-forget upsert — don't block the response on DB latency.
-  db.insert(pageFallback)
+// Returns the write so a caller inside `after()` can hand it back and have the
+// function kept alive until it commits. This used to be fire-and-forget, and
+// on Vercel that meant the insert was frequently frozen mid-flight when the
+// function exited after the response — observed 2026-09-11: the homepage
+// rendered with data, its after() ran, and no `home` row ever appeared while
+// sibling pages' rows did. Still swallowed on error; still skipped at build.
+function writeFallbackDb<T>(key: string, value: T): Promise<void> {
+  if (isBuildPhase()) return Promise.resolve(); // never write mid-prerender
+  return db.insert(pageFallback)
     .values({ cacheKey: key, payload: value as object })
     .onConflictDoUpdate({
       target: pageFallback.cacheKey,
       set:    { payload: value as object, updatedAt: new Date() },
     })
-    .catch((err) => {
+    .then(() => undefined, (err) => {
       console.error(`[page-fallback] DB write failed for ${key}:`, err);
     });
 }
@@ -158,16 +163,15 @@ async function readFallbackRedis<T>(key: string): Promise<T | null> {
  * readFallbackRedis. The value is JSON.stringify'd to match what the SDK wrote
  * (and what readFallbackRedis JSON.parses back). Fire-and-forget; swallowed.
  */
-function writeFallbackRedis<T>(key: string, value: T): void {
+function writeFallbackRedis<T>(key: string, value: T): Promise<void> {
   const url   = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return;
-  // No await — don't block the render/after() on Redis latency.
-  fetch(url, {
+  if (!url || !token) return Promise.resolve();
+  return fetch(url, {
     method:  "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body:    JSON.stringify(["SET", key, JSON.stringify(value), "EX", String(TTL_SECONDS)]),
-  }).catch((err) => {
+  }).then(() => undefined, (err) => {
     console.error(`[page-fallback] Redis write failed for ${key}:`, err);
   });
 }
@@ -185,9 +189,10 @@ async function readFallback<T>(key: string): Promise<T | null> {
   return readFallbackDb<T>(key);
 }
 
-function writeFallback<T>(key: string, value: T): void {
-  writeFallbackRedis(key, value);
-  writeFallbackDb(key, value);
+// Every page calls this as `after(() => setLastGoodX(data))`; returning the
+// combined promise is what makes after() wait for the writes to land.
+function writeFallback<T>(key: string, value: T): Promise<void> {
+  return Promise.all([writeFallbackRedis(key, value), writeFallbackDb(key, value)]).then(() => undefined);
 }
 
 // ── /protocols/[slug] ──────────────────────────────────────────────────────────
@@ -198,8 +203,8 @@ export function getLastGoodProtocolData<T>(slug: string): Promise<T | null> {
   return readFallback<T>(protocolKey(slug));
 }
 
-export function setLastGoodProtocolData<T>(slug: string, data: T): void {
-  writeFallback(protocolKey(slug), data);
+export function setLastGoodProtocolData<T>(slug: string, data: T): Promise<void> {
+  return writeFallback(protocolKey(slug), data);
 }
 
 // ── /protocols (index) ─────────────────────────────────────────────────────────
@@ -210,8 +215,8 @@ export function getLastGoodProtocolsData<T>(): Promise<T | null> {
   return readFallback<T>(indexKey);
 }
 
-export function setLastGoodProtocolsData<T>(data: T): void {
-  writeFallback(indexKey, data);
+export function setLastGoodProtocolsData<T>(data: T): Promise<void> {
+  return writeFallback(indexKey, data);
 }
 
 // ── /chains/[slug] ───────────────────────────────────────────────────────────
@@ -222,8 +227,8 @@ export function getLastGoodChainData<T>(slug: string): Promise<T | null> {
   return readFallback<T>(chainKey(slug));
 }
 
-export function setLastGoodChainData<T>(slug: string, data: T): void {
-  writeFallback(chainKey(slug), data);
+export function setLastGoodChainData<T>(slug: string, data: T): Promise<void> {
+  return writeFallback(chainKey(slug), data);
 }
 
 // ── /chains (index) ──────────────────────────────────────────────────────────
@@ -234,8 +239,8 @@ export function getLastGoodChainsData<T>(): Promise<T | null> {
   return readFallback<T>(chainsIndexKey);
 }
 
-export function setLastGoodChainsData<T>(data: T): void {
-  writeFallback(chainsIndexKey, data);
+export function setLastGoodChainsData<T>(data: T): Promise<void> {
+  return writeFallback(chainsIndexKey, data);
 }
 
 // ── /unlocks (index) ─────────────────────────────────────────────────────────
@@ -253,8 +258,8 @@ export function getLastGoodUnlocksData<T>(): Promise<T | null> {
   return readFallback<T>(unlocksIndexKey);
 }
 
-export function setLastGoodUnlocksData<T>(data: T): void {
-  writeFallback(unlocksIndexKey, data);
+export function setLastGoodUnlocksData<T>(data: T): Promise<void> {
+  return writeFallback(unlocksIndexKey, data);
 }
 
 // ── / (homepage hero stats) ───────────────────────────────────────────────────
@@ -270,8 +275,8 @@ export function getLastGoodHomeData<T>(): Promise<T | null> {
   return readFallback<T>(homeKey);
 }
 
-export function setLastGoodHomeData<T>(data: T): void {
-  writeFallback(homeKey, data);
+export function setLastGoodHomeData<T>(data: T): Promise<void> {
+  return writeFallback(homeKey, data);
 }
 
 // ── /unlocks/[range] ─────────────────────────────────────────────────────────
@@ -282,8 +287,8 @@ export function getLastGoodUnlocksRangeData<T>(slug: string): Promise<T | null> 
   return readFallback<T>(unlocksRangeKey(slug));
 }
 
-export function setLastGoodUnlocksRangeData<T>(slug: string, data: T): void {
-  writeFallback(unlocksRangeKey(slug), data);
+export function setLastGoodUnlocksRangeData<T>(slug: string, data: T): Promise<void> {
+  return writeFallback(unlocksRangeKey(slug), data);
 }
 
 // ── /token/[chainId]/[address] ───────────────────────────────────────────────
@@ -301,8 +306,8 @@ export function getLastGoodTokenData<T>(chainId: number, address: string): Promi
   return readFallback<T>(tokenKey(chainId, address));
 }
 
-export function setLastGoodTokenData<T>(chainId: number, address: string, data: T): void {
-  writeFallback(tokenKey(chainId, address), data);
+export function setLastGoodTokenData<T>(chainId: number, address: string, data: T): Promise<void> {
+  return writeFallback(tokenKey(chainId, address), data);
 }
 
 // ── /status (durable L2 only) ───────────────────────────────────────────────────
@@ -317,6 +322,6 @@ export function getLastGoodStatusDb<T>(): Promise<T | null> {
   return readFallbackDb<T>(statusKey);
 }
 
-export function setLastGoodStatusDb<T>(data: T): void {
-  writeFallbackDb(statusKey, data);
+export function setLastGoodStatusDb<T>(data: T): Promise<void> {
+  return writeFallbackDb(statusKey, data);
 }
