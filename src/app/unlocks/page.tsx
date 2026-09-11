@@ -19,6 +19,7 @@ import { InkHero } from "@/components/InkHero";
 import { getProtocol, chainBrand } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 import { withTimeout } from "@/lib/with-timeout";
+import { getNewLocks, enrichNewLocksWithUsd, type NewLockRow } from "@/lib/vesting/new-locks";
 
 // ISR (30-min). Renders once per revalidation (background — no request-timeout
 // pressure), NOT per request. The force-dynamic version fired window scans on
@@ -195,6 +196,32 @@ function fmtAmt(amount: string | null, decimals: number): string | null {
   } catch { return null; }
 }
 
+/**
+ * Projects that locked tokens in the last 24h, newest first.
+ *
+ * Fetched independently of getPageData rather than folded into it: this is a
+ * complementary feed, so an empty or slow result should hide one section, not
+ * degrade the unlock table that is the page's actual promise. Bounded at 8s —
+ * measured at ~1s including pricing.
+ */
+async function getNewLocksFeed(limit = 12): Promise<NewLockRow[]> {
+  const rows = await withTimeout(getNewLocks(24, limit), 8_000, [], "unlocks:new-locks");
+  if (rows.length === 0) return rows;
+  // redis:false is ISR-safe (the Upstash SDK hardcodes no-store and hard-errors
+  // inside an ISR render); liveFallback is left on because this handful of
+  // brand-new tokens is exactly the set the DB price cache has not seen yet.
+  return withTimeout(enrichNewLocksWithUsd(rows, { redis: false }), 5_000, rows, "unlocks:new-locks-usd");
+}
+
+/** "3h ago" / "12m ago" — how long since we indexed the lock. */
+function agoLabel(d: Date | string): string {
+  const ms = Date.now() - new Date(d).getTime();
+  const mins = Math.max(0, Math.round(ms / 60_000));
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  return `${hrs}h ago`;
+}
+
 function whenLabel(sec: number): { date: string; rel: string } {
   const d = new Date(sec * 1000);
   const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -207,6 +234,7 @@ export default async function UnlocksIndex() {
   // Table FIRST: it is the page's actual content, and it must not be starved by
   // the window counts (which are a secondary nav aid and currently all "–").
   const { counts, upcoming } = await getPageData(25);
+  const newLocks = await getNewLocksFeed(12);
 
   const indexJsonLd = {
     "@context": "https://schema.org",
@@ -346,6 +374,80 @@ export default async function UnlocksIndex() {
           <p className="text-[11px] mt-3" style={{ color: "#B8BABD" }}>
             Holder counts come from Vestream&apos;s per-wallet index. A dash means we haven&apos;t finished
             indexing that token&apos;s recipients yet.
+          </p>
+        </section>
+      )}
+
+      {/* ── Locked today ──────────────────────────────────────────────
+          A discovery feed, not a leaderboard. Ordered newest-first and
+          deliberately NOT ranked by size: roughly half of brand-new tokens
+          have no DEX pair yet, and USD ranking would have hidden most of the
+          day's genuine activity behind that gap. The reader is here to find
+          projects that have just locked supply, so every project earns a row
+          and the dollar figure is context where we have it. */}
+      {newLocks.length > 0 && (
+        <section className="px-4 md:px-8 pb-16 max-w-6xl mx-auto w-full">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1 pt-10 md:pt-12" style={{ borderTop: "1px solid rgba(21,23,26,0.08)" }}>
+            <h2 className="font-bold" style={{ fontSize: "clamp(1.5rem, 2.6vw, 1.9rem)", color: "#0B0E12", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+              Locked <span style={{ color: "#0F8A8A" }}>today</span>
+            </h2>
+            <span className="text-xs" style={{ color: "#8B8E92" }}>
+              {newLocks.length} project{newLocks.length === 1 ? "" : "s"} in the last 24 hours
+            </span>
+          </div>
+          <p className="text-sm mb-5" style={{ color: "#475569" }}>
+            Projects that just put tokens into vesting. A new lock is a team committing supply on a
+            schedule, so this is where tomorrow&apos;s unlock calendar starts.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {newLocks.map((n) => {
+              const p = getProtocol(n.protocol);
+              const b = chainBrand(n.chainId);
+              const amt = fmtAmt(n.totalAmount, n.decimals);
+              return (
+                <Link
+                  key={`${n.chainId}-${n.tokenAddress}`}
+                  href={`/token/${n.chainId}/${n.tokenAddress}`}
+                  className="rounded-2xl p-4 transition-all hover:-translate-y-0.5 block"
+                  style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-bold truncate" style={{ color: "#1A1D20" }}>
+                      {n.tokenSymbol || `${n.tokenAddress.slice(0, 6)}…${n.tokenAddress.slice(-4)}`}
+                    </span>
+                    <span className="text-[11px] whitespace-nowrap" style={{ color: b.color }}>{b.name}</span>
+                  </div>
+
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="font-semibold tabular-nums" style={{ fontSize: "1.15rem", color: "#1A1D20" }}>
+                      {amt ?? "–"}
+                    </span>
+                    {n.usdValue != null && (
+                      <span className="text-xs font-semibold tabular-nums" style={{ color: "#0F8A8A" }}>
+                        {fmtUsd(n.usdValue)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] mt-0.5" style={{ color: "#B8BABD" }}>locked into vesting</div>
+
+                  <div className="mt-3 pt-3 flex items-center justify-between gap-2 text-[11px]" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+                    <span className="font-medium truncate" style={{ color: p?.color ?? "#8B8E92" }}>{p?.name ?? n.protocol}</span>
+                    <span className="whitespace-nowrap" style={{ color: "#8B8E92" }}>
+                      {n.lockCount} schedule{n.lockCount === 1 ? "" : "s"} · {agoLabel(n.seenAt)}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* The cache has no on-chain creation timestamp, so "today" means
+              first indexed in the last 24h AND not back-dated. Say so rather
+              than imply we read a creation block. */}
+          <p className="text-[11px] mt-3" style={{ color: "#B8BABD" }}>
+            New locks first indexed in the last 24 hours, whose vesting had not already started.
+            A missing dollar figure means the token has no DEX pair we can price yet.
           </p>
         </section>
       )}
