@@ -28,6 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
@@ -59,6 +60,14 @@ import {
   type TokenUpcomingEvent,
   type TokenMarketData,
 } from "@/lib/vesting/token-aggregates";
+
+// generateMetadata and the page body both need the overview and the market
+// data, and Next runs them as separate calls with no shared memo — so a cold
+// render was paying for the two heaviest loads twice (overview ~240ms on big
+// tokens, DexScreener ~400ms), serially in metadata and again in the body.
+// React.cache() memoises per request across both, so each runs once.
+const loadOverview = cache((cid: number, addr: string) => getTokenOverview(cid, addr));
+const loadMarket   = cache((cid: number, addr: string) => getTokenMarketData(cid, addr));
 import { withTimeout } from "@/lib/with-timeout";
 import { getTokenTotalSupplyRaw, totalSupplyWhole } from "@/lib/vesting/token-supply";
 
@@ -187,8 +196,8 @@ export async function generateMetadata(
   // Bounded – generateMetadata blocks the response head; a stalled query here
   // hangs the page just like the body fan-out below.
   const [overviewRes, marketRes] = await Promise.allSettled([
-    withTimeout(getTokenOverview(cid, addr), 8_000, null, "pubtoken-meta:overview"),
-    withTimeout(getTokenMarketData(cid, addr), 6_000, null, "pubtoken-meta:market"),
+    withTimeout(loadOverview(cid, addr), 8_000, null, "pubtoken-meta:overview"),
+    withTimeout(loadMarket(cid, addr), 6_000, null, "pubtoken-meta:market"),
   ]);
   const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
   // marketRes always fulfils now (withTimeout), but its value can be null on
@@ -275,7 +284,7 @@ export default async function TokenPage(
   // token still renders usefully if the calendar or recipient list degrades).
   const settled = await Promise.allSettled([
     Promise.race([
-      getTokenOverview(cid, addr),
+      loadOverview(cid, addr),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("overview load exceeded 15s")), 15_000),
       ),
@@ -287,7 +296,7 @@ export default async function TokenPage(
     withTimeout(getTokenUnlockCalendar(cid, addr, { monthsBack: 12, monthsForward: 12 }), 12_000, [], "pubtoken:calendar"),
     withTimeout(getTokenRecipients(cid, addr, 10), 8_000, [], "pubtoken:recipients"),
     withTimeout(getTokenUpcomingEvents(cid, addr, 8), 8_000, [], "pubtoken:upcoming"),
-    withTimeout(getTokenMarketData(cid, addr), 8_000, null, "pubtoken:market"),
+    withTimeout(loadMarket(cid, addr), 8_000, null, "pubtoken:market"),
     // On-chain total supply → "% of total supply" context. Nice-to-have; a 5s
     // ceiling + null fallback means a slow/absent RPC never blocks the page.
     withTimeout(getTokenTotalSupplyRaw(cid, addr), 5_000, null, "pubtoken:supply"),
