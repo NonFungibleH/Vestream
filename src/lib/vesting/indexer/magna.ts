@@ -262,11 +262,23 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       // Consequence: the response contains EVERY transfer of those tokens, not
       // just claims, so it can be huge for a popular token. Free-tier RPCs cap
       // response size (~100KB — see the CLAUDE.md landmine), and 20 tokens over
-      // a 9,999-block window measured ~8.5k logs, right at the edge. ADDR_BATCH
-      // is therefore deliberately small; keep it that way.
+      // a 9,999-block window measured ~8.5k logs, right at the edge. Keep the
+      // log batch deliberately small.
+      //
+      // 2026-09-12: the log batch is now SEPARATE from the multicall batch and
+      // much smaller. magna/10 had been stalled 30h on "backend response too
+      // large" because Optimism's token list includes 0x4200…0042 — the OP
+      // token itself. Measured: OP alone returns 4,958 logs over a 2,000-block
+      // window (fine on its own), but bundled with 11 other tokens in one
+      // request the response exceeds the cap. The multicall is a contract read
+      // with different limits and stays at 12; only the getLogs batch shrinks,
+      // which keeps the 2,000-block window and therefore the catch-up rate.
+      // A smaller WINDOW was the other option and is worse: at 500 blocks an
+      // hourly tick cannot keep pace with Optimism's block rate at all.
       const tokensToWatch = new Set<string>();
       const vesterTokenPre = new Map<string, string>();
-      const ADDR_BATCH = 12;
+      const ADDR_BATCH = 12;       // multicall (contract reads)
+      const LOG_ADDR_BATCH = 4;    // getLogs (response-size bound — see above)
       for (let i = 0; i < vesters.length; i += ADDR_BATCH) {
         const slice = vesters.slice(i, i + ADDR_BATCH);
         try {
@@ -288,8 +300,8 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
 
       const candidateTxs = new Map<Hex, Set<string>>(); // txHash -> vesters involved
       const tokenList = Array.from(tokensToWatch) as `0x${string}`[];
-      for (let i = 0; i < tokenList.length; i += ADDR_BATCH) {
-        const slice = tokenList.slice(i, i + ADDR_BATCH);
+      for (let i = 0; i < tokenList.length; i += LOG_ADDR_BATCH) {
+        const slice = tokenList.slice(i, i + LOG_ADDR_BATCH);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const logs = await (client.getLogs as any)({
           address:   slice,
