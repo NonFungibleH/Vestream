@@ -25,7 +25,12 @@ import { useState, useEffect } from "react";
 import { AppStoreBadges } from "./AppStoreBadges";
 
 const VIEW_COOKIE = "vestr_token_views";
-const FREE_LIMIT  = 3;
+// 25 (was 3, raised 2026-09-12): the token pages are the SEO surface and the
+// "Locked today" feed on /unlocks now sends people through several of them in
+// one sitting, so three was walling browsers before they'd seen the product.
+// Cookie size at 25 keys is ~1.3 KB (`chainId:address` each), under the 4 KB
+// cap; go past ~70 and the counter should move to localStorage.
+const FREE_LIMIT  = 25;
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function readViewed(): string[] {

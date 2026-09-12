@@ -139,7 +139,7 @@ export function middleware(req: NextRequest) {
     // walled when clicking through from the dashboard / browsing the site.
     // This flag lets the client-side gate detect a logged-in user. It is NOT
     // a security control — real data access stays server-gated; this only
-    // unlocks the "3 free token pages" marketing wall. Lifetime matches the
+    // unlocks the "25 free token pages" marketing wall. Lifetime matches the
     // 30-day session and is refreshed on every dashboard visit, so existing
     // sessions pick it up without re-login. Set ONLY on the dashboard branch —
     // never on the shared-cached /token responses (which also pass through this
