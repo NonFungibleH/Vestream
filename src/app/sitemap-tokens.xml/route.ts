@@ -77,7 +77,11 @@ export async function GET() {
   // of the per-chain token pages, and the other half of the crawl hierarchy
   // (hub → chain pages, chain pages → hub). Best-effort — an empty read just
   // means the token URLs go out without hubs this time.
-  const symbols = isBuild ? [] : await withTimeout(getMultiChainSymbols(500).catch(() => []), 8_000, [], "sitemap-symbols");
+  // Read at build too (same bounded pattern as the token list above): this
+  // route is ISR, so whatever the build emits is what serves until the next
+  // revalidation, and skipping the query at build shipped a sitemap with no
+  // hubs at all.
+  const symbols = await withTimeout(getMultiChainSymbols(500).catch(() => []), isBuild ? 15_000 : 8_000, [], "sitemap-symbols");
 
   const urls = [
     ...symbols.map(
