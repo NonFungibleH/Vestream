@@ -496,6 +496,27 @@ export async function runWalkerSnapshot(
       const LOW_BAND_HEADLINE_DISCOUNT = 1.0;
 
       const perChain = { tvl: 0, high: 0, medium: 0, low: 0 };
+      // ── Absurd-input guard (2026-09-12) ───────────────────────────────
+      //
+      // The per-token ceiling assumes the raw value is roughly right and just
+      // needs bounding. When the raw value is orders of magnitude past the
+      // cap, that assumption is wrong: the price or the supply is fabricated,
+      // and capping quietly converts nonsense into the MAXIMUM credit.
+      //
+      // Found on pinksale/137: a token whose symbol is "BTC", at a random
+      // Polygon address, priced $0.000965, with DexScreener reporting $4.82bn
+      // liquidity and a $964bn market cap. Every existing check passed — the
+      // symbol is well-shaped (the May 2026 guard looks for address-fragment
+      // symbols, not impersonation), and the fabricated liquidity put it in
+      // the HIGH band — so its $868bn raw value was capped to exactly
+      // $200,000,000 and credited in full. That one pair moved site-wide TVL
+      // from $1.67bn to $1.87bn.
+      //
+      // A cap ratio this large is a data-quality signal, not a size signal.
+      // Demote to LOW, the existing "visible for audit, never in headline"
+      // path, rather than inventing a number.
+      const ABSURD_CAP_RATIO = 10;
+
       for (const p of priced) {
         const cap = perTokenCeiling(p);
         const credited = Math.min(p.usd, cap);
@@ -504,9 +525,11 @@ export async function runWalkerSnapshot(
         // Demote unverified-symbol tokens before bucketing. Their
         // pricing remains visible in tvl_low for transparency, but
         // they never feed the headline regardless of liquidity depth.
+        const absurd = cap > 0 && p.usd > cap * ABSURD_CAP_RATIO;
         const effectiveConfidence: "high" | "medium" | "low" =
-          (p.confidence === "high" && !hasRealSymbol(p.tokenSymbol))
+          (p.confidence === "high" && (!hasRealSymbol(p.tokenSymbol) || absurd))
             ? "low"
+            : absurd && p.confidence === "medium" ? "low"
             : p.confidence;
 
         // Bucket the credited (capped) portion by confidence.
