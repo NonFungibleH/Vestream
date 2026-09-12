@@ -104,13 +104,37 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
   // 91 times in one Doppler backfill). If the env URL is on a host we
   // already know cannot serve event scans, carry the tag over so it is only
   // used for contract reads, exactly like its free-pool twin.
-  if (envValue) out.push({ url: envValue, excludeForLogs: LOG_UNSAFE_HOSTS.some((h) => envValue.includes(h)) || undefined });
-  out.push(...freeFallbacks);
+  if (envValue) out.push({ url: envValue, excludeForLogs: isLogUnsafe(envValue) || undefined });
+  // 2026-09-12: apply the same host rule to the HARDCODED entries, not just
+  // the env slot. LOG_UNSAFE_HOSTS already listed 1rpc.io, but only env URLs
+  // were checked against it, so the pool entries were tagged by hand — and
+  // only two of the seven 1rpc entries ever got tagged. The five that did not
+  // (bnb, matic, arb, op, avax) stayed eligible for eth_getLogs, where 1rpc
+  // caps at 50 blocks and 403s our 2k-5k windows. That is what killed
+  // hedgey/56 for 105 days and, this week, hedgey/10 and magna/10. Deriving
+  // the tag from the host list means adding a bad host fixes every chain at
+  // once instead of relying on someone spotting all seven.
+  out.push(...freeFallbacks.map((p) => (
+    p.excludeForLogs || !isLogUnsafe(p.url) ? p : { ...p, excludeForLogs: true }
+  )));
   return out;
 }
 
-/** Hosts whose free tiers prune or cap eth_getLogs (see per-entry notes below). */
-const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.io", "rpc.ankr.com"];
+/**
+ * Hosts whose free tiers prune or cap eth_getLogs (see per-entry notes below).
+ *
+ * This is the single source of truth: buildPool() derives `excludeForLogs`
+ * from it for every provider, env or hardcoded. Add a host here and it is
+ * excluded from log scans on every chain at once.
+ *
+ * onfinality added 2026-09-12: their public endpoints answer 429 to
+ * eth_getLogs under any real load. base.api.onfinality.io stalled the
+ * magna/8453 and uncx-vm/8453 cursors for 69h and 86h, and the ETH pool note
+ * above already recorded them as rate-limited. Contract reads still use them.
+ */
+const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.io", "rpc.ankr.com", "onfinality.io"];
+
+const isLogUnsafe = (url: string) => LOG_UNSAFE_HOSTS.some((h) => url.includes(h));
 
 // ── Pool expansion notes (2026-05-14, updated 2026-05-28) ─────────────────
 // Free-tier pools widened so a paid-RPC-free deploy can ride out individual
