@@ -1122,6 +1122,19 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
        5. To verify a route is REALLY cached, don't trust timings or
           headers alone: `curl` it twice and byte-diff — re-renders leak
           through time-relative strings ("in 1 h 38 min").
+   - **An indexer cursor can fall so far behind it will never catch up — check
+     the GAP before debugging the RPC.** `hedgey/56` sat 72.4 million blocks
+     behind (cursor 49,117,999 vs a BSC head of 121.5M), which is ~36,000
+     daily ticks at `maxBlocksPerScan`. It had alarmed for 105 days and no
+     amount of RPC fixing would have moved it. Reset to `head - 20,000` on
+     2026-09-12. That was safe ONLY because the daily seeder is the complete
+     source for Hedgey (it enumerates every plan via ERC721 `tokenByIndex`,
+     so the indexer is incremental-only and discovers nothing the seeder
+     misses — 861 rows, 585 active, refreshed hourly throughout the stall).
+     **Do not reset a cursor for a protocol where the indexer is the ONLY
+     discovery path** (Doppler, Magna, UNCX-VM): there you must backfill, not
+     skip. Gap check: compare `indexer_state.last_confirmed_block` against the
+     chain head before assuming the error message is the whole story.
    - **Functions run in `dub1` (Dublin) — same AWS region as the Supabase
      pooler (`aws-1-eu-west-1`). Set via `"regions": ["dub1"]` in vercel.json
      (2026-09-11).** Before that they ran in Vercel's default `iad1` and every
