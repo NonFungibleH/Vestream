@@ -217,40 +217,20 @@ export async function ProtocolUnlocksView({
   // active pill still renders when someone deep-links to an idle chain.
   const filterChains = meta.chainIds.filter((cid) => chainsWithUnlocks.has(cid) || cid === filterChainId);
 
-  // ItemList JSON-LD – unlock events scoped to this protocol.
+  // ItemList JSON-LD – plain ListItems (name + url), not schema.org Events;
+  // see the note on the /unlocks/[range] page for why Event was dropped.
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type":    "ItemList",
     name:       `${meta.name} upcoming unlocks`,
     description: `Live calendar of every upcoming ${meta.name} token unlock.`,
     numberOfItems: result.groups.length,
-    itemListElement: result.groups.slice(0, 50).map((g, i) => {
-      const tokenUrl = `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}`;
-      const label = tokenLabel(g.tokenSymbol, g.tokenAddress);
-      return {
-        "@type":   "ListItem",
-        position:  i + 1,
-        item: {
-          "@type":              "Event",
-          name:                 `${label} unlock`,
-          // A token unlock is a scheduled online occurrence. Google REQUIRES
-          // eventAttendanceMode=Online for a VirtualLocation to be valid —
-          // omitting it caused "Invalid object type for field location".
-          description:          `Scheduled ${label} token unlock on ${meta.name}.`,
-          startDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-          // An unlock happens at a point in time, so endDate == startDate.
-          // Google flags a missing endDate as an incomplete Event; this is the
-          // honest value rather than inventing a duration.
-          endDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-          eventStatus:          "https://schema.org/EventScheduled",
-          eventAttendanceMode:  "https://schema.org/OnlineEventAttendanceMode",
-          url:                  tokenUrl,
-          image:                ["https://www.vestream.io/opengraph-image"],
-          location:  { "@type": "VirtualLocation", url: tokenUrl },
-          organizer: { "@type": "Organization", name: meta.name, url: `https://www.vestream.io/protocols/${meta.slug}` },
-        },
-      };
-    }),
+    itemListElement: result.groups.slice(0, 50).map((g, i) => ({
+      "@type":  "ListItem",
+      position: i + 1,
+      name:     `${tokenLabel(g.tokenSymbol, g.tokenAddress)} unlock on ${meta.name}`,
+      url:      `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}`,
+    })),
   };
 
   const breadcrumbJsonLd = {

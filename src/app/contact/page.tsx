@@ -17,7 +17,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ContactFormCard } from "./ContactFormCard";
 
 export const metadata: Metadata = {
-  title: "Contact – Vestream",
+  title: "Contact | Vestream",
   description:
     "Get in touch with Vestream. Questions about the product, API access, Enterprise pricing, partnerships, or anything else – we reply within one business day.",
   alternates: { canonical: "https://www.vestream.io/contact" },

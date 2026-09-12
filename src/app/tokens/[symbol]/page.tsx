@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     // Build-time DB outage – return a neutral title; ISR will re-render
     // proper metadata on first runtime request.
   }
-  if (matches.length === 0) return { title: "Token not found – Vestream" };
+  if (matches.length === 0) return { title: "Token not found | Vestream" };
 
   const display = matches[0]?.symbol ?? symbol.toUpperCase();
   const url     = `https://www.vestream.io/tokens/${symbol.toLowerCase()}`;
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     const m    = matches[0];
     const chain = CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`;
     return {
-      title:       `${display} unlock schedule on ${chain} – Vestream`,
+      title:       `${display} unlock schedule on ${chain} | Vestream`,
       description: `Track ${display} vesting on ${chain} – ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
       alternates:  { canonical: `https://www.vestream.io/token/${m.chainId}/${m.address}` },
     };

@@ -26,7 +26,7 @@ import { VestingDemo } from "@/components/VestingDemo";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
-  title: "Interactive + live vesting demo · Vestream",
+  title: "Interactive + live vesting demo | Vestream",
   description: "See Vestream in action: a 90-second claim-flow walkthrough, a live vesting demo on your phone, and a Sepolia vesting you can deploy yourself on Sablier.",
   alternates: { canonical: "https://www.vestream.io/demo" },
 };

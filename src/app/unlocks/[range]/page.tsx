@@ -312,51 +312,25 @@ export default async function WindowPage({ params }: PageParams) {
         .join(", ")}.`
     : null;
 
-  // ItemList JSON-LD – every unlock as an Event so Google can render rich
-  // event-result cards in SERPs. Capped at 50 items (Google's practical
-  // upper bound for ItemList rich results). `eventStatus` +
-  // `eventAttendanceMode` are required by Google's rich-result validator –
-  // without them the events are ignored even if `startDate` / `location`
-  // are otherwise present.
   const itemListGroups = result.groups.slice(0, 50);
+  // Plain ListItems (name + url), NOT schema.org Events. Each unlock used to
+  // be an Event with a VirtualLocation and an Organization organizer — 150
+  // objects per page. Google's Event rich results are for things people
+  // attend, misuse is a documented manual-action trigger ("spammy structured
+  // markup"), and an unlock never earned an event card anyway. The list still
+  // tells crawlers what the page enumerates and where each item lives.
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type":    "ItemList",
     name:       `Token unlocks ${def.label.toLowerCase()}`,
     description: def.description,
     numberOfItems: itemListGroups.length,
-    itemListElement: itemListGroups.map((g, i) => {
-      const tokenUrl = `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}`;
-      const tokenStr = g.tokenSymbol ?? "Unknown";
-      const amountStr = fmtTokenAmount(g.amount, g.tokenDecimals);
-      return {
-        "@type":   "ListItem",
-        position:  i + 1,
-        item: {
-          "@type":              "Event",
-          name:                 `${tokenStr} unlock – ${amountStr} ${tokenStr}`,
-          description:          `${amountStr} ${tokenStr} unlocks on ${protocolDisplay(g.protocol).name}.`,
-          startDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-          // An unlock happens at a point in time, so endDate == startDate.
-          // Google flags a missing endDate as an incomplete Event; this is the
-          // honest value rather than inventing a duration.
-          endDate:            g.eventTime ? new Date(g.eventTime * 1000).toISOString() : undefined,
-          eventStatus:          "https://schema.org/EventScheduled",
-          eventAttendanceMode:  "https://schema.org/OnlineEventAttendanceMode",
-          url:                  tokenUrl,
-          image:                ["https://www.vestream.io/opengraph-image"],
-          location: {
-            "@type": "VirtualLocation",
-            url:     tokenUrl,
-          },
-          organizer: {
-            "@type": "Organization",
-            name:    protocolDisplay(g.protocol).name,
-            url:     `https://www.vestream.io/protocols/${g.protocol}`,
-          },
-        },
-      };
-    }),
+    itemListElement: itemListGroups.map((g, i) => ({
+      "@type":  "ListItem",
+      position: i + 1,
+      name:     `${fmtTokenAmount(g.amount, g.tokenDecimals)} ${g.tokenSymbol ?? "Unknown"} unlock on ${protocolDisplay(g.protocol).name}`,
+      url:      `https://www.vestream.io/token/${g.chainId}/${g.tokenAddress}`,
+    })),
   };
 
   const breadcrumbJsonLd = {

@@ -291,6 +291,18 @@ export function setLastGoodUnlocksRangeData<T>(slug: string, data: T): Promise<v
   return writeFallback(unlocksRangeKey(slug), data);
 }
 
+// ── /unlocks/report/[month] ──────────────────────────────────────────────────
+
+const reportKey = (month: string) => `${KEY_PREFIX}:unlocks-report:${month}`;
+
+export function getLastGoodReportData<T>(month: string): Promise<T | null> {
+  return readFallback<T>(reportKey(month));
+}
+
+export function setLastGoodReportData<T>(month: string, data: T): Promise<void> {
+  return writeFallback(reportKey(month), data);
+}
+
 // ── /token/[chainId]/[address] ───────────────────────────────────────────────
 //
 // The long tail. 259 sitemap token pages, none prerendered with data and none

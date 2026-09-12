@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!page) return { title: "Not found · Vestream Docs" };
   const url = `https://www.vestream.io/docs/${slug}`;
   return {
-    title: `${page.title} · Vestream Docs`,
+    title: `${page.title} | Vestream Docs`,
     description: page.description,
     alternates: { canonical: url },
     openGraph: { title: page.title, description: page.description, url, siteName: "Vestream", type: "article" },

@@ -20,7 +20,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { QuickstartTabs } from "./QuickstartTabs";
 
 export const metadata: Metadata = {
-  title:       "Quickstart – Vestream API + MCP",
+  title:       "API + MCP Quickstart | Vestream",
   description: "From zero to first vesting query in 60 seconds. Step-by-step setup for Claude Desktop, Cursor, Windsurf, and ChatGPT.",
   alternates:  { canonical: "https://www.vestream.io/developer/quickstart" },
 };

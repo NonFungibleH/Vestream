@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "Monthly token unlock reports: the biggest scheduled unlocks each month across every protocol and chain, ranked by USD value. Updated from live vesting data.",
   alternates: { canonical: "https://www.vestream.io/unlocks/report" },
   openGraph: {
-    title: "Token Unlock Reports, Monthly Archive",
+    title: "Token Unlock Reports, Monthly Archive | Vestream",
     description: "The biggest token unlocks each month, ranked by USD value across every protocol and chain.",
     url: "https://www.vestream.io/unlocks/report",
     siteName: "Vestream",

@@ -11,7 +11,7 @@
 // advances daily, and a render-time timestamp made Google distrust the signal.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { getTopTokens } from "@/lib/vesting/token-symbols";
+import { getTopTokens, getMultiChainSymbols } from "@/lib/vesting/token-symbols";
 import { readSitemapTokensCache } from "@/lib/sitemap-token-cache";
 import { withTimeout } from "@/lib/with-timeout";
 
@@ -72,12 +72,23 @@ export async function GET() {
     }
   }
 
-  const urls = topTokens
-    .map(
+  // Multi-chain symbol hubs (/tokens/usdt). These were in NO sitemap until
+  // 2026-09-12 despite being prerendered with real data: the natural parent
+  // of the per-chain token pages, and the other half of the crawl hierarchy
+  // (hub → chain pages, chain pages → hub). Best-effort — an empty read just
+  // means the token URLs go out without hubs this time.
+  const symbols = isBuild ? [] : await withTimeout(getMultiChainSymbols(500).catch(() => []), 8_000, [], "sitemap-symbols");
+
+  const urls = [
+    ...symbols.map(
+      (sym) =>
+        `  <url>\n    <loc>${SITE}/tokens/${escapeXml(encodeURIComponent(sym))}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`,
+    ),
+    ...topTokens.map(
       (t) =>
         `  <url>\n    <loc>${SITE}/token/${t.chainId}/${escapeXml(t.address)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.65</priority>\n  </url>`,
-    )
-    .join("\n");
+    ),
+  ].join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

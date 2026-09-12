@@ -160,40 +160,7 @@ export async function getTopTokens(limit = 1000): Promise<TopTokenRow[]> {
       address: tokenVestingRollups.tokenAddress,
     })
     .from(tokenVestingRollups)
-    .where(
-      and(
-        sql`length(${tokenVestingRollups.tokenAddress}) >= 32`,
-        notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
-        // SEO quality gate (Aug 2026): only sitemap tokens that are still
-        // actively vesting (a real upcoming unlock — last_end in the future)
-        // AND have more than one recipient. Flooding the sitemap with the
-        // long tail of fully-vested, single-stream dust memecoins wasted crawl
-        // budget and signalled low value → most sat "Discovered/Crawled - not
-        // indexed" or fell to the noindex 404 page. The dust is still reachable
-        // via internal links; it's just no longer force-submitted.
-        sql`${tokenVestingRollups.lastEnd} > ${Math.floor(Date.now() / 1000)}`,
-        sql`${tokenVestingRollups.walletCount} >= 2`,
-        // Tightened 2026-09-09. The gate above still shipped 708 URLs, and
-        // Search Console showed Google had seen essentially all of them and
-        // indexed almost none: 356 "Discovered - currently not indexed" plus
-        // 359 "Crawled - currently not indexed" = 715.
-        //
-        // The reason is thinness at scale. Of 9,079 rollups, 85% carry no USD
-        // value, 91% have a single wallet and 87% have no market cap, so most
-        // submitted pages were a token nobody has heard of with no number on
-        // it. Hundreds of near-identical shells read as templated low-value
-        // content, and that judgement is domain-wide, not per-page.
-        //
-        // So the sitemap now submits only pages with a REASON to exist: a real
-        // locked value, and an unlock still ahead of them (the countdown is
-        // what makes the page unique and worth a visit). ~247 URLs instead of
-        // 708. Everything else stays crawlable via internal links; it is just
-        // no longer force-submitted. Widen this once Google is indexing what
-        // we do submit.
-        sql`${tokenVestingRollups.lockedValueUsd} > 1000`,
-        sql`${tokenVestingRollups.nextUnlock} is not null`,
-      ),
-    )
+    .where(sitemapTokenGate())
     .orderBy(sql`${tokenVestingRollups.streamCount} desc`)
     .limit(limit);
 
@@ -293,4 +260,111 @@ export async function getChainSummariesForSymbol(symbol: string): Promise<ChainS
   }
 
   return [...merged.values()].sort((a, b) => b.streamCount - a.streamCount);
+}
+
+/**
+ * The SEO quality gate: a token page worth submitting to Google, and worth
+ * linking to from another page. ONE definition, shared by the sitemap
+ * (getTopTokens) and by related-token links (getRelatedTokens), so internal
+ * links never point at a page we would not submit.
+ *
+ * History: the first gate (Aug 2026) required an unlock still ahead and >1
+ * recipient, and still shipped 708 URLs of which Google indexed almost none —
+ * 356 "Discovered - currently not indexed" plus 359 "Crawled - currently not
+ * indexed". Of 9,079 rollups, 85% carry no USD value, 91% have a single wallet
+ * and 87% have no market cap, so most submitted pages were a token nobody has
+ * heard of with no number on it, and hundreds of near-identical shells read as
+ * templated low-value content — a judgement Google applies domain-wide.
+ * Tightened 2026-09-09 to pages with a REASON to exist: real locked value and
+ * an unlock still ahead (the countdown is what makes the page unique). ~250
+ * URLs. Everything else stays crawlable via internal links; it is just not
+ * force-submitted. Widen once Google is indexing what we do submit.
+ */
+export function sitemapTokenGate() {
+  return and(
+    sql`length(${tokenVestingRollups.tokenAddress}) >= 32`,
+    notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
+    sql`${tokenVestingRollups.lastEnd} > ${Math.floor(Date.now() / 1000)}`,
+    sql`${tokenVestingRollups.walletCount} >= 2`,
+    sql`${tokenVestingRollups.lockedValueUsd} > 1000`,
+    sql`${tokenVestingRollups.nextUnlock} is not null`,
+  );
+}
+
+export interface RelatedToken {
+  chainId:        number;
+  tokenAddress:   string;
+  tokenSymbol:    string | null;
+  lockedValueUsd: number | null;
+  walletCount:    number;
+  nextUnlock:     number | null;
+  protocols:      string[];
+}
+
+/**
+ * Other tokens vesting on the same chain, biggest locked value first, that
+ * pass the sitemap gate. Rendered as a "related tokens" block on every token
+ * page — until 2026-09-12 a token page linked to no other token page at all,
+ * so the whole long tail hung off the sitemap alone, which is exactly what
+ * "Discovered - currently not indexed" means.
+ */
+export async function getRelatedTokens(chainId: number, tokenAddress: string, limit = 6): Promise<RelatedToken[]> {
+  if (isDbUnreachable()) return [];
+  const rows = await db
+    .select({
+      chainId:        tokenVestingRollups.chainId,
+      tokenAddress:   tokenVestingRollups.tokenAddress,
+      tokenSymbol:    tokenVestingRollups.tokenSymbol,
+      lockedValueUsd: tokenVestingRollups.lockedValueUsd,
+      walletCount:    tokenVestingRollups.walletCount,
+      nextUnlock:     tokenVestingRollups.nextUnlock,
+      protocols:      tokenVestingRollups.protocols,
+    })
+    .from(tokenVestingRollups)
+    .where(and(
+      sitemapTokenGate(),
+      sql`${tokenVestingRollups.chainId} = ${chainId}`,
+      sql`${tokenVestingRollups.tokenAddress} <> ${normaliseAddress(tokenAddress)}`,
+    ))
+    .orderBy(sql`${tokenVestingRollups.lockedValueUsd} desc nulls last`)
+    .limit(limit);
+  return rows.map((r) => ({ ...r, protocols: r.protocols ?? [] }));
+}
+
+/** How many public chains a symbol vests on — >1 means the /tokens/[symbol]
+ *  hub is a real multi-chain page rather than a redirect back to one token. */
+export async function getSymbolChainCount(symbol: string): Promise<number> {
+  const trimmed = symbol.trim();
+  if (!trimmed || isDbUnreachable()) return 0;
+  const rows = await db
+    .select({ n: sql<number>`count(distinct ${tokenVestingRollups.chainId})::int` })
+    .from(tokenVestingRollups)
+    .where(and(
+      sql`lower(${tokenVestingRollups.tokenSymbol}) = ${trimmed.toLowerCase()}`,
+      notInArray(tokenVestingRollups.chainId, [...PUBLIC_HIDDEN_CHAIN_IDS]),
+    ));
+  return rows[0]?.n ?? 0;
+}
+
+/**
+ * Symbols whose gated token pages span 2+ chains — the /tokens/[symbol] hubs
+ * worth submitting. A hub for a single-chain symbol redirects to the token
+ * page, so it is not a page in its own right.
+ */
+export async function getMultiChainSymbols(limit = 500): Promise<string[]> {
+  if (isDbUnreachable()) return [];
+  const rows = await db
+    .select({ sym: sql<string>`lower(${tokenVestingRollups.tokenSymbol})` })
+    .from(tokenVestingRollups)
+    .where(and(
+      sitemapTokenGate(),
+      sql`${tokenVestingRollups.tokenSymbol} is not null`,
+      sql`length(${tokenVestingRollups.tokenSymbol}) >= 2`,
+      sql`lower(${tokenVestingRollups.tokenSymbol}) != 'unknown'`,
+    ))
+    .groupBy(sql`lower(${tokenVestingRollups.tokenSymbol})`)
+    .having(sql`count(distinct ${tokenVestingRollups.chainId}) >= 2`)
+    .orderBy(sql`sum(${tokenVestingRollups.lockedValueUsd}) desc nulls last`)
+    .limit(limit);
+  return rows.map((r) => r.sym);
 }

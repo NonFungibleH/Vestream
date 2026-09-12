@@ -4,7 +4,7 @@ import { docsByCategory } from "@/lib/docs";
 import { DocsIcon } from "./_components/DocsIcon";
 
 export const metadata: Metadata = {
-  title: "Vestream Docs · How to track token vesting & unlocks",
+  title: "Docs: how to track token vesting & unlocks | Vestream",
   description:
     "The complete Vestream guide: track wallets, set up unlock notifications, use the Explorer and tax reports, and see every integrated protocol and chain.",
   alternates: { canonical: "https://www.vestream.io/docs" },

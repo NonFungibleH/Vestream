@@ -16,7 +16,7 @@ import { protocolBrand, protocolIcon, chainBrand, chainIcon } from "@/lib/protoc
 import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
-  title: "Find your token vestings – scan any wallet · Vestream",
+  title: "Find your token vestings – scan any wallet | Vestream",
   description: "Paste a wallet address and instantly see every vesting owed to it across Sablier, Hedgey, Streamflow, Jupiter Lock and more, EVM and Solana. Free, no signup.",
   alternates: { canonical: "https://www.vestream.io/find-vestings" },
 };

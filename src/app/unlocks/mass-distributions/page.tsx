@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description: `On-chain unlock events with ${MIN_WALLETS}+ recipients in the next ${WINDOW_DAYS} days. Catches airdrops, launchpad rounds, and seed allocations.`,
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {
-    title:       "Token mass distributions",
+    title:       "Token mass distributions | Vestream",
     description: `${MIN_WALLETS}+ recipients per event, next ${WINDOW_DAYS} days.`,
     url:         CANONICAL_URL,
     siteName:    "Vestream",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Token mass distributions",
+    title:       "Token mass distributions | Vestream",
     description: `${MIN_WALLETS}+ recipients per event, next ${WINDOW_DAYS} days.`,
   },
 };

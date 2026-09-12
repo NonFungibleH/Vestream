@@ -103,7 +103,7 @@ async function loadSnapshot(): Promise<SnapshotRow[]> {
 }
 
 export const metadata = {
-  title: "Smart Money – Vestream",
+  title: "Smart Money | Vestream",
   description: "Wallets receiving vestings of the most distinct tokens across all indexed protocols. Daily snapshot.",
 };
 

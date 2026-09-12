@@ -135,12 +135,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Monthly Token Unlock Reports — the hub + a window of dated reports
-  // (last 3 months through next 6). Pure date math, no DB.
+  // (last 3 months through next 2). Pure date math, no DB. Was +6: months
+  // that far out were empty ("No token unlocks are currently indexed for
+  // March 2027") and being force-submitted as thin pages. +2 matches what the
+  // report page prerenders and what the 60/90-day calendars already prove
+  // has data; empty months beyond that self-noindex on the page.
   const nowUtc = new Date();
   const reportEntries: MetadataRoute.Sitemap = [
     { url: `${SITE}/unlocks/report`, lastModified: today, changeFrequency: "daily", priority: 0.8 },
   ];
-  for (let offset = 6; offset >= -3; offset--) {
+  for (let offset = 2; offset >= -3; offset--) {
     const d = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth() + offset, 1));
     const slug = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
     reportEntries.push({

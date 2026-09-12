@@ -39,9 +39,9 @@ export async function generateMetadata({ params }: { params: Promise<{ chain: st
   const url  = `https://www.vestream.io/chains/${chain}`;
   if (chainId === undefined) {
     const up = upcomingChain(chain);
-    if (!up) return { title: "Chain not found · Vestream" };
+    if (!up) return { title: "Chain not found | Vestream" };
     return {
-      title: `${up.name} Token Unlocks & Vesting`,
+      title: `${up.name} Token Unlocks & Vesting | Vestream`,
       description: `Token vesting on ${up.name}: which vesting protocols are deployed there, why unlock schedules matter on ${up.name}, and when Vestream will index it. ${up.tagline}`,
       alternates: { canonical: url },
       openGraph: { title: `${up.name} Token Unlocks & Vesting`, description: up.tagline, url, siteName: "Vestream", type: "website" },
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ chain: st
   }
   const name = chainBrand(chainId).name;
   return {
-    title: `${name} Token Unlocks & Vesting Tracker`,
+    title: `${name} Token Unlocks & Vesting Tracker | Vestream`,
     description: `Live token vesting on ${name}: total value locked, the protocols integrated on ${name}, and the biggest upcoming token unlocks, priced in USD. Free, updated continuously.`,
     alternates: { canonical: url },
     openGraph: {

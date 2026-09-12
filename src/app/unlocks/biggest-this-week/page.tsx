@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description: "Every token unlock landing this week, ranked by USD value. Live, on-chain, across Sablier, Hedgey, UNCX, and more.",
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {
-    title:       "Biggest token unlocks this week",
+    title:       "Biggest token unlocks this week | Vestream",
     description: "Ranked by USD value, live on-chain.",
     url:         CANONICAL_URL,
     siteName:    "Vestream",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Biggest token unlocks this week",
+    title:       "Biggest token unlocks this week | Vestream",
     description: "Ranked by USD value, live on-chain.",
   },
 };

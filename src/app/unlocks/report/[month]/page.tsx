@@ -8,6 +8,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { cache } from "react";
+import { getLastGoodReportData, setLastGoodReportData } from "@/lib/vesting/page-data-fallback";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
@@ -72,17 +75,49 @@ const FULL: Intl.DateTimeFormatOptions = { month: "long", day: "numeric", timeZo
 const dayFmt  = (ts: number) => new Date(ts * 1000).toLocaleDateString("en-US", DAY);
 const fullFmt = (ts: number) => new Date(ts * 1000).toLocaleDateString("en-US", FULL);
 
+type Report = Awaited<ReturnType<typeof getMonthlyUnlockReport>>;
+
+/**
+ * One load for generateMetadata and the body (React.cache), with the same
+ * last-good net the range pages have:
+ *   build   → the last-good row, so the prerender ships with data instead of
+ *             "No token unlocks are currently indexed for October 2026" (which
+ *             was live in the sitemap while the 30-day calendar showed 688);
+ *   runtime → live; persist when non-empty; on an empty read serve last-good.
+ * `knownEmpty` is true only when a RUNTIME read came back empty AND there is
+ * no last-good — the one case that earns noindex.
+ */
+const loadReport = cache(async (year: number, mo: number, month: string): Promise<{ report: Report; knownEmpty: boolean }> => {
+  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+  if (isBuild) {
+    const saved = await getLastGoodReportData<Report>(month);
+    return { report: saved ?? emptyMonthlyReport(year, mo), knownEmpty: false };
+  }
+  const live = await withTimeout(getMonthlyUnlockReport(year, mo), 14_000, emptyMonthlyReport(year, mo), `monthly-report:${month}`);
+  if (!live.isEmpty) {
+    after(() => setLastGoodReportData<Report>(month, live));
+    return { report: live, knownEmpty: false };
+  }
+  const saved = await getLastGoodReportData<Report>(month);
+  return saved ? { report: saved, knownEmpty: false } : { report: live, knownEmpty: true };
+});
+
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { month } = await params;
   const parsed = parseMonth(month);
-  if (!parsed) return { title: "Token Unlock Report – Vestream" };
+  if (!parsed) return { title: "Token Unlock Report | Vestream" };
   const label = monthLabel(parsed.year, parsed.month);
+  const { knownEmpty } = await loadReport(parsed.year, parsed.month, month);
   const title = `${label} Token Unlock Report | Vestream`;
   const desc  = `The biggest token unlocks in ${label}, ranked by USD value across every protocol and chain Vestream tracks, dates, amounts, and dollar impact.`;
   const url   = `https://www.vestream.io/unlocks/report/${month}`;
   return {
     title,
     description: desc,
+    // A month with nothing indexed is a placeholder, not a page: keep it out
+    // of the index until it has unlocks. Never set at build (data may just be
+    // absent there); only on a runtime read that positively found nothing.
+    ...(knownEmpty ? { robots: { index: false, follow: true } } : {}),
     alternates: { canonical: url },
     openGraph: { title: `${label} Token Unlock Report`, description: desc, url, siteName: "Vestream", type: "article" },
     twitter:   { card: "summary_large_image", title: `${label} Token Unlock Report`, description: desc },
@@ -96,12 +131,7 @@ export default async function MonthlyReportPage({ params }: PageParams) {
   const { year, month: mo } = parsed;
   const label = monthLabel(year, mo);
 
-  const report = await withTimeout(
-    getMonthlyUnlockReport(year, mo),
-    14_000,
-    emptyMonthlyReport(year, mo),
-    `monthly-report:${month}`,
-  );
+  const { report } = await loadReport(year, mo, month);
 
   const top3 = report.topEvents.filter((e) => e.usdValue != null).slice(0, 3);
   const answerLead = report.isEmpty

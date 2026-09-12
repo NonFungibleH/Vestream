@@ -29,6 +29,7 @@ import {
   type TokenUpcomingEvent, type TokenMarketData,
 } from "./token-aggregates";
 import { getTokenTotalSupplyRaw } from "./token-supply";
+import { getRelatedTokens, getSymbolChainCount, type RelatedToken } from "./token-symbols";
 import { withTimeout } from "../with-timeout";
 import { getLastGoodTokenData, setLastGoodTokenData } from "./page-data-fallback";
 
@@ -40,6 +41,10 @@ export interface TokenPageData {
   market:     TokenMarketData;
   /** On-chain total supply in raw base units, stringified bigint; null when unknown. */
   supplyRaw:  string | null;
+  /** Other gated tokens on the same chain, for the related-tokens block. */
+  related:    RelatedToken[];
+  /** Public chains this symbol vests on; >1 means the /tokens hub is worth linking. */
+  symbolChains: number;
   /** When this payload was computed (ISO). Lets a caller judge staleness. */
   computedAt: string;
 }
@@ -86,11 +91,12 @@ export async function computeTokenPageData(
     withTimeout(getTokenUpcomingEvents(cid, addr, 8), 8_000, [], "pubtoken:upcoming"),
     withTimeout(marketFn(cid, addr), 8_000, null, "pubtoken:market"),
     withTimeout(getTokenTotalSupplyRaw(cid, addr), 5_000, null, "pubtoken:supply"),
+    withTimeout(getRelatedTokens(cid, addr, 6), 5_000, [], "pubtoken:related"),
   ]);
 
   settled.forEach((s, i) => {
     if (s.status === "rejected") {
-      const stage = ["overview", "calendar", "recipients", "upcoming", "market", "supply"][i];
+      const stage = ["overview", "calendar", "recipients", "upcoming", "market", "supply", "related"][i];
       console.error(`[token-page] ${stage} failed for ${cid}/${addr}:`, s.reason);
     }
   });
@@ -102,13 +108,20 @@ export async function computeTokenPageData(
   }
 
   const supply = settled[5].status === "fulfilled" ? settled[5].value : null;
+  const overview = settled[0].value;
+  // Needs the symbol, so it runs after the fan-out; one indexed count.
+  const symbolChains = overview?.tokenSymbol
+    ? await withTimeout(getSymbolChainCount(overview.tokenSymbol), 3_000, 0, "pubtoken:symbol-chains")
+    : 0;
   return {
-    overview:   settled[0].value,
+    overview,
     calendar:   settled[1].status === "fulfilled" ? settled[1].value : [],
     recipients: settled[2].status === "fulfilled" ? settled[2].value : [],
     upcoming:   settled[3].status === "fulfilled" ? settled[3].value : [],
     market:     (settled[4].status === "fulfilled" && settled[4].value) ? settled[4].value : EMPTY_MARKET,
     supplyRaw:  supply == null ? null : supply.toString(),
+    related:    settled[6].status === "fulfilled" ? settled[6].value : [],
+    symbolChains,
     computedAt: new Date().toISOString(),
   };
 }

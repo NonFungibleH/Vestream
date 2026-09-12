@@ -60,6 +60,10 @@ export async function GET(req: NextRequest) {
     // — a page nobody visits between deploys would otherwise never have one,
     // and the next build would bake it empty again. ~0.3s each.
     ...ALL_WINDOW_SLUGS.map((r) => `${BASE}/unlocks/${r}`),
+    // Monthly reports: the hub plus the same months the page prerenders
+    // (last month through two ahead). Same reason as the range pages.
+    `${BASE}/unlocks/report`,
+    ...reportMonths().map((m) => `${BASE}/unlocks/report/${m}`),
   ];
 
   // Warm SEQUENTIALLY, not in parallel. Firing 13 heavy renders at once
@@ -100,6 +104,15 @@ export async function GET(req: NextRequest) {
   const tokens = await computeTokenSlice();
 
   return NextResponse.json({ ok: true, count: warmed.length, slow, warmed, tokens });
+}
+
+function reportMonths(): string[] {
+  const now = new Date(); const out: string[] = [];
+  for (let offset = -1; offset <= 2; offset++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1));
+    out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+  return out;
 }
 
 const TOKEN_SLICE       = 30;

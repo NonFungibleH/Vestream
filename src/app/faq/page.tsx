@@ -26,7 +26,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "FAQ – Vestream | Token vesting, unlock alerts, developer API",
+  title: "FAQ: token vesting, unlock alerts, developer API | Vestream",
   description:
     "Vestream FAQ: supported protocols and chains, how token unlock alerts work, pricing, security, the developer REST API and MCP server, and your account.",
   alternates: { canonical: "https://www.vestream.io/faq" },

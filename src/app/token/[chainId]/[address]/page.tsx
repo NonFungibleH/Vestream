@@ -39,7 +39,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { Provenance } from "@/components/Provenance";
-import { PROTOCOLS, listProtocols, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
+import { PROTOCOLS, listProtocols, PUBLIC_CHAIN_COUNT, chainSlug } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
@@ -224,7 +224,7 @@ export async function generateMetadata(
   const { chainId, address } = await params;
   const cid  = Number(chainId);
   const addr = normaliseAddress(decodeURIComponent(address));
-  if (!CHAIN_NAMES[cid]) return { title: "Token not found – Vestream" };
+  if (!CHAIN_NAMES[cid]) return { title: "Token not found | Vestream" };
 
   // Same allSettled pattern as the page render below – if metadata
   // generation throws, Next fails the whole page with a 500 instead
@@ -253,8 +253,8 @@ export async function generateMetadata(
   // about a schedule that does not exist (2026-09-12). follow stays on so
   // the links out to /find-vestings and /unlocks still carry.
   const title   = knownEmpty
-    ? `No vesting found for ${symbol} on ${chain} – Vestream`
-    : `${symbol} unlocks on ${chain} – Vestream`;
+    ? `No vesting found for ${symbol} on ${chain} | Vestream`
+    : `${symbol} unlocks on ${chain} | Vestream`;
   const desc    = overview
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
     : knownEmpty
@@ -623,6 +623,17 @@ export default async function TokenPage(
                 display={`${addr.slice(0, 6)}…${addr.slice(-4)}`}
                 style={{ color: "#8B8E92" }}
               />
+              {/* Up to the multi-chain hub, only when it IS one: a single-chain
+                  symbol's hub redirects straight back here. */}
+              {(data?.symbolChains ?? 0) > 1 && (
+                <Link
+                  href={`/tokens/${encodeURIComponent(symbol.toLowerCase())}`}
+                  className="text-xs font-semibold hover:underline"
+                  style={{ color: "#0F8A8A" }}
+                >
+                  {symbol} on {data!.symbolChains} chains →
+                </Link>
+              )}
               {priceUsd != null && priceUsd > 0 && (
                 <>
                   <span className="font-bold tabular-nums" style={{ color: "#1A1D20" }}>
@@ -1017,12 +1028,47 @@ export default async function TokenPage(
         </section>
       )}
 
+      {/* ── Related tokens ────────────────────────────────────────────────
+          Other gated tokens vesting on this chain, biggest first. This is the
+          only place a token page links to another token page; without it the
+          long tail hung off the sitemap alone. Only gated tokens (the same
+          rule the sitemap uses) so every link points at a page we'd submit. */}
+      {(data?.related?.length ?? 0) > 0 && (
+        <section className="px-4 md:px-8 pb-12 max-w-5xl mx-auto">
+          <div className="flex items-baseline justify-between gap-2 mb-3">
+            <h2 className="text-lg font-bold" style={{ color: "#1A1D20", letterSpacing: "-0.02em" }}>
+              Also vesting on {CHAIN_NAMES[cid]}
+            </h2>
+            <Link href={`/chains/${chainSlug(cid)}`} className="text-xs font-semibold hover:underline" style={{ color: "#0F8A8A" }}>
+              All {CHAIN_NAMES[cid]} unlocks →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {data!.related.map((r) => (
+              <Link
+                key={`${r.chainId}-${r.tokenAddress}`}
+                href={`/token/${r.chainId}/${r.tokenAddress}`}
+                className="rounded-xl p-3 block transition-all hover:-translate-y-0.5"
+                style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}
+              >
+                <div className="font-bold text-sm truncate" style={{ color: "#1A1D20" }}>
+                  {r.tokenSymbol || `${r.tokenAddress.slice(0, 6)}…`}
+                </div>
+                <div className="text-xs font-semibold tabular-nums mt-1" style={{ color: "#0F8A8A" }}>
+                  {r.lockedValueUsd != null ? fmtUsd(r.lockedValueUsd) : "–"}
+                </div>
+                <div className="text-[10px] mt-0.5" style={{ color: "#B8BABD" }}>
+                  locked · {r.walletCount} wallet{r.walletCount === 1 ? "" : "s"}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── SEO FAQ ───────────────────────────────────────────────────────
-          Rendered even when hasVesting is false – questions like "what is
-          $TOKEN worth fully diluted today" still have valid answers, and
-          the FAQPage JSON-LD is the main SEO win regardless of whether a
-          vesting schedule exists. For a not-yet-indexed token the answers
-          gracefully degrade to "Vestream has not indexed vesting yet". */}
+          Only reached when the token HAS vesting (the no-vesting state
+          returns early above), so every answer is backed by real data. */}
       <TokenFAQ
         symbol={symbol}
         items={buildTokenFAQ({

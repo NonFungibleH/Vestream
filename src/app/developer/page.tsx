@@ -8,12 +8,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 // has it, /developer slipped through). Adds LinkedIn/Twitter/Slack unfurl
 // consistency with the rest of the site.
 export const metadata: Metadata = {
-  title: "Developer API – Vestream",
+  title: "Developer API | Vestream",
   description:
     "Token vesting API for developers: REST + MCP server covering 12+ protocols and 9+ chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
-    title: "Developer API – Vestream",
+    title: "Developer API | Vestream",
     description:
       "REST + MCP for 11+ vesting protocols across 9+ chains – EVM and Solana. Normalised JSON, agent-native.",
     url: "https://www.vestream.io/developer",

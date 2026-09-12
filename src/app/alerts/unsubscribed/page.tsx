@@ -5,7 +5,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Unsubscribed · Vestream",
+  title: "Unsubscribed | Vestream",
   // Never index an unsubscribe confirmation.
   robots: { index: false, follow: false },
 };
