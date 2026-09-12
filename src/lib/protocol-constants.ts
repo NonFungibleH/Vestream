@@ -290,7 +290,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // deploys on Polygon, we just have no data source. Re-add when a
     // working subgraph URL is available – see the comment in
     // src/lib/vesting/adapters/uncx.ts SUBGRAPH_IDS map.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC],
+    // Robinhood Chain added 2026-09-12, after the indexer had run and found
+    // real positions (GWOOD and FLYWHEEL, both active). Indexer ships first,
+    // chain is surfaced once it has data — see the chain-launch note in
+    // CLAUDE.md.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.ROBINHOOD],
     officialUrl: "https://app.uncx.network",
     claimUrl:   "https://app.uncx.network/services/token-vesting/list",
     searchKeywords: [

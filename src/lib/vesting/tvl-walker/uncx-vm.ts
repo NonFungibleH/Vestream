@@ -17,9 +17,9 @@
 // so neither source alone can zero the result.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http, type Hex } from "viem";
-import { mainnet, bsc, base } from "viem/chains";
+import { type Hex } from "viem";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
+import { makeFallbackClient } from "../rpc";
 import type { WalkerResult, TokenAggregate } from "./types";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
@@ -27,34 +27,36 @@ import { withTimeout } from "@/lib/with-timeout";
 
 // ─── Per-chain config ──────────────────────────────────────────────────────────
 
+// 2026-09-12: this used to carry a viem chain object and its own hardcoded
+// RPC per chain — a second copy of knowledge that already lives in rpc.ts, and
+// it defaulted to dRPC, whose free plan cannot serve eth_getLogs on ANY chain
+// (probed on all seven). So this walker was pointed straight at a provider
+// that could not answer its only query. It now goes through
+// makeFallbackClient, which knows which providers can serve logs and falls
+// back across the whole pool, and the config is reduced to the two things
+// that genuinely differ per chain.
 const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
   contractAddress: `0x${string}`;
   fromBlock:       bigint;
-  chain:           typeof mainnet | typeof bsc | typeof base;
-  getRpcUrl:       () => string | undefined;
 }>> = {
   [CHAIN_IDS.ETHEREUM]: {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
     fromBlock:       23_143_944n,
-    chain:           mainnet,
-    // RPC fallback strategy: dRPC public endpoints. See the getRpcUrl
-    // comment block in tvl-walker/pinksale.ts for the full survey of why
-    // (publicnode prunes, Ankr requires keys, free-tier Alchemy caps
-    // eth_getLogs at 10 blocks which is unusable for event scans).
-    getRpcUrl:       () => process.env.ALCHEMY_RPC_URL_ETH ?? "https://eth.drpc.org",
   },
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     fromBlock:       43_187_425n,
-    chain:           base,
-    getRpcUrl:       () =>
-      process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL ?? "https://base.drpc.org",
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     fromBlock:       85_818_300n,
-    chain:           bsc,
-    getRpcUrl:       () => process.env.BSC_RPC_URL ?? "https://bsc.drpc.org",
+  },
+  // Robinhood Chain — UNCX's V2 token vesting, live since block 59,662,330.
+  // Mirrors UNCX_VM_CONFIG in indexer/uncx-vm.ts; the indexer owns history
+  // behind its cursor and this walker prices what it found.
+  [CHAIN_IDS.ROBINHOOD]: {
+    contractAddress: "0xB31eAEFA2A0bdC53Df6D7a7f0f289b6eE1a8AAF3",
+    fromBlock:       59_662_330n,
   },
 };
 
@@ -236,10 +238,11 @@ export async function walkUncxVm(chainId: SupportedChainId): Promise<WalkerResul
   // Polygon (or any other un-deployed chain) — clean empty result.
   if (!config) return empty(chainId, started);
 
-  const rpcUrl = config.getRpcUrl();
-  if (!rpcUrl) return empty(chainId, started, "no RPC URL configured for this chain");
 
-  const client = createPublicClient({ chain: config.chain, transport: http(rpcUrl) });
+  // forLogs:true so the transport only contains providers that can actually
+  // serve eth_getLogs — this walker's whole first phase is a log scan.
+  const client = makeFallbackClient(chainId, { forLogs: true });
+  if (!client) return empty(chainId, started, "no log-capable RPC in the pool for this chain");
 
   // ── Phase 1: enumerate vestingIds via VestingCreated logs ───────────────────
   const chunkErrors: string[] = [];
