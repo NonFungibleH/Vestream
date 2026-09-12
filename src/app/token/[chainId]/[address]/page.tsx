@@ -51,8 +51,6 @@ import { buildTokenPulse } from "@/lib/vesting/token-pulse";
 import {
   getTokenOverview,
   getTokenUnlockCalendar,
-  getTokenRecipients,
-  getTokenUpcomingEvents,
   getTokenMarketData,
   type TokenOverview,
   type UnlockCalendarBucket,
@@ -972,61 +970,16 @@ export default async function TokenPage(
         </section>
       )}
 
-      {/* ── Price chart (DexScreener embed) – sits directly below the market
-          stats card (vesting-first: price data is supporting context). Only
-          when a priced pair exists. pairUrl is the most-liquid base-token pair;
-          ?embed=1 strips their chrome to just the candles. dexscreener.com is
-          allow-listed in the CSP frame-src (next.config.ts).
-
-          Floor lowered $5,000 → $100 (2026-09-01). The old floor existed
-          because ultra-thin pairs used to leave DexScreener stuck on "Loading
-          pair…" forever. Re-tested against live embeds and that is no longer
-          true: NUTS/USDT at $3.3k liquidity renders full candle history, and
-          NUTS/USDC at $114 renders too — it just takes a few seconds past a
-          "Loading chart settings…" state. The old floor was silently hiding the
-          chart on most small-cap tokens, which is exactly where a reader has
-          the least other context. $100 matches LIQUIDITY_FLOOR_USD, the
-          codebase's existing "below this is dust" line, so only genuinely dead
-          pairs are skipped. */}
-      {market.pairUrl && (market.liquidity ?? 0) >= 100 && (
-        // w-full is REQUIRED here: the page root is `flex flex-col` and this
-        // section uses `mx-auto`, which on a flex item cancels the default
-        // stretch and shrink-wraps to content. The chart's content is an iframe
-        // whose width:100% then can't resolve against an indefinite-width parent
-        // and collapses to the 300px iframe default – dragging the whole section
-        // narrow. w-full gives the section a definite width so width:100% resolves.
-        <section className="w-full px-4 md:px-8 pb-6 max-w-6xl mx-auto">
-          <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-sm font-semibold" style={{ color: "#1A1D20" }}>Price chart</h2>
-            <a
-              href={market.dexScreenerUrl ?? market.pairUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] hover:underline"
-              style={{ color: "#8B8E92" }}
-            >
-              via DexScreener ↗
-            </a>
-          </div>
-          <div className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff" }}>
-            {/* Eager load (NOT loading="lazy"): the chart sits below the
-                market-stats card, so lazy-loading meant it didn't even start
-                fetching DexScreener until the user scrolled near it – they'd
-                then stare at DexScreener's narrow "Loading pair…" placeholder
-                for seconds, which reads as a cramped "little window". Loading
-                eagerly starts the fetch on page render so it's ready by the
-                time they reach it, then fills the full-width iframe. */}
-            <iframe
-              src={`${market.pairUrl}?embed=1&theme=light&info=0&trades=0`}
-              title={`${symbol} price chart on DexScreener`}
-              // Inline width/height – the iframe was falling back to its ~300px
-              // HTML default (the `w-full` class wasn't winning). Inline
-              // width:100% forces it to fill the max-w-6xl container.
-              style={{ display: "block", width: "100%", height: 560, border: 0 }}
-            />
-          </div>
-        </section>
-      )}
+      {/* The DexScreener price-chart embed lived here and was removed
+          2026-09-12. It was a 560px eager-loaded third-party iframe sitting
+          directly under the market-stats card: it blocked on DexScreener for
+          seconds on every token page, showing their "Loading pair…"
+          placeholder, which read as broken on the one surface we send people
+          to. Price is supporting context on a vesting-first page and the
+          market bar above already carries price, liquidity, 24h volume and
+          FDV, with outbound links to DexScreener and DexTools for anyone who
+          wants candles. Do not re-add an eager third-party iframe here; if a
+          chart comes back it should be click-to-load. */}
 
       {/* ── Related tokens ────────────────────────────────────────────────
           Other gated tokens vesting on this chain, biggest first. This is the
