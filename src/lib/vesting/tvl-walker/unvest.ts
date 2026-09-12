@@ -38,7 +38,14 @@ const SUBGRAPH_URLS: Partial<Record<SupportedChainId, string | undefined>> = {
   // Arbitrum + Optimism — added May 5 2026 from working IDs verified
   // against the Graph network gateway.
   [CHAIN_IDS.ARBITRUM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_ARBITRUM, "9soNvLk5RWaJ3HtgJSsr9m5Nafo985kNyrArPM7iopUV"),
-  [CHAIN_IDS.OPTIMISM]: resolveSubgraphUrl(process.env.UNVEST_SUBGRAPH_URL_OPTIMISM, "J7QQ4hkWLvfNBMAMxcYhzEfWw7ChJ9DM5qQsXcad5ewb"),
+  // Optimism removed 2026-09-12. Its subgraph is gone from The Graph's
+  // decentralised network — the endpoint answers
+  // {"errors":[{"message":"subgraph not found: no allocations"}]} — so the
+  // walker returned 0 on every run while 11 stale rows (5 of them showing as
+  // active) sat in the cache from 72 days earlier. That mismatch is what the
+  // "walker found 0 streams but N active rows are cached" alarm was for.
+  // Arbitrum was checked at the same time and is healthy, so this is specific
+  // to Optimism, not a Graph-wide problem. Re-add if Unvest redeploys it.
 };
 
 const PAGE_SIZE = 1000;   // The Graph's hard cap

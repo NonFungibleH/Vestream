@@ -323,7 +323,12 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#2563EB",
     bg:    "rgba(37,99,235,0.08)",
     border:"rgba(37,99,235,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM],
+    // Optimism dropped 2026-09-12: Unvest's Optimism subgraph no longer
+    // exists on The Graph (the endpoint answers "subgraph not found: no
+    // allocations"), so we cannot serve that chain at all. Advertising it
+    // meant /protocols/unvest claimed a chain whose only data was 72 days
+    // stale. Arbitrum was verified healthy on the same pass and stays.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM],
     officialUrl: "https://unvest.io",
     claimUrl:   "https://app.unvest.io",
     searchKeywords: [
