@@ -1122,6 +1122,23 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
        5. To verify a route is REALLY cached, don't trust timings or
           headers alone: `curl` it twice and byte-diff — re-renders leak
           through time-relative strings ("in 1 h 38 min").
+   - **dRPC's free plan no longer serves `eth_getLogs` (verified 2026-09-12).**
+     Probed on all seven EVM chains: every one rejects even a 1,000-block
+     window with "ranges over 10000 blocks are not supported on free plan",
+     and Base/Optimism reject 499-block ADDRESS-FILTERED windows too, so the
+     message is boilerplate rather than a range check. dRPC is first in every
+     pool and older comments still call it "most reliable + supports logs" —
+     that was true when written. It is now tagged in `LOG_UNSAFE_HOSTS` and is
+     READS-ONLY. The log providers that actually work are Tenderly (eth,
+     polygon), blxrbdn (bsc) and the chain-native RPC (base, arbitrum,
+     optimism, avalanche). Those pools are now THIN — usually one provider per
+     chain — so a paid RPC is the obvious next upgrade.
+   - **An RPC's range cap is per-chain, and the error text lies.** Base's
+     official RPC caps `eth_getLogs` at 2,000 blocks; uncx-vm asked for 5,000
+     on every chain, so every Base window failed and that cursor sat still for
+     87h. Indexer scan windows are per-chain overrides for this reason (see
+     `UNCX_VM_CONFIG`). When a provider blames the range, probe it directly at
+     several sizes before believing the number in the message.
    - **An indexer cursor can fall so far behind it will never catch up — check
      the GAP before debugging the RPC.** `hedgey/56` sat 72.4 million blocks
      behind (cursor 49,117,999 vs a BSC head of 121.5M), which is ~36,000

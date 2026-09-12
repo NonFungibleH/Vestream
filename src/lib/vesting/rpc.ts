@@ -131,15 +131,34 @@ function buildPool(envValue: string | undefined, freeFallbacks: Provider[]): Pro
  * eth_getLogs under any real load. base.api.onfinality.io stalled the
  * magna/8453 and uncx-vm/8453 cursors for 69h and 86h, and the ETH pool note
  * above already recorded them as rate-limited. Contract reads still use them.
+ *
+ * drpc added 2026-09-12, and this one is significant: their FREE PLAN no
+ * longer serves eth_getLogs at all. Probed on all seven EVM chains we use
+ * (eth, bsc, polygon, base, arbitrum, optimism, avalanche) — every one
+ * rejected a 1,000-block window with "ranges over 10000 blocks are not
+ * supported on free plan". Base and Optimism were probed further at 4,999 /
+ * 1,999 / 499 blocks WITH an address filter, the exact shape our indexers
+ * use, and rejected all three, so the message is boilerplate rather than a
+ * real range check.
+ *
+ * drpc is listed FIRST in every pool below and the notes there still describe
+ * it as "most reliable + supports logs" — that was true when written and is
+ * not true now. Until this tag every log scan on every chain burned its first
+ * attempt on a provider that could never answer. Each chain keeps a working
+ * log provider without it (tenderly on eth/polygon, blxrbdn on bsc, the
+ * chain-native RPC on base/arbitrum/optimism/avalanche), all verified against
+ * address-filtered queries. Revisit if we ever move to a paid drpc plan;
+ * contract reads are unaffected and still use it first.
  */
-const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.io", "rpc.ankr.com", "onfinality.io"];
+const LOG_UNSAFE_HOSTS = ["publicnode.com", "1rpc.io", "meowrpc.com", "blastapi.io", "rpc.ankr.com", "onfinality.io", "drpc.org"];
 
 const isLogUnsafe = (url: string) => LOG_UNSAFE_HOSTS.some((h) => url.includes(h));
 
 // ── Pool expansion notes (2026-05-14, updated 2026-05-28) ─────────────────
 // Free-tier pools widened so a paid-RPC-free deploy can ride out individual
 // provider outages. ORDERING MATTERS — fallback transport tries top-down.
-// Provider tier order: dRPC (most reliable + supports logs) →
+// Provider tier order: dRPC (reliable for READS; as of 2026-09-12 its free
+// plan cannot serve eth_getLogs on any chain — see LOG_UNSAFE_HOSTS) →
 // chain-native official RPC → blockpi → blastapi → meowrpc → publicnode
 // (excludeForLogs) → ankr (excludeForLogs — historically log-pruned) →
 // 1RPC (last resort — see note below).
