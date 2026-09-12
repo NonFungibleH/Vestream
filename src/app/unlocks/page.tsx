@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   description: "Live calendar of upcoming token unlocks across 11+ vesting protocols and 9+ chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
   alternates:  { canonical: "https://www.vestream.io/unlocks" },
   openGraph: {
-    title:       "Token Unlock Calendar – Vestream",
+    title:       "Token Unlock Calendar | Vestream",
     description: "Live calendar of upcoming token unlocks across 11+ vesting protocols and 9+ chains.",
     url:         "https://www.vestream.io/unlocks",
     siteName:    "Vestream",
@@ -98,21 +98,22 @@ type UpcomingRow = {
  * Counts are computed BEFORE USD enrichment (they need no prices); only the
  * ~25 rows actually rendered get priced.
  */
-type Persisted = { counts: WindowCount[]; upcoming: Array<Omit<UpcomingRow, "totalLocked"> & { totalLocked: string | null }> };
+type Persisted = { counts: WindowCount[]; upcoming: Array<Omit<UpcomingRow, "totalLocked"> & { totalLocked: string | null }>; newLocks?: NewLockRow[] };
 
 /** Last good render, so a degraded read never shows an empty page. */
-async function lastGood(): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[] } | null> {
+async function lastGood(): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[]; newLocks: NewLockRow[] } | null> {
   const saved = await getLastGoodUnlocksData<Persisted>();
   if (!saved || saved.upcoming.length === 0) return null;
   return {
     counts: new Map(saved.counts.map((c) => [c.slug, c])),
     // BigInt does not survive JSON, so totalLocked round-trips as a string.
     upcoming: saved.upcoming.map((u) => ({ ...u, totalLocked: u.totalLocked == null ? null : BigInt(u.totalLocked) })),
+    newLocks: saved.newLocks ?? [],
   };
 }
 
-async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[] }> {
-  const empty = { counts: new Map<string, WindowCount>(), upcoming: [] as UpcomingRow[] };
+async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCount>; upcoming: UpcomingRow[]; newLocks: NewLockRow[] }> {
+  const empty = { counts: new Map<string, WindowCount>(), upcoming: [] as UpcomingRow[], newLocks: [] as NewLockRow[] };
   // Build phase: serve the last good render rather than baking an empty page.
   if (process.env.NEXT_PHASE === "phase-production-build") return (await lastGood()) ?? empty;
 
@@ -173,15 +174,25 @@ async function getPageData(limit = 25): Promise<{ counts: Map<string, WindowCoun
     };
   });
 
+  // The "Locked today" feed rides in the same payload. It used to be fetched
+  // outside it, so it was missing from the build prerender and every deploy
+  // hid the section for up to 30 minutes — with several deploys a day that
+  // read as "the scanner isn't current" (2026-09-12). A live read that comes
+  // back empty falls back to the last good feed rather than hiding the
+  // section, on the same stale-beats-empty logic as the table.
+  let newLocks = await getNewLocksFeed(12);
+  if (newLocks.length === 0) newLocks = (await lastGood())?.newLocks ?? [];
+
   // Good render: keep the durable copy fresh. In after() so the write cannot
   // flip this ISR render dynamic.
   if (upcoming.length > 0) {
     after(() => setLastGoodUnlocksData<Persisted>({
       counts: [...counts.values()],
       upcoming: upcoming.map((u) => ({ ...u, totalLocked: u.totalLocked == null ? null : u.totalLocked.toString() })),
+      newLocks,
     }));
   }
-  return { counts, upcoming };
+  return { counts, upcoming, newLocks };
 }
 
 function fmtAmt(amount: string | null, decimals: number): string | null {
@@ -233,8 +244,7 @@ function whenLabel(sec: number): { date: string; rel: string } {
 export default async function UnlocksIndex() {
   // Table FIRST: it is the page's actual content, and it must not be starved by
   // the window counts (which are a secondary nav aid and currently all "–").
-  const { counts, upcoming } = await getPageData(25);
-  const newLocks = await getNewLocksFeed(12);
+  const { counts, upcoming, newLocks } = await getPageData(25);
 
   const indexJsonLd = {
     "@context": "https://schema.org",
