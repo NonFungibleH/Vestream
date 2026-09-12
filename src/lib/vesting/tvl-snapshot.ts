@@ -580,7 +580,15 @@ export async function runWalkerSnapshot(
 
         // Anything above the cap goes into the LOW bucket as "excess" —
         // visible in breakdown for auditability, never in headline.
-        if (overflow > 0) perChain.low += overflow;
+        //
+        // EXCEPT for absurd tokens (2026-09-12). Their overflow is the
+        // fabricated remainder of a fabricated number and tells an auditor
+        // nothing, but it is arithmetically enormous: BTHN's 3.5e23 landed
+        // here and overflowed tvl_low numeric(24,2) (max ~1e22), which failed
+        // the whole upsert and left pinksale/137 with no row at all. The
+        // capped credit is already recorded in tvl_low above, which is the
+        // part worth auditing.
+        if (overflow > 0 && !absurd) perChain.low += overflow;
 
         creditedByToken.push({
           chainId:      p.chainId,
@@ -714,6 +722,23 @@ export async function runWalkerSnapshot(
       // Commit IMMEDIATELY so this chain's result survives even if a sibling
       // chain hangs and Vercel kills the function. See note above the
       // Promise.allSettled call.
+      // Defence in depth: no band may exceed what numeric(24,2) can hold.
+      // This class of bug has now broken the same upsert twice (BTHN via
+      // tvl_usd, then again via tvl_low), each time silently, so clamp at the
+      // boundary rather than trusting every upstream guard to hold forever.
+      // A clamp firing is itself a signal something upstream is wrong, so say
+      // so loudly rather than quietly truncating.
+      const NUMERIC_24_2_MAX = 1e21;   // an order under the true 1e22 ceiling
+      for (const band of ["tvl", "high", "medium", "low"] as const) {
+        if (!Number.isFinite(perChain[band]) || perChain[band] > NUMERIC_24_2_MAX) {
+          console.error(
+            `[snapshot] ${protocol}/${chainId}: ${band}=${perChain[band]} exceeds the column ceiling, clamping. ` +
+            `An upstream pricing guard has let a fabricated value through.`,
+          );
+          perChain[band] = Math.min(Number.isFinite(perChain[band]) ? perChain[band] : 0, NUMERIC_24_2_MAX);
+        }
+      }
+
       if (!skipped) {
         try {
           await upsertSnapshot({
