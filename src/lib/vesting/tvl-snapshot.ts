@@ -134,17 +134,41 @@ async function upsertSnapshot(row: SnapshotRow): Promise<void> {
  */
 async function recordSnapshotFailure(protocol: string, chainId: number, reason: string): Promise<void> {
   try {
+    // INSERT ... ON CONFLICT, not UPDATE (2026-09-12). As a bare UPDATE this
+    // matched zero rows whenever the row did not exist yet — a first-ever
+    // snapshot for a chain, or one that had been deleted — so the failure was
+    // recorded nowhere and the run reported chainsOk:0 with an empty error
+    // list. pinksale/137 spent a run in exactly that state: the walker
+    // computed a value, the upsert failed, and nothing anywhere said so.
+    // A zero-value row with last_error set is the honest record of "we tried
+    // and could not"; it contributes nothing to any headline and shows the
+    // failure on /status instead of hiding it.
     await db
-      .update(protocolTvlSnapshots)
-      .set({
+      .insert(protocolTvlSnapshots)
+      .values({
+        protocol,
+        chainId,
+        tvlUsd:              "0",
+        tvlHigh:             "0",
+        tvlMedium:           "0",
+        tvlLow:              "0",
+        streamCount:         0,
+        tokensPriced:        0,
+        tokensTotal:         0,
+        methodology:         walkerMethodology(protocol),
+        topContributors:     [],
         lastAttemptAt:       new Date(),
         lastError:           reason.slice(0, 500),
-        consecutiveFailures: sql`${protocolTvlSnapshots.consecutiveFailures} + 1`,
+        consecutiveFailures: 1,
       })
-      .where(and(
-        eq(protocolTvlSnapshots.protocol, protocol),
-        eq(protocolTvlSnapshots.chainId,  chainId),
-      ));
+      .onConflictDoUpdate({
+        target: [protocolTvlSnapshots.protocol, protocolTvlSnapshots.chainId],
+        set: {
+          lastAttemptAt:       new Date(),
+          lastError:           reason.slice(0, 500),
+          consecutiveFailures: sql`${protocolTvlSnapshots.consecutiveFailures} + 1`,
+        },
+      });
   } catch (err) {
     console.warn(`[snapshot] recordSnapshotFailure ${protocol}/${chainId} failed:`, err);
   }
@@ -278,6 +302,7 @@ export async function runWalkerSnapshot(
       creditedByToken:   CreditedToken[];
       error:             string | null;
       committed:         boolean;
+      commitError:       string | null;
     }> => {
       const walker = await runWalker(protocol, chainId);
       if (!walker) {
@@ -291,6 +316,7 @@ export async function runWalkerSnapshot(
           creditedByToken: [],
           error: `no walker for ${protocol}`,
           committed: false,
+          commitError: null,
         };
       }
 
@@ -656,6 +682,7 @@ export async function runWalkerSnapshot(
 
       let committed = false;
       let skipped   = false;
+      let commitError: string | null = null;
       if (priorRow && !priorIsStale && (!coverageOk || tvlCrashed)) {
         // We keep the prior row. If no prior exists OR prior is stale, we
         // let the row write through — a partial number beats indefinite
@@ -708,7 +735,12 @@ export async function runWalkerSnapshot(
           committed = true;
         } catch (dbErr) {
           console.error(`[snapshot] upsert failed for ${protocol}/${chainId}:`, dbErr);
-          await recordSnapshotFailure(protocol, chainId, `upsert failed: ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`);
+          const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+          await recordSnapshotFailure(protocol, chainId, `upsert failed: ${msg}`);
+          // Carry it into the run summary too. Logging to console only meant a
+          // failed commit was invisible to anyone calling the cron endpoint —
+          // the response said ok:true with chainsOk:0 and errors:[].
+          commitError = `chain ${chainId}: upsert failed: ${msg.slice(0, 200)}`;
         }
       }
 
@@ -721,6 +753,7 @@ export async function runWalkerSnapshot(
         creditedByToken,
         error: walker.error,
         committed,
+        commitError,
       };
     }),
   );
@@ -740,6 +773,7 @@ export async function runWalkerSnapshot(
       continue;
     }
     if (r.committed) summary.chainsOk++;
+    if (r.commitError) summary.errors.push(r.commitError);
     summary.totalUsd    += r.perChain.tvl;
     summary.streamCount += r.walker.streamCount;
     if (r.walker.error) summary.errors.push(`chain ${r.chainId}: ${r.walker.error}`);
