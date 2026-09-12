@@ -31,6 +31,8 @@ import type { Indexer } from "./types";
 const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
   contractAddress: `0x${string}`;
   genesisBlock:    bigint;
+  /** Per-chain override for the log window. Omitted = DEFAULT_SCAN_WINDOW. */
+  maxBlocksPerScan?: bigint;
 }>> = {
   [CHAIN_IDS.ETHEREUM]: {
     contractAddress: "0xa98f06312b7614523d0f5e725e15fd20fb1b99f5",
@@ -39,6 +41,12 @@ const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
   [CHAIN_IDS.BASE]: {
     contractAddress: "0xcb08B6d865b6dE9a5ca04b886c9cECEf70211b45",
     genesisBlock:    43_187_425n,
+    // Base's official RPC hard-caps eth_getLogs at a 2,000-block range
+    // ("eth_getLogs is limited to a 2,000 range"), and it is the only
+    // log-capable free provider left on this chain — drpc rejects every
+    // range on its free plan regardless of size. The shared 5,000 default
+    // therefore failed on EVERY window and the cursor sat still for 87h.
+    maxBlocksPerScan: 2000n,
   },
   [CHAIN_IDS.BSC]: {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
@@ -129,6 +137,12 @@ function cumulativeToIncremental(
   return steps;
 }
 
+/** Default log window. UNCX-VM events are sparse (single digits per day on
+ *  most chains), so payloads stay well under free-tier caps even this wide,
+ *  and wider windows mean faster catch-up from a cold start. Chains whose RPC
+ *  caps the RANGE itself override it in UNCX_VM_CONFIG. */
+const DEFAULT_SCAN_WINDOW = 5000n;
+
 function makeIndexer(chainId: SupportedChainId): Indexer {
   const config = UNCX_VM_CONFIG[chainId];
   if (!config) throw new Error(`UNCX-VM not configured for chainId ${chainId}`);
@@ -141,7 +155,7 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
     // day on most chains) so per-window log payloads stay well under
     // free-tier RPC caps even at this width. Larger windows = faster
     // catch-up from a cold start.
-    maxBlocksPerScan: 5000n,
+    maxBlocksPerScan: config.maxBlocksPerScan ?? DEFAULT_SCAN_WINDOW,
     // 12-block lag is conservative for ETH and trivial for BSC/Base (both
     // fast-finality chains). Cheap insurance against re-org thrash.
     reorgLag:         12n,

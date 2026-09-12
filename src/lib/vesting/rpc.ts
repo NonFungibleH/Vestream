@@ -251,7 +251,12 @@ const POOL: Record<SupportedChainId, Provider[]> = {
     { url: "https://1rpc.io/matic" },              // last resort
   ]),
   [CHAIN_IDS.BASE]: buildPool(process.env.ALCHEMY_RPC_URL_BASE ?? process.env.ALCHEMY_RPC_URL, [
-    { url: "https://base.drpc.org" },
+    // 2026-09-12: tagged excludeForLogs. drpc's free plan rejects eth_getLogs
+    // on Base at ANY range — probed at 4,999, 1,999 and 499 blocks, all
+    // answered "ranges over 10000 blocks are not supported on free plan",
+    // which is boilerplate rather than a real range check. Leaving it in the
+    // log pool burned the first attempt of every scan. Still fine for reads.
+    { url: "https://base.drpc.org",                excludeForLogs: true },
     { url: "https://mainnet.base.org" },
     // 2026-05-26: tagged excludeForLogs — reliability tag, see ETH note.
     { url: "https://base.blockpi.network/v1/rpc/public", excludeForLogs: true },
