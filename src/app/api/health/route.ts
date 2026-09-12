@@ -37,7 +37,20 @@ const STALE_SEED_HOURS       = 40;  // daily seed + weekend/margin
 const STALE_DERIVED_HOURS    = 28;  // rollups hourly, summaries/status daily
 const MAX_TVL_FAILURES       = 5;   // ~5 consecutive failed daily snapshots
 
-export async function GET() {
+export async function GET(req: Request) {
+  // `?strict=1` keeps the old behaviour: 503 whenever the pipeline is
+  // degraded. The DEFAULT is now 200-with-a-body, because the two questions
+  // an uptime monitor and an operator ask are different ones:
+  //
+  //   "is the site up?"          → 200/503. Only a DB outage is an outage.
+  //   "is the pipeline healthy?" → status/failures in the body.
+  //
+  // Conflating them made the probe useless for uptime: it has been returning
+  // 503 continuously for four long-standing pipeline issues (a stalled Hedgey
+  // BSC cursor, guard-held TVL snapshots), so any monitor pointed at it would
+  // alarm forever and be muted within a day. A monitor should watch the
+  // default; alerting on pipeline health reads `status` or uses ?strict=1.
+  const strict = new URL(req.url).searchParams.get("strict") === "1";
   try {
     const rows = (await db.execute(sql`
       SELECT
@@ -92,11 +105,13 @@ export async function GET() {
         alarms,
         ts: new Date().toISOString(),
       },
-      { status: stillHealthy ? 200 : 503 },
+      // Reachable DB = the service is up, whatever the pipeline is doing.
+      { status: stillHealthy || !strict ? 200 : 503 },
     );
   } catch (err) {
     // DB unreachable is itself a critical health signal.
     return NextResponse.json(
+      // The one genuine outage: we could not reach the database at all.
       { status: "error", error: err instanceof Error ? err.message : String(err), ts: new Date().toISOString() },
       { status: 503 },
     );

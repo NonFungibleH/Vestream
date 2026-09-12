@@ -24,6 +24,11 @@ import {
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
+// A diagnostic endpoint must fail fast, not hang: without this the route
+// inherits the platform default and a stuck read keeps the request open for
+// minutes (see the getPipelineFreshness note). Both data paths are internally
+// bounded well under this.
+export const maxDuration = 30;
 
 export interface CacheStatsResponse {
   ok:        true;

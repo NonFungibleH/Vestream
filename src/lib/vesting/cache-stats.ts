@@ -455,13 +455,27 @@ export async function getPipelineFreshness(): Promise<PipelineFreshnessEntry[]> 
   ] as const;
 
   try {
-    const rows = (await db.execute(sql`
+    // BOUNDED AT SOURCE (2026-09-12). This was the only read in this file
+    // without its own timeout. /status got away with it by wrapping the call
+    // in a 3s race of its own; /api/admin/cache-stats did not, and its
+    // Promise.all([getCacheStatsCells(), getPipelineFreshness()]) therefore
+    // never settled — 120s with no response at all, while /status rendered
+    // fine. Per-caller bounding is how that asymmetry happens, so the bound
+    // belongs here. Four max() reads over small tables take ~150ms; 5s is
+    // generous, and an empty array renders freshness as "unknown" rather
+    // than hanging the caller.
+    const rows = (await Promise.race([
+      db.execute(sql`
       SELECT
         extract(epoch from (SELECT max(computed_at)     FROM token_vesting_rollups))::bigint  AS rollups,
         extract(epoch from (SELECT max(computed_at)     FROM protocol_summaries))::bigint      AS summaries,
         extract(epoch from (SELECT max(computed_at)     FROM status_summary))::bigint          AS status,
         extract(epoch from (SELECT max(last_attempt_at) FROM protocol_tvl_snapshots))::bigint  AS tvl
-    `)) as unknown as Array<{ rollups: number | null; summaries: number | null; status: number | null; tvl: number | null }>;
+      `),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("getPipelineFreshness exceeded 5s")), 5_000),
+      ),
+    ])) as unknown as Array<{ rollups: number | null; summaries: number | null; status: number | null; tvl: number | null }>;
 
     const r = rows[0] ?? { rollups: null, summaries: null, status: null, tvl: null };
     const secByKey: Record<string, number | null> = {
