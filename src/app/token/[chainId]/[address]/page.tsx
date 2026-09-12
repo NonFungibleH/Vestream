@@ -68,6 +68,15 @@ import {
 // React.cache() memoises per request across both, so each runs once.
 const loadOverview = cache((cid: number, addr: string) => getTokenOverview(cid, addr));
 const loadMarket   = cache((cid: number, addr: string) => getTokenMarketData(cid, addr));
+// ONE load for both generateMetadata and the body. Metadata used to call the
+// raw overview loader itself, which returns null during `next build` (the DB
+// guard) — so every prerendered page baked a "No vesting found" title with
+// noindex while the body, reading the fallback row, rendered the full page
+// (shipped and reverted within the hour, 2026-09-12). Both now read the same
+// memoised result, so they can never disagree.
+const loadPage = cache((cid: number, addr: string) =>
+  loadTokenPageData(cid, addr, { overview: loadOverview, market: loadMarket }),
+);
 import { withTimeout } from "@/lib/with-timeout";
 import { loadTokenPageData, EMPTY_MARKET } from "@/lib/vesting/token-page-data";
 import { listSitemapTokens } from "@/lib/sitemap-token-cache";
@@ -222,20 +231,17 @@ export async function generateMetadata(
   // of rendering. Two fallbacks keep title/description sensible.
   // Bounded – generateMetadata blocks the response head; a stalled query here
   // hangs the page just like the body fan-out below.
-  const [overviewRes, marketRes] = await Promise.allSettled([
-    withTimeout(loadOverview(cid, addr), 8_000, null, "pubtoken-meta:overview"),
-    withTimeout(loadMarket(cid, addr), 6_000, null, "pubtoken-meta:market"),
-  ]);
-  const overview = overviewRes.status === "fulfilled" ? overviewRes.value : null;
-  // marketRes always fulfils now (withTimeout), but its value can be null on
-  // timeout/error – fall back to the empty shell so downstream `market.x`
-  // access is safe.
-  const market: TokenMarketData = (marketRes.status === "fulfilled" && marketRes.value) ? marketRes.value : {
-    priceUsd: null, fdv: null, marketCap: null, change24h: null,
-    liquidity: null, volume24h: null, tokenName: null, tokenSymbol: null, imageUrl: null,
-    website: null, twitterUrl: null, telegramUrl: null, discordUrl: null,
-    dexScreenerUrl: null, dexToolsUrl: null, pairUrl: null,
-  };
+  // Same memoised load the body uses (see loadPage). A thrown load is the
+  // body's problem — it throws too and ISR declines to cache — so here it just
+  // degrades to a neutral head. `knownEmpty` is the ONLY thing allowed to set
+  // noindex: a real runtime load that came back with no overview. At build the
+  // data may simply be absent (no fallback row yet), and baking noindex on a
+  // guess would drop real pages from the index.
+  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+  const data = await loadPage(cid, addr).catch(() => null);
+  const overview = data?.overview ?? null;
+  const market: TokenMarketData = data?.market ?? EMPTY_MARKET;
+  const knownEmpty = !isBuild && data !== null && overview === null;
 
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
   const chain   = CHAIN_NAMES[cid];
@@ -246,19 +252,21 @@ export async function generateMetadata(
   // random or made-up address was a thin, indexable page with a FAQ block
   // about a schedule that does not exist (2026-09-12). follow stays on so
   // the links out to /find-vestings and /unlocks still carry.
-  const title   = overview
-    ? `${symbol} unlocks on ${chain} – Vestream`
-    : `No vesting found for ${symbol} on ${chain} – Vestream`;
+  const title   = knownEmpty
+    ? `No vesting found for ${symbol} on ${chain} – Vestream`
+    : `${symbol} unlocks on ${chain} – Vestream`;
   const desc    = overview
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
-    : `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across 12 protocols.`;
+    : knownEmpty
+      ? `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across 12 protocols.`
+      : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
 
   const url = `https://www.vestream.io/token/${cid}/${addr}`;
 
   return {
     title,
     description: desc,
-    ...(overview ? {} : { robots: { index: false, follow: true } }),
+    ...(knownEmpty ? { robots: { index: false, follow: true } } : {}),
     alternates: { canonical: url },
     openGraph: {
       title, description: desc,
@@ -304,7 +312,7 @@ export default async function TokenPage(
   //     caches an empty render.
   // overview + market are passed pre-memoised so generateMetadata and this
   // body share one call each (React.cache above).
-  const data = await loadTokenPageData(cid, addr, { overview: loadOverview, market: loadMarket });
+  const data = await loadPage(cid, addr);
 
   const overview   = data?.overview ?? null;
   const calendar   = data?.calendar ?? [];
@@ -481,7 +489,7 @@ export default async function TokenPage(
             <ul className="mt-3 space-y-2 text-sm" style={{ color: "#475569" }}>
               <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The team hasn&apos;t locked tokens on-chain, or locked them through a protocol we don&apos;t cover yet.</li>
               <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The vesting lives on a different chain than {chainName}.</li>
-              <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The address is mistyped{known ? "" : " or isn&apos;t a token contract"}.</li>
+              <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The address is mistyped{known ? "" : " or isn't a token contract"}.</li>
             </ul>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
