@@ -44,6 +44,20 @@ const UNCX_VM_CONFIG: Partial<Record<SupportedChainId, {
     contractAddress: "0xEc76C87EAB54217F581cc703DAea0554D825d1Fa",
     genesisBlock:    85_818_300n,
   },
+  // Robinhood Chain (2026-09-12). UNCX shipped their V2 token vesting here —
+  // address from their own deployment docs, then verified on-chain: 26,672
+  // bytes of code, and the contract emits the same VestingCreated topic this
+  // indexer already decodes, so no new decode path is needed.
+  //
+  // Genesis is the deployment block, found by binary search on eth_getCode;
+  // the first vesting is in that very block. Usage is genuinely early — two
+  // vestings at the time of writing (blocks 59,662,330 and 59,731,743) — but
+  // indexing from day one costs one cron tick and means no backfill later.
+  // Same reasoning as the HoodLock bet on this chain.
+  [CHAIN_IDS.ROBINHOOD]: {
+    contractAddress: "0xB31eAEFA2A0bdC53Df6D7a7f0f289b6eE1a8AAF3",
+    genesisBlock:    59_662_330n,
+  },
 };
 
 // Verified on-chain topic hash for:
@@ -260,8 +274,10 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
   };
 }
 
-export const uncxVmIndexers: Indexer[] = [
-  makeIndexer(CHAIN_IDS.ETHEREUM),
-  makeIndexer(CHAIN_IDS.BASE),
-  makeIndexer(CHAIN_IDS.BSC),
-];
+// Derived from UNCX_VM_CONFIG rather than listed again here: the two had to
+// be kept in step by hand, and adding Robinhood Chain to the config alone
+// (2026-09-12) silently registered no indexer at all — findIndexer returned
+// undefined and the cron would have 404'd with the config looking correct.
+export const uncxVmIndexers: Indexer[] = (
+  Object.keys(UNCX_VM_CONFIG).map(Number) as SupportedChainId[]
+).map(makeIndexer);
