@@ -191,7 +191,15 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   // ranks for the month-name search) and clearer for users.
   const dynLabel = def.dynamicLabel?.() ?? def.label;
   const dynDesc  = def.dynamicDescription?.() ?? def.description;
-  const title  = `Token unlocks ${dynLabel.toLowerCase()} – ${dateStr} | Vestream`;
+  // Lower-case only the leading word so a dynamic label keeps its own casing
+  // ("This week – ends Sun 13 Sept" was becoming "this week – ends sun 13 sept"),
+  // and don't append today's date when the label already carries one — the
+  // title was reading "… ends sun 13 sept – Sat, Sep 12, 2026".
+  const labelLower = dynLabel.charAt(0).toLowerCase() + dynLabel.slice(1);
+  const labelHasDate = dynLabel !== def.label;
+  const title  = labelHasDate
+    ? `Token unlocks ${labelLower} | Vestream`
+    : `Token unlocks ${labelLower} – ${dateStr} | Vestream`;
   const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 11+ vesting protocols.`;
   const url    = `https://www.vestream.io/unlocks/${range}`;
 

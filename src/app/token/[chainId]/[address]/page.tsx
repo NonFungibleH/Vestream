@@ -39,7 +39,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { Provenance } from "@/components/Provenance";
-import { PROTOCOLS } from "@/lib/protocol-constants";
+import { PROTOCOLS, listProtocols, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
@@ -240,16 +240,25 @@ export async function generateMetadata(
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
   const chain   = CHAIN_NAMES[cid];
   const locked  = overview ? fmtTokens(overview.lockedTokensWhole) : "0";
-  const title   = `${symbol} unlocks on ${chain} – Vestream`;
+  // No vesting: say so in the title rather than claiming "unlocks on
+  // Ethereum" for a token that has none, and keep the page out of the index.
+  // Any address on any chain renders a 200 here, so without noindex every
+  // random or made-up address was a thin, indexable page with a FAQ block
+  // about a schedule that does not exist (2026-09-12). follow stays on so
+  // the links out to /find-vestings and /unlocks still carry.
+  const title   = overview
+    ? `${symbol} unlocks on ${chain} – Vestream`
+    : `No vesting found for ${symbol} on ${chain} – Vestream`;
   const desc    = overview
     ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
-    : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
+    : `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across 12 protocols.`;
 
   const url = `https://www.vestream.io/token/${cid}/${addr}`;
 
   return {
     title,
     description: desc,
+    ...(overview ? {} : { robots: { index: false, follow: true } }),
     alternates: { canonical: url },
     openGraph: {
       title, description: desc,
@@ -418,6 +427,93 @@ export default async function TokenPage(
       item:       b.url,
     })),
   };
+
+  // ── No-vesting state ──────────────────────────────────────────────────────
+  // A dedicated page, not the full layout with dashes in every tile. The old
+  // render showed "Locked –", "Unlocking next 7d None", "Recipients –" and a
+  // FAQ about a schedule that does not exist, which read as broken and told
+  // the visitor nothing. This says what we know, why it may be empty, and
+  // sends them to the one thing that helps: scanning their own wallet (which
+  // also adds the token to our index if they hold vesting in it). It skips the
+  // paywall counter, the share row and the FAQ schema on purpose.
+  if (!hasVesting) {
+    const chainName = CHAIN_NAMES[cid];
+    const known = Boolean(market.tokenName) || (priceUsd != null && priceUsd > 0);
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+        <SiteNav theme="light" />
+
+        <nav aria-label="Breadcrumb" className="px-4 md:px-8 pt-6 max-w-3xl mx-auto w-full">
+          <ol className="flex items-center gap-1.5 text-xs" style={{ color: "#8B8E92" }}>
+            <li><Link href="/" className="hover:underline">Home</Link></li>
+            <li aria-hidden style={{ color: "#B8BABD" }}>›</li>
+            <li><Link href="/protocols" className="hover:underline">Protocols</Link></li>
+            <li aria-hidden style={{ color: "#B8BABD" }}>›</li>
+            <li aria-current="page" style={{ color: "#1A1D20", fontWeight: 600 }}>{symbol} on {chainName}</li>
+          </ol>
+        </nav>
+
+        <main className="flex-1 px-4 md:px-8 py-10 md:py-14 max-w-3xl mx-auto w-full">
+          <div className="rounded-2xl p-7 md:p-10" style={{ background: "white", border: "1px solid rgba(21,23,26,0.10)" }}>
+            <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#8B8E92" }}>
+              No vesting tracked
+            </div>
+            <h1 className="font-bold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", letterSpacing: "-0.03em", lineHeight: 1.1, color: "#0B0E12" }}>
+              No vesting found for {symbol} on {chainName}
+            </h1>
+
+            <div className="mt-3 flex items-center gap-3 flex-wrap text-sm" style={{ color: "#8B8E92" }}>
+              <CopyButton value={addr} display={`${addr.slice(0, 6)}…${addr.slice(-4)}`} style={{ color: "#8B8E92" }} />
+              {known && market.tokenName && market.tokenName !== symbol && <span>· {market.tokenName}</span>}
+              {priceUsd != null && priceUsd > 0 && (
+                <span className="font-semibold tabular-nums" style={{ color: "#1A1D20" }}>
+                  {priceUsd < 0.01 ? "<$0.01" : fmtUsd(priceUsd, false)}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-6 text-sm leading-relaxed" style={{ color: "#475569" }}>
+              {known
+                ? `We know this token, but none of its supply is locked through a vesting protocol we index. That usually means one of three things:`
+                : `We can't find any vesting at this address on ${chainName}, and no market data for it either. That usually means one of three things:`}
+            </p>
+            <ul className="mt-3 space-y-2 text-sm" style={{ color: "#475569" }}>
+              <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The team hasn&apos;t locked tokens on-chain, or locked them through a protocol we don&apos;t cover yet.</li>
+              <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The vesting lives on a different chain than {chainName}.</li>
+              <li className="flex gap-2"><span style={{ color: "#0F8A8A" }}>–</span>The address is mistyped{known ? "" : " or isn&apos;t a token contract"}.</li>
+            </ul>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/find-vestings"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm"
+                style={{ background: "#0F8A8A", color: "white", boxShadow: "0 4px 16px rgba(15,138,138,0.28)" }}
+              >
+                Find vestings for my wallet →
+              </Link>
+              <Link
+                href="/unlocks"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm"
+                style={{ background: "rgba(15,138,138,0.08)", border: "1px solid rgba(15,138,138,0.25)", color: "#0F8A8A" }}
+              >
+                See what&apos;s locking today
+              </Link>
+            </div>
+
+            <p className="mt-6 text-[12px] leading-relaxed" style={{ color: "#8B8E92" }}>
+              Hold {symbol} vesting in a wallet? Scanning that wallet adds the token to our index
+              automatically. We track {listProtocols().length} protocols
+              across {PUBLIC_CHAIN_COUNT} chains — see the{" "}
+              <Link href="/protocols" className="underline" style={{ color: "#0F8A8A" }}>full list</Link>.
+            </p>
+          </div>
+        </main>
+
+        <SiteFooter theme="light" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>

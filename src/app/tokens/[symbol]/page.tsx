@@ -83,7 +83,10 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   }
 
   // Multi-chain – describe coverage in the snippet
-  const chainList = matches.map((m) => CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`).join(", ");
+  // One name per CHAIN, not per address: USDT has several contracts on BSC, and
+  // the description was reading "BSC, Ethereum, Solana, BSC, BSC, BSC, Polygon,
+  // Polygon…" in search snippets.
+  const chainList = [...new Set(matches.map((m) => CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`))].join(", ");
   return {
     title:       `${display} vesting & unlocks across ${matches.length} chains | Vestream`,
     description: `${display} is vesting on ${chainList}. Live unlock schedules, top recipients, and upcoming unlocks for each chain.`,
