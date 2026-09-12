@@ -13,6 +13,7 @@
 
 import { and, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
+import { LIQUIDITY_HIGH, LIQUIDITY_FLOOR_USD } from "./quick-prices";
 import { tokenVestingRollups } from "../db/schema";
 import { withTimeout } from "../with-timeout";
 import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
@@ -48,6 +49,13 @@ const SOLANA_CHAIN_ID = 101;
  * upsert. One background pass; the per-recipient nested aggregate that the
  * request path could not afford runs here, once. Returns the row count.
  */
+/** Per-token ceiling above which pricing must be HIGH-confidence. Mirrors
+ *  HIGH_BAND_CEILING_USD in tvl-snapshot.ts — same rule, same number. */
+const HIGH_BAND_CEILING_USD  = 200_000_000;
+/** No single token's locked vesting is credibly worth more than this. Mirrors
+ *  MAX_PLAUSIBLE_UNLOCK_USD in quick-prices.ts. */
+const MAX_PLAUSIBLE_LOCKED_USD = 10_000_000_000;
+
 export async function refreshTokenRollups(): Promise<{ rows: number }> {
   if (process.env.NEXT_PHASE === "phase-production-build") return { rows: 0 };
 
@@ -126,12 +134,13 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
   // up, so locked_value_usd + market_cap can be precomputed into the rollup
   // (the explorer's $-amount filter, USD sort, and risk all read them from
   // here instead of pricing live on render). Keyed `${chainId}:${lowerAddr}`.
-  const priceByKey = new Map<string, { price: number; mcap: number | null }>();
+  const priceByKey = new Map<string, { price: number; mcap: number | null; liq: number | null }>();
   try {
     const priceRows = (await db.execute(sql`
       SELECT chain_id AS "chainId", lower(token_address) AS "tok",
              price_usd::double precision AS "price",
-             market_cap::double precision AS "mcap"
+             market_cap::double precision AS "mcap",
+             liquidity_usd::double precision AS "liq"
       FROM token_prices_cache
       WHERE price_usd > 0
     `) as unknown as Row[]) ?? [];
@@ -139,6 +148,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
       priceByKey.set(`${p.chainId}:${p.tok}`, {
         price: Number(p.price),
         mcap:  p.mcap != null ? Number(p.mcap) : null,
+        liq:   p.liq  != null ? Number(p.liq)  : null,
       });
     }
   } catch (err) {
@@ -153,10 +163,39 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     const topHolderShare = total > 0n ? Number((top * 1_000_000n) / total) / 1_000_000 : null;
     const decimals = Number(r.decimals ?? 18) || 18;
     const px = priceByKey.get(`${r.chainId}:${r.tok}`);
+    // ── Headline-confidence guard (2026-09-12) ────────────────────────────
+    // This used to be a bare `whole * price` with no liquidity check, which is
+    // exactly the multiplication the TVL pipeline has guarded since the Team
+    // Finance fake-headline incident (see TVL Methodology in CLAUDE.md). The
+    // rollup never got those rules, so 20 public token pages were publishing
+    // figures no market could support — BTHN on Polygon claimed
+    // $351,800,648,527,895,000,000,000 against $238 of DEX liquidity, and that
+    // single value is why pinksale/137's TVL snapshot had failed 9 runs in a
+    // row: 3.5e23 overflows tvl_usd numeric(24,2).
+    //
+    // Same thresholds as the TVL pipeline, not new ones. A null here means the
+    // page renders the token AMOUNT with no dollar figure, which is the honest
+    // answer for a token nobody can actually sell.
     let lockedValueUsd: number | null = null;
     if (px && total > 0n) {
       const whole = Number(total) / 10 ** Math.min(decimals, 30);
-      lockedValueUsd = Number.isFinite(whole) ? whole * px.price : null;
+      const raw   = Number.isFinite(whole) ? whole * px.price : null;
+      // liquidity null = UNKNOWN, not zero. The price cache often carries a
+      // price with no liquidity reading, and treating those as dust would have
+      // stripped the dollar figure from 111 otherwise-fine tokens (VELVET at
+      // $23.7M among them). Rows with no reading are judged on the value alone.
+      const liq = px.liq;
+      lockedValueUsd =
+        raw == null || !Number.isFinite(raw) || raw <= 0 ? null
+        // Dust market: a quote we would not stand behind.
+        : liq != null && liq < LIQUIDITY_FLOOR_USD             ? null
+        // A nine-figure claim needs a market deep enough to mean something.
+        : raw > HIGH_BAND_CEILING_USD && liq != null && liq < LIQUIDITY_HIGH ? null
+        // Absolute implausibility bound, mirroring MAX_PLAUSIBLE_UNLOCK_USD in
+        // quick-prices. Also the backstop that keeps tvl_usd numeric(24,2) from
+        // overflowing no matter what a thin pair quotes.
+        : raw > MAX_PLAUSIBLE_LOCKED_USD                      ? null
+        : raw;
     }
     // postgres-js returns text[] as a JS array already.
     const protocols = Array.isArray(r.protocols) ? (r.protocols as string[]).filter(Boolean) : [];

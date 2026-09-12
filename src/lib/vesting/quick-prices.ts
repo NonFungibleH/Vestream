@@ -78,8 +78,10 @@ export const DS_CHAIN_SLUG: Record<number, string> = {
   101:   "solana",
 };
 
-const LIQUIDITY_HIGH      = 10_000;
+export const LIQUIDITY_HIGH   = 10_000;
 const LIQUIDITY_MEDIUM    = 1_000;
+/** Below this much DEX liquidity a quote is dust — see tvl.ts, same value. */
+export const LIQUIDITY_FLOOR_USD = 100;
 
 const DS_BATCH_SIZE = 30;
 
