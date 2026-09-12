@@ -303,12 +303,52 @@ function makeIndexer(chainId: SupportedChainId): Indexer {
       for (let i = 0; i < tokenList.length; i += LOG_ADDR_BATCH) {
         const slice = tokenList.slice(i, i + LOG_ADDR_BATCH);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const logs = await (client.getLogs as any)({
-          address:   slice,
-          topics:    [TRANSFER_TOPIC],
-          fromBlock,
-          toBlock,
-        }) as { topics: readonly (Hex | null)[]; transactionHash: Hex }[];
+        type TLog = { topics: readonly (Hex | null)[]; transactionHash: Hex };
+        let logs: TLog[];
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          logs = await (client.getLogs as any)({
+            address:   slice,
+            topics:    [TRANSFER_TOPIC],
+            fromBlock,
+            toBlock,
+          }) as TLog[];
+        } catch (err) {
+          // Response-size fallback (2026-09-12). A single mega-token can blow
+          // the provider's size cap on its own — measured on Optimism, where
+          // the watch list includes 0x4200…0042 (OP): ~5k Transfer logs per
+          // 2,000-block window, and some windows exceed the limit outright. No
+          // batch size fixes that, and shrinking the WINDOW is worse because an
+          // hourly tick then cannot keep pace with Optimism's block rate. It
+          // left magna/10 stalled for 30h.
+          //
+          // So fall back to the scalar-topic form the header already vouches
+          // for: topics[1] = the padded VESTER address is honoured correctly
+          // (it is only the ARRAY form that is silently ignored). One request
+          // per (vester, its token) returns just that vester's payouts, which
+          // is tiny. Costs more requests, but only on the windows that actually
+          // fail — every other chain keeps the cheap batched path untouched.
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`[magna/${chainId}] batched getLogs failed (${msg.slice(0, 80)}), falling back to per-vester scalar topics`);
+          logs = [];
+          const sliceSet = new Set(slice.map((t) => t.toLowerCase()));
+          for (const [vester, token] of vesterTokenPre) {
+            if (!sliceSet.has(token)) continue;
+            const padded = `0x${"0".repeat(24)}${vester.slice(2)}`.toLowerCase() as Hex;
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const one = await (client.getLogs as any)({
+                address: token as `0x${string}`,
+                topics:  [TRANSFER_TOPIC, padded],
+                fromBlock,
+                toBlock,
+              }) as TLog[];
+              logs.push(...one);
+            } catch (e2) {
+              console.warn(`[magna/${chainId}] per-vester scan failed for ${vester}:`, String(e2).slice(0, 90));
+            }
+          }
+        }
         for (const log of logs) {
           if (!log.topics[1]) continue;
           const from = `0x${(log.topics[1] as Hex).slice(26)}`.toLowerCase();
