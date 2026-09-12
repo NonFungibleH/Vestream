@@ -688,10 +688,21 @@ export async function runWalkerSnapshot(
         : 0;
       const priorIsStale = priorRow != null && priorAgeMs > STALE_PRIOR_DAYS * 24 * 60 * 60 * 1000;
 
+      // A zero-value row is NOT data worth preserving (2026-09-12). The guards
+      // exist to stop good data being replaced by bad; a $0 row is either a
+      // failure heartbeat (recordSnapshotFailure writes one so a failure on a
+      // missing row is still recorded) or a chain that genuinely holds
+      // nothing. Treating it as precious created a deadlock on pinksale/137:
+      // the heartbeat wrote $0, the coverage guard then protected the $0, and
+      // every subsequent run computed the real $3.6M and refused to store it.
+      // Any structurally low-coverage protocol would hit the same trap on its
+      // first-ever failure.
+      const priorHasValue = priorRow != null && priorTvl > 0;
+
       let committed = false;
       let skipped   = false;
       let commitError: string | null = null;
-      if (priorRow && !priorIsStale && (!coverageOk || tvlCrashed)) {
+      if (priorRow && priorHasValue && !priorIsStale && (!coverageOk || tvlCrashed)) {
         // We keep the prior row. If no prior exists OR prior is stale, we
         // let the row write through — a partial number beats indefinite
         // staleness, and beats no row at all for first-time snapshots.
@@ -707,7 +718,7 @@ export async function runWalkerSnapshot(
         // Heartbeat the guard skip so the frozen cell shows "pipeline failing"
         // rather than silently aging.
         await recordSnapshotFailure(protocol, chainId, `guard kept prior row: ${reason}`);
-      } else if (priorRow && priorIsStale && (!coverageOk || tvlCrashed)) {
+      } else if (priorRow && (priorIsStale || !priorHasValue) && (!coverageOk || tvlCrashed)) {
         // Loud log so we can see when the stale-prior override kicks in.
         // This is the "guard would have preserved but prior is too old"
         // path — useful signal that a protocol's pricing pipeline needs
