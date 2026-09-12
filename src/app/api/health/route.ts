@@ -58,10 +58,22 @@ export async function GET(req: Request) {
         extract(epoch from (now() - (SELECT max(computed_at)        FROM token_vesting_rollups)))/3600  AS rollups_hours,
         extract(epoch from (now() - (SELECT max(computed_at)        FROM protocol_summaries)))/3600      AS summaries_hours,
         extract(epoch from (now() - (SELECT max(computed_at)        FROM status_summary)))/3600          AS status_hours,
-        (SELECT max(consecutive_failures) FROM protocol_tvl_snapshots)                                   AS tvl_fails
+        -- Only count snapshots that actually FAILED. A "guard kept prior row"
+        -- heartbeat means the pricing guards did their job and refused to
+        -- publish a number they could not stand behind (thin coverage, or a
+        -- >50% drop) — that is the safety system working, not a fault. Every
+        -- genuine fault was fixed on 2026-09-12 and all six remaining rows
+        -- were guard holds, so the probe was reporting degraded permanently
+        -- on nothing but healthy refusals. A monitor that always alarms gets
+        -- muted, which is worse than no monitor.
+        (SELECT max(consecutive_failures) FROM protocol_tvl_snapshots
+          WHERE last_error IS NULL OR last_error NOT LIKE 'guard kept prior row%')     AS tvl_fails,
+        (SELECT count(*) FROM protocol_tvl_snapshots
+          WHERE last_error LIKE 'guard kept prior row%')::int                          AS tvl_guard_holds
     `)) as unknown as Array<{
       seed_hours: number | null; rollups_hours: number | null;
-      summaries_hours: number | null; status_hours: number | null; tvl_fails: number | null;
+      summaries_hours: number | null; status_hours: number | null;
+      tvl_fails: number | null; tvl_guard_holds: number | null;
     }>;
 
     const r = rows[0] ?? {};
@@ -73,6 +85,8 @@ export async function GET(req: Request) {
       summariesAgeHours: num(r.summaries_hours),
       statusAgeHours:    num(r.status_hours),
       tvlMaxConsecutiveFailures: r.tvl_fails == null ? 0 : Number(r.tvl_fails),
+      // Surfaced but NOT a failure: guards holding a prior row on purpose.
+      tvlGuardHolds: r.tvl_guard_holds == null ? 0 : Number(r.tvl_guard_holds),
     };
 
     const failures: string[] = [];
