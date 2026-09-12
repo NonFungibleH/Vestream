@@ -1931,20 +1931,24 @@ function UpcomingEvents({
                       target="_blank"
                       rel="noopener noreferrer nofollow"
                       title={e.lockTxKind === "claim"
-                        ? `Source transaction · ${e.lockTxHash.slice(0, 10)}… This is an earlier withdrawal that revealed the schedule, not this unlock. These tokens are still locked.`
-                        : `View lock transaction · ${e.lockTxHash.slice(0, 10)}…`}
+                        ? `Source transaction · ${e.lockTxHash.slice(0, 10)}… An earlier withdrawal that revealed this schedule, not this unlock. These tokens are still locked.`
+                        : `Lock transaction · ${e.lockTxHash.slice(0, 10)}… The transaction that created this vesting stream, not this unlock. This unlock has not happened yet.`}
                       className="inline-flex items-center px-1 rounded text-[9px] font-bold tracking-wider hover:opacity-80 transition-opacity"
                       style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 16 }}
                     >
-                      {/* Never "CLAIM" here. This block is UPCOMING unlocks, so
-                          the tokens are by definition still locked and nothing
-                          is claimable. For merkle protocols the hash we hold is
-                          an earlier withdrawal that revealed the allocation, and
-                          labelling that "CLAIM" next to a future date read as a
-                          claim-it-now affordance pointing at an Etherscan page
-                          showing tokens already moved. "SOURCE" keeps the
-                          verifiable provenance link without the false promise. */}
-                      {e.lockTxKind === "claim" ? "SOURCE ↗" : "TX ↗"}
+                      {/* Say WHICH transaction, in the badge itself. A bare
+                          "TX" sitting next to "in 2mo" under a heading that
+                          reads UPCOMING UNLOCK EVENTS looks like the link is
+                          the unlock — reported 2026-09-12 against a DEXE
+                          stream whose hash is in fact the Sablier batch-create
+                          that opened all four of that recipient's streams. The
+                          data was right; only the label was ambiguous, and it
+                          only disambiguated in a `title` nobody hovers on a
+                          phone. Never "CLAIM": this block is upcoming unlocks,
+                          so the tokens are by definition still locked, and for
+                          merkle protocols the hash is an earlier withdrawal
+                          that revealed the allocation. */}
+                      {e.lockTxKind === "claim" ? "SOURCE TX ↗" : "LOCK TX ↗"}
                     </a>
                   )}
                 </div>
