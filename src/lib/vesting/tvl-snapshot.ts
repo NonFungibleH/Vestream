@@ -513,8 +513,9 @@ export async function runWalkerSnapshot(
       // from $1.67bn to $1.87bn.
       //
       // A cap ratio this large is a data-quality signal, not a size signal.
-      // Demote to LOW, the existing "visible for audit, never in headline"
-      // path, rather than inventing a number.
+      // The token is excluded from the headline entirely and its capped value
+      // recorded in tvl_low for audit, rather than having a number invented
+      // for it.
       const ABSURD_CAP_RATIO = 10;
 
       for (const p of priced) {
@@ -527,18 +528,26 @@ export async function runWalkerSnapshot(
         // they never feed the headline regardless of liquidity depth.
         const absurd = cap > 0 && p.usd > cap * ABSURD_CAP_RATIO;
         const effectiveConfidence: "high" | "medium" | "low" =
-          (p.confidence === "high" && (!hasRealSymbol(p.tokenSymbol) || absurd))
+          (p.confidence === "high" && !hasRealSymbol(p.tokenSymbol))
             ? "low"
-            : absurd && p.confidence === "medium" ? "low"
             : p.confidence;
 
         // Bucket the credited (capped) portion by confidence.
-        if      (effectiveConfidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
+        //
+        // An absurd token is EXCLUDED from the headline, not demoted. The
+        // first attempt at this guard demoted to LOW on the strength of the
+        // comment below saying LOW never reaches the headline — but that
+        // comment is stale: LOW_BAND_HEADLINE_DISCOUNT was raised to 1.0 in
+        // May 2026, so LOW feeds tvl at full value and the demotion changed
+        // nothing (pinksale/137 still reported $205M on the rerun). The value
+        // still lands in tvl_low so the forensic trail is intact.
+        if      (absurd)                           { perChain.low    += credited; }
+        else if (effectiveConfidence === "high")   { perChain.high   += credited; perChain.tvl += credited; }
         else if (effectiveConfidence === "medium") { perChain.medium += credited; perChain.tvl += credited; }
         else {
-          // LOW band: full value in tvl_low for audit, half value in
-          // headline so thin-pool dollars still show up but at a
-          // realistic discount.
+          // LOW band: credited into both tvl_low and the headline —
+          // per-token ceilings bound the phantom risk directly, so the old
+          // aggregate discount was dropped (LOW_BAND_HEADLINE_DISCOUNT = 1.0).
           perChain.low += credited;
           perChain.tvl += credited * LOW_BAND_HEADLINE_DISCOUNT;
         }
