@@ -52,8 +52,22 @@ const CHAIN_CONFIG: Partial<Record<SupportedChainId, {
     fromBlock:       85_818_300n,
   },
   // Robinhood Chain — UNCX's V2 token vesting, live since block 59,662,330.
-  // Mirrors UNCX_VM_CONFIG in indexer/uncx-vm.ts; the indexer owns history
-  // behind its cursor and this walker prices what it found.
+  // Mirrors UNCX_VM_CONFIG in indexer/uncx-vm.ts.
+  //
+  // KNOWN GAP (2026-09-12): this walker returns 0 for Robinhood and the chain
+  // therefore has no TVL. Discovery is fine — the ids come from the cache and
+  // resolve to 127 and 128 — but the getVestingSchedule struct DIFFERS on
+  // UNCX's Robinhood deployment, and decoding fails with
+  //   "Bytes value ... is not a valid boolean"
+  // i.e. the field layout below does not match that contract. The indexer is
+  // unaffected because it reads from the VestingCreated event topics, which is
+  // why the positions are indexed correctly (GWOOD, FLYWHEEL) while the dollar
+  // value is missing. /protocols/uncx hides zero-TVL chains, so nothing false
+  // is displayed — the chain is simply absent from the value breakdown.
+  //
+  // To finish: pull the verified ABI for 0xB31eAEFA... from the Robinhood
+  // explorer and give this walker a per-chain struct, the same way the
+  // indexer already keeps a per-chain scan window.
   [CHAIN_IDS.ROBINHOOD]: {
     contractAddress: "0xB31eAEFA2A0bdC53Df6D7a7f0f289b6eE1a8AAF3",
     fromBlock:       59_662_330n,
