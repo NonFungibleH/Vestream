@@ -33,6 +33,10 @@ import type { WalkerResult, TokenAggregate } from "./types";
 const SABLIER_ENVIO_URL =
   process.env.SABLIER_ENVIO_URL ?? "https://indexer.hyperindex.xyz/53b7e25/v1/graphql";
 
+// Kept in step with SUPPORTED_CHAINS in adapters/sablier.ts by hand — adding a
+// chain to the adapter alone leaves the walker answering "chain not supported"
+// and the chain sits at $0 (hit on 2026-09-13 adding Robinhood and Monad).
+// Avalanche is deliberately absent: its TVL comes from the DefiLlama path.
 const SUPPORTED_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.ETHEREUM,
   CHAIN_IDS.BSC,
@@ -40,6 +44,8 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.BASE,
   CHAIN_IDS.ARBITRUM,
   CHAIN_IDS.OPTIMISM,
+  CHAIN_IDS.ROBINHOOD,
+  CHAIN_IDS.MONAD,
 ];
 
 const PAGE_SIZE = 1000;
