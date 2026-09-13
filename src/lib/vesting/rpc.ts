@@ -66,6 +66,15 @@ const robinhood = defineChain({
 // balance or a gas figure for Arc must read decimals from the chain rather
 // than assume 1e18. (Claim ingestion currently writes gasNative as null, so
 // today the blast radius is small — but it will not stay that way.)
+// Monad — high-throughput EVM L1, mainnet live. Native gas MON, 18 decimals.
+const monad = defineChain({
+  id: 143,
+  name: "Monad",
+  nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.monad.xyz"] } },
+  blockExplorers: { default: { name: "MonadVision", url: "https://monvision.io" } },
+});
+
 const arc = defineChain({
   id: 5042,
   name: "Arc",
@@ -341,6 +350,14 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.ROBINHOOD]: buildPool(process.env.ROBINHOOD_RPC_URL, [
     { url: "https://rpc.mainnet.chain.robinhood.com" },
   ]),
+  // Monad (2026-09-13). Only the official RPC is listed: the chain is new and
+  // the usual free-tier providers either do not serve it or are untested for
+  // eth_getLogs here. Nothing in our pipeline scans Monad logs today — Sablier
+  // is indexed through Envio, not RPC — so this exists for contract reads and
+  // for whatever integrates next. Widen it before relying on it for log scans.
+  [CHAIN_IDS.MONAD]: buildPool(process.env.MONAD_RPC_URL, [
+    { url: "https://rpc.monad.xyz" },
+  ]),
   // Arc mainnet opens 2026-09-16; the canonical RPC host is published at
   // launch, so ARC_RPC_URL is the override that will carry it. The default
   // below is the documented pattern and may 404 until then — the pool simply
@@ -545,6 +562,7 @@ const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
   [CHAIN_IDS.OPTIMISM]:     optimism,
   [CHAIN_IDS.AVALANCHE]:    avalanche,
   [CHAIN_IDS.ROBINHOOD]:    robinhood,
+  [CHAIN_IDS.MONAD]:        monad,
   // Testnets added 2026-05-26 so makeFallbackClient can serve adapters
   // that need them (Hedgey/Sepolia, future Base-Sepolia paths).
   [CHAIN_IDS.SEPOLIA]:      sepolia,

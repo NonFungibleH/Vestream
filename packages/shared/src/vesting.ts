@@ -43,6 +43,12 @@ export const CHAIN_IDS = {
   OPTIMISM:     10,        // OP Mainnet — major L2 (OP token vesting + ecosystem)
   AVALANCHE:    43114,     // Avalanche C-Chain — vesting TVL across Sablier/Hedgey/Team Finance/LlamaPay
   ROBINHOOD:    4663,      // Robinhood Chain — EVM L2 (Arbitrum Orbit/Nitro), gas ETH; HoodLock locker
+  // Monad — high-throughput EVM L1, mainnet live, native gas MON. Added
+  // 2026-09-13 for Sablier, whose Envio indexer already serves it (63 streams
+  // at the time). Team Finance market their Monad support but their Squid
+  // returns ZERO vestings for chain 143, so there is nothing to index from
+  // them yet; Hedgey is not deployed here at all (eth_getCode: 0 bytes).
+  MONAD:        143,
   // Arc — Circle's EVM L1 with USDC as the NATIVE gas asset (6 decimals, not
   // 18 like every other chain here). Mainnet opens 2026-09-16. Testnet is
   // listed so we can prove the pipeline against Superfluid's live testnet
@@ -67,6 +73,7 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.OPTIMISM]:     "Optimism",
   [CHAIN_IDS.AVALANCHE]:    "Avalanche",
   [CHAIN_IDS.ROBINHOOD]:    "Robinhood Chain",
+  [CHAIN_IDS.MONAD]:        "Monad",
   [CHAIN_IDS.ARC]:          "Arc",
   [CHAIN_IDS.ARC_TESTNET]:  "Arc Testnet",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",

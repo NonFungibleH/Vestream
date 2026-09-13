@@ -122,7 +122,11 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#F0992E",
     bg:    "rgba(240,153,46,0.08)",
     border:"rgba(240,153,46,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
+    // Robinhood Chain and Monad added 2026-09-13. Sablier's Envio indexer
+    // already served both (468 and 63 streams when audited) and both the
+    // adapter and the TVL walker query Envio with a chainId filter, so
+    // neither needed RPC or contract plumbing.
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE, CHAIN_IDS.ROBINHOOD, CHAIN_IDS.MONAD],
     officialUrl: "https://sablier.com",
     claimUrl:   "https://app.sablier.com/portfolio",
     searchKeywords: [
@@ -847,6 +851,8 @@ const CHAIN_BASE: Record<number, { color: string; name: string }> = {
   4663:     { color: "#5B8C00", name: "Robinhood Chain" },
   // Arc — Circle's L1. Provisional colour until their brand kit is published;
   // deliberately distinct from Base's #0052FF so the two do not read alike.
+  // Monad brand purple.
+  143:      { color: "#836EF9", name: "Monad" },
   5042:     { color: "#1F7A6B", name: "Arc" },
   5042002:  { color: "#9AA0A6", name: "Arc Testnet" },
   101:      { color: "#9945FF", name: "Solana" },
@@ -899,6 +905,7 @@ const CHAIN_SLUG: Record<number, string> = {
   10:    "optimism",
   43114: "avalanche",
   4663:  "robinhood-chain",
+  143:   "monad",
   101:   "solana",
 };
 const SLUG_TO_CHAIN: Record<string, number> =
@@ -938,12 +945,6 @@ export const UPCOMING_CHAINS: Record<string, UpcomingChain> = {
     tagline: "Circle's Layer-1 for stablecoin finance, with USDC as native gas.",
     body: "Arc is built for regulated, dollar-denominated on-chain finance. Token launches that settle in USDC bring the same problem every other chain has: team, investor and community allocations that vest on a schedule nobody is watching. Vestream will index Arc vesting as the first lockers and streaming protocols deploy there.",
     protocols: [],
-  },
-  "monad": {
-    slug: "monad", name: "Monad", evm: true,
-    tagline: "High-throughput EVM Layer-1 with a fast-growing set of token launches.",
-    body: "Monad's launch cohort of projects is vesting founder, investor and airdrop allocations on-chain today. Sablier already runs vesting streams on Monad. Vestream's Monad integration will bring those schedules into the same calendar and alerts as every other chain we index.",
-    protocols: ["Sablier"],
   },
   "berachain": {
     slug: "berachain", name: "Berachain", evm: true,

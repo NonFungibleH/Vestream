@@ -40,6 +40,10 @@
       "schedule": "20 4 * * *"
     },
     {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=4663,143",
+      "schedule": "50 2 * * *"
+    },
+    {
       "path": "/api/cron/tvl-snapshot?protocol=team-finance",
       "schedule": "35 4 * * *"
     },

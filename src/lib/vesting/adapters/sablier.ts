@@ -36,6 +36,13 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.BASE,
   CHAIN_IDS.ARBITRUM,
   CHAIN_IDS.OPTIMISM,
+  // Robinhood Chain added 2026-09-13. Sablier's Envio indexer already serves
+  // it — 468 streams when audited — and this adapter and the TVL walker both
+  // query Envio with a chainId filter, so no RPC, contract address or chain
+  // plumbing was needed. The chain itself already existed for HoodLock, UNCX
+  // and Doppler. Cheapest coverage win available: 468 positions for two lines.
+  CHAIN_IDS.ROBINHOOD,
+  CHAIN_IDS.MONAD,
   CHAIN_IDS.SEPOLIA,
 ];
 
