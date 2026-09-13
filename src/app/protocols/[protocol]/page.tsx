@@ -38,6 +38,7 @@ import {
   type ProtocolFunStats,
   getNextUpcomingUnlock,
   getProtocolStats,
+  getStreamCountsByChain,
   getUpcomingUnlocksForProtocol,
   relativeFreshness,
   relativeTimeSince,
@@ -142,6 +143,11 @@ interface ProtocolPageData {
   funStats:     ProtocolFunStats | null;
   /** 2026-06-01: per-chain TVL breakdown from protocolTvlSnapshots. */
   tvlPerChain:  Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>;
+  /** Indexed streams per chain, from the cache — see getStreamCountsByChain.
+   *  Lets the chain card show a covered-but-unpriced chain honestly instead
+   *  of dropping it. Plain object so it survives unstable_cache's JSON round
+   *  trip (a Map would come back as {}). */
+  streamsByChain: Record<string, number>;
 }
 
 // Empty-shape default. Returned during the build phase (no DB access)
@@ -155,6 +161,7 @@ const EMPTY_PROTOCOL_DATA: ProtocolPageData = {
   upcomingList: [],
   funStats:     null,
   tvlPerChain:  [],
+  streamsByChain: {},
 };
 
 const loadProtocolData = unstable_cache(
@@ -188,6 +195,7 @@ const loadProtocolData = unstable_cache(
       getUpcomingUnlocksForProtocol(adapterIds, 6),
       getProtocolFunStats(adapterIds),
       readSnapshotsForAdapters(adapterIds),
+      getStreamCountsByChain(adapterIds),
     ]);
     const stats        = settled[0].status === "fulfilled" ? settled[0].value : null;
     const latest       = settled[1].status === "fulfilled" ? settled[1].value : null;
@@ -195,6 +203,9 @@ const loadProtocolData = unstable_cache(
     const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
     const funStats     = settled[4].status === "fulfilled" ? settled[4].value : null;
     const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>) : [];
+    const streamsByChain = settled[6].status === "fulfilled"
+      ? Object.fromEntries((settled[6].value as Map<number, number>).entries())
+      : {};
     for (let i = 0; i < settled.length; i++) {
       const r = settled[i];
       if (r.status === "rejected") {
@@ -271,6 +282,7 @@ const loadProtocolData = unstable_cache(
       upcomingList: upcomingList.map((g) => enrich(g)!),
       funStats,
       tvlPerChain,
+      streamsByChain,
     };
   },
   // v7 = bump after adding tvlPerChain. Without bumping, the
@@ -287,7 +299,7 @@ const loadProtocolData = unstable_cache(
   // v10 = bump on 2026-07-06 for the dust/scam-token USD sanity guard in
   // toUsdValue (nonsense "$475.70B TKN" headlines). Key bump forces the
   // upcoming-queue USD to recompute with the guard immediately on deploy.
-  ["protocol-page-data-v10"],
+  ["protocol-page-data-v11"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -411,6 +423,8 @@ export default async function ProtocolLandingPage(
     pageData = lastGood ?? EMPTY_PROTOCOL_DATA;
   }
   const { stats, latest, upcoming, upcomingList, funStats, tvlPerChain } = pageData;
+  // Older last-good payloads predate this field; default rather than crash.
+  const streamsByChain = pageData.streamsByChain ?? {};
 
   // Stream counts now come from cache only (getGlobalStats was dropped –
   // see the loadProtocolData comment for the why).
@@ -739,8 +753,17 @@ export default async function ProtocolLandingPage(
                 };
               })
         )
-          .filter((r) => r.tvlUsd > 0)
-          .sort((a, b) => b.tvlUsd - a.tvlUsd);
+          // Keep chains at $0 when we HAVE indexed streams there (2026-09-13).
+          // Dropping them was a rule made for Team Finance on Avalanche and it
+          // is wrong: the hero says "4 chains covered" and the card listed
+          // three, which reads as a bug. A covered-but-unpriced chain is a real
+          // state — UNCX on Robinhood (indexed, not yet priceable) and Team
+          // Finance on Avalanche (148 vestings, all unpriced dust) — and the
+          // card now says so instead of hiding it. Chains with neither value
+          // nor streams are still dropped; there is nothing to report.
+          .map((r) => ({ ...r, streams: streamsByChain[String(r.chainId)] ?? 0 }))
+          .filter((r) => r.tvlUsd > 0 || r.streams > 0)
+          .sort((a, b) => b.tvlUsd - a.tvlUsd || b.streams - a.streams);
         if (chainTvl.length === 0) return null;
         const totalTvl = chainTvl.reduce((s, r) => s + r.tvlUsd, 0);
         return (
@@ -777,19 +800,33 @@ export default async function ProtocolLandingPage(
                           )}
                           {chainLabel(row.chainId)}
                         </span>
-                        <span className="text-sm font-semibold tabular-nums" style={{ color: row.tvlUsd === 0 ? "#94A3B8" : "#1A1D20" }}>
-                          {/* An integrated-but-empty chain (e.g. Team Finance on
-                              Base) shows an explicit "$0" rather than the generic
-                              "-" no-value dash, so it reads as "covered, nothing
-                              locked yet" instead of "unknown". */}
-                          {row.tvlUsd === 0 ? "$0" : formatUsdCompact(row.tvlUsd)}
-                        </span>
+                        {/* A chain we index but cannot value yet says exactly
+                            that. "$0" was worse than useless here: UNCX on
+                            Robinhood holds two live vestings we simply cannot
+                            price (their contract there uses a different struct),
+                            and Team Finance on Avalanche has 148 whose tokens
+                            have no market. Reporting "$0" claimed nothing is
+                            locked, which is false; omitting the row made the
+                            hero's chain count disagree with the table. */}
+                        {row.tvlUsd === 0 && row.streams > 0 ? (
+                          <span className="text-xs tabular-nums" style={{ color: "#94A3B8" }}>
+                            {row.streams.toLocaleString("en-US")} {row.streams === 1 ? "stream" : "streams"} · no TVL yet
+                          </span>
+                        ) : (
+                          <span className="text-sm font-semibold tabular-nums" style={{ color: row.tvlUsd === 0 ? "#94A3B8" : "#1A1D20" }}>
+                            {row.tvlUsd === 0 ? "$0" : formatUsdCompact(row.tvlUsd)}
+                          </span>
+                        )}
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${Math.max(pct, 0.5)}%`, background: meta.color, opacity: 0.75 }}
-                        />
+                        {/* No bar for an unpriced chain — a bar implies a share
+                            of the total, and it has none to show. */}
+                        {!(row.tvlUsd === 0 && row.streams > 0) && (
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${Math.max(pct, 0.5)}%`, background: meta.color, opacity: 0.75 }}
+                          />
+                        )}
                       </div>
                     </div>
                   );

@@ -1440,3 +1440,33 @@ export function formatAmountCompact(
   if (fixed === "0.0000" && whole > 0) return `< 0.0001${sym}`;
   return `${fixed}${sym}`;
 }
+
+/**
+ * Indexed streams per chain for a protocol, straight from the cache.
+ *
+ * Distinct from protocol_tvl_snapshots.stream_count, which is what the TVL
+ * WALKER found. The two diverge whenever a walker cannot read a chain that the
+ * indexer can — UNCX on Robinhood is the live example: the indexer holds two
+ * vestings there, the walker decodes nothing (different contract struct), so
+ * the snapshot says 0. For "is this chain actually covered?" the cache is the
+ * honest source.
+ */
+export async function getStreamCountsByChain(
+  adapterIds: readonly string[],
+): Promise<Map<number, number>> {
+  if (process.env.NEXT_PHASE === "phase-production-build") return new Map();
+  try {
+    const rows = await db
+      .select({
+        chainId: vestingStreamsCache.chainId,
+        n:       sql<number>`count(*)::int`,
+      })
+      .from(vestingStreamsCache)
+      .where(and(inArray(vestingStreamsCache.protocol, [...adapterIds]), excludeTestnets, excludeUnlisted))
+      .groupBy(vestingStreamsCache.chainId);
+    return new Map(rows.map((r) => [Number(r.chainId), Number(r.n)]));
+  } catch (err) {
+    console.warn("[protocol-stats] getStreamCountsByChain failed:", err);
+    return new Map();
+  }
+}

@@ -4,8 +4,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   listProtocols, protocolIcon,
-  publicChainIds, chainSlug, chainBrand, chainIcon,
+  publicChainIds, chainSlug, chainBrand, chainIcon, upcomingChain,
 } from "@/lib/protocol-constants";
+import { CHAIN_IDS } from "@vestream/shared";
 import { GlobalSearchOverlay } from "@/components/GlobalSearchOverlay";
 
 function SearchIcon() {
@@ -25,17 +26,43 @@ interface Props {
   theme?: "light" | "navy" | "dark" | "ink";
 }
 
+/** A dropdown entry. `soon` marks a chain we publish a page for but do not
+ *  index yet (UPCOMING_CHAINS) — rendered with a "Soon" badge. */
+type DropItem = {
+  label: string; href: string; icon: string | null;
+  color: string; bg: string; border: string; soon?: boolean;
+};
+type NavItem = { label: string; href: string; items?: DropItem[] };
+
 // Dropdown item lists, built from the single source of truth in
 // protocol-constants so the nav never drifts from the real integrations.
-const PROTOCOL_ITEMS = listProtocols().map((p) => ({
+const PROTOCOL_ITEMS: DropItem[] = listProtocols().map((p) => ({
   label: p.name, href: `/protocols/${p.slug}`, icon: protocolIcon(p.slug), color: p.color, bg: p.bg, border: p.border,
 }));
-const CHAIN_ITEMS = publicChainIds()
-  .map((id) => ({ id, slug: chainSlug(id), brand: chainBrand(id), icon: chainIcon(id) }))
-  .filter((c) => c.slug)
-  .map((c) => ({ label: c.brand.name, href: `/chains/${c.slug}`, icon: c.icon, color: c.brand.color, bg: c.brand.bg, border: c.brand.border }));
+const CHAIN_ITEMS: DropItem[] = [
+  ...publicChainIds()
+    .map((id) => ({ id, slug: chainSlug(id), brand: chainBrand(id), icon: chainIcon(id) }))
+    .filter((c) => c.slug)
+    .map((c) => ({ label: c.brand.name, href: `/chains/${c.slug}`, icon: c.icon, color: c.brand.color, bg: c.brand.bg, border: c.brand.border, soon: false })),
+  // Arc carries a "Soon" badge rather than being left out. Its /chains/arc
+  // page already exists and explains the integration is on the roadmap, so
+  // the menu should lead people there instead of hiding it — but it must not
+  // read as a live integration, hence the badge. `soon` is what every render
+  // below keys off; add more UPCOMING_CHAINS here the same way.
+  ...(upcomingChain("arc")
+    ? [{
+        label:  upcomingChain("arc")!.name,
+        href:   "/chains/arc",
+        icon:   chainIcon(CHAIN_IDS.ARC),
+        color:  chainBrand(CHAIN_IDS.ARC).color,
+        bg:     chainBrand(CHAIN_IDS.ARC).bg,
+        border: chainBrand(CHAIN_IDS.ARC).border,
+        soon:   true,
+      }]
+    : []),
+];
 
-type NavItem = { label: string; href: string; items?: typeof PROTOCOL_ITEMS };
+
 const NAV_ITEMS: NavItem[] = [
   { label: "Protocols", href: "/protocols", items: PROTOCOL_ITEMS },
   { label: "Chains",    href: "/chains",    items: CHAIN_ITEMS },
@@ -222,6 +249,14 @@ export function SiteNav({ theme = "light" }: Props) {
                                 : <span className="font-bold text-[12px]" style={{ color: it.color }}>{it.label[0]}</span>}
                             </span>
                             <span className="text-[13px] font-medium truncate">{it.label}</span>
+                            {it.soon && (
+                              <span
+                                className="ml-auto flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                style={{ background: "rgba(240,153,46,0.14)", color: "#C77B18" }}
+                              >
+                                Soon
+                              </span>
+                            )}
                           </Link>
                         ))}
                       </div>
@@ -354,6 +389,14 @@ export function SiteNav({ theme = "light" }: Props) {
                           : <span className="font-bold text-[10px]" style={{ color: it.color }}>{it.label[0]}</span>}
                       </span>
                       <span className="text-[12px] font-medium truncate">{it.label}</span>
+                      {it.soon && (
+                        <span
+                          className="ml-auto flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                          style={{ background: "rgba(240,153,46,0.14)", color: "#C77B18" }}
+                        >
+                          Soon
+                        </span>
+                      )}
                     </Link>
                   ))}
                 </div>
