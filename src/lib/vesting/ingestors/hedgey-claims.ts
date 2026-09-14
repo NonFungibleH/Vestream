@@ -104,7 +104,7 @@ const tokenMetaCache = new Map<string, { symbol: string; decimals: number }>();
  * wallets and the chains where Hedgey is deployed.
  */
 export async function ingestHedgeyClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

@@ -19,7 +19,10 @@ import { claimEvents } from "../../db/schema";
 import { getHistoricalPrice } from "../historical-prices";
 
 export interface ClaimEventInput {
-  userId:        string;
+  /** Owner tag. Null for rows discovered by an anonymous wallet scan — the
+   *  claim is identified by (chain, tx, recipient, token), not by who found
+   *  it, so an unowned row is a complete row. */
+  userId:        string | null;
   /** Composite stream id matching vestingStreamsCache.streamId, e.g.
    *  "sablier-1-0xabc". */
   streamId:      string;

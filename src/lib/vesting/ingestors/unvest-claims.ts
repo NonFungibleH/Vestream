@@ -101,7 +101,7 @@ interface RawClaim {
  * claim_events.
  */
 export async function ingestUnvestClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

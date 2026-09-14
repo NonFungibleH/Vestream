@@ -87,7 +87,7 @@ const tokenMetaCache = new Map<string, { symbol: string; decimals: number }>();
  * claim_events.
  */
 export async function ingestPinksaleClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

@@ -189,7 +189,7 @@ async function getUnderlying(
  * claim_events.
  */
 export async function ingestSuperfluidClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

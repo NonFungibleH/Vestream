@@ -24,7 +24,7 @@ const SUPPORTED_CHAINS: SupportedChainId[] =
   Object.keys(HOODLOCK_CONTRACTS).map(Number) as SupportedChainId[];
 
 export async function ingestHoodlockClaimsForUser(
-  userId:   string,
+  userId:   string | null,
   wallets:  string[],
   chainIds: SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

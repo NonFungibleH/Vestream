@@ -14,8 +14,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { db } from "../../db";
+import { getWalletsForUser } from "../../db/queries";
 import { claimEvents } from "../../db/schema";
-import { sql, and, eq } from "drizzle-orm";
+import { sql, and, eq, inArray } from "drizzle-orm";
 import { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";
 import type { SupportedChainId } from "../types";
 
@@ -83,7 +84,7 @@ interface RawStream {
  * duplicates a no-op.
  */
 export async function ingestSablierClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {
@@ -173,11 +174,37 @@ async function fetchSablierActions(
  * Heavy enrichment already happened at ingestion time, so this is a
  * straight DB read.
  */
+/**
+ * Claim history for everything a user tracks.
+ *
+ * Matches on RECIPIENT, not user_id. A claim row is identified by
+ * (chain, tx, recipient, token) — user_id is never in that key — so filtering
+ * by owner silently returned nothing for the second user to track any wallet
+ * already indexed by someone else, and returns nothing at all for rows found
+ * by an anonymous scan (user_id null). The wallets a user tracks are the
+ * correct scope.
+ */
 export async function getClaimHistoryForUser(
   userId:        string,
   opts: { since?: Date; until?: Date; protocol?: string; tokenAddress?: string } = {},
 ) {
-  const conditions = [eq(claimEvents.userId, userId)];
+  const tracked = await getWalletsForUser(userId);
+  const addrs = tracked.map((w) => w.address.toLowerCase());
+
+  // Match on wallet OR owner, deliberately additive so this can only widen
+  // what a user sees, never narrow it.
+  //   - recipient: the correct scope. Picks up rows found by an anonymous
+  //     scan (user_id null) and rows another user indexed first, which the
+  //     old owner-only filter silently hid.
+  //   - user_id: retained for rows whose recipient is not a wallet the user
+  //     tracks. The demo account is exactly this — its 13 fixture rows use
+  //     0xdead…beef, which no one tracks — and dropping the clause would have
+  //     emptied the demo.
+  const scope = addrs.length > 0
+    ? sql`(${inArray(sql`lower(${claimEvents.recipient})`, addrs)} or ${eq(claimEvents.userId, userId)})`
+    : eq(claimEvents.userId, userId);
+
+  const conditions = [scope];
   if (opts.since)        conditions.push(sql`${claimEvents.claimedAt} >= ${opts.since}`);
   if (opts.until)        conditions.push(sql`${claimEvents.claimedAt} <= ${opts.until}`);
   if (opts.protocol)     conditions.push(eq(claimEvents.protocol, opts.protocol));

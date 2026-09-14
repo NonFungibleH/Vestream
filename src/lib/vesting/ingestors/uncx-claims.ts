@@ -98,7 +98,7 @@ interface RawWithdrawEvent {
  * claim_events.
  */
 export async function ingestUncxClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

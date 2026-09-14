@@ -107,8 +107,16 @@ export const users = pgTable("users", {
 //   - (chainId, txHash)   — dedup on backfill (each tx delivers one event)
 export const claimEvents = pgTable("claim_events", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** Owner tag, NOT part of identity. Null when the row came from an
+   *  anonymous wallet scan rather than a logged-in user — the tax product
+   *  shows a visitor their claim history before they have an account.
+   *
+   *  Identity is the dedup index below: (chain_id, tx_hash, recipient,
+   *  token_address). One on-chain claim is one row no matter who looks at
+   *  it, so reads MUST match on `recipient` against the wallets a user
+   *  tracks, never on this column — filtering by user_id returned nothing
+   *  for the second user to track any already-indexed wallet. */
   userId: uuid("user_id")
-    .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   /** Composite stream id matching vestingStreamsCache.streamId */
   streamId: text("stream_id").notNull(),

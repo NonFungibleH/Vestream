@@ -146,7 +146,7 @@ export async function ingestClaimsForToken(
  * the others. A failed adapter returns inserted: 0 + an error string.
  */
 export async function ingestAllClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds?: SupportedChainId[],
 ): Promise<IngestResult[]> {
@@ -198,6 +198,27 @@ export async function ingestAllClaimsForUser(
   ];
 
   return Promise.all(tasks);
+}
+
+
+/**
+ * Claim history for a wallet with no account behind it.
+ *
+ * Same fan-out as ingestAllClaimsForUser with no owner attached. This is what
+ * lets the tax product show a first-time visitor their own claim history
+ * before they pay: the ingestors were always wallet-scoped, and the userId
+ * was only ever the storage key.
+ *
+ * Rows land with user_id null and are found on read by matching `recipient`
+ * against the wallets a user tracks, so if this wallet is later linked to an
+ * account the history is already there — no re-scan, and no duplicate, because
+ * the dedup index has never included user_id.
+ */
+export async function ingestAllClaimsForWallet(
+  wallet:    string,
+  chainIds?: SupportedChainId[],
+): Promise<IngestResult[]> {
+  return ingestAllClaimsForUser(null, [wallet], chainIds);
 }
 
 export { upsertClaimEvents, syntheticTxHash, type ClaimEventInput } from "./shared";

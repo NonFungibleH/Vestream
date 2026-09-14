@@ -86,7 +86,7 @@ async function getJupiterTokenList(): Promise<Map<string, { symbol: string; deci
  * `withdrawnAmount` so subsequent runs only emit deltas.
  */
 export async function ingestStreamflowClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds?: SupportedChainId[],
 ): Promise<number> {

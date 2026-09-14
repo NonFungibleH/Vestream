@@ -105,7 +105,7 @@ function decodeEscrow(escrowPubkey: string, data: Buffer): DecodedEscrow | null 
  * claim_events.
  */
 export async function ingestJupiterLockClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds?: SupportedChainId[],
 ): Promise<number> {

@@ -28,7 +28,7 @@ const SUPPORTED_CHAINS: SupportedChainId[] =
   Object.keys(DOPPLER_AIRLOCK).map(Number) as SupportedChainId[];
 
 export async function ingestDopplerClaimsForUser(
-  userId:   string,
+  userId:   string | null,
   wallets:  string[],
   chainIds: SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

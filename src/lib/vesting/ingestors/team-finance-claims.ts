@@ -45,7 +45,7 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [1, 56, 137, 8453, 11155111] as Sup
  * tokenAddress) makes re-running a no-op for already-seen events.
  */
 export async function ingestTeamFinanceClaimsForUser(
-  userId:    string,
+  userId:    string | null,
   wallets:   string[],
   chainIds:  SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {

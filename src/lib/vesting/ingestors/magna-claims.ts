@@ -84,7 +84,7 @@ async function streamIdIndex(wallets: string[]): Promise<Map<string, string>> {
 }
 
 export async function ingestMagnaClaimsForUser(
-  userId:   string,
+  userId:   string | null,
   wallets:  string[],
   chainIds: SupportedChainId[] = SUPPORTED_CHAINS,
 ): Promise<number> {
