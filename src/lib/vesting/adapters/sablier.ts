@@ -43,6 +43,9 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
   // and Doppler. Cheapest coverage win available: 468 positions for two lines.
   CHAIN_IDS.ROBINHOOD,
   CHAIN_IDS.MONAD,
+  CHAIN_IDS.ZKSYNC,
+  CHAIN_IDS.BLAST,
+  CHAIN_IDS.BERACHAIN,
   CHAIN_IDS.SEPOLIA,
 ];
 

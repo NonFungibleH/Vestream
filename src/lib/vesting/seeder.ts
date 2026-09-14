@@ -1075,7 +1075,10 @@ const UNCX_VM_WINDOWS: Record<SupportedChainId, bigint> = {
   [CHAIN_IDS.OPTIMISM]:              0n, // UNCX-VM not yet wired for Optimism
   [CHAIN_IDS.AVALANCHE]:             0n, // UNCX-VM not on Avalanche
   [CHAIN_IDS.ROBINHOOD]:             0n, // UNCX-VM not on Robinhood Chain
-  [CHAIN_IDS.MONAD]:        0n,   // no seeder job on Monad — Sablier is Envio-indexed
+  [CHAIN_IDS.MONAD]:        0n,
+  [CHAIN_IDS.ZKSYNC]:         0n,   // no seeder job — indexed upstream
+  [CHAIN_IDS.BLAST]:          0n,   // no seeder job — indexed upstream
+  [CHAIN_IDS.BERACHAIN]:      0n,   // no seeder job — indexed upstream   // no seeder job on Monad — Sablier is Envio-indexed
   [CHAIN_IDS.ARC]:                   0n, // UNCX-VM not on Arc
   [CHAIN_IDS.ARC_TESTNET]:           0n,
   [CHAIN_IDS.SOLANA]:                0n, // EVM-only
@@ -1416,6 +1419,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "hedgey",       chainId: CHAIN_IDS.BASE,     discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ARBITRUM, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.OPTIMISM, discover: discoverHedgeyRecipients },
+  { adapterId: "hedgey",       chainId: CHAIN_IDS.BERACHAIN, discover: discoverHedgeyRecipients },
   { adapterId: "hedgey",       chainId: CHAIN_IDS.SEPOLIA,  discover: discoverHedgeyRecipients },
   // (LlamaPay + Sablier Flow moved up to the top of STANDARD — they
   // were timing out at the tail of the run when Hedgey's slower

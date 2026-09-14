@@ -222,6 +222,14 @@
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=43114",
       "schedule": "51 * * * *"
+    },
+    {
+      "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=324,81457,80094",
+      "schedule": "55 2 * * *"
+    },
+    {
+      "path": "/api/cron/indexer?protocol=hedgey&chainId=80094",
+      "schedule": "10 6 * * *"
     }
   ],
   "headers": [

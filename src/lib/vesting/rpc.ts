@@ -66,6 +66,35 @@ const robinhood = defineChain({
 // balance or a gas figure for Arc must read decimals from the chain rather
 // than assume 1e18. (Claim ingestion currently writes gasNative as null, so
 // today the blast radius is small — but it will not stay that way.)
+// zkSync Era — ETH-gas ZK rollup. Note it is NOT EVM-equivalent at the
+// bytecode level (different address derivation), which is why Hedgey's
+// same-address-everywhere deployment does not exist here.
+const zksync = defineChain({
+  id: 324,
+  name: "zkSync Era",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://mainnet.era.zksync.io"] } },
+  blockExplorers: { default: { name: "zkSync Explorer", url: "https://explorer.zksync.io" } },
+});
+
+// Blast — ETH-gas L2 with native yield.
+const blast = defineChain({
+  id: 81457,
+  name: "Blast",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.blast.io"] } },
+  blockExplorers: { default: { name: "Blastscan", url: "https://blastscan.io" } },
+});
+
+// Berachain — proof-of-liquidity L1, native gas BERA.
+const berachain = defineChain({
+  id: 80094,
+  name: "Berachain",
+  nativeCurrency: { name: "BERA", symbol: "BERA", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.berachain.com"] } },
+  blockExplorers: { default: { name: "Berascan", url: "https://berascan.com" } },
+});
+
 // Monad — high-throughput EVM L1, mainnet live. Native gas MON, 18 decimals.
 const monad = defineChain({
   id: 143,
@@ -358,6 +387,24 @@ const POOL: Record<SupportedChainId, Provider[]> = {
   [CHAIN_IDS.MONAD]: buildPool(process.env.MONAD_RPC_URL, [
     { url: "https://rpc.monad.xyz" },
   ]),
+  // zkSync / Blast / Berachain (2026-09-14). Official endpoint each, plus
+  // dRPC for READS only — it is in LOG_UNSAFE_HOSTS, so it never serves a log
+  // scan. Sablier on all three and Team Finance on zkSync come through their
+  // own indexers, so nothing here scans logs today; Hedgey on Berachain does,
+  // and uses the official RPC. Widen before adding another log-scanning
+  // protocol on these chains.
+  [CHAIN_IDS.ZKSYNC]: buildPool(process.env.ZKSYNC_RPC_URL, [
+    { url: "https://mainnet.era.zksync.io" },
+    { url: "https://zksync.drpc.org" },
+  ]),
+  [CHAIN_IDS.BLAST]: buildPool(process.env.BLAST_RPC_URL, [
+    { url: "https://rpc.blast.io" },
+    { url: "https://blast.drpc.org" },
+  ]),
+  [CHAIN_IDS.BERACHAIN]: buildPool(process.env.BERACHAIN_RPC_URL, [
+    { url: "https://rpc.berachain.com" },
+    { url: "https://berachain.drpc.org" },
+  ]),
   // Arc mainnet opens 2026-09-16; the canonical RPC host is published at
   // launch, so ARC_RPC_URL is the override that will carry it. The default
   // below is the documented pattern and may 404 until then — the pool simply
@@ -563,6 +610,9 @@ const VIEM_CHAINS: Partial<Record<SupportedChainId, Chain>> = {
   [CHAIN_IDS.AVALANCHE]:    avalanche,
   [CHAIN_IDS.ROBINHOOD]:    robinhood,
   [CHAIN_IDS.MONAD]:        monad,
+  [CHAIN_IDS.ZKSYNC]:       zksync,
+  [CHAIN_IDS.BLAST]:        blast,
+  [CHAIN_IDS.BERACHAIN]:    berachain,
   // Testnets added 2026-05-26 so makeFallbackClient can serve adapters
   // that need them (Hedgey/Sepolia, future Base-Sepolia paths).
   [CHAIN_IDS.SEPOLIA]:      sepolia,

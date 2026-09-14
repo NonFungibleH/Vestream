@@ -59,6 +59,9 @@ export const PINKSALE_SEED_WALLETS: Record<SupportedChainId, string[]> = {
   [CHAIN_IDS.OPTIMISM]:     [],
   [CHAIN_IDS.AVALANCHE]:    [],
   [CHAIN_IDS.ROBINHOOD]:    [], // PinkSale not on Robinhood Chain
-  [CHAIN_IDS.MONAD]:     [],  // Sablier-only so far; Envio needs no seed wallets
+  [CHAIN_IDS.MONAD]:     [],
+  [CHAIN_IDS.ZKSYNC]:      [],  // Envio/Squid-indexed; no seed wallets needed
+  [CHAIN_IDS.BLAST]:       [],  // Envio/Squid-indexed; no seed wallets needed
+  [CHAIN_IDS.BERACHAIN]:   [],  // Envio/Squid-indexed; no seed wallets needed  // Sablier-only so far; Envio needs no seed wallets
   [CHAIN_IDS.SOLANA]:       [], // PinkSale is EVM-only; Solana never populated here
 };

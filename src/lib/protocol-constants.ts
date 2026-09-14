@@ -126,7 +126,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // already served both (468 and 63 streams when audited) and both the
     // adapter and the TVL walker query Envio with a chainId filter, so
     // neither needed RPC or contract plumbing.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE, CHAIN_IDS.ROBINHOOD, CHAIN_IDS.MONAD],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE, CHAIN_IDS.ROBINHOOD, CHAIN_IDS.MONAD, CHAIN_IDS.ZKSYNC, CHAIN_IDS.BLAST, CHAIN_IDS.BERACHAIN],
     officialUrl: "https://sablier.com",
     claimUrl:   "https://app.sablier.com/portfolio",
     searchKeywords: [
@@ -211,7 +211,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     color: "#33406B",
     bg:    "rgba(51,64,107,0.08)",
     border:"rgba(51,64,107,0.22)",
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BASE, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.AVALANCHE, CHAIN_IDS.BERACHAIN],
     officialUrl: "https://hedgey.finance",
     claimUrl:   "https://app.hedgey.finance",
     searchKeywords: [
@@ -250,7 +250,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // REST fallback. Rather than show incomplete/incorrect Base data (or a
     // permanent "$0 on Base"), we don't claim Base coverage. Re-add if/when TF
     // indexes Base upstream.
-    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE],
+    chainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE, CHAIN_IDS.ZKSYNC],
     officialUrl: "https://www.team.finance",
     claimUrl:   "https://app.team.finance",
     searchKeywords: [
@@ -853,6 +853,9 @@ const CHAIN_BASE: Record<number, { color: string; name: string }> = {
   // deliberately distinct from Base's #0052FF so the two do not read alike.
   // Monad brand purple.
   143:      { color: "#836EF9", name: "Monad" },
+  324:      { color: "#1E69FF", name: "zkSync Era" },
+  81457:    { color: "#FCFC03", name: "Blast" },
+  80094:    { color: "#814625", name: "Berachain" },
   5042:     { color: "#1F7A6B", name: "Arc" },
   5042002:  { color: "#9AA0A6", name: "Arc Testnet" },
   101:      { color: "#9945FF", name: "Solana" },
@@ -886,6 +889,9 @@ const CHAIN_ICON_FILE: Record<number, string> = {
   4663:  "robinhood",
   101:   "solana",
   143:   "monad",
+  324:   "zksync",
+  81457: "blast",
+  80094: "berachain",
   // Arc has no /chains/<slug> entry yet (it is still an UPCOMING_CHAINS page),
   // but it DOES need an icon: the Chains menu lists it with a "Soon" badge and
   // would otherwise fall back to a bare letter tile. Supplied 2026-09-14.
@@ -911,6 +917,9 @@ const CHAIN_SLUG: Record<number, string> = {
   43114: "avalanche",
   4663:  "robinhood-chain",
   143:   "monad",
+  324:   "zksync",
+  81457: "blast",
+  80094: "berachain",
   101:   "solana",
 };
 const SLUG_TO_CHAIN: Record<string, number> =
@@ -950,12 +959,6 @@ export const UPCOMING_CHAINS: Record<string, UpcomingChain> = {
     tagline: "Circle's Layer-1 for stablecoin finance, with USDC as native gas.",
     body: "Arc is built for regulated, dollar-denominated on-chain finance. Token launches that settle in USDC bring the same problem every other chain has: team, investor and community allocations that vest on a schedule nobody is watching. Vestream will index Arc vesting as the first lockers and streaming protocols deploy there.",
     protocols: [],
-  },
-  "berachain": {
-    slug: "berachain", name: "Berachain", evm: true,
-    tagline: "Proof-of-liquidity EVM chain with a large, active token ecosystem.",
-    body: "Berachain's ecosystem tokens lean heavily on vesting to align validators, LPs and teams, and Sablier's lockup contracts are live on it. Vestream is not indexing Berachain yet; this page will become the live Berachain unlock calendar when the integration ships.",
-    protocols: ["Sablier"],
   },
   "sonic": {
     slug: "sonic", name: "Sonic", evm: true,

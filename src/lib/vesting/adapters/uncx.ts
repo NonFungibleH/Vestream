@@ -58,7 +58,10 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               "CUQ2qwQcVfivLPF9TsoLaLnJGmPRb3sDYFVRXbtUy78z"
                             ),
   // Sepolia testnet — UNCX Vesting V1
-    [CHAIN_IDS.MONAD]:        undefined,  // UNCX has no Monad deployment
+    [CHAIN_IDS.MONAD]:        undefined,
+  [CHAIN_IDS.ZKSYNC]:         undefined,  // UNCX not deployed
+  [CHAIN_IDS.BLAST]:          undefined,  // UNCX not deployed
+  [CHAIN_IDS.BERACHAIN]:      undefined,  // UNCX not deployed  // UNCX has no Monad deployment
 [CHAIN_IDS.SEPOLIA]:      resolveSubgraphUrl(
                               process.env.UNCX_SUBGRAPH_URL_SEPOLIA,
                               "5foyqAtEVWtcSJX62sMC6fVR7FmetsFy8eYRKRT2E7DU"

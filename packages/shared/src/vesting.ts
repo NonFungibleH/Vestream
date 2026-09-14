@@ -49,6 +49,14 @@ export const CHAIN_IDS = {
   // returns ZERO vestings for chain 143, so there is nothing to index from
   // them yet; Hedgey is not deployed here at all (eth_getCode: 0 bytes).
   MONAD:        143,
+  // Added 2026-09-14 off the coverage audit. Stream counts measured against
+  // each protocol's own index before building, so none of these is a guess:
+  //   zkSync    Sablier 4,131 + Team Finance 111  (the single biggest gap)
+  //   Blast     Sablier 2,564 + Hedgey 2
+  //   Berachain Sablier 416   + Hedgey 574        (best multi-protocol case)
+  ZKSYNC:       324,
+  BLAST:        81457,
+  BERACHAIN:    80094,
   // Arc — Circle's EVM L1 with USDC as the NATIVE gas asset (6 decimals, not
   // 18 like every other chain here). Mainnet opens 2026-09-16. Testnet is
   // listed so we can prove the pipeline against Superfluid's live testnet
@@ -74,6 +82,9 @@ export const CHAIN_NAMES: Record<SupportedChainId, string> = {
   [CHAIN_IDS.AVALANCHE]:    "Avalanche",
   [CHAIN_IDS.ROBINHOOD]:    "Robinhood Chain",
   [CHAIN_IDS.MONAD]:        "Monad",
+  [CHAIN_IDS.ZKSYNC]:       "zkSync Era",
+  [CHAIN_IDS.BLAST]:        "Blast",
+  [CHAIN_IDS.BERACHAIN]:    "Berachain",
   [CHAIN_IDS.ARC]:          "Arc",
   [CHAIN_IDS.ARC_TESTNET]:  "Arc Testnet",
   [CHAIN_IDS.SEPOLIA]:      "Sepolia",

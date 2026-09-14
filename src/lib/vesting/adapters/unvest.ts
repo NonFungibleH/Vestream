@@ -25,7 +25,10 @@ const SUBGRAPH_URLS: Record<SupportedChainId, string | undefined> = {
                               process.env.UNVEST_SUBGRAPH_URL_BASE,
                               "8DdThKxMS2LxEtyDCdwqtecwRu4qD8GbE77n3ANvkN2M"
                             ),
-    [CHAIN_IDS.MONAD]:        undefined,  // Unvest has no Monad deployment
+    [CHAIN_IDS.MONAD]:        undefined,
+  [CHAIN_IDS.ZKSYNC]:         undefined,  // Unvest not deployed
+  [CHAIN_IDS.BLAST]:          undefined,  // Unvest not deployed
+  [CHAIN_IDS.BERACHAIN]:      undefined,  // Unvest not deployed  // Unvest has no Monad deployment
 [CHAIN_IDS.SEPOLIA]:      undefined,
   // Base Sepolia testnet — Unvest V3 (legacy tokenLocks schema)
   [CHAIN_IDS.BASE_SEPOLIA]: resolveSubgraphUrl(

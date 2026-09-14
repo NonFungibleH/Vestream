@@ -48,6 +48,7 @@ const HEDGEY_CONTRACTS: Partial<Record<SupportedChainId, `0x${string}`>> = {
   [CHAIN_IDS.BASE]:     "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.ARBITRUM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
   [CHAIN_IDS.OPTIMISM]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
+  [CHAIN_IDS.BERACHAIN]: "0x2CDE9919e81b20B4B33DD562a48a84b54C48F00C",
 };
 
 // Approximate "30 days back" block heights as of 2026-05-14. Anything
@@ -59,6 +60,15 @@ const HEDGEY_GENESIS: Partial<Record<SupportedChainId, bigint>> = {
   [CHAIN_IDS.BASE]:     27_700_000n,
   [CHAIN_IDS.ARBITRUM]: 320_000_000n,
   [CHAIN_IDS.OPTIMISM]: 132_000_000n,
+  // Berachain (2026-09-14). The contract has been live since block 782,380
+  // (binary-searched on eth_getCode), but that is 25.4M blocks behind the head
+  // — 2,540 ticks even at Berachain's 10,000-block log cap, which no cron
+  // schedule makes practical. The SEEDER owns history here: Hedgey plans are
+  // enumerable ERC-721s, so discoverHedgeyRecipients walks tokenByIndex and
+  // finds all 574 regardless of block. This indexer therefore starts NEAR THE
+  // HEAD and only keeps up incrementally — the same division of labour the
+  // hedgey/56 cursor reset established (see CLAUDE.md).
+  [CHAIN_IDS.BERACHAIN]: 26_150_000n,
 };
 
 // keccak256("Transfer(address,address,uint256)") — standard ERC721 event.
@@ -277,4 +287,5 @@ export const hedgeyIndexers: Indexer[] = [
   makeIndexer(CHAIN_IDS.BASE),
   makeIndexer(CHAIN_IDS.ARBITRUM),
   makeIndexer(CHAIN_IDS.OPTIMISM),
+  makeIndexer(CHAIN_IDS.BERACHAIN),
 ];

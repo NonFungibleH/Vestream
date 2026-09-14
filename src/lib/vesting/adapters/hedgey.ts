@@ -268,6 +268,6 @@ async function fetchForChain(wallets: string[], chainId: SupportedChainId): Prom
 export const hedgeyAdapter: VestingAdapter = {
   id:   "hedgey",
   name: "Hedgey Finance",
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.SEPOLIA],
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.BASE, CHAIN_IDS.ARBITRUM, CHAIN_IDS.OPTIMISM, CHAIN_IDS.BERACHAIN, CHAIN_IDS.SEPOLIA],
   fetch: fetchForChain,
 };

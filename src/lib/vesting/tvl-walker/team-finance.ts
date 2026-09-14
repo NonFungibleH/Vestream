@@ -24,8 +24,7 @@
 // decimals(), mirroring the pattern in tvl-walker/superfluid.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createPublicClient, http } from "viem";
-import { mainnet, bsc, polygon, avalanche } from "viem/chains";
+import { makeFallbackClient } from "../rpc";
 import { CHAIN_IDS, type SupportedChainId } from "../types";
 import type { WalkerResult, TokenAggregate } from "./types";
 
@@ -39,6 +38,10 @@ const SUPPORTED_CHAINS: SupportedChainId[] = [
   CHAIN_IDS.BSC,
   CHAIN_IDS.POLYGON,
   CHAIN_IDS.AVALANCHE,
+  // zkSync added 2026-09-14: their Squid reports 111 vestings on chain 324,
+  // measured before building. Monad, Robinhood and Base were checked at the
+  // same time and all return ZERO, so they are deliberately absent.
+  CHAIN_IDS.ZKSYNC,
 ];
 
 const PAGE_SIZE = 1000;
@@ -71,26 +74,12 @@ interface RawVesting {
 
 // ─── viem helpers for ERC-20 metadata ─────────────────────────────────────────
 
-function getRpcUrl(chainId: SupportedChainId): string {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return process.env.ALCHEMY_RPC_URL_ETH  ?? "https://ethereum.publicnode.com";
-    case CHAIN_IDS.BSC:      return process.env.BSC_RPC_URL           ?? "https://bsc.publicnode.com";
-    case CHAIN_IDS.POLYGON:  return process.env.POLYGON_RPC_URL       ?? "https://polygon.publicnode.com";
-    case CHAIN_IDS.AVALANCHE: return process.env.AVALANCHE_RPC_URL    ?? "https://api.avax.network/ext/bc/C/rpc";
-    default:                 return "https://ethereum.publicnode.com";
-  }
-}
-
-function getViemChain(chainId: SupportedChainId) {
-  switch (chainId) {
-    case CHAIN_IDS.ETHEREUM: return mainnet;
-    case CHAIN_IDS.BSC:      return bsc;
-    case CHAIN_IDS.POLYGON:  return polygon;
-    case CHAIN_IDS.AVALANCHE: return avalanche;
-    default:                 return mainnet;
-  }
-}
-
+// getRpcUrl/getViemChain used to live here as two switch statements with a
+// `default: mainnet` fallback — so any chain added to SUPPORTED_CHAINS without
+// also editing both would silently read that chain's ERC-20 metadata FROM
+// ETHEREUM and report confident nonsense. Adding zkSync on 2026-09-14 would
+// have done exactly that. makeFallbackClient already knows every chain and
+// falls back across the whole pool, so the duplication is gone with the trap.
 const ERC20_ABI = [
   { name: "symbol",   type: "function" as const, inputs: [], outputs: [{ type: "string" }], stateMutability: "view" as const },
   { name: "decimals", type: "function" as const, inputs: [], outputs: [{ type: "uint8"  }], stateMutability: "view" as const },
@@ -103,10 +92,13 @@ async function fetchTokenMeta(
   const result = new Map<string, { symbol: string; decimals: number }>();
   if (tokenAddresses.length === 0) return result;
 
-  const client = createPublicClient({
-    chain:     getViemChain(chainId),
-    transport: http(getRpcUrl(chainId)),
-  });
+  // Contract reads only (ERC-20 symbol/decimals), so the default pool is right
+  // — no forLogs filter needed.
+  const client = makeFallbackClient(chainId);
+  if (!client) {
+    for (const addr of tokenAddresses) result.set(addr.toLowerCase(), { symbol: "???", decimals: 18 });
+    return result;
+  }
 
   const contracts = tokenAddresses.flatMap((addr) => [
     { address: addr as `0x${string}`, abi: ERC20_ABI, functionName: "symbol"   as const },

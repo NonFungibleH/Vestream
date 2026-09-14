@@ -364,6 +364,6 @@ export const teamFinanceAdapter: VestingAdapter = {
   // — don't fetch Base at all rather than show incorrect data.
   // Avalanche added 2026-07-06: TF's Squid DOES index Avax (147 vestings) + the
   // REST API returns per-wallet Avax, so it's fully supported unlike Base.
-  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE, CHAIN_IDS.SEPOLIA],
+  supportedChainIds: [CHAIN_IDS.ETHEREUM, CHAIN_IDS.BSC, CHAIN_IDS.POLYGON, CHAIN_IDS.AVALANCHE, CHAIN_IDS.ZKSYNC, CHAIN_IDS.SEPOLIA],
   fetch:             fetchForChain,
 };
