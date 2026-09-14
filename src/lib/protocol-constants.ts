@@ -789,7 +789,7 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
     docs:    "https://dev.jup.ag",
   },
   smithii: {
-    twitter: "https://x.com/smithii_io",
+    twitter: "https://x.com/SmithiiTools",
     docs:    "https://docs.smithii.io",
   },
   hoodlock: {
