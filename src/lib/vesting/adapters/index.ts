@@ -30,6 +30,7 @@ import { superfluidAdapter }  from "./superfluid";
 import { pinksaleAdapter }    from "./pinksale";
 import { streamflowAdapter }  from "./streamflow";
 import { jupiterLockAdapter } from "./jupiter-lock";
+import { smithiiAdapter }     from "./smithii";
 import { llamapayAdapter }    from "./llamapay";
 import { hoodlockAdapter }    from "./hoodlock";
 import { dopplerAdapter }     from "./doppler";
@@ -54,4 +55,5 @@ export const ADAPTER_REGISTRY: VestingAdapter[] = [
   // EVM-only environments are unaffected.
   streamflowAdapter,
   jupiterLockAdapter,
+  smithiiAdapter,
 ];

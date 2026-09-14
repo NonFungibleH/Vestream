@@ -594,6 +594,7 @@ export default async function AdminPage() {
                     const protoLabel = c.protocol === "team-finance" ? "Team Finance"
                       : c.protocol === "uncx-vm" ? "UNCX VM"
                       : c.protocol === "jupiter-lock" ? "Jupiter Lock"
+                      : c.protocol === "smithii" ? "Smithii"
                       : c.protocol.charAt(0).toUpperCase() + c.protocol.slice(1);
                     const chainLabel = CHAIN_NAMES[c.chainId] ?? `chain ${c.chainId}`;
                     return (

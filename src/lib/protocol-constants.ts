@@ -536,6 +536,39 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // will switch to a DefiLlama entry if one appears later.
   },
 
+  smithii: {
+    slug: "smithii",
+    adapterIds: ["smithii"],
+    name: "Smithii",
+    tagline: "No-code token vesting on Solana",
+    // PROGRAM: vesFcnNXtfS9JMtspbe9SkMJiRiSPwsywuWMjYwxQ2K (Halborn-audited,
+    // 2025). Smithii's wider toolkit spans several chains, but the vesting
+    // program is Solana-only — chainIds must not grow past SOLANA without
+    // evidence of an EVM vesting deployment.
+    description:
+      "Smithii is a no-code token toolkit used by small and mid-size Solana projects to create, lock and vest their supply without writing a contract. Its vesting program holds each allocation in a dedicated on-chain vault and releases it linearly to a named beneficiary. Vestream reads every schedule straight from the program, so a recipient sees their unlock dates and claimable balance without opening the Smithii dashboard.",
+    color: "#F2A900",        // Smithii amber
+    bg:    "rgba(242,169,0,0.08)",
+    border:"rgba(242,169,0,0.26)",
+    chainIds: [CHAIN_IDS.SOLANA],
+    officialUrl: "https://tools.smithii.io",
+    claimUrl:   "https://tools.smithii.io/token-vesting/solana",
+    searchKeywords: [
+      "smithii vesting",
+      "smithii token vesting solana",
+      "smithii unlock tracker",
+      "solana no-code vesting",
+    ],
+    useCases: [
+      { title: "Per-wallet allocations", body: "Each Smithii schedule names a single beneficiary rather than a pooled contract, so a wallet scan attributes the exact allocation to the person who holds it — 1,920 distinct recipients across the program today." },
+      { title: "Small-cap team locks",   body: "Smithii is where projects too small to run their own vesting contract lock team and presale supply. Vestream surfaces those unlocks alongside the large-cap rails so a holder sees every schedule in one place." },
+      { title: "Vault-verified balances", body: "Claimed amounts are not stored on the schedule, so Vestream reads the live balance of each schedule's on-chain vault instead. The claimed figure is derived from tokens that actually left the vault, not a self-reported field." },
+    ],
+    relatedSlugs: ["jupiter-lock", "streamflow", "pinksale"],
+    testimonials: [],
+    // No DefiLlama entry — TVL is computed from our own program scan.
+  },
+
   doppler: {
     slug: "doppler",
     adapterIds: ["doppler"],
@@ -671,6 +704,7 @@ export const PROTOCOL_SLUGS = [
   "pinksale",
   "streamflow",
   "jupiter-lock",
+  "smithii",
   "llamapay",
   "hoodlock",
   "magna",
@@ -752,6 +786,10 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
     twitter: "https://x.com/JupiterExchange",
     github:  "https://github.com/jup-ag",
     docs:    "https://dev.jup.ag",
+  },
+  smithii: {
+    twitter: "https://x.com/smithii_io",
+    docs:    "https://docs.smithii.io",
   },
   hoodlock: {
     twitter: "https://x.com/HoodLockRH",

@@ -52,6 +52,10 @@
       "schedule": "45 4 * * *"
     },
     {
+      "path": "/api/cron/tvl-snapshot?protocol=smithii",
+      "schedule": "5 5 * * *"
+    },
+    {
       "path": "/api/cron/smart-money",
       "schedule": "30 3 * * *"
     },

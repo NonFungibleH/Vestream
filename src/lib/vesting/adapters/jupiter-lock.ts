@@ -81,11 +81,17 @@ const OFFSET_CANCELLED_AT         = 200;
 
 // ─── Jupiter token-list fallback (shared pattern with Streamflow) ───────────
 
-const JUPITER_TOKEN_LIST_URL = "https://token.jup.ag/all";
+// token.jup.ag/all was retired by Jupiter and now resolves to "Route not
+// found" — it had been failing silently for a while, which is why Solana
+// symbols were rendering as truncated mints. The v2 tag endpoint replaces it
+// and keys tokens by `id` rather than `address` (2026-09-14).
+const JUPITER_TOKEN_LIST_URL = "https://lite-api.jup.ag/tokens/v2/tag?query=verified";
 const JUPITER_TTL_MS         = 30 * 60 * 1000;
 
 interface JupiterTokenEntry {
-  address:  string;
+  /** v2 field. `address` is the retired v1 name, still accepted defensively. */
+  id?:      string;
+  address?: string;
   symbol:   string;
   decimals: number;
 }
@@ -93,7 +99,7 @@ interface JupiterTokenEntry {
 let jupiterCache: Map<string, { symbol: string; decimals: number }> | null = null;
 let jupiterCacheFetchedAt = 0;
 
-async function getJupiterTokenList(): Promise<Map<string, { symbol: string; decimals: number }>> {
+export async function getJupiterTokenList(): Promise<Map<string, { symbol: string; decimals: number }>> {
   const now = Date.now();
   if (jupiterCache && now - jupiterCacheFetchedAt < JUPITER_TTL_MS) {
     return jupiterCache;
@@ -105,9 +111,11 @@ async function getJupiterTokenList(): Promise<Map<string, { symbol: string; deci
     });
     if (!res.ok) return jupiterCache ?? new Map();
     const tokens = (await res.json()) as JupiterTokenEntry[];
+    if (!Array.isArray(tokens)) return jupiterCache ?? new Map();
     const map = new Map<string, { symbol: string; decimals: number }>();
     for (const t of tokens) {
-      if (t.address && t.symbol) map.set(t.address, { symbol: t.symbol, decimals: t.decimals });
+      const mint = t.id ?? t.address;
+      if (mint && t.symbol) map.set(mint, { symbol: t.symbol, decimals: t.decimals });
     }
     jupiterCache = map;
     jupiterCacheFetchedAt = now;

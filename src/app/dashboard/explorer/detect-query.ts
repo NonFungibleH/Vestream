@@ -42,6 +42,7 @@ const PROTOCOL_ALIASES: Record<string, string> = {
   "pink-sale":   "pinksale",
   "stream-flow": "streamflow",
   "jupiter":     "jupiter-lock",
+  "smithii":     "smithii",
   "jup":         "jupiter-lock",
 };
 

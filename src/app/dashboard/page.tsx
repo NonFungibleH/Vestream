@@ -3871,7 +3871,7 @@ const CHAIN_LABELS: Record<string, string> = {
 const PROTOCOL_LABELS: Record<string, string> = {
   "sablier": "Sablier", "uncx": "UNCX",
   "hedgey": "Hedgey", "unvest": "Unvest", "superfluid": "Superfluid",
-  "pinksale": "PinkSale", "streamflow": "Streamflow", "jupiter-lock": "Jupiter",
+  "pinksale": "PinkSale", "streamflow": "Streamflow", "jupiter-lock": "Jupiter", "smithii": "Smithii",
 };
 
 // ─── AddWalletModal ───────────────────────────────────────────────────────────

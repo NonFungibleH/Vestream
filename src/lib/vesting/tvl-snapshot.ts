@@ -47,6 +47,8 @@ function walkerMethodology(protocol: string): string {
     case "uncx-vm":
     case "pinksale":       return "contract-reads-v1";
     case "jupiter-lock":   return "program-scan-v1";
+    // Smithii reads live vault balances rather than inferring from a schedule.
+    case "smithii":        return "vault-balance-v1";
     default:               return "subgraph-walk-v1";
   }
 }

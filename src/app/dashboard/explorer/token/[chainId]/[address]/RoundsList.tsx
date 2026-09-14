@@ -13,7 +13,7 @@ import { roundColor } from "./round-colors";
 const PROTO: Record<string, string> = {
   sablier: "Sablier", hedgey: "Hedgey", uncx: "UNCX", "uncx-vm": "UNCX",
   unvest: "Unvest", superfluid: "Superfluid", pinksale: "PinkSale",
-  streamflow: "Streamflow", "jupiter-lock": "Jupiter Lock",
+  streamflow: "Streamflow", "jupiter-lock": "Jupiter Lock", smithii: "Smithii",
 };
 const proto = (p: string) => PROTO[p] ?? p;
 

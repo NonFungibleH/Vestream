@@ -69,11 +69,16 @@ const OFFSET_CANCELLED_AT         = 200;
 
 // ─── Jupiter token-list cache (mirrors adapter pattern, standalone state) ───
 
-const JUPITER_TOKEN_LIST_URL = "https://token.jup.ag/all";
+// token.jup.ag/all was retired by Jupiter and returns "Route not found", so
+// this list had been silently empty. Replaced with the v2 tag endpoint, which
+// keys tokens by `id` rather than `address` (2026-09-14).
+const JUPITER_TOKEN_LIST_URL = "https://lite-api.jup.ag/tokens/v2/tag?query=verified";
 const JUPITER_TTL_MS         = 30 * 60 * 1000;
 
 interface JupiterTokenEntry {
-  address:  string;
+  /** v2 field. `address` is the retired v1 name, still accepted defensively. */
+  id?:      string;
+  address?: string;
   symbol:   string;
   decimals: number;
 }
@@ -91,9 +96,11 @@ async function getJupiterTokenList(): Promise<Map<string, { symbol: string; deci
     });
     if (!res.ok) return jupiterCache ?? new Map();
     const tokens = (await res.json()) as JupiterTokenEntry[];
+    if (!Array.isArray(tokens)) return jupiterCache ?? new Map();
     const map    = new Map<string, { symbol: string; decimals: number }>();
     for (const t of tokens) {
-      if (t.address && t.symbol) map.set(t.address, { symbol: t.symbol, decimals: t.decimals });
+      const mint = t.id ?? t.address;
+      if (mint && t.symbol) map.set(mint, { symbol: t.symbol, decimals: t.decimals });
     }
     jupiterCache          = map;
     jupiterCacheFetchedAt = now;

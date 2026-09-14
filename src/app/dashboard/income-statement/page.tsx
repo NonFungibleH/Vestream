@@ -105,6 +105,7 @@ const PROTOCOL_LABELS: Record<string, string> = {
   "pinksale":     "PinkSale",
   "streamflow":   "Streamflow",
   "jupiter-lock": "Jupiter Lock",
+  "smithii": "Smithii",
 };
 
 function pretty(p: string): string {

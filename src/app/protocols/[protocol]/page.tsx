@@ -381,6 +381,8 @@ function tvlSourceLabel(
   const has = (id: string) => adapterIds.includes(id);
   if (usesExternalTvl) return "TVL via DefiLlama";
   if (["pinksale", "jupiter-lock"].some(has)) return "on-chain amounts, market-priced";
+  // Smithii reads the live vault balance, so the amount is custody, not a claim.
+  if (has("smithii")) return "on-chain vault balances, market-priced";
   // Non-breaking space inside the protocol name so it never splits across two
   // lines on mobile (the caption wraps as "data from Team Finance, market-priced"
   // with "Team Finance" kept whole).

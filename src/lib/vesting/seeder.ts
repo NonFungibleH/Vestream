@@ -52,7 +52,7 @@
 import { createPublicClient, http, type Hex } from "viem";
 import { mainnet, bsc, polygon, base, arbitrum, optimism, sepolia } from "viem/chains";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { CHAIN_IDS, type SupportedChainId } from "./types";
+import { CHAIN_IDS, type SupportedChainId, type VestingStream } from "./types";
 import { writeToCache } from "./dbcache";
 import { refreshStatusSummary } from "./cache-stats";
 import { refreshProtocolSummaries } from "./protocol-stats";
@@ -706,6 +706,7 @@ export async function discoverHedgeyRecipients(chainId: SupportedChainId, limit:
 import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pinksale";
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
+import { fetchAllSmithiiSchedules }  from "./adapters/smithii";
 import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
@@ -1220,7 +1221,9 @@ export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
   if (adapterId === "streamflow")    return "streamflow"; // own group, runs daily, separate from JL
-  if (adapterId === "jupiter-lock") return "solana";      // "solana" group = Jupiter Lock only
+  // "solana" group = the two bulk-scan Solana lockers. Both finish a full
+  // program scan in ~30s, so they share one 300s slot comfortably.
+  if (adapterId === "jupiter-lock" || adapterId === "smithii") return "solana";
   // Team Finance gets its own group for the same reason Hedgey and Superfluid
   // did: it's slow. Its Squid GraphQL walk across 5 chains doesn't finish
   // inside a shared budget — a targeted 5-job run still hadn't committed after
@@ -1333,6 +1336,10 @@ const SEED_JOBS: SeedJob[] = [
   // single line back out — JL TVL display still works because the TVL
   // walker uses its own separate daily cron path.
   { adapterId: "jupiter-lock",  chainId: CHAIN_IDS.SOLANA,   discover: discoverJupiterLockRecipients },
+
+  // Smithii — Solana only. runJob dispatches to the bulk path, so `discover`
+  // is never called; the no-op keeps the SeedJob shape uniform.
+  { adapterId: "smithii",       chainId: CHAIN_IDS.SOLANA,   discover: async () => [] },
 
   // ─── STANDARD (subgraph-based, generally fast and reliable) ───
   // Sablier — ETH, BSC, Polygon, Base + Sepolia (testnet). Single Envio
@@ -1580,8 +1587,21 @@ async function runPinkSaleViaWalker(job: SeedJob): Promise<SeedRunResult> {
  * timed out the 300s budget reliably; this finishes in well under it.
  */
 async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> {
-  const tag = `jupiter-lock/${job.chainId}`;
-  const streams = await fetchAllJupiterLockEscrows().catch((err) => {
+  return runSolanaBulkFetch(job, fetchAllJupiterLockEscrows);
+}
+
+/**
+ * Shared Solana bulk-seed path. Both Solana lockers expose every schedule
+ * through a single program scan, so neither needs the per-wallet fan-out that
+ * overran the 300s budget. Parameterised rather than copied so a fix to the
+ * write/heartbeat handling lands on both.
+ */
+async function runSolanaBulkFetch(
+  job: SeedJob,
+  fetchAll: () => Promise<VestingStream[] | null>,
+): Promise<SeedRunResult> {
+  const tag = `${job.adapterId}/${job.chainId}`;
+  const streams = await fetchAll().catch((err) => {
     console.error(`[seeder:${tag}] bulk fetch threw:`, err);
     return null;
   });
@@ -1589,16 +1609,17 @@ async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> 
     // Bump the heartbeat even on failure so the protocols-page freshness
     // UI shows "the seeder ran (and got nothing)" rather than a 26d-old
     // timestamp. The root cause here is usually the Solana RPC provider
-    // returning 0 pubkeys for the Jupiter Lock program — see the comment
-    // in fetchAllJupiterLockEscrows about Alchemy silently returning [].
-    // FIX: set JUPITER_LOCK_RPC_URL to a provider that fully indexes the
-    // program (e.g. Helius free tier — the original provider before the
-    // May 2026 Alchemy migration). Until then, the heartbeat keeps the
-    // staleness display honest ("cron ran, RPC returned nothing").
+    // refusing or silently emptying the program scan — getProgramAccounts is
+    // the most expensive primitive Solana RPC exposes, and free tiers either
+    // 429 it or return []. FIX: point SOLANA_RPC_URL at a provider that fully
+    // indexes the program (Helius free tier is more generous here than
+    // Alchemy's, and a paid plan removes the ceiling entirely). Until then,
+    // the heartbeat keeps the staleness display honest ("cron ran, RPC
+    // returned nothing").
     await bumpSeedHeartbeat(job.adapterId, job.chainId);
     return emptyResult(job, "bulk fetch returned null (Solana disabled / RPC dead)");
   }
-  console.log(`[seeder:${tag}] bulk fetch: ${streams.length} active escrows decoded`);
+  console.log(`[seeder:${tag}] bulk fetch: ${streams.length} active schedules decoded`);
   if (streams.length === 0) {
     await bumpSeedHeartbeat(job.adapterId, job.chainId);
     return emptyResult(job);
@@ -1657,6 +1678,12 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   // in batches.
   if (job.adapterId === "jupiter-lock") {
     return runJupiterLockViaBulkFetch(job);
+  }
+  // ── Smithii special path ───────────────────────────────────────────────────
+  // Same shape as Jupiter Lock: one program scan returns all ~2,068 schedules,
+  // so the per-wallet path would be pure waste.
+  if (job.adapterId === "smithii") {
+    return runSolanaBulkFetch(job, fetchAllSmithiiSchedules);
   }
 
   let recipients: string[];

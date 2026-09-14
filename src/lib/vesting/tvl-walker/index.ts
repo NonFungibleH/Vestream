@@ -36,6 +36,7 @@ import { walkSuperfluid }  from "./superfluid";
 import { walkTeamFinance } from "./team-finance";
 import { walkPinkSale }    from "./pinksale";
 import { walkJupiterLock } from "./jupiter-lock";
+import { walkSmithii }     from "./smithii";
 import { walkSablier }     from "./sablier";
 import { walkHedgey }      from "./hedgey";
 import { walkLlamapay }    from "./llamapay";
@@ -61,6 +62,7 @@ export const WALKER_REGISTRY: Record<string, WalkerFn> = {
   "team-finance": walkTeamFinance,
   "pinksale":     walkPinkSale,
   "jupiter-lock": walkJupiterLock,
+  "smithii":      walkSmithii,
   "sablier":      walkSablier,
   "hedgey":       walkHedgey,
   "llamapay":     walkLlamapay,

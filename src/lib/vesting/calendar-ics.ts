@@ -52,6 +52,7 @@ const PROTOCOL_LABELS: Record<string, string> = {
   pinksale:       "PinkSale",
   streamflow:     "Streamflow",
   "jupiter-lock": "Jupiter Lock",
+  smithii:        "Smithii",
   llamapay:       "LlamaPay",
 };
 

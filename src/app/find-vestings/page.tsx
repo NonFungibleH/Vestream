@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 // protocol-constants.ts (single source of truth), which also fixes the
 // palette drift the old hardcoded lists here had accumulated.
 const PROTOCOL_ROW_1_SLUGS = ["sablier", "hedgey", "uncx", "llamapay"] as const;
-const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock", "team-finance", "hoodlock"] as const;
+const PROTOCOL_ROW_2_SLUGS = ["unvest", "superfluid", "pinksale", "streamflow", "jupiter-lock", "smithii", "team-finance", "hoodlock"] as const;
 
 // Homepage "Available on" order: Ethereum, BNB, Base, Polygon, Arbitrum,
 // Optimism, Avalanche, Solana. (The old literal list here was missing

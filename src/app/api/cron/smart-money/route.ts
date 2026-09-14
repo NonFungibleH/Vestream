@@ -73,7 +73,7 @@ const CANDIDATE_POOL = LEADERBOARD_SIZE * 4;
 // is about. Re-add if/when those protocols expose a way to tell vesting
 // from LP-lock at the row level.
 const SMART_MONEY_PROTOCOLS = [
-  "sablier", "hedgey", "unvest", "superfluid", "streamflow", "jupiter-lock",
+  "sablier", "hedgey", "unvest", "superfluid", "streamflow", "jupiter-lock", "smithii",
 ] as const;
 
 export async function GET(req: NextRequest) {
