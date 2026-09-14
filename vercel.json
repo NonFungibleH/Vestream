@@ -184,6 +184,10 @@
       "schedule": "45 6 * * *"
     },
     {
+      "path": "/api/cron/seed-cache?group=sablier-flow",
+      "schedule": "55 6 * * *"
+    },
+    {
       "path": "/api/cron/seed-cache?group=heavy",
       "schedule": "0 7 * * *"
     },

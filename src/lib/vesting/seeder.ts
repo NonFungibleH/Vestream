@@ -1214,9 +1214,9 @@ function limitFor(mode: SeedMode): number {
 // causing sustained 429 storms and Vercel 300s timeouts. Running sequentially
 // in separate cron jobs with a 30-min gap eliminates the contention.
 // Streamflow runs daily; Jupiter Lock every 2 days.
-export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "superfluid" | "hedgey" | "team-finance";
+export type SeedGroup = "heavy" | "solana" | "streamflow" | "subgraphs" | "sablier" | "sablier-flow" | "superfluid" | "hedgey" | "team-finance";
 
-export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "superfluid", "hedgey", "team-finance"] as const;
+export const SEED_GROUPS: readonly SeedGroup[] = ["heavy", "solana", "streamflow", "subgraphs", "sablier", "sablier-flow", "superfluid", "hedgey", "team-finance"] as const;
 
 function groupFor(adapterId: string): SeedGroup {
   if (adapterId === "pinksale")      return "heavy";
@@ -1240,7 +1240,14 @@ function groupFor(adapterId: string): SeedGroup {
   // limit, leaving UNCX/Unvest with stale data. Moving here costs the
   // sablier group ~10–15s extra and drops subgraphs from 27 to 21 jobs,
   // giving UNCX/Unvest/Hedgey comfortable headroom.
-  if (adapterId === "sablier-flow")  return "sablier";
+  // 2026-09-14: sablier-flow split OUT of "sablier" into its own group. The
+  // 2026-05-28 merge below was correct at 6 Sablier chains, but Sablier has
+  // since grown to 12 (Robinhood, Monad, zkSync, Blast, Berachain, Avalanche)
+  // and 18 jobs no longer fit one 240s budget. Measured that day: Ethereum,
+  // BSC, Polygon and Base were each dying on the 46s per-job cap having
+  // written 0 rows, and BSC had not had a successful seed in 9 days. Splitting
+  // returns ~6 jobs' worth of budget to the chains that carry the volume.
+  if (adapterId === "sablier-flow")  return "sablier-flow";
   // 2026-05-26: Superfluid split out of "subgraphs" into its own group.
   // Reason: Superfluid runs across 6 chains (ETH/BSC/Polygon/Base/Arb/Op),
   // each calling its own hosted subgraph endpoint. When sharing the
@@ -1350,6 +1357,10 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "sablier",      chainId: CHAIN_IDS.BASE,     discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierRecipients },
+  // Avalanche: the TVL walker has covered this chain for months but no seed
+  // job existed, so /find-vestings returned nothing for Avalanche Sablier
+  // wallets while the protocol page counted the chain. Added 2026-09-14.
+  { adapterId: "sablier",      chainId: CHAIN_IDS.AVALANCHE, discover: discoverSablierRecipients },
   // Chains added 2026-09-13/14. Without a seed job the TVL walker still reports
   // a chain (it queries Envio directly) but vesting_streams_cache stays empty,
   // so per-wallet lookups, the explorer and the token pages all miss it — and
