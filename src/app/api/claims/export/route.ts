@@ -17,8 +17,17 @@ import { db } from "@/lib/db";
 import { users, taxReportFiles } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { getClaimHistoryForUser } from "@/lib/vesting/ingestors";
-import { buildClaimsCsv, csvFilename, type ExportFormat } from "@/lib/vesting/csv-exports";
+import { getUnlockEventsForExport } from "@/lib/vesting/unlock-events";
+import {
+  buildTaxCsv,
+  csvFilename,
+  claimRowToExportRow,
+  unlockRowToExportRow,
+  type ExportFormat,
+  type TaxExportRow,
+} from "@/lib/vesting/csv-exports";
 import { getStreamAnnotationsForUser, getStreamTagsForUser } from "@/lib/db/queries";
+import { isTaxBasis, DEFAULT_TAX_BASIS, type TaxBasis } from "@/lib/tax/tax-basis";
 
 export const runtime = "nodejs";
 // Same reason as /api/claims/history: the CSV varies by ?since/?until, so it
@@ -42,7 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
   const [u] = await db
-    .select({ id: users.id })
+    .select({ id: users.id, taxBasis: users.taxBasis })
     .from(users)
     .where(eq(users.address, session.address.toLowerCase()))
     .limit(1);
@@ -55,11 +64,28 @@ export async function GET(req: NextRequest) {
   const until        = sp.get("until");
   const tokenAddress = sp.get("tokenAddress") ?? undefined;
 
-  const events = await getClaimHistoryForUser(u.id, {
+  // Which basis to export on. Query param overrides the stored default so the
+  // dashboard's toggle can force either without mutating the user's setting.
+  const basisRaw = sp.get("basis");
+  const basis: TaxBasis = isTaxBasis(basisRaw)
+    ? basisRaw
+    : isTaxBasis(u.taxBasis) ? u.taxBasis : DEFAULT_TAX_BASIS;
+
+  const filters = {
     since: since ? new Date(since) : undefined,
     until: until ? new Date(until) : undefined,
     tokenAddress,
-  });
+  };
+
+  // Emit income on exactly ONE basis per report so it can't double-count.
+  let exportRows: TaxExportRow[];
+  if (basis === "unlock") {
+    const unlockEvents = await getUnlockEventsForExport(u.id, filters);
+    exportRows = unlockEvents.map(unlockRowToExportRow);
+  } else {
+    const claimEventsRows = await getClaimHistoryForUser(u.id, filters);
+    exportRows = claimEventsRows.map(claimRowToExportRow);
+  }
 
   // Load the user's stream annotations + tags in parallel and build
   // O(1) lookup maps for the CSV builders. Most users have 0-10 of
@@ -82,13 +108,13 @@ export async function GET(req: NextRequest) {
     tagMap.set(t.streamId, arr);
   }
 
-  const csv = buildClaimsCsv(events, format, annotationMap, tagMap);
+  const csv = buildTaxCsv(exportRows, format, annotationMap, tagMap);
 
   // Year hints for the filename — pull from the actual data range so an
   // empty selection produces a sensible filename ("all-time").
   const sinceYear = since ? new Date(since).getUTCFullYear() : undefined;
   const untilYear = until ? new Date(until).getUTCFullYear() : undefined;
-  const filename  = csvFilename(format, sinceYear, untilYear);
+  const filename  = csvFilename(format, sinceYear, untilYear, basis);
 
   // 2026-05-15: persist a copy to tax_report_files so the mobile Tax
   // Reports screen can list + re-download. Runs via `after()` so the
@@ -102,7 +128,7 @@ export async function GET(req: NextRequest) {
         format,
         filename,
         sizeBytes: csvBytes,
-        rowCount:  events.length,
+        rowCount:  exportRows.length,
         content:   csv,
         sinceDate: since ? new Date(since) : null,
         untilDate: until ? new Date(until) : null,

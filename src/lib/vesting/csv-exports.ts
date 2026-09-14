@@ -16,11 +16,75 @@
 // Format-specific logic lives in this file (one function per format).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { claimEvents } from "../db/schema";
+import type { claimEvents, vestingUnlockEvents } from "../db/schema";
 import { CHAIN_NAMES } from "./types";
 
-// Drizzle row shape from `select().from(claimEvents)`.
+// Drizzle row shapes.
 type ClaimRow = typeof claimEvents.$inferSelect;
+type UnlockRow = typeof vestingUnlockEvents.$inferSelect;
+
+/**
+ * Normalised row every CSV builder consumes — the common shape both the
+ * claim-basis and unlock-basis paths map into. A tax report is emitted on
+ * exactly ONE basis (never both) so income can't double-count.
+ *
+ *   claim basis  → date = claimedAt,  usdValue = usdValueAtClaim,  txHash = the tx
+ *   unlock basis → date = unlockTime, usdValue = usdValueAtUnlock, txHash = null
+ *
+ * `date` is always UTC (builders call toISOString) — matches production and the
+ * on-screen table.
+ */
+export interface TaxExportRow {
+  date: Date;
+  protocol: string;
+  chainId: number;
+  tokenSymbol: string | null;
+  tokenAddress: string;
+  amount: string;
+  tokenDecimals: number;
+  usdValue: string | null;
+  confidence: string;
+  /** Source tx (claim basis) or null (unlock basis — unlocks have no tx). */
+  txHash: string | null;
+  recipient: string;
+  streamId: string;
+}
+
+/** Adapt a claim_events row into the common export shape. */
+export function claimRowToExportRow(r: ClaimRow): TaxExportRow {
+  return {
+    date: r.claimedAt,
+    protocol: r.protocol,
+    chainId: r.chainId,
+    tokenSymbol: r.tokenSymbol,
+    tokenAddress: r.tokenAddress,
+    amount: r.amount,
+    tokenDecimals: r.tokenDecimals,
+    usdValue: r.usdValueAtClaim,
+    confidence: r.priceConfidence,
+    txHash: r.txHash,
+    recipient: r.recipient,
+    streamId: r.streamId,
+  };
+}
+
+/** Adapt a vesting_unlock_events row into the common export shape. */
+export function unlockRowToExportRow(r: UnlockRow): TaxExportRow {
+  return {
+    date: r.unlockTime,
+    protocol: r.protocol,
+    chainId: r.chainId,
+    tokenSymbol: r.tokenSymbol,
+    tokenAddress: r.tokenAddress,
+    amount: r.amount,
+    tokenDecimals: r.tokenDecimals,
+    usdValue: r.usdValueAtUnlock,
+    confidence: r.priceConfidence,
+    txHash: null, // unlocks are computed, not on-chain — no tx
+    recipient: r.recipient,
+    streamId: r.streamId,
+  };
+}
 
 export type ExportFormat =
   | "vestream-generic"
@@ -80,9 +144,9 @@ function isoDateTime(d: Date): string {
  * figures so micro-cap unit prices ($0.0000123) survive the CSV round-trip;
  * ≥$1 prices show 4 decimals. Mirrors the on-screen Price column.
  */
-function unitPriceUsd(r: ClaimRow): string {
-  if (!r.usdValueAtClaim) return "";
-  const usd = Number(r.usdValueAtClaim);
+function unitPriceUsd(r: TaxExportRow): string {
+  if (!r.usdValue) return "";
+  const usd = Number(r.usdValue);
   const tokens = Number(tokensWhole(r.amount, r.tokenDecimals));
   if (!Number.isFinite(usd) || !Number.isFinite(tokens) || tokens <= 0) return "";
   const price = usd / tokens;
@@ -142,7 +206,7 @@ function tagList(tags: TagsByStreamId | undefined, streamId: string): string {
 // "Description" column carries the user's custom name + notes (when set)
 // so accountants get human context alongside the machine-readable data.
 function buildVestreamGeneric(
-  rows:         ClaimRow[],
+  rows:         TaxExportRow[],
   annotations?: AnnotationsByStreamId,
   tags?:        TagsByStreamId,
 ): string {
@@ -164,18 +228,18 @@ function buildVestreamGeneric(
     "Tags",
   ]);
   const body = rows.map((r) => csvRow([
-    isoDate(r.claimedAt),
-    isoDateTime(r.claimedAt).slice(11),
+    isoDate(r.date),
+    isoDateTime(r.date).slice(11),
     r.protocol,
     CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`,
     r.tokenSymbol ?? "",
     r.tokenAddress,
     tokensWhole(r.amount, r.tokenDecimals),
     unitPriceUsd(r),
-    r.usdValueAtClaim ?? "",
-    r.priceConfidence,
+    r.usdValue ?? "",
+    r.confidence,
     r.recipient,
-    r.txHash.startsWith("synthetic:") ? "" : r.txHash,
+    r.txHash && r.txHash.startsWith("synthetic:") ? "" : (r.txHash ?? ""),
     r.streamId,
     annotationDescription(annotations, r.streamId),
     tagList(tags, r.streamId),
@@ -192,7 +256,7 @@ function buildVestreamGeneric(
 // For vesting claims, the Sent side is empty (nothing leaves your wallet —
 // vested tokens arrive). Received side is the token + amount. Net Worth is
 // the USD value at claim, which Koinly uses to compute cost basis.
-function buildKoinly(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildKoinly(rows: TaxExportRow[], annotations?: AnnotationsByStreamId): string {
   const header = csvRow([
     "Date",
     "Sent Amount",
@@ -216,18 +280,18 @@ function buildKoinly(rows: ClaimRow[], annotations?: AnnotationsByStreamId): str
     const machine = `Vesting claim on ${r.protocol} (${CHAIN_NAMES[r.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${r.chainId}`})`;
     const description = ann ? `${ann}, ${machine}` : machine;
     return csvRow([
-      isoDateTime(r.claimedAt) + " UTC",
+      isoDateTime(r.date) + " UTC",
       "",                                    // Sent Amount (empty, nothing left wallet)
       "",                                    // Sent Currency
       tokensWhole(r.amount, r.tokenDecimals),
       r.tokenSymbol ?? r.tokenAddress.slice(0, 8),
       "",                                    // Fee Amount (gas not yet captured, Phase 2)
       "",                                    // Fee Currency
-      r.usdValueAtClaim ?? "",
-      r.usdValueAtClaim ? "USD" : "",
+      r.usdValue ?? "",
+      r.usdValue ? "USD" : "",
       "income",                              // Koinly label for vesting claims
       description,
-      r.txHash.startsWith("synthetic:") ? "" : r.txHash,
+      r.txHash && r.txHash.startsWith("synthetic:") ? "" : (r.txHash ?? ""),
     ]);
   });
   return [header, ...body].join("\n") + "\n";
@@ -240,7 +304,7 @@ function buildKoinly(rows: ClaimRow[], annotations?: AnnotationsByStreamId): str
 //
 // Vesting claims map to Tag=staking (closest CT category for periodic
 // token receipts) — users may want to re-tag in CT after import.
-function buildCoinTracker(rows: ClaimRow[]): string {
+function buildCoinTracker(rows: TaxExportRow[]): string {
   const header = csvRow([
     "Date",
     "Received Quantity",
@@ -252,7 +316,7 @@ function buildCoinTracker(rows: ClaimRow[]): string {
     "Tag",
   ]);
   const body = rows.map((r) => csvRow([
-    isoDateTime(r.claimedAt),
+    isoDateTime(r.date),
     tokensWhole(r.amount, r.tokenDecimals),
     r.tokenSymbol ?? r.tokenAddress.slice(0, 8),
     "",
@@ -272,7 +336,7 @@ function buildCoinTracker(rows: ClaimRow[]): string {
 // not Sale. We export it as a 'Date Acquired' row with USD = cost basis,
 // proceeds blank. The user files this under Form 1040 Schedule 1 (Other
 // Income) and uses the cost basis later when they sell.
-function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildTurboTax(rows: TaxExportRow[], annotations?: AnnotationsByStreamId): string {
   const header = csvRow([
     "Date Acquired",
     "Description",
@@ -285,9 +349,9 @@ function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): s
     const machine = `${tokensWhole(r.amount, r.tokenDecimals)} ${r.tokenSymbol ?? r.tokenAddress.slice(0, 8)} via ${r.protocol}`;
     const description = ann ? `${ann}, ${machine}` : machine;
     return csvRow([
-      isoDate(r.claimedAt),
+      isoDate(r.date),
       description,
-      r.usdValueAtClaim ?? "",
+      r.usdValue ?? "",
       "",
       "",
     ]);
@@ -310,7 +374,7 @@ function buildTurboTax(rows: ClaimRow[], annotations?: AnnotationsByStreamId): s
 // capital-gains scaffolding entirely so worker users aren't filing the
 // wrong return.
 function buildPayrollIncome(
-  rows:         ClaimRow[],
+  rows:         TaxExportRow[],
   annotations?: AnnotationsByStreamId,
   tags?:        TagsByStreamId,
 ): string {
@@ -336,17 +400,19 @@ function buildPayrollIncome(
     // category column on claim_events when streams gain multi-category.
     const incomeType = r.protocol === "llamapay" ? "salary" : "vesting income";
     return csvRow([
-      isoDate(r.claimedAt),
+      isoDate(r.date),
       source,
       r.tokenSymbol ?? r.tokenAddress.slice(0, 10),
       tokensWhole(r.amount, r.tokenDecimals),
       unitPriceUsd(r),
-      r.usdValueAtClaim ?? "",
-      r.priceConfidence,
+      r.usdValue ?? "",
+      r.confidence,
       incomeType,
       tagList(tags, r.streamId),
       r.streamId,                   // composite "<protocol>-<chain>-<id>", recognisable to the user
-      r.txHash,
+      // Unlock-basis rows have no transaction — an unlock is computed from the
+      // schedule, not emitted on chain — so this is null for them.
+      r.txHash ?? "",
     ]);
   });
   return [header, ...body].join("\n") + "\n";
@@ -389,7 +455,7 @@ interface PayrollAggregate {
 }
 
 function aggregatePayroll(
-  rows:         ClaimRow[],
+  rows:         TaxExportRow[],
   annotations?: AnnotationsByStreamId,
 ): PayrollAggregate[] {
   const map = new Map<string, PayrollAggregate>();
@@ -397,7 +463,7 @@ function aggregatePayroll(
     const ann = annotationDescription(annotations, r.streamId);
     const source = ann || `${r.protocol} via chain ${r.chainId}`;
     const existing = map.get(r.streamId);
-    const usd = r.usdValueAtClaim ? Number(r.usdValueAtClaim) : 0;
+    const usd = r.usdValue ? Number(r.usdValue) : 0;
     if (!existing) {
       map.set(r.streamId, {
         streamId:      r.streamId,
@@ -409,15 +475,15 @@ function aggregatePayroll(
         tokenDecimals: r.tokenDecimals,
         usdTotal:      usd,
         claimCount:    1,
-        dateFirst:     r.claimedAt,
-        dateLast:      r.claimedAt,
+        dateFirst:     r.date,
+        dateLast:      r.date,
       });
     } else {
       existing.tokens     += BigInt(r.amount);
       existing.usdTotal   += usd;
       existing.claimCount += 1;
-      if (r.claimedAt < existing.dateFirst) existing.dateFirst = r.claimedAt;
-      if (r.claimedAt > existing.dateLast)  existing.dateLast  = r.claimedAt;
+      if (r.date < existing.dateFirst) existing.dateFirst = r.date;
+      if (r.date > existing.dateLast)  existing.dateLast  = r.date;
     }
   }
   return Array.from(map.values()).sort((a, b) => b.usdTotal - a.usdTotal);
@@ -427,7 +493,7 @@ function aggregatePayroll(
 // → 1099-NEC summary, OR attaches the CSV as supporting documentation if
 // they're filing Schedule C with a long contributor list. Column names
 // borrow IRS terminology so accountants don't have to map.
-function buildPayrollSummaryUs(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildPayrollSummaryUs(rows: TaxExportRow[], annotations?: AnnotationsByStreamId): string {
   const aggs = aggregatePayroll(rows, annotations);
   const header = csvRow([
     "Payer",                       // who the income came from
@@ -470,7 +536,7 @@ function buildPayrollSummaryUs(rows: ClaimRow[], annotations?: AnnotationsByStre
 // or transaction-time rate, both of which we'd need extra data to
 // compute reliably. Better to leave one explicit conversion step than
 // fabricate a bad GBP figure.
-function buildPayrollSummaryUk(rows: ClaimRow[], annotations?: AnnotationsByStreamId): string {
+function buildPayrollSummaryUk(rows: TaxExportRow[], annotations?: AnnotationsByStreamId): string {
   const aggs = aggregatePayroll(rows, annotations);
   const header = csvRow([
     "Source of Income",
@@ -516,8 +582,8 @@ function buildPayrollSummaryUk(rows: ClaimRow[], annotations?: AnnotationsByStre
 
 // ── Public dispatcher ──────────────────────────────────────────────────────
 
-export function buildClaimsCsv(
-  rows:         ClaimRow[],
+export function buildTaxCsv(
+  rows:         TaxExportRow[],
   format:       ExportFormat,
   annotations?: AnnotationsByStreamId,
   tags?:        TagsByStreamId,
@@ -536,10 +602,18 @@ export function buildClaimsCsv(
   }
 }
 
-export function csvFilename(format: ExportFormat, sinceYear?: number, untilYear?: number): string {
+export function csvFilename(
+  format: ExportFormat,
+  sinceYear?: number,
+  untilYear?: number,
+  basis: "claim" | "unlock" = "claim",
+): string {
   const range =
     sinceYear && untilYear
       ? sinceYear === untilYear ? `${sinceYear}` : `${sinceYear}-${untilYear}`
       : "all-time";
-  return `vestream-claims-${format}-${range}.csv`;
+  // Keep the historical "claims" filename for claim basis (no behaviour change);
+  // unlock exports get "unlocks" so the two reports are distinguishable on disk.
+  const kind = basis === "unlock" ? "unlocks" : "claims";
+  return `vestream-${kind}-${format}-${range}.csv`;
 }

@@ -42,6 +42,7 @@ import { useToast } from "@/components/Toast";
 import { CopyButton } from "@/components/CopyButton";
 import { useCountUp } from "@/lib/use-count-up";
 import { VestingsList } from "./VestingsList";
+import { UnlockTaxTable } from "./UnlockTaxTable";
 
 // Drizzle row shape mirrored manually – the API returns rows from the
 // claim_events table with claimedAt as ISO string after JSON serialization.
@@ -564,6 +565,13 @@ export default function ExportsPage() {
         {/* Vestings-first: one row per token the user vests, with claimed-to-date
             income and an expandable per-token claim history. */}
         <VestingsList />
+
+        {/* Unlock-basis income: per-tranche table showing both bases side by
+            side (unlock vs claim) with a basis toggle + manual FMV entry for
+            pre-liquid tokens. The accrual-basis counterpart to the claim table. */}
+        <div className="mt-6">
+          <UnlockTaxTable />
+        </div>
 
         {/* Action row */}
         <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
