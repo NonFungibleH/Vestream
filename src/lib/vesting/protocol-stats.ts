@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { and, asc, desc, eq, gt, gte, inArray, lt, lte, notInArray, or, sql } from "drizzle-orm";
-import { UNLISTED_ADAPTER_IDS } from "@/lib/protocol-constants";
+import { UNLISTED_ADAPTER_IDS, chainBrand } from "@/lib/protocol-constants";
 import { unstable_cache } from "next/cache";
 import { db } from "../db";
 import { protocolSummaries, vestingStreamsCache } from "../db/schema";
@@ -1312,22 +1312,20 @@ export function truncateAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-/** Human-readable chain name for a chain ID (7 public chains incl. Solana). */
+/**
+ * Human-readable chain name for a chain ID.
+ *
+ * Derived from chainBrand, the single source of truth, rather than the switch
+ * statement this used to be. That switch silently returned "Chain 324" for
+ * zkSync the day the chain was added — the third hardcoded chain list to drift
+ * in two days, after the UNCX and Team Finance TVL walkers. Anything that has
+ * to be edited alongside CHAIN_BASE will eventually not be.
+ */
 export function chainLabel(chainId: number): string {
-  switch (chainId) {
-    case 1:     return "Ethereum";
-    case 56:    return "BNB Chain";
-    case 137:   return "Polygon";
-    case 8453:  return "Base";
-    case 42161: return "Arbitrum";
-    case 10:    return "Optimism";
-    case 43114: return "Avalanche";
-    case 4663:  return "Robinhood Chain";
-    case 101:   return "Solana";
-    case 11155111: return "Sepolia";
-    case 84532:    return "Base Sepolia";
-    default:    return `Chain ${chainId}`;
-  }
+  const name = chainBrand(chainId).name;
+  // chainBrand falls back to String(chainId) for an unknown chain, which would
+  // render as a bare "999999". Keep the old "Chain N" wording for that case.
+  return !name || name === String(chainId) ? `Chain ${chainId}` : name;
 }
 
 /**
