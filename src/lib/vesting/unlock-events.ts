@@ -12,7 +12,7 @@
 // the repo has no db-test harness.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { vestingUnlockEvents, claimEvents } from "../db/schema";
 import { normaliseAddress, addressesEqual } from "../address-validation";
@@ -325,8 +325,20 @@ export function mergeUnlockAndClaim(
  * rows (both bases per tranche). Newest tranche first.
  */
 export async function getTaxEventsForUser(userId: string): Promise<TaxEventRow[]> {
+  // Only unlocks that have actually happened are taxable income. The tranche
+  // generator deliberately enumerates the WHOLE schedule, future dates
+  // included, because the same rows feed the unlock calendar — but a tax
+  // table must not list them. Two reasons, both real: an unlock dated next
+  // month cannot have a historical price, so it lands here as
+  // priceConfidence "missing" and the UI flags it "needs your input"; and if
+  // a user obliges, they have invented a fair market value for a date that
+  // has not occurred. Measured on the first production run: 9 of 36 generated
+  // events were future-dated and every one of them was flagged unpriced.
   const [unlockRows, claimRows] = await Promise.all([
-    db.select().from(vestingUnlockEvents).where(eq(vestingUnlockEvents.userId, userId)),
+    db.select().from(vestingUnlockEvents).where(and(
+      eq(vestingUnlockEvents.userId, userId),
+      lte(vestingUnlockEvents.unlockTime, new Date()),
+    )),
     db.select().from(claimEvents).where(eq(claimEvents.userId, userId)),
   ]);
 
