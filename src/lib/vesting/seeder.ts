@@ -1343,6 +1343,15 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "sablier",      chainId: CHAIN_IDS.BASE,     discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.ARBITRUM, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.OPTIMISM, discover: discoverSablierRecipients },
+  // Chains added 2026-09-13/14. Without a seed job the TVL walker still reports
+  // a chain (it queries Envio directly) but vesting_streams_cache stays empty,
+  // so per-wallet lookups, the explorer and the token pages all miss it — and
+  // the protocol chain card hid the row entirely.
+  { adapterId: "sablier",      chainId: CHAIN_IDS.ROBINHOOD, discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.MONAD,     discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.ZKSYNC,    discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.BLAST,     discover: discoverSablierRecipients },
+  { adapterId: "sablier",      chainId: CHAIN_IDS.BERACHAIN, discover: discoverSablierRecipients },
   { adapterId: "sablier",      chainId: CHAIN_IDS.SEPOLIA,  discover: discoverSablierRecipients },
   // ── Worker-pivot stream protocols (LlamaPay + Sablier Flow) ──
   // Promoted to run BEFORE Hedgey because the Hedgey discovery path
@@ -1411,6 +1420,7 @@ const SEED_JOBS: SeedJob[] = [
   { adapterId: "team-finance", chainId: CHAIN_IDS.BSC,      discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.POLYGON,  discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.AVALANCHE, discover: discoverTeamFinanceRecipients },
+  { adapterId: "team-finance", chainId: CHAIN_IDS.ZKSYNC,   discover: discoverTeamFinanceRecipients },
   { adapterId: "team-finance", chainId: CHAIN_IDS.SEPOLIA,  discover: discoverTeamFinanceRecipients },
   // Hedgey — four mainnets + Sepolia (ERC721Enumerable reads via Multicall3).
   { adapterId: "hedgey",       chainId: CHAIN_IDS.ETHEREUM, discover: discoverHedgeyRecipients },

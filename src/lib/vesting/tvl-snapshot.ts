@@ -1118,7 +1118,7 @@ export async function readAllSnapshots(): Promise<ProtocolSnapshotRow[]> {
  */
 export async function readSnapshotsForAdapters(
   adapterIds: readonly string[],
-): Promise<Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>> {
+): Promise<Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number; streamCount: number }>> {
   if (process.env.NEXT_PHASE === "phase-production-build") return [];
   if (adapterIds.length === 0) return [];
 
@@ -1133,17 +1133,24 @@ export async function readSnapshotsForAdapters(
         // pair — so a bare TVL overstates our certainty.
         tokensPriced: protocolTvlSnapshots.tokensPriced,
         tokensTotal:  protocolTvlSnapshots.tokensTotal,
+        // What the WALKER enumerated. Differs from the per-wallet cache count
+        // in both directions, so the protocol chain card takes the max of the
+        // two — see the note there. Carried since 2026-09-14, when a newly
+        // added chain (Team Finance on zkSync) had 111 here and nothing in the
+        // cache yet, and was therefore hidden from the card entirely.
+        streamCount:  protocolTvlSnapshots.streamCount,
       })
       .from(protocolTvlSnapshots)
       .where(inArray(protocolTvlSnapshots.protocol, [...adapterIds]));
 
     // Sum across adapters — uncx + uncx-vm can have rows for the same chainId
-    const byChain = new Map<number, { tvlUsd: number; tokensPriced: number; tokensTotal: number }>();
+    const byChain = new Map<number, { tvlUsd: number; tokensPriced: number; tokensTotal: number; streamCount: number }>();
     for (const r of rows) {
-      const cur = byChain.get(r.chainId) ?? { tvlUsd: 0, tokensPriced: 0, tokensTotal: 0 };
+      const cur = byChain.get(r.chainId) ?? { tvlUsd: 0, tokensPriced: 0, tokensTotal: 0, streamCount: 0 };
       cur.tvlUsd       += Number(r.tvlUsd);
       cur.tokensPriced += Number(r.tokensPriced ?? 0);
       cur.tokensTotal  += Number(r.tokensTotal ?? 0);
+      cur.streamCount  += Number(r.streamCount ?? 0);
       byChain.set(r.chainId, cur);
     }
 

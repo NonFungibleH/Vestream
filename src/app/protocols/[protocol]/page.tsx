@@ -142,7 +142,7 @@ interface ProtocolPageData {
    *  token on this protocol, new-streams count for the past 24h. */
   funStats:     ProtocolFunStats | null;
   /** 2026-06-01: per-chain TVL breakdown from protocolTvlSnapshots. */
-  tvlPerChain:  Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>;
+  tvlPerChain:  Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number; streamCount: number }>;
   /** Indexed streams per chain, from the cache — see getStreamCountsByChain.
    *  Lets the chain card show a covered-but-unpriced chain honestly instead
    *  of dropping it. Plain object so it survives unstable_cache's JSON round
@@ -202,7 +202,7 @@ const loadProtocolData = unstable_cache(
     const upcoming     = settled[2].status === "fulfilled" ? settled[2].value : null;
     const upcomingList = settled[3].status === "fulfilled" ? settled[3].value : [];
     const funStats     = settled[4].status === "fulfilled" ? settled[4].value : null;
-    const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number }>) : [];
+    const tvlPerChain  = settled[5].status === "fulfilled" ? (settled[5].value as Array<{ chainId: number; tvlUsd: number; tokensPriced: number; tokensTotal: number; streamCount: number }>) : [];
     const streamsByChain = settled[6].status === "fulfilled"
       ? Object.fromEntries((settled[6].value as Map<number, number>).entries())
       : {};
@@ -299,7 +299,7 @@ const loadProtocolData = unstable_cache(
   // v10 = bump on 2026-07-06 for the dust/scam-token USD sanity guard in
   // toUsdValue (nonsense "$475.70B TKN" headlines). Key bump forces the
   // upcoming-queue USD to recompute with the guard immediately on deploy.
-  ["protocol-page-data-v12"],
+  ["protocol-page-data-v13"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -750,6 +750,7 @@ export default async function ProtocolLandingPage(
                   tvlUsd:       row?.tvlUsd ?? 0,
                   tokensPriced: row?.tokensPriced ?? 0,
                   tokensTotal:  row?.tokensTotal ?? 0,
+                  streamCount:  row?.streamCount ?? 0,
                 };
               })
         )
@@ -761,7 +762,18 @@ export default async function ProtocolLandingPage(
           // Finance on Avalanche (148 vestings, all unpriced dust) — and the
           // card now says so instead of hiding it. Chains with neither value
           // nor streams are still dropped; there is nothing to report.
-          .map((r) => ({ ...r, streams: streamsByChain[String(r.chainId)] ?? 0 }))
+          // Streams from EITHER source. The cache is what we have indexed
+          // per-wallet; the snapshot is what the TVL walker enumerated. They
+          // disagree in both directions and each gap is real:
+          //   UNCX/Robinhood   cache 2,  snapshot 0   (walker cannot decode)
+          //   TF/zkSync        cache 0,  snapshot 111 (no seed job had run)
+          // Taking the max means a chain appears as soon as anything knows it
+          // exists, which is what makes the card agree with the hero's chain
+          // count. Reading only the cache hid zkSync the day it was added.
+          .map((r) => ({
+            ...r,
+            streams: Math.max(streamsByChain[String(r.chainId)] ?? 0, r.streamCount ?? 0),
+          }))
           .filter((r) => r.tvlUsd > 0 || r.streams > 0)
           .sort((a, b) => b.tvlUsd - a.tvlUsd || b.streams - a.streams);
         if (chainTvl.length === 0) return null;
