@@ -560,7 +560,7 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
       "solana no-code vesting",
     ],
     useCases: [
-      { title: "Per-wallet allocations", body: "Each Smithii schedule names a single beneficiary rather than a pooled contract, so a wallet scan attributes the exact allocation to the person who holds it — 1,920 distinct recipients across the program today." },
+      { title: "Per-wallet allocations", body: "Each Smithii schedule names a single beneficiary rather than a pooled contract, so a wallet scan attributes the exact allocation to the person who holds it, with no manual claim-address mapping." },
       { title: "Small-cap team locks",   body: "Smithii is where projects too small to run their own vesting contract lock team and presale supply. Vestream surfaces those unlocks alongside the large-cap rails so a holder sees every schedule in one place." },
       { title: "Vault-verified balances", body: "Claimed amounts are not stored on the schedule, so Vestream reads the live balance of each schedule's on-chain vault instead. The claimed figure is derived from tokens that actually left the vault, not a self-reported field." },
     ],
