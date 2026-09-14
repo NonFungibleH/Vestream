@@ -299,7 +299,7 @@ const loadProtocolData = unstable_cache(
   // v10 = bump on 2026-07-06 for the dust/scam-token USD sanity guard in
   // toUsdValue (nonsense "$475.70B TKN" headlines). Key bump forces the
   // upcoming-queue USD to recompute with the guard immediately on deploy.
-  ["protocol-page-data-v11"],
+  ["protocol-page-data-v12"],
   { revalidate: CACHE_TTL_SECONDS, tags: ["protocol-page"] },
 );
 
@@ -799,18 +799,32 @@ export default async function ProtocolLandingPage(
                             />
                           )}
                           {chainLabel(row.chainId)}
+                          {/* Stream count on EVERY chain, not just the ones we
+                              cannot price (2026-09-14). It was only shown in
+                              the no-TVL case, which made "N streams" read as a
+                              consolation for a missing dollar figure rather
+                              than what it is: how much of this protocol's
+                              activity sits on each chain. A chain can be small
+                              in dollars and busy in positions — Avalanche on
+                              Team Finance is 662 streams — and that is worth
+                              seeing next to the money. */}
+                          {row.streams > 0 && (
+                            <span className="text-xs tabular-nums font-normal" style={{ color: "#94A3B8" }}>
+                              {row.streams.toLocaleString("en-US")} {row.streams === 1 ? "stream" : "streams"}
+                            </span>
+                          )}
                         </span>
                         {/* A chain we index but cannot value yet says exactly
                             that. "$0" was worse than useless here: UNCX on
                             Robinhood holds two live vestings we simply cannot
                             price (their contract there uses a different struct),
-                            and Team Finance on Avalanche has 148 whose tokens
+                            and Team Finance on Avalanche has 662 whose tokens
                             have no market. Reporting "$0" claimed nothing is
                             locked, which is false; omitting the row made the
                             hero's chain count disagree with the table. */}
                         {row.tvlUsd === 0 && row.streams > 0 ? (
                           <span className="text-xs tabular-nums" style={{ color: "#94A3B8" }}>
-                            {row.streams.toLocaleString("en-US")} {row.streams === 1 ? "stream" : "streams"} · no TVL yet
+                            no TVL yet
                           </span>
                         ) : (
                           <span className="text-sm font-semibold tabular-nums" style={{ color: row.tvlUsd === 0 ? "#94A3B8" : "#1A1D20" }}>

@@ -885,6 +885,11 @@ const CHAIN_ICON_FILE: Record<number, string> = {
   43114: "avalanche",
   4663:  "robinhood",
   101:   "solana",
+  143:   "monad",
+  // Arc has no /chains/<slug> entry yet (it is still an UPCOMING_CHAINS page),
+  // but it DOES need an icon: the Chains menu lists it with a "Soon" badge and
+  // would otherwise fall back to a bare letter tile. Supplied 2026-09-14.
+  5042:  "arc",
 };
 
 /** Path to a chain's logo icon, or null for unknown / testnet chains. */
