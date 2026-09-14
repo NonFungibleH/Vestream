@@ -547,9 +547,10 @@ export const PROTOCOLS: Record<string, ProtocolMeta> = {
     // evidence of an EVM vesting deployment.
     description:
       "Smithii is a no-code token toolkit used by small and mid-size Solana projects to create, lock and vest their supply without writing a contract. Its vesting program holds each allocation in a dedicated on-chain vault and releases it linearly to a named beneficiary. Vestream reads every schedule straight from the program, so a recipient sees their unlock dates and claimable balance without opening the Smithii dashboard.",
-    color: "#F2A900",        // Smithii amber
-    bg:    "rgba(242,169,0,0.08)",
-    border:"rgba(242,169,0,0.26)",
+    // Sampled from the brand mark: teal creature on a dark navy ground.
+    color: "#1EA3B4",
+    bg:    "rgba(30,163,180,0.08)",
+    border:"rgba(30,163,180,0.26)",
     chainIds: [CHAIN_IDS.SOLANA],
     officialUrl: "https://tools.smithii.io",
     claimUrl:   "https://tools.smithii.io/token-vesting/solana",
@@ -854,7 +855,7 @@ export const PROTOCOL_CHIPS: Record<string, ProtocolChip> =
 const SLUGS_WITH_ICON = new Set([
   "sablier", "superfluid", "uncx", "team-finance", "unvest",
   "pinksale", "streamflow", "jupiter-lock", "llamapay", "hoodlock",
-  "magna",
+  "magna", "smithii",
 ]);
 
 // Variant adapters that share a parent brand's mark — no separate asset needed.
