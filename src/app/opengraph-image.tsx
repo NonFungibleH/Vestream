@@ -13,6 +13,7 @@
 //     edge time predictable
 
 import { ImageResponse } from "next/og";
+import { VestreamMark } from "@/lib/og/vestream-mark";
 
 export const runtime  = "edge";
 export const alt      = "Vestream – Free Token Vesting Tracker for 12 Protocols";
@@ -49,12 +50,7 @@ export default async function OG() {
 
         {/* Wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-          {/* V-mark slabs (matches /public/logo-icon.svg) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ width: 56, height: 8, background: "#1A1D20", opacity: 0.35, borderRadius: 2 }} />
-            <div style={{ width: 56, height: 8, background: "#1A1D20", opacity: 0.65, borderRadius: 2 }} />
-            <div style={{ width: 56, height: 8, background: "#1CB8B8", borderRadius: 2 }} />
-          </div>
+          <VestreamMark width={56} />
           <span style={{ fontSize: 40, fontWeight: 800, color: "#1A1D20", letterSpacing: "-0.02em" }}>
             Vestream
           </span>

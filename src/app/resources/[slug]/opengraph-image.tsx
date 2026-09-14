@@ -6,6 +6,7 @@
 // (Edge runtime + generateStaticParams is incompatible in Next.js).
 
 import { ImageResponse } from "next/og";
+import { VestreamMark } from "@/lib/og/vestream-mark";
 import { getArticle, getAllArticles } from "@/lib/articles";
 
 export const runtime  = "nodejs";
@@ -97,11 +98,7 @@ export default async function OG(
 
         {/* Vestream wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{ width: 44, height: 6, background: "#1A1D20", opacity: 0.35, borderRadius: 2 }} />
-            <div style={{ width: 44, height: 6, background: "#1A1D20", opacity: 0.65, borderRadius: 2 }} />
-            <div style={{ width: 44, height: 6, background: "#1CB8B8", borderRadius: 2 }} />
-          </div>
+          <VestreamMark width={44} />
           <span style={{ fontSize: 32, fontWeight: 800, color: "#1A1D20", letterSpacing: "-0.02em" }}>
             Vestream
           </span>
