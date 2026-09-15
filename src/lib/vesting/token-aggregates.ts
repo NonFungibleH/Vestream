@@ -769,7 +769,12 @@ export async function getTokenMarketData(
     dexScreenerUrl: DS_CHAIN_SLUG[chainId]
       ? `https://dexscreener.com/${DS_CHAIN_SLUG[chainId]}/${normaliseAddress(tokenAddress)}` : null,
     dexToolsUrl:    DEXTOOLS_CHAIN_SLUG[chainId]
-      ? `https://www.dextools.io/app/en/${DEXTOOLS_CHAIN_SLUG[chainId]}/pair-explorer/${tokenAddress.toLowerCase()}` : null,
+      // token-explorer, NOT pair-explorer. pair-explorer expects a PAIR
+      // address; handed a token address it resolves to whatever unrelated pair
+      // shares those bytes — the FURY token page sent users to an "Engines of
+      // Fury" pair chart with $0 liquidity. api/market/route.ts already used
+      // the token form; this brings the token page into line.
+      ? `https://www.dextools.io/app/en/${DEXTOOLS_CHAIN_SLUG[chainId]}/token/${tokenAddress.toLowerCase()}` : null,
     pairUrl:        null,
   };
 

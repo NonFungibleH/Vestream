@@ -21,6 +21,7 @@
  */
 
 import { VestingAdapter } from "./index";
+import { resolveTokenMeta } from "../token-resolver";
 import { fetchWithRetry } from "@/lib/fetch-with-retry";
 import { mapBounded } from "@/lib/vesting/rpc";
 import { VestingStream, SupportedChainId, CHAIN_IDS, nextUnlockTime } from "../types";
@@ -289,6 +290,28 @@ async function fetchForChain(
 
   const nowSec = Math.floor(Date.now() / 1000);
 
+  // Resolve token metadata ON CHAIN rather than trusting the squid.
+  //
+  // The squid returns a tokenSymbol and tokenDecimals per vesting and we used
+  // to pass both straight through. They are not reliable: it reports the FURY
+  // token (0x0203d2…3b92, BNB) as symbol "TKN" with 8 decimals when the
+  // contract itself answers "FURY" and 18. The symbol is cosmetic; the
+  // decimals are not — being out by ten orders of magnitude rendered that
+  // token page as "64732989.42B TKN locked".
+  //
+  // Measured 2026-09-15: "TKN" sat on 22 distinct addresses in the cache.
+  // The TVL walker already resolves this properly via multicall
+  // (tvl-walker/team-finance.ts); this brings the adapter into line, so the
+  // number on a token page and the number in TVL come from the same source.
+  //
+  // resolveTokenMeta caches for 24h in-process, so the cost is one call per
+  // token per lambda, not one per vesting.
+  const distinctTokens = [...new Set(filtered.map((v) => v.token.toLowerCase()))];
+  const metaByToken = new Map<string, { symbol: string; decimals: number }>();
+  await mapBounded(distinctTokens, 8, async (addr) => {
+    metaByToken.set(addr, await resolveTokenMeta(chainId, addr));
+  });
+
   return filtered.map((v): VestingStream => {
     const walletLower  = v.walletAddr.toLowerCase();
     const addrLower    = v.address.toLowerCase();
@@ -336,8 +359,8 @@ async function fetchForChain(
       chainId,
       recipient:       v.walletAddr,
       tokenAddress:    v.token,
-      tokenSymbol:     v.tokenSymbol     ?? "???",
-      tokenDecimals:   v.tokenDecimals   ?? 18,
+      tokenSymbol:     metaByToken.get(v.token.toLowerCase())?.symbol   ?? v.tokenSymbol   ?? "???",
+      tokenDecimals:   metaByToken.get(v.token.toLowerCase())?.decimals ?? v.tokenDecimals ?? 18,
       totalAmount:     total.toString(),
       withdrawnAmount: withdrawn.toString(),
       claimableNow:    claimableNow.toString(),
