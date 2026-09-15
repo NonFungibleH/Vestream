@@ -40,6 +40,7 @@ import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { Provenance } from "@/components/Provenance";
 import { PROTOCOLS, listProtocols, PUBLIC_CHAIN_COUNT, chainSlug } from "@/lib/protocol-constants";
+import { protocolGuides } from "@/lib/protocol-guides";
 import { TokenMetaPanel } from "@/components/TokenMetaPanel";
 import { TokenPulse } from "@/components/TokenPulse";
 import { TokenFAQ } from "@/components/TokenFAQ";
@@ -210,6 +211,14 @@ function protocolName(protocol: string): string {
 function protocolSlug(protocol: string): string | null {
   const meta = Object.values(PROTOCOLS).find((p) => p.adapterIds.includes(protocol));
   return meta?.slug ?? null;
+}
+
+/** The explainer article for a protocol, if one exists. Token pages are the
+ *  site's most numerous pages; linking each to its protocol's explainer is what
+ *  feeds the article cluster (see lib/protocol-guides.ts). */
+function protocolExplainer(protocol: string) {
+  const slug = protocolSlug(protocol);
+  return slug ? protocolGuides(slug)[0] ?? null : null;
 }
 
 // ─── Metadata ───────────────────────────────────────────────────────────────
@@ -1651,6 +1660,11 @@ function ProtocolMix({
           {slug ? (
             <Link href={`/protocols/${slug}`} className="block hover:opacity-80 transition-opacity">{inner}</Link>
           ) : inner}
+          {protocolExplainer(p.protocol) && (
+            <Link href={protocolExplainer(p.protocol)!.href} className="inline-block mt-3 text-xs font-semibold hover:opacity-80" style={{ color: "#0F8A8A" }}>
+              {protocolExplainer(p.protocol)!.title} →
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -1705,6 +1719,17 @@ function ProtocolMix({
             <div key={p.protocol}>{content}</div>
           );
         })}
+        {mix.some((p) => protocolExplainer(p.protocol)) && (
+          <div className="pt-3 flex flex-col gap-1.5" style={{ borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+            {Array.from(new Map(
+              mix.map((p) => protocolExplainer(p.protocol)).filter((g): g is NonNullable<typeof g> => !!g).map((g) => [g.slug, g]),
+            ).values()).map((g) => (
+              <Link key={g.slug} href={g.href} className="text-xs font-semibold hover:opacity-80" style={{ color: "#0F8A8A" }}>
+                {g.title} →
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

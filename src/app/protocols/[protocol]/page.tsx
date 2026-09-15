@@ -58,6 +58,8 @@ import { readSnapshotsForAdapters } from "@/lib/vesting/tvl-snapshot";
 import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-queries";
 import { isLinkableTokenAddress } from "@/lib/chain-links";
+import { protocolGuides } from "@/lib/protocol-guides";
+import { TESTNET_CHAIN_IDS } from "@vestream/shared";
 import { normaliseAddress } from "@/lib/address-validation";
 
 // On-demand ISR with 5-minute revalidation (2026-06-12).
@@ -123,15 +125,6 @@ export const maxDuration = 60;
 // pricing cost across thousands of subsequent visits.
 const CACHE_TTL_SECONDS = 3600;
 
-// Protocols that have a dedicated "how to track X unlocks" guide in
-// /resources. Rendered as a cross-link in the "More trackers" section so the
-// high-intent protocol page funnels into the answer content (topic cluster +
-// AI-crawlable path). Keep in sync with the how-to articles in lib/articles.ts.
-const HOW_TO_GUIDE: Record<string, { href: string; label: string }> = {
-  "sablier":      { href: "/resources/how-to-track-sablier-unlocks",      label: "How to track your Sablier unlocks" },
-  "hedgey":       { href: "/resources/how-to-track-hedgey-unlocks",       label: "How to track your Hedgey unlocks" },
-  "team-finance": { href: "/resources/how-to-track-team-finance-unlocks", label: "How to track Team Finance unlocks" },
-};
 
 interface ProtocolPageData {
   stats:        ProtocolStats | null;
@@ -476,6 +469,32 @@ export default async function ProtocolLandingPage(
   ].filter((u): u is string => !!u);
   const orgId = `https://www.vestream.io/protocols/${meta.slug}#organization`;
 
+  // Articles about this protocol, linked from the page (lib/protocol-guides).
+  const guides = protocolGuides(meta.slug);
+
+  // Visible FAQ, mirrored into FAQPage JSON-LD. Every answer is built only from
+  // facts this page already states (description, indexed chains, how scanning
+  // works, custody), so the markup can't claim anything the page doesn't.
+  // Google now shows FAQ rich results only for government and health sites; the
+  // markup is for answer engines and Bing, which still parse it.
+  const testnets = new Set<number>(TESTNET_CHAIN_IDS);
+  const faqChains = meta.chainIds.filter((id) => !testnets.has(Number(id))).map((id) => chainLabel(id));
+  const faqItems: { q: string; a: string }[] = [
+    { q: `What is ${meta.name}?`, a: meta.description },
+    ...(faqChains.length > 0 ? [{
+      q: `Which chains does Vestream track ${meta.name} on?`,
+      a: `Vestream indexes ${meta.name} on ${faqChains.length === 1 ? faqChains[0] : `${faqChains.slice(0, -1).join(", ")} and ${faqChains[faqChains.length - 1]}`}.`,
+    }] : []),
+    {
+      q: `How do I track my ${meta.name} unlocks?`,
+      a: `Paste your wallet into Vestream's free scanner. It shows the ${meta.name} schedules Vestream can read on-chain for that wallet, alongside the other vesting protocols it indexes. The Vestream app can also notify you when tokens become claimable.`,
+    },
+    {
+      q: `Does Vestream hold my ${meta.name} tokens?`,
+      a: `No. Claims happen on ${meta.name}'s own contract. Vestream reads on-chain data and never touches your tokens.`,
+    },
+  ];
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -496,6 +515,14 @@ export default async function ProtocolLandingPage(
         isPartOf: { "@id": "https://www.vestream.io/#website" },
         about: { "@id": orgId },
         dateModified: (toDateSafe(stats?.lastIndexedAt ?? null) ?? new Date()).toISOString(),
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
       },
       {
         "@type": "BreadcrumbList",
@@ -1274,21 +1301,41 @@ export default async function ProtocolLandingPage(
           </Link>
         </div>
 
-        {/* Cross-link to the protocol's how-to guide when one exists. Internal
-            linking from these high-intent pages into the /resources guides
-            strengthens the topic cluster (SEO) and gives AI crawlers a clear
-            path to the answer content. See lib/articles.ts. */}
-        {HOW_TO_GUIDE[meta.slug] && (
-          <div className="mt-3 text-center">
-            <Link
-              href={HOW_TO_GUIDE[meta.slug].href}
-              className="text-sm font-semibold"
-              style={{ color: meta.color }}
-            >
-              {HOW_TO_GUIDE[meta.slug].label} →
-            </Link>
+        {/* Cross-links to this protocol's articles (explainer, then tracking
+            guide). Internal links from these high-intent pages into /resources
+            strengthen the topic cluster and give crawlers a path to the answer
+            content. Mapping lives in lib/protocol-guides.ts. */}
+        {guides.length > 0 && (
+          <div className="mt-3 flex flex-col items-center gap-2">
+            {guides.map((g) => (
+              <Link
+                key={g.slug}
+                href={g.href}
+                className="text-sm font-semibold text-center"
+                style={{ color: meta.color }}
+              >
+                {g.title} →
+              </Link>
+            ))}
           </div>
         )}
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      {/* Visible questions backing the FAQPage JSON-LD above. Kept on the page,
+          not collapsed, because structured FAQ content must be visible. */}
+      <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-3xl mx-auto w-full">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center" style={{ letterSpacing: "-0.02em", color: "#1A1D20" }}>
+          {meta.name} FAQ
+        </h2>
+        <div className="space-y-3">
+          {faqItems.map((f) => (
+            <div key={f.q} className="rounded-2xl p-5" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <h3 className="text-base font-semibold mb-2" style={{ color: "#1A1D20" }}>{f.q}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── Bottom CTA ───────────────────────────────────────────────────── */}

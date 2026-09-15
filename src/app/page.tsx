@@ -10,11 +10,28 @@ import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon } from 
 import { loadSnapshots } from "@/lib/vesting/chain-stats";
 import { getLastGoodHomeData, setLastGoodHomeData } from "@/lib/vesting/page-data-fallback";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
+import { getArticle } from "@/lib/articles";
 import {
   getProtocolStats,
   toDateSafe,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
+
+// Homepage → article links. The homepage is the strongest page on the site and
+// previously linked only two articles; these point its authority at the core
+// token-vesting cluster. Titles and excerpts come from the articles themselves.
+const HOME_GUIDE_SLUGS = [
+  "what-is-token-vesting",
+  "token-vesting-schedules-explained",
+  "how-to-track-token-vesting",
+  "why-token-prices-fall-before-unlocks",
+  "uk-tax-vesting-tokens-vest-or-claim",
+  "best-crypto-token-unlock-trackers",
+];
+const HOME_GUIDES = HOME_GUIDE_SLUGS
+  .map((slug) => getArticle(slug))
+  .filter((a): a is NonNullable<ReturnType<typeof getArticle>> => !!a);
+
 
 // ISR – re-render at most once every 10 minutes. Bumped 60→600 on
 // 2026-05-10 as part of the egress-reduction pass after Supabase Free
@@ -1882,6 +1899,31 @@ export default async function Home() {
             </div>
           </div>
         </div>
+        </div>
+      </section>
+
+      {/* ── Guides ──────────────────────────────────────────────────────── */}
+      <section className="px-4 md:px-8 pb-16 md:pb-24 max-w-5xl mx-auto w-full">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2.5 mb-3">
+            <span style={{ width: 26, height: 1, background: "#1CB8B8" }} />
+            <span className="text-[10.5px] font-semibold uppercase" style={{ letterSpacing: "0.18em", color: "#0F8A8A" }}>Guides</span>
+          </div>
+          <h2 className="text-[2rem] md:text-[2.625rem] font-bold leading-[1.08]" style={{ letterSpacing: "-0.035em", color: "#0B0E12" }}>Understand token vesting</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {HOME_GUIDES.map((a) => (
+            <Link key={a.slug} href={`/resources/${a.slug}`}
+              className="rounded-2xl p-5 block transition-opacity hover:opacity-80"
+              style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <p className="text-[10.5px] font-semibold uppercase mb-2" style={{ letterSpacing: "0.12em", color: "#0F8A8A" }}>{a.category}</p>
+              <h3 className="text-base font-bold leading-snug mb-2" style={{ color: "#0B0E12" }}>{a.title.replace(/\s*\(\d{4}\)\s*$/, "")}</h3>
+              <p className="text-sm leading-relaxed line-clamp-3" style={{ color: "#5C6066" }}>{a.excerpt}</p>
+            </Link>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link href="/resources" className="text-sm font-semibold" style={{ color: "#0F8A8A" }}>All guides →</Link>
         </div>
       </section>
 
