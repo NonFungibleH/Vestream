@@ -19,6 +19,7 @@ Created 2026-09-15. Character counts use X's weighting: a link counts as 23, an 
 | 1 | Arc launch: ready for vesting protocols | Ready | **Post on 16 Sep 2026** (Arc mainnet day) |
 | 2 | UK tax: vest or claim | Ready | Any time; strongest Nov–Jan ahead of the 31 Jan deadline |
 | 3 | Why token prices fall before unlocks (long-form) | Ready | Any time after the original unlock-timing thread |
+| 4 | Why unlock alerts matter | Ready | Promotes the same article as #3 from the alerts angle. Post one or the other first, not both in the same week |
 
 ---
 
@@ -205,3 +206,62 @@ vestream.io/resources/why-token-prices-fall-before-unlocks
 - Post 1 refers back to the original unlock-timing thread, so post this one after it.
 
 **Sources:** Keyrock study via [crypto.news](https://crypto.news/token-unlocks-almost-always-negative-for-price-keyrocks-study-reveals/) and [ChainCatcher](https://www.chaincatcher.com/en/article/2155623) · Vestream on-chain index (MOVE, FF, Smithii), September 2026
+
+---
+
+## 4. Why unlock alerts matter
+
+**Links to:** https://www.vestream.io/resources/why-token-prices-fall-before-unlocks
+
+**Graphic:** A single timeline with three marks: "~30 days before: price pressure typically starts", "Unlock day", and "1 year later: still unclaimed", with a teal Vestream bell on the first stretch and on unlock day.
+
+**1/5** · 235
+```
+Most people treat a token unlock like a date in the diary. Check it on the day, claim, move on.
+
+That misses two things. The market often moves weeks before the unlock. And a lot of people who are owed tokens never claim them at all 🧵
+```
+
+**2/5** · 258
+```
+Keyrock studied 16,000+ token unlocks.
+
+About 90% were followed by falling prices, and the decline typically started around 30 days before the unlock, not on the day.
+
+Unlock dates are public. Holders who plan to sell go early, and funds hedge ahead of time.
+```
+
+**3/5** · 257
+```
+So if the first you hear of an unlock is the day it happens, much of the move may already be in the price.
+
+The month before is where the useful information is: how big the unlock is against circulating supply, who receives it, and how much actually trades.
+```
+
+**4/5** · 260
+```
+If the tokens are yours, the bigger risk is simply forgetting.
+
+On Smithii, about 6 in 10 vesting schedules that have finished still hold tokens nobody has claimed. Some ended more than a year ago.
+
+In the UK, the unlock date can also decide when you're taxed.
+```
+
+**5/5** · 243
+```
+Vestream covers both sides.
+
+Every upcoming unlock across 13 protocols on a public calendar, weeks ahead. Plus alerts for your own vestings, up to 48 hours before they unlock.
+
+The full breakdown, with a real example 👇
+vestream.io/resources/why-token-prices-fall-before-unlocks
+```
+
+**Notes**
+- Alerts fire 1 to 48 hours before an unlock (the lead times the app offers). Don't claim alerts arrive 30 days ahead: the 30-day view is the public calendar.
+- Alerts cover the user's own vestings only, not other wallets or watchlisted tokens.
+- The 6-in-10 figure is Smithii only. Don't generalise it to all protocols.
+- "13 protocols" matches the site header on 16 Sep 2026. Update it if a protocol is added before posting.
+
+**Sources:** Keyrock study via [crypto.news](https://crypto.news/token-unlocks-almost-always-negative-for-price-keyrocks-study-reveals/) and [ChainCatcher](https://www.chaincatcher.com/en/article/2155623) · Vestream on-chain index (Smithii), September 2026 · Alert lead times from the Vestream app settings
+
