@@ -1903,30 +1903,28 @@ function UpcomingEvents({
                       explorer – the on-chain anchor a retail buyer can
                       verify themselves. Hidden when adapter didn't expose
                       the hash (PinkSale + Solana adapters currently). */}
-                  {e.lockTxHash && e.chainId && (
+                  {/* Only the creating "lock" transaction is linked here. For
+                      merkle protocols (Magna) the only hash we hold is the
+                      recipient's latest claim, an earlier tranche. With equal
+                      monthly tranches that claim shows the same amount as the
+                      upcoming unlock, so it read as "this unlock already
+                      happened" (reported 2026-09-21 on WCT: a 50,230 WCT claim
+                      made that morning for the 26 Aug tranche, beside the
+                      50,230 WCT unlock due 26 Sep). A label can't fix that on
+                      a phone, so claim hashes are not shown in this block. */}
+                  {e.lockTxHash && e.chainId && e.lockTxKind !== "claim" && (
                     <a
                       href={`${BLOCK_EXPLORERS_PUBLIC[e.chainId] ?? "https://etherscan.io"}/tx/${e.lockTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
-                      title={e.lockTxKind === "claim"
-                        ? `Source transaction · ${e.lockTxHash.slice(0, 10)}… An earlier withdrawal that revealed this schedule, not this unlock. These tokens are still locked.`
-                        : `Lock transaction · ${e.lockTxHash.slice(0, 10)}… The transaction that created this vesting stream, not this unlock. This unlock has not happened yet.`}
+                      title={`Lock transaction · ${e.lockTxHash.slice(0, 10)}… The transaction that created this vesting stream, not this unlock. This unlock has not happened yet.`}
                       className="inline-flex items-center px-1 rounded text-[9px] font-bold tracking-wider hover:opacity-80 transition-opacity"
                       style={{ color: "#0F8A8A", background: "rgba(28,184,184,0.08)", border: "1px solid rgba(28,184,184,0.18)", height: 16 }}
                     >
-                      {/* Say WHICH transaction, in the badge itself. A bare
-                          "TX" sitting next to "in 2mo" under a heading that
-                          reads UPCOMING UNLOCK EVENTS looks like the link is
-                          the unlock — reported 2026-09-12 against a DEXE
-                          stream whose hash is in fact the Sablier batch-create
-                          that opened all four of that recipient's streams. The
-                          data was right; only the label was ambiguous, and it
-                          only disambiguated in a `title` nobody hovers on a
-                          phone. Never "CLAIM": this block is upcoming unlocks,
-                          so the tokens are by definition still locked, and for
-                          merkle protocols the hash is an earlier withdrawal
-                          that revealed the allocation. */}
-                      {e.lockTxKind === "claim" ? "SOURCE TX ↗" : "LOCK TX ↗"}
+                      {/* Say WHICH transaction in the badge itself: a bare "TX"
+                          beside "in 2mo" under UPCOMING UNLOCK EVENTS read as
+                          the unlock (DEXE, 2026-09-12). */}
+                      LOCK TX ↗
                     </a>
                   )}
                 </div>
