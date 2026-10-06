@@ -97,7 +97,7 @@ function flushTags(tags: string[]): void {
  */
 type Scope = "all" | "summaries" | "tokens";
 
-async function runAll(scope: Scope = "all"): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
+async function runAll(scope: Scope = "all", chainIds?: number[]): Promise<{ tokens: number | null; protocol: number | null; status: number | null }> {
   const out = { tokens: null as number | null, protocol: null as number | null, status: null as number | null };
 
   if (scope === "all" || scope === "summaries") {
@@ -111,7 +111,7 @@ async function runAll(scope: Scope = "all"): Promise<{ tokens: number | null; pr
   }
 
   // Heavy token rollup last — the Explorer's per-token aggregates.
-  try { out.tokens = (await refreshTokenRollups()).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
+  try { out.tokens = (await refreshTokenRollups(chainIds)).rows; } catch (e) { console.error("[cron/refresh-rollups] refreshTokenRollups failed:", e); }
   // Flush the explorer/calendar caches after the token rollup lands.
   flushTags(["protocol-unlocks", "protocols-page"]);
 
@@ -166,18 +166,23 @@ async function handle(req: NextRequest) {
   // uses the default synchronous path, which reliably runs to completion.
   const scopeParam = req.nextUrl.searchParams.get("scope");
   const scope: Scope = scopeParam === "summaries" || scopeParam === "tokens" ? scopeParam : "all";
+  // `?chains=1,56` runs the token rollup for those chains only. The whole-table
+  // run no longer fits in 300s (see refreshTokenRollups), so the cron splits it;
+  // the upsert never deletes, so the slices compose into a complete table.
+  const chainIds = (req.nextUrl.searchParams.get("chains") ?? "")
+    .split(",").map((c) => Number(c.trim())).filter((c) => Number.isFinite(c) && c > 0);
 
   if (req.nextUrl.searchParams.get("background") === "true") {
     after(async () => {
       const t = Date.now();
-      const r = await runAll(scope);
+      const r = await runAll(scope, chainIds);
       console.log(`[cron/refresh-rollups] background complete in ${((Date.now() - t) / 1000).toFixed(1)}s, ${JSON.stringify(r)}`);
     });
     return NextResponse.json({ ok: true, accepted: true, message: "Refresh running in background." }, { status: 202 });
   }
 
   const startedAt = Date.now();
-  const result = await runAll(scope);
+  const result = await runAll(scope, chainIds);
   const elapsedSec = Math.round((Date.now() - startedAt) / 100) / 10;
   console.log(`[cron/refresh-rollups] complete in ${elapsedSec}s, ${JSON.stringify(result)}`);
   return NextResponse.json({ ok: true, durationSec: elapsedSec, ...result });

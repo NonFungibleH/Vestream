@@ -88,10 +88,6 @@
       "schedule": "40 */12 * * *"
     },
     {
-      "path": "/api/cron/refresh-rollups?scope=tokens",
-      "schedule": "50 */12 * * *"
-    },
-    {
       "path": "/api/cron/indexer?protocol=uncx-vm&chainId=1",
       "schedule": "0 5 * * *"
     },
@@ -242,6 +238,22 @@
     {
       "path": "/api/cron/indexer?protocol=hedgey&chainId=80094",
       "schedule": "10 6 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-rollups?scope=tokens&chains=1",
+      "schedule": "50 */12 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-rollups?scope=tokens&chains=101",
+      "schedule": "55 */12 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-rollups?scope=tokens&chains=8453,56,137",
+      "schedule": "0 1,13 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-rollups?scope=tokens&chains=42161,10,43114,4663,324,143,80094,81457",
+      "schedule": "5 1,13 * * *"
     }
   ],
   "headers": [

@@ -56,8 +56,19 @@ const HIGH_BAND_CEILING_USD  = 200_000_000;
  *  MAX_PLAUSIBLE_UNLOCK_USD in quick-prices.ts. */
 const MAX_PLAUSIBLE_LOCKED_USD = 10_000_000_000;
 
-export async function refreshTokenRollups(): Promise<{ rows: number }> {
+/**
+ * `chainIds` splits the work so each run fits Vercel's 300s ceiling. The two
+ * aggregate passes measured 86s and 90s+ against the live cache on 2026-10-06,
+ * which with the upsert and sitemap write put the whole-table run over the
+ * limit — it was killed every time and the table sat unwritten from 23 Sep to
+ * 6 Oct. Nothing here deletes, so a per-chain run only touches its own rows
+ * and the chains compose. Omit it for the whole table (manual runs).
+ */
+export async function refreshTokenRollups(chainIds?: number[]): Promise<{ rows: number }> {
   if (process.env.NEXT_PHASE === "phase-production-build") return { rows: 0 };
+  const chainFilter = chainIds && chainIds.length > 0
+    ? sql`AND chain_id IN (${sql.join(chainIds.map((c) => sql`${c}`), sql`, `)})`
+    : sql``;
 
   // Pass 1 — per-recipient → per-token: total locked, largest holder, wallets.
   const concentration = await db.execute(sql`
@@ -74,6 +85,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
       FROM vesting_streams_cache
       WHERE is_fully_vested = false
         AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${chainFilter}
         ${unlistedProtocolSql()}
       GROUP BY chain_id, lower(token_address), lower(recipient)
     ) s
@@ -114,6 +126,7 @@ export async function refreshTokenRollups(): Promise<{ rows: number }> {
     FROM vesting_streams_cache
     WHERE is_fully_vested = false
       AND chain_id NOT IN (${sql.join(TESTNET_CHAIN_IDS, sql`, `)})
+        ${chainFilter}
         ${unlistedProtocolSql()}
     GROUP BY chain_id, lower(token_address)
   `);
