@@ -242,7 +242,12 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
     const now = new Date();
     const rows = unique.map((s) => ({
       streamId:        s.id,
-      recipient:       s.recipient.toLowerCase(),
+      // normaliseAddress, not toLowerCase: it lowercases EVM but preserves
+      // Solana base58 verbatim. The read paths above already normalise the
+      // wallets they look up (lines ~105/168), so lowercasing here made every
+      // Solana recipient unmatchable — the column held an invalid address and
+      // any per-wallet Solana lookup silently returned nothing (2026-10-06).
+      recipient:       normaliseAddress(s.recipient),
       chainId:         s.chainId,
       protocol:        s.protocol,
       tokenAddress:    s.tokenAddress ?? null,
@@ -290,6 +295,17 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
           // the token page (which reads streamData) showed the real symbol. This
           // COALESCE keeps the better of the two so the gap can't regrow.
           tokenSymbol:     sql`COALESCE(NULLIF(NULLIF(excluded.token_symbol, 'unknown'), ''), ${vestingStreamsCache.tokenSymbol})`,
+          // end_time was insert-only, so the column froze at whatever the
+          // schedule said when the row was FIRST seen while stream_data moved
+          // on beneath it (2026-10-06 audit: nearly every sablier-flow and
+          // llamapay row, 3,926 of 5,077 uncx-vm rows). It is the column the
+          // unlock calendar and the "finished" queries sort and filter on, so
+          // a frozen value silently mis-dates unlocks.
+          endTime:         sql`excluded.end_time`,
+          // Same shape: recipient was insert-only, so Solana rows written
+          // before the normaliseAddress fix above keep their corrupted
+          // lowercase address until this re-writes them.
+          recipient:       sql`excluded.recipient`,
         },
         // Update when:
         //  - stream data moved (the always-update case from the original
@@ -307,6 +323,8 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
         setWhere: sql`
           ${vestingStreamsCache.streamData} IS DISTINCT FROM excluded.stream_data
           OR ${vestingStreamsCache.isFullyVested} IS DISTINCT FROM excluded.is_fully_vested
+          OR ${vestingStreamsCache.endTime} IS DISTINCT FROM excluded.end_time
+          OR ${vestingStreamsCache.recipient} IS DISTINCT FROM excluded.recipient
           OR ${vestingStreamsCache.lastRefreshedAt} < NOW() - INTERVAL '23 hours'
         `,
       });
