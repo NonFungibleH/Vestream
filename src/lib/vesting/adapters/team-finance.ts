@@ -17,14 +17,17 @@
  *  • Squid GQL – https://teamfinance.squids.live/tf-vesting-staking-subgraph:prod/api/graphql
  *    vestingClaims  →  individual claim events (used to derive withdrawnAmount)
  *
- * Chains: Ethereum (1), BSC (56), Base (8453), Sepolia (11155111)
+ * Chains: see supportedChainIds below (Ethereum, BSC, Polygon, Avalanche, zkSync, Sepolia).
+ *
+ * Withdrawn and revoked come from each vesting contract on-chain (claimed /
+ * getRevoked by merkle index); the Squid is only a fallback (2026-10-07).
  */
 
 import { VestingAdapter } from "./index";
 import { resolveTokenMeta } from "../token-resolver";
 import { fetchWithRetry } from "@/lib/fetch-with-retry";
-import { mapBounded } from "@/lib/vesting/rpc";
-import { VestingStream, SupportedChainId, CHAIN_IDS, nextUnlockTime } from "../types";
+import { mapBounded, makeFallbackClient } from "@/lib/vesting/rpc";
+import { VestingStream, SupportedChainId, CHAIN_IDS } from "../types";
 
 // ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -48,10 +51,15 @@ export interface TFVesting {
   userTotal:         string;  // hex bigint, e.g. "0x083d6c7aab63600000"
   start:             number;  // unix seconds
   end:               number;  // unix seconds
-  cadence:           number;  // 1 = continuous linear
-  percentageOnStart: number;  // 0–100: portion that unlocks immediately at start
+  cadence:           number;  // seconds per release step; 1 = continuous
+  // BASIS POINTS (0–10000), matching the contract's MAX_PERCENTAGE = 1e4.
+  // Was documented as 0–100 and multiplied by 100, so a 20% upfront unlock
+  // read as 2000% and every such vesting showed fully vested (and more than
+  // the whole grant claimable) from its start date (fixed 2026-10-07).
+  percentageOnStart: number;
   revocable:         boolean;
   version:           string;  // "v3"
+  index?:            number;  // the recipient's merkle leaf index in this contract
 }
 
 // ─── Module-level cache (shared across per-chain calls for the same wallet) ──
@@ -233,6 +241,81 @@ export async function fetchClaimEvents(
   }
 }
 
+// ─── On-chain claimed / revoked ───────────────────────────────────────────────
+//
+// The Squid's claim events disagree with the chain for ~17.5% of contracts and
+// never see revocations (2026-10-07 census: 263 empty escrows still counted as
+// locked, 546 revoked leaves shown as owed). Each vesting contract exposes the
+// truth per merkle leaf, and the REST API hands us each recipient's `index`,
+// so read it directly. Squid totals remain the fallback when a read fails.
+
+const TF_VESTING_ABI = [
+  { type: "function", name: "claimed",    stateMutability: "view", inputs: [{ name: "", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "getRevoked", stateMutability: "view", inputs: [{ name: "index", type: "uint256" }], outputs: [{ type: "bool" }] },
+] as const;
+
+interface LeafState { claimed: bigint; revoked: boolean }
+
+async function readLeafStates(
+  chainId: SupportedChainId,
+  leaves:  Array<{ contract: string; index: number }>,
+): Promise<Map<string, LeafState>> {
+  const out = new Map<string, LeafState>();
+  if (leaves.length === 0) return out;
+  const client = makeFallbackClient(chainId, { batch: true });
+  if (!client) return out;
+  const PAGE = 50; // two calls per leaf; keeps each response under free-RPC caps
+  for (let i = 0; i < leaves.length; i += PAGE) {
+    const page = leaves.slice(i, i + PAGE);
+    const contracts = page.flatMap((l) => [
+      { address: l.contract as `0x${string}`, abi: TF_VESTING_ABI, functionName: "claimed"    as const, args: [BigInt(l.index)] as const },
+      { address: l.contract as `0x${string}`, abi: TF_VESTING_ABI, functionName: "getRevoked" as const, args: [BigInt(l.index)] as const },
+    ]);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await client.multicall({ contracts: contracts as any, allowFailure: true });
+      page.forEach((l, j) => {
+        const c = res[j * 2], r = res[j * 2 + 1];
+        if (c?.status === "success" && r?.status === "success") {
+          out.set(`${l.contract.toLowerCase()}:${l.index}`, { claimed: c.result as bigint, revoked: r.result as boolean });
+        }
+      });
+    } catch (err) {
+      console.warn(`[team-finance] leaf state read failed (chain ${chainId}, page ${i}):`, err);
+    }
+  }
+  return out;
+}
+
+/**
+ * Vested amount, mirroring the contract's getClaimable() exactly (verified
+ * source, Sourcify): nothing before start, everything after end, otherwise
+ * elapsed time floored to whole `cadence` steps, with `percentageOnStart`
+ * basis points released at start. Pure so it can be unit tested.
+ */
+export function teamFinanceVested(
+  total: bigint, start: number, end: number, cadence: number, pctBps: number, nowSec: number,
+): bigint {
+  if (nowSec < start) return 0n;
+  if (nowSec > end || end <= start) return total;
+  const step    = cadence > 0 ? cadence : 1;
+  const elapsed = BigInt(Math.floor((nowSec - start) / step) * step);
+  const bps     = BigInt(Math.min(Math.max(Math.round(pctBps), 0), 10_000));
+  const onStart = (bps * total) / 10_000n;
+  const vested  = onStart + (elapsed * (total - onStart)) / BigInt(end - start);
+  return vested > total ? total : vested;
+}
+
+/** Next release time: the next cadence boundary, or the end date. */
+export function teamFinanceNextUnlock(start: number, end: number, cadence: number, nowSec: number): number | null {
+  if (nowSec >= end) return null;
+  if (nowSec < start) return start;
+  const step = cadence > 0 ? cadence : 1;
+  if (step <= 1) return end; // continuous: the meaningful "next" date is the end
+  const next = start + (Math.floor((nowSec - start) / step) + 1) * step;
+  return Math.min(next, end);
+}
+
 // ─── Main fetch ───────────────────────────────────────────────────────────────
 
 async function fetchForChain(
@@ -269,6 +352,12 @@ async function fetchForChain(
   const accounts       = [...new Set(filtered.map(v => v.walletAddr.toLowerCase()))];
   const vestingAddrs   = [...new Set(filtered.map(v => v.address.toLowerCase()))];
   const claimTotals    = await fetchClaims(accounts, vestingAddrs, chainId);
+  const leafStates     = await readLeafStates(
+    chainId,
+    filtered
+      .filter((v) => typeof v.index === "number")
+      .map((v) => ({ contract: v.address, index: v.index as number })),
+  );
 
   // Fetch per-wallet claim events for claimEvents field
   const claimEventsPerWallet = await Promise.all(
@@ -322,31 +411,28 @@ async function fetchForChain(
     const endTime   = Number(v.end)    || 0;
     if (!v.userTotal || !endTime) return null as unknown as VestingStream; // filtered below
 
-    const total     = BigInt(v.userTotal);
-    const withdrawn = claimTotals.get(claimKey) ?? 0n;
+    const total = BigInt(v.userTotal);
+    const leaf  = typeof v.index === "number" ? leafStates.get(`${addrLower}:${v.index}`) : undefined;
+    // On-chain claimed(index) when we have it; the Squid total only as fallback.
+    const withdrawn = leaf ? leaf.claimed : (claimTotals.get(claimKey) ?? 0n);
 
-    // Linear vesting: percentageOnStart% unlocks at start, rest vests linearly start→end
-    // percentageOnStart can be null/undefined in some API responses — default to 0
-    const pct          = typeof v.percentageOnStart === "number" && isFinite(v.percentageOnStart)
-      ? v.percentageOnStart : 0;
-    const bps          = BigInt(Math.round(pct * 100)); // basis points (0..10000)
-    const initialUnlock = (total * bps) / 10000n;
-    const linearPortion = total - initialUnlock;
+    const pct     = typeof v.percentageOnStart === "number" && isFinite(v.percentageOnStart) ? v.percentageOnStart : 0;
+    const cadence = Number(v.cadence) || 1;
 
-    let vested: bigint;
-    if (nowSec < startTime || endTime <= startTime) {
-      vested = 0n;
-    } else if (nowSec >= endTime) {
-      vested = total;
+    let vested = teamFinanceVested(total, startTime, endTime, cadence, pct, nowSec);
+    let claimableNow: bigint;
+    let lockedAmount: bigint;
+    if (leaf?.revoked) {
+      // stopVesting() has already settled this leaf: the unvested remainder
+      // went back to the owner, so nothing more is owed or will unlock.
+      vested       = withdrawn;
+      claimableNow = 0n;
+      lockedAmount = 0n;
     } else {
-      const elapsed  = BigInt(nowSec - startTime);
-      const duration = BigInt(endTime - startTime);
-      vested = initialUnlock + (linearPortion * elapsed) / duration;
+      claimableNow = vested > withdrawn ? vested - withdrawn : 0n;
+      lockedAmount = total > vested     ? total  - vested    : 0n;
     }
-
-    const claimableNow  = vested > withdrawn ? vested - withdrawn : 0n;
-    const lockedAmount  = total > vested     ? total  - vested    : 0n;
-    const isFullyVested = vested >= total;
+    const isFullyVested = leaf?.revoked ? true : vested >= total;
 
     // Use a unique ID: protocol-chain-vestingAddr-walletAddr
     // (multiple wallets can be recipients of the same contract)
@@ -369,7 +455,7 @@ async function fetchForChain(
       endTime,
       cliffTime:       null, // TF V3 uses percentageOnStart instead of a cliff date
       isFullyVested,
-      nextUnlockTime:  nextUnlockTime(isFullyVested, nowSec, null, endTime),
+      nextUnlockTime:  isFullyVested ? null : teamFinanceNextUnlock(startTime, endTime, cadence, nowSec),
       cancelable:      v.revocable ?? undefined,
       shape:           "linear",
       claimEvents:     claimEventsMap.get(claimKey),
