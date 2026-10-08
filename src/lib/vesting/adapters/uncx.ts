@@ -7,6 +7,7 @@ import {
   nextUnlockTime,
 } from "../types";
 import { resolveSubgraphUrl } from "../graph";
+import { makeFallbackClient } from "../rpc";
 
 // ─── In-app claim contracts (UNCX TokenVesting V3) ───────────────────────────
 // The per-chain TokenVesting deployment whose `withdraw(uint256 lockID,
@@ -129,6 +130,83 @@ interface RawLock {
   owner:           { id: string };
 }
 
+// ─── On-chain lock state ───────────────────────────────────────────────────────
+//
+// The subgraph is wrong after transferLockOwnership / splitLock. On-chain both
+// create a NEW lock id and empty the old one, but the subgraph keeps the old
+// entity frozen with its pre-transfer shares (so the previous owner still sees
+// a full balance) and stamps the new entity's `lockID` with the PARENT's id (so
+// an in-app claim would call withdraw(parentId) and revert "OWNER"). Measured
+// 2026-10-06: 2,628 such phantom finished locks across ETH/BSC/Base.
+//
+// So: take the real id from the entity id (locker address + lock id), and
+// confirm owner and amounts with the contract's own getLock(), which returns
+// TOKEN amounts (the contract's share conversion), not raw shares.
+
+const UNCX_LOCKER_ABI = [{
+  type: "function", name: "getLock", stateMutability: "view",
+  inputs:  [{ name: "lockId", type: "uint256" }],
+  outputs: [
+    { name: "lockID",           type: "uint256" },
+    { name: "tokenAddress",     type: "address" },
+    { name: "tokensDeposited",  type: "uint256" },
+    { name: "tokensWithdrawn",  type: "uint256" },
+    { name: "sharesDeposited",  type: "uint256" },
+    { name: "sharesWithdrawn",  type: "uint256" },
+    { name: "startEmission",    type: "uint256" },
+    { name: "endEmission",      type: "uint256" },
+    { name: "owner",            type: "address" },
+    { name: "condition",        type: "address" },
+  ],
+}] as const;
+
+interface OnChainLock {
+  tokensDeposited: bigint;
+  tokensWithdrawn: bigint;
+  startEmission:   number;
+  endEmission:     number;
+  owner:           string;
+}
+
+/** The real lock id: the subgraph entity id is `${lockerAddress}${lockId}`. */
+export function uncxLockIdFromEntity(entityId: string, fallback: string): string {
+  const suffix = /^0x[0-9a-fA-F]{40}(\d+)$/.exec(entityId)?.[1];
+  return suffix ?? fallback;
+}
+
+async function readLocks(chainId: SupportedChainId, ids: string[]): Promise<Map<string, OnChainLock> | null> {
+  const locker = UNCX_CLAIM_CONTRACTS[chainId];
+  const client = locker ? makeFallbackClient(chainId, { batch: true }) : undefined;
+  if (!locker || !client || ids.length === 0) return null;
+  const out = new Map<string, OnChainLock>();
+  const PAGE = 50; // keep each multicall response under free-RPC caps
+  for (let i = 0; i < ids.length; i += PAGE) {
+    const page = ids.slice(i, i + PAGE);
+    try {
+      const res = await client.multicall({
+        contracts: page.map((id) => ({
+          address: locker as `0x${string}`, abi: UNCX_LOCKER_ABI, functionName: "getLock" as const, args: [BigInt(id)] as const,
+        })),
+        allowFailure: true,
+      });
+      page.forEach((id, j) => {
+        const r = res[j];
+        if (r?.status !== "success") return;
+        const v = r.result as readonly [bigint, string, bigint, bigint, bigint, bigint, bigint, bigint, string, string];
+        out.set(id, {
+          tokensDeposited: v[2], tokensWithdrawn: v[3],
+          startEmission: Number(v[6]), endEmission: Number(v[7]),
+          owner: v[8].toLowerCase(),
+        });
+      });
+    } catch (err) {
+      console.warn(`[uncx] getLock read failed (chain ${chainId}, page ${i}):`, err);
+      return null; // fall back to subgraph values rather than show a partial set
+    }
+  }
+  return out;
+}
+
 // ─── Per-chain fetcher ─────────────────────────────────────────────────────────
 async function fetchForChain(
   wallets: string[],
@@ -180,13 +258,25 @@ async function fetchForChain(
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
+  const wanted = new Set(lowercased);
 
-  return all.map((raw): VestingStream => {
+  // Real lock ids, de-duplicated (a split can surface the same id twice).
+  const withIds = all.map((raw) => ({ raw, lockId: uncxLockIdFromEntity(raw.id, raw.lockID) }));
+  const seen = new Set<string>();
+  const unique = withIds.filter(({ lockId }) => (seen.has(lockId) ? false : (seen.add(lockId), true)));
+  const onChain = await readLocks(chainId, unique.map((u) => u.lockId));
+
+  return unique.flatMap(({ raw, lockId }): VestingStream[] => {
+    const live = onChain?.get(lockId);
+    // Drop ghosts: the lock now belongs to someone else (transferred/split away).
+    if (onChain && (!live || !wanted.has(live.owner))) return [];
+
     // startEmission is 0 on pure-cliff locks — fall back to lockDate
-    const startTime = Number(raw.startEmission) || Number(raw.lockDate);
-    const endTime   = Number(raw.endEmission);
-    const total     = BigInt(raw.sharesDeposited);
-    const withdrawn = BigInt(raw.sharesWithdrawn);
+    const startTime = (live ? live.startEmission : Number(raw.startEmission)) || Number(raw.lockDate);
+    const endTime   = live ? live.endEmission : Number(raw.endEmission);
+    // On-chain values are token amounts; the subgraph fallback is shares.
+    const total     = live ? live.tokensDeposited : BigInt(raw.sharesDeposited);
+    const withdrawn = live ? live.tokensWithdrawn : BigInt(raw.sharesWithdrawn);
     const isCliff   = raw.releaseSchedule === "Cliff";
 
     let claimableNow: bigint;
@@ -209,12 +299,12 @@ async function fetchForChain(
       isFullyVested  = computed.isFullyVested;
     }
 
-    return {
-      id:              `uncx-${chainId}-${raw.lockID}`,
+    return [{
+      id:              `uncx-${chainId}-${lockId}`,
       protocol:        "uncx",
       category:        "vesting",
       chainId,
-      recipient:       raw.owner.id,
+      recipient:       live ? live.owner : raw.owner.id,
       tokenAddress:    raw.token.id,
       tokenSymbol:     raw.token.symbol,
       tokenDecimals:   raw.token.decimals,
@@ -231,8 +321,8 @@ async function fetchForChain(
       // contract; shares are read on-device at claim time. Only set where we
       // have a verified contract (ETH/BSC/Base) — absence ⇒ web-claim fallback.
       claimContract:   UNCX_CLAIM_CONTRACTS[chainId] ?? null,
-      claimNativeId:   raw.lockID,
-    };
+      claimNativeId:   lockId,
+    }];
   });
 }
 
