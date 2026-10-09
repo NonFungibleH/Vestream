@@ -165,6 +165,13 @@ const nextConfig: NextConfig = {
         destination: "/resources",
         permanent: true,
       },
+      // Duplicate protocol articles merged 2026-10-09 so each protocol has ONE
+      // page competing for its name in search. Unique FAQ answers were folded
+      // into the kept article; permanent redirects carry over any links.
+      { source: "/resources/what-is-uncx-token-locker-and-vesting",    destination: "/resources/uncx-token-lockers-and-vesting",            permanent: true },
+      { source: "/resources/what-is-sablier-token-streaming-vesting",  destination: "/resources/sablier-token-streaming-vesting-explained", permanent: true },
+      { source: "/resources/what-is-streamflow-solana-token-vesting",  destination: "/resources/streamflow-solana-vesting",                 permanent: true },
+      { source: "/resources/how-to-track-team-finance-unlocks",        destination: "/resources/how-to-track-team-finance-vesting",        permanent: true },
     ];
   },
   // /unlocks is now the canonical home of the date-windowed unlock calendar

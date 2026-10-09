@@ -24,7 +24,7 @@ export const PROTOCOL_GUIDE_SLUGS: Record<string, GuideSlugs> = {
   "sablier":      { explainer: "sablier-token-streaming-vesting-explained", howTo: "how-to-track-sablier-unlocks" },
   "sablier-flow": { explainer: "sablier-token-streaming-vesting-explained" },
   "hedgey":       { explainer: "hedgey-nft-vesting-plans-explained",        howTo: "how-to-track-hedgey-unlocks" },
-  "team-finance": { explainer: "how-to-track-team-finance-vesting",         howTo: "how-to-track-team-finance-unlocks" },
+  "team-finance": { explainer: "how-to-track-team-finance-vesting" },
   "uncx":         { explainer: "uncx-token-lockers-and-vesting" },
   "unvest":       { explainer: "what-is-unvest-token-vesting" },
   "superfluid":   { explainer: "superfluid-cliff-and-streaming-vesting" },

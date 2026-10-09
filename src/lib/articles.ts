@@ -30,10 +30,10 @@ const articles: Article[] = [
   //    "how to track team finance vesting") — neutral, helps TF recipients ──────
   {
     slug:        "how-to-track-team-finance-vesting",
-    title:       "How to Track Team Finance Vesting (2026)",
+    title:       "Team Finance Vesting & Token Lock: How to Track Your Unlocks (2026)",
     excerpt:     "Team Finance vesting is on-chain but gives recipients no personal dashboard, so finding your own unlock schedule is hard. Here's how Team Finance vesting works and three ways to track it, including a free wallet scan that reconstructs your full schedule in seconds.",
     publishedAt: "2026-08-28",
-    updatedAt:   "2026-08-28",
+    updatedAt:   "2026-10-09",
     readingTime: "6 min read",
     category:    "Guides",
     tags:        ["Team Finance", "team finance vesting", "vesting tracker", "how to track vesting", "token unlock"],
@@ -59,25 +59,26 @@ const articles: Article[] = [
       { type: "h3", text: "2. A block explorer (Etherscan / BscScan)" },
       { type: "p", html: "You can read the vesting contract directly on a block explorer and inspect its state. This works, but it's technical, you need the correct contract address, you have to decode the schedule fields yourself, and merkle-distributed plans may not expose your allocation at all until you claim." },
       { type: "h3", text: "3. A multi-protocol vesting tracker (the easy way)" },
-      { type: "p", html: "The fastest route is a tracker that already decodes Team Finance's contracts. <a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting across Ethereum, BNB Chain and Polygon, paste your wallet address and it reconstructs your full schedule: what's locked, what's claimable now, and every upcoming unlock date. No sign-up, no wallet connection." },
+      { type: "p", html: "The fastest route is a tracker that already decodes Team Finance's contracts. <a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting across Ethereum, BNB Chain, Polygon, Avalanche and zkSync Era, paste your wallet address and it reconstructs your full schedule: what's locked, what's claimable now, and every upcoming unlock date. No sign-up, no wallet connection." },
 
       { type: "h2", text: "How to track your Team Finance vesting on Vestream" },
       { type: "ol", items: [
         "Open <a href=\"/find-vestings\">the free wallet scanner</a>.",
         "Paste the wallet address that holds (or will receive) the vesting, read-only, EVM or Solana.",
-        "Vestream scans Team Finance plus 9 other vesting protocols and lists every position it finds.",
+        "Vestream scans Team Finance plus 12 other vesting protocols and lists every position it finds.",
         "Open the token to see the full unlock schedule, amounts and next unlock date, and turn on an alert so you're notified before each cliff.",
       ] },
       { type: "p", html: "You can also browse Team Finance activity directly: the <a href=\"/protocols/team-finance\">Team Finance unlock tracker</a> shows live locked value and stats, and the <a href=\"/protocols/team-finance/unlocks\">Team Finance unlock calendar</a> lists upcoming unlocks across every token vested on the protocol." },
-      { type: "p", html: "Want the deeper, more technical walkthrough, including how to handle merkle-distributed plans? Read <a href=\"/resources/how-to-track-team-finance-unlocks\">how to track Team Finance token unlocks</a>." },
 
       { type: "h2", text: "Team Finance vesting FAQ" },
       { type: "faq", items: [
         { q: "Does Team Finance show my vesting schedule?", a: "Not directly for recipients. The Team Finance app is designed for the founder who creates the plan. To see your own schedule as a recipient, read the contract on a block explorer or use a tracker like Vestream that decodes it and shows your locked balance, claimable amount and next unlock date." },
         { q: "How do I find my Team Finance unlock date?", a: "Paste your wallet into Vestream's free scanner, it reconstructs your Team Finance schedule and shows the exact date and amount of each upcoming unlock. Alternatively, inspect the vesting contract on Etherscan or BscScan, though merkle-distributed plans may not expose your allocation until you claim." },
         { q: "Is Team Finance vesting on-chain and safe?", a: "Yes. Team Finance vesting runs on audited, non-custodial smart contracts, the release schedule is enforced by code, and no one can withdraw early or change the terms. Tracking your schedule just reads that on-chain data; it doesn't affect the security of the vesting itself." },
-        { q: "Which chains does Team Finance vesting run on?", a: "Team Finance supports vesting on several EVM chains including Ethereum, BNB Chain and Polygon. Vestream tracks Team Finance vesting across these chains alongside 9 other vesting protocols." },
+        { q: "Which chains does Team Finance vesting run on?", a: "Team Finance supports vesting on several EVM chains. Vestream tracks Team Finance vesting on Ethereum, BNB Chain, Polygon, Avalanche and zkSync Era, alongside 12 other vesting protocols." },
         { q: "How do I get alerted before a Team Finance unlock?", a: "Track the wallet on Vestream and enable unlock alerts, you'll get a push or email notification before each cliff or scheduled release, so you never miss a claim or get caught off guard by new supply hitting the market." },
+        { q: "Why can't I see my Team Finance vesting on Etherscan?", a: "Many Team Finance vestings are merkle-distributed: recipients are committed as a single merkle root rather than one on-chain record each, so there's often no per-wallet entry to read until you claim. A tracker that resolves the data per wallet, like Vestream, surfaces it for you." },
+        { q: "Do I need to connect my wallet?", a: "No. Tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
       ] },
 
       { type: "p", html: "Team Finance is one of 11+ vesting protocols Vestream tracks. To see every unlock across all of them, Sablier, Hedgey, UNCX, Streamflow and more, start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
@@ -171,42 +172,6 @@ const articles: Article[] = [
   },
 
   // ── SEO article: Streamflow (targets "streamflow", Solana vesting) ───────────
-  {
-    slug:        "what-is-streamflow-solana-token-vesting",
-    title:       "What Is Streamflow? Solana Token Vesting Explained",
-    excerpt:     "Streamflow is the leading token vesting and distribution platform on Solana. Here's how Streamflow vesting works, what it's used for, and how to track any Streamflow vesting schedule.",
-    publishedAt: "2026-08-07",
-    updatedAt:   "2026-08-07",
-    readingTime: "6 min read",
-    category:    "Protocols",
-    tags:        ["Streamflow", "Solana vesting", "token vesting", "token streaming", "token distribution"],
-    content: [
-      { type: "p", html: "On Solana, when a project vests team tokens, distributes an airdrop, or runs token payments, <strong>Streamflow</strong> is very often the rails underneath it. It's the leading <strong>token vesting and distribution</strong> platform in the Solana ecosystem. This guide explains what Streamflow does and how to track a Streamflow vesting schedule." },
-
-      { type: "h2", text: "What is Streamflow?" },
-      { type: "p", html: "Streamflow provides on-chain infrastructure for distributing SPL tokens over time on Solana, vesting, token lockups, streaming payments, and airdrop distribution. Recipients' tokens unlock according to a schedule (cliff and/or linear), enforced by Solana programs rather than a team's discretion." },
-      { type: "callout", emoji: "◎", title: "In one line", body: "Streamflow = Solana's go-to vesting and token-distribution layer, cliffs, linear release, streaming payments, and airdrops, all on-chain." },
-
-      { type: "h2", text: "What Streamflow is used for" },
-      { type: "ul", items: [
-        "<strong>Team & investor vesting:</strong> Locking founder/investor allocations with a cliff + linear release.",
-        "<strong>Airdrop distribution:</strong> Distributing community allocations, sometimes with vesting to reduce immediate sell-off.",
-        "<strong>Streaming payments:</strong> Ongoing payroll/grants that release continuously.",
-      ] },
-
-      { type: "h2", text: "Streamflow vs EVM vesting protocols" },
-      { type: "p", html: "Streamflow plays the role on Solana that protocols like Sablier, Hedgey and UNCX play on EVM chains, the difference is the ecosystem. Because Solana uses a different address format and program model, Solana vesting positions are tracked separately from EVM ones, so a genuinely cross-chain tracker needs to cover both." },
-
-      { type: "h2", text: "How to track Streamflow vesting" },
-      { type: "p", html: "To see Streamflow vesting for a Solana wallet or token, including claimable vs locked amounts and the schedule, use the <a href=\"/protocols/streamflow\">Streamflow unlock tracker on Vestream</a>, or paste a Solana address into the <a href=\"/find-vestings\">free wallet scanner</a>." },
-
-      { type: "faq", items: [
-        { q: "What is Streamflow used for?", a: "Streamflow is Solana's leading token vesting and distribution platform, used for team/investor vesting, airdrops, token lockups, and streaming payments, all enforced on-chain." },
-        { q: "Is Streamflow only on Solana?", a: "Streamflow is best known as the Solana vesting standard. When tracking a token's total vesting, remember Solana positions are separate from EVM ones, you need a tracker that covers both ecosystems." },
-        { q: "How do I track a Streamflow vesting schedule?", a: "Use a cross-chain tracker like Vestream, which indexes Streamflow on Solana and shows claimable vs locked amounts and upcoming unlocks for any wallet, free." },
-      ] },
-    ],
-  },
 
   // ── SEO article: KAITO unlock (targets "kaito token unlock schedule / august 2026") ─
   {
@@ -424,96 +389,8 @@ const articles: Article[] = [
       { type: "ul", items: ["<a href=\"https://www.unvest.io/features/token-vesting\" rel=\"noopener\" target=\"_blank\">Unvest's token vesting page</a>: features, pricing and supported networks", "<a href=\"/protocols/unvest\">Vestream Unvest protocol page</a>: live on-chain figures"] },
     ],
   },
-  {
-    slug:        "what-is-sablier-token-streaming-vesting",
-    title:       "What Is Sablier? Real-Time Token Streaming & Vesting",
-    excerpt:     "Sablier pioneered real-time \"token streaming\", vesting that releases tokens by the second instead of in monthly chunks. Here's how Sablier works, where it's used, and how to track any Sablier stream.",
-    publishedAt: "2026-08-09",
-    updatedAt:   "2026-08-09",
-    readingTime: "7 min read",
-    category:    "Protocols",
-    tags:        ["Sablier", "token streaming", "streaming payments", "token vesting", "vesting stream"],
-    content: [
-      { type: "p", html: "<strong>Sablier</strong> is the protocol that popularised <strong>real-time token streaming</strong>, the idea that instead of unlocking tokens in monthly steps, you can release them continuously, by the second. If you've heard the phrase \"money streaming\" in crypto, Sablier is where it started. This guide explains what Sablier is, how its vesting works, and how to see any Sablier stream's live schedule." },
-
-      { type: "h2", text: "What is Sablier?" },
-      { type: "p", html: "Sablier is an on-chain protocol for distributing ERC-20 tokens over time. Rather than a recipient claiming a lump sum at each unlock, tokens accrue to them <strong>every second</strong> and can be withdrawn at any point. It's used for token vesting, payroll, grants, and airdrops, anywhere you want a smooth, verifiable, continuous release instead of cliff-and-chunk unlocks." },
-      { type: "callout", emoji: "💧", title: "The core idea", body: "Sablier streams tokens by the second. At any moment, a recipient's 'claimable' balance is exactly what has streamed so far, no waiting for a monthly unlock date." },
-
-      { type: "h2", text: "How Sablier vesting works: Lockup vs Flow" },
-      { type: "p", html: "Sablier has two main flavours of stream:" },
-      { type: "ul", items: [
-        "<strong>Lockup (vesting):</strong> A fixed-total stream, often with a cliff, then linear or tranched release over a set duration. This is the classic vesting use case (team/investor allocations).",
-        "<strong>Flow (open-ended streaming):</strong> A continuous stream with no fixed end, used for ongoing payments like salaries and grants.",
-      ] },
-      { type: "p", html: "For token holders assessing unlock pressure, the <strong>Lockup</strong> streams are the vesting positions that matter, they define how much of a token's supply is still locked and how fast it releases." },
-
-      { type: "h2", text: "Which chains does Sablier support?" },
-      { type: "p", html: "Sablier is deployed across many EVM networks, including <strong>Ethereum, BNB Chain, Polygon, Base, Arbitrum and Optimism</strong>. A single project can run Sablier streams on several chains at once, which is why a cross-chain view helps when you're totalling a token's real vesting." },
-
-      { type: "h2", text: "Sablier vs step-based vesting" },
-      { type: "table", headers: ["", "Sablier (streaming)", "Step/tranche vesting"], rows: [
-        ["Release cadence", "Per second (continuous)", "At discrete unlock dates"],
-        ["Claimable balance", "Grows smoothly every block", "Jumps at each unlock"],
-        ["Best for", "Payroll, grants, smooth vesting", "Cliff-heavy investor/team schedules"],
-        ["Market impact", "Spread out, less spiky", "Concentrated on unlock days"],
-      ] },
-
-      { type: "h2", text: "How to track a Sablier stream or unlock" },
-      { type: "p", html: "To see live Sablier vesting for a wallet or token, including how much has streamed, what's still locked, and the schedule, use the <a href=\"/protocols/sablier\">Sablier unlock tracker on Vestream</a>, or paste any address into the <a href=\"/find-vestings\">free wallet scanner</a>. No sign-up required." },
-
-      { type: "faq", items: [
-        { q: "What does Sablier do?", a: "Sablier streams ERC-20 tokens over time, releasing them by the second rather than in lump-sum unlocks. It's used for token vesting, payroll, grants, and airdrops on-chain." },
-        { q: "Is Sablier a payment or a vesting tool?", a: "Both. Its Lockup product handles fixed-total vesting (with cliffs), while its Flow product handles open-ended streaming payments like salaries." },
-        { q: "How do I see my Sablier stream's schedule?", a: "Use a cross-protocol tracker like Vestream, which indexes Sablier on-chain and shows claimable vs locked amounts, the release schedule, and alerts, for any wallet, free." },
-      ] },
-    ],
-  },
 
   // ── SEO article: UNCX (targets "uncx", "uncx locker", "uncx token") ──────────
-  {
-    slug:        "what-is-uncx-token-locker-and-vesting",
-    title:       "What Is UNCX? Token Locker & Vesting Platform (2026)",
-    excerpt:     "UNCX Network (formerly Unicrypt) is one of the most widely used token lockers and vesting platforms in DeFi. Here's how UNCX locking and vesting work, which chains it supports, and how to track any UNCX vesting schedule.",
-    publishedAt: "2026-08-12",
-    updatedAt:   "2026-08-12",
-    readingTime: "8 min read",
-    category:    "Protocols",
-    tags:        ["UNCX", "UNCX locker", "UNCX Network", "token locker", "liquidity lock", "token vesting"],
-    content: [
-      { type: "p", html: "If you have ever bought a newly launched token, you have almost certainly relied on <strong>UNCX</strong> without knowing it. UNCX Network, formerly Unicrypt, is one of the oldest and most widely used <strong>token lockers</strong> and <strong>vesting platforms</strong> in DeFi. When a project says its liquidity is \"locked\" or its team tokens are \"vested,\" UNCX is frequently the contract enforcing it." },
-      { type: "p", html: "This guide explains what UNCX is, the difference between its <strong>locker</strong> and <strong>vesting</strong> products, which chains it runs on, and, importantly, how to see the live unlock schedule for any UNCX vesting position." },
-
-      { type: "h2", text: "What is UNCX (UNCX Network)?" },
-      { type: "p", html: "UNCX is an on-chain infrastructure provider that lets token projects <strong>lock</strong> and <strong>vest</strong> tokens using audited smart contracts. Rather than trusting a team's promise not to sell, holders can verify on-chain that liquidity or allocations are locked for a defined period. It launched as Unicrypt in 2020 and rebranded to UNCX Network as it expanded across chains." },
-      { type: "callout", emoji: "🔒", title: "In one line", body: "UNCX = audited smart contracts that lock LP tokens and vest team/investor allocations, so anyone can verify a project's lockups on-chain instead of taking the team's word for it." },
-
-      { type: "h2", text: "UNCX locker vs UNCX vesting, what's the difference?" },
-      { type: "p", html: "People search for the \"UNCX locker\" and \"UNCX vesting\" as if they're one thing, but they solve two different problems:" },
-      { type: "ul", items: [
-        "<strong>Liquidity locker:</strong> Locks a project's liquidity-pool (LP) tokens for a set time so the team can't pull liquidity (a \"rug pull\"). This is the classic \"liquidity locked via UNCX\" badge you see on launchpads and DEX tools.",
-        "<strong>Token vesting:</strong> Releases a team, investor, or advisor allocation gradually on a schedule (cliff + linear or stepped tranches), the same mechanics as any vesting contract, enforced on-chain.",
-      ] },
-      { type: "p", html: "For token holders trying to understand future sell pressure, the <strong>vesting</strong> side is what matters, it tells you how many tokens unlock, and when." },
-
-      { type: "h2", text: "Which chains does UNCX support?" },
-      { type: "p", html: "UNCX is multi-chain. Its locker and vesting products are deployed across major EVM networks including <strong>Ethereum, BNB Chain, Polygon and Base</strong>, among others. Because the contracts are chain-specific, a single token can have separate UNCX locks on each chain it lives on, which is why a cross-chain view matters when you're assessing a token's real unlock schedule." },
-
-      { type: "h2", text: "How do you track a UNCX vesting or unlock schedule?" },
-      { type: "p", html: "UNCX's own dashboard shows individual locks, but it doesn't give you a wallet-level or cross-protocol view. To see every UNCX vesting position for a wallet or token, plus the upcoming unlock dates and amounts, you can use a dedicated tracker:" },
-      { type: "ol", items: [
-        "Open the <a href=\"/protocols/uncx\">UNCX unlock tracker on Vestream</a> to see live UNCX vesting activity, locked value, and upcoming unlocks.",
-        "Or paste any wallet address into the <a href=\"/find-vestings\">free wallet scanner</a>, it finds UNCX vestings (and every other major protocol) with no sign-up.",
-        "Set an alert so you're notified before each UNCX unlock cliff, rather than finding out after the tokens hit the market.",
-      ] },
-
-      { type: "faq", items: [
-        { q: "Is UNCX the same as Unicrypt?", a: "Yes. UNCX Network is the rebranded name for Unicrypt, which launched in 2020. The contracts and products are the same lineage." },
-        { q: "Does 'liquidity locked on UNCX' mean a token is safe?", a: "It reduces one specific risk, the team pulling liquidity, but it is not a guarantee of safety. Always check the lock duration, how much of the supply is locked, and the team/investor vesting schedule, not just whether a lock exists." },
-        { q: "How can I see when UNCX tokens unlock?", a: "Use a cross-protocol unlock tracker. Vestream indexes UNCX vesting on-chain and shows the upcoming unlock dates and amounts per token and per wallet, with free alerts before each cliff." },
-      ] },
-    ],
-  },
 
   // ── SEO article: Hedgey (targets "hedgey", "hedgey pricing") ─────────────────
   {
@@ -3591,10 +3468,10 @@ const articles: Article[] = [
   // ── Article 17 ───────────────────────────────────────────────────────────────
   {
     slug:        "sablier-token-streaming-vesting-explained",
-    title:       "Sablier: Token Streaming Vesting Explained",
+    title:       "Sablier Token Vesting & Streaming: How It Works and How to Track It (2026)",
     excerpt:     "Sablier pioneered real-time, per-second token streaming on Ethereum. Here is how it works, where it runs, and how to track Sablier streams on Vestream.",
     publishedAt: "2026-04-27",
-    updatedAt:   "2026-04-27",
+    updatedAt:   "2026-10-09",
     readingTime: "9 min read",
     category:    "Guides",
     tags:        ["sablier", "token streaming", "vesting", "ethereum", "defi"],
@@ -3727,7 +3604,8 @@ const articles: Article[] = [
           { q: "Can a Sablier stream be cancelled?", a: "Only if the sender enabled cancelability at creation. Many vesting deployments deliberately set cancelability to false so the recipient cannot have their stream pulled. Check the stream's metadata before assuming either way." },
           { q: "What happens if I never claim?", a: "Nothing bad. The tokens remain in the contract and continue to accrue against your claimable balance. There is no expiry – you can claim the full amount at any point after the stream ends." },
           { q: "Does Sablier support tokens with transfer fees?", a: "Some token types (rebasing, transfer-tax) interact poorly with streaming math. Sablier's docs flag the unsupported types – most vanilla ERC-20s work without issue." },
-        ],
+        { q: "Is Sablier a payment or a vesting tool?", a: "Both. Its Lockup product handles fixed-total vesting (with cliffs), while its Flow product handles open-ended streaming payments like salaries." },
+      ],
       },
     ],
   },
@@ -3867,10 +3745,10 @@ const articles: Article[] = [
   // ── Article 19 ───────────────────────────────────────────────────────────────
   {
     slug:        "uncx-token-lockers-and-vesting",
-    title:       "UNCX: Token Lockers and Vesting Explained",
+    title:       "UNCX Token Locker & Vesting: How It Works and How to Track It (2026)",
     excerpt:     "UNCX is best known for LP locks but also runs two vesting products: TokenVesting v3 and the newer VestingManager. Here is how to tell them apart and read a UNCX vest.",
     publishedAt: "2026-04-27",
-    updatedAt:   "2026-04-27",
+    updatedAt:   "2026-10-09",
     readingTime: "10 min read",
     category:    "Guides",
     tags:        ["uncx", "token locker", "vesting", "liquidity", "guides"],
@@ -4008,7 +3886,10 @@ const articles: Article[] = [
           { q: "Can a UNCX vest be cancelled by the project?", a: "TokenVesting v3 vests are not unilaterally cancellable by the project once funded. Always verify on a per-deployment basis though – admin keys can vary." },
           { q: "What is the difference between UNCX TokenVesting v3 and VestingManager?", a: "TokenVesting v3 is the older, single-contract-per-deployment model. VestingManager is the newer architecture that handles many recipients more efficiently. Functionally they behave the same from a recipient's perspective." },
           { q: "Does UNCX support per-second streaming?", a: "No – UNCX vests use linear release between startEmission and endEmission, calculated on each claim. Effectively similar to streaming but you only realise the unlock when you withdraw." },
-        ],
+        { q: "Is UNCX the same as Unicrypt?", a: "Yes. UNCX Network is the rebranded name for Unicrypt, which launched in 2020. The contracts and products are the same lineage." },
+        { q: "Does 'liquidity locked on UNCX' mean a token is safe?", a: "It reduces one specific risk, the team pulling liquidity, but it is not a guarantee of safety. Always check the lock duration, how much of the supply is locked, and the team and investor vesting schedule, not just whether a lock exists." },
+        { q: "How can I see when UNCX tokens unlock?", a: "Use a cross-protocol unlock tracker. Vestream reads UNCX vesting on-chain and shows the upcoming unlock dates and amounts per token and per wallet, with alerts before each unlock." },
+      ],
       },
     ],
   },
@@ -4016,10 +3897,10 @@ const articles: Article[] = [
   // ── Article 21 ───────────────────────────────────────────────────────────────
   {
     slug:        "streamflow-solana-vesting",
-    title:       "Streamflow on Solana: Token Vesting in the SVM Ecosystem",
+    title:       "Streamflow Token Vesting & Lock on Solana: How It Works (2026)",
     excerpt:     "Streamflow is the dominant vesting protocol on Solana. Here is how it differs from EVM equivalents and how Vestream tracks SPL-token vesting.",
     publishedAt: "2026-04-27",
-    updatedAt:   "2026-04-27",
+    updatedAt:   "2026-10-09",
     readingTime: "9 min read",
     category:    "Guides",
     tags:        ["streamflow", "solana", "spl tokens", "vesting", "guides"],
@@ -4143,7 +4024,9 @@ const articles: Article[] = [
           { q: "Can a Streamflow stream be cancelled?", a: "Yes, if the stream was configured as cancelable at creation. The sender can call cancel and reclaim unvested tokens. Many vesting deployments deliberately set cancelable to false." },
           { q: "What's the difference between Streamflow's vesting and payments products?", a: "Vesting is finite, with a defined total amount and end date. Payments streams are open-ended, designed for payroll-style ongoing flows. Vestream surfaces the vesting category." },
           { q: "Why isn't Streamflow on EVM?", a: "Streamflow is a Solana-native protocol that takes advantage of Solana's account model and low fees. The EVM equivalent for similar UX is Sablier or Superfluid." },
-        ],
+        { q: "What is Streamflow used for?", a: "Streamflow is a Solana token vesting and distribution platform, used for team and investor vesting, airdrops, token lockups and streaming payments, all enforced on-chain." },
+        { q: "How do I track a Streamflow vesting schedule?", a: "Use a cross-chain tracker like Vestream, which reads Streamflow on Solana and shows claimable and locked amounts and upcoming unlocks for any wallet." },
+      ],
       },
     ],
   },
@@ -5223,74 +5106,6 @@ const articles: Article[] = [
   },
 
   // ── How-to: track Team Finance unlocks ───────────────────────────────────────
-  {
-    slug:        "how-to-track-team-finance-unlocks",
-    title:       "How to Track Team Finance Token Unlocks (2026)",
-    excerpt:     "Team Finance vesting is often merkle-distributed, which makes your unlock schedule genuinely hard to find. Here's how to see your Team Finance unlocks and get alerted before each one.",
-    publishedAt: "2026-07-04",
-    updatedAt:   "2026-07-04",
-    readingTime: "6 min read",
-    category:    "Guides",
-    tags:        ["team finance", "token unlock", "vesting tracker", "how to track vesting", "merkle vesting"],
-    content: [
-      {
-        type: "p",
-        html: "<strong>Team Finance</strong> is a long-standing tool for locking and vesting team and treasury tokens with transparent on-chain proof, the standard many launchpad-era projects rely on. But tracking <em>your own</em> Team Finance unlocks is harder than with most protocols, for one specific reason: many Team Finance vestings are <strong>merkle-distributed</strong>. This guide explains why that matters and how to see your unlocks anyway.",
-      },
-      { type: "h2", text: "Why Team Finance unlocks are hard to track" },
-      {
-        type: "p",
-        html: "In a merkle distribution, the full list of recipients and amounts is committed on-chain as a single <em>merkle root</em>, a cryptographic fingerprint, rather than as an individual on-chain record per person. Your allocation is a <em>leaf</em> in that tree. The upside is efficiency; the downside is that until you claim, there's often no obvious per-wallet on-chain entry to read, so a normal block-explorer lookup won't surface your schedule. That's why holders frequently don't know when their next Team Finance unlock is.",
-      },
-      { type: "h2", text: "Method 1: The Team Finance app (manual)" },
-      {
-        type: "ol",
-        items: [
-          "Go to <a href=\"https://team.finance\" rel=\"nofollow\">team.finance</a> and connect the wallet that received the vesting.",
-          "Find the vesting associated with your wallet and its claim schedule.",
-          "Claim unlocked tokens when they're available.",
-        ],
-      },
-      {
-        type: "p",
-        html: "This is the canonical source, but it only covers Team Finance, offers <strong>no advance alerts</strong>, and requires you to remember to check a dapp that you might visit only a few times a year, exactly the pattern that leads to missed unlocks.",
-      },
-      { type: "h2", text: "Method 2: Automated tracking with alerts (recommended)" },
-      {
-        type: "p",
-        html: "<a href=\"/find-vestings\">Vestream</a> indexes Team Finance vesting directly from its on-chain data across Ethereum, BNB Chain, and Polygon, and resolves per-wallet schedules so you can see your own unlocks without hunting through a claim portal. Paste your address, see the unlock calendar alongside any other vesting on that wallet, and get an email or push alert before each unlock. It's read-only, no wallet connection required to track.",
-      },
-      {
-        type: "table",
-        headers: ["", "Team Finance app", "Block explorer", "Vestream"],
-        rows: [
-          ["Surfaces your unlock schedule", "Yes (connect wallet)", "Often no (merkle)", "Yes"],
-          ["Alerts before an unlock", "No", "No", "Email + push"],
-          ["Other protocols on the same wallet", "No", "No", "Yes (11 protocols)"],
-          ["Wallet connection required", "Yes", "No", "No, read-only"],
-        ],
-      },
-      {
-        type: "callout",
-        emoji: "🧩",
-        title: "Merkle vesting, made visible",
-        body:  "Because merkle-distributed vesting hides your schedule from ordinary lookups, an indexer that resolves per-wallet data is the practical way to see Team Finance unlocks, and to be reminded before they happen.",
-      },
-      {
-        type: "faq",
-        items: [
-          { q: "Why can't I see my Team Finance vesting on Etherscan?", a: "Many Team Finance vestings are merkle-distributed: recipients are committed as a single merkle root rather than one on-chain record each, so there's often no per-wallet entry to read until you claim. A tracker that indexes and resolves the data per wallet (like Vestream) surfaces it for you." },
-          { q: "How do I get alerted before a Team Finance unlock?", a: "The Team Finance app doesn't send reminders. Paste your wallet into Vestream, turn on alerts, and you'll get an email or push notification before each Team Finance unlock." },
-          { q: "Which chains does Team Finance tracking cover?", a: "Vestream indexes Team Finance vesting on Ethereum, BNB Chain, and Polygon." },
-          { q: "Do I need to connect my wallet?", a: "No, tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
-        ],
-      },
-      {
-        type: "p",
-        html: "See live Team Finance coverage and stats on the <a href=\"/protocols/team-finance\">Team Finance protocol page</a>, or learn the fundamentals in <a href=\"/resources/what-is-token-vesting\">What is token vesting?</a>",
-      },
-    ],
-  },
 
 ];
 

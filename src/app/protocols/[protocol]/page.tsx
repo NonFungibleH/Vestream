@@ -59,6 +59,7 @@ import { PROTOCOL_DEFAULT_CATEGORY } from "@vestream/shared";
 import { getStreamingStreams, type StreamingRow } from "@/lib/vesting/explorer-queries";
 import { isLinkableTokenAddress } from "@/lib/chain-links";
 import { protocolGuides } from "@/lib/protocol-guides";
+import { UNCLAIMED_FINDINGS } from "@/lib/unclaimed-research";
 import { TESTNET_CHAIN_IDS } from "@vestream/shared";
 import { normaliseAddress } from "@/lib/address-validation";
 
@@ -465,7 +466,7 @@ export default async function ProtocolLandingPage(
   const links = protocolLinks(meta.slug);
   const sameAs = [
     meta.officialUrl,
-    links.twitter, links.discord, links.telegram, links.github, links.docs,
+    links.twitter, links.discord, links.telegram, links.github, links.docs, links.defillama,
   ].filter((u): u is string => !!u);
   const orgId = `https://www.vestream.io/protocols/${meta.slug}#organization`;
 
@@ -479,8 +480,12 @@ export default async function ProtocolLandingPage(
   // markup is for answer engines and Bing, which still parse it.
   const testnets = new Set<number>(TESTNET_CHAIN_IDS);
   const faqChains = meta.chainIds.filter((id) => !testnets.has(Number(id))).map((id) => chainLabel(id));
+  // Dated, on-chain-verified research finding for this protocol, if measured.
+  const unclaimed = UNCLAIMED_FINDINGS[meta.slug];
+
   const faqItems: { q: string; a: string }[] = [
     { q: `What is ${meta.name}?`, a: meta.description },
+    ...(unclaimed ? [{ q: `How many ${meta.name} vestings are left unclaimed?`, a: unclaimed.faq }] : []),
     ...(faqChains.length > 0 ? [{
       q: `Which chains does Vestream track ${meta.name} on?`,
       a: `Vestream indexes ${meta.name} on ${faqChains.length === 1 ? faqChains[0] : `${faqChains.slice(0, -1).join(", ")} and ${faqChains[faqChains.length - 1]}`}.`,
@@ -1320,6 +1325,41 @@ export default async function ProtocolLandingPage(
           </div>
         )}
       </section>
+
+      {/* ── Unclaimed research ───────────────────────────────────────────── */}
+      {/* Original, dated research (lib/unclaimed-research.ts): data nobody else
+          publishes about this protocol, which is what earns a page its place
+          beside the protocol's own site for a search on its name. */}
+      {unclaimed && (
+        <section className="px-4 md:px-8 pb-16 md:pb-20 max-w-5xl mx-auto w-full">
+          <div className="rounded-2xl p-6 md:p-8" style={{ background: "#0B0E12", color: "white" }}>
+            <p className="text-[10.5px] font-semibold uppercase mb-3" style={{ letterSpacing: "0.18em", color: "#5FDCDC" }}>
+              Unclaimed {meta.name} vesting · Vestream research
+            </p>
+            <h2 className="mb-2" style={{ letterSpacing: "-0.03em" }}>
+              <span className="block text-4xl md:text-5xl font-bold">{unclaimed.headline}</span>
+              <span className="block text-lg md:text-xl font-semibold mt-2" style={{ color: "rgba(255,255,255,0.85)" }}>{unclaimed.headlineLabel}</span>
+            </h2>
+            <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.6)" }}>
+              Fully unlocked, and still sitting in {meta.name} contracts. Measured {unclaimed.measured}.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              {unclaimed.stats.map((st) => (
+                <div key={st.label} className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="text-2xl font-bold" style={{ color: "#5FDCDC", letterSpacing: "-0.02em" }}>{st.value}</div>
+                  <div className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>{st.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+              <Link href="/find-vestings" className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "#1CB8B8", color: "#0B0E12" }}>
+                Check your wallets for unclaimed {meta.name} tokens →
+              </Link>
+              <p className="text-[11px] leading-relaxed sm:max-w-md" style={{ color: "rgba(255,255,255,0.45)" }}>{unclaimed.method}</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       {/* Visible questions backing the FAQPage JSON-LD above. Kept on the page,

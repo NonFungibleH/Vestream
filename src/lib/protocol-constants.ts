@@ -734,6 +734,8 @@ export interface ProtocolLinks {
   telegram?: string;
   github?:   string;
   docs?:     string;
+  /** The protocol's DefiLlama page. Verified 2026-10-09 against api.llama.fi/protocol/{slug}. */
+  defillama?: string;
 }
 
 export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
@@ -741,24 +743,29 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
     twitter: "https://x.com/Sablier",
     github:  "https://github.com/sablier-labs",
     docs:    "https://docs.sablier.com",
+    defillama: "https://defillama.com/protocol/sablier",
   },
   "sablier-flow": {
     twitter: "https://x.com/Sablier",
     github:  "https://github.com/sablier-labs",
     docs:    "https://docs.sablier.com",
+    defillama: "https://defillama.com/protocol/sablier",
   },
   hedgey: {
     twitter: "https://x.com/hedgeyfinance",
     github:  "https://github.com/hedgey-finance",
     docs:    "https://docs.hedgey.finance",
+    defillama: "https://defillama.com/protocol/hedgey",
   },
   "team-finance": {
     twitter: "https://x.com/TeamFinance_",
     docs:    "https://docs.team.finance",
+    defillama: "https://defillama.com/protocol/team-finance",
   },
   uncx: {
     twitter: "https://x.com/UNCX_token",
     docs:    "https://docs.uncx.network",
+    defillama: "https://defillama.com/protocol/uncx-network",
   },
   unvest: {
     twitter: "https://x.com/unvest_io",
@@ -768,20 +775,24 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
     twitter: "https://x.com/Superfluid_HQ",
     github:  "https://github.com/superfluid-finance",
     docs:    "https://docs.superfluid.finance",
+    defillama: "https://defillama.com/protocol/superfluid",
   },
   pinksale: {
     twitter: "https://x.com/pinkecosystem",
     docs:    "https://docs.pinksale.finance",
+    defillama: "https://defillama.com/protocol/pinksale",
   },
   streamflow: {
     twitter: "https://x.com/streamflow_fi",
     github:  "https://github.com/streamflow-finance",
     docs:    "https://docs.streamflow.finance",
+    defillama: "https://defillama.com/protocol/streamflow",
   },
   llamapay: {
     twitter: "https://x.com/llamapay_io",
     github:  "https://github.com/LlamaPay",
     docs:    "https://docs.llamapay.io",
+    defillama: "https://defillama.com/protocol/llamapay",
   },
   "jupiter-lock": {
     twitter: "https://x.com/JupiterExchange",
@@ -791,10 +802,12 @@ export const PROTOCOL_LINKS: Record<string, ProtocolLinks> = {
   smithii: {
     twitter: "https://x.com/SmithiiTools",
     docs:    "https://docs.smithii.io",
+    defillama: "https://defillama.com/protocol/smithii",
   },
   hoodlock: {
     twitter: "https://x.com/HoodLockRH",
     docs:    "https://hoodlock.tech/docs",
+    defillama: "https://defillama.com/protocol/hoodlock",
   },
   magna: {
     docs: "https://docs.magna.so",
