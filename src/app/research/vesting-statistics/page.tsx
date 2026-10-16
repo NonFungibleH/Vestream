@@ -73,6 +73,7 @@ export default async function VestingStatisticsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",
+    license: "https://creativecommons.org/licenses/by/4.0/",
     name: "Token Vesting Statistics · Vestream Index",
     description: "Total value locked in token vesting, vesting stream and token counts, and vesting TVL broken down by blockchain and by protocol, from the Vestream on-chain index.",
     url: "https://www.vestream.io/research/vesting-statistics",

@@ -1348,7 +1348,10 @@ export default async function ProtocolLandingPage(
               <Link href="/find-vestings" className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "#1CB8B8", color: "#0B0E12" }}>
                 Check your wallets for unclaimed {meta.name} tokens →
               </Link>
-              <p className="text-[11px] leading-relaxed sm:max-w-md" style={{ color: "rgba(255,255,255,0.45)" }}>{unclaimed.method}</p>
+              <p className="text-[11px] leading-relaxed sm:max-w-md" style={{ color: "rgba(255,255,255,0.45)" }}>
+                {unclaimed.method}{" "}
+                <Link href="/research/unclaimed-vesting" className="underline" style={{ color: "#5FDCDC" }}>Read the full study</Link>.
+              </p>
             </div>
           </div>
         </section>
