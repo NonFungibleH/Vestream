@@ -165,7 +165,7 @@ export default function UnclaimedVestingResearch() {
 
         <h2 className={h2}>How it was measured</h2>
         <ul className="list-disc pl-5 mb-6 space-y-2 text-base leading-relaxed">
-          <li><strong>Coverage varies by protocol.</strong> Sablier was measured across 25 EVM chains; the other protocols run on between one and six chains each, including Solana. Each protocol&rsquo;s chains are listed in the table.</li>
+          <li><strong>Coverage varies by protocol.</strong> Sablier was measured through Sablier&rsquo;s own indexer, which covers every chain it is deployed on (25 EVM chains, more than Vestream itself tracks); the chains outside Vestream&rsquo;s coverage hold under 2% of Sablier&rsquo;s finished streams. The other protocols run on between one and six chains each, including Solana. Each protocol&rsquo;s chains are listed in the table.</li>
           <li><strong>Finished</strong> means the schedule&rsquo;s end date was more than 30 days before measurement (before 6 September 2026).</li>
           <li><strong>Unclaimed</strong> means more than 1% of the schedule&rsquo;s total is still held for the recipient. <strong>Never claimed</strong> means nothing was ever withdrawn.</li>
           <li><strong>Sources.</strong> Each protocol was read from its own contracts or program accounts: Sablier from its live indexer with on-chain spot checks; Hedgey from its event history on all four plan contracts; UNCX, Team Finance and Smithii directly from contract and vault balances; Unvest from its subgraph, reconciled to on-chain balances; Streamflow and Jupiter Lock from seeded random samples of 6,000 accounts each.</li>
@@ -193,11 +193,10 @@ export default function UnclaimedVestingResearch() {
           Pearce, H. (2026). <em>Unclaimed token vesting: what happens after tokens unlock</em>. Vestream. {URL_}
         </p>
 
-        <div className="rounded-2xl p-6" style={{ background: "#0B0E12", color: "white" }}>
-          <p className="font-semibold mb-1">Have you ever had tokens vesting?</p>
-          <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.65)" }}>Paste a wallet to see every vesting Vestream can read for it, claimed or not.</p>
-          <Link href="/find-vestings" className="inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "#1CB8B8", color: "#0B0E12" }}>Check a wallet →</Link>
-        </div>
+        <p className="text-sm" style={{ color: "#8B8E92" }}>
+          This research was carried out by Vestream, which tracks token vesting.{" "}
+          <Link href="/find-vestings" className="underline" style={{ color: "#0F8A8A" }}>Check a wallet for unclaimed vestings</Link>.
+        </p>
       </article>
 
       <SiteFooter theme="light" />

@@ -54,7 +54,7 @@ Something that worked as a script for insiders now has to work as infrastructure
 
 ## Problem one: pull money
 
-When your employer pays you, the payment arrives in your account, because your employer's system does the work. Traditional payment rails are push systems, where the payer's side sends the money.
+When your employer pays you, the payment arrives in your account, because your employer's system does the work. A salary is a push payment: the payer's side sends the money, and you don't have to do anything to receive it.
 
 Most crypto vesting works the other way. When a tranche unlocks nothing arrives, and the value sits in the contract until the recipient notices, connects a wallet and claims it. In effect, crypto moved the final step of every payment onto the person being paid.
 
@@ -71,11 +71,13 @@ The data shows what that costs. This is the share of finished schedules still ho
 | Team Finance | 66.3% of allocations (excluding mass distributions) |
 | Unvest | 87.0% |
 
+These rates say more about how each protocol is used than about the protocol itself. Platforms that carry a lot of airdrops and small community distributions show higher rates, while those used mainly for team and investor grants show lower ones, so this isn't a league table.
+
 [[GRAPHIC 3: Bar chart, "Share of finished vesting schedules still unclaimed", one horizontal bar per protocol using the figures in the table above, sorted from lowest (Jupiter Lock 2.9%) to highest (Unvest 87.0%). Mark Streamflow and Jupiter Lock as "sample" with a lighter shade or an asterisk. Place it here, directly under the table, or use it to replace the table.]]
 
 The more revealing number is how people fail to claim. You might expect recipients to start claiming and then drift off, but almost nobody does that. Across every protocol I measured, between 78% and 97% of unclaimed schedules had never been claimed once. People claim everything or nothing, and the few who stop partway tend to stop early: on Streamflow, 148 of the 150 partial claimers in my sample made their last claim before the schedule had even ended.
 
-It would be easy to conclude that push systems are the answer. Superfluid is the clearest test, because its schedules are designed to start on their own: an automated service sends the transaction that begins each payment, so the recipient doesn't have to do anything. Of the 3,439 finished Superfluid schedules I checked, 83% started as designed, which shows push works most of the time. The rest is still telling, though. 187 schedules are recorded as failed because the automated step couldn't run, and another 345 never started at all. Superfluid's newer version also added an option for recipients to claim, and a third of the schedules using it (450 of 1,310) were never claimed.
+It would be easy to conclude that push systems are the answer. Superfluid is the clearest test, because its schedules are designed to start on their own: an automated service sends the transaction that begins each payment, so the recipient doesn't have to do anything. Of the 3,439 finished Superfluid schedules I checked, 83% started as designed, which shows push works most of the time. The rest is still telling, though. 187 schedules are recorded by the scheduler as failed, and another 345 never started at all. Superfluid's newer version also added an option for recipients to claim, and a third of the schedules using it (450 of 1,310) were never claimed.
 
 Whichever way a payment works, someone has to be responsible for finishing it, and something has to happen when that doesn't go to plan. Most vesting has never decided either.
 
@@ -87,17 +89,17 @@ Traditional finance has the same split and treats it as fundamental. A trade is 
 
 In crypto the two dates can drift apart by months or years, and nothing records both. That matters, because the date that counts is often the one nobody is watching. In the UK, HMRC treats the vesting of employee share awards as the taxable point, and its closest guidance for tokens points the same way, although there's no definitive rule. So a recipient who never claims can still owe tax on value that has been sitting in a contract they've forgotten about.
 
-With roughly a third of finished schedules unclaimed, the gap between the two dates is more than a technicality: for those recipients it's the difference between a tax return that's correct and one that isn't.
+On Sablier, the largest protocol I measured, about a third of finished schedules are unclaimed, and on some protocols it's more than half. For those recipients the gap between the two dates is more than a technicality: it's the difference between a tax return that's correct and one that isn't.
 
 A proper payment rail records the moment value is earned as well as the moment it moves. Vesting records neither in a form anyone can easily use.
 
-[[GRAPHIC 4: Two dates on one timeline. A horizontal line with a marker at "Unlocks" (labelled "the value is yours, and in the UK this is usually the taxable point") and a later marker at "Claimed" (labelled "the tokens reach your wallet"). Shade the gap between them and label it "can be months or years". Add a small note at the end: "Roughly 1 in 3 finished schedules never reach the second date." Place it here.]]
+[[GRAPHIC 4: Two dates on one timeline. A horizontal line with a marker at "Unlocks" (labelled "the value is yours, and in the UK this is usually the taxable point") and a later marker at "Claimed" (labelled "the tokens reach your wallet"). Shade the gap between them and label it "can be months or years". Add a small note at the end: "On the largest protocol measured, about 1 in 3 finished schedules never reach the second date." Place it here.]]
 
 ## Problem three: the chain is the ledger, not the record
 
 The most repeated claim in crypto is that on-chain data is the source of truth. That's true in a narrow sense, because the chain holds the raw state, but in practice almost nobody reads the chain directly. Wallets, dashboards, analysts and auditors all read it through indexers and APIs, and those copies drift from the chain in ways I didn't expect.
 
-- **Copies that remember a world that no longer exists.** When a UNCX lock is transferred or split, the contract creates a new lock and empties the old one. The protocol's subgraph, the index most tools read, kept the old lock as if nothing had happened, so 2,628 finished locks were recorded as unclaimed when the chain held nothing.
+- **Copies that remember a world that no longer exists.** On one locker protocol, transferring or splitting a lock creates a new lock and empties the old one. The protocol's subgraph, the index most tools read, kept the old lock as if nothing had happened, so 2,628 finished locks were recorded as unclaimed when the chain held nothing. The contracts were right; the copy most people read was not.
 - **Disagreement at scale.** For one protocol, a third-party index disagreed with the chain on 17.5% of vesting contracts. That included 263 contracts recorded as locked whose escrow was actually empty, a pattern consistent with cancellations the index never recorded.
 - **Units.** One API reports upfront percentages in basis points, so if you read them as plain percentages, grants look fully claimable on day one.
 - **Zeros that mean "never measured".** In a pipeline I built, one protocol's claimed amounts were hardcoded to zero, and that protocol deletes its record entirely when someone claims in full. The result was a perfect 100% "unclaimed". In my audit, every protocol that came out at exactly 0% or 100% unclaimed turned out to be a measurement error rather than a real result.
@@ -119,7 +121,7 @@ A vesting schedule can run for years, and the token it pays out may not last tha
 
 87% of unclaimed Sablier streams are in tokens that no longer trade anywhere, as are 91% of unclaimed UNCX locks, and 83% of the tokens behind unclaimed Smithii schedules on Solana have no price at all. A lot of the time recipients aren't forgetting value, the value has simply gone. On Unvest, 88% of the positions in two large airdrops were worth less than the fee to claim them, so leaving them was the rational choice.
 
-That isn't always the case, though. Ten unclaimed Hedgey plans are each worth more than $100,000, and some unclaimed positions in tokens that still trade have sat untouched for over two years. Across the six protocols I valued, the unclaimed tokens that still trade add up to roughly $4.9 to $9.5 million, depending on how strictly you discount positions that are larger than their own markets.
+That isn't always the case, though. Ten unclaimed Hedgey plans are each valued at more than $100,000 at market prices, and some unclaimed positions in tokens that still trade have sat untouched for over two years. One grant worth about $11,000, in a token with a healthy market, finished 20 months ago and has never been claimed. Across the six protocols I valued, the unclaimed tokens that still trade add up to roughly $4.9 to $9.5 million, depending on how strictly you discount positions that are larger than their own markets.
 
 [[GRAPHIC 5: Where the unclaimed tokens sit. For Sablier, a single bar or ring split into "tokens with no market at all: 87%" (grey) and "tokens that still trade: 13%" (highlight colour). Beside it, a callout: "$4.9M to $9.5M still unclaimed in tokens that trade, across six protocols". Place it here.]]
 
@@ -148,7 +150,7 @@ Any vesting contract, on any chain, should be able to answer six questions the s
 5. Has it been cancelled, and if so, when?
 6. When does the next amount unlock, and when does it end?
 
-Those six answers are enough for a wallet to show your balance, an accountant to report income on the right date, an auditor to see obligations and a custodian to hold positions for clients, and none of them limit how a protocol designs its product.
+Those six answers are enough for a wallet to show your balance, an accountant to report income on the right date, an auditor to see obligations and a custodian to hold positions for clients, and none of them limit how a protocol designs its product. Several protocols already expose most of them through their own contract functions, so this is less about anyone changing what they've built and more about agreeing to describe it the same way.
 
 ## What the rail needs
 
@@ -174,7 +176,7 @@ Money released on a schedule, on-chain, doesn't have a system of record yet. Who
 
 Vesting isn't really a lockup feature, it's the first draft of how the internet will pay people over time.
 
-Crypto has solved the hard part, which is value that releases on schedule, enforced by code, with nobody in the middle able to stop it. What it hasn't built is the layer that makes the money arrive, keeps it visible and reconciled, and handles it when things go wrong. That gap is a big part of why roughly a third of finished vestings are never collected.
+Crypto has solved the hard part, which is value that releases on schedule, enforced by code, with nobody in the middle able to stop it. What it hasn't built is the layer that makes the money arrive, keeps it visible and reconciled, and handles it when things go wrong. That gap is a big part of why so many finished vestings are never collected.
 
 We've spent a decade making money programmable. The next decade is about making sure it arrives.
 
@@ -192,3 +194,15 @@ We've spent a decade making money programmable. The next decade is about making 
 - **Story settings:** tick the vested-interest disclosure.
 - **Sources:** every figure is in docs/content/research-unclaimed-*.md. The Superfluid figures come from a full pull of 3,439 finished schedules across six chains on 16 Oct 2026.
 - **Before submitting:** re-read the research page live, so the citation link and figures match.
+
+## Graphics style guide (for all six figures)
+
+- **Look:** clean, flat, editorial data graphics in the style of a financial research report. No logos, no Vestream wordmark, no crypto clichés (coins, rockets, padlocks, glowing chains, 3D renders).
+- **Canvas:** 1600 × 900 px, the same for every figure, so they line up in the article. Light paper background (#F5F5F3), because Hackernoon pages are light; a dark graphic would look like an advert.
+- **Colours (Vestream palette, no branding):** ink #0B0E12 for text and lines; deep teal #0F8A8A as the single highlight colour; teal #1CB8B8 for secondary highlights; greys #8B8E92 and #D5D8DC for everything de-emphasised. Use teal only for the thing the reader should look at.
+- **Type:** Geist (free on Google Fonts). Figure titles in Geist Semibold 44px, labels Regular 28px, small notes 22px. Sentence case everywhere.
+- **Lines and shapes:** 3px strokes, rounded corners of 12px on boxes, plenty of white space. Dashed lines only for "upcoming" or "not yet built".
+- **Numbering:** put "Figure 1" to "Figure 6" small and grey in the top-left of each image, and the title beside it.
+- **Source line:** bottom-left of each data figure (3 and 5) in small grey text: "Source: author's on-chain study, October 2026." No URL in the image; Hackernoon doesn't allow images to act as links.
+- **Featured image (the header Hackernoon shows on the article card):** an abstract version of Figure 1, with no text other than the title. No logo; Hackernoon rejects logos in the featured image.
+- **Accessibility:** add alt text for each figure when uploading, describing the takeaway, e.g. "Bar chart: unclaimed share of finished vesting schedules ranges from 2.9% on Jupiter Lock to 87% on Unvest."
